@@ -29,11 +29,11 @@ class CompiledRoute:
 
     Parameters
     ----------
-    method : :obj:`str`
+    method : :obj:`~str`
         The HTTP method to use.
-    path : :obj:`str`
+    path : :obj:`~str`
         The path with any major parameters interpolated in.
-    major_params_hash : :obj:`str`
+    major_params_hash : :obj:`~str`
         The part of the hash identifier to use for the compiled set of major parameters.
     """
 
@@ -41,22 +41,22 @@ class CompiledRoute:
 
     #: The method to use on the route.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     method: typing.Final[str]
 
     #: The major parameters in a bucket hash-compatible representation.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     major_params_hash: typing.Final[str]
 
     #: The compiled route path to use
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     compiled_path: typing.Final[str]
 
     #: The hash code
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     hash_code: typing.Final[int]
 
     def __init__(self, method: str, path_template: str, path: str, major_params_hash: str) -> None:
@@ -70,12 +70,12 @@ class CompiledRoute:
 
         Parameters
         ----------
-        base_url : :obj:`str`
+        base_url : :obj:`~str`
             The base of the URL to prepend to the compiled path.
 
         Returns
         -------
-        :obj:`str`
+        :obj:`~str`
             The full URL for the route.
         """
         return base_url + self.compiled_path
@@ -88,13 +88,13 @@ class CompiledRoute:
 
         Parameters
         ----------
-        initial_bucket_hash: :obj:`str`
+        initial_bucket_hash: :obj:`~str`
             The initial bucket hash provided by Discord in the HTTP headers
             for a given response.
 
         Returns
         -------
-        :obj:`str`
+        :obj:`~str`
             The input hash amalgamated with a hash code produced by the
             major parameters in this compiled route instance.
         """
@@ -128,9 +128,9 @@ class RouteTemplate:
 
     Parameters
     ----------
-    path_template : :obj:`str`
+    path_template : :obj:`~str`
         The template string for the path to use.
-    major_params : :obj:`str`
+    major_params : :obj:`~str`
         A collection of major parameter names that appear in the template path.
         If not specified, the default major parameter names are extracted and
         used in-place.
@@ -140,12 +140,12 @@ class RouteTemplate:
 
     #: The template string used for the path.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     path_template: typing.Final[str]
 
     #: Major parameter names that appear in the template path.
     #:
-    #: :type: :obj:`typing.FrozenSet` [ :obj:`str` ]
+    #: :type: :obj:`~typing.FrozenSet` [ :obj:`~str` ]
     major_params: typing.Final[typing.FrozenSet[str]]
 
     def __init__(self, path_template: str, major_params: typing.Collection[str] = None) -> None:
@@ -156,21 +156,21 @@ class RouteTemplate:
             self.major_params = frozenset(major_params)
 
     def compile(self, method: str, /, **kwargs: typing.Any) -> CompiledRoute:
-        """Generate a formatted :obj:`CompiledRoute` for this route template.
+        """Generate a formatted :obj:`~CompiledRoute` for this route template.
 
         This takes into account any URL parameters that have been passed, and extracting
         the :attr:major_params" for bucket hash operations accordingly.
 
         Parameters
         ----------
-        method : :obj:`str`
+        method : :obj:`~str`
             The method to use.
-        **kwargs : :obj:`typing.Any`
+        **kwargs : :obj:`~typing.Any`
             Any parameters to interpolate into the route path.
 
         Returns
         -------
-        :obj:`CompiledRoute`
+        :obj:`~CompiledRoute`
             The compiled route.
         """
         major_hash_part = "-".join((str(kwargs[p]) for p in self.major_params))

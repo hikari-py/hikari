@@ -36,18 +36,18 @@ class SessionStartLimit(entities.HikariEntity, entities.Deserializable):
 
     #: The total number of session starts the current bot is allowed.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     total: int = marshaller.attrib(deserializer=int)
 
     #: The remaining number of session starts this bot has.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     remaining: int = marshaller.attrib(deserializer=int)
 
     #: The timedelta of when :attr:`remaining` will reset back to :attr:`total`
     #: for the current bot.
     #:
-    #: :type: :obj:`datetime.timedelta`
+    #: :type: :obj:`~datetime.timedelta`
     reset_after: datetime.timedelta = marshaller.attrib(
         deserializer=lambda after: datetime.timedelta(milliseconds=after),
     )
@@ -60,17 +60,17 @@ class GatewayBot(entities.HikariEntity, entities.Deserializable):
 
     #: The WSS URL that can be used for connecting to the gateway.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     url: str = marshaller.attrib(deserializer=str)
 
     #: The recommended number of shards to use when connecting to the gateway.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     shard_count: int = marshaller.attrib(raw_name="shards", deserializer=int)
 
     #: Information about the bot's current session start limit.
     #:
-    #: :type: :obj:`SessionStartLimit`
+    #: :type: :obj:`~SessionStartLimit`
     session_start_limit: SessionStartLimit = marshaller.attrib(deserializer=SessionStartLimit.deserialize)
 
 
@@ -84,19 +84,19 @@ class GatewayActivity(entities.Deserializable, entities.Serializable):
 
     #: The activity name.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     name: str = marshaller.attrib(deserializer=str, serializer=str)
 
     #: The activity URL. Only valid for ``STREAMING`` activities.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     url: typing.Optional[str] = marshaller.attrib(
         deserializer=str, serializer=str, if_none=None, if_undefined=None, default=None
     )
 
     #: The activity type.
     #:
-    #: :type: :obj:`hikari.guilds.ActivityType`
+    #: :type: :obj:`~hikari.guilds.ActivityType`
     type: guilds.ActivityType = marshaller.attrib(
         deserializer=guilds.ActivityType,
         serializer=int,

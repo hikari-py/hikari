@@ -53,42 +53,42 @@ class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
 
     #: The type of the webhook.
     #:
-    #: :type: :obj:`WebhookType`
+    #: :type: :obj:`~WebhookType`
     type: WebhookType = marshaller.attrib(deserializer=WebhookType)
 
     #: The guild ID of the webhook.
     #:
-    #: :type: :obj:`hikari.snowflakes.Snowflake`, optional
+    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
         deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The channel ID this webhook is for.
     #:
-    #: :type: :obj:`hikari.snowflakes.Snowflake`
+    #: :type: :obj:`~hikari.snowflakes.Snowflake`
     channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
 
     #: The user that created the webhook
     #:
     #: Note
     #: ----
-    #: This will be :obj:`None` when getting a webhook with bot authorization
+    #: This will be :obj:`~None` when getting a webhook with bot authorization
     #: rather than the webhook's token.
     #:
     #:
-    #: :type: :obj:`hikari.users.User`, optional
+    #: :type: :obj:`~hikari.users.User`, optional
     user: typing.Optional[users.User] = marshaller.attrib(
         deserializer=users.User.deserialize, if_undefined=None, default=None
     )
 
     #: The default name of the webhook.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None)
 
     #: The default avatar hash of the webhook.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     avatar_hash: typing.Optional[str] = marshaller.attrib(raw_name="avatar", deserializer=str, if_none=None)
 
     #: The token of the webhook.
@@ -98,5 +98,5 @@ class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
     #: This is only available for Incoming webhooks.
     #:
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     token: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)

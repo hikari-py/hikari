@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Provides a facade around :obj:`hikari.net.shard.ShardConnection`.
+"""Provides a facade around :obj:`~hikari.net.shard.ShardConnection`.
 
 This handles parsing and initializing the object from a configuration, as
 well as restarting it if it disconnects.
@@ -87,27 +87,27 @@ class ShardClient(runnable.RunnableClient):
 
     Parameters
     ----------
-    shard_id : :obj:`int`
+    shard_id : :obj:`~int`
         The ID of this specific shard.
-    shard_id : :obj:`int`
+    shard_id : :obj:`~int`
         The number of shards that make up this distributed application.
-    config : :obj:`hikari.clients.configs.WebsocketConfig`
+    config : :obj:`~hikari.clients.configs.WebsocketConfig`
         The gateway configuration to use to initialize this shard.
-    raw_event_consumer_impl : :obj:`hikari.state.raw_event_consumers.RawEventConsumer`
+    raw_event_consumer_impl : :obj:`~hikari.state.raw_event_consumers.RawEventConsumer`
         The consumer of a raw event.
-    url : :obj:`str`
+    url : :obj:`~str`
         The URL to connect the gateway to.
-    dispatcher : :obj:`hikari.state.event_dispatchers.EventDispatcher`, optional
+    dispatcher : :obj:`~hikari.state.event_dispatchers.EventDispatcher`, optional
         The high level event dispatcher to use for dispatching start and stop
-        events. Set this to :obj:`None` to disable that functionality (useful if
+        events. Set this to :obj:`~None` to disable that functionality (useful if
         you use a gateway manager to orchestrate multiple shards instead and
-        provide this functionality there). Defaults to :obj:`None` if
+        provide this functionality there). Defaults to :obj:`~None` if
         unspecified.
 
     Notes
     -----
     Generally, you want to use
-    :obj:`hikari.clients.gateway_managers.GatewayManager` rather than this class
+    :obj:`~hikari.clients.gateway_managers.GatewayManager` rather than this class
     directly, as that will handle sharding where enabled and applicable, and
     provides a few more bits and pieces that may be useful such as state
     management and event dispatcher integration. and If you want to customize
@@ -178,7 +178,7 @@ class ShardClient(runnable.RunnableClient):
 
         Returns
         -------
-        :obj:`hikari.net.shard.ShardConnection`
+        :obj:`~hikari.net.shard.ShardConnection`
             The low-level gateway client used for this shard.
         """
         return self._connection
@@ -189,7 +189,7 @@ class ShardClient(runnable.RunnableClient):
 
         Returns
         -------
-        :obj:`int`
+        :obj:`~int`
             The 0-indexed shard ID.
         """
         return self._connection.shard_id
@@ -200,7 +200,7 @@ class ShardClient(runnable.RunnableClient):
 
         Returns
         -------
-        :obj:`int`
+        :obj:`~int`
             The number of shards that make up this bot.
         """
         return self._connection.shard_count
@@ -212,7 +212,7 @@ class ShardClient(runnable.RunnableClient):
 
         Returns
         -------
-        :obj:`hikari.guilds.PresenceStatus`
+        :obj:`~hikari.guilds.PresenceStatus`
             The current user status for this shard.
         """
         return self._status
@@ -224,8 +224,8 @@ class ShardClient(runnable.RunnableClient):
 
         Returns
         -------
-        :obj:`hikari.gateway_entities.GatewayActivity`, optional
-            The current activity for the user on this shard, or :obj:`None` if
+        :obj:`~hikari.gateway_entities.GatewayActivity`, optional
+            The current activity for the user on this shard, or :obj:`~None` if
             there is no activity.
         """
         return self._activity
@@ -236,21 +236,21 @@ class ShardClient(runnable.RunnableClient):
 
         Returns
         -------
-        :obj:`datetime.datetime`, optional
+        :obj:`~datetime.datetime`, optional
             The timestamp when the user of this shard appeared to be idle, or
-            :obj:`None` if not applicable.
+            :obj:`~None` if not applicable.
         """
         return self._idle_since
 
     # Ignore docstring not starting in an imperative mood
     @property
     def is_afk(self) -> bool:  # noqa: D401
-        """:obj:`True` if the user is AFK, :obj:`False` otherwise.
+        """:obj:`~True` if the user is AFK, :obj:`~False` otherwise.
 
         Returns
         -------
-        :obj:`bool`
-            :obj:`True` if the user is AFK, :obj:`False` otherwise.
+        :obj:`~bool`
+            :obj:`~True` if the user is AFK, :obj:`~False` otherwise.
         """
         return self._is_afk
 
@@ -260,7 +260,7 @@ class ShardClient(runnable.RunnableClient):
 
         Returns
         -------
-        :obj:`float`
+        :obj:`~float`
             The heartbeat latency in seconds. This will be ``float('nan')``
             until the first heartbeat is performed.
         """
@@ -272,7 +272,7 @@ class ShardClient(runnable.RunnableClient):
 
         Returns
         -------
-        :obj:`float`
+        :obj:`~float`
             The heartbeat interval in seconds. This will be ``float('nan')``
             until the connection has received a ``HELLO`` payload.
         """
@@ -286,7 +286,7 @@ class ShardClient(runnable.RunnableClient):
 
         Returns
         -------
-        :obj:`int`
+        :obj:`~int`
             The number of reconnects this shard has performed.
         """
         return self._connection.reconnect_count
@@ -297,7 +297,7 @@ class ShardClient(runnable.RunnableClient):
 
         Returns
         -------
-        :obj:`ShardState`
+        :obj:`~ShardState`
             The state of this shard.
         """
         return self._shard_state
@@ -493,14 +493,14 @@ class ShardClient(runnable.RunnableClient):
 
         Parameters
         ----------
-        status : :obj:`hikari.guilds.PresenceStatus`
+        status : :obj:`~hikari.guilds.PresenceStatus`
             If specified, the new status to set.
-        activity : :obj:`hikari.gateway_entities.GatewayActivity`, optional
+        activity : :obj:`~hikari.gateway_entities.GatewayActivity`, optional
             If specified, the new activity to set.
-        idle_since : :obj:`datetime.datetime`, optional
+        idle_since : :obj:`~datetime.datetime`, optional
             If specified, the time to show up as being idle since, or
-            :obj:`None` if not applicable.
-        is_afk : :obj:`bool`
+            :obj:`~None` if not applicable.
+        is_afk : :obj:`~bool`
             If specified, whether the user should be marked as AFK.
         """
         status = self._status if status is ... else status

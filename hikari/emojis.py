@@ -42,7 +42,7 @@ class UnicodeEmoji(Emoji):
 
     #: The codepoints that form the emoji.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     name: str = marshaller.attrib(deserializer=str)
 
     @property
@@ -63,12 +63,12 @@ class UnknownEmoji(Emoji, snowflakes.UniqueEntity):
 
     #: The name of the emoji.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None)
 
     #: Whether the emoji is animated.
     #:
-    #: :type: :obj:`bool`
+    #: :type: :obj:`~bool`
     is_animated: bool = marshaller.attrib(
         raw_name="animated", deserializer=bool, if_undefined=False, if_none=None, default=False
     )
@@ -86,7 +86,7 @@ class GuildEmoji(UnknownEmoji):
 
     #: The whitelisted role IDs to use this emoji.
     #:
-    #: :type: :obj:`typing.Set` [ :obj:`hikari.snowflakes.Snowflake` ]
+    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ]
     role_ids: typing.Set[snowflakes.Snowflake] = marshaller.attrib(
         raw_name="roles",
         deserializer=lambda roles: {snowflakes.Snowflake.deserialize(r) for r in roles},
@@ -98,25 +98,25 @@ class GuildEmoji(UnknownEmoji):
     #:
     #: Note
     #: ----
-    #: This will be :obj:`None` if you are missing the ``MANAGE_EMOJIS``
+    #: This will be :obj:`~None` if you are missing the ``MANAGE_EMOJIS``
     #: permission in the server the emoji is from.
     #:
     #:
-    #: :type: :obj:`hikari.users.User`, optional
+    #: :type: :obj:`~hikari.users.User`, optional
     user: typing.Optional[users.User] = marshaller.attrib(
         deserializer=users.User.deserialize, if_none=None, if_undefined=None, default=None
     )
 
     #: Whether this emoji must be wrapped in colons.
     #:
-    #: :type: :obj:`bool`, optional
+    #: :type: :obj:`~bool`, optional
     is_colons_required: typing.Optional[bool] = marshaller.attrib(
         raw_name="require_colons", deserializer=bool, if_undefined=None, default=None
     )
 
     #: Whether the emoji is managed by an integration.
     #:
-    #: :type: :obj:`bool`, optional
+    #: :type: :obj:`~bool`, optional
     is_managed: typing.Optional[bool] = marshaller.attrib(
         raw_name="managed", deserializer=bool, if_undefined=None, default=None
     )

@@ -50,25 +50,25 @@ class LowLevelRestfulClient:
 
     Parameters
     ----------
-    base_url: :obj:`str`
+    base_url: :obj:`~str`
         The base URL and route for the discord API
-    allow_redirects: :obj:`bool`
+    allow_redirects: :obj:`~bool`
         Whether to allow redirects or not.
-    connector: :obj:`aiohttp.BaseConnector`, optional
+    connector: :obj:`~aiohttp.BaseConnector`, optional
         Optional aiohttp connector info for making an HTTP connection
-    proxy_headers: :obj:`typing.Mapping` [ :obj:`str`, :obj:`str` ], optional
+    proxy_headers: :obj:`~typing.Mapping` [ :obj:`~str`, :obj:`~str` ], optional
         Optional proxy headers to pass to HTTP requests.
-    proxy_auth: :obj:`aiohttp.BasicAuth`, optional
+    proxy_auth: :obj:`~aiohttp.BasicAuth`, optional
         Optional authorization to be used if using a proxy.
-    proxy_url: :obj:`str`, optional
+    proxy_url: :obj:`~str`, optional
         Optional proxy URL to use for HTTP requests.
-    ssl_context: :obj:`ssl.SSLContext`, optional
+    ssl_context: :obj:`~ssl.SSLContext`, optional
         The optional SSL context to be used.
-    verify_ssl: :obj:`bool`
+    verify_ssl: :obj:`~bool`
         Whether or not the client should enforce SSL signed certificate
-        verification. If :obj:`False` it will ignore potentially malicious
+        verification. If :obj:`~False` it will ignore potentially malicious
         SSL certificates.
-    timeout: :obj:`float`, optional
+    timeout: :obj:`~float`, optional
         The optional timeout for all HTTP requests.
     json_deserialize: ``deserialization function``
         A custom JSON deserializer function to use. Defaults to
@@ -76,14 +76,14 @@ class LowLevelRestfulClient:
     json_serialize: ``serialization function``
         A custom JSON serializer function to use. Defaults to
         :func:`json.dumps`.
-    token: :obj:`string`, optional
+    token: :obj:`~string`, optional
         The bot token for the client to use. You may start this with
         a prefix of either ``Bot`` or ``Bearer`` to force the token type, or
         not provide this information if you want to have it auto-detected.
-        If this is passed as :obj:`None`, then no token is used.
-        This will be passed as the ``Authorization`` header if not :obj:`None`
+        If this is passed as :obj:`~None`, then no token is used.
+        This will be passed as the ``Authorization`` header if not :obj:`~None`
         for each request.
-    version: :obj:`typing.Union` [ :obj:`int`, :obj:`hikari.net.versions.HTTPAPIVersion` ]
+    version: :obj:`~typing.Union` [ :obj:`~int`, :obj:`~hikari.net.versions.HTTPAPIVersion` ]
         The version of the API to use. Defaults to the most recent stable
         version.
     """
@@ -98,37 +98,37 @@ class LowLevelRestfulClient:
 
     _AUTHENTICATION_SCHEMES = ("Bearer", "Bot")
 
-    #: :obj:`True` if HTTP redirects are enabled, or :obj:`False` otherwise.
+    #: :obj:`~True` if HTTP redirects are enabled, or :obj:`~False` otherwise.
     #:
-    #: :type: :obj:`bool`
+    #: :type: :obj:`~bool`
     allow_redirects: bool
 
     #: The base URL to send requests to.
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     base_url: str
 
     #: The :mod:`aiohttp` client session to make requests with.
     #:
-    #: :type: :obj:`aiohttp.ClientSession`
+    #: :type: :obj:`~aiohttp.ClientSession`
     client_session: aiohttp.ClientSession
 
     #: The internal correlation ID for the number of requests sent. This will
     #: increase each time a REST request is sent.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     in_count: int
 
     #: The global ratelimiter. This is used if Discord declares a ratelimit
     #: across the entire API, regardless of the endpoint. If this is set, then
     #: any HTTP operation using this session will be paused.
     #:
-    #: :type: :obj:`hikari.net.ratelimits.ManualRateLimiter`
+    #: :type: :obj:`~hikari.net.ratelimits.ManualRateLimiter`
     global_ratelimiter: ratelimits.ManualRateLimiter
 
     #: The logger to use for this object.
     #:
-    #: :type: :obj:`logging.Logger`
+    #: :type: :obj:`~logging.Logger`
     logger: logging.Logger
 
     #: The JSON deserialization function. This consumes a JSON string and
@@ -141,17 +141,17 @@ class LowLevelRestfulClient:
 
     #: Proxy authorization to use.
     #:
-    #: :type: :obj:`aiohttp.BasicAuth`, optional
+    #: :type: :obj:`~aiohttp.BasicAuth`, optional
     proxy_auth: typing.Optional[aiohttp.BasicAuth]
 
     #: A set of headers to provide to a proxy server.
     #:
-    #: :type: :obj:`typing.Mapping` [ :obj:`str`, :obj:`str` ], optional
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~str`, :obj:`~str` ], optional
     proxy_headers: typing.Optional[typing.Mapping[str, str]]
 
     #: An optional proxy URL to send requests to.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     proxy_url: typing.Optional[str]
 
     #: The per-route ratelimit manager. This handles tracking any ratelimits
@@ -163,17 +163,17 @@ class LowLevelRestfulClient:
     #:
     #: You should not ever need to touch this implementation.
     #:
-    #: :type: :obj:`hikari.net.ratelimits.HTTPBucketRateLimiterManager`
+    #: :type: :obj:`~hikari.net.ratelimits.HTTPBucketRateLimiterManager`
     ratelimiter: ratelimits.HTTPBucketRateLimiterManager
 
     #: The custom SSL context to use.
     #:
-    #: :type: :obj:`ssl.SSLContext`
+    #: :type: :obj:`~ssl.SSLContext`
     ssl_context: typing.Optional[ssl.SSLContext]
 
     #: The HTTP request timeout to abort requests after.
     #:
-    #: :type: :obj:`float`
+    #: :type: :obj:`~float`
     timeout: typing.Optional[float]
 
     #: The bot token. This will be prefixed with either ``"Bearer "`` or
@@ -182,10 +182,10 @@ class LowLevelRestfulClient:
     #: This value will be used for the ``Authorization`` HTTP header on each
     #: API request.
     #:
-    #: If no token is set, then the value will be :obj:`None`. In this case,
+    #: If no token is set, then the value will be :obj:`~None`. In this case,
     #: no ``Authorization`` header will be sent.
     #:
-    #: :type: :obj:`str`, optional
+    #: :type: :obj:`~str`, optional
     token: typing.Optional[str]
 
     #: The ``User-Agent`` header to send to Discord.
@@ -197,20 +197,20 @@ class LowLevelRestfulClient:
     #: ``User-Agent`` header that conforms to specific requirements.
     #: Your mileage may vary (YMMV).
     #:
-    #: :type: :obj:`str`
+    #: :type: :obj:`~str`
     user_agent: str
 
-    #: If :obj:`True`, SSL certificates are verified for each request, and
+    #: If :obj:`~True`, SSL certificates are verified for each request, and
     #: invalid SSL certificates are rejected, causing an exception. If
-    #: :obj:`False`, then unrecognised certificates that may be illegitimate
+    #: :obj:`~False`, then unrecognised certificates that may be illegitimate
     #: are accepted and ignored.
     #:
-    #: :type: :obj:`bool`
+    #: :type: :obj:`~bool`
     verify_ssl: bool
 
     #: The API version number that is being used.
     #:
-    #: :type: :obj:`int`
+    #: :type: :obj:`~int`
     version: int
 
     def __init__(
@@ -445,7 +445,7 @@ class LowLevelRestfulClient:
 
         Returns
         -------
-        :obj:`str`
+        :obj:`~str`
             A static URL to use to connect to the gateway with.
 
         Note
@@ -460,8 +460,8 @@ class LowLevelRestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
-            An object containing a ``url`` to connect to, an :obj:`int` number of shards recommended to use
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
+            An object containing a ``url`` to connect to, an :obj:`~int` number of shards recommended to use
             for connecting, and a ``session_start_limit`` object.
 
         Note
@@ -477,29 +477,29 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The guild ID to look up.
-        user_id : :obj:`str`
+        user_id : :obj:`~str`
             If specified, the user ID to filter by.
-        action_type : :obj:`int`
+        action_type : :obj:`~int`
             If specified, the action type to look up.
-        limit : :obj:`int`
+        limit : :obj:`~int`
             If specified, the limit to apply to the number of records.
             Defaults to ``50``. Must be between ``1`` and ``100`` inclusive.
-        before : :obj:`str`
+        before : :obj:`~str`
             If specified, the ID of the entry that all retrieved entries will
             have occurred before.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             An audit log object.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the given permissions to view an audit log.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild does not exist.
         """
         query = {}
@@ -515,19 +515,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The channel ID to look up.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The channel object that has been found.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you don't have access to the channel.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
         """
         route = routes.CHANNEL.compile(self.GET, channel_id=channel_id)
@@ -552,56 +552,56 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The channel ID to update.
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, the new name for the channel. This must be
             between ``2`` and ``100`` characters in length.
-        position : :obj:`int`
+        position : :obj:`~int`
             If specified, the position to change the channel to.
-        topic : :obj:`str`
+        topic : :obj:`~str`
             If specified, the topic to set. This is only applicable to
             text channels. This must be between ``0`` and ``1024``
             characters in length.
-        nsfw : :obj:`bool`
+        nsfw : :obj:`~bool`
             If specified, whether the  channel will be marked as NSFW.
             Only applicable to text channels.
-        rate_limit_per_user : :obj:`int`
+        rate_limit_per_user : :obj:`~int`
             If specified, the number of seconds the user has to wait before sending
             another message.  This will not apply to bots, or to members with
             ``MANAGE_MESSAGES`` or ``MANAGE_CHANNEL`` permissions. This must
             be between ``0`` and ``21600`` seconds.
-        bitrate : :obj:`int`
+        bitrate : :obj:`~int`
             If specified, the bitrate in bits per second allowable for the channel.
             This only applies to voice channels and must be between ``8000``
             and ``96000`` for normal servers or ``8000`` and ``128000`` for
             VIP servers.
-        user_limit : :obj:`int`
+        user_limit : :obj:`~int`
             If specified, the new max number of users to allow in a voice channel.
             This must be between ``0`` and ``99`` inclusive, where
             ``0`` implies no limit.
-        permission_overwrites : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        permission_overwrites : :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             If specified, the new list of permission overwrites that are category
             specific to replace the existing overwrites with.
-        parent_id : :obj:`str`, optional
+        parent_id : :obj:`~str`, optional
             If specified, the new parent category ID to set for the channel.,
-            pass :obj:`None` to unset.
-        reason : :obj:`str`
+            pass :obj:`~None` to unset.
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The channel object that has been modified.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the permission to make the change.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide incorrect options for the corresponding channel type
             (e.g. a ``bitrate`` for a text channel).
         """
@@ -623,20 +623,20 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The channel ID to delete, or direct message channel to close.
 
         Returns
         -------
-        :obj:`None`
+        :obj:`~None`
             Nothing, unlike what the API specifies. This is done to maintain
             consistency with other calls of a similar nature in this API wrapper.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you do not have permission to delete the channel.
 
         Warning
@@ -653,47 +653,47 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to retrieve the messages from.
-        limit : :obj:`int`
+        limit : :obj:`~int`
             If specified, the number of messages to return. Must be
             between ``1`` and ``100`` inclusive.Defaults to ``50``
             if unspecified.
-        after : :obj:`str`
+        after : :obj:`~str`
             A message ID. If specified, only return messages sent AFTER this message.
-        before : :obj:`str`
+        before : :obj:`~str`
             A message ID. If specified, only return messages sent BEFORE this message.
-        around : :obj:`str`
+        around : :obj:`~str`
             A message ID. If specified, only return messages sent AROUND and
             including (if it still exists) this message.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of message objects.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permission to read the channel.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If your query is malformed, has an invalid value for ``limit``,
             or contains more than one of ``after``, ``before`` and ``around``.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found, or the message
             provided for one of the filter arguments is not found.
 
         Note
         ----
         If you are missing the ``VIEW_CHANNEL`` permission, you will receive a
-        :obj:`hikari.errors.ForbiddenHTTPError`. If you are instead missing
+        :obj:`~hikari.errors.ForbiddenHTTPError`. If you are instead missing
         the ``READ_MESSAGE_HISTORY`` permission, you will always receive
         zero results, and thus an empty list will be returned instead.
 
         Warning
         -------
         You can only specify a maximum of one from ``before``, ``after``, and ``around``.
-        Specifying more than one will cause a :obj:`hikari.errors.BadRequestHTTPError` to be raised.
+        Specifying more than one will cause a :obj:`~hikari.errors.BadRequestHTTPError` to be raised.
         """
         query = {}
         conversions.put_if_specified(query, "limit", limit)
@@ -708,14 +708,14 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to get the message from.
-        message_id : :obj:`str`
+        message_id : :obj:`~str`
             The ID of the message to retrieve.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             A message object.
 
         Note
@@ -724,9 +724,9 @@ class LowLevelRestfulClient:
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permission to see the message.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
         """
         route = routes.CHANNEL_MESSAGE.compile(self.GET, channel_id=channel_id, message_id=message_id)
@@ -747,37 +747,37 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to send to.
-        content : :obj:`str`
+        content : :obj:`~str`
             If specified, the message content to send with the message.
-        nonce : :obj:`str`
+        nonce : :obj:`~str`
             If specified, an optional ID to send for opportunistic message
             creation. This doesn't serve any real purpose for general use,
             and can usually be ignored.
-        tts : :obj:`bool`
+        tts : :obj:`~bool`
             If specified, whether the message will be sent as a TTS message.
-        files : :obj:`typing.Sequence` [ :obj:`typing.Tuple` [ :obj:`str`, :obj:`io.IOBase` ] ]
+        files : :obj:`~typing.Sequence` [ :obj:`~typing.Tuple` [ :obj:`~str`, :obj:`~io.IOBase` ] ]
             If specified, this should be a list of between ``1`` and ``5`` tuples.
             Each tuple should consist of the file name, and either
-            raw :obj:`bytes` or an :obj:`io.IOBase` derived object with
+            raw :obj:`~bytes` or an :obj:`~io.IOBase` derived object with
             a seek that points to a buffer containing said file.
-        embed : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        embed : :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             If specified, the embed to send with the message.
-        allowed_mentions : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        allowed_mentions : :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             If specified, the mentions to parse from the ``content``.
             If not specified, will parse all mentions from the ``content``.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The created message object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
             empty or greater than ``2000`` characters; if neither content, file
@@ -785,7 +785,7 @@ class LowLevelRestfulClient:
             fields in ``allowed_mentions``; if you specify to parse all
             users/roles mentions but also specify which users/roles to
             parse only.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permissions to send to this channel.
         """
         form = aiohttp.FormData()
@@ -814,24 +814,24 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to add this reaction in.
-        message_id : :obj:`str`
+        message_id : :obj:`~str`
             The ID of the message to add the reaction in.
-        emoji : :obj:`str`
+        emoji : :obj:`~str`
             The emoji to add. This can either be a series of unicode
             characters making up a valid Discord emoji, or it can be a the url
             representation of a custom emoji ``<{emoji.name}:{emoji.id}>``.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If this is the first reaction using this specific emoji on this
             message and you lack the ``ADD_REACTIONS`` permission. If you lack
             ``READ_MESSAGE_HISTORY``, this may also raise this error.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message is not found, or if the emoji is not found.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If the emoji is not valid, unknown, or formatted incorrectly.
         """
         route = routes.OWN_REACTION.compile(self.PUT, channel_id=channel_id, message_id=message_id, emoji=emoji)
@@ -842,20 +842,20 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to get the message from.
-        message_id : :obj:`str`
+        message_id : :obj:`~str`
             The ID of the message to delete the reaction from.
-        emoji : :obj:`str`
+        emoji : :obj:`~str`
             The emoji to delete. This can either be a series of unicode
             characters making up a valid Discord emoji, or it can be a
             snowflake ID for a custom emoji.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permission to do this.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message or emoji is not found.
         """
         route = routes.OWN_REACTION.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
@@ -866,20 +866,20 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to get the message from.
-        message_id : :obj:`str`
+        message_id : :obj:`~str`
             The ID of the message to delete the reactions from.
-        emoji : :obj:`str`
+        emoji : :obj:`~str`
             The emoji to delete. This can either be a series of unicode
             characters making up a valid Discord emoji, or it can be a
             snowflake ID for a custom emoji.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message or emoji or user is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission, or are in DMs.
         """
         route = routes.REACTION_EMOJI.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
@@ -890,22 +890,22 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to get the message from.
-        message_id : :obj:`str`
+        message_id : :obj:`~str`
             The ID of the message to remove the reaction from.
-        emoji : :obj:`str`
+        emoji : :obj:`~str`
             The emoji to delete. This can either be a series of unicode
             characters making up a valid Discord emoji, or it can be a
             snowflake ID for a custom emoji.
-        user_id : :obj:`str`
+        user_id : :obj:`~str`
             The ID of the user who made the reaction that you wish to remove.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message or emoji or user is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission, or are in DMs.
         """
         route = routes.REACTION_EMOJI_USER.compile(
@@ -920,32 +920,32 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to get the message from.
-        message_id : :obj:`str`
+        message_id : :obj:`~str`
             The ID of the message to get the reactions from.
-        emoji : :obj:`str`
+        emoji : :obj:`~str`
             The emoji to get. This can either be a series of unicode
             characters making up a valid Discord emoji, or it can be a
             snowflake ID for a custom emoji.
-        after : :obj:`str`
+        after : :obj:`~str`
             If specified, the user ID. If specified, only users with a snowflake
             that is lexicographically greater than the value will be returned.
-        limit : :obj:`str`
+        limit : :obj:`~str`
             If specified, the limit of the number of values to return. Must be
             between ``1`` and ``100`` inclusive. If unspecified,
             defaults to ``25``.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of user objects.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack access to the message.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
         """
         query = {}
@@ -959,16 +959,16 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to get the message from.
-        message_id : :obj:`str`
+        message_id : :obj:`~str`
             The ID of the message to remove all reactions from.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission.
         """
         route = routes.ALL_REACTIONS.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
@@ -988,38 +988,38 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to get the message from.
-        message_id : :obj:`str`
+        message_id : :obj:`~str`
             The ID of the message to edit.
-        content : :obj:`str`, optional
+        content : :obj:`~str`, optional
             If specified, the string content to replace with in the message.
-            If :obj:`None`, the content will be removed from the message.
-        embed : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ], optional
+            If :obj:`~None`, the content will be removed from the message.
+        embed : :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ], optional
             If specified, the embed to replace with in the message.
-            If :obj:`None`, the embed will be removed from the message.
-        flags : :obj:`int`
+            If :obj:`~None`, the embed will be removed from the message.
+        flags : :obj:`~int`
             If specified, the integer to replace the message's current flags.
-        allowed_mentions : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        allowed_mentions : :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             If specified, the mentions to parse from the ``content``.
             If not specified, will parse all mentions from the ``content``.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The edited message object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             This can be raised if the embed exceeds the defined limits;
             if the message content is specified only and empty or greater
             than ``2000`` characters; if neither content, file or embed
             are specified.
             parse only.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you try to edit ``content`` or ``embed`` or ``allowed_mentions`
             on a message you did not author or try to edit the flags on a
             message you did not author without the ``MANAGE_MESSAGES``
@@ -1038,17 +1038,17 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to get the message from.
-        message_id : :obj:`str`
+        message_id : :obj:`~str`
             The ID of the message to delete.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you did not author the message and are in a DM, or if you did not author the message and lack the
             ``MANAGE_MESSAGES`` permission in a guild channel.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
         """
         route = routes.CHANNEL_MESSAGE.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
@@ -1059,18 +1059,18 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to get the message from.
-        messages : :obj:`typing.Sequence` [ :obj:`str` ]
+        messages : :obj:`~typing.Sequence` [ :obj:`~str` ]
             A list of ``2-100`` message IDs to remove in the channel.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission in the channel.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any of the messages passed are older than ``2`` weeks in age or
             any duplicate message IDs are passed.
 
@@ -1093,26 +1093,26 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to edit permissions for.
-        overwrite_id : :obj:`str`
+        overwrite_id : :obj:`~str`
             The overwrite ID to edit.
-        type_ : :obj:`str`
+        type_ : :obj:`~str`
             The type of overwrite. ``"member"`` if it is for a member,
             or ``"role"`` if it is for a role.
-        allow : :obj:`int`
+        allow : :obj:`~int`
             If specified, the bitwise value of all permissions to set to be allowed.
-        deny : :obj:`int`
+        deny : :obj:`~int`
             If specified, the bitwise value of all permissions to set to be denied.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the target channel or overwrite doesn't exist.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permission to do this.
         """
         payload = {"type": type_}
@@ -1126,19 +1126,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to get invites for.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of invite objects.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_CHANNELS`` permission.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
         """
         route = routes.CHANNEL_INVITES.compile(self.GET, channel_id=channel_id)
@@ -1160,40 +1160,40 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to create the invite for.
-        max_age : :obj:`int`
+        max_age : :obj:`~int`
             If specified, the max age of the invite in seconds, defaults to
             ``86400`` (``24`` hours).
             Set to ``0`` to never expire.
-        max_uses : :obj:`int`
+        max_uses : :obj:`~int`
             If specified, the max number of uses this invite can have, or ``0``
             for unlimited (as per the default).
-        temporary : :obj:`bool`
+        temporary : :obj:`~bool`
             If specified, whether to grant temporary membership, meaning the
             user is kicked when their session ends unless they are given a role.
-        unique : :obj:`bool`
+        unique : :obj:`~bool`
             If specified, whether to try to reuse a similar invite.
-        target_user : :obj:`str`
+        target_user : :obj:`~str`
             If specified, the ID of the user this invite should target.
-        target_user_type : :obj:`int`
+        target_user_type : :obj:`~int`
             If specified, the type of target for this invite.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             An invite object.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``CREATE_INSTANT_MESSAGES`` permission.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If the arguments provided are not valid (e.g. negative age, etc).
         """
         payload = {}
@@ -1211,16 +1211,16 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to delete the overwrite from.
-        overwrite_id : :obj:`str`
+        overwrite_id : :obj:`~str`
             The ID of the overwrite to remove.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the overwrite or channel do not exist.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission for that channel.
         """
         route = routes.CHANNEL_PERMISSIONS.compile(self.DELETE, channel_id=channel_id, overwrite_id=overwrite_id)
@@ -1231,14 +1231,14 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to appear to be typing in.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are not able to type in the channel.
         """
         route = routes.CHANNEL_TYPING.compile(self.POST, channel_id=channel_id)
@@ -1249,19 +1249,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The channel ID to get messages from.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of messages.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are not able to see the channel.
 
         Note
@@ -1277,16 +1277,16 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to pin a message to.
-        message_id : :obj:`str`
+        message_id : :obj:`~str`
             The ID of the message to pin.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the message or channel do not exist.
         """
         route = routes.CHANNEL_PINS.compile(self.PUT, channel_id=channel_id, message_id=message_id)
@@ -1299,16 +1299,16 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to remove a pin from.
-        message_id : :obj:`str`
+        message_id : :obj:`~str`
             The ID of the message to unpin.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the message or channel do not exist.
         """
         route = routes.CHANNEL_PIN.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
@@ -1319,19 +1319,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to get the emojis for.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of emoji objects.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you aren't a member of the guild.
         """
         route = routes.GUILD_EMOJIS.compile(self.GET, guild_id=guild_id)
@@ -1342,21 +1342,21 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to get the emoji from.
-        emoji_id : :obj:`str`
+        emoji_id : :obj:`~str`
             The ID of the emoji to get.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             An emoji object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the emoji aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you aren't a member of said guild.
         """
         route = routes.GUILD_EMOJI.compile(self.GET, guild_id=guild_id, emoji_id=emoji_id)
@@ -1369,33 +1369,33 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to create the emoji in.
-        name : :obj:`str`
+        name : :obj:`~str`
             The new emoji's name.
-        image : :obj:`bytes`
+        image : :obj:`~bytes`
             The ``128x128`` image in bytes form.
-        roles : :obj:`typing.Sequence` [ :obj:`str` ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~str` ]
             If specified, a list of roles for which the emoji will be whitelisted.
             If empty, all roles are whitelisted.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The newly created emoji object.
 
         Raises
         ------
-        :obj:`ValueError`
-            If ``image`` is :obj:`None`.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~ValueError`
+            If ``image`` is :obj:`~None`.
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_EMOJIS`` permission or aren't a member of said guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you attempt to upload an image larger than ``256kb``, an empty image or an invalid image format.
         """
         assertions.assert_not_none(image, "image must be a valid image")
@@ -1414,30 +1414,30 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to which the emoji to update belongs to.
-        emoji_id : :obj:`str`
+        emoji_id : :obj:`~str`
             The ID of the emoji to update.
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, a new emoji name string. Keep unspecified to keep the name the same.
-        roles : :obj:`typing.Sequence` [ :obj:`str` ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~str` ]
             If specified, a list of IDs for the new whitelisted roles.
             Set to an empty list to whitelist all roles.
             Keep unspecified to leave the same roles already set.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The updated emoji object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the emoji aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_EMOJIS`` permission or are not a member of the given guild.
         """
         payload = {}
@@ -1451,16 +1451,16 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to delete the emoji from.
-        emoji_id : :obj:`str`
+        emoji_id : :obj:`~str`
             The ID of the emoji to be deleted.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the emoji aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_EMOJIS`` permission or aren't a member of said guild.
         """
         route = routes.GUILD_EMOJI.compile(self.DELETE, guild_id=guild_id, emoji_id=emoji_id)
@@ -1486,35 +1486,35 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        name : :obj:`str`
+        name : :obj:`~str`
             The name string for the new guild (``2-100`` characters).
-        region : :obj:`str`
+        region : :obj:`~str`
             If specified, the voice region ID for new guild. You can use
             :meth:`list_voice_regions` to see which region IDs are available.
-        icon : :obj:`bytes`
+        icon : :obj:`~bytes`
             If specified, the guild icon image in bytes form.
-        verification_level : :obj:`int`
+        verification_level : :obj:`~int`
             If specified, the verification level integer (``0-5``).
-        default_message_notifications : :obj:`int`
+        default_message_notifications : :obj:`~int`
             If specified, the default notification level integer (``0-1``).
-        explicit_content_filter : :obj:`int`
+        explicit_content_filter : :obj:`~int`
             If specified, the explicit content filter integer (``0-2``).
-        roles : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             If specified, an array of role objects to be created alongside the
             guild. First element changes the ``@everyone`` role.
-        channels : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        channels : :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             If specified, an array of channel objects to be created alongside the guild.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The newly created guild object.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are on ``10`` or more guilds.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide unsupported fields like ``parent_id`` in channel objects.
         """
         payload = {"name": name}
@@ -1533,19 +1533,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to get.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The requested guild object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you don't have access to the guild.
         """
         route = routes.GUILD.compile(self.GET, guild_id=guild_id)
@@ -1556,12 +1556,12 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to get the preview object of.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The requested guild preview object.
 
         Note
@@ -1571,7 +1571,7 @@ class LowLevelRestfulClient:
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found or it isn't ``PUBLIC``.
         """
         route = routes.GUILD_PREVIEW.compile(self.GET, guild_id=guild_id)
@@ -1599,45 +1599,45 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to be edited.
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, the new name string for the guild (``2-100`` characters).
-        region : :obj:`str`
+        region : :obj:`~str`
             If specified, the new voice region ID for guild. You can use
             :meth:`list_voice_regions` to see which region IDs are available.
-        verification_level : :obj:`int`
+        verification_level : :obj:`~int`
             If specified, the new verification level integer (``0-5``).
-        default_message_notifications : :obj:`int`
+        default_message_notifications : :obj:`~int`
             If specified, the new default notification level integer (``0-1``).
-        explicit_content_filter : :obj:`int`
+        explicit_content_filter : :obj:`~int`
             If specified, the new explicit content filter integer (``0-2``).
-        afk_channel_id : :obj:`str`
+        afk_channel_id : :obj:`~str`
             If specified, the new ID for the AFK voice channel.
-        afk_timeout : :obj:`int`
+        afk_timeout : :obj:`~int`
             If specified, the new AFK timeout period in seconds
-        icon : :obj:`bytes`
+        icon : :obj:`~bytes`
             If specified, the new guild icon image in bytes form.
-        owner_id : :obj:`str`
+        owner_id : :obj:`~str`
             If specified, the new ID of the new guild owner.
-        splash : :obj:`bytes`
+        splash : :obj:`~bytes`
             If specified, the new new splash image in bytes form.
-        system_channel_id : :obj:`str`
+        system_channel_id : :obj:`~str`
             If specified, the new ID of the new system channel.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The edited guild object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = {}
@@ -1664,14 +1664,14 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to be deleted.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are not the guild owner.
         """
         route = routes.GUILD.compile(self.DELETE, guild_id=guild_id)
@@ -1682,19 +1682,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to get the channels from.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of channel objects.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are not in the guild.
         """
         route = routes.GUILD_CHANNELS.compile(self.GET, guild_id=guild_id)
@@ -1720,57 +1720,57 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to create the channel in.
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, the name for the channel.This must be
             between ``2`` and ``100`` characters in length.
-        type_: :obj:`int`
+        type_: :obj:`~int`
             If specified, the channel type integer (``0-6``).
-        position : :obj:`int`
+        position : :obj:`~int`
             If specified, the position to change the channel to.
-        topic : :obj:`str`
+        topic : :obj:`~str`
             If specified, the topic to set. This is only applicable to
             text channels. This must be between ``0`` and ``1024``
             characters in length.
-        nsfw : :obj:`bool`
+        nsfw : :obj:`~bool`
             If specified, whether the channel will be marked as NSFW.
             Only applicable to text channels.
-        rate_limit_per_user : :obj:`int`
+        rate_limit_per_user : :obj:`~int`
             If specified, the number of seconds the user has to wait before sending
             another message.  This will not apply to bots, or to members with
             ``MANAGE_MESSAGES`` or ``MANAGE_CHANNEL`` permissions. This must
             be between ``0`` and ``21600`` seconds.
-        bitrate : :obj:`int`
+        bitrate : :obj:`~int`
             If specified, the bitrate in bits per second allowable for the channel.
             This only applies to voice channels and must be between ``8000``
             and ``96000`` for normal servers or ``8000`` and ``128000`` for
             VIP servers.
-        user_limit : :obj:`int`
+        user_limit : :obj:`~int`
             If specified, the max number of users to allow in a voice channel.
             This must be between ``0`` and ``99`` inclusive, where
             ``0`` implies no limit.
-        permission_overwrites : :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        permission_overwrites : :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             If specified, the list of permission overwrites that are category
             specific to replace the existing overwrites with.
-        parent_id : :obj:`str`
+        parent_id : :obj:`~str`
             If specified, the parent category ID to set for the channel.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The newly created channel object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_CHANNEL`` permission or are not in the guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide incorrect options for the corresponding channel type
             (e.g. a ``bitrate`` for a text channel).
         """
@@ -1795,22 +1795,22 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild in which to edit the channels.
-        channel : :obj:`typing.Tuple` [ :obj:`str`, :obj:`int` ]
+        channel : :obj:`~typing.Tuple` [ :obj:`~str`, :obj:`~int` ]
             The first channel to change the position of. This is a tuple of the channel ID and the integer position.
-        *channels : :obj:`typing.Tuple` [ :obj:`str`, :obj:`int` ]
+        *channels : :obj:`~typing.Tuple` [ :obj:`~str`, :obj:`~int` ]
             Optional additional channels to change the position of. These must be tuples of the channel ID and the
             integer positions to change to.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or any of the channels aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_CHANNELS`` permission or are not a member of said guild or are not in
             the guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide anything other than the ``id`` and ``position`` fields for the channels.
         """
         payload = [{"id": ch[0], "position": ch[1]} for ch in (channel, *channels)]
@@ -1822,21 +1822,21 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to get the member from.
-        user_id : :obj:`str`
+        user_id : :obj:`~str`
             The ID of the member to get.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The requested member object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the member aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you don't have access to the target guild.
         """
         route = routes.GUILD_MEMBER.compile(self.GET, guild_id=guild_id, user_id=user_id)
@@ -1849,12 +1849,12 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-            guild_id : :obj:`str`
+            guild_id : :obj:`~str`
                 The ID of the guild to get the members from.
-            limit : :obj:`int`
+            limit : :obj:`~int`
                 If specified, the maximum number of members to return. This has to be between
                 ``1`` and ``1000`` inclusive.
-            after : :obj:`str`
+            after : :obj:`~str`
                 If specified, the highest ID in the previous page. This is used for retrieving more
                 than ``1000`` members in a server using consecutive requests.
 
@@ -1876,16 +1876,16 @@ class LowLevelRestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             A list of member objects.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are not in the guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the ``limit`` or `after`` fields.
         """
         query = {}
@@ -1910,38 +1910,38 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to edit the member from.
-        user_id : :obj:`str`
+        user_id : :obj:`~str`
             The ID of the member to edit.
-        nick : :obj:`str`, optional
-            If specified, the new nickname string. Setting it to :obj:`None`
+        nick : :obj:`~str`, optional
+            If specified, the new nickname string. Setting it to :obj:`~None`
             explicitly will clear the nickname.
-        roles : :obj:`typing.Sequence` [ :obj:`str` ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~str` ]
             If specified, a list of role IDs the member should have.
-        mute : :obj:`bool`
+        mute : :obj:`~bool`
             If specified, whether the user should be muted in the voice channel
             or not.
-        deaf : :obj:`bool`
+        deaf : :obj:`~bool`
             If specified, whether the user should be deafen in the voice channel
             or not.
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             If specified, the ID of the channel to move the member to. Setting
-            it to :obj:`None` explicitly will disconnect the user.
-        reason : :obj:`str`
+            it to :obj:`~None` explicitly will disconnect the user.
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild, user, channel or any of the roles aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack any of the applicable permissions
             (``MANAGE_NICKNAMES``, ``MANAGE_ROLES``, ``MUTE_MEMBERS``, ``DEAFEN_MEMBERS`` or ``MOVE_MEMBERS``).
             Note that to move a member you must also have permission to connect to the end channel.
             This will also be raised if you're not in the guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you pass ```mute``, ``deaf`` or ``channel_id`` while the member is not connected to a voice channel.
         """
         payload = {}
@@ -1958,21 +1958,21 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild you want to change the nick on.
-        nick : :obj:`str`, optional
+        nick : :obj:`~str`, optional
             The new nick string. Setting this to `None` clears the nickname.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``CHANGE_NICKNAME`` permission or are not in the guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide a disallowed nickname, one that is too long, or one that is empty.
         """
         payload = {"nick": nick}
@@ -1984,21 +1984,21 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild the member belongs to.
-        user_id : :obj:`str`
+        user_id : :obj:`~str`
             The ID of the member you want to add the role to.
-        role_id : :obj:`str`
+        role_id : :obj:`~str`
             The ID of the role you want to add.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild, member or role aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER_ROLE.compile(self.PUT, guild_id=guild_id, user_id=user_id, role_id=role_id)
@@ -2009,21 +2009,21 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild the member belongs to.
-        user_id : :obj:`str`
+        user_id : :obj:`~str`
             The ID of the member you want to remove the role from.
-        role_id : :obj:`str`
+        role_id : :obj:`~str`
             The ID of the role you want to remove.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild, member or role aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER_ROLE.compile(self.DELETE, guild_id=guild_id, user_id=user_id, role_id=role_id)
@@ -2034,19 +2034,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id: :obj:`str`
+        guild_id: :obj:`~str`
             The ID of the guild the member belongs to.
-        user_id: :obj:`str`
+        user_id: :obj:`~str`
             The ID of the member you want to kick.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or member aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``KICK_MEMBERS`` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
@@ -2057,19 +2057,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild you want to get the bans from.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of ban objects.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
         """
         route = routes.GUILD_BANS.compile(self.GET, guild_id=guild_id)
@@ -2080,21 +2080,21 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild you want to get the ban from.
-        user_id : :obj:`str`
+        user_id : :obj:`~str`
             The ID of the user to get the ban information for.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             A ban object for the requested user.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the user aren't found, or if the user is not banned.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
         """
         route = routes.GUILD_BAN.compile(self.GET, guild_id=guild_id, user_id=user_id)
@@ -2107,22 +2107,22 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild the member belongs to.
-        user_id : :obj:`str`
+        user_id : :obj:`~str`
             The ID of the member you want to ban.
-        delete_message_days : :obj:`str`
+        delete_message_days : :obj:`~str`
             If specified, how many days of messages from the user should
             be removed.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or member aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
         """
         query = {}
@@ -2136,19 +2136,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to un-ban the user from.
-        user_id : :obj:`str`
+        user_id : :obj:`~str`
             The ID of the user you want to un-ban.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or member aren't found, or the member is not banned.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``BAN_MEMBERS`` permission or are not a in the guild.
         """
         route = routes.GUILD_BAN.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
@@ -2159,19 +2159,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild you want to get the roles from.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of role objects.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you're not in the guild.
         """
         route = routes.GUILD_ROLES.compile(self.GET, guild_id=guild_id)
@@ -2192,34 +2192,34 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild you want to create the role on.
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, the new role name string.
-        permissions : :obj:`int`
+        permissions : :obj:`~int`
             If specified, the permissions integer for the role.
-        color : :obj:`int`
+        color : :obj:`~int`
             If specified, the color for the role.
-        hoist : :obj:`bool`
+        hoist : :obj:`~bool`
             If specified, whether the role will be hoisted.
-        mentionable : :obj:`bool`
+        mentionable : :obj:`~bool`
            If specified, whether the role will be able to be mentioned by any user.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The newly created role object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or you're not in the guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the role attributes.
         """
         payload = {}
@@ -2240,25 +2240,25 @@ class LowLevelRestfulClient:
         ----------
         guild_id : str
             The ID of the guild the roles belong to.
-        role : :obj:`typing.Tuple` [ :obj:`str`, :obj:`int` ]
+        role : :obj:`~typing.Tuple` [ :obj:`~str`, :obj:`~int` ]
             The first role to move. This is a tuple of the role ID and the
             integer position.
-        *roles : :obj:`typing.Tuple` [ :obj:`str`, :obj:`int` ]
+        *roles : :obj:`~typing.Tuple` [ :obj:`~str`, :obj:`~int` ]
             Optional extra roles to move. These must be tuples of the role ID
             and the integer position.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of all the guild roles.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or any of the roles aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or you're not in the guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the `position` fields.
         """
         payload = [{"id": r[0], "position": r[1]} for r in (role, *roles)]
@@ -2281,36 +2281,36 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild the role belong to.
-        role_id : :obj:`str`
+        role_id : :obj:`~str`
             The ID of the role you want to edit.
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, the new role's name string.
-        permissions : :obj:`int`
+        permissions : :obj:`~int`
             If specified, the new permissions integer for the role.
-        color : :obj:`int`
+        color : :obj:`~int`
             If specified, the new color for the new role.
-        hoist : :obj:`bool`
+        hoist : :obj:`~bool`
             If specified, whether the role should hoist or not.
-        mentionable : :obj:`bool`
+        mentionable : :obj:`~bool`
             If specified, whether the role should be mentionable or not.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The edited role object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or role aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or you're not in the guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the role attributes.
         """
         payload = {}
@@ -2327,16 +2327,16 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild you want to remove the role from.
-        role_id : :obj:`str`
+        role_id : :obj:`~str`
             The ID of the role you want to delete.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the role aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
         """
         route = routes.GUILD_ROLE.compile(self.DELETE, guild_id=guild_id, role_id=role_id)
@@ -2347,23 +2347,23 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild you want to get the count for.
-        days : :obj:`int`
+        days : :obj:`~int`
             The number of days to count prune for (at least ``1``).
 
         Returns
         -------
-        :obj:`int`
+        :obj:`~int`
             The number of members estimated to be pruned.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``KICK_MEMBERS`` or you are not in the guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you pass an invalid amount of days.
         """
         payload = {"days": days}
@@ -2378,30 +2378,30 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild you want to prune member of.
-        days : :obj:`int`
+        days : :obj:`~int`
             The number of inactivity days you want to use as filter.
-        compute_prune_count : :obj:`bool`
+        compute_prune_count : :obj:`~bool`
             Whether a count of pruned members is returned or not.
             Discouraged for large guilds out of politeness.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`int`, optional
+        :obj:`~int`, optional
             The number of members who were kicked if ``compute_prune_count``
-            is :obj:`True`, else :obj:`None`.
+            is :obj:`~True`, else :obj:`~None`.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found:
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``KICK_MEMBER`` permission or are not in the guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the ``days`` or ``compute_prune_count`` fields.
         """
         query = {"days": days}
@@ -2419,19 +2419,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to get the voice regions for.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of voice region objects.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are not in the guild.
         """
         route = routes.GUILD_VOICE_REGIONS.compile(self.GET, guild_id=guild_id)
@@ -2442,19 +2442,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to get the invites for.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of invite objects (with metadata).
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         route = routes.GUILD_INVITES.compile(self.GET, guild_id=guild_id)
@@ -2465,19 +2465,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`int`
+        guild_id : :obj:`~int`
             The ID of the guild to get the integrations for.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of integration objects.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATIONS.compile(self.GET, guild_id=guild_id)
@@ -2497,27 +2497,27 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to which the integration belongs to.
-        integration_id : :obj:`str`
+        integration_id : :obj:`~str`
             The ID of the integration.
-        expire_behaviour : :obj:`int`
+        expire_behaviour : :obj:`~int`
             If specified, the behaviour for when an integration subscription
             lapses.
-        expire_grace_period : :obj:`int`
+        expire_grace_period : :obj:`~int`
             If specified, time interval in seconds in which the integration
             will ignore lapsed subscriptions.
-        enable_emojis : :obj:`bool`
+        enable_emojis : :obj:`~bool`
             If specified, whether emojis should be synced for this integration.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the integration aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = {}
@@ -2533,19 +2533,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to which the integration belongs to.
-        integration_id : :obj:`str`
+        integration_id : :obj:`~str`
             The ID of the integration to delete.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
                 If either the guild or the integration aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATION.compile(self.DELETE, guild_id=guild_id, integration_id=integration_id)
@@ -2556,16 +2556,16 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to which the integration belongs to.
-        integration_id : :obj:`str`
+        integration_id : :obj:`~str`
             The ID of the integration to sync.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the integration aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATION_SYNC.compile(self.POST, guild_id=guild_id, integration_id=integration_id)
@@ -2576,19 +2576,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to get the embed for.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             A guild embed object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         route = routes.GUILD_EMBED.compile(self.GET, guild_id=guild_id)
@@ -2601,27 +2601,27 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to edit the embed for.
-        channel_id : :obj:`str`, optional
+        channel_id : :obj:`~str`, optional
             If specified, the channel that this embed's invite should target.
-            Set to :obj:`None` to disable invites for this embed.
-        enabled : :obj:`bool`
+            Set to :obj:`~None` to disable invites for this embed.
+        enabled : :obj:`~bool`
             If specified, whether this embed should be enabled.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The updated embed object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = {}
@@ -2635,19 +2635,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to get the vanity URL for.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             A partial invite object containing the vanity URL in the ``code`` field.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         route = routes.GUILD_VANITY_URL.compile(self.GET, guild_id=guild_id)
@@ -2658,14 +2658,14 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The guild ID to use for the widget.
-        style : :obj:`str`
+        style : :obj:`~str`
             If specified, the syle of the widget.
 
         Returns
         -------
-        :obj:`str`
+        :obj:`~str`
             A URL to retrieve a PNG widget for your guild.
 
         Note
@@ -2685,20 +2685,20 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        invite_code : :obj:`str`
+        invite_code : :obj:`~str`
             The ID for wanted invite.
-        with_counts : :obj:`bool`
+        with_counts : :obj:`~bool`
             If specified, whether to attempt to count the number of
             times the invite has been used.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The requested invite object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the invite is not found.
         """
         query = {}
@@ -2711,20 +2711,20 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        invite_code : :obj:`str`
+        invite_code : :obj:`~str`
             The ID for the invite to be deleted.
 
         Returns
         -------
-        :obj:`None` # Marker
+        :obj:`~None` # Marker
             Nothing, unlike what the API specifies. This is done to maintain
             consistency with other calls of a similar nature in this API wrapper.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the invite is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack either ``MANAGE_CHANNELS`` on the channel the invite
             belongs to or ``MANAGE_GUILD`` for guild-global delete.
         """
@@ -2736,7 +2736,7 @@ class LowLevelRestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The current user object.
         """
         route = routes.OWN_USER.compile(self.GET)
@@ -2747,17 +2747,17 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        user_id : :obj:`str`
+        user_id : :obj:`~str`
             The ID of the user to get.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The requested user object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the user is not found.
         """
         route = routes.USER.compile(self.GET, user_id=user_id)
@@ -2770,20 +2770,20 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        username : :obj:`str`
+        username : :obj:`~str`
             If specified, the new username string.
-        avatar : :obj:`bytes`, optional
+        avatar : :obj:`~bytes`, optional
             If specified, the new avatar image in bytes form.
-            If it is :obj:`None`, the avatar is removed.
+            If it is :obj:`~None`, the avatar is removed.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The updated user object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you pass username longer than the limit (``2-32``) or an invalid image.
         """
         payload = {}
@@ -2801,7 +2801,7 @@ class LowLevelRestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of connection objects.
         """
         route = routes.OWN_CONNECTIONS.compile(self.GET)
@@ -2814,24 +2814,24 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        before : :obj:`str`
+        before : :obj:`~str`
             If specified, the guild ID to get guilds before it.
 
-        after : :obj:`str`
+        after : :obj:`~str`
             If specified, the guild ID to get guilds after it.
 
-        limit : :obj:`int`
+        limit : :obj:`~int`
             If specified, the limit of guilds to get. Has to be between
             ``1`` and ``100``.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of partial guild objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you pass both ``before`` and ``after`` or an
             invalid value for ``limit``.
         """
@@ -2847,12 +2847,12 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID of the guild to leave.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
         """
         route = routes.LEAVE_GUILD.compile(self.DELETE, guild_id=guild_id)
@@ -2863,17 +2863,17 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        recipient_id : :obj:`str`
+        recipient_id : :obj:`~str`
             The ID of the user to create the new DM channel with.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The newly created DM channel object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the recipient is not found.
         """
         payload = {"recipient_id": recipient_id}
@@ -2885,7 +2885,7 @@ class LowLevelRestfulClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of voice regions available
 
         Note
@@ -2902,29 +2902,29 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel for webhook to be created in.
-        name : :obj:`str`
+        name : :obj:`~str`
             The webhook's name string.
-        avatar : :obj:`bytes`
+        avatar : :obj:`~bytes`
             If specified, the avatar image in bytes form.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The newly created webhook object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             can not see the given channel.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If the avatar image is too big or the format is invalid.
         """
         payload = {"name": name}
@@ -2937,19 +2937,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             The ID of the channel to get the webhooks from.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of webhook objects for the give channel.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             can not see the given channel.
         """
@@ -2961,19 +2961,19 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        guild_id : :obj:`str`
+        guild_id : :obj:`~str`
             The ID for the guild to get the webhooks from.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ] ]
+        :obj:`~typing.Sequence` [ :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ] ]
             A list of webhook objects for the given guild.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             aren't a member of the given guild.
         """
@@ -2985,24 +2985,24 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        webhook_id : :obj:`str`
+        webhook_id : :obj:`~str`
             The ID of the webhook to get.
-        webhook_token : :obj:`str`
+        webhook_token : :obj:`~str`
             If specified, the webhook token to use to get it (bypassing bot authorization).
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The requested webhook object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the webhook is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you're not in the guild that owns this webhook or
             lack the ``MANAGE_WEBHOOKS`` permission.
-        :obj:`hikari.errors.UnauthorizedHTTPError`
+        :obj:`~hikari.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
         """
         if webhook_token is ...:
@@ -3025,35 +3025,35 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        webhook_id : :obj:`str`
+        webhook_id : :obj:`~str`
             The ID of the webhook to edit.
-        webhook_token : :obj:`str`
+        webhook_token : :obj:`~str`
             If specified, the webhook token to use to modify it (bypassing bot authorization).
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, the new name string.
-        avatar : :obj:`bytes`
+        avatar : :obj:`~bytes`
             If specified, the new avatar image in bytes form. If None, then
             it is removed.
-        channel_id : :obj:`str`
+        channel_id : :obj:`~str`
             If specified, the ID of the new channel the given
             webhook should be moved to.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             The updated webhook object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the webhook or the channel aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             aren't a member of the guild this webhook belongs to.
-        :obj:`hikari.errors.UnauthorizedHTTPError`
+        :obj:`~hikari.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
         """
         payload = {}
@@ -3073,20 +3073,20 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        webhook_id : :obj:`str`
+        webhook_id : :obj:`~str`
             The ID of the webhook to delete
-        webhook_token : :obj:`str`
+        webhook_token : :obj:`~str`
             If specified, the webhook token to use to
             delete it (bypassing bot authorization).
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the webhook is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             aren't a member of the guild this webhook belongs to.
-        :obj:`hikari.errors.UnauthorizedHTTPError`
+        :obj:`~hikari.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
         """
         if webhook_token is ...:
@@ -3113,45 +3113,45 @@ class LowLevelRestfulClient:
 
         Parameters
         ----------
-        webhook_id : :obj:`str`
+        webhook_id : :obj:`~str`
             The ID of the webhook to execute.
-        webhook_token : :obj:`str`
+        webhook_token : :obj:`~str`
             The token of the webhook to execute.
-        content : :obj:`str`
+        content : :obj:`~str`
             If specified, the webhook message content to send.
-        username : :obj:`str`
+        username : :obj:`~str`
             If specified, the username to override the webhook's username
             for this request.
-        avatar_url : :obj:`str`
+        avatar_url : :obj:`~str`
             If specified, the url of an image to override the webhook's
             avatar with for this request.
-        tts : :obj:`bool`
+        tts : :obj:`~bool`
             If specified, whether this webhook should create a TTS message.
-        wait : :obj:`bool`
+        wait : :obj:`~bool`
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
-        file : :obj:`typing.Tuple` [ :obj:`str`, :obj:`io.IOBase` ]
-            If specified, a tuple of the file name and either raw :obj:`bytes`
-            or a :obj:`io.IOBase` derived object that points to a buffer
+        file : :obj:`~typing.Tuple` [ :obj:`~str`, :obj:`~io.IOBase` ]
+            If specified, a tuple of the file name and either raw :obj:`~bytes`
+            or a :obj:`~io.IOBase` derived object that points to a buffer
             containing said file.
-        embeds : :obj:`typing.Sequence` [:obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]]
+        embeds : :obj:`~typing.Sequence` [:obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]]
             If specified, the sequence of embed objects that will be sent
             with this message.
-        allowed_mentions : :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        allowed_mentions : :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             If specified, the mentions to parse from the ``content``.
             If not specified, will parse all mentions from the ``content``.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ], optional
-            The created message object if ``wait`` is :obj:`True`, else
-            :obj:`None`.
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ], optional
+            The created message object if ``wait`` is :obj:`~True`, else
+            :obj:`~None`.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel ID or webhook ID is not found.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
             empty or greater than ``2000`` characters; if neither content, file
@@ -3159,9 +3159,9 @@ class LowLevelRestfulClient:
             fields in ``allowed_mentions``; if you specify to parse all
             users/roles mentions but also specify which users/roles to parse
             only.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permissions to send to this channel.
-        :obj:`hikari.errors.UnauthorizedHTTPError`
+        :obj:`~hikari.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
         """
         form = aiohttp.FormData()
@@ -3205,7 +3205,7 @@ class LowLevelRestfulClient:
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Any` ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             An application info object.
         """
         route = routes.OAUTH2_APPLICATIONS_ME.compile(self.GET)
