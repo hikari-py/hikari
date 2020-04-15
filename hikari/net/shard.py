@@ -165,7 +165,7 @@ class ShardConnection:
         "heartbeat_interval",
         "heartbeat_latency",
         "hello_event",
-        "identify_event",
+        "handshake_event",
         "_intents",
         "_large_threshold",
         "_json_deserialize",
@@ -237,7 +237,7 @@ class ShardConnection:
     #: be received.
     #:
     #: :type: :obj:`asyncio.Event`
-    identify_event: typing.Final[asyncio.Event]
+    handshake_event: typing.Final[asyncio.Event]
 
     #: The monotonic timestamp that the last ``HEARTBEAT`` was sent at, or
     #: ``nan`` if no ``HEARTBEAT`` has yet been sent.
@@ -375,7 +375,7 @@ class ShardConnection:
         self.heartbeat_interval: float = float("nan")
         self.heartbeat_latency: float = float("nan")
         self.hello_event: asyncio.Event = asyncio.Event()
-        self.identify_event: asyncio.Event = asyncio.Event()
+        self.handshake_event: asyncio.Event = asyncio.Event()
         self.last_heartbeat_sent: float = float("nan")
         self.last_message_received: float = float("nan")
         self.requesting_close_event: asyncio.Event = asyncio.Event()
@@ -571,7 +571,7 @@ class ShardConnection:
 
         self.closed_event.clear()
         self.hello_event.clear()
-        self.identify_event.clear()
+        self.handshake_event.clear()
         self.ready_event.clear()
         self.requesting_close_event.clear()
         self.resumed_event.clear()
@@ -602,8 +602,7 @@ class ShardConnection:
             self.logger.debug("received HELLO (interval:%ss)", self.heartbeat_interval)
 
             completed, pending_tasks = await asyncio.wait(
-                [self._heartbeat_keep_alive(self.heartbeat_interval), self._identify_or_resume_then_poll_events()],
-                return_when=asyncio.FIRST_COMPLETED,
+                [self._heartbeat_keep_alive(self.heartbeat_interval), self._run()], return_when=asyncio.FIRST_COMPLETED,
             )
 
             # Kill other running tasks now.
@@ -668,45 +667,6 @@ class ShardConnection:
     def _cs_init_kwargs(self):
         return dict(connector=self._connector)
 
-    async def _identify_or_resume_then_poll_events(self):
-        if self.session_id is None:
-            self.logger.debug("preparing to send IDENTIFY")
-
-            pl = {
-                "op": codes.GatewayOpcode.IDENTIFY,
-                "d": {
-                    "token": self._token,
-                    "compress": False,
-                    "large_threshold": self._large_threshold,
-                    "properties": user_agent.UserAgent().websocket_triplet,
-                    "shard": [self.shard_id, self.shard_count],
-                },
-            }
-
-            # Do not always add this option; if it is None, exclude it for now. According to Mason,
-            # we can only use intents at the time of writing if our bot has less than 100 guilds.
-            # This means we need to give the user the option to opt in to this rather than breaking their
-            # bot with it if they have 100+ guilds. This restriction will be removed eventually.
-            if self._intents is not None:
-                pl["d"]["intents"] = self._intents
-
-            if self._presence:
-                # noinspection PyTypeChecker
-                pl["d"]["presence"] = self._presence
-            await self._send(pl)
-            self.logger.debug("sent IDENTIFY, now listening to incoming events")
-        else:
-            self.logger.debug("preparing to send RESUME")
-            pl = {
-                "op": codes.GatewayOpcode.RESUME,
-                "d": {"token": self._token, "seq": self.seq, "session_id": self.session_id},
-            }
-            await self._send(pl)
-            self.logger.debug("sent RESUME, now listening to incoming events")
-
-        self.identify_event.set()
-        await self._poll_events()
-
     async def _heartbeat_keep_alive(self, heartbeat_interval):
         while not self.requesting_close_event.is_set():
             if self.last_message_received < self.last_heartbeat_sent:
@@ -721,7 +681,48 @@ class ShardConnection:
             except asyncio.TimeoutError:
                 pass
 
-    async def _poll_events(self):
+    async def _identify(self):
+        self.logger.debug("preparing to send IDENTIFY")
+
+        pl = {
+            "op": codes.GatewayOpcode.IDENTIFY,
+            "d": {
+                "token": self._token,
+                "compress": False,
+                "large_threshold": self._large_threshold,
+                "properties": user_agent.UserAgent().websocket_triplet,
+                "shard": [self.shard_id, self.shard_count],
+            },
+        }
+
+        # From october 2020, we will likely just make this always passed
+        if self._intents is not None:
+            pl["d"]["intents"] = self._intents
+
+        if self._presence:
+            # noinspection PyTypeChecker
+            pl["d"]["presence"] = self._presence
+        await self._send(pl)
+        self.logger.debug("sent IDENTIFY")
+        self.handshake_event.set()
+
+    async def _resume(self):
+        self.logger.debug("preparing to send RESUME")
+        pl = {
+            "op": codes.GatewayOpcode.RESUME,
+            "d": {"token": self._token, "seq": self.seq, "session_id": self.session_id},
+        }
+        await self._send(pl)
+        self.logger.debug("sent RESUME")
+
+    async def _run(self):
+        if self.session_id is None:
+            await self._identify()
+        else:
+            await self._resume()
+
+        self.handshake_event.set()
+
         while not self.requesting_close_event.is_set():
             next_pl = await self._receive()
 

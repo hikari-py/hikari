@@ -38,7 +38,12 @@ def temp_chdir(session: nox.Session, target: str):
     session.chdir(cwd)
 
 
-@nox.session(reuse_venv=False, only_if=lambda: "CI" in os.environ)
+def predicate():
+    commit_ref = os.getenv("CI_COMMIT_REF_NAME")
+    return commit_ref in (config.PROD_BRANCH, config.PREPROD_BRANCH) and "CI" in os.environ
+
+
+@nox.session(reuse_venv=False, only_if=predicate)
 def pip(session: nox.Session):
     """Run through sandboxed install of PyPI package."""
     if "--showtime" in session.posargs:

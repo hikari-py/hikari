@@ -187,10 +187,10 @@ class MyUser(User):
     #: :type: :obj:`bool`
     is_mfa_enabled: bool = marshaller.attrib(raw_name="mfa_enabled", deserializer=bool)
 
-    #: The user's set language.
+    #: The user's set language. This is not provided by the ``READY`` event.
     #:
-    #: :type: :obj:`str`
-    locale: str = marshaller.attrib(deserializer=str)
+    #: :type: :obj:`str`, optional
+    locale: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, if_undefined=None)
 
     #: Whether the email for this user's account has been verified.
     #: Will be :obj:`None` if retrieved through the oauth2 flow without the

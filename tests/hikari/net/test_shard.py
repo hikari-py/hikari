@@ -83,7 +83,7 @@ class MockClientSession:
 
 
 @pytest.mark.asyncio
-class TestGatewayClientConstructor:
+class TestShardConstructor:
     async def test_init_sets_shard_numbers_correctly(self,):
         input_shard_id, input_shard_count, expected_shard_id, expected_shard_count = 1, 2, 1, 2
         client = shard.ShardConnection(shard_id=input_shard_id, shard_count=input_shard_count, token="xxx", url="yyy")
@@ -125,7 +125,7 @@ class TestGatewayClientConstructor:
 
 
 @pytest.mark.asyncio
-class TestGatewayClientUptimeProperty:
+class TestShardUptimeProperty:
     @pytest.mark.parametrize(
         ["connected_at", "now", "expected_uptime"],
         [(float("nan"), 31.0, datetime.timedelta(seconds=0)), (10.0, 31.0, datetime.timedelta(seconds=21.0)),],
@@ -138,7 +138,7 @@ class TestGatewayClientUptimeProperty:
 
 
 @pytest.mark.asyncio
-class TestGatewayClientIsConnectedProperty:
+class TestShardIsConnectedProperty:
     @pytest.mark.parametrize(["connected_at", "is_connected"], [(float("nan"), False), (15, True), (2500.0, True),])
     async def test_is_connected(self, connected_at, is_connected):
         client = shard.ShardConnection(token="xxx", url="yyy")
@@ -182,7 +182,7 @@ class TestGatewayCurrentPresenceProperty:
 
 
 @pytest.mark.asyncio
-class TestGatewayClientAiohttpClientSessionKwargsProperty:
+class TestShardAiohttpClientSessionKwargsProperty:
     async def test_right_stuff_is_included(self):
         connector = mock.MagicMock()
 
@@ -192,7 +192,7 @@ class TestGatewayClientAiohttpClientSessionKwargsProperty:
 
 
 @pytest.mark.asyncio
-class TestGatewayClientWebSocketKwargsProperty:
+class TestShardWebSocketKwargsProperty:
     async def test_right_stuff_is_included(self):
         url = "http://localhost.lan/discord"
         proxy_url = "http://localhost.lan/some_proxy"
@@ -232,7 +232,7 @@ class TestGatewayClientWebSocketKwargsProperty:
 
 
 @pytest.mark.asyncio
-class TestGatewayConnect:
+class TestConnect:
     @pytest.fixture
     def client_session_t(self):
         return MockClientSession()
@@ -269,11 +269,11 @@ class TestGatewayConnect:
             pass
 
         assert client._ws is None
-        client._identify_or_resume_then_poll_events.assert_not_called()
+        client._run.assert_not_called()
         client._heartbeat_keep_alive.assert_not_called()
 
     @pytest.mark.parametrize(
-        "event_attr", ["closed_event", "identify_event", "ready_event", "requesting_close_event", "resumed_event"]
+        "event_attr", ["closed_event", "handshake_event", "ready_event", "requesting_close_event", "resumed_event"]
     )
     @_helpers.timeout_after(10.0)
     async def test_events_unset_on_open(self, client, client_session_t, event_attr):
@@ -425,7 +425,7 @@ class TestGatewayConnect:
         with self.suppress_closure():
             await client.connect(client_session_t)
 
-        client._identify_or_resume_then_poll_events.assert_called_once()
+        client._run.assert_called_once()
 
     @_helpers.timeout_after(10.0)
     async def test_waits_indefinitely_if_everything_is_working(self, client, client_session_t):
@@ -433,7 +433,7 @@ class TestGatewayConnect:
             await asyncio.get_running_loop().create_future()
 
         client._heartbeat_keep_alive = deadlock
-        client._identify_or_resume_then_poll_events = deadlock
+        client._run = deadlock
 
         try:
             await asyncio.wait_for(client.connect(client_session_t), timeout=2.5)
@@ -442,20 +442,18 @@ class TestGatewayConnect:
             pass
 
     @_helpers.timeout_after(10.0)
-    async def test_waits_for_identify_or_resume_then_poll_events_then_throws_that_exception(
-        self, client, client_session_t
-    ):
+    async def test_waits_for_run_then_throws_that_exception(self, client, client_session_t):
         async def deadlock(*_, **__):
             await asyncio.get_running_loop().create_future()
 
         class ExceptionThing(Exception):
             pass
 
-        async def identify_or_resume_then_poll_events():
+        async def run():
             raise ExceptionThing()
 
         client._heartbeat_keep_alive = deadlock
-        client._identify_or_resume_then_poll_events = identify_or_resume_then_poll_events
+        client._run = run
 
         try:
             await client.connect(client_session_t)
@@ -473,7 +471,7 @@ class TestGatewayConnect:
             pass
 
         client._heartbeat_keep_alive = heartbeat_keep_alive
-        client._identify_or_resume_then_poll_events = deadlock
+        client._run = deadlock
 
         try:
             await client.connect(client_session_t)
@@ -487,11 +485,11 @@ class TestGatewayConnect:
         async def deadlock(*_, **__):
             await asyncio.get_running_loop().create_future()
 
-        async def identify_or_resume_then_poll_events():
+        async def run():
             pass
 
         client._heartbeat_keep_alive = deadlock
-        client._identify_or_resume_then_poll_events = identify_or_resume_then_poll_events
+        client._run = run
 
         try:
             await client.connect(client_session_t)
@@ -507,7 +505,7 @@ class TestGatewayConnect:
             raise asyncio.TimeoutError("reee")
 
         client._heartbeat_keep_alive = heartbeat_keep_alive
-        client._identify_or_resume_then_poll_events = deadlock
+        client._run = deadlock
 
         try:
             await client.connect(client_session_t)
@@ -521,11 +519,11 @@ class TestGatewayConnect:
         async def deadlock(*_, **__):
             await asyncio.get_running_loop().create_future()
 
-        async def identify_or_resume_then_poll_events():
+        async def run():
             raise asyncio.TimeoutError("reee")
 
         client._heartbeat_keep_alive = deadlock
-        client._identify_or_resume_then_poll_events = identify_or_resume_then_poll_events
+        client._run = run
 
         try:
             await client.connect(client_session_t)
@@ -535,46 +533,60 @@ class TestGatewayConnect:
 
 
 @pytest.mark.asyncio
-class TestGatewayClientIdentifyOrResumeThenPollEvents:
+class TestShardRun:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
-        client = _helpers.mock_methods_on(client, except_=("_identify_or_resume_then_poll_events",))
+        client = _helpers.mock_methods_on(client, except_=("_run",))
 
-        def send(_):
-            client.send_time = time.perf_counter()
+        def receive():
+            client.recv_time = time.perf_counter()
 
-        def poll_events():
-            client.poll_events_time = time.perf_counter()
+        def identify():
+            client.identify_time = time.perf_counter()
 
-        client._send = mock.AsyncMock(wraps=send)
-        client._poll_events = mock.AsyncMock(spec=shard.ShardConnection._send, wraps=poll_events)
+        def resume():
+            client.resume_time = time.perf_counter()
+
+        client._identify = mock.AsyncMock(spec=shard.ShardConnection._identify, wraps=identify)
+        client._resume = mock.AsyncMock(spec=shard.ShardConnection._resume, wraps=resume)
+        client._receive = mock.AsyncMock(spec=shard.ShardConnection._receive, wraps=receive)
         return client
 
     async def test_no_session_id_sends_identify_then_polls_events(self, client):
         client.session_id = None
-        await client._identify_or_resume_then_poll_events()
-
-        client._send.assert_awaited_once()
-        args, kwargs = client._send.call_args
-        assert len(args) == 1
-        payload = args[0]
-        assert payload["op"] == 2  # IDENTIFY
-        client._poll_events.assert_awaited_once()
-        assert client.send_time <= client.poll_events_time
+        task = asyncio.create_task(client._run())
+        await asyncio.sleep(0.25)
+        try:
+            client._identify.assert_awaited_once()
+            client._receive.assert_awaited_once()
+            client._resume.assert_not_called()
+            assert client.identify_time <= client.recv_time
+        finally:
+            task.cancel()
 
     async def test_session_id_sends_resume_then_polls_events(self, client):
         client.session_id = 69420
-        await client._identify_or_resume_then_poll_events()
+        task = asyncio.create_task(client._run())
+        await asyncio.sleep(0.25)
+        try:
+            client._resume.assert_awaited_once()
+            client._receive.assert_awaited_once()
+            client._identify.assert_not_called()
+            assert client.resume_time <= client.recv_time
+        finally:
+            task.cancel()
 
-        client._send.assert_awaited_once()
-        args, kwargs = client._send.call_args
-        assert len(args) == 1
-        payload = args[0]
-        assert payload["op"] == 6  # RESUME
-        client._poll_events.assert_awaited_once()
-        assert client.send_time <= client.poll_events_time
+
+@pytest.mark.asyncio
+class TestIdentify:
+    @pytest.fixture
+    def client(self, event_loop):
+        asyncio.set_event_loop(event_loop)
+        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
+        client = _helpers.mock_methods_on(client, except_=("_identify",))
+        return client
 
     async def test_identify_payload_no_intents_no_presence(self, client):
         client._presence = None
@@ -585,7 +597,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
         client.shard_id = 69
         client.shard_count = 96
 
-        await client._identify_or_resume_then_poll_events()
+        await client._identify()
 
         client._send.assert_awaited_once_with(
             {
@@ -610,7 +622,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
         client.shard_id = 69
         client.shard_count = 96
 
-        await client._identify_or_resume_then_poll_events()
+        await client._identify()
 
         client._send.assert_awaited_once_with(
             {
@@ -636,7 +648,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
         client.shard_id = 69
         client.shard_count = 96
 
-        await client._identify_or_resume_then_poll_events()
+        await client._identify()
 
         client._send.assert_awaited_once_with(
             {
@@ -663,7 +675,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
         client.shard_id = 69
         client.shard_count = 96
 
-        await client._identify_or_resume_then_poll_events()
+        await client._identify()
 
         client._send.assert_awaited_once_with(
             {
@@ -680,6 +692,16 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
             }
         )
 
+
+@pytest.mark.asyncio
+class TestResume:
+    @pytest.fixture
+    def client(self, event_loop):
+        asyncio.set_event_loop(event_loop)
+        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
+        client = _helpers.mock_methods_on(client, except_=("_resume",))
+        return client
+
     @_helpers.timeout_after(10.0)
     @pytest.mark.parametrize("seq", [None, 999])
     async def test_resume_payload(self, client, seq):
@@ -687,7 +709,7 @@ class TestGatewayClientIdentifyOrResumeThenPollEvents:
         client.seq = seq
         client.token = "reee"
 
-        await client._identify_or_resume_then_poll_events()
+        await client._resume()
 
         client._send.assert_awaited_once_with({"op": 6, "d": {"token": "1234", "session_id": 69420, "seq": seq,}})
 
@@ -713,13 +735,13 @@ class TestHeartbeatKeepAlive:
         client._send = mock.AsyncMock(wraps=send)
 
         task: asyncio.Future = event_loop.create_task(client._heartbeat_keep_alive(0.01))
-        await asyncio.sleep(2)
+        await asyncio.sleep(1.5)
 
         if task.done():
             raise task.exception()
 
         client.requesting_close_event.set()
-        await asyncio.sleep(2)
+        await asyncio.sleep(1.5)
         assert task.done()
 
         assert client._send.await_count > 2  # arbitrary number to imply a lot of calls.
@@ -746,8 +768,8 @@ class TestHeartbeatKeepAlive:
     async def test_heartbeat_payload(self, client, seq):
         client.seq = seq
         with contextlib.suppress(asyncio.TimeoutError):
-            with async_timeout.timeout(1.0):
-                await client._heartbeat_keep_alive(1.0)
+            with async_timeout.timeout(0.5):
+                await client._heartbeat_keep_alive(1)
 
         client._send.assert_awaited_once_with({"op": 1, "d": seq})
 
@@ -829,7 +851,7 @@ class TestPollEvents:
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
-        client = _helpers.mock_methods_on(client, except_=("_poll_events",))
+        client = _helpers.mock_methods_on(client, except_=("_run",))
         return client
 
     @_helpers.timeout_after(5.0)
@@ -840,7 +862,7 @@ class TestPollEvents:
 
         client._receive = mock.AsyncMock(wraps=receive)
 
-        await client._poll_events()
+        await client._run()
 
         client.dispatch.assert_called_with(client, "MESSAGE_CREATE", {"content": "whatever"})
 
@@ -855,7 +877,7 @@ class TestPollEvents:
 
         client._receive = mock.AsyncMock(wraps=receive)
 
-        await client._poll_events()
+        await client._run()
 
         client.dispatch.assert_called_with(client, "READY", {"v": 69, "session_id": "1a2b3c4d"})
 
