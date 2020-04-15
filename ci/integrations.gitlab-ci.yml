@@ -101,15 +101,7 @@ pages:
     - |+
       set -e
       set -x
-      git log -n 1 "${CI_COMMIT_SHA}" --format="%B" \
-          | grep -iqE "\[\s*(skip|no|don'?t|do\s+not)\s+pages?\s*\]" \
-        && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" \
-        && exit 0
-      mkdir public || true
-      cd public/master
-      find . -maxdepth 1 -exec mv {} .. \;
-      cd ../..
-      rm public/master -Rvf
+      ls public -R
   stage: deploy
 
 ###
