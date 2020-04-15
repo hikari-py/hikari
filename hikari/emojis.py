@@ -68,8 +68,11 @@ class UnknownEmoji(Emoji, snowflakes.UniqueEntity):
 
     #: Whether the emoji is animated.
     #:
-    #: :type: :obj:`~bool`
-    is_animated: bool = marshaller.attrib(
+    #: Will be :obj:`None` when received in Message Reaction Remove and Message
+    #: Reaction Remove Emoji events.
+    #:
+    #: :type: :obj:`~bool`, optional
+    is_animated: typing.Optional[bool] = marshaller.attrib(
         raw_name="animated", deserializer=bool, if_undefined=False, if_none=None, default=False
     )
 
@@ -90,8 +93,8 @@ class GuildEmoji(UnknownEmoji):
     role_ids: typing.Set[snowflakes.Snowflake] = marshaller.attrib(
         raw_name="roles",
         deserializer=lambda roles: {snowflakes.Snowflake.deserialize(r) for r in roles},
-        if_undefined=dict,
-        factory=dict,
+        if_undefined=set,
+        factory=set,
     )
 
     #: The user that created the emoji.
@@ -109,17 +112,19 @@ class GuildEmoji(UnknownEmoji):
 
     #: Whether this emoji must be wrapped in colons.
     #:
-    #: :type: :obj:`~bool`, optional
-    is_colons_required: typing.Optional[bool] = marshaller.attrib(
-        raw_name="require_colons", deserializer=bool, if_undefined=None, default=None
-    )
+    #: :type: :obj:`~bool`
+    is_colons_required: bool = marshaller.attrib(raw_name="require_colons", deserializer=bool)
 
     #: Whether the emoji is managed by an integration.
     #:
-    #: :type: :obj:`~bool`, optional
-    is_managed: typing.Optional[bool] = marshaller.attrib(
-        raw_name="managed", deserializer=bool, if_undefined=None, default=None
-    )
+    #: :type: :obj:`~bool`
+    is_managed: bool = marshaller.attrib(raw_name="managed", deserializer=bool)
+
+    #: Whether this emoji can currently be used, may be :obj:`False` due to
+    #: a loss of Sever Boosts on the emoji's guild.
+    #:
+    #: :type: :obj:`~bool`
+    is_available: bool = marshaller.attrib(raw_name="available", deserializer=bool)
 
     @property
     def mention(self) -> str:

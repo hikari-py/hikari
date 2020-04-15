@@ -323,8 +323,8 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
     channel_mentions: typing.Set[snowflakes.Snowflake] = marshaller.attrib(
         raw_name="mention_channels",
         deserializer=lambda channel_mentions: {snowflakes.Snowflake.deserialize(c["id"]) for c in channel_mentions},
-        if_undefined=dict,
-        factory=dict,
+        if_undefined=set,
+        factory=set,
     )
 
     #: The message attachments.
@@ -345,7 +345,7 @@ class Message(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #: :type: :obj:`~typing.Sequence` [ :obj:`~Reaction` ]
     reactions: typing.Sequence[Reaction] = marshaller.attrib(
-        deserializer=lambda reactions: [Reaction.deserialize(r) for r in reactions], if_undefined=dict, factory=dict
+        deserializer=lambda reactions: [Reaction.deserialize(r) for r in reactions], if_undefined=list, factory=list
     )
 
     #: Whether the message is pinned.
