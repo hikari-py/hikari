@@ -639,6 +639,70 @@ class PresenceUser(users.User):
         raw_name="system", deserializer=bool, if_undefined=entities.Unset,
     )
 
+    #: The public flags for this user.
+    #:
+    #: :type: :obj:`typing.Union` [ :obj:`hikari.users.UserFlag`, :obj:`hikari.entities.UNSET` ]
+    flags: typing.Union[users.UserFlag, entities.Unset] = marshaller.attrib(
+        raw_name="public_flags", deserializer=users.UserFlag, if_undefined=entities.Unset
+    )
+
+    @property
+    def avatar_url(self) -> typing.Union[str, entities.Unset]:
+        """URL for this user's avatar if the relevant info is available.
+
+        Note
+        ----
+        This will be :obj:`hikari.entities.UNSET` if both :attr:`avatar_hash`
+        and :attr:`discriminator` are :obj:`hikari.entities.UNSET`.
+        """
+        return self.format_avatar_url()
+
+    def format_avatar_url(
+        self, fmt: typing.Optional[str] = None, size: int = 4096
+    ) -> typing.Union[str, entities.Unset]:
+        """Generate the avatar URL for this user's avatar if available.
+
+        Parameters
+        ----------
+        fmt : :obj:`str`
+            The format to use for this URL, defaults to ``png`` or ``gif``.
+            Supports ``png``, ``jpeg``, ``jpg``, ``webp`` and ``gif`` (when
+            animated). Will be ignored for default avatars which can only be
+            ``png``.
+        size : :obj:`int`
+            The size to set for the URL, defaults to ``4096``.
+            Can be any power of two between 16 and 4096.
+            Will be ignored for default avatars.
+
+        Returns
+        -------
+        :obj:`typing.Union` [ :obj:`str`, :obj:`hikari.entities.UNSET` ]
+            The string URL of the user's custom avatar if
+            either :attr:`avatar_hash` is set or their default avatar if
+            :attr:`discriminator` is set, else :obj:`hikari.entities.UNSET`.
+
+        Raises
+        ------
+        :obj:`ValueError`
+            If ``size`` is not a power of two or not between 16 and 4096.
+        """
+        if self.discriminator is entities.UNSET and self.avatar_hash is entities.UNSET:
+            return entities.UNSET
+        return super().format_avatar_url(fmt=fmt, size=size)
+
+    @property
+    def default_avatar(self) -> typing.Union[int, entities.Unset]:
+        """Integer representation of this user's default avatar.
+
+        Note
+        ----
+        This will be :obj:`hikari.entities.UNSET` if :attr:`discriminator` is
+        :obj:`hikari.entities.UNSET`.
+        """
+        if self.discriminator is not entities.UNSET:
+            return int(self.discriminator) % 5
+        return entities.UNSET
+
 
 @marshaller.marshallable()
 @attr.s(slots=True)
