@@ -90,6 +90,9 @@ license_scanning:
 ### This must use a specific name. Do not rename it for consistency.
 ###
 pages:
+  artifacts:
+    paths:
+      - public/
   dependencies:
     - master pages
     - staging pages
