@@ -22,7 +22,7 @@ import datetime
 import math
 import time
 import urllib.parse
-from unittest import mock
+import mock
 
 import aiohttp
 import async_timeout

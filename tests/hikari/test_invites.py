@@ -18,7 +18,7 @@
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
 import datetime
-from unittest import mock
+import mock
 
 import pytest
 
