@@ -20,7 +20,7 @@ from hikari.internal import meta
 
 
 def test_SingletonMeta():
-    class Test(metaclass=meta.SingletonMeta):
+    class StubSingleton(metaclass=meta.SingletonMeta):
         pass
 
-    assert Test() is Test()
+    assert StubSingleton() is StubSingleton()
