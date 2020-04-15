@@ -48,6 +48,7 @@ def test_oauth_user_payload():
         "verified": True,
         "locale": "en-US",
         "mfa_enabled": True,
+        "public_flags": int(users.UserFlag.VERIFIED_BOT_DEVELOPER),
         "flags": int(users.UserFlag.DISCORD_PARTNER | users.UserFlag.DISCORD_EMPLOYEE),
         "premium_type": 1,
     }
@@ -62,7 +63,7 @@ class TestUser:
         assert user_obj.discriminator == "6127"
         assert user_obj.is_bot is True
         assert user_obj.is_system is True
-        assert user_obj.public_flags == users.UserFlag.VERIFIED_BOT_DEVELOPER
+        assert user_obj.flags == users.UserFlag.VERIFIED_BOT_DEVELOPER
 
     @pytest.fixture()
     def user_obj(self, test_user_payload):
@@ -73,7 +74,7 @@ class TestUser:
             discriminator="6127",
             is_bot=None,
             is_system=None,
-            public_flags=None,
+            flags=None,
         )
 
     def test_avatar_url(self, user_obj):

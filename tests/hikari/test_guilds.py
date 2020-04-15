@@ -104,8 +104,11 @@ def test_user_payload():
         "avatar": "1a2b3c4d",
         "mfa_enabled": True,
         "locale": "gb",
+        "system": True,
+        "bot": True,
         "flags": 0b00101101,
-        "premium_type": 0b1101101,
+        "premium_type": 1,
+        "public_flags": 0b0001101,
     }
 
 
@@ -533,6 +536,9 @@ class TestPresenceUser:
         assert presence_user_obj.username == "Boris Johnson"
         assert presence_user_obj.discriminator == "6969"
         assert presence_user_obj.avatar_hash == "1a2b3c4d"
+        assert presence_user_obj.is_system is True
+        assert presence_user_obj.is_bot is True
+        assert presence_user_obj.flags == users.UserFlag(0b0001101)
 
     def test_deserialize_partial_presence_user(self):
         presence_user_obj = guilds.PresenceUser.deserialize({"id": "115590097100865541"})
@@ -540,6 +546,62 @@ class TestPresenceUser:
         for attr in presence_user_obj.__slots__:
             if attr != "id":
                 assert getattr(presence_user_obj, attr) is entities.UNSET
+
+    @pytest.fixture()
+    def test_presence_user_obj(self):
+        return guilds.PresenceUser(
+            id=4242424242,
+            discriminator=entities.UNSET,
+            username=entities.UNSET,
+            avatar_hash=entities.UNSET,
+            is_bot=entities.UNSET,
+            is_system=entities.UNSET,
+            flags=entities.UNSET,
+        )
+
+    def test_avatar_url(self, test_presence_user_obj):
+        mock_url = mock.MagicMock(str)
+        test_presence_user_obj.discriminator = 2222
+        with mock.patch.object(users.User, "format_avatar_url", return_value=mock_url):
+            assert test_presence_user_obj.avatar_url is mock_url
+            users.User.format_avatar_url.assert_called_once()
+
+    @pytest.mark.parametrize(["avatar_hash", "discriminator"], [("dwaea22", entities.UNSET), (entities.UNSET, "2929")])
+    def test_format_avatar_url_when_discriminator_or_avatar_hash_set_without_optionals(
+        self, test_presence_user_obj, avatar_hash, discriminator
+    ):
+        test_presence_user_obj.avatar_hash = avatar_hash
+        test_presence_user_obj.discriminator = discriminator
+        mock_url = mock.MagicMock(str)
+        with mock.patch.object(users.User, "format_avatar_url", return_value=mock_url):
+            assert test_presence_user_obj.format_avatar_url() is mock_url
+            users.User.format_avatar_url.assert_called_once_with(fmt=None, size=4096)
+
+    @pytest.mark.parametrize(["avatar_hash", "discriminator"], [("dwaea22", entities.UNSET), (entities.UNSET, "2929")])
+    def test_format_avatar_url_when_discriminator_or_avatar_hash_set_with_optionals(
+        self, test_presence_user_obj, avatar_hash, discriminator
+    ):
+        test_presence_user_obj.avatar_hash = avatar_hash
+        test_presence_user_obj.discriminator = discriminator
+        mock_url = mock.MagicMock(str)
+        with mock.patch.object(users.User, "format_avatar_url", return_value=mock_url):
+            assert test_presence_user_obj.format_avatar_url(fmt="nyaapeg", size=2048) is mock_url
+            users.User.format_avatar_url.assert_called_once_with(fmt="nyaapeg", size=2048)
+
+    def test_format_avatar_url_when_discriminator_and_avatar_hash_unset(self, test_presence_user_obj):
+        test_presence_user_obj.avatar_hash = entities.UNSET
+        test_presence_user_obj.discriminator = entities.UNSET
+        with mock.patch.object(users.User, "format_avatar_url", return_value=...):
+            assert test_presence_user_obj.format_avatar_url() is entities.UNSET
+            users.User.format_avatar_url.assert_not_called()
+
+    def test_default_avatar_when_discriminator_set(self, test_presence_user_obj):
+        test_presence_user_obj.discriminator = 4242
+        assert test_presence_user_obj.default_avatar == 2
+
+    def test_default_avatar_when_discriminator_unset(self, test_presence_user_obj):
+        test_presence_user_obj.discriminator = entities.UNSET
+        assert test_presence_user_obj.default_avatar is entities.UNSET
 
 
 @pytest.fixture()

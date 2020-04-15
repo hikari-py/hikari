@@ -129,7 +129,9 @@ class User(snowflakes.UniqueEntity, entities.Deserializable):
     #:
     #:
     #: :type: :obj:`UserFlag`, optional
-    public_flags: typing.Optional[UserFlag] = marshaller.attrib(deserializer=UserFlag, if_undefined=None)
+    flags: typing.Optional[UserFlag] = marshaller.attrib(
+        raw_name="public_flags", deserializer=UserFlag, if_undefined=None,
+    )
 
     @property
     def avatar_url(self) -> str:
@@ -181,37 +183,36 @@ class MyUser(User):
     """Represents a user with extended oauth2 information."""
 
     #: Whether the user's account has 2fa enabled.
-    #: Requires the ``identify`` scope.
     #:
-    #: :type: :obj:`bool`, optional
-    is_mfa_enabled: typing.Optional[bool] = marshaller.attrib(
-        raw_name="mfa_enabled", deserializer=bool, if_undefined=None
-    )
+    #: :type: :obj:`bool`
+    is_mfa_enabled: bool = marshaller.attrib(raw_name="mfa_enabled", deserializer=bool)
 
-    #: The user's set language, requires the ``identify`` scope.
+    #: The user's set language.
     #:
-    #: :type: :obj:`str`, optional
-    locale: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None)
+    #: :type: :obj:`str`
+    locale: str = marshaller.attrib(deserializer=str)
 
     #: Whether the email for this user's account has been verified.
-    #: Requires the ``email`` scope.
+    #: Will be :obj:`None` if retrieved through the oauth2 flow without the
+    #: ``email`` scope.
     #:
     #: :type: :obj:`bool`, optional
     is_verified: typing.Optional[bool] = marshaller.attrib(raw_name="verified", deserializer=bool, if_undefined=None)
 
-    #: The user's set email, requires the ``email`` scope.
-    #: This will always be :obj:`None` for bots.
+    #: The user's set email.
+    #: Will be :obj:`None` if retrieved through the oauth2 flow without the
+    #: ``email`` scope and for bot users.
     #:
     #: :type: :obj:`str`, optional
     email: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None)
 
-    #: This user account's flags, requires the ``identify`` scope.
+    #: This user account's flags.
     #:
-    #: :type: :obj:`UserFlag`, optional
-    flags: typing.Optional[UserFlag] = marshaller.attrib(deserializer=UserFlag, if_undefined=None)
+    #: :type: :obj:`UserFlag`
+    flags: UserFlag = marshaller.attrib(deserializer=UserFlag)
 
     #: The type of Nitro Subscription this user account had.
-    #: Requires the ``identify`` scope and will always be :obj:`None` for bots.
+    #: This will always be :obj:`None` for bots.
     #:
     #: :type: :obj:`PremiumType`, optional
     premium_type: typing.Optional[PremiumType] = marshaller.attrib(deserializer=PremiumType, if_undefined=None)
