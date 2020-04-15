@@ -41,9 +41,9 @@ except Exception as ex:  # pylint:disable=broad-except
 # pylint:disable=unused-variable
 @typing.runtime_checkable
 class Future(typing.Protocol[T]):
-    """Typed protocol representation of an :obj:`asyncio.Future`.
+    """Typed protocol representation of an :obj:`~asyncio.Future`.
 
-    You should consult the documentation for :obj:`asyncio.Future` for usage.
+    You should consult the documentation for :obj:`~asyncio.Future` for usage.
     """
 
     def result(self) -> T:
@@ -87,9 +87,9 @@ class Future(typing.Protocol[T]):
 
 # pylint:disable=unused-variable
 class Task(Future[T]):
-    """Typed protocol representation of an :obj:`asyncio.Task`.
+    """Typed protocol representation of an :obj:`~asyncio.Task`.
 
-    You should consult the documentation for :obj:`asyncio.Task` for usage.
+    You should consult the documentation for :obj:`~asyncio.Task` for usage.
     """
 
     def get_stack(self, *, limit: typing.Optional[int] = None) -> typing.Sequence[StackFrameType]:
@@ -123,12 +123,12 @@ def completed_future(result=None, /):
 
     Parameters
     ----------
-    result : :obj:`typing.Any`
+    result : :obj:`~typing.Any`
         The value to set for the result of the future.
 
     Returns
     -------
-    :obj:`asyncio.Future`
+    :obj:`~asyncio.Future`
         The completed future.
     """
     future = asyncio.get_event_loop().create_future()
@@ -145,8 +145,8 @@ def wait(
 
     Returns
     -------
-    :obj:`typing.Coroutine` [ :obj:`typing.Any`, :obj:`typing.Any`, :obj:`typing.Tuple` [ :obj:`typing.Set` [ :obj:`Future` ], :obj:`typing.Set` [ :obj:`Future` ] ] ]
-        The coroutine returned by :obj:`asyncio.wait` of two sets of
+    :obj:`~typing.Coroutine` [ :obj:`~typing.Any`, :obj:`~typing.Any`, :obj:`~typing.Tuple` [ :obj:`~typing.Set` [ :obj:`~Future` ], :obj:`~typing.Set` [ :obj:`~Future` ] ] ]
+        The coroutine returned by :obj:`~asyncio.wait` of two sets of
         Tasks/Futures (done, pending).
     """
     # noinspection PyTypeChecker

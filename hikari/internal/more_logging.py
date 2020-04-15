@@ -45,7 +45,7 @@ def get_named_logger(obj: typing.Any, *extra_objs: typing.Any) -> logging.Logger
 
     Returns
     -------
-    :obj:`logging.Logger`
+    :obj:`~logging.Logger`
         A created logger.
     """
     if not isinstance(obj, str):

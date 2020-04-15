@@ -67,14 +67,14 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`hikari.events.HikariEvent` ]
+        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
             The event to register to.
         callback : ``async def callback(event: HikariEvent) -> ...``
             The event callback to invoke when this event is fired.
 
         Raises
         ------
-        :obj:`TypeError`
+        :obj:`~TypeError`
             If ``coroutine_function`` is not a coroutine.
         """
 
@@ -86,7 +86,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`hikari.events.HikariEvent` ]
+        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
             The type of event to remove the callback from.
         callback : ``async def callback(event: HikariEvent) -> ...``
             The event callback to invoke when this event is fired.
@@ -100,12 +100,12 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`hikari.events.HikariEvent` ]
+        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
             The name of the event to wait for.
-        timeout : :obj:`float`, optional
+        timeout : :obj:`~float`, optional
             The timeout to wait for before cancelling and raising an
-            :obj:`asyncio.TimeoutError` instead. If this is :obj:`None`, this
-            will wait forever. Care must be taken if you use :obj:`None` as this
+            :obj:`~asyncio.TimeoutError` instead. If this is :obj:`~None`, this
+            will wait forever. Care must be taken if you use :obj:`~None` as this
             may leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
             using an event listener instead of this function.
@@ -117,7 +117,7 @@ class EventDispatcher(abc.ABC):
 
         Returns
         -------
-        :obj:`asyncio.Future`:
+        :obj:`~asyncio.Future`:
             A future to await. When the given event is matched, this will be
             completed with the corresponding event body.
 
@@ -165,7 +165,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`hikari.events.HikariEvent` ], optional
+        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ], optional
             The event type to register the produced decorator to. If this is not
             specified, then the given function is used instead and the type hint
             of the first argument is considered. If no type hint is present
@@ -230,12 +230,12 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event : :obj:`hikari.events.HikariEvent`
+        event : :obj:`~hikari.events.HikariEvent`
             The event to dispatch.
 
         Returns
         -------
-        :obj:`asyncio.Future`:
+        :obj:`~asyncio.Future`:
             a future that can be optionally awaited if you need to wait for all
             listener callbacks and waiters to be processed. If this is not
             awaited, the invocation is invoked soon on the current event loop.
@@ -259,7 +259,7 @@ class EventDispatcherImpl(EventDispatcher):
 
     #: The logger used to write log messages.
     #:
-    #: :type: :obj:`logging.Logger`
+    #: :type: :obj:`~logging.Logger`
     logger: logging.Logger
 
     def __init__(self) -> None:
@@ -284,14 +284,14 @@ class EventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`hikari.events.HikariEvent` ]
+        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
             The event to register to.
         callback : ``async def callback(event: HikariEvent) -> ...``
             The event callback to invoke when this event is fired.
 
         Raises
         ------
-        :obj:`TypeError`
+        :obj:`~TypeError`
             If ``coroutine_function`` is not a coroutine.
         """
         assertions.assert_that(
@@ -308,7 +308,7 @@ class EventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`hikari.events.HikariEvent` ]
+        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
             The type of event to remove the callback from.
         callback : ``async def callback(event: HikariEvent) -> ...``
             The event callback to remove.
@@ -326,12 +326,12 @@ class EventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event : :obj:`hikari.events.HikariEvent`
+        event : :obj:`~hikari.events.HikariEvent`
             The event to dispatch.
 
         Returns
         -------
-        :obj:`asyncio.Future`
+        :obj:`~asyncio.Future`
             This may be a gathering future of the callbacks to invoke, or it may
             be a completed future object. Regardless, this result will be
             scheduled on the event loop automatically, and does not need to be
@@ -402,17 +402,17 @@ class EventDispatcherImpl(EventDispatcher):
         This allows users to override this with a custom implementation if desired.
 
         This implementation will check to see if the event that triggered the
-        exception is an :obj:`hikari.events.ExceptionEvent`. If this
-        exception was caused by the :obj:`hikari.events.ExceptionEvent`,
+        exception is an :obj:`~hikari.events.ExceptionEvent`. If this
+        exception was caused by the :obj:`~hikari.events.ExceptionEvent`,
         then nothing is dispatched (thus preventing an exception handler recursively
-        re-triggering itself). Otherwise, an :obj:`hikari.events.ExceptionEvent`
+        re-triggering itself). Otherwise, an :obj:`~hikari.events.ExceptionEvent`
         is dispatched.
 
         Parameters
         ----------
-        exception: :obj:`Exception`
+        exception: :obj:`~Exception`
             The exception that triggered this call.
-        event: :obj:`hikari.events.HikariEvent`
+        event: :obj:`~hikari.events.HikariEvent`
             The event that was being dispatched.
         callback
             The callback that threw the exception.
@@ -445,11 +445,11 @@ class EventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : :obj:`typing.Type` [ :obj:`hikari.events.HikariEvent` ]
+        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
             The name of the event to wait for.
-        timeout : :obj:`float`, optional
+        timeout : :obj:`~float`, optional
             The timeout to wait for before cancelling and raising an
-            :obj:`asyncio.TimeoutError` instead. If this is `None`, this will
+            :obj:`~asyncio.TimeoutError` instead. If this is `None`, this will
             wait forever. Care must be taken if you use `None` as this may
             leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
@@ -462,7 +462,7 @@ class EventDispatcherImpl(EventDispatcher):
 
         Returns
         -------
-        :obj:`asyncio.Future`
+        :obj:`~asyncio.Future`
             A future that when awaited will provide a the arguments passed to
             the first matching event. If no arguments are passed to the event,
             then `None` is the result. If one argument is passed to the event,
@@ -471,7 +471,7 @@ class EventDispatcherImpl(EventDispatcher):
 
         Notes
         -----
-        Awaiting this result will raise an :obj:`asyncio.TimeoutError` if the
+        Awaiting this result will raise an :obj:`~asyncio.TimeoutError` if the
         timeout is hit and no match is found. If the predicate throws any
         exception, this is raised immediately.
         """

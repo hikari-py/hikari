@@ -34,7 +34,7 @@ class RunnableClient(abc.ABC):
 
     #: The logger to use for this client.
     #:
-    #: :type: :obj:`logging.Logger`
+    #: :type: :obj:`~logging.Logger`
     logger: logging.Logger
 
     @abc.abstractmethod

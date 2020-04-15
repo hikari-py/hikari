@@ -62,12 +62,12 @@ class RESTClient:
     A marshalling object-oriented HTTP API.
 
     This component bridges the basic HTTP API exposed by
-    :obj:`hikari.net.rest.LowLevelRestfulClient` and wraps it in a unit of
+    :obj:`~hikari.net.rest.LowLevelRestfulClient` and wraps it in a unit of
     processing that can handle parsing API objects into Hikari entity objects.
 
     Parameters
     ----------
-    config : :obj:`hikari.clients.configs.RESTConfig`
+    config : :obj:`~hikari.clients.configs.RESTConfig`
         A HTTP configuration object.
 
     Note
@@ -107,7 +107,7 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`str`
+        :obj:`~str`
             A static URL to use to connect to the gateway with.
 
         Note
@@ -121,7 +121,7 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`hikari.gateway_entities.GatewayBot`
+        :obj:`~hikari.gateway_entities.GatewayBot`
             The bot specific gateway information object.
 
         Note
@@ -144,33 +144,33 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the audit logs for.
-        user : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the user to filter by.
-        action_type : :obj:`typing.Union` [ :obj:`hikari.audit_logs.AuditLogEventType`, :obj:`int` ]
+        action_type : :obj:`~typing.Union` [ :obj:`~hikari.audit_logs.AuditLogEventType`, :obj:`~int` ]
             If specified, the action type to look up. Passing a raw integer
             for this may lead to unexpected behaviour.
-        limit : :obj:`int`
+        limit : :obj:`~int`
             If specified, the limit to apply to the number of records.
             Defaults to ``50``. Must be between ``1`` and ``100`` inclusive.
-        before : :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`hikari.audit_logs.AuditLogEntry`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.audit_logs.AuditLogEntry`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the entry that all retrieved
             entries should have occurred befor.
 
         Returns
         -------
-        :obj:`hikari.audit_logs.AuditLog`
+        :obj:`~hikari.audit_logs.AuditLog`
             An audit log object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the given permissions to view an audit log.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild does not exist.
         """
         if isinstance(before, datetime.datetime):
@@ -204,18 +204,18 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The ID or object of the guild to get audit log entries for
-        before : :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`hikari.audit_logs.AuditLogEntry`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ], optional
+        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.audit_logs.AuditLogEntry`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], optional
             If specified, the ID or object of the entry or datetime to get
             entries that happened before otherwise this will start from the
             newest entry.
-        user : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the user to filter by.
-        action_type : :obj:`typing.Union` [ :obj:`hikari.audit_logs.AuditLogEventType`, :obj:`int` ]
+        action_type : :obj:`~typing.Union` [ :obj:`~hikari.audit_logs.AuditLogEventType`, :obj:`~int` ]
             If specified, the action type to look up. Passing a raw integer
             for this may lead to unexpected behaviour.
-        limit : :obj:`int`, optional
+        limit : :obj:`~int`, optional
             If specified, the limit for how many entries this iterator should
             return, defaults to unlimited.
 
@@ -238,10 +238,10 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.audit_logs.AuditLogIterator`
+        :obj:`~hikari.audit_logs.AuditLogIterator`
             An async iterator of the audit log entries in a guild (from newest
             to oldest).
         """
@@ -265,22 +265,22 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object ID of the channel to look up.
 
         Returns
         -------
-        :obj:`hikari.channels.Channel`
+        :obj:`~hikari.channels.Channel`
             The channel object that has been found.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you don't have access to the channel.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
         """
         payload = await self._session.get_channel(
@@ -307,57 +307,57 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The channel ID to update.
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, the new name for the channel. This must be
             inclusively between ``1`` and ``100`` characters in length.
-        position : :obj:`int`
+        position : :obj:`~int`
             If specified, the position to change the channel to.
-        topic : :obj:`str`
+        topic : :obj:`~str`
             If specified, the topic to set. This is only applicable to
             text channels. This must be inclusively between ``0`` and ``1024``
             characters in length.
-        nsfw : :obj:`bool`
-            Mark the channel as being not safe for work (NSFW) if :obj:`True`.
-            If :obj:`False` or unspecified, then the channel is not marked as
+        nsfw : :obj:`~bool`
+            Mark the channel as being not safe for work (NSFW) if :obj:`~True`.
+            If :obj:`~False` or unspecified, then the channel is not marked as
             NSFW. Will have no visible effect for non-text guild channels.
-        rate_limit_per_user : :obj:`typing.Union` [ :obj:`int`, :obj:`datetime.timedelta` ]
+        rate_limit_per_user : :obj:`~typing.Union` [ :obj:`~int`, :obj:`~datetime.timedelta` ]
             If specified, the time delta of seconds  the user has to wait
             before sending another message. This will not apply to bots, or to
             members with ``MANAGE_MESSAGES`` or ``MANAGE_CHANNEL`` permissions.
             This must be inclusively between ``0`` and ``21600`` seconds.
-        bitrate : :obj:`int`
+        bitrate : :obj:`~int`
             If specified, the bitrate in bits per second allowable for the
             channel. This only applies to voice channels and must be inclusively
             between ``8000`` and ``96000`` for normal servers or ``8000`` and
             ``128000`` for VIP servers.
-        user_limit : :obj:`int`
+        user_limit : :obj:`~int`
             If specified, the new max number of users to allow in a voice
             channel. This must be between ``0`` and ``99`` inclusive, where
             ``0`` implies no limit.
-        permission_overwrites : :obj:`typing.Sequence` [ :obj:`hikari.channels.PermissionOverwrite` ]
+        permission_overwrites : :obj:`~typing.Sequence` [ :obj:`~hikari.channels.PermissionOverwrite` ]
             If specified, the new list of permission overwrites that are
             category specific to replace the existing overwrites with.
-        parent_category : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ], optional
+        parent_category : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], optional
             If specified, the new parent category ID to set for the channel,
-            pass :obj:`None` to unset.
-        reason : :obj:`str`
+            pass :obj:`~None` to unset.
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`hikari.channels.Channel`
+        :obj:`~hikari.channels.Channel`
             The channel object that has been modified.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the permission to make the change.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide incorrect options for the corresponding channel type
             (e.g. a ``bitrate`` for a text channel).
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -395,24 +395,24 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake` :obj:`str` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake` :obj:`~str` ]
             The object or ID of the channel to delete.
 
         Returns
         -------
-        :obj:`None`
+        :obj:`~None`
             Nothing, unlike what the API specifies. This is done to maintain
             consistency with other calls of a similar nature in this API
             wrapper.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you do not have permission to delete the channel.
 
         Note
@@ -443,12 +443,12 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The ID of the channel to retrieve the messages from.
-        limit : :obj:`int`
+        limit : :obj:`~int`
             If specified, the maximum number of how many messages this iterator
             should return.
-        after : :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             A object or ID message. Only return messages sent AFTER this
             message if it's specified else this will return every message after
             (and including) the first message in the channel.
@@ -463,24 +463,24 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`typing.AsyncIterator` [ :obj:`hikari.messages.Message` ]
+        :obj:`~typing.AsyncIterator` [ :obj:`~hikari.messages.Message` ]
             An async iterator that retrieves the channel's message objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permission to read the channel.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found, or the message
             provided for one of the filter arguments is not found.
 
         Note
         ----
         If you are missing the ``VIEW_CHANNEL`` permission, you will receive a
-        :obj:`hikari.errors.ForbiddenHTTPError`. If you are instead missing
+        :obj:`~hikari.errors.ForbiddenHTTPError`. If you are instead missing
         the ``READ_MESSAGE_HISTORY`` permission, you will always receive
         zero results, and thus an empty list will be returned instead.
         """
@@ -512,12 +512,12 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The ID of the channel to retrieve the messages from.
-        limit : :obj:`int`
+        limit : :obj:`~int`
             If specified, the maximum number of how many messages this iterator
             should return.
-        before : :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             A message object or ID. Only return messages sent BEFORE
             this message if this is specified else this will return every
             message before (and including) the most recent message in the
@@ -533,24 +533,24 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`typing.AsyncIterator` [ :obj:`hikari.messages.Message` ]
+        :obj:`~typing.AsyncIterator` [ :obj:`~hikari.messages.Message` ]
             An async iterator that retrieves the channel's message objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permission to read the channel.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found, or the message
             provided for one of the filter arguments is not found.
 
         Note
         ----
         If you are missing the ``VIEW_CHANNEL`` permission, you will receive a
-        :obj:`hikari.errors.ForbiddenHTTPError`. If you are instead missing
+        :obj:`~hikari.errors.ForbiddenHTTPError`. If you are instead missing
         the ``READ_MESSAGE_HISTORY`` permission, you will always receive
         zero results, and thus an empty list will be returned instead.
         """
@@ -583,14 +583,14 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The ID of the channel to retrieve the messages from.
-        around : :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        around : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the message to get messages that were sent
             AROUND it in the provided channel, unlike ``before`` and ``after``,
             this argument is required and the provided message will also be
             returned if it still exists.
-        limit : :obj:`int`
+        limit : :obj:`~int`
             If specified, the maximum number of how many messages this iterator
             should return, cannot be more than `100`
 
@@ -604,24 +604,24 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`typing.AsyncIterator` [ :obj:`hikari.messages.Message` ]
+        :obj:`~typing.AsyncIterator` [ :obj:`~hikari.messages.Message` ]
             An async iterator that retrieves the found message objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permission to read the channel.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found, or the message
             provided for one of the filter arguments is not found.
 
         Note
         ----
         If you are missing the ``VIEW_CHANNEL`` permission, you will receive a
-        :obj:`hikari.errors.ForbiddenHTTPError`. If you are instead missing
+        :obj:`~hikari.errors.ForbiddenHTTPError`. If you are instead missing
         the ``READ_MESSAGE_HISTORY`` permission, you will always receive
         zero results, and thus an empty list will be returned instead.
         """
@@ -653,34 +653,34 @@ class RESTClient:
 
         Parameters
         ----------
-        deserializer : :obj:`typing.Callable` [ [ :obj:`typing.Any` ], :obj:`typing.Any` ]
+        deserializer : :obj:`~typing.Callable` [ [ :obj:`~typing.Any` ], :obj:`~typing.Any` ]
             The deserializer to use to deserialize raw elements.
-        direction : :obj:`typing.Union` [ ``"before"``, ``"after"`` ]
+        direction : :obj:`~typing.Union` [ ``"before"``, ``"after"`` ]
             The direction that this paginator should go in.
-        request : :obj:`typing.Callable` [ ``...``, :obj:`typing.Coroutine` [ :obj:`typing.Any`, :obj:`typing.Any`, :obj:`typing.Any` ] ]
+        request : :obj:`~typing.Callable` [ ``...``, :obj:`~typing.Coroutine` [ :obj:`~typing.Any`, :obj:`~typing.Any`, :obj:`~typing.Any` ] ]
             The function on :attr:`_session` that should be called to make
             requests for this paginator.
-        reversing : :obj:`bool`
+        reversing : :obj:`~bool`
             Whether the retrieved array of objects should be reversed before
             iterating through it, this is needed for certain endpoints like
             ``fetch_messages_before`` where the order is static regardless of
             if you're using ``before`` or ``after``.
-        start : :obj:`int`, optional
+        start : :obj:`~int`, optional
             The snowflake ID that this paginator should start at, ``0`` may be
             passed for ``forward`` pagination to start at the first created
-            entity and :obj:`None` may be passed for ``before`` pagination to
+            entity and :obj:`~None` may be passed for ``before`` pagination to
             start at the newest entity (based on when it's snowflake timestamp).
-        limit : :obj:`int`, optional
+        limit : :obj:`~int`, optional
             The amount of deserialized entities that the iterator should return
-            total, will be unlimited if set to :obj:`None`.
-        id_getter : :obj:`typing.Callable` [ [ :obj:`typing.Any` ], :obj:`str` ]
+            total, will be unlimited if set to :obj:`~None`.
+        id_getter : :obj:`~typing.Callable` [ [ :obj:`~typing.Any` ], :obj:`~str` ]
         **kwargs
             Kwargs to pass through to ``request`` for every request made along
             with the current decided limit and direction snowflake.
 
         Returns
         -------
-        :obj:`typing.AsyncIterator` [ :obj:`typing.Any` ]
+        :obj:`~typing.AsyncIterator` [ :obj:`~typing.Any` ]
             An async iterator of the found deserialized found objects.
 
         """
@@ -708,14 +708,14 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`typing.Union` [ :obj:`hikari.messages.Message`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the message to retrieve.
 
         Returns
         -------
-        :obj:`hikari.messages.Message`
+        :obj:`~hikari.messages.Message`
             The found message object.
 
         Note
@@ -724,12 +724,12 @@ class RESTClient:
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permission to see the message.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
         """
         payload = await self._session.get_channel_message(
@@ -748,21 +748,21 @@ class RESTClient:
 
         Parameters
         ----------
-        mentions_everyone : :obj:`bool`
+        mentions_everyone : :obj:`~bool`
             Whether ``@everyone`` and ``@here`` mentions should be resolved by
             discord and lead to actual pings.
-        user_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ], :obj:`bool` ]
+        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
             Either an array of user objects/IDs to allow mentions for,
-            :obj:`True` to allow all user mentions or :obj:`False` to block all
+            :obj:`~True` to allow all user mentions or :obj:`~False` to block all
             user mentions from resolving.
-        role_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ], :obj:`bool` ]
+        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
             Either an array of guild role objects/IDs to allow mentions for,
-            :obj:`True` to allow all role mentions or :obj:`False` to block all
+            :obj:`~True` to allow all role mentions or :obj:`~False` to block all
             role mentions from resolving.
 
         Returns
         -------
-        :obj:`typing.Dict` [ :obj:`str`, :obj:`typing.Sequence` [ :obj:`str` ] ]
+        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Sequence` [ :obj:`~str` ] ]
             The resulting allowed mentions dict object.
         """
         parsed_mentions = []
@@ -817,50 +817,50 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The channel or ID of the channel to send to.
-        content : :obj:`str`
+        content : :obj:`~str`
             If specified, the message content to send with the message.
-        nonce : :obj:`str`
+        nonce : :obj:`~str`
             If specified, an optional ID to send for opportunistic message
             creation. This doesn't serve any real purpose for general use,
             and can usually be ignored.
-        tts : :obj:`bool`
+        tts : :obj:`~bool`
             If specified, whether the message will be sent as a TTS message.
-        files : :obj:`typing.Collection` [ ``hikari.media.IO`` ]
+        files : :obj:`~typing.Collection` [ ``hikari.media.IO`` ]
             If specified, this should be a list of inclusively between ``1`` and
             ``5`` IO like media objects, as defined in :mod:`hikari.media`.
-        embed : :obj:`hikari.embeds.Embed`
+        embed : :obj:`~hikari.embeds.Embed`
             If specified, the embed object to send with the message.
-        mentions_everyone : :obj:`bool`
+        mentions_everyone : :obj:`~bool`
             Whether ``@everyone`` and ``@here`` mentions should be resolved by
-            discord and lead to actual pings, defaults to :obj:`True`.
-        user_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ], :obj:`bool` ]
+            discord and lead to actual pings, defaults to :obj:`~True`.
+        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
             Either an array of user objects/IDs to allow mentions for,
-            :obj:`True` to allow all user mentions or :obj:`False` to block all
-            user mentions from resolving, defaults to :obj:`True`.
-        role_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ], :obj:`bool` ]
+            :obj:`~True` to allow all user mentions or :obj:`~False` to block all
+            user mentions from resolving, defaults to :obj:`~True`.
+        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
             Either an array of guild role objects/IDs to allow mentions for,
-            :obj:`True` to allow all role mentions or :obj:`False` to block all
-            role mentions from resolving, defaults to :obj:`True`.
+            :obj:`~True` to allow all role mentions or :obj:`~False` to block all
+            role mentions from resolving, defaults to :obj:`~True`.
 
         Returns
         -------
-        :obj:`hikari.messages.Message`
+        :obj:`~hikari.messages.Message`
             The created message object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
             empty or greater than ``2000`` characters; if neither content, files
             or embed are specified.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permissions to send to this channel.
         """
         payload = await self._session.create_message(
@@ -893,7 +893,7 @@ class RESTClient:
 
         This endpoint has the same signature as :attr:`create_message` with
         the only difference being that ``mentions_everyone``,
-        ``user_mentions`` and ``role_mentions`` default to :obj:`False`.
+        ``user_mentions`` and ``role_mentions`` default to :obj:`~False`.
         """
         return self.create_message(
             channel=channel,
@@ -917,11 +917,11 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to add this reaction in.
-        message : :obj:`typing.Union` [ :obj:`hikari.messages.Message`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the message to add the reaction in.
-        emoji : :obj:`typing.Union` [ :obj:`hikari.emojis.Emoji`, :obj:`str` ]
+        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
             The emoji to add. This can either be an emoji object or a string
             representation of an emoji. The string representation will be either
             ``"name:id"`` for custom emojis else it's unicode character(s)  (can
@@ -929,13 +929,13 @@ class RESTClient:
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If this is the first reaction using this specific emoji on this
             message and you lack the ``ADD_REACTIONS`` permission. If you lack
             ``READ_MESSAGE_HISTORY``, this may also raise this error.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message is not found, or if the emoji is not found.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If the emoji is not valid, unknown, or formatted incorrectly.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -956,11 +956,11 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to add this reaction in.
-        message : :obj:`typing.Union` [ :obj:`hikari.messages.Message`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the message to add the reaction in.
-        emoji : :obj:`typing.Union` [ :obj:`hikari.emojis.Emoji`, :obj:`str` ]
+        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
             The emoji to add. This can either be an emoji object or a
             string representation of an emoji. The string representation will be
             either ``"name:id"`` for custom emojis else it's unicode
@@ -968,14 +968,14 @@ class RESTClient:
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If this is the first reaction using this specific emoji on this
             message and you lack the ``ADD_REACTIONS`` permission. If you lack
             ``READ_MESSAGE_HISTORY``, this may also raise this error.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message is not found, or if the emoji is not
             found.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If the emoji is not valid, unknown, or formatted incorrectly.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -993,19 +993,19 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`typing.Union` [ :obj:`hikari.messages.Message`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the message to remove all reactions from.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission.
         """
         await self._session.delete_all_reactions(
@@ -1023,23 +1023,23 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`typing.Union` [ :obj:`hikari.messages.Message`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the message to delete the reactions from.
-        emoji : :obj:`typing.Union` [ :obj:`hikari.emojis.Emoji`, :obj:`str` ]
+        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
             The object or string representatiom of the emoji to delete. The
             string representation will be either ``"name:id"`` for custom emojis
             else it's unicode character(s) (can be UTF-32).
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message or emoji or user is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission, or the channel is a
             DM channel.
         """
@@ -1065,20 +1065,20 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`typing.Union` [ :obj:`hikari.messages.Message`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the message to get the reactions from.
-        emoji : :obj:`typing.Union` [ :obj:`hikari.emojis.Emoji`, :obj:`str` ]
+        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
             The emoji to get. This can either be it's object or the string
             representation of the emoji. The string representation will be
             either ``"name:id"`` for custom emojis else it's unicode
             character(s) (can be UTF-32).
-        after : :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             If specified, a object or ID user. If specified, only users with a
             snowflake that is lexicographically greater than the value will be
             returned.
-        limit : :obj:`str`
+        limit : :obj:`~str`
             If specified, the limit of the number of users this iterator should
             return.
 
@@ -1092,17 +1092,17 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`typing.AsyncIterator` [ :obj:`hikari.users.User` ]
+        :obj:`~typing.AsyncIterator` [ :obj:`~hikari.users.User` ]
             An async iterator of user objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack access to the message.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
         """
         if isinstance(after, datetime.datetime):
@@ -1137,49 +1137,49 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`typing.Union` [ :obj:`hikari.messages.Message`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the message to edit.
-        content : :obj:`str`, optional
+        content : :obj:`~str`, optional
             If specified, the string content to replace with in the message.
-            If :obj:`None`, the content will be removed from the message.
-        embed : :obj:`hikari.embeds.Embed`, optional
+            If :obj:`~None`, the content will be removed from the message.
+        embed : :obj:`~hikari.embeds.Embed`, optional
             If specified, the embed to replace with in the message.
-            If :obj:`None`, the embed will be removed from the message.
-        flags : :obj:`hikari.messages.MessageFlag`
+            If :obj:`~None`, the embed will be removed from the message.
+        flags : :obj:`~hikari.messages.MessageFlag`
             If specified, the new flags for this message, while a raw int may
             be passed for this, this can lead to unexpected behaviour if it's
             outside the range of the MessageFlag int flag.
-        mentions_everyone : :obj:`bool`
+        mentions_everyone : :obj:`~bool`
             Whether ``@everyone`` and ``@here`` mentions should be resolved by
-            discord and lead to actual pings, defaults to :obj:`True`.
-        user_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ], :obj:`bool` ]
+            discord and lead to actual pings, defaults to :obj:`~True`.
+        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
             Either an array of user objects/IDs to allow mentions for,
-            :obj:`True` to allow all user mentions or :obj:`False` to block all
-            user mentions from resolving, defaults to :obj:`True`.
-        role_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ], :obj:`bool` ]
+            :obj:`~True` to allow all user mentions or :obj:`~False` to block all
+            user mentions from resolving, defaults to :obj:`~True`.
+        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
             Either an array of guild role objects/IDs to allow mentions for,
-            :obj:`True` to allow all role mentions or :obj:`False` to block all
-            role mentions from resolving, defaults to :obj:`True`.
+            :obj:`~True` to allow all role mentions or :obj:`~False` to block all
+            role mentions from resolving, defaults to :obj:`~True`.
 
         Returns
         -------
-        :obj:`hikari.messages.Message`
+        :obj:`~hikari.messages.Message`
             The edited message object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             This can be raised if the embed exceeds the defined limits;
             if the message content is specified only and empty or greater
             than ``2000`` characters; if neither content, file or embed
             are specified.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you try to edit ``content`` or ``embed`` or ``allowed_mentions`
             on a message you did not author.
             If you try to edit the flags on a message you did not author without
@@ -1213,7 +1213,7 @@ class RESTClient:
 
         This endpoint has the same signature as :attr:`execute_webhook` with
         the only difference being that ``mentions_everyone``,
-        ``user_mentions`` and ``role_mentions`` default to :obj:`False`.
+        ``user_mentions`` and ``role_mentions`` default to :obj:`~False`.
         """
         return self.update_message(
             message=message,
@@ -1236,26 +1236,26 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`typing.Union` [ :obj:`hikari.messages.Message`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the message to delete.
-        *additional_messages : :obj:`typing.Union` [ :obj:`hikari.messages.Message`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        *additional_messages : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             Objects and/or IDs of additional messages to delete in the same
             channel, in total you can delete up to 100 messages in a request.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you did not author the message and are in a DM, or if you did
             not author the message and lack the ``MANAGE_MESSAGES``
             permission in a guild channel.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel or message is not found.
-        :obj:`ValueError`
+        :obj:`~ValueError`
             If you try to delete over ``100`` messages in a single request.
 
         Note
@@ -1304,32 +1304,32 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.messages.Message`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to edit permissions for.
-        overwrite : :obj:`typing.Union` [ :obj:`hikari.channels.PermissionOverwrite`, :obj:`hikari.guilds.GuildRole`, :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake` , :obj:`int` ]
+        overwrite : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwrite`, :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake` , :obj:`~int` ]
             The object or ID of the target member or role to  edit/create the
             overwrite for.
-        target_type : :obj:`typing.Union` [ :obj:`hikari.channels.PermissionOverwriteType`, :obj:`int` ]
+        target_type : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwriteType`, :obj:`~int` ]
             The type of overwrite, passing a raw string that's outside of the
             enum's range for this may lead to unexpected behaviour.
-        allow : :obj:`typing.Union` [ :obj:`hikari.permissions.Permission`, :obj:`int` ]
+        allow : :obj:`~typing.Union` [ :obj:`~hikari.permissions.Permission`, :obj:`~int` ]
             If specified, the value of all permissions to set to be allowed,
             passing a raw integer for this may lead to unexpected behaviour.
-        deny : :obj:`typing.Union` [ :obj:`hikari.permissions.Permission`, :obj:`int` ]
+        deny : :obj:`~typing.Union` [ :obj:`~hikari.permissions.Permission`, :obj:`~int` ]
             If specified, the value of all permissions to set to be denied,
             passing a raw integer for this may lead to unexpected behaviour.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the target channel or overwrite doesn't exist.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permission to do this.
         """
         await self._session.edit_channel_permissions(
@@ -1348,22 +1348,22 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get invites for.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`hikari.invites.InviteWithMetadata` ]
+        :obj:`~typing.Sequence` [ :obj:`~hikari.invites.InviteWithMetadata` ]
             A list of invite objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_CHANNELS`` permission.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
         """
         payload = await self._session.get_channel_invites(
@@ -1387,42 +1387,42 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`datetime.timedelta`, :obj:`str` ]
+        channel : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~str` ]
             The object or ID of the channel to create the invite for.
-        max_age : :obj:`int`
+        max_age : :obj:`~int`
             If specified, the seconds time delta for the max age of the invite,
             defaults to ``86400`` seconds (``24`` hours).
             Set to ``0`` seconds to never expire.
-        max_uses : :obj:`int`
+        max_uses : :obj:`~int`
             If specified, the max number of uses this invite can have, or ``0``
             for unlimited (as per the default).
-        temporary : :obj:`bool`
+        temporary : :obj:`~bool`
             If specified, whether to grant temporary membership, meaning the
             user is kicked when their session ends unless they are given a role.
-        unique : :obj:`bool`
+        unique : :obj:`~bool`
             If specified, whether to try to reuse a similar invite.
-        target_user : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        target_user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the user this invite should
             target.
-        target_user_type : :obj:`typing.Union` [ :obj:`hikari.invites.TargetUserType`, :obj:`int` ]
+        target_user_type : :obj:`~typing.Union` [ :obj:`~hikari.invites.TargetUserType`, :obj:`~int` ]
             If specified, the type of target for this invite, passing a raw
             integer for this may lead to unexpected results.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`hikari.invites.InviteWithMetadata`
+        :obj:`~hikari.invites.InviteWithMetadata`
             The created invite object.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``CREATE_INSTANT_MESSAGES`` permission.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel does not exist.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If the arguments provided are not valid (e.g. negative age, etc).
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -1452,19 +1452,19 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to delete the overwrite from.
-        overwrite : :obj:`typing.Union` [ :obj:`hikari.channels.PermissionOverwrite`, :obj:`hikari.guilds.GuildRole`, :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:int ]
+        overwrite : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwrite`, :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:int ]
             The ID of the entity this overwrite targets.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the overwrite or channel do not exist.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission for that channel.
         """
         await self._session.delete_channel_permission(
@@ -1477,17 +1477,17 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to appear to be typing in.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are not able to type in the channel.
         """
         await self._session.trigger_typing_indicator(
@@ -1501,22 +1501,22 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get messages from.
 
         Returns
         -------
-        :obj:`typing.Mapping` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`hikari.messages.Message` ]
+        :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.messages.Message` ]
             A list of message objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are not able to see the channel.
 
         Note
@@ -1537,19 +1537,19 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to pin a message to.
-        message : :obj:`typing.Union` [ :obj:`hikari.messages.Message`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the message to pin.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the message or channel do not exist.
         """
         await self._session.add_pinned_channel_message(
@@ -1566,19 +1566,19 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.Channel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The ID of the channel to remove a pin from.
-        message : :obj:`typing.Union` [ :obj:`hikari.messages.Message`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the message to unpin.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_MESSAGES`` permission.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the message or channel do not exist.
         """
         await self._session.delete_pinned_channel_message(
@@ -1593,24 +1593,24 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the emoji from.
-        emoji : :obj:`typing.Union` [ :obj:`hikari.emojis.GuildEmoji`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the emoji to get.
 
         Returns
         -------
-        :obj:`hikari.emojis.GuildEmoji`
+        :obj:`~hikari.emojis.GuildEmoji`
             A guild emoji object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the emoji aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you aren't a member of said guild.
         """
         payload = await self._session.get_guild_emoji(
@@ -1624,22 +1624,22 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the emojis for.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`hikari.emojis.GuildEmoji` ]
+        :obj:`~typing.Sequence` [ :obj:`~hikari.emojis.GuildEmoji` ]
             A list of guild emoji objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you aren't a member of the guild.
         """
         payload = await self._session.list_guild_emojis(
@@ -1660,34 +1660,34 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to create the emoji in.
-        name : :obj:`str`
+        name : :obj:`~str`
             The new emoji's name.
         image_data : ``hikari.internal.conversions.FileLikeT``
             The ``128x128`` image data.
-        roles : :obj:`typing.Sequence` [ :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
             If specified, a list of role objects or IDs for which the emoji
             will be whitelisted. If empty, all roles are whitelisted.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`hikari.emojis.GuildEmoji`
+        :obj:`~hikari.emojis.GuildEmoji`
             The newly created emoji object.
 
         Raises
         ------
-        :obj:`ValueError`
-            If ``image`` is :obj:`None`.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~ValueError`
+            If ``image`` is :obj:`~None`.
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_EMOJIS`` permission or aren't a
             member of said guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you attempt to upload an image larger than ``256kb``, an empty
             image or an invalid image format.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -1717,34 +1717,34 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to which the emoji to edit belongs to.
-        emoji : :obj:`typing.Union` [ :obj:`hikari.emojis.GuildEmoji`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the emoji to edit.
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, a new emoji name string. Keep unspecified to leave the
             name unchanged.
-        roles : :obj:`typing.Sequence` [ :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
             If specified, a list of objects or IDs for the new whitelisted
             roles. Set to an empty list to whitelist all roles.
             Keep unspecified to leave the same roles already set.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`hikari.emojis.GuildEmoji`
+        :obj:`~hikari.emojis.GuildEmoji`
             The updated emoji object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the emoji aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_EMOJIS`` permission or are not a
             member of the given guild.
         """
@@ -1766,19 +1766,19 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to delete the emoji from.
-        emoji : :obj:`typing.Union` [ :obj:`hikari.emojis.GuildEmoji`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild emoji to be deleted.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the emoji aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_EMOJIS`` permission or aren't a
             member of said guild.
         """
@@ -1807,40 +1807,40 @@ class RESTClient:
 
         Parameters
         ----------
-        name : :obj:`str`
+        name : :obj:`~str`
             The name string for the new guild (``2-100`` characters).
-        region : :obj:`str`
+        region : :obj:`~str`
             If specified, the voice region ID for new guild. You can use
             :meth:`fetch_guild_voice_regions` to see which region IDs are
             available.
         icon_data : ``hikari.internal.conversions.FileLikeT``
             If specified, the guild icon image data.
-        verification_level : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildVerificationLevel`, :obj:`int` ]
+        verification_level : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildVerificationLevel`, :obj:`~int` ]
             If specified, the verification level. Passing a raw int for this
             may lead to unexpected behaviour.
-        default_message_notifications : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildMessageNotificationsLevel`, :obj:`int` ]
+        default_message_notifications : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildMessageNotificationsLevel`, :obj:`~int` ]
             If specified, the default notification level. Passing a raw int for
             this may lead to unexpected behaviour.
-        explicit_content_filter : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildExplicitContentFilterLevel`, :obj:`int` ]
+        explicit_content_filter : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildExplicitContentFilterLevel`, :obj:`~int` ]
             If specified, the explicit content filter. Passing a raw int for
             this may lead to unexpected behaviour.
-        roles : :obj:`typing.Sequence` [ :obj:`hikari.guilds.GuildRole` ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~hikari.guilds.GuildRole` ]
             If specified, an array of role objects to be created alongside the
             guild. First element changes the ``@everyone`` role.
-        channels : :obj:`typing.Sequence` [ :obj:`hikari.channels.GuildChannelBuilder` ]
+        channels : :obj:`~typing.Sequence` [ :obj:`~hikari.channels.GuildChannelBuilder` ]
             If specified, an array of guild channel builder objects to be
             created within the guild.
 
         Returns
         -------
-        :obj:`hikari.guilds.Guild`
+        :obj:`~hikari.guilds.Guild`
             The newly created guild object.
 
         Raises
         ------
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are in ``10`` or more guilds.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide unsupported fields like ``parent_id`` in channel
             objects.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -1863,22 +1863,22 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get.
 
         Returns
         -------
-        :obj:`hikari.guilds.Guild`
+        :obj:`~hikari.guilds.Guild`
             The requested guild object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you don't have access to the guild.
         """
         payload = await self._session.get_guild(
@@ -1891,12 +1891,12 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the preview object for.
 
         Returns
         -------
-        :obj:`hikari.guilds.GuildPreview`
+        :obj:`~hikari.guilds.GuildPreview`
             The requested guild preview object.
 
         Note
@@ -1906,10 +1906,10 @@ class RESTClient:
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of UINT64.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found or it isn't ``PUBLIC``.
         """
         payload = await self._session.get_guild_preview(
@@ -1938,52 +1938,52 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to be edited.
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, the new name string for the guild (``2-100`` characters).
-        region : :obj:`str`
+        region : :obj:`~str`
             If specified, the new voice region ID for guild. You can use
             :meth:`fetch_guild_voice_regions` to see which region IDs are
             available.
-        verification_level : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildVerificationLevel`, :obj:`int` ]
+        verification_level : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildVerificationLevel`, :obj:`~int` ]
             If specified, the new verification level. Passing a raw int for this
             may lead to unexpected behaviour.
-        default_message_notifications : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildMessageNotificationsLevel`, :obj:`int` ]
+        default_message_notifications : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildMessageNotificationsLevel`, :obj:`~int` ]
             If specified, the new default notification level. Passing a raw int
             for this may lead to unexpected behaviour.
-        explicit_content_filter : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildExplicitContentFilterLevel`, :obj:`int` ]
+        explicit_content_filter : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildExplicitContentFilterLevel`, :obj:`~int` ]
             If specified, the new explicit content filter. Passing a raw int for
             this may lead to unexpected behaviour.
-        afk_channel : :obj:`typing.Union` [ :obj:`hikari.channels.GuildVoiceChannel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        afk_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             If specified, the object or ID for the new AFK voice channel.
-        afk_timeout : :obj:`typing.Union` [ :obj:`datetime.timedelta`, :obj:`int` ]
+        afk_timeout : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             If specified, the new AFK timeout seconds timedelta.
         icon_data : ``hikari.internal.conversions.FileLikeT``
             If specified, the new guild icon image file data.
-        owner : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        owner : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the new guild owner.
         splash_data : ``hikari.internal.conversions.FileLikeT``
             If specified, the new new splash image file data.
-        system_channel : :obj:`typing.Union` [ :obj:`hikari.channels.GuildVoiceChannel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        system_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the new system channel.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`hikari.guilds.Guild`
+        :obj:`~hikari.guilds.Guild`
             The edited guild object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = await self._session.modify_guild(
@@ -2020,17 +2020,17 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to be deleted.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are not the guild owner.
         """
         await self._session.delete_guild(
@@ -2044,22 +2044,22 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the channels from.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`hikari.channels.GuildChannel` ]
+        :obj:`~typing.Sequence` [ :obj:`~hikari.channels.GuildChannel` ]
             A list of guild channel objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are not in the guild.
         """
         payload = await self._session.list_guild_channels(
@@ -2086,60 +2086,60 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to create the channel in.
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, the name for the channel. This must be
             inclusively between ``1` and ``100`` characters in length.
-        channel_type: :obj:`typing.Union` [ :obj:`hikari.channels.ChannelType`, :obj:`int` ]
+        channel_type: :obj:`~typing.Union` [ :obj:`~hikari.channels.ChannelType`, :obj:`~int` ]
             If specified, the channel type, passing through a raw integer here
             may lead to unexpected behaviour.
-        position : :obj:`int`
+        position : :obj:`~int`
             If specified, the position to change the channel to.
-        topic : :obj:`str`
+        topic : :obj:`~str`
             If specified, the topic to set. This is only applicable to
             text channels. This must be inclusively between ``0`` and ``1024``
             characters in length.
-        nsfw : :obj:`bool`
+        nsfw : :obj:`~bool`
             If specified, whether the channel will be marked as NSFW.
             Only applicable for text channels.
-        rate_limit_per_user : :obj:`typing.Union` [ :obj:`datetime.timedelta`, :obj:`int` ]
+        rate_limit_per_user : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             If specified, the second time delta the user has to wait before
             sending another message.  This will not apply to bots, or to
             members with ``MANAGE_MESSAGES`` or ``MANAGE_CHANNEL`` permissions.
             This must be inclusively between ``0`` and ``21600`` seconds.
-        bitrate : :obj:`int`
+        bitrate : :obj:`~int`
             If specified, the bitrate in bits per second allowable for the
             channel. This only applies to voice channels and must be inclusively
             between ``8000`` and ``96000`` for normal servers or ``8000`` and
             ``128000`` for VIP servers.
-        user_limit : :obj:`int`
+        user_limit : :obj:`~int`
             If specified, the max number of users to allow in a voice channel.
             This must be between ``0`` and ``99`` inclusive, where
             ``0`` implies no limit.
-        permission_overwrites : :obj:`typing.Sequence` [ :obj:`hikari.channels.PermissionOverwrite` ]
+        permission_overwrites : :obj:`~typing.Sequence` [ :obj:`~hikari.channels.PermissionOverwrite` ]
             If specified, the list of permission overwrite objects that are
             category specific to replace the existing overwrites with.
-        parent_category : :obj:`typing.Union` [ :obj:`hikari.channels.GuildCategory`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        parent_category : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildCategory`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the parent category to set for
              the channel.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`hikari.channels.GuildChannel`
+        :obj:`~hikari.channels.GuildChannel`
             The newly created channel object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_CHANNEL`` permission or are not in the
             guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide incorrect options for the corresponding channel type
             (e.g. a ``bitrate`` for a text channel).
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -2183,24 +2183,24 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild in which to edit the channels.
-        channel : :obj:`typing.Tuple` [ :obj:`int` , :obj:`typing.Union` [ :obj:`hikari.channels.GuildChannel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ]
+        channel : :obj:`~typing.Tuple` [ :obj:`~int` , :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
             The first channel to change the position of. This is a tuple of the
             integer position the channel object or ID.
-        *additional_channels : :obj:`typing.Tuple` [ :obj:`int`, :obj:`typing.Union` [ :obj:`hikari.channels.GuildChannel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ]
+        *additional_channels : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
             Optional additional channels to change the position of. These must
             be tuples of integer positions to change to and the channel object
             or ID and the.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or any of the channels aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_CHANNELS`` permission or are not a
             member of said guild or are not in the guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide anything other than the ``id`` and ``position``
             fields for the channels.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -2221,24 +2221,24 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the member from.
-        user : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the member to get.
 
         Returns
         -------
-        :obj:`hikari.guilds.GuildMember`
+        :obj:`~hikari.guilds.GuildMember`
             The requested member object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the member aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you don't have access to the target guild.
         """
         payload = await self._session.get_guild_member(
@@ -2262,12 +2262,12 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the members from.
-        limit : :obj:`int`
+        limit : :obj:`~int`
             If specified, the maximum number of members this iterator
             should return.
-        after : :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the user this iterator should start
             after if specified, else this will start at the oldest user.
 
@@ -2281,17 +2281,17 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`typing.AsyncIterator` [ :obj:`hikari.guilds.GuildMember` ]
+        :obj:`~typing.AsyncIterator` [ :obj:`~hikari.guilds.GuildMember` ]
             An async iterator of member objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are not in the guild.
         """
         if isinstance(after, datetime.datetime):
@@ -2324,39 +2324,39 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to edit the member from.
-        user : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildMember`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildMember`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the member to edit.
-        nickname : :obj:`str`, optional
-            If specified, the new nickname string. Setting it to :obj:`None`
+        nickname : :obj:`~str`, optional
+            If specified, the new nickname string. Setting it to :obj:`~None`
             explicitly will clear the nickname.
-        roles : :obj:`typing.Sequence` [ :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
             If specified, a list of role IDs the member should have.
-        mute : :obj:`bool`
+        mute : :obj:`~bool`
             If specified, whether the user should be muted in the voice channel
             or not.
-        deaf : :obj:`bool`
+        deaf : :obj:`~bool`
             If specified, whether the user should be deafen in the voice
             channel or not.
-        voice_channel : :obj:`typing.Union` [ :obj:`hikari.channels.GuildVoiceChannel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ], optional
+        voice_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], optional
             If specified, the ID of the channel to move the member to. Setting
-            it to :obj:`None` explicitly will disconnect the user.
-        reason : :obj:`str`
+            it to :obj:`~None` explicitly will disconnect the user.
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild, user, channel or any of the roles aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack any of the applicable permissions
             (``MANAGE_NICKNAMES``, ``MANAGE_ROLES``, ``MUTE_MEMBERS``, ``DEAFEN_MEMBERS`` or ``MOVE_MEMBERS``).
             Note that to move a member you must also have permission to connect
             to the end channel. This will also be raised if you're not in the
             guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you pass ``mute``, ``deaf`` or ``channel_id`` while the member
             is not connected to a voice channel.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -2388,22 +2388,22 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to change the nick on.
-        nickname : :obj:`str`, optional
+        nickname : :obj:`~str`, optional
             The new nick string. Setting this to `None` clears the nickname.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``CHANGE_NICKNAME`` permission or are not in the
             guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide a disallowed nickname, one that is too long, or one
             that is empty.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -2427,24 +2427,24 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the member you want to add the role to.
-        role : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the role you want to add.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild, member or role aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
         """
         await self._session.add_guild_member_role(
@@ -2466,24 +2466,24 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the member you want to remove the role from.
-        role : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the role you want to remove.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild, member or role aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
         """
         await self._session.remove_guild_member_role(
@@ -2500,22 +2500,22 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the member you want to kick.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or member aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``KICK_MEMBERS`` permission or are not in the guild.
         """
         await self._session.remove_guild_member(
@@ -2531,25 +2531,25 @@ class RESTClient:
 
         Parameters
         ----------
-         guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+         guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to get the ban from.
-         user : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+         user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the user to get the ban information for.
 
         Returns
         -------
-        :obj:`hikari.guilds.GuildMemberBan`
+        :obj:`~hikari.guilds.GuildMemberBan`
             A ban object for the requested user.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the user aren't found, or if the user is not
             banned.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
         """
         payload = await self._session.get_guild_ban(
@@ -2563,22 +2563,22 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to get the bans from.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`hikari.guilds.GuildMemberBan` ]
+        :obj:`~typing.Sequence` [ :obj:`~hikari.guilds.GuildMemberBan` ]
             A list of ban objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
         """
         payload = await self._session.get_guild_bans(
@@ -2598,25 +2598,25 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the member you want to ban.
-        delete_message_days : :obj:`typing.Union` [ :obj:`datetime.timedelta`, :obj:`int` ]
+        delete_message_days : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             If specified, the tim delta of how many days of messages from the
             user should be removed.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or member aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
         """
         await self._session.create_guild_ban(
@@ -2633,23 +2633,23 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to un-ban the user from.
-        user : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The ID of the user you want to un-ban.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or member aren't found, or the member is not
             banned.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``BAN_MEMBERS`` permission or are not a in the
             guild.
         """
@@ -2666,22 +2666,22 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to get the roles from.
 
         Returns
         -------
-        :obj:`typing.Mapping` [ :obj:`hikari.snowflakes.Snowflake`, :obj:`hikari.guilds.GuildRole` ]
+        :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.guilds.GuildRole` ]
             A list of role objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you're not in the guild.
         """
         payload = await self._session.get_guild_roles(
@@ -2704,37 +2704,37 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to create the role on.
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, the new role name string.
-        permissions : :obj:`typing.Union` [ :obj:`hikari.permissions.Permission`, :obj:`int` ]
+        permissions : :obj:`~typing.Union` [ :obj:`~hikari.permissions.Permission`, :obj:`~int` ]
             If specified, the permissions integer for the role, passing a raw
             integer rather than the int flag may lead to unexpected results.
-        color : :obj:`typing.Union` [ :obj:`hikari.colors.Color`, :obj:`int` ]
+        color : :obj:`~typing.Union` [ :obj:`~hikari.colors.Color`, :obj:`~int` ]
             If specified, the color for the role.
-        hoist : :obj:`bool`
+        hoist : :obj:`~bool`
             If specified, whether the role will be hoisted.
-        mentionable : :obj:`bool`
+        mentionable : :obj:`~bool`
            If specified, whether the role will be able to be mentioned by any
            user.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`hikari.guilds.GuildRole`
+        :obj:`~hikari.guilds.GuildRole`
             The newly created role object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or you're not in the
             guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the role attributes.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -2760,28 +2760,28 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The ID of the guild the roles belong to.
-        role : :obj:`typing.Tuple` [ :obj:`int`, :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ]
+        role : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
             The first role to move. This is a tuple of the integer position and
             the role object or ID.
-        *additional_roles : :obj:`typing.Tuple` [ :obj:`int`, :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ]
+        *additional_roles : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
             Optional extra roles to move. These must be tuples of the integer
             position and the role object or ID.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`hikari.guilds.GuildRole` ]
+        :obj:`~typing.Sequence` [ :obj:`~hikari.guilds.GuildRole` ]
             A list of all the guild roles.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or any of the roles aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or you're not in the
             guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the `position` fields.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -2811,39 +2811,39 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the role belong to.
-        role : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the role you want to edit.
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, the new role's name string.
-        permissions : :obj:`typing.Union` [ :obj:`hikari.permissions.Permission`, :obj:`int` ]
+        permissions : :obj:`~typing.Union` [ :obj:`~hikari.permissions.Permission`, :obj:`~int` ]
             If specified, the new permissions integer for the role, passing a
             raw integer for this may lead to unexpected behaviour.
-        color : :obj:`typing.Union` [ :obj:`hikari.colors.Color`, :obj:`int` ]
+        color : :obj:`~typing.Union` [ :obj:`~hikari.colors.Color`, :obj:`~int` ]
             If specified, the new color for the new role passing a raw integer
             for this may lead to unexpected behaviour.
-        hoist : :obj:`bool`
+        hoist : :obj:`~bool`
             If specified, whether the role should hoist or not.
-        mentionable : :obj:`bool`
+        mentionable : :obj:`~bool`
             If specified, whether the role should be mentionable or not.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`hikari.guilds.GuildRole`
+        :obj:`~hikari.guilds.GuildRole`
             The edited role object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or role aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or you're not in the
             guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the role attributes.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -2867,19 +2867,19 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to remove the role from.
-        role : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the role you want to delete.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the role aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
         """
         await self._session.delete_guild_role(
@@ -2894,23 +2894,23 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to get the count for.
-        days : :obj:`typing.Union` [ :obj:`datetime.timedelta`, :obj:`int` ]
+        days : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             The time delta of days to count prune for (at least ``1``).
 
         Returns
         -------
-        :obj:`int`
+        :obj:`~int`
             The number of members estimated to be pruned.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``KICK_MEMBERS`` or you are not in the guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you pass an invalid amount of days.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -2932,30 +2932,30 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to prune member of.
-        days : :obj:`typing.Union` [ :obj:`datetime.timedelta`, :obj:`int` ]
+        days : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             The time delta of inactivity days you want to use as filter.
-        compute_prune_count : :obj:`bool`
+        compute_prune_count : :obj:`~bool`
             Whether a count of pruned members is returned or not.
             Discouraged for large guilds out of politeness.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`int`, optional
+        :obj:`~int`, optional
             The number of members who were kicked if ``compute_prune_count``
-            is :obj:`True`, else :obj:`None`.
+            is :obj:`~True`, else :obj:`~None`.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found:
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``KICK_MEMBER`` permission or are not in the guild.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you provide invalid values for the ``days`` or
             ``compute_prune_count`` fields.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -2975,22 +2975,22 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the voice regions for.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`hikari.voices.VoiceRegion` ]
+        :obj:`~typing.Sequence` [ :obj:`~hikari.voices.VoiceRegion` ]
             A list of voice region objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you are not in the guild.
         """
         payload = await self._session.get_guild_voice_regions(
@@ -3005,22 +3005,22 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the invites for.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`hikari.invites.InviteWithMetadata` ]
+        :obj:`~typing.Sequence` [ :obj:`~hikari.invites.InviteWithMetadata` ]
             A list of invite objects (with metadata).
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = await self._session.get_guild_invites(
@@ -3035,22 +3035,22 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the integrations for.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`hikari.guilds.GuildIntegration` ]
+        :obj:`~typing.Sequence` [ :obj:`~hikari.guilds.GuildIntegration` ]
             A list of integration objects.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = await self._session.get_guild_integrations(
@@ -3072,31 +3072,31 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to which the integration belongs to.
-        integration : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildIntegration`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the integration to update.
-        expire_behaviour : :obj:`typing.Union` [ :obj:`hikari.guilds.IntegrationExpireBehaviour`, :obj:`int` ]
+        expire_behaviour : :obj:`~typing.Union` [ :obj:`~hikari.guilds.IntegrationExpireBehaviour`, :obj:`~int` ]
             If specified, the behaviour for when an integration subscription
             expires (passing a raw integer for this may lead to unexpected
             behaviour).
-        expire_grace_period : :obj:`typing.Union` [ :obj:`datetime.timedelta`, :obj:`int` ]
+        expire_grace_period : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             If specified, time time delta of how many days the integration will
             ignore lapsed subscriptions for.
-        enable_emojis : :obj:`bool`
+        enable_emojis : :obj:`~bool`
             If specified, whether emojis should be synced for this integration.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the integration aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         await self._session.modify_guild_integration(
@@ -3121,22 +3121,22 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to which the integration belongs to.
-        integration : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildIntegration`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the integration to delete.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the integration aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         await self._session.delete_guild_integration(
@@ -3154,19 +3154,19 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to which the integration belongs to.
-        integration : :obj:`typing.Union` [ :obj:`hikari.guilds.GuildIntegration`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The ID of the integration to sync.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the guild or the integration aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         await self._session.sync_guild_integration(
@@ -3181,22 +3181,22 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the embed for.
 
         Returns
         -------
-        :obj:`hikari.guilds.GuildEmbed`
+        :obj:`~hikari.guilds.GuildEmbed`
             A guild embed object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_GUILD`` permission or are not in
             the guild.
         """
@@ -3217,31 +3217,31 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to edit the embed for.
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.GuildChannel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ], optional
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], optional
             If specified, the object or ID of the channel that this embed's
-            invite should target. Set to :obj:`None` to disable invites for this
+            invite should target. Set to :obj:`~None` to disable invites for this
             embed.
-        enabled : :obj:`bool`
+        enabled : :obj:`~bool`
             If specified, whether this embed should be enabled.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`hikari.guilds.GuildEmbed`
+        :obj:`~hikari.guilds.GuildEmbed`
             The updated embed object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_GUILD`` permission or are not in
             the guild.
         """
@@ -3263,23 +3263,23 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the vanity URL for.
 
         Returns
         -------
-        :obj:`hikari.invites.VanityUrl`
+        :obj:`~hikari.invites.VanityUrl`
             A partial invite object containing the vanity URL in the ``code``
             field.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_GUILD`` permission or are not in
             the guild.
         """
@@ -3293,14 +3293,14 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to form the widget.
-        style : :obj:`str`
+        style : :obj:`~str`
             If specified, the syle of the widget.
 
         Returns
         -------
-        :obj:`str`
+        :obj:`~str`
             A URL to retrieve a PNG widget for your guild.
 
         Note
@@ -3324,7 +3324,7 @@ class RESTClient:
 
         Parameters
         ----------
-        invite : :obj:`typing.Union` [ :obj:`hikari.invites.Invite`, :obj:`str` ]
+        invite : :obj:`~typing.Union` [ :obj:`~hikari.invites.Invite`, :obj:`~str` ]
             The object or code of the wanted invite.
         with_counts : :bool:
             If specified, whether to attempt to count the number of
@@ -3332,15 +3332,15 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`hikari.invites.Invite`
+        :obj:`~hikari.invites.Invite`
             The requested invite object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the invite is not found.
         """
         payload = await self._session.get_invite(invite_code=getattr(invite, "code", invite), with_counts=with_counts)
@@ -3351,20 +3351,20 @@ class RESTClient:
 
         Parameters
         ----------
-        invite : :obj:`typing.Union` [ :obj:`hikari.invites.Invite`, :obj:`str` ]
+        invite : :obj:`~typing.Union` [ :obj:`~hikari.invites.Invite`, :obj:`~str` ]
             The object or ID for the invite to be deleted.
 
         Returns
         -------
-        :obj:`None`
+        :obj:`~None`
             Nothing, unlike what the API specifies. This is done to maintain
             consistency with other calls of a similar nature in this API wrapper.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the invite is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack either ``MANAGE_CHANNELS`` on the channel the invite
             belongs to or ``MANAGE_GUILD`` for guild-global delete.
         """
@@ -3375,20 +3375,20 @@ class RESTClient:
 
         Parameters
         ----------
-        user : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the user to get.
 
         Returns
         -------
-        :obj:`hikari.users.User`
+        :obj:`~hikari.users.User`
             The requested user object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the user is not found.
         """
         payload = await self._session.get_user(
@@ -3401,7 +3401,7 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`hikari.oauth2.Application`
+        :obj:`~hikari.oauth2.Application`
             An application info object.
         """
         payload = await self._session.get_current_application_info()
@@ -3412,7 +3412,7 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`hikari.users.MyUser`
+        :obj:`~hikari.users.MyUser`
             The current user object.
         """
         payload = await self._session.get_current_user()
@@ -3425,20 +3425,20 @@ class RESTClient:
 
         Parameters
         ----------
-        username : :obj:`str`
+        username : :obj:`~str`
             If specified, the new username string.
         avatar_data : ``hikari.internal.conversions.FileLikeT``, optional
             If specified, the new avatar image data.
-            If it is :obj:`None`, the avatar is removed.
+            If it is :obj:`~None`, the avatar is removed.
 
         Returns
         -------
-        :obj:`hikari.users.MyUser`
+        :obj:`~hikari.users.MyUser`
             The updated user object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If you pass username longer than the limit (``2-32``) or an invalid image.
         """
         payload = await self._session.modify_current_user(
@@ -3459,7 +3459,7 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`hikari.oauth2.OwnConnection` ]
+        :obj:`~typing.Sequence` [ :obj:`~hikari.oauth2.OwnConnection` ]
             A list of connection objects.
         """
         payload = await self._session.get_current_user_connections()
@@ -3478,10 +3478,10 @@ class RESTClient:
 
         Parameters
         ----------
-        after : :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of a guild to get guilds that were created after
             it if specified, else this will start at the oldest guild.
-        limit : :obj:`int`
+        limit : :obj:`~int`
             If specified, the maximum amount of guilds that this paginator
             should return.
 
@@ -3494,14 +3494,14 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`typing.AsyncIterator` [ :obj:`hikari.oauth2.OwnGuild` ]
+        :obj:`~typing.AsyncIterator` [ :obj:`~hikari.oauth2.OwnGuild` ]
             An async iterator of partial guild objects.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
@@ -3531,23 +3531,23 @@ class RESTClient:
 
         Parameters
         ----------
-        before : :obj:`typing.Union` [ :obj:`datetime.datetime`, :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of a guild to get guilds that were created
             before it if specified, else this will start at the newest guild.
-        limit : :obj:`int`
+        limit : :obj:`~int`
             If specified, the maximum amount of guilds that this paginator
             should return.
 
         Returns
         -------
-        :obj:`typing.AsyncIterator` [ :obj:`hikari.oauth2.OwnGuild` ]
+        :obj:`~typing.AsyncIterator` [ :obj:`~hikari.oauth2.OwnGuild` ]
             An async iterator of partial guild objects.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
@@ -3569,14 +3569,14 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to leave.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
@@ -3589,19 +3589,19 @@ class RESTClient:
 
         Parameters
         ----------
-        recipient : :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        recipient : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the user to create the new DM channel with.
 
         Returns
         -------
-        :obj:`hikari.channels.DMChannel`
+        :obj:`~hikari.channels.DMChannel`
             The newly created DM channel object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the recipient is not found.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
@@ -3615,7 +3615,7 @@ class RESTClient:
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`hikari.voices.VoiceRegion` ]
+        :obj:`~typing.Sequence` [ :obj:`~hikari.voices.VoiceRegion` ]
             A list of voice regions available
 
         Note
@@ -3637,29 +3637,29 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.GuildChannel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the channel for webhook to be created in.
-        name : :obj:`str`
+        name : :obj:`~str`
             The webhook's name string.
         avatar_data : ``hikari.internal.conversions.FileLikeT``
             If specified, the avatar image data.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`hikari.webhooks.Webhook`
+        :obj:`~hikari.webhooks.Webhook`
             The newly created webhook object.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             can not see the given channel.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If the avatar image is too big or the format is invalid.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -3679,22 +3679,22 @@ class RESTClient:
 
         Parameters
         ----------
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.GuildChannel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the guild channel to get the webhooks from.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`hikari.webhooks.Webhook` ]
+        :obj:`~typing.Sequence` [ :obj:`~hikari.webhooks.Webhook` ]
             A list of webhook objects for the give channel.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             can not see the given channel.
         """
@@ -3710,22 +3710,22 @@ class RESTClient:
 
         Parameters
         ----------
-        guild : :obj:`typing.Union` [ :obj:`hikari.guilds.Guild`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID for the guild to get the webhooks from.
 
         Returns
         -------
-        :obj:`typing.Sequence` [ :obj:`hikari.webhooks.Webhook` ]
+        :obj:`~typing.Sequence` [ :obj:`~hikari.webhooks.Webhook` ]
             A list of webhook objects for the given guild.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the guild is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             aren't a member of the given guild.
         """
@@ -3741,28 +3741,28 @@ class RESTClient:
 
         Parameters
         ----------
-        webhook : :obj:`typing.Union` [ :obj:`hikari.webhooks.Webhook`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the webhook to get.
-        webhook_token : :obj:`str`
+        webhook_token : :obj:`~str`
             If specified, the webhook token to use to get it (bypassing this
             session's provided authorization ``token``).
 
         Returns
         -------
-        :obj:`hikari.webhooks.Webhook`
+        :obj:`~hikari.webhooks.Webhook`
             The requested webhook object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the webhook is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you're not in the guild that owns this webhook or
             lack the ``MANAGE_WEBHOOKS`` permission.
-        :obj:`hikari.errors.UnauthorizedHTTPError`
+        :obj:`~hikari.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
         """
         payload = await self._session.get_webhook(
@@ -3785,39 +3785,39 @@ class RESTClient:
 
         Parameters
         ----------
-        webhook : :obj:`typing.Union` [ :obj:`hikari.webhooks.Webhook`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the webhook to edit.
-        webhook_token : :obj:`str`
+        webhook_token : :obj:`~str`
             If specified, the webhook token to use to modify it (bypassing this
             session's provided authorization ``token``).
-        name : :obj:`str`
+        name : :obj:`~str`
             If specified, the new name string.
         avatar_data : ``hikari.internal.conversions.FileLikeT``, optional
-            If specified, the new avatar image file object. If :obj:`None`, then
+            If specified, the new avatar image file object. If :obj:`~None`, then
             it is removed.
-        channel : :obj:`typing.Union` [ :obj:`hikari.channels.GuildChannel`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
-        reason : :obj:`str`
+        reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`hikari.webhooks.Webhook`
+        :obj:`~hikari.webhooks.Webhook`
             The updated webhook object.
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If either the webhook or the channel aren't found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             aren't a member of the guild this webhook belongs to.
-        :obj:`hikari.errors.UnauthorizedHTTPError`
+        :obj:`~hikari.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
         """
         payload = await self._session.modify_webhook(
@@ -3845,23 +3845,23 @@ class RESTClient:
 
         Parameters
         ----------
-        webhook : :obj:`typing.Union` [ :obj:`hikari.webhooks.Webhook`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the webhook to delete
-        webhook_token : :obj:`str`
+        webhook_token : :obj:`~str`
             If specified, the webhook token to use to delete it (bypassing this
             session's provided authorization ``token``).
 
         Raises
         ------
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the webhook is not found.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you either lack the ``MANAGE_WEBHOOKS`` permission or
             aren't a member of the guild this webhook belongs to.
-        :obj:`hikari.errors.UnauthorizedHTTPError`
+        :obj:`~hikari.errors.UnauthorizedHTTPError`
                 If you pass a token that's invalid for the target webhook.
         """
         await self._session.delete_webhook(
@@ -3889,61 +3889,61 @@ class RESTClient:
 
         Parameters
         ----------
-        webhook : :obj:`typing.Union` [ :obj:`hikari.webhooks.Webhook`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ]
+        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
             The object or ID of the webhook to execute.
-        webhook_token : :obj:`str`
+        webhook_token : :obj:`~str`
             The token of the webhook to execute.
-        content : :obj:`str`
+        content : :obj:`~str`
             If specified, the message content to send with the message.
-        username : :obj:`str`
+        username : :obj:`~str`
             If specified, the username to override the webhook's username
             for this request.
-        avatar_url : :obj:`str`
+        avatar_url : :obj:`~str`
             If specified, the url of an image to override the webhook's
             avatar with for this request.
-        tts : :obj:`bool`
+        tts : :obj:`~bool`
             If specified, whether the message will be sent as a TTS message.
-        wait : :obj:`bool`
+        wait : :obj:`~bool`
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
         file : ``hikari.media.IO``
             If specified, this is a file object to send along with the webhook
             as defined in :mod:`hikari.media`.
-        embeds : :obj:`typing.Sequence` [ :obj:`hikari.embeds.Embed` ]
+        embeds : :obj:`~typing.Sequence` [ :obj:`~hikari.embeds.Embed` ]
             If specified, a sequence of ``1`` to ``10`` embed objects to send
             with the embed.
-        mentions_everyone : :obj:`bool`
+        mentions_everyone : :obj:`~bool`
             Whether ``@everyone`` and ``@here`` mentions should be resolved by
-            discord and lead to actual pings, defaults to :obj:`True`.
-        user_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.users.User`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ], :obj:`bool` ]
+            discord and lead to actual pings, defaults to :obj:`~True`.
+        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
             Either an array of user objects/IDs to allow mentions for,
-            :obj:`True` to allow all user mentions or :obj:`False` to block all
-            user mentions from resolving, defaults to :obj:`True`.
-        role_mentions : :obj:`typing.Union` [ :obj:`typing.Collection` [ :obj:`typing.Union` [ :obj:`hikari.guilds.GuildRole`, :obj:`hikari.snowflakes.Snowflake`, :obj:`int` ] ], :obj:`bool` ]
+            :obj:`~True` to allow all user mentions or :obj:`~False` to block all
+            user mentions from resolving, defaults to :obj:`~True`.
+        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
             Either an array of guild role objects/IDs to allow mentions for,
-            :obj:`True` to allow all role mentions or :obj:`False` to block all
-            role mentions from resolving, defaults to :obj:`True`.
+            :obj:`~True` to allow all role mentions or :obj:`~False` to block all
+            role mentions from resolving, defaults to :obj:`~True`.
 
         Returns
         -------
-        :obj:`hikari.messages.Message`, optional
-            The created message object, if ``wait`` is :obj:`True`, else
-            :obj:`None`.
+        :obj:`~hikari.messages.Message`, optional
+            The created message object, if ``wait`` is :obj:`~True`, else
+            :obj:`~None`.
 
         Raises
         ------
-        :obj:`hikari.errors.NotFoundHTTPError`
+        :obj:`~hikari.errors.NotFoundHTTPError`
             If the channel ID or webhook ID is not found.
-        :obj:`hikari.errors.BadRequestHTTPError`
+        :obj:`~hikari.errors.BadRequestHTTPError`
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
             empty or greater than ``2000`` characters; if neither content, file
             or embeds are specified.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`hikari.errors.ForbiddenHTTPError`
+        :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permissions to send to this channel.
-        :obj:`hikari.errors.UnauthorizedHTTPError`
+        :obj:`~hikari.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
         """
         payload = await self._session.execute_webhook(
@@ -3984,7 +3984,7 @@ class RESTClient:
 
         This endpoint has the same signature as :attr:`execute_webhook` with
         the only difference being that ``mentions_everyone``,
-        ``user_mentions`` and ``role_mentions`` default to :obj:`False`.
+        ``user_mentions`` and ``role_mentions`` default to :obj:`~False`.
         """
         return self.execute_webhook(
             webhook=webhook,
