@@ -39,7 +39,7 @@
     nox -s sphinx || nox -s documentation  # FIXME: remove once in master.
     rm ../public -rf && mkdir ../public
     if [[ "$TARGET_BRANCH" = master ]]; then
-        mv public ../publi
+        mv public ../public
     else
         mv public "../public/${TARGET_BRANCH}"
     fi
