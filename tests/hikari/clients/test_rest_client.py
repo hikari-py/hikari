@@ -71,7 +71,7 @@ class TestRESTClient:
                 ssl_context=mock_config.ssl_context,
                 verify_ssl=mock_config.verify_ssl,
                 timeout=mock_config.request_timeout,
-                token=mock_config.token,
+                token=f"{mock_config.token_type} {mock_config.token}",
                 version=mock_config.rest_version,
             )
             assert cli._session is mock_low_level_rest_clients
