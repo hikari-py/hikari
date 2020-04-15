@@ -40,22 +40,16 @@ from tests.hikari import _helpers
 class TestLowLevelRestfulClient:
     @pytest.fixture
     def rest_impl(self):
-        class LowLevelRestfulClientImpl(rest.LowLevelRestfulClient):
-            def __init__(self, *args, **kwargs):
-                self.base_url = "https://discordapp.com/api/v6"
-                self.client_session = mock.MagicMock(close=mock.AsyncMock())
-                self.logger = mock.MagicMock()
-                self.ratelimiter = mock.MagicMock(
-                    ratelimits.HTTPBucketRateLimiterManager,
-                    acquire=mock.MagicMock(),
-                    update_rate_limits=mock.MagicMock(),
-                )
-                self.global_ratelimiter = mock.MagicMock(
-                    ratelimits.ManualRateLimiter, acquire=mock.MagicMock(), throttle=mock.MagicMock()
-                )
-                self._request = mock.AsyncMock(return_value=...)
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch("aiohttp.ClientSession"))
+        stack.enter_context(mock.patch("hikari.internal.more_logging.get_named_logger"))
+        stack.enter_context(mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager"))
+        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
+        with stack:
+            client = rest.LowLevelRestfulClient(base_url="https://discordapp.com/api/v6", token="Bot blah.blah.blah")
+        client._request = mock.AsyncMock(return_value=...)
 
-        return LowLevelRestfulClientImpl()
+        return client
 
     @pytest.fixture
     def compiled_route(self):
@@ -94,33 +88,18 @@ class TestLowLevelRestfulClient:
         return Response()
 
     @pytest.mark.asyncio
-    async def test_rest___aenter___and___aexit__(self):
-        class LowLevelRestfulClientImpl(rest.LowLevelRestfulClient):
-            def __init__(self, *args, **kwargs):
-                kwargs.setdefault("token", "Bearer xxx")
-                super().__init__(*args, **kwargs)
-                self.close = mock.AsyncMock()
+    async def test_rest___aenter___and___aexit__(self, rest_impl):
+        rest_impl.close = mock.AsyncMock()
 
-        inst = LowLevelRestfulClientImpl()
+        async with rest_impl as client:
+            assert client is rest_impl
 
-        async with inst as client:
-            assert client is inst
-
-        inst.close.assert_called_once_with()
+        rest_impl.close.assert_called_once_with()
 
     @pytest.mark.asyncio
-    async def test_rest_close_calls_client_session_close(self):
-        class LowLevelRestfulClientImpl(rest.LowLevelRestfulClient):
-            def __init__(self, *args, **kwargs):
-                self.client_session = mock.MagicMock()
-                self.client_session.close = mock.AsyncMock()
-                self.logger = logging.getLogger(__name__)
-
-        inst = LowLevelRestfulClientImpl()
-
-        await inst.close()
-
-        inst.client_session.close.assert_called_with()
+    async def test_rest_close_calls_client_session_close(self, rest_impl):
+        await rest_impl.close()
+        rest_impl.client_session.close.assert_called_with()
 
     @pytest.mark.asyncio
     async def test__init__with_bot_token_and_without_optionals(self):
