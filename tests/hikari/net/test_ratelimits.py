@@ -23,7 +23,7 @@ import logging
 import math
 import statistics
 import time
-from unittest import mock
+import mock
 
 import pytest
 

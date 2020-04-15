@@ -22,8 +22,7 @@ import io
 import json
 import logging
 import ssl
-import unittest.mock
-from unittest import mock
+import mock
 
 import aiohttp
 import pytest
@@ -690,10 +689,10 @@ class TestLowLevelRestfulClient:
         rest_impl._request.assert_called_once_with(mock_route, form_body=mock_form, re_seekable_resources=[])
 
     @pytest.mark.asyncio
-    @unittest.mock.patch.object(routes, "CHANNEL_MESSAGES")
-    @unittest.mock.patch.object(aiohttp, "FormData", autospec=True)
-    @unittest.mock.patch.object(conversions, "make_resource_seekable")
-    @unittest.mock.patch.object(json, "dumps")
+    @mock.patch.object(routes, "CHANNEL_MESSAGES")
+    @mock.patch.object(aiohttp, "FormData", autospec=True)
+    @mock.patch.object(conversions, "make_resource_seekable")
+    @mock.patch.object(json, "dumps")
     async def test_create_message_with_optionals(
         self, dumps, make_resource_seekable, FormData, CHANNEL_MESSAGES, rest_impl
     ):
@@ -2067,12 +2066,11 @@ class TestLowLevelRestfulClient:
             mock_route, form_body=mock_form, re_seekable_resources=[], query={}, suppress_authorization_header=True,
         )
 
-    # cymock doesn't work right with the patch
     @pytest.mark.asyncio
-    @unittest.mock.patch.object(aiohttp, "FormData", autospec=True)
-    @unittest.mock.patch.object(routes, "WEBHOOK_WITH_TOKEN")
-    @unittest.mock.patch.object(json, "dumps")
-    @unittest.mock.patch.object(conversions, "make_resource_seekable")
+    @mock.patch.object(aiohttp, "FormData", autospec=True)
+    @mock.patch.object(routes, "WEBHOOK_WITH_TOKEN")
+    @mock.patch.object(json, "dumps")
+    @mock.patch.object(conversions, "make_resource_seekable")
     async def test_execute_webhook_with_optionals(
         self, make_resource_seekable, dumps, WEBHOOK_WITH_TOKEN, FormData, rest_impl
     ):
