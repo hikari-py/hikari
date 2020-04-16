@@ -43,6 +43,7 @@ class _NotInitializedYet(meta.Singleton):
 
     These will be filled once the bot has started.
     """
+
     __slots__ = ()
 
     def __bool__(self) -> bool:
