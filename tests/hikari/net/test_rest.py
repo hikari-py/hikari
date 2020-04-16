@@ -42,7 +42,7 @@ class TestLowLevelRestfulClient:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch("aiohttp.ClientSession"))
         stack.enter_context(mock.patch("hikari.internal.more_logging.get_named_logger"))
-        stack.enter_context(mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager"))
+        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
         with stack:
             client = rest.LowLevelRestfulClient(base_url="https://discordapp.com/api/v6", token="Bot blah.blah.blah")
@@ -108,7 +108,7 @@ class TestLowLevelRestfulClient:
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=mock_manual_rate_limiter))
-        stack.enter_context(mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager", return_value=buckets_mock))
+        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager", return_value=buckets_mock))
         stack.enter_context(mock.patch.object(aiohttp, "ClientSession", return_value=mock_client_session))
 
         with stack:
@@ -126,7 +126,7 @@ class TestLowLevelRestfulClient:
     async def test__init__with_bearer_token_and_without_optionals(self):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
-        stack.enter_context(mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager"))
+        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
         stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
         with stack:
             client = rest.LowLevelRestfulClient(token="Bearer token.otacon.a-token")
@@ -135,7 +135,7 @@ class TestLowLevelRestfulClient:
     @pytest.mark.asyncio
     async def test__init__with_optionals(self):
         mock_manual_rate_limiter = mock.MagicMock(ratelimits.ManualRateLimiter)
-        mock_http_bucket_rate_limit_manager = mock.MagicMock(ratelimits.HTTPBucketRateLimiterManager)
+        mock_http_bucket_rate_limit_manager = mock.MagicMock(ratelimits.RESTBucketManager)
         mock_connector = mock.MagicMock(aiohttp.BaseConnector)
         mock_dumps = mock.MagicMock(json.dumps)
         mock_loads = mock.MagicMock(json.loads)
@@ -147,9 +147,7 @@ class TestLowLevelRestfulClient:
         stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=mock_manual_rate_limiter))
         stack.enter_context(
-            mock.patch.object(
-                ratelimits, "HTTPBucketRateLimiterManager", return_value=mock_http_bucket_rate_limit_manager
-            )
+            mock.patch.object(ratelimits, "RESTBucketManager", return_value=mock_http_bucket_rate_limit_manager)
         )
 
         with stack:
@@ -179,7 +177,7 @@ class TestLowLevelRestfulClient:
     async def test__init__raises_runtime_error_with_invalid_token(self, *_):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
-        stack.enter_context(mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager"))
+        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
         stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
         with stack:
             async with rest.LowLevelRestfulClient(token="An-invalid-TOKEN"):
@@ -193,13 +191,13 @@ class TestLowLevelRestfulClient:
 
     @pytest.fixture()
     @mock.patch.object(ratelimits, "ManualRateLimiter")
-    @mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager")
+    @mock.patch.object(ratelimits, "RESTBucketManager")
     @mock.patch.object(aiohttp, "ClientSession")
     def rest_impl_with__request(self, *args):
         rest_impl = rest.LowLevelRestfulClient(token="Bot token")
         rest_impl.logger = mock.MagicMock(debug=mock.MagicMock())
         rest_impl.ratelimiter = mock.MagicMock(
-            ratelimits.HTTPBucketRateLimiterManager, acquire=mock.MagicMock(), update_rate_limits=mock.MagicMock(),
+            ratelimits.RESTBucketManager, acquire=mock.MagicMock(), update_rate_limits=mock.MagicMock(),
         )
         rest_impl.global_ratelimiter = mock.MagicMock(
             ratelimits.ManualRateLimiter, acquire=mock.MagicMock(), throttle=mock.MagicMock()
@@ -455,7 +453,7 @@ class TestLowLevelRestfulClient:
     ):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
-        stack.enter_context(mock.patch.object(ratelimits, "HTTPBucketRateLimiterManager"))
+        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
         stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
         discord_response.status = status_code
         with stack:

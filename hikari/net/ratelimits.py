@@ -164,8 +164,8 @@ __all__ = [
     "BurstRateLimiter",
     "ManualRateLimiter",
     "WindowedBurstRateLimiter",
-    "HTTPBucketRateLimiter",
-    "HTTPBucketRateLimiterManager",
+    "RESTBucket",
+    "RESTBucketManager",
     "ExponentialBackOff",
 ]
 
@@ -299,7 +299,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
 
 class ManualRateLimiter(BurstRateLimiter):
-    """Rate limit handler for the global HTTP rate limit.
+    """Rate limit handler for the global REST rate limit.
 
     This is a non-preemptive rate limiting algorithm that will always return
     completed futures until :meth:`throttle` is invoked. Once this is invoked,
@@ -312,8 +312,8 @@ class ManualRateLimiter(BurstRateLimiter):
     Triggering a throttle when it is already set will cancel the current
     throttle task that is sleeping and replace it.
 
-    This is used to enforce the global HTTP rate limit that will occur
-    "randomly" during HTTP API interaction.
+    This is used to enforce the global REST rate limit that will occur
+    "randomly" during REST API interaction.
 
     Expect random occurrences.
     """
@@ -321,7 +321,7 @@ class ManualRateLimiter(BurstRateLimiter):
     __slots__ = ()
 
     def __init__(self) -> None:
-        super().__init__("global HTTP")
+        super().__init__("global REST")
 
     def acquire(self) -> more_asyncio.Future[None]:
         """Acquire time on this rate limiter.
@@ -575,10 +575,10 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.throttle_task = None
 
 
-class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
-    """Represents a rate limit for an HTTP endpoint.
+class RESTBucket(WindowedBurstRateLimiter):
+    """Represents a rate limit for an REST endpoint.
 
-    Component to represent an active rate limit bucket on a specific HTTP route
+    Component to represent an active rate limit bucket on a specific REST route
     with a specific major parameter combo.
 
     This is somewhat similar to the :obj:`~WindowedBurstRateLimiter` in how it
@@ -667,10 +667,10 @@ class HTTPBucketRateLimiter(WindowedBurstRateLimiter):
             self.remaining -= 1
 
 
-class HTTPBucketRateLimiterManager:
-    """The main rate limiter implementation for HTTP clients.
+class RESTBucketManager:
+    """The main rate limiter implementation for REST clients.
 
-    This is designed to provide bucketed rate limiting for Discord HTTP
+    This is designed to provide bucketed rate limiting for Discord REST
     endpoints that respects the ``X-RateLimit-Bucket`` rate limit header. To do
     this, it makes the assumption that any limit can change at any time.
     """
@@ -692,8 +692,8 @@ class HTTPBucketRateLimiterManager:
     #: major parameters used in that compiled route) to their corresponding rate
     #: limiters.
     #:
-    #: :type: :obj:`~typing.MutableMapping` [ :obj:`~str`, :obj:`~HTTPBucketRateLimiter` ]
-    real_hashes_to_buckets: typing.Final[typing.MutableMapping[str, HTTPBucketRateLimiter]]
+    #: :type: :obj:`~typing.MutableMapping` [ :obj:`~str`, :obj:`~RESTBucketRateLimiter` ]
+    real_hashes_to_buckets: typing.Final[typing.MutableMapping[str, RESTBucket]]
 
     #: An internal event that is set when the object is shut down.
     #:
@@ -717,7 +717,7 @@ class HTTPBucketRateLimiterManager:
         self.gc_task: typing.Optional[asyncio.Task] = None
         self.logger: logging.Logger = more_logging.get_named_logger(self)
 
-    def __enter__(self) -> "HTTPBucketRateLimiterManager":
+    def __enter__(self) -> "RESTBucketManager":
         return self
 
     def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
@@ -833,7 +833,7 @@ class HTTPBucketRateLimiterManager:
         ----
         The returned future MUST be awaited, and will complete when your turn to
         make a call comes along. You are expected to await this and then
-        immediately make your HTTP call. The returned future may already be
+        immediately make your REST call. The returned future may already be
         completed if you can make the call immediately.
         """
         # Returns a future to await on to wait to be allowed to send the request, and a
@@ -850,7 +850,7 @@ class HTTPBucketRateLimiterManager:
             bucket = self.real_hashes_to_buckets[real_bucket_hash]
         except KeyError:
             self.logger.debug("creating new bucket for %s", real_bucket_hash)
-            bucket = HTTPBucketRateLimiter(real_bucket_hash, compiled_route)
+            bucket = RESTBucket(real_bucket_hash, compiled_route)
             self.real_hashes_to_buckets[real_bucket_hash] = bucket
 
         return bucket.acquire()
@@ -888,7 +888,7 @@ class HTTPBucketRateLimiterManager:
         real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
 
         if real_bucket_hash not in self.real_hashes_to_buckets:
-            bucket = HTTPBucketRateLimiter(real_bucket_hash, compiled_route)
+            bucket = RESTBucket(real_bucket_hash, compiled_route)
             self.real_hashes_to_buckets[real_bucket_hash] = bucket
         else:
             bucket = self.real_hashes_to_buckets[real_bucket_hash]
