@@ -415,7 +415,7 @@ class ShardClient(runnable.RunnableClient):
                 self.logger.warning("shutting down")
                 return
             except Exception as ex:
-                self.logger.debug("propagating unexpected exception %s", exc_info=ex)
+                self.logger.debug("propagating unexpected exception", exc_info=ex)
                 raise ex
 
     async def _spin_up(self) -> asyncio.Task:
