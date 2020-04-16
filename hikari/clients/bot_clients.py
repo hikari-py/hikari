@@ -50,7 +50,7 @@ class _NotInitializedYet(meta.Singleton):
         return False
 
     def __defer(self, *args, **kwargs) -> typing.NoReturn:
-        raise TypeError(f"Bot has not yet initialized, so attribute is not available.") from None
+        raise TypeError("Bot has not yet initialized, so attribute is not available.") from None
 
     __call__ = __defer
     __getattr__ = __defer
