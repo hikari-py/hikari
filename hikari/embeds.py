@@ -362,10 +362,10 @@ class Embed(entities.HikariEntity, entities.Deserializable, entities.Serializabl
 
     #: The fields of the embed.
     #:
-    #: :type: :obj:`~typing.Sequence` [ :obj:`~EmbedField` ], optional
-    fields: typing.Optional[typing.Sequence[EmbedField]] = marshaller.attrib(
+    #: :type: :obj:`~typing.Sequence` [ :obj:`~EmbedField` ]
+    fields: typing.Sequence[EmbedField] = marshaller.attrib(
         deserializer=lambda fields: [EmbedField.deserialize(f) for f in fields],
         serializer=lambda fields: [f.serialize() for f in fields],
-        if_undefined=None,
-        default=None,
+        if_undefined=list,
+        factory=list,
     )

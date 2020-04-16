@@ -334,7 +334,7 @@ class RESTConfig(AIOHTTPConfig, TokenConfig):
     #:
     #: Defaults to ``"Bot"``
     #:
-    #: :type: :obj:`~str`
+    #: :type: :obj:`~str`, optional
     token_type: typing.Optional[str] = marshaller.attrib(
         deserializer=str, if_undefined=lambda: "Bot", if_none=None, default="Bot"
     )
