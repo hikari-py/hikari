@@ -550,13 +550,16 @@ class ShardConnection:
             The close code to use. Defaults to ``1000`` (normal closure).
         """
         if not self.requesting_close_event.is_set():
+            self.logger.debug("closing websocket connection")
             self.requesting_close_event.set()
             # These will attribute error if they are not set; in this case we don't care, just ignore it.
             with contextlib.suppress(asyncio.TimeoutError, AttributeError):
-                await asyncio.wait_for(asyncio.shield(self._ws.close(code=close_code)), timeout=2.0)
+                await asyncio.wait_for(self._ws.close(code=close_code), timeout=2.0)
             with contextlib.suppress(asyncio.TimeoutError, AttributeError):
-                await asyncio.wait_for(asyncio.shield(self._session.close()), timeout=2.0)
+                await asyncio.wait_for(self._session.close(), timeout=2.0)
             self.closed_event.set()
+        else:
+            self.logger.debug("websocket connection already requested to be closed, will not do anything else")
 
     async def connect(self, client_session_type=aiohttp.ClientSession) -> None:
         """Connect to the gateway and return when it closes.

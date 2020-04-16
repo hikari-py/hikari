@@ -339,6 +339,7 @@ class EventDispatcherImpl(EventDispatcher):
             event handlers.
         """
         event_t = type(event)
+        self.logger.debug("dispatching %s", event_t.__name__)
 
         futs = []
 
