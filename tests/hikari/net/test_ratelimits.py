@@ -360,18 +360,18 @@ class TestWindowedBurstRateLimiter:
             assert rl.is_rate_limited(now) is (remaining <= 0)
 
 
-class TestHTTPBucketRateLimiter:
+class TestRESTBucket:
     @pytest.fixture
     def compiled_route(self):
         return routes.CompiledRoute("get", "/foo/bar", "/foo/bar", "1a2b3c")
 
     @pytest.mark.parametrize("name", ["spaghetti", ratelimits.UNKNOWN_HASH])
     def test_is_unknown(self, name, compiled_route):
-        with ratelimits.HTTPBucketRateLimiter(name, compiled_route) as rl:
+        with ratelimits.RESTBucket(name, compiled_route) as rl:
             assert rl.is_unknown is (name == ratelimits.UNKNOWN_HASH)
 
     def test_update_rate_limit(self, compiled_route):
-        with ratelimits.HTTPBucketRateLimiter(__name__, compiled_route) as rl:
+        with ratelimits.RESTBucket(__name__, compiled_route) as rl:
             rl.remaining = 1
             rl.limit = 2
             rl.reset_at = 3
@@ -387,13 +387,13 @@ class TestHTTPBucketRateLimiter:
 
     @pytest.mark.parametrize("name", ["spaghetti", ratelimits.UNKNOWN_HASH])
     def test_drip(self, name, compiled_route):
-        with ratelimits.HTTPBucketRateLimiter(name, compiled_route) as rl:
+        with ratelimits.RESTBucket(name, compiled_route) as rl:
             rl.remaining = 1
             rl.drip()
             assert rl.remaining == 0 if name != ratelimits.UNKNOWN_HASH else 1
 
 
-class TestHTTPBucketRateLimiterManager:
+class TestRESTBucketManager:
     @pytest.mark.asyncio
     async def test_close_closes_all_buckets(self):
         class MockBucket:
@@ -402,7 +402,7 @@ class TestHTTPBucketRateLimiterManager:
 
         buckets = [MockBucket() for _ in range(30)]
 
-        mgr = ratelimits.HTTPBucketRateLimiterManager()
+        mgr = ratelimits.RESTBucketManager()
         mgr.real_hashes_to_buckets = {f"blah{i}": bucket for i, bucket in enumerate(buckets)}
 
         mgr.close()
@@ -412,14 +412,14 @@ class TestHTTPBucketRateLimiterManager:
 
     @pytest.mark.asyncio
     async def test_close_sets_closed_event(self):
-        mgr = ratelimits.HTTPBucketRateLimiterManager()
+        mgr = ratelimits.RESTBucketManager()
         assert not mgr.closed_event.is_set()
         mgr.close()
         assert mgr.closed_event.is_set()
 
     @pytest.mark.asyncio
     async def test_start(self):
-        with ratelimits.HTTPBucketRateLimiterManager() as mgr:
+        with ratelimits.RESTBucketManager() as mgr:
             assert mgr.gc_task is None
             mgr.start()
             mgr.start()
@@ -428,9 +428,9 @@ class TestHTTPBucketRateLimiterManager:
 
     @pytest.mark.asyncio
     async def test_exit_closes(self):
-        with mock.patch("hikari.net.ratelimits.HTTPBucketRateLimiterManager.close") as close:
-            with mock.patch("hikari.net.ratelimits.HTTPBucketRateLimiterManager.gc") as gc:
-                with ratelimits.HTTPBucketRateLimiterManager() as mgr:
+        with mock.patch("hikari.net.ratelimits.RESTBucketManager.close") as close:
+            with mock.patch("hikari.net.ratelimits.RESTBucketManager.gc") as gc:
+                with ratelimits.RESTBucketManager() as mgr:
                     mgr.start(0.01)
                 gc.assert_called_once_with(0.01)
             close.assert_called()
@@ -438,7 +438,7 @@ class TestHTTPBucketRateLimiterManager:
     @pytest.mark.asyncio
     async def test_gc_polls_until_closed_event_set(self):
         # This is shit, but it is good shit.
-        with ratelimits.HTTPBucketRateLimiterManager() as mgr:
+        with ratelimits.RESTBucketManager() as mgr:
             mgr.start(0.01)
             assert mgr.gc_task is not None
             assert not mgr.gc_task.done()
@@ -456,7 +456,7 @@ class TestHTTPBucketRateLimiterManager:
 
     @pytest.mark.asyncio
     async def test_gc_calls_do_pass(self):
-        with _helpers.unslot_class(ratelimits.HTTPBucketRateLimiterManager)() as mgr:
+        with _helpers.unslot_class(ratelimits.RESTBucketManager)() as mgr:
             mgr.do_gc_pass = mock.MagicMock()
             mgr.start(0.01)
             try:
@@ -467,7 +467,7 @@ class TestHTTPBucketRateLimiterManager:
 
     @pytest.mark.asyncio
     async def test_do_gc_pass_any_buckets_that_are_empty_and_unknown_get_closed(self):
-        with _helpers.unslot_class(ratelimits.HTTPBucketRateLimiterManager)() as mgr:
+        with _helpers.unslot_class(ratelimits.RESTBucketManager)() as mgr:
             bucket = mock.MagicMock()
             bucket.is_empty = True
             bucket.is_unknown = True
@@ -481,7 +481,7 @@ class TestHTTPBucketRateLimiterManager:
 
     @pytest.mark.asyncio
     async def test_do_gc_pass_any_buckets_that_are_empty_and_known_but_still_rate_limited_are_kept(self):
-        with _helpers.unslot_class(ratelimits.HTTPBucketRateLimiterManager)() as mgr:
+        with _helpers.unslot_class(ratelimits.RESTBucketManager)() as mgr:
             bucket = mock.MagicMock()
             bucket.is_empty = True
             bucket.is_unknown = False
@@ -496,7 +496,7 @@ class TestHTTPBucketRateLimiterManager:
 
     @pytest.mark.asyncio
     async def test_do_gc_pass_any_buckets_that_are_empty_and_known_but_not_rate_limited_are_closed(self):
-        with _helpers.unslot_class(ratelimits.HTTPBucketRateLimiterManager)() as mgr:
+        with _helpers.unslot_class(ratelimits.RESTBucketManager)() as mgr:
             bucket = mock.MagicMock()
             bucket.is_empty = True
             bucket.is_unknown = False
@@ -511,7 +511,7 @@ class TestHTTPBucketRateLimiterManager:
 
     @pytest.mark.asyncio
     async def test_do_gc_pass_any_buckets_that_are_not_empty_are_kept(self):
-        with _helpers.unslot_class(ratelimits.HTTPBucketRateLimiterManager)() as mgr:
+        with _helpers.unslot_class(ratelimits.RESTBucketManager)() as mgr:
             bucket = mock.MagicMock()
             bucket.is_empty = False
             bucket.is_unknown = True
@@ -525,7 +525,7 @@ class TestHTTPBucketRateLimiterManager:
 
     @pytest.mark.asyncio
     async def test_acquire_route_when_not_in_routes_to_real_hashes_makes_new_bucket_using_initial_hash(self):
-        with ratelimits.HTTPBucketRateLimiterManager() as mgr:
+        with ratelimits.RESTBucketManager() as mgr:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
 
@@ -534,11 +534,11 @@ class TestHTTPBucketRateLimiterManager:
             mgr.acquire(route)
 
             assert "UNKNOWN;bobs" in mgr.real_hashes_to_buckets
-            assert isinstance(mgr.real_hashes_to_buckets["UNKNOWN;bobs"], ratelimits.HTTPBucketRateLimiter)
+            assert isinstance(mgr.real_hashes_to_buckets["UNKNOWN;bobs"], ratelimits.RESTBucket)
 
     @pytest.mark.asyncio
     async def test_acquire_route_when_not_in_routes_to_real_hashes_caches_route(self):
-        with ratelimits.HTTPBucketRateLimiterManager() as mgr:
+        with ratelimits.RESTBucketManager() as mgr:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
 
@@ -550,7 +550,7 @@ class TestHTTPBucketRateLimiterManager:
 
     @pytest.mark.asyncio
     async def test_acquire_route_when_route_cached_already_obtains_hash_from_route_and_bucket_from_hash(self):
-        with ratelimits.HTTPBucketRateLimiterManager() as mgr:
+        with ratelimits.RESTBucketManager() as mgr:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(return_value="eat pant;1234")
             bucket = mock.MagicMock()
@@ -566,11 +566,11 @@ class TestHTTPBucketRateLimiterManager:
 
     @pytest.mark.asyncio
     async def test_acquire_route_returns_acquired_future(self):
-        with ratelimits.HTTPBucketRateLimiterManager() as mgr:
+        with ratelimits.RESTBucketManager() as mgr:
             route = mock.MagicMock()
 
             bucket = mock.MagicMock()
-            with mock.patch("hikari.net.ratelimits.HTTPBucketRateLimiter", return_value=bucket):
+            with mock.patch("hikari.net.ratelimits.RESTBucket", return_value=bucket):
                 route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
 
                 f = mgr.acquire(route)
@@ -578,7 +578,7 @@ class TestHTTPBucketRateLimiterManager:
 
     @pytest.mark.asyncio
     async def test_acquire_route_returns_acquired_future_for_new_bucket(self):
-        with ratelimits.HTTPBucketRateLimiterManager() as mgr:
+        with ratelimits.RESTBucketManager() as mgr:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(return_value="eat pant;bobs")
             bucket = mock.MagicMock()
@@ -590,17 +590,17 @@ class TestHTTPBucketRateLimiterManager:
 
     @pytest.mark.asyncio
     async def test_update_rate_limits_if_wrong_bucket_hash_reroutes_route(self):
-        with ratelimits.HTTPBucketRateLimiterManager() as mgr:
+        with ratelimits.RESTBucketManager() as mgr:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
             mgr.routes_to_hashes[route] = "123"
             mgr.update_rate_limits(route, "blep", 22, 23, datetime.datetime.now(), datetime.datetime.now())
             assert mgr.routes_to_hashes[route] == "blep"
-            assert isinstance(mgr.real_hashes_to_buckets["blep;bobs"], ratelimits.HTTPBucketRateLimiter)
+            assert isinstance(mgr.real_hashes_to_buckets["blep;bobs"], ratelimits.RESTBucket)
 
     @pytest.mark.asyncio
     async def test_update_rate_limits_if_right_bucket_hash_does_nothing_to_hash(self):
-        with ratelimits.HTTPBucketRateLimiterManager() as mgr:
+        with ratelimits.RESTBucketManager() as mgr:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
             mgr.routes_to_hashes[route] = "123"
@@ -612,7 +612,7 @@ class TestHTTPBucketRateLimiterManager:
 
     @pytest.mark.asyncio
     async def test_update_rate_limits_updates_params(self):
-        with ratelimits.HTTPBucketRateLimiterManager() as mgr:
+        with ratelimits.RESTBucketManager() as mgr:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
             mgr.routes_to_hashes[route] = "123"
