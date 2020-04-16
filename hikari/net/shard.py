@@ -558,7 +558,7 @@ class ShardConnection:
             with contextlib.suppress(asyncio.TimeoutError, AttributeError):
                 await asyncio.wait_for(self._session.close(), timeout=2.0)
             self.closed_event.set()
-        else:
+        elif self._debug:
             self.logger.debug("websocket connection already requested to be closed, will not do anything else")
 
     async def connect(self, client_session_type=aiohttp.ClientSession) -> None:
@@ -641,17 +641,20 @@ class ShardConnection:
 
             raise ex
         finally:
-            await self.close(close_code)
             self.closed_event.set()
             self._connected_at = float("nan")
             self.last_heartbeat_sent = float("nan")
             self.heartbeat_latency = float("nan")
             self.last_message_received = float("nan")
-            self.disconnect_count += 1
-            self._ws = None
+
+            if self._ws is not None:
+                await self.close(close_code)
+                self.dispatch(self, "DISCONNECTED", {})
+                self.disconnect_count += 1
+                self._ws = None
+
             await self._session.close()
             self._session = None
-            self.dispatch(self, "DISCONNECTED", {})
 
     @property
     def _ws_connect_kwargs(self):
