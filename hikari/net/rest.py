@@ -388,7 +388,7 @@ class LowLevelRestfulClient:
                     )
                     continue
                 else:
-                    self.logger.debug(
+                    self.logger.warning(
                         "received unexpected response shape. Status: %s, Content-Type: %s, Body: %s",
                         status, content_type, raw_body
                     )
