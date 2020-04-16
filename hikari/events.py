@@ -240,14 +240,14 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializ
     #:
     #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
     guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_none=None
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The sorting position of this channel, will be relative to the
     #: :attr:`parent_id` if set.
     #:
     #: :type: :obj:`~int`, optional
-    position: typing.Optional[int] = marshaller.attrib(deserializer=int, if_none=None)
+    position: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
 
     #: An mapping of the set permission overwrites for this channel, if applicable.
     #:
@@ -256,7 +256,8 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializ
         typing.Mapping[snowflakes.Snowflake, channels.PermissionOverwrite]
     ] = marshaller.attrib(
         deserializer=lambda overwrites: {o.id: o for o in map(channels.PermissionOverwrite.deserialize, overwrites)},
-        if_none=None,
+        if_undefined=None,
+        default=None,
     )
 
     #: The name of this channel, if applicable.
