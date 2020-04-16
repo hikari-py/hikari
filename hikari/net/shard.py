@@ -588,11 +588,11 @@ class ShardConnection:
 
         try:
             self._ws = await self._session.ws_connect(**self._ws_connect_kwargs)
-
-            self._connected_at = time.perf_counter()
             self._zlib = zlib.decompressobj()
             self.logger.debug("expecting HELLO")
             pl = await self._receive()
+
+            self._connected_at = time.perf_counter()
 
             op = pl["op"]
             if op != 10:
@@ -642,16 +642,18 @@ class ShardConnection:
             raise ex
         finally:
             self.closed_event.set()
+
+            if not math.isnan(self._connected_at):
+                await self.close(close_code)
+                self.dispatch(self, "DISCONNECTED", {})
+                self.disconnect_count += 1
+
+            self._ws = None
+
             self._connected_at = float("nan")
             self.last_heartbeat_sent = float("nan")
             self.heartbeat_latency = float("nan")
             self.last_message_received = float("nan")
-
-            if self._ws is not None:
-                await self.close(close_code)
-                self.dispatch(self, "DISCONNECTED", {})
-                self.disconnect_count += 1
-                self._ws = None
 
             await self._session.close()
             self._session = None
