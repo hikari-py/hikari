@@ -22,7 +22,6 @@ import mock
 
 import pytest
 
-import hikari.internal.conversions
 from hikari import channels
 from hikari import colors
 from hikari import emojis
@@ -30,6 +29,7 @@ from hikari import entities
 from hikari import guilds
 from hikari import permissions
 from hikari import users
+from hikari.internal import conversions
 from hikari.internal import urls
 from tests.hikari import _helpers
 
@@ -302,7 +302,7 @@ class TestGuildMember:
             _helpers.patch_marshal_attr(
                 guilds.GuildMember,
                 "joined_at",
-                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                deserializer=conversions.parse_iso_8601_ts,
                 return_value=mock_datetime_1,
             )
         )
@@ -310,7 +310,7 @@ class TestGuildMember:
             _helpers.patch_marshal_attr(
                 guilds.GuildMember,
                 "premium_since",
-                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                deserializer=conversions.parse_iso_8601_ts,
                 return_value=mock_datetime_2,
             )
         )
@@ -405,7 +405,7 @@ class TestActivityTimestamps:
             _helpers.patch_marshal_attr(
                 guilds.ActivityTimestamps,
                 "start",
-                deserializer=hikari.internal.conversions.unix_epoch_to_datetime,
+                deserializer=conversions.unix_epoch_to_datetime,
                 return_value=mock_start_date,
             )
         )
@@ -413,7 +413,7 @@ class TestActivityTimestamps:
             _helpers.patch_marshal_attr(
                 guilds.ActivityTimestamps,
                 "end",
-                deserializer=hikari.internal.conversions.unix_epoch_to_datetime,
+                deserializer=conversions.unix_epoch_to_datetime,
                 return_value=mock_end_date,
             )
         )
@@ -483,7 +483,7 @@ class TestPresenceActivity:
             _helpers.patch_marshal_attr(
                 guilds.PresenceActivity,
                 "created_at",
-                deserializer=hikari.internal.conversions.unix_epoch_to_datetime,
+                deserializer=conversions.unix_epoch_to_datetime,
                 return_value=mock_created_at,
             )
         )
@@ -627,7 +627,7 @@ class TestGuildMemberPresence:
         with _helpers.patch_marshal_attr(
             guilds.GuildMemberPresence,
             "premium_since",
-            deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+            deserializer=conversions.parse_iso_8601_ts,
             return_value=mock_since,
         ) as patched_since_deserializer:
             guild_member_presence_obj = guilds.GuildMemberPresence.deserialize(test_guild_member_presence)
@@ -717,7 +717,7 @@ class TestGuildIntegration:
             _helpers.patch_marshal_attr(
                 guilds.GuildIntegration,
                 "last_synced_at",
-                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                deserializer=conversions.parse_iso_8601_ts,
                 return_value=mock_sync_date,
             )
         )
@@ -944,7 +944,7 @@ class TestGuild:
             | guilds.GuildSystemChannelFlag.SUPPRESS_USER_JOIN
         )
         assert guild_obj.rules_channel_id == 42042069
-        assert guild_obj.joined_at == hikari.internal.conversions.parse_iso_8601_ts("2019-05-17T06:26:56.936000+00:00")
+        assert guild_obj.joined_at == conversions.parse_iso_8601_ts("2019-05-17T06:26:56.936000+00:00")
         assert guild_obj.is_large is False
         assert guild_obj.member_count == 14
         assert guild_obj.channels == {6969: mock_guild_channel}

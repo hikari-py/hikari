@@ -174,7 +174,7 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
 
         try:
             handler(shard_client_obj, payload)
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=W0703
             self.logger.exception(
                 "Failed to unmarshal %r event payload. This is likely a bug in Hikari itself. "
                 "Please contact a library dev or make an issue on the issue tracker for more support.",

@@ -692,7 +692,7 @@ class RESTBucketManager:
     #: major parameters used in that compiled route) to their corresponding rate
     #: limiters.
     #:
-    #: :type: :obj:`~typing.MutableMapping` [ :obj:`~str`, :obj:`~RESTBucketRateLimiter` ]
+    #: :type: :obj:`~typing.MutableMapping` [ :obj:`~str`, :obj:`~RESTBucket` ]
     real_hashes_to_buckets: typing.Final[typing.MutableMapping[str, RESTBucket]]
 
     #: An internal event that is set when the object is shut down.
