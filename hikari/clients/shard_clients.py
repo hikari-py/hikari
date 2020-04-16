@@ -344,6 +344,8 @@ class ShardClient(runnable.RunnableClient):
 
             if self._dispatcher is not None:
                 await self._dispatcher.dispatch_event(events.StoppedEvent())
+        else:
+            self.logger.debug("shard already requested to stop, will not do anything else")
 
     async def _keep_alive(self):
         back_off = ratelimits.ExponentialBackOff(maximum=None)
