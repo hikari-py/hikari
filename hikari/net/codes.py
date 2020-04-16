@@ -317,10 +317,10 @@ class JSONErrorCode(enum.IntEnum):
     #: Maximum number of guild channels reached (500)
     MAX_GUILD_CHANNELS_REACHED = 30_013
 
-    #: Maximun number of attachments in a message reached (10)
+    #: Maximum number of attachments in a message reached (10)
     MAX_MESSAGE_ATTACHMENTS_REACHED = 30_015
 
-    #: Maximun number of invites reached (10000)
+    #: Maximum number of invites reached (10000)
     MAX_INVITES_REACHED = 30_016
 
     #: Unauthorized

@@ -64,6 +64,7 @@ class TestGuildEmoji:
                     "id": "12345",
                     "name": "testing",
                     "animated": False,
+                    "available": True,
                     "roles": ["123", "456"],
                     "user": test_user_payload,
                     "require_colons": True,
@@ -79,11 +80,13 @@ class TestGuildEmoji:
         assert emoji_obj.user == mock_user
         assert emoji_obj.is_colons_required is True
         assert emoji_obj.is_managed is False
+        assert emoji_obj.is_available is True
 
     @pytest.fixture()
     def mock_guild_emoji_obj(self):
         return emojis.GuildEmoji(
             is_animated=False,
+            is_available=True,
             id=650573534627758100,
             name="nyaa",
             role_ids=[],
