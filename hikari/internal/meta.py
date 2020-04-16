@@ -22,6 +22,10 @@
 """
 __all__ = ["SingletonMeta", "Singleton"]
 
+import typing
+
+from hikari.internal import more_collections
+
 
 class SingletonMeta(type):
     """Metaclass that makes the class a singleton.
@@ -50,7 +54,8 @@ class SingletonMeta(type):
     thread safe.
     """
 
-    ___instances___ = {}
+    ___instance_dict_t___ = more_collections.WeakKeyDictionary[typing.Type[typing.Any], typing.Any]
+    ___instances___: ___instance_dict_t___ = more_collections.WeakKeyDictionary()
     __slots__ = ()
 
     def __call__(cls):
