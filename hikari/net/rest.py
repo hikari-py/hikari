@@ -164,7 +164,7 @@ class LowLevelRestfulClient:
     #: You should not ever need to touch this implementation.
     #:
     #: :type: :obj:`~hikari.net.ratelimits.HTTPBucketRateLimiterManager`
-    ratelimiter: ratelimits.HTTPBucketRateLimiterManager
+    ratelimiter: ratelimits.RESTBucketManager
 
     #: The custom SSL context to use.
     #:
@@ -248,7 +248,7 @@ class LowLevelRestfulClient:
         self.global_ratelimiter = ratelimits.ManualRateLimiter()
         self.json_serialize = json_serialize
         self.json_deserialize = json_deserialize
-        self.ratelimiter = ratelimits.HTTPBucketRateLimiterManager()
+        self.ratelimiter = ratelimits.RESTBucketManager()
         self.ratelimiter.start()
 
         if token is not None and not token.startswith(self._AUTHENTICATION_SCHEMES):
