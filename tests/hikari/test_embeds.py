@@ -21,9 +21,9 @@ import mock
 
 import pytest
 
-import hikari.internal.conversions
 from hikari import colors
 from hikari import embeds
+from hikari.internal import conversions
 from tests.hikari import _helpers
 
 
@@ -237,10 +237,7 @@ class TestEmbed:
         mock_datetime = mock.MagicMock(datetime.datetime)
 
         with _helpers.patch_marshal_attr(
-            embeds.Embed,
-            "timestamp",
-            deserializer=hikari.internal.conversions.parse_iso_8601_ts,
-            return_value=mock_datetime,
+            embeds.Embed, "timestamp", deserializer=conversions.parse_iso_8601_ts, return_value=mock_datetime,
         ) as patched_timestamp_deserializer:
             embed_obj = embeds.Embed.deserialize(test_embed_payload)
             patched_timestamp_deserializer.assert_called_once_with("2020-03-22T16:40:39.218000+00:00")
