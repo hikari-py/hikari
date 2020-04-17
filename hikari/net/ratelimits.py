@@ -921,6 +921,8 @@ class ExponentialBackOff:
     jitter_multiplier : :obj:`~float`
         The multiplier for the random jitter. Defaults to ``1``.
         Set to ``0`` to disable jitter.
+    initial_increment : :obj:`~int`
+        The initial increment to start at. Defaults to ``0``.
     """
 
     __slots__ = ("base", "increment", "maximum", "jitter_multiplier")
@@ -947,10 +949,16 @@ class ExponentialBackOff:
     #: :type: :obj:`~float`
     jitter_multiplier: typing.Final[float]
 
-    def __init__(self, base: float = 2, maximum: typing.Optional[float] = 64, jitter_multiplier: float = 1) -> None:
+    def __init__(
+        self,
+        base: float = 2,
+        maximum: typing.Optional[float] = 64,
+        jitter_multiplier: float = 1,
+        initial_increment: int = 0,
+    ) -> None:
         self.base = base
         self.maximum = maximum
-        self.increment = 0
+        self.increment = initial_increment
         self.jitter_multiplier = jitter_multiplier
 
     def __next__(self) -> float:

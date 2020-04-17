@@ -30,11 +30,40 @@ from hikari.clients import gateway_managers
 from hikari.clients import rest_clients
 from hikari.clients import runnable
 from hikari.clients import shard_clients
+from hikari.internal import meta
 from hikari.internal import more_asyncio
 from hikari.internal import more_logging
 from hikari.state import event_dispatchers
 from hikari.state import event_managers
 from hikari.state import stateless_event_managers
+
+
+class _NotInitializedYet(meta.Singleton):
+    """Sentinel value for fields that are not yet initialized.
+
+    These will be filled once the bot has started.
+    """
+
+    __slots__ = ()
+
+    def __bool__(self) -> bool:
+        return False
+
+    def __defer(self, *args, **kwargs) -> typing.NoReturn:
+        raise TypeError("Bot has not yet initialized, so attribute is not available.") from None
+
+    __call__ = __defer
+    __getattr__ = __defer
+    __setattr__ = __defer
+    __delattr__ = __defer
+    __getitem__ = __defer
+    __setitem__ = __defer
+    __delitem__ = __defer
+    __await__ = __defer
+    __enter__ = __defer
+    __aenter__ = __defer
+    __exit__ = __defer
+    __aexit__ = __defer
 
 
 class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
@@ -60,6 +89,10 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
 
     #: The gateway for this bot.
     #:
+    #: Note
+    #: ----
+    #: This will be initialized lazily once the bot has started.
+    #:
     #: :type: :obj:`~hikari.clients.gateway_managers.GatewayManager` [ :obj:`~hikari.clients.shard_clients.ShardClient` ]
     gateway: gateway_managers.GatewayManager[shard_clients.ShardClient]
 
@@ -70,6 +103,10 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
 
     #: The REST HTTP client to use for this bot.
     #:
+    #: Note
+    #: ----
+    #: This will be initialized lazily once the bot has started.
+    #:
     #: :type: :obj:`~hikari.clients.rest_clients.RESTClient`
     rest: rest_clients.RESTClient
 
@@ -78,10 +115,13 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
         super().__init__(more_logging.get_named_logger(self))
         self.config = config
         self.event_manager = event_manager
-        self.gateway = NotImplemented
-        self.rest = NotImplemented
+        self.gateway = _NotInitializedYet()
+        self.rest = _NotInitializedYet()
 
     async def start(self):
+        if self.rest or self.gateway:
+            raise RuntimeError("Bot is already running.")
+
         self.rest = rest_clients.RESTClient(self.config)
         gateway_bot = await self.rest.fetch_gateway_bot()
 
@@ -106,13 +146,18 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
 
         await self.gateway.start()
 
-    async def close(self):
-        await self.gateway.close()
+    async def close(self) -> None:
+        if self.gateway:
+            await self.gateway.close()
         self.event_manager.event_dispatcher.close()
-        await self.rest.close()
+        if self.rest:
+            await self.rest.close()
+        self.gateway = _NotInitializedYet()
+        self.rest = _NotInitializedYet()
 
     async def join(self) -> None:
-        await self.gateway.join()
+        if self.gateway:
+            await self.gateway.join()
 
     def add_listener(
         self, event_type: typing.Type[event_dispatchers.EventT], callback: event_dispatchers.EventCallbackT

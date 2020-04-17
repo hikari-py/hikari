@@ -346,7 +346,7 @@ class ShardClient(runnable.RunnableClient):
                 await self._dispatcher.dispatch_event(events.StoppedEvent())
 
     async def _keep_alive(self):
-        back_off = ratelimits.ExponentialBackOff(maximum=None)
+        back_off = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         last_start = time.perf_counter()
         do_not_back_off = True
 
@@ -358,7 +358,7 @@ class ShardClient(runnable.RunnableClient):
                 if not do_not_back_off and time.perf_counter() - last_start < 30:
                     next_backoff = next(back_off)
                     self.logger.info(
-                        "restarted within 30 seconds, will backoff for %ss", next_backoff,
+                        "restarted within 30 seconds, will backoff for %.2fs", next_backoff,
                     )
                     await asyncio.sleep(next_backoff)
                 else:
