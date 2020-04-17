@@ -388,6 +388,12 @@ class LowLevelRestfulClient:
                     )
                     continue
                 else:
+                    self.logger.warning(
+                        "received unexpected response shape. Status: %s, Content-Type: %s, Body: %s",
+                        status,
+                        content_type,
+                        raw_body,
+                    )
                     body = None
 
             self.ratelimiter.update_rate_limits(compiled_route, bucket, remaining, limit, now_date, reset_date)
@@ -402,7 +408,9 @@ class LowLevelRestfulClient:
             if status >= codes.HTTPStatusCode.BAD_REQUEST:
                 code = None
 
-                if self.version == versions.HTTPAPIVersion.V6:
+                if body is None:
+                    message = raw_body
+                elif self.version == versions.HTTPAPIVersion.V6:
                     message = ", ".join(f"{k} - {v}" for k, v in body.items())
                 else:
                     message = body.get("message")
