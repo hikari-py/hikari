@@ -830,8 +830,12 @@ class ShardConnection:
                 raise errors.GatewayServerClosedConnectionError(close_code)
 
             if message.type in (aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.CLOSED):
-                self.logger.debug("connection has been marked as closed")
-                raise errors.GatewayClientClosedError()
+                if self.requesting_close_event.is_set():
+                    self.logger.debug("connection has been marked as closed")
+                    raise errors.GatewayClientClosedError()
+
+                self.logger.debug("connection has been marked as closed unexpectedly")
+                raise errors.GatewayClientDisconnectedError()
 
             if message.type == aiohttp.WSMsgType.ERROR:
                 ex = self._ws.exception()
