@@ -18,9 +18,9 @@
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 import math
-import mock
 
 import aiohttp
+import mock
 import pytest
 
 from hikari import errors

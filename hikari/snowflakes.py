@@ -30,9 +30,9 @@ import typing
 
 import attr
 
+from hikari import entities
 from hikari.internal import conversions
 from hikari.internal import marshaller
-from hikari import entities
 
 
 @functools.total_ordering

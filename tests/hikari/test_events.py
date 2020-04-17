@@ -18,21 +18,21 @@
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
 import datetime
-import mock
 
+import mock
 import pytest
 
-import hikari.internal.conversions
 from hikari import channels
 from hikari import embeds
 from hikari import emojis
-from hikari import entities
 from hikari import events
 from hikari import guilds
 from hikari import invites
 from hikari import messages
 from hikari import oauth2
+from hikari import unset
 from hikari import users
+from hikari.internal import conversions
 from tests.hikari import _helpers
 
 
@@ -213,7 +213,7 @@ class TestBaseChannelEvent:
             _helpers.patch_marshal_attr(
                 events.BaseChannelEvent,
                 "last_pin_timestamp",
-                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                deserializer=conversions.parse_iso_8601_ts,
                 return_value=mock_timestamp,
             )
         )
@@ -272,7 +272,7 @@ class TestChannelPinUpdateEvent:
         with _helpers.patch_marshal_attr(
             events.ChannelPinUpdateEvent,
             "last_pin_timestamp",
-            deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+            deserializer=conversions.parse_iso_8601_ts,
             return_value=mock_timestamp,
         ) as patched_iso_parser:
             channel_pin_add_obj = events.ChannelPinUpdateEvent.deserialize(test_chanel_pin_update_payload)
@@ -397,7 +397,7 @@ class TestGuildMemberUpdateEvent:
             _helpers.patch_marshal_attr(
                 events.GuildMemberUpdateEvent,
                 "premium_since",
-                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                deserializer=conversions.parse_iso_8601_ts,
                 return_value=mock_premium_since,
             )
         )
@@ -416,8 +416,8 @@ class TestGuildMemberUpdateEvent:
         del guild_member_update_payload["premium_since"]
         with _helpers.patch_marshal_attr(events.GuildMemberUpdateEvent, "user", deserializer=users.User.deserialize):
             guild_member_update_obj = events.GuildMemberUpdateEvent.deserialize(guild_member_update_payload)
-        assert guild_member_update_obj.nickname is entities.UNSET
-        assert guild_member_update_obj.premium_since is entities.UNSET
+        assert guild_member_update_obj.nickname is unset.UNSET
+        assert guild_member_update_obj.premium_since is unset.UNSET
 
 
 @pytest.fixture()
@@ -500,7 +500,7 @@ class TestInviteCreateEvent:
             _helpers.patch_marshal_attr(
                 events.InviteCreateEvent,
                 "created_at",
-                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                deserializer=conversions.parse_iso_8601_ts,
                 return_value=mock_created_at,
             )
         )
@@ -658,7 +658,7 @@ class TestMessageUpdateEvent:
             _helpers.patch_marshal_attr(
                 events.MessageUpdateEvent,
                 "timestamp",
-                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                deserializer=conversions.parse_iso_8601_ts,
                 return_value=mock_timestamp,
             )
         )
@@ -666,7 +666,7 @@ class TestMessageUpdateEvent:
             _helpers.patch_marshal_attr(
                 events.MessageUpdateEvent,
                 "edited_timestamp",
-                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                deserializer=conversions.parse_iso_8601_ts,
                 return_value=mock_edited_timestamp,
             )
         )
@@ -738,7 +738,7 @@ class TestMessageUpdateEvent:
         for key in message_update_obj.__slots__:
             if key in ("id", "channel_id"):
                 continue
-            assert getattr(message_update_obj, key) is entities.UNSET
+            assert getattr(message_update_obj, key) is unset.UNSET
         assert message_update_obj.id == 393939
         assert message_update_obj.channel_id == 434949
 

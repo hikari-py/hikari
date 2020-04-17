@@ -15,4 +15,20 @@
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
+# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+from hikari import unset
+
+
+class TestUnset:
+    def test_repr(self):
+        assert repr(unset.UNSET) == "UNSET"
+
+    def test_str(self):
+        assert str(unset.UNSET) == "UNSET"
+
+    def test_bool(self):
+        assert bool(unset.UNSET) is False
+
+    def test_singleton_behaviour(self):
+        assert unset.Unset() is unset.Unset()
+        assert unset.UNSET is unset.Unset()

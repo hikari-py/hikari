@@ -55,10 +55,11 @@ from hikari import emojis as _emojis
 from hikari import entities
 from hikari import permissions as _permissions
 from hikari import snowflakes
+from hikari import unset
 from hikari import users
-from hikari.internal import urls
 from hikari.internal import conversions
 from hikari.internal import marshaller
+from hikari.internal import urls
 
 
 @enum.unique
@@ -198,7 +199,7 @@ class GuildVerificationLevel(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildEmbed(entities.HikariEntity, entities.Deserializable):
+class GuildEmbed(entities.HikariEntity, marshaller.Deserializable):
     """Represents a guild embed."""
 
     #: The ID of the channel the invite for this embed targets, if enabled
@@ -216,7 +217,7 @@ class GuildEmbed(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMember(entities.HikariEntity, entities.Deserializable):
+class GuildMember(entities.HikariEntity, marshaller.Deserializable):
     """Used to represent a guild bound member."""
 
     #: This member's user object, will be :obj:`~None` when attached to Message
@@ -267,7 +268,7 @@ class GuildMember(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PartialGuildRole(snowflakes.UniqueEntity, entities.Deserializable):
+class PartialGuildRole(snowflakes.UniqueEntity, marshaller.Deserializable):
     """Represents a partial guild bound Role object."""
 
     #: The role's name.
@@ -278,7 +279,7 @@ class PartialGuildRole(snowflakes.UniqueEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildRole(PartialGuildRole, entities.Serializable):
+class GuildRole(PartialGuildRole, marshaller.Serializable):
     """Represents a guild bound Role object."""
 
     #: The colour of this role, will be applied to a member's name in chat
@@ -350,7 +351,7 @@ class ActivityType(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ActivityTimestamps(entities.HikariEntity, entities.Deserializable):
+class ActivityTimestamps(entities.HikariEntity, marshaller.Deserializable):
     """The datetimes for the start and/or end of an activity session."""
 
     #: When this activity's session was started, if applicable.
@@ -370,7 +371,7 @@ class ActivityTimestamps(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ActivityParty(entities.HikariEntity, entities.Deserializable):
+class ActivityParty(entities.HikariEntity, marshaller.Deserializable):
     """Used to represent activity groups of users."""
 
     #: The string id of this party instance, if set.
@@ -399,7 +400,7 @@ class ActivityParty(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ActivityAssets(entities.HikariEntity, entities.Deserializable):
+class ActivityAssets(entities.HikariEntity, marshaller.Deserializable):
     """Used to represent possible assets for an activity."""
 
     #: The ID of the asset's large image, if set.
@@ -425,7 +426,7 @@ class ActivityAssets(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ActivitySecret(entities.HikariEntity, entities.Deserializable):
+class ActivitySecret(entities.HikariEntity, marshaller.Deserializable):
     """The secrets used for interacting with an activity party."""
 
     #: The secret used for joining a party, if applicable.
@@ -472,7 +473,7 @@ class ActivityFlag(enum.IntFlag):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PresenceActivity(entities.HikariEntity, entities.Deserializable):
+class PresenceActivity(entities.HikariEntity, marshaller.Deserializable):
     """Represents an activity that will be attached to a member's presence."""
 
     #: The activity's name.
@@ -582,7 +583,7 @@ class PresenceStatus(str, enum.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ClientStatus(entities.HikariEntity, entities.Deserializable):
+class ClientStatus(entities.HikariEntity, marshaller.Deserializable):
     """The client statuses for this member."""
 
     #: The status of the target user's desktop session.
@@ -614,66 +615,64 @@ class PresenceUser(users.User):
 
     Warnings
     --------
-    Every attribute except ``id`` may be received as :obj:`~hikari.entities.UNSET`
+    Every attribute except ``id`` may be received as :obj:`~hikari.unset.UNSET`
     unless it is specifically being modified for this update.
     """
 
     #: This user's discriminator.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~str`, :obj:`~hikari.entities.UNSET` ]
-    discriminator: typing.Union[str, entities.Unset] = marshaller.attrib(
-        deserializer=str, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~str`, :obj:`~hikari.unset.UNSET` ]
+    discriminator: typing.Union[str, unset.Unset] = marshaller.attrib(
+        deserializer=str, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: This user's username.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~str`, :obj:`~hikari.entities.UNSET` ]
-    username: typing.Union[str, entities.Unset] = marshaller.attrib(
-        deserializer=str, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~str`, :obj:`~hikari.unset.UNSET` ]
+    username: typing.Union[str, unset.Unset] = marshaller.attrib(
+        deserializer=str, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: This user's avatar hash, if set.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~str`, :obj:`~hikari.entities.UNSET` ], optional
-    avatar_hash: typing.Union[None, str, entities.Unset] = marshaller.attrib(
-        raw_name="avatar", deserializer=str, if_none=None, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~str`, :obj:`~hikari.unset.UNSET` ], optional
+    avatar_hash: typing.Union[None, str, unset.Unset] = marshaller.attrib(
+        raw_name="avatar", deserializer=str, if_none=None, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: Whether this user is a bot account.
     #:
-    #: :type:  :obj:`~typing.Union` [ :obj:`~bool`, :obj:`~hikari.entities.UNSET` ]
-    is_bot: typing.Union[bool, entities.Unset] = marshaller.attrib(
-        raw_name="bot", deserializer=bool, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type:  :obj:`~typing.Union` [ :obj:`~bool`, :obj:`~hikari.unset.UNSET` ]
+    is_bot: typing.Union[bool, unset.Unset] = marshaller.attrib(
+        raw_name="bot", deserializer=bool, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: Whether this user is a system account.
     #:
-    #: :type:  :obj:`~typing.Union` [ :obj:`~bool`, :obj:`~hikari.entities.UNSET` ]
-    is_system: typing.Union[bool, entities.Unset] = marshaller.attrib(
-        raw_name="system", deserializer=bool, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type:  :obj:`~typing.Union` [ :obj:`~bool`, :obj:`~hikari.unset.UNSET` ]
+    is_system: typing.Union[bool, unset.Unset] = marshaller.attrib(
+        raw_name="system", deserializer=bool, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The public flags for this user.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.users.UserFlag`, :obj:`~hikari.entities.UNSET` ]
-    flags: typing.Union[users.UserFlag, entities.Unset] = marshaller.attrib(
-        raw_name="public_flags", deserializer=users.UserFlag, if_undefined=entities.Unset
+    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.users.UserFlag`, :obj:`~hikari.unset.UNSET` ]
+    flags: typing.Union[users.UserFlag, unset.Unset] = marshaller.attrib(
+        raw_name="public_flags", deserializer=users.UserFlag, if_undefined=unset.Unset
     )
 
     @property
-    def avatar_url(self) -> typing.Union[str, entities.Unset]:
+    def avatar_url(self) -> typing.Union[str, unset.Unset]:
         """URL for this user's avatar if the relevant info is available.
 
         Note
         ----
-        This will be :obj:`~hikari.entities.UNSET` if both :attr:`avatar_hash`
-        and :attr:`discriminator` are :obj:`~hikari.entities.UNSET`.
+        This will be :obj:`~hikari.unset.UNSET` if both :attr:`avatar_hash`
+        and :attr:`discriminator` are :obj:`~hikari.unset.UNSET`.
         """
         return self.format_avatar_url()
 
-    def format_avatar_url(
-        self, fmt: typing.Optional[str] = None, size: int = 4096
-    ) -> typing.Union[str, entities.Unset]:
+    def format_avatar_url(self, fmt: typing.Optional[str] = None, size: int = 4096) -> typing.Union[str, unset.Unset]:
         """Generate the avatar URL for this user's avatar if available.
 
         Parameters
@@ -690,37 +689,37 @@ class PresenceUser(users.User):
 
         Returns
         -------
-        :obj:`~typing.Union` [ :obj:`~str`, :obj:`~hikari.entities.UNSET` ]
+        :obj:`~typing.Union` [ :obj:`~str`, :obj:`~hikari.unset.UNSET` ]
             The string URL of the user's custom avatar if
             either :attr:`avatar_hash` is set or their default avatar if
-            :attr:`discriminator` is set, else :obj:`~hikari.entities.UNSET`.
+            :attr:`discriminator` is set, else :obj:`~hikari.unset.UNSET`.
 
         Raises
         ------
         :obj:`~ValueError`
             If ``size`` is not a power of two or not between 16 and 4096.
         """
-        if self.discriminator is entities.UNSET and self.avatar_hash is entities.UNSET:
-            return entities.UNSET
+        if self.discriminator is unset.UNSET and self.avatar_hash is unset.UNSET:
+            return unset.UNSET
         return super().format_avatar_url(fmt=fmt, size=size)
 
     @property
-    def default_avatar(self) -> typing.Union[int, entities.Unset]:
+    def default_avatar(self) -> typing.Union[int, unset.Unset]:
         """Integer representation of this user's default avatar.
 
         Note
         ----
-        This will be :obj:`~hikari.entities.UNSET` if :attr:`discriminator` is
-        :obj:`~hikari.entities.UNSET`.
+        This will be :obj:`~hikari.unset.UNSET` if :attr:`discriminator` is
+        :obj:`~hikari.unset.UNSET`.
         """
-        if self.discriminator is not entities.UNSET:
+        if self.discriminator is not unset.UNSET:
             return int(self.discriminator) % 5
-        return entities.UNSET
+        return unset.UNSET
 
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberPresence(entities.HikariEntity, entities.Deserializable):
+class GuildMemberPresence(entities.HikariEntity, marshaller.Deserializable):
     """Used to represent a guild member's presence."""
 
     #: The object of the user who this presence is for, only `id` is guaranteed
@@ -790,7 +789,7 @@ class IntegrationExpireBehaviour(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class IntegrationAccount(entities.HikariEntity, entities.Deserializable):
+class IntegrationAccount(entities.HikariEntity, marshaller.Deserializable):
     """An account that's linked to an integration."""
 
     #: The string ID of this (likely) third party account.
@@ -806,7 +805,7 @@ class IntegrationAccount(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PartialGuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
+class PartialGuildIntegration(snowflakes.UniqueEntity, marshaller.Deserializable):
     """A partial representation of an integration, found in audit logs."""
 
     #: The name of this integration.
@@ -827,7 +826,7 @@ class PartialGuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
+class GuildIntegration(snowflakes.UniqueEntity, marshaller.Deserializable):
     """Represents a guild integration object."""
 
     #: Whether this integration is enabled.
@@ -882,7 +881,7 @@ class GuildIntegration(snowflakes.UniqueEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberBan(entities.HikariEntity, entities.Deserializable):
+class GuildMemberBan(entities.HikariEntity, marshaller.Deserializable):
     """Used to represent guild bans."""
 
     #: The reason for this ban, will be :obj:`~None` if no reason was given.
@@ -898,7 +897,7 @@ class GuildMemberBan(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class UnavailableGuild(snowflakes.UniqueEntity, entities.Deserializable):
+class UnavailableGuild(snowflakes.UniqueEntity, marshaller.Deserializable):
     """An unavailable guild object, received during gateway events such as READY.
 
     An unavailable guild cannot be interacted with, and most information may
@@ -917,7 +916,7 @@ class UnavailableGuild(snowflakes.UniqueEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PartialGuild(snowflakes.UniqueEntity, entities.Deserializable):
+class PartialGuild(snowflakes.UniqueEntity, marshaller.Deserializable):
     """Base object for any partial guild objects."""
 
     #: The name of the guild.

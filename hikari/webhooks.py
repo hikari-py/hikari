@@ -24,7 +24,6 @@ import typing
 
 import attr
 
-from hikari import entities
 from hikari import snowflakes
 from hikari import users
 from hikari.internal import marshaller
@@ -43,7 +42,7 @@ class WebhookType(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Webhook(snowflakes.UniqueEntity, entities.Deserializable):
+class Webhook(snowflakes.UniqueEntity, marshaller.Deserializable):
     """Represents a webhook object on Discord.
 
     This is an endpoint that can have messages sent to it using standard
