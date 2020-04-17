@@ -79,6 +79,7 @@ from hikari import invites
 from hikari import messages
 from hikari import oauth2
 from hikari import snowflakes
+from hikari import unset
 from hikari import users
 from hikari import voices
 from hikari.clients import shard_clients
@@ -141,7 +142,7 @@ class StoppedEvent(HikariEvent):
 
 
 @attr.s(slots=True, kw_only=True, auto_attribs=True)
-class ConnectedEvent(HikariEvent, entities.Deserializable):
+class ConnectedEvent(HikariEvent, marshaller.Deserializable):
     """Event invoked each time a shard connects."""
 
     #: The shard that connected.
@@ -151,7 +152,7 @@ class ConnectedEvent(HikariEvent, entities.Deserializable):
 
 
 @attr.s(slots=True, kw_only=True, auto_attribs=True)
-class DisconnectedEvent(HikariEvent, entities.Deserializable):
+class DisconnectedEvent(HikariEvent, marshaller.Deserializable):
     """Event invoked each time a shard disconnects."""
 
     #: The shard that disconnected.
@@ -172,7 +173,7 @@ class ResumedEvent(HikariEvent):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ReadyEvent(HikariEvent, entities.Deserializable):
+class ReadyEvent(HikariEvent, marshaller.Deserializable):
     """Represents the gateway Ready event.
 
     This is received only when IDENTIFYing with the gateway.
@@ -228,7 +229,7 @@ class ReadyEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializable):
+class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deserializable):
     """A base object that Channel events will inherit from."""
 
     #: The channel's type.
@@ -373,7 +374,7 @@ class ChannelDeleteEvent(BaseChannelEvent):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ChannelPinUpdateEvent(HikariEvent, entities.Deserializable):
+class ChannelPinUpdateEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent the Channel Pins Update gateway event.
 
     Sent when a message is pinned or unpinned in a channel but not
@@ -404,7 +405,7 @@ class ChannelPinUpdateEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildCreateEvent(HikariEvent, entities.Deserializable):
+class GuildCreateEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent Guild Create gateway events.
 
     Will be received when the bot joins a guild, and when a guild becomes
@@ -414,13 +415,13 @@ class GuildCreateEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildUpdateEvent(HikariEvent, entities.Deserializable):
+class GuildUpdateEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent Guild Update gateway events."""
 
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildLeaveEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializable):
+class GuildLeaveEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deserializable):
     """Fired when the current user leaves the guild or is kicked/banned from it.
 
     Notes
@@ -431,7 +432,7 @@ class GuildLeaveEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializa
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildUnavailableEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializable):
+class GuildUnavailableEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deserializable):
     """Fired when a guild becomes temporarily unavailable due to an outage.
 
     Notes
@@ -442,7 +443,7 @@ class GuildUnavailableEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deser
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class BaseGuildBanEvent(HikariEvent, entities.Deserializable):
+class BaseGuildBanEvent(HikariEvent, marshaller.Deserializable):
     """A base object that guild ban events will inherit from."""
 
     #: The ID of the guild this ban is in.
@@ -470,7 +471,7 @@ class GuildBanRemoveEvent(BaseGuildBanEvent):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildEmojisUpdateEvent(HikariEvent, entities.Deserializable):
+class GuildEmojisUpdateEvent(HikariEvent, marshaller.Deserializable):
     """Represents a Guild Emoji Update gateway event."""
 
     #: The ID of the guild this emoji was updated in.
@@ -488,7 +489,7 @@ class GuildEmojisUpdateEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildIntegrationsUpdateEvent(HikariEvent, entities.Deserializable):
+class GuildIntegrationsUpdateEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent Guild Integration Update gateway events."""
 
     #: The ID of the guild the integration was updated in.
@@ -510,7 +511,7 @@ class GuildMemberAddEvent(HikariEvent, guilds.GuildMember):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberUpdateEvent(HikariEvent, entities.Deserializable):
+class GuildMemberUpdateEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Member Update gateway event.
 
     Sent when a guild member or their inner user object is updated.
@@ -534,25 +535,25 @@ class GuildMemberUpdateEvent(HikariEvent, entities.Deserializable):
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
 
     #: This member's nickname. When set to :obj:`~None`, this has been removed
-    #: and when set to :obj:`~hikari.entities.UNSET` this hasn't been acted on.
+    #: and when set to :obj:`~hikari.unset.UNSET` this hasn't been acted on.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~str`, :obj:`~hikari.entities.UNSET` ], optional
-    nickname: typing.Union[None, str, entities.Unset] = marshaller.attrib(
-        raw_name="nick", deserializer=str, if_none=None, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~str`, :obj:`~hikari.unset.UNSET` ], optional
+    nickname: typing.Union[None, str, unset.Unset] = marshaller.attrib(
+        raw_name="nick", deserializer=str, if_none=None, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The datetime of when this member started "boosting" this guild.
     #: Will be :obj:`~None` if they aren't boosting.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.entities.UNSET` ], optional
-    premium_since: typing.Union[None, datetime.datetime, entities.Unset] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.unset.UNSET` ], optional
+    premium_since: typing.Union[None, datetime.datetime, unset.Unset] = marshaller.attrib(
+        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=unset.Unset, default=unset.UNSET
     )
 
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberRemoveEvent(HikariEvent, entities.Deserializable):
+class GuildMemberRemoveEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent Guild Member Remove gateway events.
 
     Sent when a member is kicked, banned or leaves a guild.
@@ -571,7 +572,7 @@ class GuildMemberRemoveEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildRoleCreateEvent(HikariEvent, entities.Deserializable):
+class GuildRoleCreateEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
 
     #: The ID of the guild where this role was created.
@@ -587,7 +588,7 @@ class GuildRoleCreateEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildRoleUpdateEvent(HikariEvent, entities.Deserializable):
+class GuildRoleUpdateEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
 
     #: The ID of the guild where this role was updated.
@@ -603,7 +604,7 @@ class GuildRoleUpdateEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildRoleDeleteEvent(HikariEvent, entities.Deserializable):
+class GuildRoleDeleteEvent(HikariEvent, marshaller.Deserializable):
     """Represents a gateway Guild Role Delete Event."""
 
     #: The ID of the guild where this role is being deleted.
@@ -619,7 +620,7 @@ class GuildRoleDeleteEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class InviteCreateEvent(HikariEvent, entities.Deserializable):
+class InviteCreateEvent(HikariEvent, marshaller.Deserializable):
     """Represents a gateway Invite Create event."""
 
     #: The ID of the channel this invite targets.
@@ -693,7 +694,7 @@ class InviteCreateEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class InviteDeleteEvent(HikariEvent, entities.Deserializable):
+class InviteDeleteEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent Invite Delete gateway events.
 
     Sent when an invite is deleted for a channel we can access.
@@ -727,13 +728,13 @@ class MessageCreateEvent(HikariEvent, messages.Message):
 # This is an arbitrarily partial version of `messages.Message`
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserializable):
+class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deserializable):
     """Represents Message Update gateway events.
 
     Note
     ----
-    All fields on this model except :attr:`channel_id` and ``id`` may be
-    set to :obj:`~hikari.entities.UNSET` (a singleton defined in
+    All fields on this model except :attr:`channel_id` and :obj:`~`HikariEvent.id`` may be
+    set to :obj:`~hikari.unset.UNSET` (a singleton defined in
     ``hikari.entities``) if we have not received information about their
     state from Discord alongside field nullability.
     """
@@ -745,179 +746,179 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
 
     #: The ID of the guild that the message was sent in.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.entities.UNSET` ]
-    guild_id: typing.Union[snowflakes.Snowflake, entities.Unset] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.unset.UNSET` ]
+    guild_id: typing.Union[snowflakes.Snowflake, unset.Unset] = marshaller.attrib(
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The author of this message.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.UNSET` ]
-    author: typing.Union[users.User, entities.Unset] = marshaller.attrib(
-        deserializer=users.User.deserialize, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.unset.UNSET` ]
+    author: typing.Union[users.User, unset.Unset] = marshaller.attrib(
+        deserializer=users.User.deserialize, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The member properties for the message's author.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildMember`, :obj:`~hikari.entities.UNSET` ]
-    member: typing.Union[guilds.GuildMember, entities.Unset] = marshaller.attrib(
-        deserializer=guilds.GuildMember.deserialize, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildMember`, :obj:`~hikari.unset.UNSET` ]
+    member: typing.Union[guilds.GuildMember, unset.Unset] = marshaller.attrib(
+        deserializer=guilds.GuildMember.deserialize, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The content of the message.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~str`, :obj:`~hikari.entities.UNSET` ]
-    content: typing.Union[str, entities.Unset] = marshaller.attrib(
-        deserializer=str, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~str`, :obj:`~hikari.unset.UNSET` ]
+    content: typing.Union[str, unset.Unset] = marshaller.attrib(
+        deserializer=str, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The timestamp that the message was sent at.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.entities.UNSET` ]
-    timestamp: typing.Union[datetime.datetime, entities.Unset] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.unset.UNSET` ]
+    timestamp: typing.Union[datetime.datetime, unset.Unset] = marshaller.attrib(
+        deserializer=conversions.parse_iso_8601_ts, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The timestamp that the message was last edited at, or :obj:`~None` if
     #: it wasn't ever edited.
     #:
-    #: :type: :obj:`~typing.Union` [  :obj:`~datetime.datetime`, :obj:`~hikari.entities.UNSET` ], optional
-    edited_timestamp: typing.Union[datetime.datetime, entities.Unset, None] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [  :obj:`~datetime.datetime`, :obj:`~hikari.unset.UNSET` ], optional
+    edited_timestamp: typing.Union[datetime.datetime, unset.Unset, None] = marshaller.attrib(
+        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: Whether the message is a TTS message.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~bool`, :obj:`~hikari.entities.UNSET` ]
-    is_tts: typing.Union[bool, entities.Unset] = marshaller.attrib(
-        raw_name="tts", deserializer=bool, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~bool`, :obj:`~hikari.unset.UNSET` ]
+    is_tts: typing.Union[bool, unset.Unset] = marshaller.attrib(
+        raw_name="tts", deserializer=bool, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: Whether the message mentions ``@everyone`` or ``@here``.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~bool`, :obj:`~hikari.entities.UNSET` ]
-    is_mentioning_everyone: typing.Union[bool, entities.Unset] = marshaller.attrib(
-        raw_name="mention_everyone", deserializer=bool, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~bool`, :obj:`~hikari.unset.UNSET` ]
+    is_mentioning_everyone: typing.Union[bool, unset.Unset] = marshaller.attrib(
+        raw_name="mention_everyone", deserializer=bool, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The users the message mentions.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ], :obj:`~hikari.entities.UNSET` ]
-    user_mentions: typing.Union[typing.Set[snowflakes.Snowflake], entities.Unset] = marshaller.attrib(
+    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ], :obj:`~hikari.unset.UNSET` ]
+    user_mentions: typing.Union[typing.Set[snowflakes.Snowflake], unset.Unset] = marshaller.attrib(
         raw_name="mentions",
         deserializer=lambda user_mentions: {snowflakes.Snowflake.deserialize(u["id"]) for u in user_mentions},
-        if_undefined=entities.Unset,
-        default=entities.UNSET,
+        if_undefined=unset.Unset,
+        default=unset.UNSET,
     )
 
     #: The roles the message mentions.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ], :obj:`~hikari.entities.UNSET` ]
-    role_mentions: typing.Union[typing.Set[snowflakes.Snowflake], entities.Unset] = marshaller.attrib(
+    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ], :obj:`~hikari.unset.UNSET` ]
+    role_mentions: typing.Union[typing.Set[snowflakes.Snowflake], unset.Unset] = marshaller.attrib(
         raw_name="mention_roles",
         deserializer=lambda role_mentions: {snowflakes.Snowflake.deserialize(r) for r in role_mentions},
-        if_undefined=entities.Unset,
-        default=entities.UNSET,
+        if_undefined=unset.Unset,
+        default=unset.UNSET,
     )
 
     #: The channels the message mentions.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ], :obj:`~hikari.entities.UNSET` ]
-    channel_mentions: typing.Union[typing.Set[snowflakes.Snowflake], entities.Unset] = marshaller.attrib(
+    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ], :obj:`~hikari.unset.UNSET` ]
+    channel_mentions: typing.Union[typing.Set[snowflakes.Snowflake], unset.Unset] = marshaller.attrib(
         raw_name="mention_channels",
         deserializer=lambda channel_mentions: {snowflakes.Snowflake.deserialize(c["id"]) for c in channel_mentions},
-        if_undefined=entities.Unset,
-        default=entities.UNSET,
+        if_undefined=unset.Unset,
+        default=unset.UNSET,
     )
 
     #: The message attachments.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Sequence` [ :obj:`~hikari.messages.Attachment` ], :obj:`~hikari.entities.UNSET` ]
-    attachments: typing.Union[typing.Sequence[messages.Attachment], entities.Unset] = marshaller.attrib(
+    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Sequence` [ :obj:`~hikari.messages.Attachment` ], :obj:`~hikari.unset.UNSET` ]
+    attachments: typing.Union[typing.Sequence[messages.Attachment], unset.Unset] = marshaller.attrib(
         deserializer=lambda attachments: [messages.Attachment.deserialize(a) for a in attachments],
-        if_undefined=entities.Unset,
-        default=entities.UNSET,
+        if_undefined=unset.Unset,
+        default=unset.UNSET,
     )
 
     #: The message's embeds.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Sequence` [ :obj:`~hikari.embeds.Embed` ], :obj:`~hikari.entities.UNSET` ]
-    embeds: typing.Union[typing.Sequence[_embeds.Embed], entities.Unset] = marshaller.attrib(
+    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Sequence` [ :obj:`~hikari.embeds.Embed` ], :obj:`~hikari.unset.UNSET` ]
+    embeds: typing.Union[typing.Sequence[_embeds.Embed], unset.Unset] = marshaller.attrib(
         deserializer=lambda embed_objs: [_embeds.Embed.deserialize(e) for e in embed_objs],
-        if_undefined=entities.Unset,
-        default=entities.UNSET,
+        if_undefined=unset.Unset,
+        default=unset.UNSET,
     )
 
     #: The message's reactions.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Sequence` [ :obj:`~hikari.messages.Reaction` ], :obj:`~hikari.entities.UNSET` ]
-    reactions: typing.Union[typing.Sequence[messages.Reaction], entities.Unset] = marshaller.attrib(
+    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Sequence` [ :obj:`~hikari.messages.Reaction` ], :obj:`~hikari.unset.UNSET` ]
+    reactions: typing.Union[typing.Sequence[messages.Reaction], unset.Unset] = marshaller.attrib(
         deserializer=lambda reactions: [messages.Reaction.deserialize(r) for r in reactions],
-        if_undefined=entities.Unset,
-        default=entities.UNSET,
+        if_undefined=unset.Unset,
+        default=unset.UNSET,
     )
 
     #: Whether the message is pinned.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~bool`, :obj:`~hikari.entities.UNSET` ]
-    is_pinned: typing.Union[bool, entities.Unset] = marshaller.attrib(
-        raw_name="pinned", deserializer=bool, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~bool`, :obj:`~hikari.unset.UNSET` ]
+    is_pinned: typing.Union[bool, unset.Unset] = marshaller.attrib(
+        raw_name="pinned", deserializer=bool, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: If the message was generated by a webhook, the webhook's id.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.entities.UNSET` ]
-    webhook_id: typing.Union[snowflakes.Snowflake, entities.Unset] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.unset.UNSET` ]
+    webhook_id: typing.Union[snowflakes.Snowflake, unset.Unset] = marshaller.attrib(
+        deserializer=snowflakes.Snowflake.deserialize, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The message's type.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.messages.MessageType`, :obj:`~hikari.entities.UNSET` ]
-    type: typing.Union[messages.MessageType, entities.Unset] = marshaller.attrib(
-        deserializer=messages.MessageType, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.messages.MessageType`, :obj:`~hikari.unset.UNSET` ]
+    type: typing.Union[messages.MessageType, unset.Unset] = marshaller.attrib(
+        deserializer=messages.MessageType, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The message's activity.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.messages.MessageActivity`, :obj:`~hikari.entities.UNSET` ]
-    activity: typing.Union[messages.MessageActivity, entities.Unset] = marshaller.attrib(
-        deserializer=messages.MessageActivity.deserialize, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.messages.MessageActivity`, :obj:`~hikari.unset.UNSET` ]
+    activity: typing.Union[messages.MessageActivity, unset.Unset] = marshaller.attrib(
+        deserializer=messages.MessageActivity.deserialize, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The message's application.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.oauth2.Application`, :obj:`~hikari.entities.UNSET` ]
+    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.oauth2.Application`, :obj:`~hikari.unset.UNSET` ]
     application: typing.Optional[oauth2.Application] = marshaller.attrib(
-        deserializer=oauth2.Application.deserialize, if_undefined=entities.Unset, default=entities.UNSET
+        deserializer=oauth2.Application.deserialize, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The message's crossposted reference data.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.messages.MessageCrosspost`, :obj:`~hikari.entities.UNSET` ]
-    message_reference: typing.Union[messages.MessageCrosspost, entities.Unset] = marshaller.attrib(
-        deserializer=messages.MessageCrosspost.deserialize, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.messages.MessageCrosspost`, :obj:`~hikari.unset.UNSET` ]
+    message_reference: typing.Union[messages.MessageCrosspost, unset.Unset] = marshaller.attrib(
+        deserializer=messages.MessageCrosspost.deserialize, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The message's flags.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.messages.MessageFlag`, :obj:`~hikari.entities.UNSET` ]
-    flags: typing.Union[messages.MessageFlag, entities.Unset] = marshaller.attrib(
-        deserializer=messages.MessageFlag, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.messages.MessageFlag`, :obj:`~hikari.unset.UNSET` ]
+    flags: typing.Union[messages.MessageFlag, unset.Unset] = marshaller.attrib(
+        deserializer=messages.MessageFlag, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The message nonce. This is a string used for validating
     #: a message was sent.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.messages.MessageFlag`, :obj:`~hikari.entities.UNSET` ]
-    nonce: typing.Union[str, entities.Unset] = marshaller.attrib(
-        deserializer=str, if_undefined=entities.Unset, default=entities.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.messages.MessageFlag`, :obj:`~hikari.unset.UNSET` ]
+    nonce: typing.Union[str, unset.Unset] = marshaller.attrib(
+        deserializer=str, if_undefined=unset.Unset, default=unset.UNSET
     )
 
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageDeleteEvent(HikariEvent, entities.Deserializable):
+class MessageDeleteEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent Message Delete gateway events.
 
     Sent when a message is deleted in a channel we have access to.
@@ -943,7 +944,7 @@ class MessageDeleteEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageDeleteBulkEvent(HikariEvent, entities.Deserializable):
+class MessageDeleteBulkEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent Message Bulk Delete gateway events.
 
     Sent when multiple messages are deleted in a channel at once.
@@ -972,7 +973,7 @@ class MessageDeleteBulkEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageReactionAddEvent(HikariEvent, entities.Deserializable):
+class MessageReactionAddEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent Message Reaction Add gateway events."""
 
     #: The ID of the user adding the reaction.
@@ -1016,7 +1017,7 @@ class MessageReactionAddEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageReactionRemoveEvent(HikariEvent, entities.Deserializable):
+class MessageReactionRemoveEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent Message Reaction Remove gateway events."""
 
     #: The ID of the user who is removing their reaction.
@@ -1052,7 +1053,7 @@ class MessageReactionRemoveEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageReactionRemoveAllEvent(HikariEvent, entities.Deserializable):
+class MessageReactionRemoveAllEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent Message Reaction Remove All gateway events.
 
     Sent when all the reactions are removed from a message, regardless of emoji.
@@ -1078,7 +1079,7 @@ class MessageReactionRemoveAllEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageReactionRemoveEmojiEvent(HikariEvent, entities.Deserializable):
+class MessageReactionRemoveEmojiEvent(HikariEvent, marshaller.Deserializable):
     """Represents Message Reaction Remove Emoji events.
 
     Sent when all the reactions for a single emoji are removed from a message.
@@ -1120,7 +1121,7 @@ class PresenceUpdateEvent(HikariEvent, guilds.GuildMemberPresence):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class TypingStartEvent(HikariEvent, entities.Deserializable):
+class TypingStartEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent typing start gateway events.
 
     Received when a user or bot starts "typing" in a channel.
@@ -1180,7 +1181,7 @@ class VoiceStateUpdateEvent(HikariEvent, voices.VoiceState):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class VoiceServerUpdateEvent(HikariEvent, entities.Deserializable):
+class VoiceServerUpdateEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent voice server update gateway events.
 
     Sent when initially connecting to voice and when the current voice instance
@@ -1205,7 +1206,7 @@ class VoiceServerUpdateEvent(HikariEvent, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class WebhookUpdateEvent(HikariEvent, entities.Deserializable):
+class WebhookUpdateEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent webhook update gateway events.
 
     Sent when a webhook is updated, created or deleted in a guild.

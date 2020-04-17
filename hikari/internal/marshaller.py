@@ -32,6 +32,8 @@ __all__ = [
     "marshallable",
     "HIKARI_ENTITY_MARSHALLER",
     "HikariEntityMarshaller",
+    "Deserializable",
+    "Serializable",
 ]
 
 import importlib
@@ -50,6 +52,9 @@ _IF_UNDEFINED: typing.Final[str] = __name__ + "IF_UNDEFINED"
 _IF_NONE: typing.Final[str] = __name__ + "_IF_NONE"
 _PASSED_THROUGH_SINGLETONS: typing.Final[typing.Sequence[bool]] = [False, True, None]
 RAISE: typing.Final[typing.Any] = object()
+
+T_contra = typing.TypeVar("T_contra", contravariant=True)
+T_co = typing.TypeVar("T_co", covariant=True)
 
 EntityT = typing.TypeVar("EntityT", contravariant=True)
 
@@ -450,3 +455,30 @@ def marshallable(*, marshaller: HikariEntityMarshaller = HIKARI_ENTITY_MARSHALLE
         return marshaller.register(cls)
 
     return decorator
+
+
+class Deserializable:
+    """Mixin that enables the class to be deserialized from a raw entity."""
+
+    __slots__ = ()
+
+    @classmethod
+    def deserialize(cls: typing.Type[T_contra], payload: typing.Any) -> T_contra:
+        """Deserialize the given payload into the object.
+
+        Parameters
+        ----------
+        payload
+            The payload to deserialize into the object.
+        """
+        return HIKARI_ENTITY_MARSHALLER.deserialize(payload, cls)
+
+
+class Serializable:
+    """Mixin that enables an instance of the class to be serialized."""
+
+    __slots__ = ()
+
+    def serialize(self: T_co) -> typing.Any:
+        """Serialize this instance into a naive value."""
+        return HIKARI_ENTITY_MARSHALLER.serialize(self)

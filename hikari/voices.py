@@ -31,7 +31,7 @@ from hikari.internal import marshaller
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class VoiceState(entities.HikariEntity, entities.Deserializable):
+class VoiceState(entities.HikariEntity, marshaller.Deserializable):
     """Represents a user's voice connection status."""
 
     #: The ID of the guild this voice state is in, if applicable.
@@ -100,7 +100,7 @@ class VoiceState(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class VoiceRegion(entities.HikariEntity, entities.Deserializable):
+class VoiceRegion(entities.HikariEntity, marshaller.Deserializable):
     """Represent's a voice region server."""
 
     #: The ID of this region

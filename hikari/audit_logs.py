@@ -167,7 +167,7 @@ AUDIT_LOG_ENTRY_CONVERTERS = {
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class AuditLogChange(entities.HikariEntity, entities.Deserializable):
+class AuditLogChange(entities.HikariEntity, marshaller.Deserializable):
     """Represents a change made to an audit log entry's target entity."""
 
     #: The new value of the key, if something was added or changed.
@@ -273,7 +273,7 @@ def register_audit_log_entry_info(
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class BaseAuditLogEntryInfo(abc.ABC, entities.HikariEntity, entities.Deserializable):
+class BaseAuditLogEntryInfo(abc.ABC, entities.HikariEntity, marshaller.Deserializable):
     """A base object that all audit log entry info objects will inherit from."""
 
 
@@ -429,7 +429,7 @@ def get_entry_info_entity(type_: int) -> typing.Type[BaseAuditLogEntryInfo]:
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class AuditLogEntry(snowflakes.UniqueEntity, entities.Deserializable):
+class AuditLogEntry(snowflakes.UniqueEntity, marshaller.Deserializable):
     """Represents an entry in a guild's audit log."""
 
     #: The ID of the entity affected by this change, if applicable.
@@ -496,7 +496,7 @@ class AuditLogEntry(snowflakes.UniqueEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class AuditLog(entities.HikariEntity, entities.Deserializable):
+class AuditLog(entities.HikariEntity, marshaller.Deserializable):
     """Represents a guilds audit log."""
 
     #: A sequence of the audit log's entries.
