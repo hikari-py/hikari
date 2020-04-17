@@ -188,7 +188,7 @@ class TestShardAiohttpClientSessionKwargsProperty:
 
         client = shard.ShardConnection(url="...", token="...", connector=connector,)
 
-        assert client._cs_init_kwargs == dict(connector=connector)
+        assert client._cs_init_kwargs() == dict(connector=connector)
 
 
 @pytest.mark.asyncio
@@ -218,7 +218,7 @@ class TestShardWebSocketKwargsProperty:
 
         client._url = url
 
-        assert client._ws_connect_kwargs == dict(
+        assert client._ws_connect_kwargs() == dict(
             url=url,
             compress=0,
             autoping=True,
@@ -249,7 +249,7 @@ class TestConnect:
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(shard.ShardConnection)(url="ws://localhost", token="xxx")
-        client = _helpers.mock_methods_on(client, except_=("connect",))
+        client = _helpers.mock_methods_on(client, except_=("connect", "_cs_init_kwargs", "_ws_connect_kwargs"))
         client._receive = mock.AsyncMock(return_value=self.hello_payload)
         return client
 
@@ -308,14 +308,14 @@ class TestConnect:
         with self.suppress_closure():
             await client.connect(client_session_t)
         assert client_session_t.args == ()
-        assert client_session_t.kwargs == client._cs_init_kwargs
+        assert client_session_t.kwargs == client._cs_init_kwargs()
 
     @_helpers.timeout_after(10.0)
     async def test_ws_opened_with_expected_kwargs(self, client, client_session_t):
         with self.suppress_closure():
             await client.connect(client_session_t)
         assert client_session_t.ws.args == ()
-        assert client_session_t.ws.kwargs == client._ws_connect_kwargs
+        assert client_session_t.ws.kwargs == client._ws_connect_kwargs()
 
     @_helpers.timeout_after(10.0)
     async def test_ws_closed_afterwards(self, client, client_session_t):
@@ -720,7 +720,7 @@ class TestHeartbeatKeepAlive:
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
-        client = _helpers.mock_methods_on(client, except_=("_heartbeat_keep_alive",))
+        client = _helpers.mock_methods_on(client, except_=("_heartbeat_keep_alive", "_zombie_detector"))
         client._send = mock.AsyncMock()
         # This won't get set on the right event loop if we are not careful
         client.closed_event = asyncio.Event()
@@ -729,12 +729,14 @@ class TestHeartbeatKeepAlive:
 
     @_helpers.timeout_after(10.0)
     async def test_loops_indefinitely_until_requesting_close_event_set(self, client, event_loop):
-        def send(_):
-            client.last_heartbeat_ack_received = time.perf_counter() + 3
+        async def recv():
+            await asyncio.sleep(0.1)
+            client.last_heartbeat_ack_received = time.perf_counter()
+            client.last_message_received = client.last_heartbeat_ack_receied
 
-        client._send = mock.AsyncMock(wraps=send)
+        client._send = mock.AsyncMock(wraps=lambda *_: asyncio.create_task(recv()))
 
-        task: asyncio.Future = event_loop.create_task(client._heartbeat_keep_alive(0.01))
+        task: asyncio.Future = event_loop.create_task(client._heartbeat_keep_alive(0.5))
         await asyncio.sleep(1.5)
 
         if task.done():
@@ -772,6 +774,20 @@ class TestHeartbeatKeepAlive:
                 await client._heartbeat_keep_alive(1)
 
         client._send.assert_awaited_once_with({"op": 1, "d": seq})
+
+    @_helpers.assert_does_not_raise(type_=asyncio.TimeoutError)
+    async def test_zombie_detector_not_a_zombie(self):
+        client = mock.MagicMock()
+        client.last_message_received = time.perf_counter() - 5
+        heartbeat_interval = 41.25
+        shard.ShardConnection._zombie_detector(client, heartbeat_interval)
+
+    @_helpers.assert_raises(type_=asyncio.TimeoutError)
+    async def test_zombie_detector_is_a_zombie(self):
+        client = mock.MagicMock()
+        client.last_message_received = time.perf_counter() - 500000
+        heartbeat_interval = 41.25
+        shard.ShardConnection._zombie_detector(client, heartbeat_interval)
 
 
 @pytest.mark.asyncio
