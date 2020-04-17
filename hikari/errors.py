@@ -33,6 +33,7 @@ __all__ = [
     "GatewayInvalidTokenError",
     "GatewayServerClosedConnectionError",
     "GatewayClientClosedError",
+    "GatewayClientDisconnectedError",
     "GatewayError",
 ]
 
@@ -87,6 +88,19 @@ class GatewayClientClosedError(GatewayError):
     """
 
     def __init__(self, reason: str = "The gateway client has been closed") -> None:
+        super().__init__(reason)
+
+
+class GatewayClientDisconnectedError(GatewayError):
+    """An exception raised when the bot client-side disconnects unexpectedly.
+
+    Parameters
+    ----------
+    reason : :obj:`~str`
+        A string explaining the issue.
+    """
+
+    def __init__(self, reason: str = "The gateway client has disconnected unexpectedly") -> None:
         super().__init__(reason)
 
 

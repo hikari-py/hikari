@@ -410,7 +410,8 @@ class ShardClient(runnable.RunnableClient):
                     raise ex from None
 
                 self.logger.warning("disconnected by Discord, will attempt to reconnect")
-
+            except errors.GatewayClientDisconnectedError:
+                self.logger.warning("unexpected connection close, will attempt to reconnect")
             except errors.GatewayClientClosedError:
                 self.logger.warning("shutting down")
                 return
