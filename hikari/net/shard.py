@@ -405,7 +405,7 @@ class ShardConnection:
 
     @property
     def is_connected(self) -> bool:
-        """Whether the gateway is connecter or not.
+        """Whether the gateway is connected or not.
 
         Returns
         -------
@@ -541,26 +541,6 @@ class ShardConnection:
         await self._send({"op": codes.GatewayOpcode.PRESENCE_UPDATE, "d": presence})
         self._presence = presence
 
-    async def close(self, close_code: int = 1000) -> None:
-        """Request this gateway connection closes.
-
-        Parameters
-        ----------
-        close_code : :obj:`~int`
-            The close code to use. Defaults to ``1000`` (normal closure).
-        """
-        if not self.requesting_close_event.is_set():
-            self.logger.debug("closing websocket connection")
-            self.requesting_close_event.set()
-            # These will attribute error if they are not set; in this case we don't care, just ignore it.
-            with contextlib.suppress(asyncio.TimeoutError, AttributeError):
-                await asyncio.wait_for(self._ws.close(code=close_code), timeout=2.0)
-            with contextlib.suppress(asyncio.TimeoutError, AttributeError):
-                await asyncio.wait_for(self._session.close(), timeout=2.0)
-            self.closed_event.set()
-        elif self._debug:
-            self.logger.debug("websocket connection already requested to be closed, will not do anything else")
-
     async def connect(self, client_session_type=aiohttp.ClientSession) -> None:
         """Connect to the gateway and return when it closes.
 
@@ -580,14 +560,14 @@ class ShardConnection:
         self.requesting_close_event.clear()
         self.resumed_event.clear()
 
-        self._session = client_session_type(**self._cs_init_kwargs)
+        self._session = client_session_type(**self._cs_init_kwargs())
 
         # 1000 and 1001 will invalidate sessions, 1006 (used here before)
         # is a sketchy area as to the intent. 4000 is known to work normally.
         close_code = codes.GatewayCloseCode.UNKNOWN_ERROR
 
         try:
-            self._ws = await self._session.ws_connect(**self._ws_connect_kwargs)
+            self._ws = await self._session.ws_connect(**self._ws_connect_kwargs())
             self._zlib = zlib.decompressobj()
             self.logger.debug("expecting HELLO")
             pl = await self._receive()
@@ -630,6 +610,7 @@ class ShardConnection:
                 # the close event was set without an error causing that flag to be changed.
                 ex = errors.GatewayClientClosedError()
                 close_code = codes.GatewayCloseCode.NORMAL_CLOSURE
+
             elif isinstance(ex, asyncio.TimeoutError):
                 # If we get timeout errors receiving stuff, propagate as a zombied connection. This
                 # is already done by the ping keepalive and heartbeat keepalive partially, but this
@@ -640,6 +621,7 @@ class ShardConnection:
                 close_code = ex.close_code
 
             raise ex
+
         finally:
             self.closed_event.set()
 
@@ -658,7 +640,26 @@ class ShardConnection:
             await self._session.close()
             self._session = None
 
-    @property
+    async def close(self, close_code: int = 1000) -> None:
+        """Request this gateway connection closes.
+
+        Parameters
+        ----------
+        close_code : :obj:`~int`
+            The close code to use. Defaults to ``1000`` (normal closure).
+        """
+        if not self.requesting_close_event.is_set():
+            self.logger.debug("closing websocket connection")
+            self.requesting_close_event.set()
+            # These will attribute error if they are not set; in this case we don't care, just ignore it.
+            with contextlib.suppress(asyncio.TimeoutError, AttributeError):
+                await asyncio.wait_for(self._ws.close(code=close_code), timeout=2.0)
+            with contextlib.suppress(asyncio.TimeoutError, AttributeError):
+                await asyncio.wait_for(self._session.close(), timeout=2.0)
+            self.closed_event.set()
+        elif self._debug:
+            self.logger.debug("websocket connection already requested to be closed, will not do anything else")
+
     def _ws_connect_kwargs(self):
         return dict(
             url=self._url,
@@ -672,23 +673,27 @@ class ShardConnection:
             ssl_context=self._ssl_context,
         )
 
-    @property
     def _cs_init_kwargs(self):
         return dict(connector=self._connector)
 
     async def _heartbeat_keep_alive(self, heartbeat_interval):
         while not self.requesting_close_event.is_set():
-            if self.last_message_received < self.last_heartbeat_sent:
-                raise asyncio.TimeoutError(
-                    f"{self.shard_id}: connection is a zombie, haven't received HEARTBEAT ACK for too long"
-                )
+            self._zombie_detector(heartbeat_interval)
             self.logger.debug("preparing to send HEARTBEAT (s:%s, interval:%ss)", self.seq, self.heartbeat_interval)
             await self._send({"op": codes.GatewayOpcode.HEARTBEAT, "d": self.seq})
             self.last_heartbeat_sent = time.perf_counter()
+
             try:
                 await asyncio.wait_for(self.requesting_close_event.wait(), timeout=heartbeat_interval)
             except asyncio.TimeoutError:
                 pass
+
+    def _zombie_detector(self, heartbeat_interval):
+        time_since_message = time.perf_counter() - self.last_message_received
+        if heartbeat_interval < time_since_message:
+            raise asyncio.TimeoutError(
+                f"{self.shard_id}: connection is a zombie, haven't received any message for {time_since_message}s"
+            )
 
     async def _identify(self):
         self.logger.debug("preparing to send IDENTIFY")
@@ -758,28 +763,34 @@ class ShardConnection:
                     self.logger.debug("connection has RESUMED (session:%s, s:%s)", self.session_id, self.seq)
 
                 self.dispatch(self, event_name, d)
+
             elif op == codes.GatewayOpcode.HEARTBEAT:
                 self.logger.debug("received HEARTBEAT, preparing to send HEARTBEAT ACK to server in response")
                 await self._send({"op": codes.GatewayOpcode.HEARTBEAT_ACK})
+
             elif op == codes.GatewayOpcode.RECONNECT:
                 self.logger.debug("instructed by gateway server to restart connection")
                 raise errors.GatewayMustReconnectError()
+
             elif op == codes.GatewayOpcode.INVALID_SESSION:
                 can_resume = bool(d)
                 self.logger.debug(
                     "instructed by gateway server to %s session", "resume" if can_resume else "restart",
                 )
                 raise errors.GatewayInvalidSessionError(can_resume)
+
             elif op == codes.GatewayOpcode.HEARTBEAT_ACK:
                 now = time.perf_counter()
                 self.heartbeat_latency = now - self.last_heartbeat_sent
                 self.logger.debug("received HEARTBEAT ACK (latency:%ss)", self.heartbeat_latency)
+
             else:
                 self.logger.debug("ignoring opcode %s with data %r", op, d)
 
     async def _receive(self):
         while True:
             message = await self._receive_one_packet()
+
             if message.type == aiohttp.WSMsgType.TEXT:
                 obj = self._json_deserialize(message.data)
 
@@ -794,6 +805,7 @@ class ShardConnection:
                         len(message.data),
                     )
                 return obj
+
             elif message.type == aiohttp.WSMsgType.BINARY:
                 buffer = bytearray(message.data)
                 packets = 1
@@ -809,6 +821,7 @@ class ShardConnection:
 
                 if self._debug:
                     self.logger.debug("receive %s zlib-encoded packets containing payload %r", packets, pl)
+
                 else:
                     self.logger.debug(
                         "receive zlib payload (op:%s, t:%s, s:%s, size:%s, packets:%s)",
@@ -828,10 +841,13 @@ class ShardConnection:
                     pass
 
                 self.logger.debug("connection closed with code %s", close_code)
+
                 if close_code == codes.GatewayCloseCode.AUTHENTICATION_FAILED:
                     raise errors.GatewayInvalidTokenError()
+
                 if close_code in (codes.GatewayCloseCode.SESSION_TIMEOUT, codes.GatewayCloseCode.INVALID_SEQ):
                     raise errors.GatewayInvalidSessionError(False)
+
                 if close_code == codes.GatewayCloseCode.SHARDING_REQUIRED:
                     raise errors.GatewayNeedsShardingError()
 

@@ -46,10 +46,22 @@ EMPTY_DICT: typing.Final[typing.Mapping[K, V]] = types.MappingProxyType({})
 EMPTY_GENERATOR_EXPRESSION: typing.Final[typing.Iterator[T]] = (_ for _ in EMPTY_COLLECTION)
 
 
-class WeakKeyDictionary(weakref.WeakKeyDictionary, typing.MutableMapping[K, V]):
+class WeakKeyDictionary(typing.Generic[K, V], weakref.WeakKeyDictionary, typing.MutableMapping[K, V]):
     """A dictionary that has weak references to the keys.
 
-    This is a type-safe version of :obj:`~weakref.WeakKeyDictionary`.
+    This is a type-safe version of :obj:`~weakref.WeakKeyDictionary` which
+    is subscriptable.
+
+    Example
+    -------
+
+    .. code-block:: python
+
+        @attr.s(auto_attribs=True)
+        class Commands:
+            instances: Set[Command]
+            aliases: WeakKeyDictionary[Command, str]
+
     """
 
     __slots__ = ()
