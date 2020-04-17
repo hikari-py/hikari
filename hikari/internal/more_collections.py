@@ -54,7 +54,6 @@ class WeakKeyDictionary(typing.Generic[K, V], weakref.WeakKeyDictionary, typing.
 
     Example
     -------
-
     .. code-block:: python
 
         @attr.s(auto_attribs=True)
