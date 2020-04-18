@@ -21,10 +21,10 @@
 |internal|
 """
 from hikari.internal import assertions
-from hikari.internal import urls
 from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import meta
 from hikari.internal import more_asyncio
 from hikari.internal import more_collections
 from hikari.internal import more_logging
+from hikari.internal import urls

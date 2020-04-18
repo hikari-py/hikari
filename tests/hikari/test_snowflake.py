@@ -21,7 +21,6 @@ import datetime
 import attr
 import pytest
 
-from hikari import entities
 from hikari import snowflakes
 from hikari.internal import marshaller
 
@@ -93,7 +92,7 @@ class TestUniqueEntity:
     def stud_marshal_entity(self):
         @marshaller.marshallable()
         @attr.s(slots=True, kw_only=True)
-        class StudEntity(snowflakes.UniqueEntity, entities.Deserializable, entities.Serializable):
+        class StudEntity(snowflakes.UniqueEntity, marshaller.Deserializable, marshaller.Serializable):
             ...
 
         return StudEntity

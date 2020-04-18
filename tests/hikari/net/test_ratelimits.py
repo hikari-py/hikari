@@ -23,8 +23,8 @@ import logging
 import math
 import statistics
 import time
-import mock
 
+import mock
 import pytest
 
 from hikari.net import ratelimits

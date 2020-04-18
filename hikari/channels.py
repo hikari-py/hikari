@@ -102,7 +102,7 @@ class PermissionOverwriteType(str, enum.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PermissionOverwrite(snowflakes.UniqueEntity, entities.Deserializable, entities.Serializable):
+class PermissionOverwrite(snowflakes.UniqueEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents permission overwrites for a channel or role in a channel."""
 
     #: The type of entity this overwrite targets.
@@ -157,7 +157,7 @@ def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type["C
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Channel(snowflakes.UniqueEntity, entities.Deserializable):
+class Channel(snowflakes.UniqueEntity, marshaller.Deserializable):
     """Base class for all channels."""
 
     #: The channel's type.
@@ -366,7 +366,7 @@ class GuildVoiceChannel(GuildChannel):
     user_limit: int = marshaller.attrib(deserializer=int)
 
 
-class GuildChannelBuilder(entities.Serializable):
+class GuildChannelBuilder(marshaller.Serializable):
     """Used to create channel objects to send in guild create requests.
 
     Parameters
@@ -393,12 +393,12 @@ class GuildChannelBuilder(entities.Serializable):
     __slots__ = ("_payload",)
 
     def __init__(self, channel_name: str, channel_type: ChannelType) -> None:
-        self._payload: entities.RawEntityT = {
+        self._payload: typing.Dict[str, typing.Any] = {
             "type": channel_type,
             "name": channel_name,
         }
 
-    def serialize(self: entities.T_co) -> entities.RawEntityT:
+    def serialize(self: "GuildChannelBuilder") -> entities.RawEntityT:
         """Serialize this instance into a naive value."""
         return self._payload
 

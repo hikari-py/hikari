@@ -20,11 +20,10 @@ import asyncio
 import contextlib
 import io
 import json
-import logging
 import ssl
-import mock
 
 import aiohttp
+import mock
 import pytest
 
 from hikari import errors

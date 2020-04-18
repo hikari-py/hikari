@@ -18,16 +18,16 @@
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
 import datetime
-import mock
 
+import mock
 import pytest
 
 from hikari import channels
 from hikari import colors
 from hikari import emojis
-from hikari import entities
 from hikari import guilds
 from hikari import permissions
+from hikari import unset
 from hikari import users
 from hikari.internal import conversions
 from hikari.internal import urls
@@ -545,18 +545,18 @@ class TestPresenceUser:
         assert presence_user_obj.id == 115590097100865541
         for attr in presence_user_obj.__slots__:
             if attr != "id":
-                assert getattr(presence_user_obj, attr) is entities.UNSET
+                assert getattr(presence_user_obj, attr) is unset.UNSET
 
     @pytest.fixture()
     def test_presence_user_obj(self):
         return guilds.PresenceUser(
             id=4242424242,
-            discriminator=entities.UNSET,
-            username=entities.UNSET,
-            avatar_hash=entities.UNSET,
-            is_bot=entities.UNSET,
-            is_system=entities.UNSET,
-            flags=entities.UNSET,
+            discriminator=unset.UNSET,
+            username=unset.UNSET,
+            avatar_hash=unset.UNSET,
+            is_bot=unset.UNSET,
+            is_system=unset.UNSET,
+            flags=unset.UNSET,
         )
 
     def test_avatar_url(self, test_presence_user_obj):
@@ -566,7 +566,7 @@ class TestPresenceUser:
             assert test_presence_user_obj.avatar_url is mock_url
             users.User.format_avatar_url.assert_called_once()
 
-    @pytest.mark.parametrize(["avatar_hash", "discriminator"], [("dwaea22", entities.UNSET), (entities.UNSET, "2929")])
+    @pytest.mark.parametrize(["avatar_hash", "discriminator"], [("dwaea22", unset.UNSET), (unset.UNSET, "2929")])
     def test_format_avatar_url_when_discriminator_or_avatar_hash_set_without_optionals(
         self, test_presence_user_obj, avatar_hash, discriminator
     ):
@@ -577,7 +577,7 @@ class TestPresenceUser:
             assert test_presence_user_obj.format_avatar_url() is mock_url
             users.User.format_avatar_url.assert_called_once_with(fmt=None, size=4096)
 
-    @pytest.mark.parametrize(["avatar_hash", "discriminator"], [("dwaea22", entities.UNSET), (entities.UNSET, "2929")])
+    @pytest.mark.parametrize(["avatar_hash", "discriminator"], [("dwaea22", unset.UNSET), (unset.UNSET, "2929")])
     def test_format_avatar_url_when_discriminator_or_avatar_hash_set_with_optionals(
         self, test_presence_user_obj, avatar_hash, discriminator
     ):
@@ -589,10 +589,10 @@ class TestPresenceUser:
             users.User.format_avatar_url.assert_called_once_with(fmt="nyaapeg", size=2048)
 
     def test_format_avatar_url_when_discriminator_and_avatar_hash_unset(self, test_presence_user_obj):
-        test_presence_user_obj.avatar_hash = entities.UNSET
-        test_presence_user_obj.discriminator = entities.UNSET
+        test_presence_user_obj.avatar_hash = unset.UNSET
+        test_presence_user_obj.discriminator = unset.UNSET
         with mock.patch.object(users.User, "format_avatar_url", return_value=...):
-            assert test_presence_user_obj.format_avatar_url() is entities.UNSET
+            assert test_presence_user_obj.format_avatar_url() is unset.UNSET
             users.User.format_avatar_url.assert_not_called()
 
     def test_default_avatar_when_discriminator_set(self, test_presence_user_obj):
@@ -600,8 +600,8 @@ class TestPresenceUser:
         assert test_presence_user_obj.default_avatar == 2
 
     def test_default_avatar_when_discriminator_unset(self, test_presence_user_obj):
-        test_presence_user_obj.discriminator = entities.UNSET
-        assert test_presence_user_obj.default_avatar is entities.UNSET
+        test_presence_user_obj.discriminator = unset.UNSET
+        assert test_presence_user_obj.default_avatar is unset.UNSET
 
 
 @pytest.fixture()

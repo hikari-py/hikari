@@ -22,10 +22,10 @@ import datetime
 import math
 import time
 import urllib.parse
-import mock
 
 import aiohttp
 import async_timeout
+import mock
 import pytest
 
 from hikari import errors

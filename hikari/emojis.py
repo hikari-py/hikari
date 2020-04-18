@@ -31,7 +31,7 @@ __all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji"]
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Emoji(entities.HikariEntity, entities.Deserializable):
+class Emoji(entities.HikariEntity, marshaller.Deserializable):
     """Base class for all emojis."""
 
 

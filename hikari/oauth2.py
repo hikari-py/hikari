@@ -29,8 +29,8 @@ from hikari import guilds
 from hikari import permissions
 from hikari import snowflakes
 from hikari import users
-from hikari.internal import urls
 from hikari.internal import marshaller
+from hikari.internal import urls
 
 
 @enum.unique
@@ -46,7 +46,7 @@ class ConnectionVisibility(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class OwnConnection(entities.HikariEntity, entities.Deserializable):
+class OwnConnection(entities.HikariEntity, marshaller.Deserializable):
     """Represents a user's connection with a third party account.
 
     Returned by the ``GET Current User Connections`` endpoint.
@@ -141,7 +141,7 @@ class TeamMembershipState(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class TeamMember(entities.HikariEntity, entities.Deserializable):
+class TeamMember(entities.HikariEntity, marshaller.Deserializable):
     """Represents a member of a Team."""
 
     #: The state of this user's membership.
@@ -168,7 +168,7 @@ class TeamMember(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Team(snowflakes.UniqueEntity, entities.Deserializable):
+class Team(snowflakes.UniqueEntity, marshaller.Deserializable):
     """Represents a development team, along with all its members."""
 
     #: The hash of this team's icon, if set.
@@ -238,7 +238,7 @@ class ApplicationOwner(users.User):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Application(snowflakes.UniqueEntity, entities.Deserializable):
+class Application(snowflakes.UniqueEntity, marshaller.Deserializable):
     """Represents the information of an Oauth2 Application."""
 
     #: The name of this application.

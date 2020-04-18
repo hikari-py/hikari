@@ -17,13 +17,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import mock
-
 import pytest
 
 from hikari import events
 from hikari.clients import shard_clients
 from hikari.state import stateless_event_managers
-from tests.hikari import _helpers
 
 
 class TestStatelessEventManagerImpl:

@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import mock
-
 import pytest
 
 from hikari import users

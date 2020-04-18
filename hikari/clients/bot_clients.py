@@ -25,45 +25,17 @@ import logging
 import typing
 
 from hikari import events
+from hikari import unset
 from hikari.clients import configs
 from hikari.clients import gateway_managers
 from hikari.clients import rest_clients
 from hikari.clients import runnable
 from hikari.clients import shard_clients
-from hikari.internal import meta
 from hikari.internal import more_asyncio
 from hikari.internal import more_logging
 from hikari.state import event_dispatchers
 from hikari.state import event_managers
 from hikari.state import stateless_event_managers
-
-
-class _NotInitializedYet(meta.Singleton):
-    """Sentinel value for fields that are not yet initialized.
-
-    These will be filled once the bot has started.
-    """
-
-    __slots__ = ()
-
-    def __bool__(self) -> bool:
-        return False
-
-    def __defer(self, *args, **kwargs) -> typing.NoReturn:
-        raise TypeError("Bot has not yet initialized, so attribute is not available.") from None
-
-    __call__ = __defer
-    __getattr__ = __defer
-    __setattr__ = __defer
-    __delattr__ = __defer
-    __getitem__ = __defer
-    __setitem__ = __defer
-    __delitem__ = __defer
-    __await__ = __defer
-    __enter__ = __defer
-    __aenter__ = __defer
-    __exit__ = __defer
-    __aexit__ = __defer
 
 
 class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
@@ -94,7 +66,7 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
     #: This will be initialized lazily once the bot has started.
     #:
     #: :type: :obj:`~hikari.clients.gateway_managers.GatewayManager` [ :obj:`~hikari.clients.shard_clients.ShardClient` ]
-    gateway: gateway_managers.GatewayManager[shard_clients.ShardClient]
+    gateway: unset.MayBeUnset[gateway_managers.GatewayManager[shard_clients.ShardClient]]
 
     #: The logger to use for this bot.
     #:
@@ -108,15 +80,15 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
     #: This will be initialized lazily once the bot has started.
     #:
     #: :type: :obj:`~hikari.clients.rest_clients.RESTClient`
-    rest: rest_clients.RESTClient
+    rest: unset.MayBeUnset[rest_clients.RESTClient]
 
     @abc.abstractmethod
     def __init__(self, config: configs.BotConfig, event_manager: event_managers.EventManager) -> None:
         super().__init__(more_logging.get_named_logger(self))
         self.config = config
         self.event_manager = event_manager
-        self.gateway = _NotInitializedYet()
-        self.rest = _NotInitializedYet()
+        self.gateway = unset.UNSET
+        self.rest = unset.UNSET
 
     async def start(self):
         if self.rest or self.gateway:
@@ -152,11 +124,11 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
         self.event_manager.event_dispatcher.close()
         if self.rest:
             await self.rest.close()
-        self.gateway = _NotInitializedYet()
-        self.rest = _NotInitializedYet()
+        self.gateway = unset.UNSET
+        self.rest = unset.UNSET
 
     async def join(self) -> None:
-        if self.gateway:
+        if not unset.is_unset(self.gateway):
             await self.gateway.join()
 
     def add_listener(

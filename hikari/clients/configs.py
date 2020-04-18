@@ -37,17 +37,16 @@ import typing
 import aiohttp
 import attr
 
-from hikari.internal import conversions
-from hikari import entities
 from hikari import gateway_entities
 from hikari import guilds
+from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.net import codes
 
 
 @marshaller.marshallable()
 @attr.s(kw_only=True)
-class BaseConfig(entities.Deserializable):
+class BaseConfig(marshaller.Deserializable):
     """Base class for any configuration data class."""
 
 
