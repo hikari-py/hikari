@@ -163,7 +163,7 @@ class LowLevelRestfulClient:
     #:
     #: You should not ever need to touch this implementation.
     #:
-    #: :type: :obj:`~hikari.net.ratelimits.HTTPBucketRateLimiterManager`
+    #: :type: :obj:`~hikari.net.ratelimits.RESTBucketManager`
     ratelimiter: ratelimits.RESTBucketManager
 
     #: The custom SSL context to use.

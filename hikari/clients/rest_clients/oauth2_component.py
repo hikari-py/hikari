@@ -16,3 +16,26 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""The logic for handling all requests to oauth2 endpoints."""
+
+__all__ = ["RESTOauth2Component"]
+
+import abc
+
+from hikari.clients.rest_clients import component_base
+from hikari import oauth2
+
+
+class RESTOauth2Component(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+    """The REST client component for handling requests to oauth2 endpoints."""
+
+    async def fetch_my_application_info(self) -> oauth2.Application:
+        """Get the current application information.
+
+        Returns
+        -------
+        :obj:`~hikari.oauth2.Application`
+            An application info object.
+        """
+        payload = await self._session.get_current_application_info()
+        return oauth2.Application.deserialize(payload)
