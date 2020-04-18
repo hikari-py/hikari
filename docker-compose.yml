@@ -3,7 +3,7 @@ version: "3"
 services:
   gateway-test:
     build: .
-    entrypoint: python -m hikari.clients.gateway_runner --logger=DEBUG
+    entrypoint: python -m hikari.clients.test_client --logger=DEBUG
     env_file:
       - credentials.env
     restart: always
