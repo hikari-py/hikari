@@ -37,6 +37,7 @@ from hikari.clients import runnable
 from hikari.clients import shard_clients
 from hikari.internal import conversions
 from hikari.internal import more_logging
+from hikari.net import codes
 from hikari.state import event_dispatchers
 from hikari.state import raw_event_consumers
 
@@ -63,7 +64,7 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
     ) -> None:
         super().__init__(more_logging.get_named_logger(self, conversions.pluralize(shard_count, "shard")))
         self._is_running = False
-        self.config = config
+        self._config = config
         self.raw_event_consumer = raw_event_consumer_impl
         self._dispatcher = dispatcher
         self.shards: typing.Dict[int, ShardT] = {
@@ -72,7 +73,7 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
         self.shard_ids = shard_ids
 
     @property
-    def latency(self) -> float:
+    def heartbeat_latency(self) -> float:
         """Average heartbeat latency for all valid shards.
 
         This will return a mean of all the heartbeat intervals for all shards
@@ -92,10 +93,56 @@ class GatewayManager(typing.Generic[ShardT], runnable.RunnableClient):
         """
         latencies = []
         for shard in self.shards.values():
-            if not math.isnan(shard.latency):
-                latencies.append(shard.latency)
+            if not math.isnan(shard.heartbeat_latency):
+                latencies.append(shard.heartbeat_latency)
 
         return sum(latencies) / len(latencies) if latencies else float("nan")
+
+    @property
+    def total_disconnect_count(self) -> int:
+        """Total number of times any shard has disconnected.
+
+        Returns
+        -------
+        :obj:`int`
+            Total disconnect count.
+        """
+        return sum(s.disconnect_count for s in self.shards.values())
+
+    @property
+    def total_reconnect_count(self) -> int:
+        """Total number of times any shard has reconnected.
+
+        Returns
+        -------
+        :obj:`int`
+            Total reconnect count.
+        """
+        return sum(s.reconnect_count for s in self.shards.values())
+
+    @property
+    def intents(self) -> typing.Optional[codes.GatewayIntent]:
+        """Intent values that any shard connections will be using.
+
+        Returns
+        -------
+        :obj:`~hikari.net.codes.GatewayIntent`, optional
+            A :obj:`~enum.IntFlag` enum containing each intent that is set. If
+            intents are not being used at all, then this will return
+            :obj:`~None` instead.
+        """
+        return self._config.intents
+
+    @property
+    def version(self) -> float:
+        """Version being used for the gateway API.
+
+        Returns
+        -------
+        :obj:`~int`
+            The API version being used.
+        """
+        return self._config.gateway_version
 
     async def start(self) -> None:
         """Start all shards.

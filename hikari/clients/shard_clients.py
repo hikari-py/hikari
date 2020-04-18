@@ -176,17 +176,6 @@ class ShardClient(runnable.RunnableClient):
         )
 
     @property
-    def connection(self) -> shard.ShardConnection:
-        """Low-level gateway client used for this shard.
-
-        Returns
-        -------
-        :obj:`~hikari.net.shard.ShardConnection`
-            The low-level gateway client used for this shard.
-        """
-        return self._connection
-
-    @property
     def shard_id(self) -> int:
         """Shard ID.
 
@@ -258,7 +247,7 @@ class ShardClient(runnable.RunnableClient):
         return self._is_afk
 
     @property
-    def latency(self) -> float:
+    def heartbeat_latency(self) -> float:
         """Latency between sending a HEARTBEAT and receiving an ACK.
 
         Returns
@@ -280,6 +269,17 @@ class ShardClient(runnable.RunnableClient):
             until the connection has received a ``HELLO`` payload.
         """
         return self._connection.heartbeat_interval
+
+    @property
+    def disconnect_count(self) -> int:
+        """Count of number of times the internal connection has disconnected.
+
+        Returns
+        -------
+        :obj:`~int`
+            The number of disconnects this shard has performed.
+        """
+        return self._connection.disconnect_count
 
     @property
     def reconnect_count(self) -> int:
@@ -304,6 +304,65 @@ class ShardClient(runnable.RunnableClient):
             The state of this shard.
         """
         return self._shard_state
+
+    @property
+    def is_connected(self) -> bool:
+        """Whether the shard is connected or not.
+
+        Returns
+        -------
+        :obj:`~bool`
+            :obj:`~True` if connected; :obj:`~False` otherwise.
+        """
+        return self._connection.is_connected
+
+    @property
+    def seq(self) -> typing.Optional[int]:
+        """Sequence ID of the shard.
+
+        Returns
+        -------
+        :obj:`~int`, optional
+            The sequence number for the shard. This is the number of payloads
+            that have been received since an ``IDENTIFY`` was sent.
+        """
+        return self._connection.seq
+
+    @property
+    def session_id(self) -> typing.Optional[str]:
+        """Session ID.
+
+        Returns
+        -------
+        :obj:`~str`, optional
+            The session ID for the shard connection, if there is one. If not,
+            then :obj:`~None`.
+        """
+        return self._connection.session_id
+
+    @property
+    def version(self) -> float:
+        """Version being used for the gateway API.
+
+        Returns
+        -------
+        :obj:`~int`
+            The API version being used.
+        """
+        return self._connection.version
+
+    @property
+    def intents(self) -> typing.Optional[codes.GatewayIntent]:
+        """Intent values that this connection is using.
+
+        Returns
+        -------
+        :obj:`~hikari.net.codes.GatewayIntent`, optional
+            A :obj:`~enum.IntFlag` enum containing each intent that is set. If
+            intents are not being used at all, then this will return
+            :obj:`~None` instead.
+        """
+        return self._connection.intents
 
     async def start(self):
         """Connect to the gateway on this shard and keep the connection alive.
@@ -437,7 +496,7 @@ class ShardClient(runnable.RunnableClient):
         if connect_task in completed:
             raise connect_task.exception()
 
-        self.logger.info("received HELLO, interval is %ss", self.connection.heartbeat_interval)
+        self.logger.info("received HELLO, interval is %ss", self._connection.heartbeat_interval)
 
         completed, _ = await asyncio.wait(
             [connect_task, self._connection.handshake_event.wait()], return_when=asyncio.FIRST_COMPLETED
@@ -536,7 +595,7 @@ class ShardClient(runnable.RunnableClient):
         }
 
     def __str__(self) -> str:
-        return f"Shard {self.connection.shard_id} in pool of {self.connection.shard_count} shards"
+        return f"Shard {self.shard_id} in pool of {self.shard_count} shards"
 
     def __repr__(self) -> str:
         return (

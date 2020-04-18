@@ -121,25 +121,16 @@ def run_gateway(compression, color, debug, intents, logger, shards, token, verif
             message = await client.rest.create_message(event.channel_id, content="Pong!")
             rest_time = time.perf_counter() - start
 
-            if (raw_intents := client.gateway.shards[0].connection.intents) is not None:
-                active_intents = []
-                for i in hikari.GatewayIntent:
-                    if i & raw_intents:
-                        active_intents.append(i.name)
-                active_intents = ", ".join(active_intents)
-            else:
-                active_intents = "not enabled"
+            active_intents = str(client.gateway._config.intents or "not provided")
 
             shard_infos = []
             for shard_id, shard in client.gateway.shards.items():
                 shard_info = (
-                    f"latency: {shard.latency * 1_000:.0f} ms\n"
-                    f"seq: {shard.connection.seq}\n"
-                    f"session id: {shard.connection.session_id}\n"
+                    f"latency: {shard.heartbeat_latency * 1_000:.0f} ms\n"
+                    f"seq: {shard.seq}\n"
+                    f"session id: {shard.session_id}\n"
                     f"reconnects: {shard.reconnect_count}\n"
-                    f"last payload: {since(shard.connection.last_message_received)} ago\n"
-                    f"last heartbeat: {since(shard.connection.last_heartbeat_sent)} ago\n"
-                    f"heartbeat interval: {shard.connection.heartbeat_interval} s\n"
+                    f"heartbeat interval: {shard.heartbeat_interval} s\n"
                     f"state: {shard.connection_state.name}\n"
                 )
 
