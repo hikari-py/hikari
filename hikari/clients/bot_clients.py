@@ -59,6 +59,11 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
     #: :type: a subclass of :obj:`~hikari.state.event_managers.EventManager`
     event_manager: event_managers.EventManager
 
+    #: The logger to use for this bot.
+    #:
+    #: :type: :obj:`~logging.Logger`
+    logger: logging.Logger
+
     #: The gateway for this bot.
     #:
     #: Note
@@ -67,11 +72,6 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
     #:
     #: :type: :obj:`~hikari.clients.gateway_managers.GatewayManager` [ :obj:`~hikari.clients.shard_clients.ShardClient` ]
     gateway: unset.MayBeUnset[gateway_managers.GatewayManager[shard_clients.ShardClient]]
-
-    #: The logger to use for this bot.
-    #:
-    #: :type: :obj:`~logging.Logger`
-    logger: logging.Logger
 
     #: The REST HTTP client to use for this bot.
     #:
@@ -83,12 +83,16 @@ class BotBase(runnable.RunnableClient, event_dispatchers.EventDispatcher):
     rest: unset.MayBeUnset[rest_clients.RESTClient]
 
     @abc.abstractmethod
+    @typing.no_type_check
     def __init__(self, config: configs.BotConfig, event_manager: event_managers.EventManager) -> None:
         super().__init__(more_logging.get_named_logger(self))
         self.config = config
         self.event_manager = event_manager
-        self.gateway = unset.UNSET
-        self.rest = unset.UNSET
+
+        # Use the typing.cast to fix issue in some linters where they give precedence to the assigned
+        # value over the type hint.
+        self.rest = typing.cast(rest_clients.RESTClient, unset.UNSET)
+        self.gateway = typing.cast(gateway_managers.GatewayManager[shard_clients.ShardClient], unset.UNSET)
 
     async def start(self):
         if self.rest or self.gateway:
