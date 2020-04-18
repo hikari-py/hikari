@@ -16,27 +16,27 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Black code-style jobs."""
+"""Pdoc documentation generation."""
+from ci import config
 from ci import nox
 
 
-PATHS = [
-    "hikari",
-    "tests",
-    "setup.py",
-    "noxfile.py",
-]
+@nox.session(reuse_venv=True, default=True)
+def pdoc(session: nox.Session) -> None:
+    """Generate documentation with pdoc."""
+    session.install(
+        "-r",
+        config.REQUIREMENTS,
+        "pdoc3==0.8.1"
+    )
 
-
-@nox.session(default=True, reuse_venv=True)
-def reformat_code(session: nox.Session) -> None:
-    """Run black code formatter."""
-    session.install("black")
-    session.run("black", *PATHS)
-
-
-@nox.session(reuse_venv=True)
-def check_formatting(session: nox.Session) -> None:
-    """Check that the code matches the black code style."""
-    session.install("black")
-    session.run("black", *PATHS, "--check")
+    session.run(
+        "python",
+        "-m",
+        "pdoc",
+        config.MAIN_PACKAGE,
+        "--html",
+        "-c",
+        "show_inherited_members=True",
+        "--force",
+    )

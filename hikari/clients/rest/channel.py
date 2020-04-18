@@ -238,7 +238,6 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Example
         -------
-        .. code-block:: python
 
             async for message in client.fetch_messages_after(channel, after=9876543, limit=3232):
                 if message.author.id in BLACKLISTED_USERS:
