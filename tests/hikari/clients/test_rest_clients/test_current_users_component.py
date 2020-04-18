@@ -30,14 +30,14 @@ from hikari import users
 from hikari.clients.rest_clients import current_users_component
 from hikari.internal import conversions
 from hikari.internal import pagination
-from hikari.net import rest
+from hikari.net import rest_sessions
 from tests.hikari import _helpers
 
 
 class TestRESTInviteLogic:
     @pytest.fixture()
     def rest_clients_impl(self):
-        mock_low_level_restful_client = mock.MagicMock(rest.LowLevelRestfulClient)
+        mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
         class RESTCurrentUserLogicImpl(current_users_component.RESTCurrentUserComponent):
             def __init__(self):

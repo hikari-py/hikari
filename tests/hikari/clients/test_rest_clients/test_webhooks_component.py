@@ -29,14 +29,14 @@ from hikari import webhooks
 from hikari.clients.rest_clients import webhooks_component
 from hikari.internal import allowed_mentions
 from hikari.internal import conversions
-from hikari.net import rest
+from hikari.net import rest_sessions
 from tests.hikari import _helpers
 
 
 class TestRESTUserLogic:
     @pytest.fixture()
     def rest_webhook_logic_impl(self):
-        mock_low_level_restful_client = mock.MagicMock(rest.LowLevelRestfulClient)
+        mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
         class RESTWebhookLogicImpl(webhooks_component.RESTWebhookComponent):
             def __init__(self):

@@ -35,7 +35,7 @@ from hikari.clients.rest_clients import users_component
 from hikari.clients.rest_clients import voices_component
 from hikari.clients.rest_clients import webhooks_component
 from hikari.clients import configs
-from hikari.net import rest
+from hikari.net import rest_sessions
 
 
 class RESTClient(
@@ -54,7 +54,7 @@ class RESTClient(
     A marshalling object-oriented REST API client.
 
     This client bridges the basic REST API exposed by
-    :obj:`~hikari.net.rest.LowLevelRestfulClient` and wraps it in a unit of
+    :obj:`~hikari.net.rest_sessions.LowLevelRestfulClient` and wraps it in a unit of
     processing that can handle parsing API objects into Hikari entity objects.
 
     Parameters
@@ -71,7 +71,7 @@ class RESTClient(
 
     def __init__(self, config: configs.RESTConfig) -> None:
         super().__init__(
-            rest.LowLevelRestfulClient(
+            rest_sessions.LowLevelRestfulClient(
                 allow_redirects=config.allow_redirects,
                 connector=config.tcp_connector,
                 proxy_headers=config.proxy_headers,

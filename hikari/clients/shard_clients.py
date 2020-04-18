@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Provides a facade around :obj:`~hikari.net.shard.ShardConnection`.
+"""Provides a facade around :obj:`~hikari.net.shards.ShardConnection`.
 
 This handles parsing and initializing the object from a configuration, as
 well as restarting it if it disconnects.
@@ -46,7 +46,7 @@ from hikari.clients import runnable
 from hikari.internal import more_logging
 from hikari.net import codes
 from hikari.net import ratelimits
-from hikari.net import shard
+from hikari.net import shards
 from hikari.state import event_dispatchers
 from hikari.state import raw_event_consumers
 
@@ -148,7 +148,7 @@ class ShardClient(runnable.RunnableClient):
         self._shard_state = ShardState.NOT_RUNNING
         self._task = None
         self._dispatcher = dispatcher
-        self._connection = shard.ShardConnection(
+        self._connection = shards.ShardConnection(
             compression=config.gateway_use_compression,
             connector=config.tcp_connector,
             debug=config.debug,

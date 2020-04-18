@@ -28,7 +28,7 @@ from hikari import guilds
 from hikari.clients import configs
 from hikari.clients import shard_clients
 from hikari.net import codes
-from hikari.net import shard
+from hikari.net import shards
 from hikari.state import raw_event_consumers
 from tests.hikari import _helpers
 
@@ -48,14 +48,14 @@ def _generate_mock_task(exception=None):
 @pytest.fixture
 def shard_client_obj():
     mock_shard_connection = mock.MagicMock(
-        shard.ShardConnection,
+        shards.ShardConnection,
         heartbeat_latency=float("nan"),
         heartbeat_interval=float("nan"),
         reconnect_count=0,
         seq=None,
         session_id=None,
     )
-    with mock.patch("hikari.net.shard.ShardConnection", return_value=mock_shard_connection):
+    with mock.patch("hikari.net.shards.ShardConnection", return_value=mock_shard_connection):
         return _helpers.unslot_class(shard_clients.ShardClient)(0, 1, configs.WebsocketConfig(), None, "some_url")
 
 
@@ -70,9 +70,9 @@ class TestShardClient:
         assert shard_client_obj._connection.dispatch(shard_client_obj, "TEST", {}) == "ASSERT TRUE"
 
     def test_connection_is_set(self, shard_client_obj):
-        mock_shard_connection = mock.MagicMock(shard.ShardConnection)
+        mock_shard_connection = mock.MagicMock(shards.ShardConnection)
 
-        with mock.patch("hikari.net.shard.ShardConnection", return_value=mock_shard_connection):
+        with mock.patch("hikari.net.shards.ShardConnection", return_value=mock_shard_connection):
             shard_client_obj = shard_clients.ShardClient(0, 1, configs.WebsocketConfig(), None, "some_url")
 
         assert shard_client_obj._connection is mock_shard_connection

@@ -36,14 +36,14 @@ from hikari.clients.rest_clients import channels_component
 from hikari.internal import allowed_mentions
 from hikari.internal import conversions
 from hikari.internal import pagination
-from hikari.net import rest
+from hikari.net import rest_sessions
 from tests.hikari import _helpers
 
 
 class TestRESTChannelLogig:
     @pytest.fixture()
     def rest_channel_logic_impl(self):
-        mock_low_level_restful_client = mock.MagicMock(rest.LowLevelRestfulClient)
+        mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
         class RESTChannelLogicImpl(channels_component.RESTChannelComponent):
             def __init__(self):
