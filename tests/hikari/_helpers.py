@@ -30,9 +30,9 @@ import time
 import typing
 import warnings
 import weakref
-import mock
 
 import async_timeout
+import mock
 import pytest
 
 from hikari import snowflakes

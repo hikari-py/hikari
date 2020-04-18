@@ -29,9 +29,9 @@ from hikari import channels
 from hikari import entities
 from hikari import guilds
 from hikari import users
-from hikari.internal import urls
 from hikari.internal import conversions
 from hikari.internal import marshaller
+from hikari.internal import urls
 
 
 @enum.unique
@@ -44,7 +44,7 @@ class TargetUserType(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class VanityUrl(entities.HikariEntity, entities.Deserializable):
+class VanityUrl(entities.HikariEntity, marshaller.Deserializable):
     """A special case invite object, that represents a guild's vanity url."""
 
     #: The code for this invite.
@@ -165,7 +165,7 @@ class InviteGuild(guilds.PartialGuild):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Invite(entities.HikariEntity, entities.Deserializable):
+class Invite(entities.HikariEntity, marshaller.Deserializable):
     """Represents an invite that's used to add users to a guild or group dm."""
 
     #: The code for this invite.

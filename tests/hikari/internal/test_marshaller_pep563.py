@@ -23,9 +23,8 @@ mechanism if they are postponed and evaluated as string literals.
 """
 from __future__ import annotations
 
-import mock
-
 import attr
+import mock
 import pytest
 
 from hikari.internal import marshaller

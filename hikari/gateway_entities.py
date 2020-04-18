@@ -31,7 +31,7 @@ from hikari.internal import marshaller
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class SessionStartLimit(entities.HikariEntity, entities.Deserializable):
+class SessionStartLimit(entities.HikariEntity, marshaller.Deserializable):
     """Used to represent information about the current session start limits."""
 
     #: The total number of session starts the current bot is allowed.
@@ -55,7 +55,7 @@ class SessionStartLimit(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GatewayBot(entities.HikariEntity, entities.Deserializable):
+class GatewayBot(entities.HikariEntity, marshaller.Deserializable):
     """Used to represent gateway information for the connected bot."""
 
     #: The WSS URL that can be used for connecting to the gateway.
@@ -76,7 +76,7 @@ class GatewayBot(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GatewayActivity(entities.Deserializable, entities.Serializable):
+class GatewayActivity(marshaller.Deserializable, marshaller.Serializable):
     """An activity that the bot can set for one or more shards.
 
     This will show the activity as the bot's presence.

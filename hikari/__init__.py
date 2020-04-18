@@ -63,6 +63,7 @@ from hikari.oauth2 import *
 from hikari.permissions import *
 from hikari.snowflakes import *
 from hikari.state import *
+from hikari.unset import *
 from hikari.users import *
 from hikari.voices import *
 from hikari.webhooks import *
@@ -88,6 +89,7 @@ __all__ = [
     *permissions.__all__,
     *snowflakes.__all__,
     *state.__all__,
+    *unset.__all__,
     *users.__all__,
     *voices.__all__,
     *webhooks.__all__,

@@ -18,17 +18,17 @@
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
 import datetime
-import mock
 
+import mock
 import pytest
 
-import hikari.internal.conversions
 from hikari import embeds
 from hikari import emojis
 from hikari import guilds
 from hikari import messages
 from hikari import oauth2
 from hikari import users
+from hikari.internal import conversions
 from tests.hikari import _helpers
 
 
@@ -203,17 +203,14 @@ class TestMessage:
         )
         patched_timestamp_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
-                messages.Message,
-                "timestamp",
-                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
-                return_value=mock_datetime,
+                messages.Message, "timestamp", deserializer=conversions.parse_iso_8601_ts, return_value=mock_datetime,
             )
         )
         patched_edited_timestamp_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
                 messages.Message,
                 "edited_timestamp",
-                deserializer=hikari.internal.conversions.parse_iso_8601_ts,
+                deserializer=conversions.parse_iso_8601_ts,
                 return_value=mock_datetime2,
             )
         )

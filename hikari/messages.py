@@ -133,7 +133,7 @@ class MessageActivityType(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Attachment(snowflakes.UniqueEntity, entities.Deserializable):
+class Attachment(snowflakes.UniqueEntity, marshaller.Deserializable):
     """Represents a file attached to a message."""
 
     #: The name of the file.
@@ -169,7 +169,7 @@ class Attachment(snowflakes.UniqueEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Reaction(entities.HikariEntity, entities.Deserializable):
+class Reaction(entities.HikariEntity, marshaller.Deserializable):
     """Represents a reaction in a message."""
 
     #: The amount of times the emoji has been used to react.
@@ -192,7 +192,7 @@ class Reaction(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageActivity(entities.HikariEntity, entities.Deserializable):
+class MessageActivity(entities.HikariEntity, marshaller.Deserializable):
     """Represents the activity of a rich presence-enabled message."""
 
     #: The type of message activity.
@@ -208,7 +208,7 @@ class MessageActivity(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageCrosspost(entities.HikariEntity, entities.Deserializable):
+class MessageCrosspost(entities.HikariEntity, marshaller.Deserializable):
     """Represents information about a cross-posted message and the origin of the original message."""
 
     #: The ID of the original message.
@@ -246,7 +246,7 @@ class MessageCrosspost(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Message(snowflakes.UniqueEntity, entities.Deserializable):
+class Message(snowflakes.UniqueEntity, marshaller.Deserializable):
     """Represents a message."""
 
     #: The ID of the channel that the message was sent in.

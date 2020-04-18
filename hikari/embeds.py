@@ -41,7 +41,7 @@ from hikari.internal import marshaller
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedFooter(entities.HikariEntity, entities.Deserializable, entities.Serializable):
+class EmbedFooter(entities.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed footer."""
 
     #: The footer text.
@@ -72,7 +72,7 @@ class EmbedFooter(entities.HikariEntity, entities.Deserializable, entities.Seria
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedImage(entities.HikariEntity, entities.Deserializable, entities.Serializable):
+class EmbedImage(entities.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed image."""
 
     #: The URL of the image.
@@ -118,7 +118,7 @@ class EmbedImage(entities.HikariEntity, entities.Deserializable, entities.Serial
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedThumbnail(entities.HikariEntity, entities.Deserializable, entities.Serializable):
+class EmbedThumbnail(entities.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed thumbnail."""
 
     #: The URL of the thumbnail.
@@ -164,7 +164,7 @@ class EmbedThumbnail(entities.HikariEntity, entities.Deserializable, entities.Se
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedVideo(entities.HikariEntity, entities.Deserializable):
+class EmbedVideo(entities.HikariEntity, marshaller.Deserializable):
     """Represents an embed video.
 
     Note
@@ -191,7 +191,7 @@ class EmbedVideo(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedProvider(entities.HikariEntity, entities.Deserializable):
+class EmbedProvider(entities.HikariEntity, marshaller.Deserializable):
     """Represents an embed provider.
 
     Note
@@ -213,7 +213,7 @@ class EmbedProvider(entities.HikariEntity, entities.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedAuthor(entities.HikariEntity, entities.Deserializable, entities.Serializable):
+class EmbedAuthor(entities.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed author."""
 
     #: The name of the author.
@@ -249,7 +249,7 @@ class EmbedAuthor(entities.HikariEntity, entities.Deserializable, entities.Seria
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedField(entities.HikariEntity, entities.Deserializable, entities.Serializable):
+class EmbedField(entities.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents a field in a embed."""
 
     #: The name of the field.
@@ -272,7 +272,7 @@ class EmbedField(entities.HikariEntity, entities.Deserializable, entities.Serial
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Embed(entities.HikariEntity, entities.Deserializable, entities.Serializable):
+class Embed(entities.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed."""
 
     #: The title of the embed.

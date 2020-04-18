@@ -24,10 +24,9 @@ import typing
 
 import attr
 
-from hikari import entities
 from hikari import snowflakes
-from hikari.internal import urls
 from hikari.internal import marshaller
+from hikari.internal import urls
 
 
 @enum.unique
@@ -93,7 +92,7 @@ class PremiumType(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class User(snowflakes.UniqueEntity, entities.Deserializable):
+class User(snowflakes.UniqueEntity, marshaller.Deserializable):
     """Represents a user."""
 
     #: This user's discriminator.
