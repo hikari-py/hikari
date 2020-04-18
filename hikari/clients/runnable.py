@@ -25,6 +25,7 @@ import asyncio
 import contextlib
 import logging
 import signal
+import typing
 
 
 class RunnableClient(abc.ABC):
@@ -38,7 +39,7 @@ class RunnableClient(abc.ABC):
     logger: logging.Logger
 
     @abc.abstractmethod
-    def __init__(self, logger: logging.Logger) -> None:
+    def __init__(self, logger: typing.Union[logging.Logger, logging.LoggerAdapter]) -> None:
         self.logger = logger
 
     @abc.abstractmethod

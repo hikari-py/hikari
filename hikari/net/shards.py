@@ -48,14 +48,16 @@ import aiohttp.typedefs
 
 from hikari import errors
 from hikari.internal import more_asyncio
-from hikari.internal import more_logging
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import user_agents
-from hikari.net import versions
 
 #: The signature for an event dispatch callback.
 DispatchT = typing.Callable[["ShardConnection", str, typing.Dict], None]
+
+
+VERSION_6: typing.Final[int] = 6
+VERSION_7: typing.Final[int] = 7
 
 
 class ShardConnection:
@@ -150,52 +152,73 @@ class ShardConnection:
         If :obj:`~True`, SSL verification is enabled, which is generally what you
         want. If you get SSL issues, you can try turning this off at your own
         risk.
-    version: :obj:`~hikari.net.versions.GatewayVersion`
-        The version of the gateway API to use. Defaults to the most recent
-        stable documented version.
+    version: :obj:`~int`
+        The version of the API to use. Defaults to the most recent stable
+        version (v6).
     """
 
     __slots__ = (
-        "closed_event",
         "_compression",
         "_connected_at",
         "_connector",
         "_debug",
-        "disconnect_count",
-        "dispatch",
-        "heartbeat_interval",
-        "heartbeat_latency",
-        "hello_event",
-        "handshake_event",
         "_intents",
-        "_large_threshold",
         "_json_deserialize",
         "_json_serialize",
-        "last_heartbeat_sent",
-        "last_message_received",
-        "logger",
+        "_large_threshold",
         "_presence",
         "_proxy_auth",
         "_proxy_headers",
         "_proxy_url",
         "_ratelimiter",
-        "ready_event",
-        "resumed_event",
-        "requesting_close_event",
         "_session",
-        "session_id",
-        "seq",
-        "shard_id",
-        "shard_count",
         "_ssl_context",
-        "status",
         "_token",
         "_url",
         "_verify_ssl",
-        "version",
         "_ws",
         "_zlib",
+        "closed_event",
+        "disconnect_count",
+        "dispatch",
+        "handshake_event",
+        "heartbeat_interval",
+        "heartbeat_latency",
+        "hello_event",
+        "last_heartbeat_sent",
+        "last_message_received",
+        "logger",
+        "ready_event",
+        "requesting_close_event",
+        "resumed_event",
+        "seq",
+        "session_id",
+        "shard_count",
+        "shard_id",
+        "status",
+        "version",
     )
+
+    _compression: bool
+    _connected_at: float
+    _connector: typing.Optional[aiohttp.BaseConnector]
+    _debug: bool
+    _intents: typing.Optional[codes.GatewayIntent]
+    _large_threshold: int
+    _json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict]
+    _json_serialize: typing.Callable[[typing.Dict], typing.AnyStr]
+    _presence: typing.Optional[typing.Dict]
+    _proxy_auth: typing.Optional[aiohttp.BasicAuth]
+    _proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders]
+    _proxy_url: typing.Optional[str]
+    _ratelimiter: ratelimits.WindowedBurstRateLimiter
+    _session: typing.Optional[aiohttp.ClientSession]
+    _ssl_context: typing.Optional[ssl.SSLContext]
+    _token: str
+    _url: str
+    _verify_ssl: bool
+    _ws: typing.Optional[aiohttp.ClientWebSocketResponse]
+    _zlib: typing.Optional[zlib.decompressobj]
 
     #: An event that is set when the connection closes.
     #:
@@ -334,7 +357,7 @@ class ShardConnection:
         token: str,
         url: str,
         verify_ssl: bool = True,
-        version: typing.Union[int, versions.GatewayVersion] = versions.GatewayVersion.STABLE,
+        version: int = VERSION_6,
     ) -> None:
         # Sanitise the URL...
         scheme, netloc, path, params, _, _ = urllib.parse.urlparse(url, allow_fragments=True)
@@ -348,47 +371,44 @@ class ShardConnection:
 
         url = urllib.parse.urlunparse((scheme, netloc, path, params, new_query, ""))
 
-        self._compression: bool = compression
-        self._connected_at: float = float("nan")
-        self._connector: typing.Optional[aiohttp.BaseConnector] = connector
-        self._debug: bool = debug
-        self._intents: typing.Optional[intents.GatewayIntent] = intents
-        self._large_threshold: int = large_threshold
-        self._json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict] = json_deserialize
-        self._json_serialize: typing.Callable[[typing.Dict], typing.AnyStr] = json_serialize
-        self._presence: typing.Optional[typing.Dict] = initial_presence
-        self._proxy_auth: typing.Optional[aiohttp.BasicAuth] = proxy_auth
-        self._proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = proxy_headers
-        self._proxy_url: typing.Optional[str] = proxy_url
-        self._ratelimiter: ratelimits.WindowedBurstRateLimiter = ratelimits.WindowedBurstRateLimiter(
-            f"gateway shard {shard_id}/{shard_count}", 60.0, 120
-        )
+        self._compression = compression
+        self._connected_at = float("nan")
+        self._connector = connector
+        self._debug = debug
+        self._intents = intents
+        self._large_threshold = large_threshold
+        self._json_deserialize = json_deserialize
+        self._json_serialize = json_serialize
+        self._presence = initial_presence
+        self._proxy_auth = proxy_auth
+        self._proxy_headers = proxy_headers
+        self._proxy_url = proxy_url
+        self._ratelimiter = ratelimits.WindowedBurstRateLimiter(str(shard_id), 60.0, 120)
         self._session: typing.Optional[aiohttp.ClientSession] = None
         self._ssl_context: typing.Optional[ssl.SSLContext] = ssl_context
-        self._token: str = token
-        self._url: str = url
-        self._verify_ssl: bool = verify_ssl
-        self._ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
-        self._zlib: typing.Optional[zlib.decompressobj] = None
-        self.closed_event: asyncio.Event = asyncio.Event()
-        self.disconnect_count: int = 0
-        self.dispatch: DispatchT = dispatch
-        self.heartbeat_interval: float = float("nan")
-        self.heartbeat_latency: float = float("nan")
-        self.hello_event: asyncio.Event = asyncio.Event()
-        self.handshake_event: asyncio.Event = asyncio.Event()
-        self.last_heartbeat_sent: float = float("nan")
-        self.last_message_received: float = float("nan")
-        self.requesting_close_event: asyncio.Event = asyncio.Event()
-        self.ready_event: asyncio.Event = asyncio.Event()
-        self.resumed_event: asyncio.Event = asyncio.Event()
+        self._token = token
+        self._url = url
+        self._verify_ssl = verify_ssl
+        self._ws = None
+        self._zlib = None
+        self.closed_event = asyncio.Event()
+        self.disconnect_count = 0
+        self.dispatch = dispatch
+        self.heartbeat_interval = float("nan")
+        self.heartbeat_latency = float("nan")
+        self.hello_event = asyncio.Event()
+        self.handshake_event = asyncio.Event()
+        self.last_heartbeat_sent = float("nan")
+        self.last_message_received = float("nan")
+        self.logger = logging.getLogger(f"hikari.net.{type(self).__qualname__}.{shard_id}")
+        self.requesting_close_event = asyncio.Event()
+        self.ready_event = asyncio.Event()
+        self.resumed_event = asyncio.Event()
         self.session_id = session_id
-        self.seq: typing.Optional[int] = seq
-        self.shard_id: int = shard_id
-        self.shard_count: int = shard_count
-        self.version: int = int(version)
-
-        self.logger: logging.Logger = more_logging.get_named_logger(self, f"#{shard_id}", f"v{self.version}")
+        self.seq = seq
+        self.shard_id = shard_id
+        self.shard_count = shard_count
+        self.version = version
 
     @property
     def uptime(self) -> datetime.timedelta:

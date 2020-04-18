@@ -48,7 +48,7 @@ class Unset(meta.Singleton):
 
 
 T = typing.TypeVar("T")
-MayBeUnset = typing.Union[Unset, T]
+MayBeUnset = typing.Union[T, Unset]
 
 #: A global instance of :class:`~Unset`.
 UNSET: typing.Final[Unset] = Unset()

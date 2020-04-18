@@ -33,17 +33,22 @@ from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import more_asyncio
 from hikari.internal import more_collections
-from hikari.internal import more_logging
 
 # Prevents a circular reference that prevents importing correctly.
 if typing.TYPE_CHECKING:
     EventT = typing.TypeVar("EventT", bound=events.HikariEvent)
-    PredicateT = typing.Callable[[EventT], typing.Union[bool, typing.Coroutine[None, None, bool]]]
-    EventCallbackT = typing.Callable[[EventT], typing.Coroutine[None, None, typing.Any]]
+    PredicateT = typing.Callable[[EventT], typing.Union[bool, typing.Coroutine[typing.Any, typing.Any, bool]]]
+    EventCallbackT = typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.Any, typing.Any]]
+    WaiterMapT = typing.Dict[
+        typing.Type[EventT], more_collections.WeakKeyDictionary[more_asyncio.Future[typing.Any], PredicateT]
+    ]
+    ListenerMapT = typing.Dict[typing.Type[EventT], typing.List[EventCallbackT]]
 else:
-    EventT = typing.TypeVar("EventT")
-    PredicateT = typing.TypeVar("PredicateT")
-    EventCallbackT = typing.TypeVar("EventCallbackT")
+    EventT = typing.Any
+    PredicateT = typing.Any
+    EventCallbackT = typing.Any
+    WaiterMapT = typing.Any
+    ListenerMapT = typing.Any
 
 
 class EventDispatcher(abc.ABC):
@@ -263,13 +268,11 @@ class EventDispatcherImpl(EventDispatcher):
     logger: logging.Logger
 
     def __init__(self) -> None:
-        self._listeners: typing.Dict[typing.Type[EventT], typing.List[EventCallbackT]] = {}
+        self._listeners: ListenerMapT = {}
         # pylint: disable=E1136
-        self._waiters: typing.Dict[
-            typing.Type[EventT], more_collections.WeakKeyDictionary[asyncio.Future, PredicateT]
-        ] = {}
+        self._waiters: WaiterMapT = {}
         # pylint: enable=E1136
-        self.logger = more_logging.get_named_logger(self)
+        self.logger = logging.getLogger(type(self).__qualname__)
 
     def close(self) -> None:
         """Cancel anything that is waiting for an event to be dispatched."""
@@ -349,9 +352,10 @@ class EventDispatcherImpl(EventDispatcher):
 
         # Only try to awaken waiters when the waiter is registered as a valid
         # event type and there is more than 0 waiters in that dict.
-        if waiters := self._waiters.get(event_t):
+        if (waiters := self._waiters.get(event_t)) is not None:
             # Run this in the background as a coroutine so that any async predicates
             # can be awaited concurrently.
+            # noinspection PyTypeChecker
             futs.append(asyncio.create_task(self._awaken_waiters(waiters, event)))
 
         result = asyncio.gather(*futs) if futs else more_asyncio.completed_future()  # lgtm [py/unused-local-variable]

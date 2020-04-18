@@ -121,10 +121,8 @@ def run_gateway(compression, color, debug, intents, logger, shards, token, verif
             message = await client.rest.create_message(event.channel_id, content="Pong!")
             rest_time = time.perf_counter() - start
 
-            active_intents = str(client.gateway._config.intents or "not provided")
-
             shard_infos = []
-            for shard_id, shard in client.gateway.shards.items():
+            for shard_id, shard in client.shards.items():
                 shard_info = (
                     f"latency: {shard.heartbeat_latency * 1_000:.0f} ms\n"
                     f"seq: {shard.seq}\n"
@@ -137,22 +135,33 @@ def run_gateway(compression, color, debug, intents, logger, shards, token, verif
                 shard_infos.append(hikari.EmbedField(name=f"Shard {shard_id}", value=shard_info, is_inline=False))
 
             gw_info = (
-                f"average latency: {client.gateway.latency * 1_000:.0f} ms\n"
-                f"shards: {len(client.gateway.shards)}\n"
-                f"version: {version}\n"
+                f"intents: {client.intents}\n"
+                f"version: {client.version}\n"
+                f"average latency: {client.heartbeat_latency * 1_000:.0f} ms\n"
+                f"shards: {len(client.shards)}\n"
                 f"compression: {compression}\n"
                 f"debug: {debug}\n"
-                f"intents: {hex(intents)} ({active_intents})"
+            )
+
+            actively_limited_routes = sum(
+                1
+                for b in client.rest._session.bucket_ratelimiters.real_hashes_to_buckets.values()
+                if b.throttle_task is not None
+            )
+
+            actively_limited_calls = sum(
+                len(b.queue)
+                for b in client.rest._session.bucket_ratelimiters.real_hashes_to_buckets.values()
+                if b.throttle_task is not None
             )
 
             rest_info = (
                 f"message edit time: {rest_time * 1_000:.0f} ms\n"
-                f"global rate limiter backlog: {len(client.rest._session.global_ratelimiter.queue)}\n"
-                f"bucket rate limiter active routes: {len(client.rest._session.ratelimiter.routes_to_hashes)}\n"
-                f"bucket rate limiter active buckets: {len(client.rest._session.ratelimiter.real_hashes_to_buckets)}\n"
-                "bucket rate limiter backlog: "
-                f"{sum(len(b.queue) for b in client.rest._session.ratelimiter.real_hashes_to_buckets.values())}\n"
-                f"bucket rate limiter GC: {getattr(client.rest._session.ratelimiter.gc_task, '_state', 'dead')}\n"
+                f"global ratelimiter backlog: {len(client.rest._session.global_ratelimiter.queue)}\n"
+                f"cached limiter routes: {len(client.rest._session.bucket_ratelimiters.routes_to_hashes)}\n"
+                f"cached limiter buckets: {len(client.rest._session.bucket_ratelimiters.real_hashes_to_buckets)}\n"
+                f"actively limited routes: {actively_limited_routes}\n"
+                f"actively limited calls: {actively_limited_calls}"
             )
 
             embed = hikari.Embed(

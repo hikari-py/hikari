@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
+import asyncio
 import datetime
 import math
 
@@ -42,6 +43,9 @@ def _generate_mock_task(exception=None):
         def exception(self):
             return self._exception
 
+        def done(self):
+            return True
+
     return Task()
 
 
@@ -56,16 +60,16 @@ def shard_client_obj():
         session_id=None,
     )
     with mock.patch("hikari.net.shards.ShardConnection", return_value=mock_shard_connection):
-        return _helpers.unslot_class(shard_clients.ShardClient)(0, 1, configs.WebsocketConfig(), None, "some_url")
+        return _helpers.unslot_class(shard_clients.ShardClientImpl)(0, 1, configs.GatewayConfig(), None, "some_url")
 
 
-class TestShardClient:
-    def test_raw_event_consumer_in_shardclient(self):
+class TestShardClientImpl:
+    def test_raw_event_consumer_in_ShardClientImpl(self):
         class DummyConsumer(raw_event_consumers.RawEventConsumer):
             def process_raw_event(self, _client, name, payload):
                 return "ASSERT TRUE"
 
-        shard_client_obj = shard_clients.ShardClient(0, 1, configs.WebsocketConfig(), DummyConsumer(), "some_url")
+        shard_client_obj = shard_clients.ShardClientImpl(0, 1, configs.GatewayConfig(), DummyConsumer(), "some_url")
 
         assert shard_client_obj._connection.dispatch(shard_client_obj, "TEST", {}) == "ASSERT TRUE"
 
@@ -73,12 +77,12 @@ class TestShardClient:
         mock_shard_connection = mock.MagicMock(shards.ShardConnection)
 
         with mock.patch("hikari.net.shards.ShardConnection", return_value=mock_shard_connection):
-            shard_client_obj = shard_clients.ShardClient(0, 1, configs.WebsocketConfig(), None, "some_url")
+            shard_client_obj = shard_clients.ShardClientImpl(0, 1, configs.GatewayConfig(), None, "some_url")
 
         assert shard_client_obj._connection is mock_shard_connection
 
 
-class TestShardClientDelegateProperties:
+class TestShardClientImplDelegateProperties:
     def test_status(self, shard_client_obj):
         marker = object()
         shard_client_obj._status = marker
@@ -150,7 +154,7 @@ class TestShardClientDelegateProperties:
         assert shard_client_obj.intents is marker
 
 
-class TestShardClientStart:
+class TestShardClientImplStart:
     @pytest.mark.asyncio
     async def test_start_when_ready_event_completes_first(self, shard_client_obj):
         shard_client_obj._keep_alive = mock.AsyncMock()
@@ -214,11 +218,11 @@ class TestShardClientStart:
         "error",
         [
             aiohttp.ClientConnectorError(mock.MagicMock(), mock.MagicMock()),
-            errors.GatewayZombiedError,
+            errors.GatewayZombiedError(),
             errors.GatewayInvalidSessionError(False),
             errors.GatewayInvalidSessionError(True),
-            errors.GatewayMustReconnectError,
-            errors.GatewayClientDisconnectedError,
+            errors.GatewayMustReconnectError(),
+            errors.GatewayClientDisconnectedError(),
         ],
     )
     @pytest.mark.asyncio
@@ -233,7 +237,7 @@ class TestShardClientStart:
             should_return = True
             return _helpers.AwaitableMock(return_value=error)
 
-        shard_client_obj._spin_up = mock.AsyncMock(side_effect=side_effect)
+        shard_client_obj._spin_up = mock.MagicMock(side_effect=side_effect)
 
         with mock.patch("asyncio.sleep", new=mock.AsyncMock()):
             await shard_client_obj._keep_alive()
@@ -290,7 +294,7 @@ class TestShardClientStart:
             await shard_client_obj._keep_alive()
 
 
-class TestShardClientSpinUp:
+class TestShardClientImplSpinUp:
     @_helpers.assert_raises(type_=RuntimeError)
     @pytest.mark.asyncio
     async def test__spin_up_if_connect_task_is_completed_raises_exception_during_hello_event(self, shard_client_obj):
@@ -338,17 +342,34 @@ class TestShardClientSpinUp:
             with mock.patch("asyncio.wait", side_effect=[([], None), ([], None), ([], None)]):
                 assert await shard_client_obj._spin_up() == task_mock
 
-    @_helpers.assert_raises(type_=RuntimeError)
+    @_helpers.timeout_after(10)
+    # @_helpers.assert_raises(type_=RuntimeError)
     @pytest.mark.asyncio
     async def test__spin_up_if_connect_task_is_completed_raises_exception_during_ready_event(self, shard_client_obj):
-        task_mock = _generate_mock_task(RuntimeError)
+        stop_event = asyncio.Event()
+        try:
 
-        with mock.patch("asyncio.create_task", return_value=task_mock):
-            with mock.patch("asyncio.wait", side_effect=[([], None), ([], None), ([task_mock], None)]):
-                await shard_client_obj._spin_up()
+            async def forever():
+                # make this so that it doesn't complete in time;
+                await stop_event.wait()
+
+            # Make this last a really long time so it doesn't complete immediately.
+            shard_client_obj._connection.connect = mock.MagicMock(wraps=forever)
+
+            # Make these finish immediately.
+            shard_client_obj._connection.hello_event = mock.MagicMock(wait=mock.AsyncMock())
+            shard_client_obj._connection.handshake_event = mock.MagicMock(wait=mock.AsyncMock())
+
+            # Make this one go boom.
+            shard_client_obj._connection.ready_event = mock.MagicMock(wait=mock.AsyncMock(side_effect=RuntimeError))
+
+            # Do iiiit.
+            await shard_client_obj._spin_up()
+        finally:
+            stop_event.set()
 
 
-class TestShardClientUpdatePresence:
+class TestShardClientImplUpdatePresence:
     @pytest.mark.asyncio
     async def test_update_presence(self, shard_client_obj):
         await shard_client_obj.update_presence()

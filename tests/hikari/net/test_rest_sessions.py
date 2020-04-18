@@ -31,16 +31,15 @@ from hikari.internal import conversions
 from hikari.net import ratelimits
 from hikari.net import rest_sessions
 from hikari.net import routes
-from hikari.net import versions
 from tests.hikari import _helpers
 
 
+# noinspection PyUnresolvedReferences
 class TestLowLevelRestfulClient:
     @pytest.fixture
     def rest_impl(self):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch("aiohttp.ClientSession"))
-        stack.enter_context(mock.patch("hikari.internal.more_logging.get_named_logger"))
         stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
         with stack:
@@ -48,6 +47,7 @@ class TestLowLevelRestfulClient:
                 base_url="https://discordapp.com/api/v6", token="Bot blah.blah.blah"
             )
         client._request = mock.AsyncMock(return_value=...)
+        client.client_session = mock.MagicMock(aiohttp.ClientSession, spec_set=True)
 
         return client
 
@@ -97,30 +97,22 @@ class TestLowLevelRestfulClient:
         rest_impl.close.assert_called_once_with()
 
     @pytest.mark.asyncio
-    async def test_rest_close_calls_client_session_close(self, rest_impl):
-        await rest_impl.close()
-        rest_impl.client_session.close.assert_called_with()
-
-    @pytest.mark.asyncio
     async def test__init__with_bot_token_and_without_optionals(self):
-        mock_manual_rate_limiter = mock.MagicMock()
-        buckets_mock = mock.MagicMock()
-        mock_client_session = mock.MagicMock(aiohttp.ClientSession)
-
+        mock_manual_rate_limiter = mock.MagicMock(close=mock.MagicMock())
+        buckets_mock = mock.MagicMock(close=mock.MagicMock())
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=mock_manual_rate_limiter))
         stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager", return_value=buckets_mock))
-        stack.enter_context(mock.patch.object(aiohttp, "ClientSession", return_value=mock_client_session))
 
         with stack:
             client = rest_sessions.LowLevelRestfulClient(token="Bot token.otacon.a-token")
 
-        assert client.base_url == f"https://discordapp.com/api/v{int(versions.HTTPAPIVersion.STABLE)}"
-        assert client.client_session is mock_client_session
+        assert client.base_url == f"https://discordapp.com/api/v{rest_sessions.VERSION_6}"
+        assert client.client_session is None
         assert client.global_ratelimiter is mock_manual_rate_limiter
         assert client.json_serialize is json.dumps
         assert client.json_deserialize is json.loads
-        assert client.ratelimiter is buckets_mock
+        assert client.bucket_ratelimiters is buckets_mock
         assert client.token == "Bot token.otacon.a-token"
 
     @pytest.mark.asyncio
@@ -128,7 +120,6 @@ class TestLowLevelRestfulClient:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
         stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
-        stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
         with stack:
             client = rest_sessions.LowLevelRestfulClient(token="Bearer token.otacon.a-token")
             assert client.token == "Bearer token.otacon.a-token"
@@ -145,7 +136,6 @@ class TestLowLevelRestfulClient:
         mock_ssl_context = mock.MagicMock(ssl.SSLContext)
 
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=mock_manual_rate_limiter))
         stack.enter_context(
             mock.patch.object(ratelimits, "RESTBucketManager", return_value=mock_http_bucket_rate_limit_manager)
@@ -170,7 +160,7 @@ class TestLowLevelRestfulClient:
             assert client.global_ratelimiter is mock_manual_rate_limiter
             assert client.json_serialize is mock_dumps
             assert client.json_deserialize is mock_loads
-            assert client.ratelimiter is mock_http_bucket_rate_limit_manager
+            assert client.bucket_ratelimiters is mock_http_bucket_rate_limit_manager
             assert client.token == "Bot token.otacon.a-token"
 
     @pytest.mark.asyncio
@@ -179,16 +169,85 @@ class TestLowLevelRestfulClient:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
         stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
-        stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
         with stack:
             async with rest_sessions.LowLevelRestfulClient(token="An-invalid-TOKEN"):
                 pass
 
     @pytest.mark.asyncio
-    async def test_close(self, rest_impl):
+    async def test_close_when_session_is_unset(self, rest_impl):
+        rest_impl.bucket_ratelimiters = mock.MagicMock(close=mock.MagicMock())
+        rest_impl.global_ratelimiter = mock.MagicMock(close=mock.MagicMock())
+        rest_impl.client_session = None
         await rest_impl.close()
-        rest_impl.ratelimiter.close.assert_called_once_with()
-        rest_impl.client_session.close.assert_called_once_with()
+        assert rest_impl.client_session is None
+
+    @pytest.mark.asyncio
+    async def test_close_when_session_is_set(self, rest_impl):
+        client_session = mock.MagicMock(aiohttp.ClientSession, close=mock.AsyncMock())
+        rest_impl.bucket_ratelimiters = mock.MagicMock(close=mock.MagicMock())
+        rest_impl.global_ratelimiter = mock.MagicMock(close=mock.MagicMock())
+        rest_impl.client_session = client_session
+        await rest_impl.close()
+        assert rest_impl.client_session is None
+        client_session.close.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_close_shuts_down_bucket_rate_limiter(self, rest_impl):
+        rest_impl.bucket_ratelimiters = mock.MagicMock(close=mock.MagicMock())
+        rest_impl.global_ratelimiter = mock.MagicMock(close=mock.MagicMock())
+        await rest_impl.close()
+        rest_impl.bucket_ratelimiters.close.assert_called_once_with()
+
+    @pytest.mark.asyncio
+    async def test_close_shuts_down_bucket_rate_limiter(self, rest_impl):
+        rest_impl.bucket_ratelimiters = mock.MagicMock(close=mock.MagicMock())
+        rest_impl.global_ratelimiter = mock.MagicMock(close=mock.MagicMock())
+        await rest_impl.close()
+        rest_impl.global_ratelimiter.close.assert_called_once_with()
+
+    @pytest.mark.asyncio
+    async def test_first_call_to_request_opens_client_session(self):
+        stack = contextlib.ExitStack()
+
+        manual_rate_limiter_mock = mock.MagicMock(ratelimits.ManualRateLimiter)
+        buckets_mock = mock.MagicMock(ratelimits.RESTBucketManager)
+        client_session_mock = mock.MagicMock(aiohttp.ClientSession)
+
+        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=manual_rate_limiter_mock))
+        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager", return_value=buckets_mock))
+        stack.enter_context(mock.patch.object(aiohttp, "ClientSession", return_value=client_session_mock))
+
+        with stack:
+            client = rest_sessions.LowLevelRestfulClient(token="Bot token.otacon.a-token")
+            assert client.client_session is None  # lazy init
+            with contextlib.suppress(Exception):
+                await client._request(mock.MagicMock(routes.CompiledRoute, spec_set=True))
+            assert client.client_session is not None
+
+    @pytest.mark.asyncio
+    async def test_more_calls_to_request_use_existing_client_session(self):
+        stack = contextlib.ExitStack()
+
+        manual_rate_limiter_mock = mock.MagicMock(ratelimits.ManualRateLimiter)
+        buckets_mock = mock.MagicMock(ratelimits.RESTBucketManager)
+        client_session_mock = mock.MagicMock(aiohttp.ClientSession)
+
+        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=manual_rate_limiter_mock))
+        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager", return_value=buckets_mock))
+        stack.enter_context(mock.patch.object(aiohttp, "ClientSession", return_value=client_session_mock))
+
+        with stack:
+            client = rest_sessions.LowLevelRestfulClient(token="Bot token.otacon.a-token")
+            with contextlib.suppress(Exception):
+                await client._request(mock.MagicMock(routes.CompiledRoute, spec_set=True))
+
+            session = client.client_session
+
+            for i in range(20):
+                with contextlib.suppress(Exception):
+                    await client._request(mock.MagicMock(routes.CompiledRoute, spec_set=True))
+
+            assert client.client_session is session
 
     @pytest.fixture()
     @mock.patch.object(ratelimits, "ManualRateLimiter")
@@ -197,12 +256,14 @@ class TestLowLevelRestfulClient:
     def rest_impl_with__request(self, *args):
         rest_impl = rest_sessions.LowLevelRestfulClient(token="Bot token")
         rest_impl.logger = mock.MagicMock(debug=mock.MagicMock())
-        rest_impl.ratelimiter = mock.MagicMock(
+        rest_impl.bucket_ratelimiters = mock.MagicMock(
             ratelimits.RESTBucketManager, acquire=mock.MagicMock(), update_rate_limits=mock.MagicMock(),
         )
         rest_impl.global_ratelimiter = mock.MagicMock(
             ratelimits.ManualRateLimiter, acquire=mock.MagicMock(), throttle=mock.MagicMock()
         )
+        rest_impl.client_session = mock.MagicMock(aiohttp.ClientSession, request=mock.MagicMock())
+
         return rest_impl
 
     @pytest.mark.asyncio
@@ -215,7 +276,7 @@ class TestLowLevelRestfulClient:
             except exit_error:
                 pass
 
-            rest_impl_with__request.ratelimiter.acquire.asset_called_once_with(compiled_route)
+            rest_impl_with__request.bucket_ratelimiters.acquire.asset_called_once_with(compiled_route)
 
     @pytest.mark.asyncio
     async def test__request_sets_Authentication_if_token(self, compiled_route, exit_error, rest_impl_with__request):
@@ -438,7 +499,7 @@ class TestLowLevelRestfulClient:
                 rest_impl_with__request.global_ratelimiter.throttle.assert_not_called()
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("api_version", [versions.HTTPAPIVersion.V6, versions.HTTPAPIVersion.V7])
+    @pytest.mark.parametrize("api_version", [6, 7])
     @pytest.mark.parametrize(
         ["status_code", "error"],
         [
@@ -455,12 +516,12 @@ class TestLowLevelRestfulClient:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
         stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
-        stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
         discord_response.status = status_code
         with stack:
             rest_impl = rest_sessions.LowLevelRestfulClient(token="Bot token", version=api_version)
-        rest_impl.ratelimiter = mock.MagicMock()
+        rest_impl.bucket_ratelimiters = mock.MagicMock()
         rest_impl.global_ratelimiter = mock.MagicMock()
+        rest_impl.client_session = mock.MagicMock(aiohttp.ClientSession)
         rest_impl.client_session.request = mock.MagicMock(return_value=discord_response)
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
