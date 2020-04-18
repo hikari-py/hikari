@@ -31,10 +31,10 @@ from hikari.internal import conversions
 from hikari.net import ratelimits
 from hikari.net import rest_sessions
 from hikari.net import routes
-from hikari.net import versions
 from tests.hikari import _helpers
 
 
+# noinspection PyUnresolvedReferences
 class TestLowLevelRestfulClient:
     @pytest.fixture
     def rest_impl(self):
@@ -115,7 +115,7 @@ class TestLowLevelRestfulClient:
         with stack:
             client = rest_sessions.LowLevelRestfulClient(token="Bot token.otacon.a-token")
 
-        assert client.base_url == f"https://discordapp.com/api/v{int(versions.HTTPAPIVersion.STABLE)}"
+        assert client.base_url == f"https://discordapp.com/api/v{rest_sessions.VERSION_6}"
         assert client.client_session is mock_client_session
         assert client.global_ratelimiter is mock_manual_rate_limiter
         assert client.json_serialize is json.dumps
@@ -438,7 +438,7 @@ class TestLowLevelRestfulClient:
                 rest_impl_with__request.global_ratelimiter.throttle.assert_not_called()
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("api_version", [versions.HTTPAPIVersion.V6, versions.HTTPAPIVersion.V7])
+    @pytest.mark.parametrize("api_version", [6, 7])
     @pytest.mark.parametrize(
         ["status_code", "error"],
         [

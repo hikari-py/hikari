@@ -52,10 +52,13 @@ from hikari.internal import more_logging
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import user_agents
-from hikari.net import versions
 
 #: The signature for an event dispatch callback.
 DispatchT = typing.Callable[["ShardConnection", str, typing.Dict], None]
+
+
+VERSION_6: typing.Final[int] = 6
+VERSION_7: typing.Final[int] = 7
 
 
 class ShardConnection:
@@ -150,9 +153,9 @@ class ShardConnection:
         If :obj:`~True`, SSL verification is enabled, which is generally what you
         want. If you get SSL issues, you can try turning this off at your own
         risk.
-    version: :obj:`~hikari.net.versions.GatewayVersion`
-        The version of the gateway API to use. Defaults to the most recent
-        stable documented version.
+    version: :obj:`~int`
+        The version of the API to use. Defaults to the most recent stable
+        version (v6).
     """
 
     __slots__ = (
@@ -334,7 +337,7 @@ class ShardConnection:
         token: str,
         url: str,
         verify_ssl: bool = True,
-        version: typing.Union[int, versions.GatewayVersion] = versions.GatewayVersion.STABLE,
+        version: int = VERSION_6,
     ) -> None:
         # Sanitise the URL...
         scheme, netloc, path, params, _, _ = urllib.parse.urlparse(url, allow_fragments=True)
@@ -386,7 +389,7 @@ class ShardConnection:
         self.seq: typing.Optional[int] = seq
         self.shard_id: int = shard_id
         self.shard_count: int = shard_count
-        self.version: int = int(version)
+        self.version: int = version
 
         self.logger: logging.Logger = more_logging.get_named_logger(self, f"#{shard_id}", f"v{self.version}")
 
