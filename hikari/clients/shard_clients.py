@@ -77,6 +77,9 @@ class ShardState(enum.IntEnum):
     #: The shard has shut down and is no longer connected.
     STOPPED = enum.auto()
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class ShardClient(runnable.RunnableClient):
     """The primary interface for a single shard connection.
