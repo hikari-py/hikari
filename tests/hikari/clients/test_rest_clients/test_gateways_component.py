@@ -22,13 +22,13 @@ import pytest
 
 from hikari import gateway_entities
 from hikari.clients.rest_clients import gateways_component
-from hikari.net import rest
+from hikari.net import rest_sessions
 
 
 class TestRESTReactionLogic:
     @pytest.fixture()
     def rest_gateway_logic_impl(self):
-        mock_low_level_restful_client = mock.MagicMock(rest.LowLevelRestfulClient)
+        mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
         class RESTGatewayLogicImpl(gateways_component.RESTGatewayComponent):
             def __init__(self):

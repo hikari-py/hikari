@@ -25,20 +25,20 @@ import types
 import typing
 
 from hikari.internal import meta
-from hikari.net import rest
+from hikari.net import rest_sessions
 
 
 class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
     """An abstract class that all REST client logic classes should inherit from.
 
     This defines the abstract method ``__init__`` which will assign an instance
-    of :obj:`~hikari.net.rest.LowLevelRestfulClient` to the attribute that all
+    of :obj:`~hikari.net.rest_sessions.LowLevelRestfulClient` to the attribute that all
     components will expect to make calls to.
     """
 
     @abc.abstractmethod
-    def __init__(self, session: rest.LowLevelRestfulClient) -> None:
-        self._session: rest.LowLevelRestfulClient = session
+    def __init__(self, session: rest_sessions.LowLevelRestfulClient) -> None:
+        self._session: rest_sessions.LowLevelRestfulClient = session
 
     async def __aenter__(self) -> "BaseRESTComponent":
         return self
@@ -53,6 +53,6 @@ class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
         await self._session.close()
 
     @property
-    def session(self) -> rest.LowLevelRestfulClient:
-        """Get the :obj:`hikari.net.rest.LowLevelRestfulClient` session object."""
+    def session(self) -> rest_sessions.LowLevelRestfulClient:
+        """Get the :obj:`hikari.net.rest_sessions.LowLevelRestfulClient` session object."""
         return self._session

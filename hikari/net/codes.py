@@ -24,8 +24,11 @@ import enum
 
 # Doesnt work correctly with enums, so since this file is all enums, ignore
 # pylint: disable=no-member
+from hikari.internal import more_enums
+
+
 @enum.unique
-class HTTPStatusCode(enum.IntEnum):
+class HTTPStatusCode(more_enums.EnumMixin, enum.IntEnum):
     """HTTP response codes expected from RESTful components."""
 
     #: Continue
@@ -106,7 +109,7 @@ class HTTPStatusCode(enum.IntEnum):
 
 
 @enum.unique
-class GatewayCloseCode(enum.IntEnum):
+class GatewayCloseCode(more_enums.EnumMixin, enum.IntEnum):
     """Reasons for closing a gateway connection.
 
     Note
@@ -171,7 +174,7 @@ class GatewayCloseCode(enum.IntEnum):
 
 
 @enum.unique
-class GatewayOpcode(enum.IntEnum):
+class GatewayOpcode(more_enums.EnumMixin, enum.IntEnum):
     """Opcodes that the gateway uses internally."""
 
     #: An event was dispatched.
@@ -217,7 +220,7 @@ class GatewayOpcode(enum.IntEnum):
 
 
 @enum.unique
-class JSONErrorCode(enum.IntEnum):
+class JSONErrorCode(more_enums.EnumMixin, enum.IntEnum):
     """Error codes that can be returned by the REST API."""
 
     #: This is sent if the payload is screwed up, etc.
@@ -420,7 +423,7 @@ class JSONErrorCode(enum.IntEnum):
 
 
 @enum.unique
-class GatewayIntent(enum.IntFlag):
+class GatewayIntent(more_enums.FlagMixin, enum.IntFlag):
     """Represents an intent on the gateway.
 
     This is a bitfield representation of all the categories of event

@@ -47,7 +47,7 @@ async def pagination_handler(
     direction : :obj:`~typing.Union` [ ``"before"``, ``"after"`` ]
         The direction that this paginator should go in.
     request : :obj:`~typing.Callable` [ ``...``, :obj:`~typing.Coroutine` [ :obj:`~typing.Any`, :obj:`~typing.Any`, :obj:`~typing.Any` ] ]
-        The :obj:`hikari.net.rest.LowLevelRestfulClient` method that should be
+        The :obj:`hikari.net.rest_sessions.LowLevelRestfulClient` method that should be
         called to make requests for this paginator.
     reversing : :obj:`~bool`
         Whether the retrieved array of objects should be reversed before

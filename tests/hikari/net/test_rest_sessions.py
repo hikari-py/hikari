@@ -29,7 +29,7 @@ import pytest
 from hikari import errors
 from hikari.internal import conversions
 from hikari.net import ratelimits
-from hikari.net import rest
+from hikari.net import rest_sessions
 from hikari.net import routes
 from hikari.net import versions
 from tests.hikari import _helpers
@@ -44,7 +44,9 @@ class TestLowLevelRestfulClient:
         stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
         with stack:
-            client = rest.LowLevelRestfulClient(base_url="https://discordapp.com/api/v6", token="Bot blah.blah.blah")
+            client = rest_sessions.LowLevelRestfulClient(
+                base_url="https://discordapp.com/api/v6", token="Bot blah.blah.blah"
+            )
         client._request = mock.AsyncMock(return_value=...)
 
         return client
@@ -111,7 +113,7 @@ class TestLowLevelRestfulClient:
         stack.enter_context(mock.patch.object(aiohttp, "ClientSession", return_value=mock_client_session))
 
         with stack:
-            client = rest.LowLevelRestfulClient(token="Bot token.otacon.a-token")
+            client = rest_sessions.LowLevelRestfulClient(token="Bot token.otacon.a-token")
 
         assert client.base_url == f"https://discordapp.com/api/v{int(versions.HTTPAPIVersion.STABLE)}"
         assert client.client_session is mock_client_session
@@ -128,7 +130,7 @@ class TestLowLevelRestfulClient:
         stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
         stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
         with stack:
-            client = rest.LowLevelRestfulClient(token="Bearer token.otacon.a-token")
+            client = rest_sessions.LowLevelRestfulClient(token="Bearer token.otacon.a-token")
             assert client.token == "Bearer token.otacon.a-token"
 
     @pytest.mark.asyncio
@@ -150,7 +152,7 @@ class TestLowLevelRestfulClient:
         )
 
         with stack:
-            client = rest.LowLevelRestfulClient(
+            client = rest_sessions.LowLevelRestfulClient(
                 token="Bot token.otacon.a-token",
                 base_url="https://discordapp.com/api/v69420",
                 allow_redirects=True,
@@ -179,7 +181,7 @@ class TestLowLevelRestfulClient:
         stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
         stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
         with stack:
-            async with rest.LowLevelRestfulClient(token="An-invalid-TOKEN"):
+            async with rest_sessions.LowLevelRestfulClient(token="An-invalid-TOKEN"):
                 pass
 
     @pytest.mark.asyncio
@@ -193,7 +195,7 @@ class TestLowLevelRestfulClient:
     @mock.patch.object(ratelimits, "RESTBucketManager")
     @mock.patch.object(aiohttp, "ClientSession")
     def rest_impl_with__request(self, *args):
-        rest_impl = rest.LowLevelRestfulClient(token="Bot token")
+        rest_impl = rest_sessions.LowLevelRestfulClient(token="Bot token")
         rest_impl.logger = mock.MagicMock(debug=mock.MagicMock())
         rest_impl.ratelimiter = mock.MagicMock(
             ratelimits.RESTBucketManager, acquire=mock.MagicMock(), update_rate_limits=mock.MagicMock(),
@@ -427,7 +429,7 @@ class TestLowLevelRestfulClient:
         rest_impl_with__request.logger.debug.side_effect = [None, exit_error]
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            with mock.patch.object(rest.LowLevelRestfulClient, "_request", return_value=discord_response):
+            with mock.patch.object(rest_sessions.LowLevelRestfulClient, "_request", return_value=discord_response):
                 try:
                     await rest_impl_with__request._request(compiled_route)
                 except exit_error:
@@ -456,7 +458,7 @@ class TestLowLevelRestfulClient:
         stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
         discord_response.status = status_code
         with stack:
-            rest_impl = rest.LowLevelRestfulClient(token="Bot token", version=api_version)
+            rest_impl = rest_sessions.LowLevelRestfulClient(token="Bot token", version=api_version)
         rest_impl.ratelimiter = mock.MagicMock()
         rest_impl.global_ratelimiter = mock.MagicMock()
         rest_impl.client_session.request = mock.MagicMock(return_value=discord_response)
