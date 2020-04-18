@@ -21,14 +21,14 @@ import pytest
 
 from hikari import users
 from hikari.clients.rest_clients import users_component
-from hikari.net import rest
+from hikari.net import rest_sessions
 from tests.hikari import _helpers
 
 
 class TestRESTUserLogic:
     @pytest.fixture()
     def rest_user_logic_impl(self):
-        mock_low_level_restful_client = mock.MagicMock(rest.LowLevelRestfulClient)
+        mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
         class RESTUserLogicImpl(users_component.RESTUserComponent):
             def __init__(self):

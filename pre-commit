@@ -1,5 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 # Put this in .git/hooks to make sure 'black' runs every time you commit.
 
-nox -sformat
+if [[ -z ${SKIP_HOOK} ]]; then
+    echo -e '\e[1;32mRUNNING HOOKS - prepend your invocation of git commit with SKIP_HOOK=1 to skip this.\e[0m'
+    nox --sessions reformat-code pytest pylint pydocstyle
+else
+    echo -e '\e[1;31mSKIPPING COMMIT HOOKS. THIS IS HERESY!\e[0m'
+fi

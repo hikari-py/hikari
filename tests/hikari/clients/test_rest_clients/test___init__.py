@@ -23,7 +23,7 @@ import pytest
 
 from hikari.clients import configs
 from hikari.clients import rest_clients
-from hikari.net import rest
+from hikari.net import rest_sessions
 
 
 class TestRESTClient:
@@ -33,8 +33,10 @@ class TestRESTClient:
         return configs.RESTConfig(token="blah.blah.blah")
 
     def test_init(self, mock_config):
-        mock_low_level_rest_clients = mock.MagicMock(rest.LowLevelRestfulClient)
-        with mock.patch.object(rest, "LowLevelRestfulClient", return_value=mock_low_level_rest_clients) as patched_init:
+        mock_low_level_rest_clients = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
+        with mock.patch.object(
+            rest_sessions, "LowLevelRestfulClient", return_value=mock_low_level_rest_clients
+        ) as patched_init:
             cli = rest_clients.RESTClient(mock_config)
             patched_init.assert_called_once_with(
                 allow_redirects=mock_config.allow_redirects,

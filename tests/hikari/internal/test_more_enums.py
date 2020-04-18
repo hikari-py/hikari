@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,7 +16,33 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Various utilities used internally within this API.
+import enum
 
-|internal|
-"""
+from hikari.internal import more_enums
+
+
+class TestEnumMixin:
+    def test_str(self):
+        class TestType(more_enums.FlagMixin, enum.IntEnum):
+            a = 1
+            b = 2
+            c = 4
+            d = 8
+            e = 16
+
+        inst = TestType(2)
+        assert str(inst) == "b"
+
+
+class TestFlagMixin:
+    def test_str(self):
+        class TestType(more_enums.FlagMixin, enum.IntFlag):
+            a = 1
+            b = 2
+            c = 4
+            d = 8
+            e = 16
+
+        inst = TestType(7)
+
+        assert str(inst) == "a, b, c"

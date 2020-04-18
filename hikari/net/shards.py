@@ -51,7 +51,7 @@ from hikari.internal import more_asyncio
 from hikari.internal import more_logging
 from hikari.net import codes
 from hikari.net import ratelimits
-from hikari.net import user_agent
+from hikari.net import user_agents
 from hikari.net import versions
 
 #: The signature for an event dispatch callback.
@@ -704,7 +704,7 @@ class ShardConnection:
                 "token": self._token,
                 "compress": False,
                 "large_threshold": self._large_threshold,
-                "properties": user_agent.UserAgent().websocket_triplet,
+                "properties": user_agents.UserAgent().websocket_triplet,
                 "shard": [self.shard_id, self.shard_count],
             },
         }

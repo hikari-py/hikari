@@ -30,8 +30,8 @@ import pytest
 
 from hikari import errors
 from hikari.internal import more_collections
-from hikari.net import shard
-from hikari.net import user_agent
+from hikari.net import shards
+from hikari.net import user_agents
 from hikari.net import versions
 from tests.hikari import _helpers
 
@@ -86,12 +86,12 @@ class MockClientSession:
 class TestShardConstructor:
     async def test_init_sets_shard_numbers_correctly(self,):
         input_shard_id, input_shard_count, expected_shard_id, expected_shard_count = 1, 2, 1, 2
-        client = shard.ShardConnection(shard_id=input_shard_id, shard_count=input_shard_count, token="xxx", url="yyy")
+        client = shards.ShardConnection(shard_id=input_shard_id, shard_count=input_shard_count, token="xxx", url="yyy")
         assert client.shard_id == expected_shard_id
         assert client.shard_count == expected_shard_count
 
     async def test_dispatch_is_callable(self):
-        client = shard.ShardConnection(token="xxx", url="yyy")
+        client = shards.ShardConnection(token="xxx", url="yyy")
         client.dispatch(client, "ping", "pong")
 
     @pytest.mark.parametrize(
@@ -103,7 +103,7 @@ class TestShardConstructor:
     )
     async def test_compression(self, compression, expected_url_query):
         url = "ws://baka-im-not-a-http-url:49620/locate/the/bloody/websocket?ayyyyy=lmao"
-        client = shard.ShardConnection(token="xxx", url=url, compression=compression)
+        client = shards.ShardConnection(token="xxx", url=url, compression=compression)
         scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(client._url)
         assert scheme == "ws"
         assert netloc == "baka-im-not-a-http-url:49620"
@@ -114,13 +114,13 @@ class TestShardConstructor:
         assert fragment == ""
 
     async def test_init_hearbeat_defaults_before_startup(self):
-        client = shard.ShardConnection(token="xxx", url="yyy")
+        client = shards.ShardConnection(token="xxx", url="yyy")
         assert math.isnan(client.last_heartbeat_sent)
         assert math.isnan(client.heartbeat_latency)
         assert math.isnan(client.last_message_received)
 
     async def test_init_connected_at_is_nan(self):
-        client = shard.ShardConnection(token="xxx", url="yyy")
+        client = shards.ShardConnection(token="xxx", url="yyy")
         assert math.isnan(client._connected_at)
 
 
@@ -132,7 +132,7 @@ class TestShardUptimeProperty:
     )
     async def test_uptime(self, connected_at, now, expected_uptime):
         with mock.patch("time.perf_counter", return_value=now):
-            client = shard.ShardConnection(token="xxx", url="yyy")
+            client = shards.ShardConnection(token="xxx", url="yyy")
             client._connected_at = connected_at
             assert client.uptime == expected_uptime
 
@@ -141,7 +141,7 @@ class TestShardUptimeProperty:
 class TestShardIsConnectedProperty:
     @pytest.mark.parametrize(["connected_at", "is_connected"], [(float("nan"), False), (15, True), (2500.0, True),])
     async def test_is_connected(self, connected_at, is_connected):
-        client = shard.ShardConnection(token="xxx", url="yyy")
+        client = shards.ShardConnection(token="xxx", url="yyy")
         client._connected_at = connected_at
         assert client.is_connected is is_connected
 
@@ -162,7 +162,7 @@ class TestGatewayReconnectCountProperty:
         ],
     )
     async def test_value(self, disconnect_count, is_connected, expected_reconnect_count):
-        client = shard.ShardConnection(token="xxx", url="yyy")
+        client = shards.ShardConnection(token="xxx", url="yyy")
         client.disconnect_count = disconnect_count
         client._connected_at = 420 if is_connected else float("nan")
         assert client.reconnect_count == expected_reconnect_count
@@ -171,12 +171,12 @@ class TestGatewayReconnectCountProperty:
 @pytest.mark.asyncio
 class TestGatewayCurrentPresenceProperty:
     async def test_returns_presence(self):
-        client = shard.ShardConnection(token="xxx", url="yyy")
+        client = shards.ShardConnection(token="xxx", url="yyy")
         client._presence = {"foo": "bar"}
         assert client.current_presence == {"foo": "bar"}
 
     async def test_returns_copy(self):
-        client = shard.ShardConnection(token="xxx", url="yyy")
+        client = shards.ShardConnection(token="xxx", url="yyy")
         client._presence = {"foo": "bar"}
         assert client.current_presence is not client._presence
 
@@ -186,7 +186,7 @@ class TestShardAiohttpClientSessionKwargsProperty:
     async def test_right_stuff_is_included(self):
         connector = mock.MagicMock()
 
-        client = shard.ShardConnection(url="...", token="...", connector=connector,)
+        client = shards.ShardConnection(url="...", token="...", connector=connector,)
 
         assert client._cs_init_kwargs() == dict(connector=connector)
 
@@ -201,7 +201,7 @@ class TestShardWebSocketKwargsProperty:
         verify_ssl = True
         ssl_context = mock.MagicMock()
 
-        client = shard.ShardConnection(
+        client = shards.ShardConnection(
             url=url,
             token="...",
             proxy_url=proxy_url,
@@ -248,7 +248,7 @@ class TestConnect:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(shard.ShardConnection)(url="ws://localhost", token="xxx")
+        client = _helpers.unslot_class(shards.ShardConnection)(url="ws://localhost", token="xxx")
         client = _helpers.mock_methods_on(client, except_=("connect", "_cs_init_kwargs", "_ws_connect_kwargs"))
         client._receive = mock.AsyncMock(return_value=self.hello_payload)
         return client
@@ -537,7 +537,7 @@ class TestShardRun:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shards.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("_run",))
 
         def receive():
@@ -549,9 +549,9 @@ class TestShardRun:
         def resume():
             client.resume_time = time.perf_counter()
 
-        client._identify = mock.AsyncMock(spec=shard.ShardConnection._identify, wraps=identify)
-        client._resume = mock.AsyncMock(spec=shard.ShardConnection._resume, wraps=resume)
-        client._receive = mock.AsyncMock(spec=shard.ShardConnection._receive, wraps=receive)
+        client._identify = mock.AsyncMock(spec=shards.ShardConnection._identify, wraps=identify)
+        client._resume = mock.AsyncMock(spec=shards.ShardConnection._resume, wraps=resume)
+        client._receive = mock.AsyncMock(spec=shards.ShardConnection._receive, wraps=receive)
         return client
 
     async def test_no_session_id_sends_identify_then_polls_events(self, client):
@@ -584,7 +584,7 @@ class TestIdentify:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shards.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("_identify",))
         return client
 
@@ -606,7 +606,7 @@ class TestIdentify:
                     "token": "aaaa",
                     "compress": False,
                     "large_threshold": 420,
-                    "properties": user_agent.UserAgent().websocket_triplet,
+                    "properties": user_agents.UserAgent().websocket_triplet,
                     "shard": [69, 96],
                 },
             }
@@ -631,7 +631,7 @@ class TestIdentify:
                     "token": "aaaa",
                     "compress": False,
                     "large_threshold": 420,
-                    "properties": user_agent.UserAgent().websocket_triplet,
+                    "properties": user_agents.UserAgent().websocket_triplet,
                     "shard": [69, 96],
                     "presence": presence,
                 },
@@ -657,7 +657,7 @@ class TestIdentify:
                     "token": "aaaa",
                     "compress": False,
                     "large_threshold": 420,
-                    "properties": user_agent.UserAgent().websocket_triplet,
+                    "properties": user_agents.UserAgent().websocket_triplet,
                     "shard": [69, 96],
                     "intents": intents,
                 },
@@ -684,7 +684,7 @@ class TestIdentify:
                     "token": "aaaa",
                     "compress": False,
                     "large_threshold": 420,
-                    "properties": user_agent.UserAgent().websocket_triplet,
+                    "properties": user_agents.UserAgent().websocket_triplet,
                     "shard": [69, 96],
                     "intents": intents,
                     "presence": presence,
@@ -698,7 +698,7 @@ class TestResume:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shards.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("_resume",))
         return client
 
@@ -719,7 +719,7 @@ class TestHeartbeatKeepAlive:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shards.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("_heartbeat_keep_alive", "_zombie_detector"))
         client._send = mock.AsyncMock()
         # This won't get set on the right event loop if we are not careful
@@ -780,14 +780,14 @@ class TestHeartbeatKeepAlive:
         client = mock.MagicMock()
         client.last_message_received = time.perf_counter() - 5
         heartbeat_interval = 41.25
-        shard.ShardConnection._zombie_detector(client, heartbeat_interval)
+        shards.ShardConnection._zombie_detector(client, heartbeat_interval)
 
     @_helpers.assert_raises(type_=asyncio.TimeoutError)
     async def test_zombie_detector_is_a_zombie(self):
         client = mock.MagicMock()
         client.last_message_received = time.perf_counter() - 500000
         heartbeat_interval = 41.25
-        shard.ShardConnection._zombie_detector(client, heartbeat_interval)
+        shards.ShardConnection._zombie_detector(client, heartbeat_interval)
 
 
 @pytest.mark.asyncio
@@ -795,7 +795,7 @@ class TestClose:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shards.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("close",))
         client.ws = mock.MagicMock(aiohttp.ClientWebSocketResponse)
         client.session = mock.MagicMock(aiohttp.ClientSession)
@@ -866,7 +866,7 @@ class TestPollEvents:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shards.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("_run",))
         return client
 
@@ -906,7 +906,7 @@ class TestRequestGuildMembers:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shards.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("request_guild_members",))
         return client
 
@@ -943,7 +943,7 @@ class TestUpdatePresence:
     @pytest.fixture
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
-        client = _helpers.unslot_class(shard.ShardConnection)(token="1234", url="xxx")
+        client = _helpers.unslot_class(shards.ShardConnection)(token="1234", url="xxx")
         client = _helpers.mock_methods_on(client, except_=("update_presence",))
         return client
 

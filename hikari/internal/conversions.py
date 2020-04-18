@@ -47,7 +47,6 @@ import re
 import types
 import typing
 
-
 IntFlagT = typing.TypeVar("IntFlagT", bound=enum.IntFlag)
 RawIntFlagValueT = typing.Union[typing.AnyStr, typing.SupportsInt, int]
 DISCORD_EPOCH: typing.Final[int] = 1_420_070_400

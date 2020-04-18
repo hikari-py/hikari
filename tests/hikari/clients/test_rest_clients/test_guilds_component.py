@@ -36,7 +36,7 @@ from hikari import webhooks
 from hikari.clients.rest_clients import guilds_component
 from hikari.internal import conversions
 from hikari.internal import pagination
-from hikari.net import rest
+from hikari.net import rest_sessions
 from tests.hikari import _helpers
 
 
@@ -50,7 +50,7 @@ def test__get_member_id():
 class TestRESTGuildLogic:
     @pytest.fixture()
     def rest_guild_logic_impl(self):
-        mock_low_level_restful_client = mock.MagicMock(rest.LowLevelRestfulClient)
+        mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
         class RESTGuildLogicImpl(guilds_component.RESTGuildComponent):
             def __init__(self):
