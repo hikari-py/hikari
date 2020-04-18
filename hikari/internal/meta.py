@@ -22,6 +22,8 @@
 """
 __all__ = ["SingletonMeta", "Singleton"]
 
+import abc
+import inspect
 import typing
 
 from hikari.internal import more_collections
@@ -54,7 +56,9 @@ class SingletonMeta(type):
     thread safe.
     """
 
+    # pylint: disable=E1136
     ___instance_dict_t___ = more_collections.WeakKeyDictionary[typing.Type[typing.Any], typing.Any]
+    # pylint: enable=E1136
     ___instances___: ___instance_dict_t___ = more_collections.WeakKeyDictionary()
     __slots__ = ()
 
@@ -89,3 +93,35 @@ class Singleton(metaclass=SingletonMeta):
     Constructing instances of this class or derived classes may not be thread
     safe.
     """
+
+
+class UniqueFunctionMeta(abc.ABCMeta):
+    """Metaclass for mixins that are expected to provide unique function names.
+
+    If subclassing from two mixins that are derived from this type and both
+    mixins provide the same function, a type error is raised when the class is
+    defined.
+
+    Note
+    ----
+    This metaclass derives from :obj:`~abc.ABCMeta`, and thus is compatible
+    with abstract method conduit.
+    """
+
+    @classmethod
+    def __prepare__(mcs, name, bases, **kwargs):
+        routines = {}
+
+        for base in bases:
+            for identifier, method in inspect.getmembers(base, inspect.isroutine):
+                if identifier.startswith("__"):
+                    continue
+
+                if identifier in routines and method != routines[identifier]:
+                    raise TypeError(
+                        f"Conflicting methods {routines[identifier].__qualname__} and {method.__qualname__} found."
+                    )
+
+                routines[identifier] = method
+
+        return super().__prepare__(name, bases, **kwargs)

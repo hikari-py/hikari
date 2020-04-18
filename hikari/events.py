@@ -732,7 +732,7 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, entities.Deserial
 
     Note
     ----
-    All fields on this model except :attr:`channel_id` and :obj:`~`HikariEvent.id`` may be
+    All fields on this model except :attr:`channel_id` and ``id`` may be
     set to :obj:`~hikari.entities.UNSET` (a singleton defined in
     ``hikari.entities``) if we have not received information about their
     state from Discord alongside field nullability.

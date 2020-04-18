@@ -24,3 +24,58 @@ def test_SingletonMeta():
         pass
 
     assert StubSingleton() is StubSingleton()
+
+
+class TestUniqueFunctionMeta:
+    def test_raises_type_error_on_duplicated_methods(self):
+        class StubMixin1(metaclass=meta.UniqueFunctionMeta):
+            def foo(self):
+                ...
+
+            def bar(cls):
+                ...
+
+        class StubMixin2(metaclass=meta.UniqueFunctionMeta):
+            def foo(cls):
+                ...
+
+            def baz(cls):
+                ...
+
+        try:
+
+            class Impl(StubMixin1, StubMixin2):
+                ...
+
+            assert False, "Should've raised a TypeError on overwritten function."
+        except TypeError:
+            pass
+
+    def test_passes_when_no_duplication_present(self):
+        class StubMixin1(metaclass=meta.UniqueFunctionMeta):
+            def foo(self):
+                ...
+
+            def bar(cls):
+                ...
+
+        class StubMixin2(metaclass=meta.UniqueFunctionMeta):
+            def baz(cls):
+                ...
+
+        class Impl(StubMixin1, StubMixin2):
+            ...
+
+    def test_allows_duplicate_methods_when_inherited_from_same_base_further_up(self):
+        class StubMixin0(metaclass=meta.UniqueFunctionMeta):
+            def nyaa(self):
+                ...
+
+        class StubMixin1(StubMixin0):
+            ...
+
+        class StubMixin2(StubMixin0):
+            ...
+
+        class Impl(StubMixin1, StubMixin2):
+            ...
