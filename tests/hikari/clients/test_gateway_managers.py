@@ -21,16 +21,18 @@ import math
 import mock
 import pytest
 
+from hikari.clients import configs
 from hikari.clients import gateway_managers
 from hikari.clients import shard_clients
+from hikari.net import codes
 from tests.hikari import _helpers
 
 
-class TestGatewayManager:
-    def test_latency(self):
-        shard1 = mock.MagicMock(shard_clients.ShardClient, latency=20)
-        shard2 = mock.MagicMock(shard_clients.ShardClient, latency=30)
-        shard3 = mock.MagicMock(shard_clients.ShardClient, latency=40)
+class TestGatewayManagerProperties:
+    def test_heartbeat_latency(self):
+        shard1 = mock.MagicMock(shard_clients.ShardClient, heartbeat_latency=20)
+        shard2 = mock.MagicMock(shard_clients.ShardClient, heartbeat_latency=30)
+        shard3 = mock.MagicMock(shard_clients.ShardClient, heartbeat_latency=40)
 
         with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
             gateway_manager_obj = gateway_managers.GatewayManager(
@@ -42,29 +44,12 @@ class TestGatewayManager:
                 shard_type=shard_clients.ShardClient,
             )
 
-        assert gateway_manager_obj.latency == 30
+        assert gateway_manager_obj.heartbeat_latency == 30
 
-    def test_latency_doesnt_take_into_a_count_shards_with_no_latency(self):
-        shard1 = mock.MagicMock(shard_clients.ShardClient, latency=20)
-        shard2 = mock.MagicMock(shard_clients.ShardClient, latency=30)
-        shard3 = mock.MagicMock(shard_clients.ShardClient, latency=float("nan"))
-
-        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
-            gateway_manager_obj = gateway_managers.GatewayManager(
-                shard_ids=[0, 1, 2],
-                shard_count=3,
-                config=None,
-                url="some_url",
-                raw_event_consumer_impl=None,
-                shard_type=shard_clients.ShardClient,
-            )
-
-        assert gateway_manager_obj.latency == 25
-
-    def test_latency_returns_nan_if_all_shards_have_no_latency(self):
-        shard1 = mock.MagicMock(shard_clients.ShardClient, latency=float("nan"))
-        shard2 = mock.MagicMock(shard_clients.ShardClient, latency=float("nan"))
-        shard3 = mock.MagicMock(shard_clients.ShardClient, latency=float("nan"))
+    def test_heartbeat_latency_doesnt_take_into_a_count_shards_with_no_latency(self):
+        shard1 = mock.MagicMock(shard_clients.ShardClient, heartbeat_latency=20)
+        shard2 = mock.MagicMock(shard_clients.ShardClient, heartbeat_latency=30)
+        shard3 = mock.MagicMock(shard_clients.ShardClient, heartbeat_latency=float("nan"))
 
         with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
             gateway_manager_obj = gateway_managers.GatewayManager(
@@ -76,8 +61,99 @@ class TestGatewayManager:
                 shard_type=shard_clients.ShardClient,
             )
 
-        assert math.isnan(gateway_manager_obj.latency)
+        assert gateway_manager_obj.heartbeat_latency == 25
 
+    def test_heartbeat_latency_returns_nan_if_all_shards_have_no_latency(self):
+        shard1 = mock.MagicMock(shard_clients.ShardClient, heartbeat_latency=float("nan"))
+        shard2 = mock.MagicMock(shard_clients.ShardClient, heartbeat_latency=float("nan"))
+        shard3 = mock.MagicMock(shard_clients.ShardClient, heartbeat_latency=float("nan"))
+
+        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
+            gateway_manager_obj = gateway_managers.GatewayManager(
+                shard_ids=[0, 1, 2],
+                shard_count=3,
+                config=None,
+                url="some_url",
+                raw_event_consumer_impl=None,
+                shard_type=shard_clients.ShardClient,
+            )
+
+        assert math.isnan(gateway_manager_obj.heartbeat_latency)
+
+    def test_total_disconnect_count(self):
+        shard1 = mock.MagicMock(shard_clients.ShardClient, disconnect_count=7)
+        shard2 = mock.MagicMock(shard_clients.ShardClient, disconnect_count=2)
+        shard3 = mock.MagicMock(shard_clients.ShardClient, disconnect_count=13)
+
+        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
+            gateway_manager_obj = gateway_managers.GatewayManager(
+                shard_ids=[0, 1, 2],
+                shard_count=3,
+                config=None,
+                url="some_url",
+                raw_event_consumer_impl=None,
+                shard_type=shard_clients.ShardClient,
+            )
+
+        assert gateway_manager_obj.total_disconnect_count == 22
+
+    def test_total_reconnect_count(self):
+        shard1 = mock.MagicMock(shard_clients.ShardClient, reconnect_count=7)
+        shard2 = mock.MagicMock(shard_clients.ShardClient, reconnect_count=2)
+        shard3 = mock.MagicMock(shard_clients.ShardClient, reconnect_count=13)
+
+        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
+            gateway_manager_obj = gateway_managers.GatewayManager(
+                shard_ids=[0, 1, 2],
+                shard_count=3,
+                config=None,
+                url="some_url",
+                raw_event_consumer_impl=None,
+                shard_type=shard_clients.ShardClient,
+            )
+
+        assert gateway_manager_obj.total_reconnect_count == 22
+
+    def test_intents(self):
+        shard1 = mock.MagicMock(shard_clients.ShardClient)
+        shard2 = mock.MagicMock(shard_clients.ShardClient)
+        shard3 = mock.MagicMock(shard_clients.ShardClient)
+
+        intents = codes.GatewayIntent.DIRECT_MESSAGE_TYPING | codes.GatewayIntent.DIRECT_MESSAGE_REACTIONS
+
+        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
+            gateway_manager_obj = gateway_managers.GatewayManager(
+                shard_ids=[0, 1, 2],
+                shard_count=3,
+                config=configs.BotConfig(intents=intents),
+                url="some_url",
+                raw_event_consumer_impl=None,
+                shard_type=shard_clients.ShardClient,
+            )
+
+        assert gateway_manager_obj.intents == intents
+
+    def test_version(self):
+        shard1 = mock.MagicMock(shard_clients.ShardClient)
+        shard2 = mock.MagicMock(shard_clients.ShardClient)
+        shard3 = mock.MagicMock(shard_clients.ShardClient)
+
+        version = 7
+
+        with mock.patch("hikari.clients.shard_clients.ShardClient", side_effect=[shard1, shard2, shard3]):
+            gateway_manager_obj = gateway_managers.GatewayManager(
+                shard_ids=[0, 1, 2],
+                shard_count=3,
+                config=configs.BotConfig(gateway_version=version),
+                url="some_url",
+                raw_event_consumer_impl=None,
+                shard_type=shard_clients.ShardClient,
+            )
+
+        assert gateway_manager_obj.version == version
+
+
+class TestGatewayManagerManagement:
     @pytest.mark.asyncio
     async def test_start_waits_five_seconds_between_shard_startup(self):
         mock_sleep = mock.AsyncMock()
