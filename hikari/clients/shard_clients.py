@@ -685,7 +685,7 @@ class ShardClientImpl(ShardClient):
             "ShardClient("
             + ", ".join(
                 f"{k}={getattr(self, k)!r}"
-                for k in ("shard_id", "shard_count", "connection_state", "heartbeat_interval", "latency")
+                for k in ("shard_id", "shard_count", "connection_state", "heartbeat_interval", "heartbeat_latency")
             )
             + ")"
         )
