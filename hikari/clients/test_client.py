@@ -137,12 +137,12 @@ def run_gateway(compression, color, debug, intents, logger, shards, token, verif
                 shard_infos.append(hikari.EmbedField(name=f"Shard {shard_id}", value=shard_info, is_inline=False))
 
             gw_info = (
-                f"average latency: {client.gateway.latency * 1_000:.0f} ms\n"
+                f"intents: {client.gateway.intents}\n"
+                f"version: {client.gateway.version}\n"
+                f"average latency: {client.gateway.heartbeat_latency * 1_000:.0f} ms\n"
                 f"shards: {len(client.gateway.shards)}\n"
-                f"version: {version}\n"
                 f"compression: {compression}\n"
                 f"debug: {debug}\n"
-                f"intents: {hex(intents)} ({active_intents})"
             )
 
             rest_info = (
