@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Marshall wrappings for the REST implementation in :mod:`hikari.net.rest`.
+"""Marshall wrappings for the REST implementation in `hikari.net.rest`.
 
 This provides an object-oriented interface for interacting with discord's REST
 API.
@@ -54,18 +54,18 @@ class RESTClient(
     A marshalling object-oriented REST API client.
 
     This client bridges the basic REST API exposed by
-    :obj:`~hikari.net.rest_sessions.LowLevelRestfulClient` and wraps it in a unit of
+    `hikari.net.rest_sessions.LowLevelRestfulClient` and wraps it in a unit of
     processing that can handle parsing API objects into Hikari entity objects.
 
     Parameters
     ----------
-    config : :obj:`~hikari.clients.configs.RESTConfig`
+    config : `hikari.clients.configs.RESTConfig`
         A HTTP configuration object.
 
     Note
     ----
-    For all endpoints where a ``reason`` argument is provided, this may be a
-    string inclusively between ``0`` and ``512`` characters length, with any
+    For all endpoints where a `reason` argument is provided, this may be a
+    string inclusively between `0` and `512` characters length, with any
     additional characters being cut off.
     """
 
