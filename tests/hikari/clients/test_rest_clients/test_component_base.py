@@ -42,11 +42,3 @@ class TestBaseRESTComponent:
         async with rest_clients_impl as client:
             assert client is rest_clients_impl
         rest_clients_impl.close.assert_called_once_with()
-
-    @pytest.mark.asyncio
-    async def test_close_awaits_session_close(self, rest_clients_impl):
-        await rest_clients_impl.close()
-        rest_clients_impl._session.close.assert_called_once()
-
-    def test_session_property(self, low_level_rest_impl, rest_clients_impl):
-        assert rest_clients_impl.session is low_level_rest_impl

@@ -20,12 +20,12 @@
 __all__ = ["raw_event_mapper", "EventManager"]
 
 import inspect
+import logging
 import typing
 
 from hikari import entities
 from hikari.clients import shard_clients
 from hikari.internal import assertions
-from hikari.internal import more_logging
 from hikari.state import event_dispatchers
 from hikari.state import raw_event_consumers
 
@@ -139,7 +139,7 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
         if event_dispatcher_impl is None:
             event_dispatcher_impl = event_dispatchers.EventDispatcherImpl()
 
-        self.logger = more_logging.get_named_logger(self)
+        self.logger = logging.getLogger(type(self).__qualname__)
         self.event_dispatcher = event_dispatcher_impl
         self.raw_event_mappers = {}
 

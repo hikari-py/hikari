@@ -64,15 +64,12 @@ def test_websocket_config(test_debug_config, test_aiohttp_config, test_token_con
         "initial_idle_since": None,  # Set in test
         "intents": 513,
         "large_threshold": 1000,
+        "shard_ids": "5...10",
+        "shard_count": "17",
         **test_debug_config,
         **test_aiohttp_config,
         **test_token_config,
     }
-
-
-@pytest.fixture
-def test_shard_config():
-    return {"shard_ids": "5...10", "shard_count": "17"}
 
 
 @pytest.fixture
@@ -81,8 +78,8 @@ def test_rest_config(test_aiohttp_config, test_token_config):
 
 
 @pytest.fixture
-def test_bot_config(test_rest_config, test_shard_config, test_websocket_config):
-    return {**test_rest_config, **test_shard_config, **test_websocket_config}
+def test_bot_config(test_rest_config, test_websocket_config):
+    return {**test_rest_config, **test_websocket_config}
 
 
 class TestDebugConfig:
@@ -141,7 +138,7 @@ class TestWebsocketConfig:
     def test_deserialize(self, test_websocket_config):
         datetime_obj = datetime.datetime.now()
         test_websocket_config["initial_idle_since"] = datetime_obj.timestamp()
-        websocket_config_obj = configs.WebsocketConfig.deserialize(test_websocket_config)
+        websocket_config_obj = configs.GatewayConfig.deserialize(test_websocket_config)
 
         assert websocket_config_obj.gateway_use_compression is False
         assert websocket_config_obj.gateway_version == 7
@@ -164,9 +161,11 @@ class TestWebsocketConfig:
         assert websocket_config_obj.ssl_context == ssl.SSLContext
         assert websocket_config_obj.verify_ssl is False
         assert websocket_config_obj.token == "token"
+        assert websocket_config_obj.shard_ids == [5, 6, 7, 8, 9, 10]
+        assert websocket_config_obj.shard_count == 17
 
     def test_empty_deserialize(self):
-        websocket_config_obj = configs.WebsocketConfig.deserialize({})
+        websocket_config_obj = configs.GatewayConfig.deserialize({})
 
         assert websocket_config_obj.gateway_use_compression is True
         assert websocket_config_obj.gateway_version == 6
@@ -185,6 +184,8 @@ class TestWebsocketConfig:
         assert websocket_config_obj.ssl_context is None
         assert websocket_config_obj.verify_ssl is True
         assert websocket_config_obj.token is None
+        assert websocket_config_obj.shard_ids is None
+        assert websocket_config_obj.shard_count is None
 
 
 class TestParseShardInfo:
@@ -203,20 +204,6 @@ class TestParseShardInfo:
     @_helpers.assert_raises(type_=ValueError)
     def test__parse_shard_info_when_invalid(self):
         configs._parse_shard_info("something invalid")
-
-
-class TestShardConfig:
-    def test_deserialize(self, test_shard_config):
-        shard_config_obj = configs.ShardConfig.deserialize(test_shard_config)
-
-        assert shard_config_obj.shard_ids == [5, 6, 7, 8, 9, 10]
-        assert shard_config_obj.shard_count == 17
-
-    def test_empty_deserialize(self):
-        shard_config_obj = configs.ShardConfig.deserialize({})
-
-        assert shard_config_obj.shard_ids is None
-        assert shard_config_obj.shard_count is None
 
 
 class TestRESTConfig:

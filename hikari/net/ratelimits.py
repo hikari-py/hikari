@@ -180,7 +180,6 @@ import typing
 import weakref
 
 from hikari.internal import more_asyncio
-from hikari.internal import more_logging
 from hikari.net import routes
 
 #: The hash used for an unknown bucket that has not yet been resolved.
@@ -256,7 +255,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         self.name = name
         self.throttle_task = None
         self.queue = []
-        self.logger: logging.Logger = more_logging.get_named_logger(self)
+        self.logger = logging.getLogger(f"hikari.net.ratelimits.{type(self).__qualname__}.{name}")
 
     @abc.abstractmethod
     def acquire(self) -> more_asyncio.Future[None]:
@@ -321,7 +320,7 @@ class ManualRateLimiter(BurstRateLimiter):
     __slots__ = ()
 
     def __init__(self) -> None:
-        super().__init__("global REST")
+        super().__init__("global")
 
     def acquire(self) -> more_asyncio.Future[None]:
         """Acquire time on this rate limiter.
@@ -715,7 +714,7 @@ class RESTBucketManager:
         self.real_hashes_to_buckets = {}
         self.closed_event: asyncio.Event = asyncio.Event()
         self.gc_task: typing.Optional[asyncio.Task] = None
-        self.logger: logging.Logger = more_logging.get_named_logger(self)
+        self.logger = logging.getLogger(f"hikari.net.ratelimits.{type(self).__qualname__}")
 
     def __enter__(self) -> "RESTBucketManager":
         return self

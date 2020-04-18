@@ -51,8 +51,3 @@ class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
     async def close(self) -> None:
         """Shut down the REST client safely."""
         await self._session.close()
-
-    @property
-    def session(self) -> rest_sessions.LowLevelRestfulClient:
-        """Get the :obj:`hikari.net.rest_sessions.LowLevelRestfulClient` session object."""
-        return self._session
