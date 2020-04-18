@@ -26,12 +26,13 @@ shard using models defined in :mod:`hikari`.
 """
 from __future__ import annotations
 
-__all__ = ["ShardState", "ShardClient"]
+__all__ = ["ShardState", "ShardClient", "ShardClientImpl"]
 
+import abc
 import asyncio
-import contextlib
 import datetime
 import enum
+import logging
 import time
 import typing
 
@@ -43,7 +44,6 @@ from hikari import gateway_entities
 from hikari import guilds
 from hikari.clients import configs
 from hikari.clients import runnable
-from hikari.internal import more_logging
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import shards
@@ -81,7 +81,231 @@ class ShardState(enum.IntEnum):
         return self.name
 
 
-class ShardClient(runnable.RunnableClient):
+class ShardClient(runnable.RunnableClient, abc.ABC):
+    """Definition of the interface for a conforming shard client."""
+
+    __slots__ = ()
+
+    @property
+    @abc.abstractmethod
+    def shard_id(self) -> int:
+        """Shard ID.
+
+        Returns
+        -------
+        :obj:`~int`
+            The 0-indexed shard ID.
+        """
+
+    @property
+    @abc.abstractmethod
+    def shard_count(self) -> int:
+        """Shard count.
+
+        Returns
+        -------
+        :obj:`~int`
+            The number of shards that make up this bot.
+        """
+
+    @property
+    @abc.abstractmethod
+    def status(self) -> guilds.PresenceStatus:
+        """User status for this shard.
+
+        Returns
+        -------
+        :obj:`~hikari.guilds.PresenceStatus`
+            The current user status for this shard.
+        """
+
+    @property
+    @abc.abstractmethod
+    def activity(self) -> typing.Optional[gateway_entities.GatewayActivity]:
+        """Activity for the user status for this shard.
+
+        Returns
+        -------
+        :obj:`~hikari.gateway_entities.GatewayActivity`, optional
+            The current activity for the user on this shard, or :obj:`~None` if
+            there is no activity.
+        """
+
+    @property
+    @abc.abstractmethod
+    def idle_since(self) -> typing.Optional[datetime.datetime]:
+        """Timestamp when the user of this shard appeared to be idle.
+
+        Returns
+        -------
+        :obj:`~datetime.datetime`, optional
+            The timestamp when the user of this shard appeared to be idle, or
+            :obj:`~None` if not applicable.
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_afk(self) -> bool:
+        """Whether the user is AFK or not.
+
+        Returns
+        -------
+        :obj:`~bool`
+            :obj:`~True` if the user is AFK, :obj:`~False` otherwise.
+        """
+
+    @property
+    @abc.abstractmethod
+    def heartbeat_latency(self) -> float:
+        """Latency between sending a HEARTBEAT and receiving an ACK.
+
+        Returns
+        -------
+        :obj:`~float`
+            The heartbeat latency in seconds. This will be ``float('nan')``
+            until the first heartbeat is performed.
+        """
+
+    @property
+    @abc.abstractmethod
+    def heartbeat_interval(self) -> float:
+        """Time period to wait between sending HEARTBEAT payloads.
+
+        Returns
+        -------
+        :obj:`~float`
+            The heartbeat interval in seconds. This will be ``float('nan')``
+            until the connection has received a ``HELLO`` payload.
+        """
+
+    @property
+    @abc.abstractmethod
+    def disconnect_count(self) -> int:
+        """Count of number of times the internal connection has disconnected.
+
+        Returns
+        -------
+        :obj:`~int`
+            The number of disconnects this shard has performed.
+        """
+
+    @property
+    @abc.abstractmethod
+    def reconnect_count(self) -> int:
+        """Count of number of times the internal connection has reconnected.
+
+        This includes RESUME and re-IDENTIFY events.
+
+        Returns
+        -------
+        :obj:`~int`
+            The number of reconnects this shard has performed.
+        """
+
+    @property
+    @abc.abstractmethod
+    def connection_state(self) -> ShardState:
+        """State of this shard.
+
+        Returns
+        -------
+        :obj:`~ShardState`
+            The state of this shard.
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_connected(self) -> bool:
+        """Whether the shard is connected or not.
+
+        Returns
+        -------
+        :obj:`~bool`
+            :obj:`~True` if connected; :obj:`~False` otherwise.
+        """
+
+    @property
+    @abc.abstractmethod
+    def seq(self) -> typing.Optional[int]:
+        """Sequence ID of the shard.
+
+        Returns
+        -------
+        :obj:`~int`, optional
+            The sequence number for the shard. This is the number of payloads
+            that have been received since an ``IDENTIFY`` was sent.
+        """
+
+    @property
+    @abc.abstractmethod
+    def session_id(self) -> typing.Optional[str]:
+        """Session ID.
+
+        Returns
+        -------
+        :obj:`~str`, optional
+            The session ID for the shard connection, if there is one. If not,
+            then :obj:`~None`.
+        """
+
+    @property
+    @abc.abstractmethod
+    def version(self) -> float:
+        """Version being used for the gateway API.
+
+        Returns
+        -------
+        :obj:`~int`
+            The API version being used.
+        """
+
+    @property
+    @abc.abstractmethod
+    def intents(self) -> typing.Optional[codes.GatewayIntent]:
+        """Intent values that this connection is using.
+
+        Returns
+        -------
+        :obj:`~hikari.net.codes.GatewayIntent`, optional
+            A :obj:`~enum.IntFlag` enum containing each intent that is set. If
+            intents are not being used at all, then this will return
+            :obj:`~None` instead.
+        """
+
+    @abc.abstractmethod
+    async def update_presence(
+        self,
+        *,
+        status: guilds.PresenceStatus = ...,
+        activity: typing.Optional[gateway_entities.GatewayActivity] = ...,
+        idle_since: typing.Optional[datetime.datetime] = ...,
+        is_afk: bool = ...,
+    ) -> None:
+        """Update the presence of the user for the shard.
+
+        This will only update arguments that you explicitly specify a value for.
+        Any arguments that you do not explicitly provide some value for will
+        not be changed.
+
+        Warnings
+        --------
+        This will fail if the shard is not online.
+
+        Parameters
+        ----------
+        status : :obj:`~hikari.guilds.PresenceStatus`
+            If specified, the new status to set.
+        activity : :obj:`~hikari.gateway_entities.GatewayActivity`, optional
+            If specified, the new activity to set.
+        idle_since : :obj:`~datetime.datetime`, optional
+            If specified, the time to show up as being idle since, or
+            :obj:`~None` if not applicable.
+        is_afk : :obj:`~bool`
+            If specified, whether the user should be marked as AFK.
+        """
+
+
+class ShardClientImpl(ShardClient):
     """The primary interface for a single shard connection.
 
     This contains several abstractions to enable usage of the low
@@ -134,12 +358,12 @@ class ShardClient(runnable.RunnableClient):
         self,
         shard_id: int,
         shard_count: int,
-        config: configs.WebsocketConfig,
+        config: configs.GatewayConfig,
         raw_event_consumer_impl: raw_event_consumers.RawEventConsumer,
         url: str,
         dispatcher: typing.Optional[event_dispatchers.EventDispatcher] = None,
     ) -> None:
-        super().__init__(more_logging.get_named_logger(self, f"#{shard_id}"))
+        super().__init__(logging.getLogger(f"hikari.{type(self).__qualname__}.{shard_id}"))
         self._raw_event_consumer = raw_event_consumer_impl
         self._activity = config.initial_activity
         self._idle_since = config.initial_idle_since
@@ -177,191 +401,66 @@ class ShardClient(runnable.RunnableClient):
 
     @property
     def shard_id(self) -> int:
-        """Shard ID.
-
-        Returns
-        -------
-        :obj:`~int`
-            The 0-indexed shard ID.
-        """
         return self._connection.shard_id
 
     @property
     def shard_count(self) -> int:
-        """Shard count.
-
-        Returns
-        -------
-        :obj:`~int`
-            The number of shards that make up this bot.
-        """
         return self._connection.shard_count
 
-    # Ignore docstring not starting in an imperative mood
     @property
-    def status(self) -> guilds.PresenceStatus:  # noqa: D401
-        """Current user status for this shard.
-
-        Returns
-        -------
-        :obj:`~hikari.guilds.PresenceStatus`
-            The current user status for this shard.
-        """
+    def status(self) -> guilds.PresenceStatus:
         return self._status
 
-    # Ignore docstring not starting in an imperative mood
     @property
-    def activity(self) -> typing.Optional[gateway_entities.GatewayActivity]:  # noqa: D401
-        """Current activity for the user status for this shard.
-
-        Returns
-        -------
-        :obj:`~hikari.gateway_entities.GatewayActivity`, optional
-            The current activity for the user on this shard, or :obj:`~None` if
-            there is no activity.
-        """
+    def activity(self) -> typing.Optional[gateway_entities.GatewayActivity]:
         return self._activity
 
     @property
     def idle_since(self) -> typing.Optional[datetime.datetime]:
-        """Timestamp when the user of this shard appeared to be idle.
-
-        Returns
-        -------
-        :obj:`~datetime.datetime`, optional
-            The timestamp when the user of this shard appeared to be idle, or
-            :obj:`~None` if not applicable.
-        """
         return self._idle_since
 
-    # Ignore docstring not starting in an imperative mood
     @property
-    def is_afk(self) -> bool:  # noqa: D401
-        """:obj:`~True` if the user is AFK, :obj:`~False` otherwise.
-
-        Returns
-        -------
-        :obj:`~bool`
-            :obj:`~True` if the user is AFK, :obj:`~False` otherwise.
-        """
+    def is_afk(self) -> bool:
         return self._is_afk
 
     @property
     def heartbeat_latency(self) -> float:
-        """Latency between sending a HEARTBEAT and receiving an ACK.
-
-        Returns
-        -------
-        :obj:`~float`
-            The heartbeat latency in seconds. This will be ``float('nan')``
-            until the first heartbeat is performed.
-        """
         return self._connection.heartbeat_latency
 
     @property
     def heartbeat_interval(self) -> float:
-        """Time period to wait between sending HEARTBEAT payloads.
-
-        Returns
-        -------
-        :obj:`~float`
-            The heartbeat interval in seconds. This will be ``float('nan')``
-            until the connection has received a ``HELLO`` payload.
-        """
         return self._connection.heartbeat_interval
 
     @property
     def disconnect_count(self) -> int:
-        """Count of number of times the internal connection has disconnected.
-
-        Returns
-        -------
-        :obj:`~int`
-            The number of disconnects this shard has performed.
-        """
         return self._connection.disconnect_count
 
     @property
     def reconnect_count(self) -> int:
-        """Count of number of times the internal connection has reconnected.
-
-        This includes RESUME and re-IDENTIFY events.
-
-        Returns
-        -------
-        :obj:`~int`
-            The number of reconnects this shard has performed.
-        """
         return self._connection.reconnect_count
 
     @property
     def connection_state(self) -> ShardState:
-        """State of this shard.
-
-        Returns
-        -------
-        :obj:`~ShardState`
-            The state of this shard.
-        """
         return self._shard_state
 
     @property
     def is_connected(self) -> bool:
-        """Whether the shard is connected or not.
-
-        Returns
-        -------
-        :obj:`~bool`
-            :obj:`~True` if connected; :obj:`~False` otherwise.
-        """
         return self._connection.is_connected
 
     @property
     def seq(self) -> typing.Optional[int]:
-        """Sequence ID of the shard.
-
-        Returns
-        -------
-        :obj:`~int`, optional
-            The sequence number for the shard. This is the number of payloads
-            that have been received since an ``IDENTIFY`` was sent.
-        """
         return self._connection.seq
 
     @property
     def session_id(self) -> typing.Optional[str]:
-        """Session ID.
-
-        Returns
-        -------
-        :obj:`~str`, optional
-            The session ID for the shard connection, if there is one. If not,
-            then :obj:`~None`.
-        """
         return self._connection.session_id
 
     @property
     def version(self) -> float:
-        """Version being used for the gateway API.
-
-        Returns
-        -------
-        :obj:`~int`
-            The API version being used.
-        """
         return self._connection.version
 
     @property
     def intents(self) -> typing.Optional[codes.GatewayIntent]:
-        """Intent values that this connection is using.
-
-        Returns
-        -------
-        :obj:`~hikari.net.codes.GatewayIntent`, optional
-            A :obj:`~enum.IntFlag` enum containing each intent that is set. If
-            intents are not being used at all, then this will return
-            :obj:`~None` instead.
-        """
         return self._connection.intents
 
     async def start(self):
@@ -401,7 +500,7 @@ class ShardClient(runnable.RunnableClient):
 
             await self._connection.close()
 
-            with contextlib.suppress():
+            if self._task is not None:
                 await self._task
 
             if self._dispatcher is not None:
@@ -442,8 +541,10 @@ class ShardClient(runnable.RunnableClient):
                 self.logger.exception(
                     "failed to connect to Discord to initialize a websocket connection", exc_info=ex,
                 )
+
             except errors.GatewayZombiedError:
                 self.logger.warning("entered a zombie state and will be restarted")
+
             except errors.GatewayInvalidSessionError as ex:
                 if ex.can_resume:
                     self.logger.warning("invalid session, so will attempt to resume")
@@ -454,10 +555,12 @@ class ShardClient(runnable.RunnableClient):
 
                 do_not_back_off = True
                 await asyncio.sleep(5)
+
             except errors.GatewayMustReconnectError:
                 self.logger.warning("instructed by Discord to reconnect")
                 do_not_back_off = True
                 await asyncio.sleep(5)
+
             except errors.GatewayServerClosedConnectionError as ex:
                 if ex.close_code in (
                     codes.GatewayCloseCode.NOT_AUTHENTICATED,
@@ -472,8 +575,10 @@ class ShardClient(runnable.RunnableClient):
                     raise ex from None
 
                 self.logger.warning("disconnected by Discord, will attempt to reconnect")
+
             except errors.GatewayClientDisconnectedError:
                 self.logger.warning("unexpected connection close, will attempt to reconnect")
+
             except errors.GatewayClientClosedError:
                 self.logger.warning("shutting down")
                 return
@@ -544,28 +649,6 @@ class ShardClient(runnable.RunnableClient):
         idle_since: typing.Optional[datetime.datetime] = ...,
         is_afk: bool = ...,
     ) -> None:
-        """Update the presence of the user for the shard.
-
-        This will only update arguments that you explicitly specify a value for.
-        Any arguments that you do not explicitly provide some value for will
-        not be changed.
-
-        Warnings
-        --------
-        This will fail if the shard is not online.
-
-        Parameters
-        ----------
-        status : :obj:`~hikari.guilds.PresenceStatus`
-            If specified, the new status to set.
-        activity : :obj:`~hikari.gateway_entities.GatewayActivity`, optional
-            If specified, the new activity to set.
-        idle_since : :obj:`~datetime.datetime`, optional
-            If specified, the time to show up as being idle since, or
-            :obj:`~None` if not applicable.
-        is_afk : :obj:`~bool`
-            If specified, whether the user should be marked as AFK.
-        """
         status = self._status if status is ... else status
         activity = self._activity if activity is ... else activity
         idle_since = self._idle_since if idle_since is ... else idle_since

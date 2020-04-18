@@ -33,10 +33,10 @@ import uuid
 import aiohttp.typedefs
 
 from hikari import errors
+from hikari import unset
 from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import more_collections
-from hikari.internal import more_logging
 from hikari.internal import urls
 from hikari.net import codes
 from hikari.net import ratelimits
@@ -113,8 +113,17 @@ class LowLevelRestfulClient:
 
     #: The :mod:`aiohttp` client session to make requests with.
     #:
+    #: This will be :obj:`~None` until the first request, due to limitations
+    #: with how :obj:`aiohttp.ClientSession` is able to be initialized outside
+    #: of a running event loop.
+    #:
     #: :type: :obj:`~aiohttp.ClientSession`
-    client_session: aiohttp.ClientSession
+    client_session: typing.Optional[aiohttp.ClientSession]
+
+    #: The base connector for the :obj:`~aiohttp.ClientSession`, if provided.
+    #:
+    #: :type: :obj:`~aiohttp.BaseConnector`, optional
+    connector: typing.Optional[aiohttp.BaseConnector]
 
     #: The internal correlation ID for the number of requests sent. This will
     #: increase each time a REST request is sent.
@@ -167,7 +176,7 @@ class LowLevelRestfulClient:
     #: You should not ever need to touch this implementation.
     #:
     #: :type: :obj:`~hikari.net.ratelimits.RESTBucketManager`
-    ratelimiter: ratelimits.RESTBucketManager
+    bucket_ratelimiters: ratelimits.RESTBucketManager
 
     #: The custom SSL context to use.
     #:
@@ -233,11 +242,10 @@ class LowLevelRestfulClient:
         token: typing.Optional[str],
         version: int = VERSION_6,
     ) -> None:
+        self.client_session = None
+        self.connector = connector
         self.allow_redirects = allow_redirects
-        self.client_session = aiohttp.ClientSession(
-            connector=connector, version=aiohttp.HttpVersion11, json_serialize=json_serialize or json.dumps,
-        )
-        self.logger = more_logging.get_named_logger(self)
+        self.logger = logging.getLogger(f"hikari.net.{type(self).__qualname__}")
         self.user_agent = user_agents.UserAgent().user_agent
         self.verify_ssl = verify_ssl
         self.proxy_url = proxy_url
@@ -251,8 +259,7 @@ class LowLevelRestfulClient:
         self.global_ratelimiter = ratelimits.ManualRateLimiter()
         self.json_serialize = json_serialize
         self.json_deserialize = json_deserialize
-        self.ratelimiter = ratelimits.RESTBucketManager()
-        self.ratelimiter.start()
+        self.bucket_ratelimiters = ratelimits.RESTBucketManager()
 
         if token is not None and not token.startswith(self._AUTHENTICATION_SCHEMES):
             this_type = type(self).__name__
@@ -264,10 +271,13 @@ class LowLevelRestfulClient:
     async def close(self) -> None:
         """Shut down the REST client safely, and terminate any rate limiters executing in the background."""
         with contextlib.suppress(Exception):
-            self.ratelimiter.close()
+            self.bucket_ratelimiters.close()
+        with contextlib.suppress(Exception):
+            self.global_ratelimiter.close()
         with contextlib.suppress(Exception):
             self.logger.debug("Closing %s", type(self).__qualname__)
             await self.client_session.close()
+            self.client_session = None
 
     async def __aenter__(self) -> "LowLevelRestfulClient":
         return self
@@ -290,7 +300,15 @@ class LowLevelRestfulClient:
         suppress_authorization_header: bool = False,
         **kwargs,
     ) -> typing.Union[typing.Dict[str, typing.Any], typing.Sequence[typing.Any], None]:
-        bucket_ratelimit_future = self.ratelimiter.acquire(compiled_route)
+        if self.client_session is None:
+            self.client_session = aiohttp.ClientSession(
+                connector=self.connector,
+                version=aiohttp.HttpVersion11,
+                json_serialize=self.json_serialize or json.dumps,
+            )
+            self.bucket_ratelimiters.start()
+
+        bucket_ratelimit_future = self.bucket_ratelimiters.acquire(compiled_route)
         request_headers = {"X-RateLimit-Precision": "millisecond"}
 
         if self.token is not None and not suppress_authorization_header:
@@ -399,7 +417,7 @@ class LowLevelRestfulClient:
                     )
                     body = None
 
-            self.ratelimiter.update_rate_limits(compiled_route, bucket, remaining, limit, now_date, reset_date)
+            self.bucket_ratelimiters.update_rate_limits(compiled_route, bucket, remaining, limit, now_date, reset_date)
 
             if status == codes.HTTPStatusCode.TOO_MANY_REQUESTS:
                 # We are being rate limited.
