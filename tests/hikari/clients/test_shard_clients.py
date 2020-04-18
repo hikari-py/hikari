@@ -343,11 +343,12 @@ class TestShardClientImplSpinUp:
                 assert await shard_client_obj._spin_up() == task_mock
 
     @_helpers.timeout_after(10)
-    #@_helpers.assert_raises(type_=RuntimeError)
+    # @_helpers.assert_raises(type_=RuntimeError)
     @pytest.mark.asyncio
     async def test__spin_up_if_connect_task_is_completed_raises_exception_during_ready_event(self, shard_client_obj):
         stop_event = asyncio.Event()
         try:
+
             async def forever():
                 # make this so that it doesn't complete in time;
                 await stop_event.wait()
