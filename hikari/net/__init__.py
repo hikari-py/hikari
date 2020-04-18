@@ -27,11 +27,9 @@ from hikari.net import rest_sessions
 from hikari.net import routes
 from hikari.net import shards
 from hikari.net import user_agents
-from hikari.net import versions
 
 from hikari.net.codes import *
 from hikari.net.rest_sessions import *
 from hikari.net.shards import *
-from hikari.net.versions import *
 
-__all__ = codes.__all__ + shards.__all__ + rest_sessions.__all__ + versions.__all__
+__all__ = codes.__all__ + shards.__all__ + rest_sessions.__all__

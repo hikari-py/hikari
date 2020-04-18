@@ -32,7 +32,6 @@ from hikari import errors
 from hikari.internal import more_collections
 from hikari.net import shards
 from hikari.net import user_agents
-from hikari.net import versions
 from tests.hikari import _helpers
 
 
@@ -84,7 +83,7 @@ class MockClientSession:
 
 @pytest.mark.asyncio
 class TestShardConstructor:
-    async def test_init_sets_shard_numbers_correctly(self,):
+    async def test_init_sets_shard_numbers_correctly(self):
         input_shard_id, input_shard_count, expected_shard_id, expected_shard_count = 1, 2, 1, 2
         client = shards.ShardConnection(shard_id=input_shard_id, shard_count=input_shard_count, token="xxx", url="yyy")
         assert client.shard_id == expected_shard_id
@@ -209,12 +208,12 @@ class TestShardWebSocketKwargsProperty:
             proxy_headers=proxy_headers,
             verify_ssl=verify_ssl,
             ssl_context=ssl_context,
-            version=versions.GatewayVersion.STABLE,
+            version=6,
         )
 
         scheme, netloc, url, params, query, fragment = urllib.parse.urlparse(client._url)
         query = urllib.parse.parse_qs(query)
-        assert query["v"] == [str(versions.GatewayVersion.STABLE.value)]
+        assert query["v"] == ["6"]
 
         client._url = url
 

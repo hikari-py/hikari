@@ -42,7 +42,10 @@ from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import routes
 from hikari.net import user_agents
-from hikari.net import versions
+
+
+VERSION_6: typing.Final[int] = 6
+VERSION_7: typing.Final[int] = 7
 
 
 class LowLevelRestfulClient:
@@ -83,20 +86,20 @@ class LowLevelRestfulClient:
         If this is passed as :obj:`~None`, then no token is used.
         This will be passed as the ``Authorization`` header if not :obj:`~None`
         for each request.
-    version: :obj:`~typing.Union` [ :obj:`~int`, :obj:`~hikari.net.versions.HTTPAPIVersion` ]
+    version: :obj:`~int`
         The version of the API to use. Defaults to the most recent stable
-        version.
+        version (v6).
     """
 
-    GET = "get"
-    POST = "post"
-    PATCH = "patch"
-    PUT = "put"
-    HEAD = "head"
-    DELETE = "delete"
-    OPTIONS = "options"
+    GET: typing.Final[str] = "get"
+    POST: typing.Final[str] = "post"
+    PATCH: typing.Final[str] = "patch"
+    PUT: typing.Final[str] = "put"
+    HEAD: typing.Final[str] = "head"
+    DELETE: typing.Final[str] = "delete"
+    OPTIONS: typing.Final[str] = "options"
 
-    _AUTHENTICATION_SCHEMES = ("Bearer", "Bot")
+    _AUTHENTICATION_SCHEMES: typing.Final[typing.Tuple[str, ...]] = ("Bearer", "Bot")
 
     #: :obj:`~True` if HTTP redirects are enabled, or :obj:`~False` otherwise.
     #:
@@ -228,7 +231,7 @@ class LowLevelRestfulClient:
         json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict] = json.loads,
         json_serialize: typing.Callable[[typing.Dict], typing.AnyStr] = json.dumps,
         token: typing.Optional[str],
-        version: typing.Union[int, versions.HTTPAPIVersion] = versions.HTTPAPIVersion.STABLE,
+        version: int = VERSION_6,
     ) -> None:
         self.allow_redirects = allow_redirects
         self.client_session = aiohttp.ClientSession(
@@ -243,7 +246,7 @@ class LowLevelRestfulClient:
         self.ssl_context: ssl.SSLContext = ssl_context
         self.timeout = timeout
         self.in_count = 0
-        self.version = int(version)
+        self.version = version
         self.base_url = base_url.format(self)
         self.global_ratelimiter = ratelimits.ManualRateLimiter()
         self.json_serialize = json_serialize
@@ -410,7 +413,7 @@ class LowLevelRestfulClient:
 
                 if body is None:
                     message = raw_body
-                elif self.version == versions.HTTPAPIVersion.V6:
+                elif self.version == VERSION_7:
                     message = ", ".join(f"{k} - {v}" for k, v in body.items())
                 else:
                     message = body.get("message")
