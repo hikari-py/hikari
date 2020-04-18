@@ -23,8 +23,7 @@ __all__ = [
     "DebugConfig",
     "AIOHTTPConfig",
     "TokenConfig",
-    "WebsocketConfig",
-    "ShardConfig",
+    "GatewayConfig",
     "RESTConfig",
     "BotConfig",
 ]
@@ -167,9 +166,29 @@ class TokenConfig(BaseConfig):
     token: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, if_undefined=None, default=None)
 
 
+def _parse_shard_info(payload):
+    range_matcher = re.search(r"(\d+)\s*(\.{2,3})\s*(\d+)", payload) if isinstance(payload, str) else None
+
+    if not range_matcher:
+        if isinstance(payload, int):
+            return [payload]
+
+        if isinstance(payload, list):
+            return payload
+
+        raise ValueError('expected shard_ids to be one of int, list of int, or range string ("x..y" or "x...y")')
+
+    minimum, range_mod, maximum = range_matcher.groups()
+    minimum, maximum = int(minimum), int(maximum)
+    if len(range_mod) == 3:
+        maximum += 1
+
+    return [*range(minimum, maximum)]
+
+
 @marshaller.marshallable()
 @attr.s(kw_only=True)
-class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
+class GatewayConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     """Single-websocket specific configuration options."""
 
     #: Whether to use zlib compression on the gateway for inbound messages or
@@ -263,30 +282,6 @@ class WebsocketConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #: :type: :obj:`~int`
     large_threshold: int = marshaller.attrib(deserializer=int, if_undefined=lambda: 250, default=250)
 
-
-def _parse_shard_info(payload):
-    range_matcher = re.search(r"(\d+)\s*(\.{2,3})\s*(\d+)", payload) if isinstance(payload, str) else None
-
-    if not range_matcher:
-        if isinstance(payload, int):
-            return [payload]
-
-        if isinstance(payload, list):
-            return payload
-
-        raise ValueError('expected shard_ids to be one of int, list of int, or range string ("x..y" or "x...y")')
-
-    minimum, range_mod, maximum = range_matcher.groups()
-    minimum, maximum = int(minimum), int(maximum)
-    if len(range_mod) == 3:
-        maximum += 1
-
-    return [*range(minimum, maximum)]
-
-
-@marshaller.marshallable()
-@attr.s(kw_only=True)
-class ShardConfig(BaseConfig):
     """Definition of shard management configuration settings."""
 
     #: The shard IDs to produce shard connections for.
@@ -316,7 +311,8 @@ class ShardConfig(BaseConfig):
     #: of. If you run multiple distributed instances of the bot, you should
     #: ensure this value is consistent.
     #:
-    #: This can be set to `None` to enable auto-sharding. This is the default.
+    #: This can be set to :obj:`~None` to enable auto-sharding. This is the
+    #: default behaviour.
     #:
     #: :type: :obj:`~int`, optional.
     shard_count: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
@@ -348,5 +344,5 @@ class RESTConfig(AIOHTTPConfig, TokenConfig):
 
 @marshaller.marshallable()
 @attr.s(kw_only=True)
-class BotConfig(RESTConfig, ShardConfig, WebsocketConfig):
+class BotConfig(RESTConfig, GatewayConfig):
     """Configuration for a standard bot."""
