@@ -21,13 +21,13 @@ import pytest
 
 from hikari import invites
 from hikari.clients.rest_clients import invites_component
-from hikari.net import rest
+from hikari.net import rest_sessions
 
 
 class TestRESTInviteLogic:
     @pytest.fixture()
     def rest_invite_logic_impl(self):
-        mock_low_level_restful_client = mock.MagicMock(rest.LowLevelRestfulClient)
+        mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
         class RESTInviteLogicImpl(invites_component.RESTInviteComponent):
             def __init__(self):

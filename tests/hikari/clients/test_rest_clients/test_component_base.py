@@ -20,13 +20,13 @@ import mock
 import pytest
 
 from hikari.clients.rest_clients import component_base
-from hikari.net import rest
+from hikari.net import rest_sessions
 
 
 class TestBaseRESTComponent:
     @pytest.fixture()
-    def low_level_rest_impl(self) -> rest.LowLevelRestfulClient:
-        return mock.MagicMock(rest.LowLevelRestfulClient)
+    def low_level_rest_impl(self) -> rest_sessions.LowLevelRestfulClient:
+        return mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
     @pytest.fixture()
     def rest_clients_impl(self, low_level_rest_impl) -> component_base.BaseRESTComponent:

@@ -41,7 +41,7 @@ from hikari.internal import urls
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import routes
-from hikari.net import user_agent
+from hikari.net import user_agents
 from hikari.net import versions
 
 
@@ -235,7 +235,7 @@ class LowLevelRestfulClient:
             connector=connector, version=aiohttp.HttpVersion11, json_serialize=json_serialize or json.dumps,
         )
         self.logger = more_logging.get_named_logger(self)
-        self.user_agent = user_agent.UserAgent().user_agent
+        self.user_agent = user_agents.UserAgent().user_agent
         self.verify_ssl = verify_ssl
         self.proxy_url = proxy_url
         self.proxy_auth = proxy_auth

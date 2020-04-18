@@ -23,13 +23,13 @@ import pytest
 
 from hikari import oauth2
 from hikari.clients.rest_clients import oauth2_component
-from hikari.net import rest
+from hikari.net import rest_sessions
 
 
 class TestRESTReactionLogic:
     @pytest.fixture()
     def rest_oauth2_logic_impl(self):
-        mock_low_level_restful_client = mock.MagicMock(rest.LowLevelRestfulClient)
+        mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
         class RESTOauth2LogicImpl(oauth2_component.RESTOauth2Component):
             def __init__(self):
