@@ -20,7 +20,7 @@ import mock
 import pytest
 
 from hikari import guilds
-from hikari import oauth2
+from hikari import applications
 from hikari import users
 from hikari.internal import urls
 from tests.hikari import _helpers
@@ -108,7 +108,7 @@ class TestOwnConnection:
     def test_deserialize(self, own_connection_payload, test_partial_integration):
         mock_integration_obj = mock.MagicMock(guilds.PartialGuildIntegration)
         with mock.patch.object(guilds.PartialGuildIntegration, "deserialize", return_value=mock_integration_obj):
-            connection_obj = oauth2.OwnConnection.deserialize(own_connection_payload)
+            connection_obj = applications.OwnConnection.deserialize(own_connection_payload)
             guilds.PartialGuildIntegration.deserialize.assert_called_once_with(test_partial_integration)
         assert connection_obj.id == "2513849648"
         assert connection_obj.name == "FS"
@@ -118,12 +118,12 @@ class TestOwnConnection:
         assert connection_obj.is_verified is True
         assert connection_obj.is_friend_syncing is False
         assert connection_obj.is_showing_activity is True
-        assert connection_obj.visibility is oauth2.ConnectionVisibility.NONE
+        assert connection_obj.visibility is applications.ConnectionVisibility.NONE
 
 
 class TestOwnGuild:
     def test_deserialize(self, own_guild_payload):
-        own_guild_obj = oauth2.OwnGuild.deserialize(own_guild_payload)
+        own_guild_obj = applications.OwnGuild.deserialize(own_guild_payload)
         assert own_guild_obj.is_owner is False
         assert own_guild_obj.my_permissions == 2147483647
 
@@ -131,7 +131,7 @@ class TestOwnGuild:
 class TestApplicationOwner:
     @pytest.fixture()
     def owner_obj(self, owner_payload):
-        return oauth2.ApplicationOwner.deserialize(owner_payload)
+        return applications.ApplicationOwner.deserialize(owner_payload)
 
     def test_deserialize(self, owner_obj):
         assert owner_obj.username == "agent 47"
@@ -151,22 +151,22 @@ class TestTeamMember:
     def test_deserialize(self, member_payload, team_user_payload):
         mock_team_user = mock.MagicMock(users.User)
         with _helpers.patch_marshal_attr(
-            oauth2.TeamMember, "user", deserializer=users.User.deserialize, return_value=mock_team_user
+            applications.TeamMember, "user", deserializer=users.User.deserialize, return_value=mock_team_user
         ) as patched_deserializer:
-            member_obj = oauth2.TeamMember.deserialize(member_payload)
+            member_obj = applications.TeamMember.deserialize(member_payload)
             patched_deserializer.assert_called_once_with(team_user_payload)
         assert member_obj.user is mock_team_user
-        assert member_obj.membership_state is oauth2.TeamMembershipState.INVITED
+        assert member_obj.membership_state is applications.TeamMembershipState.INVITED
         assert member_obj.permissions == {"*"}
         assert member_obj.team_id == 209333111222
 
 
 class TestTeam:
     def test_deserialize(self, team_payload, member_payload):
-        mock_member = mock.MagicMock(oauth2.Team, user=mock.MagicMock(id=123))
-        with mock.patch.object(oauth2.TeamMember, "deserialize", return_value=mock_member):
-            team_obj = oauth2.Team.deserialize(team_payload)
-            oauth2.TeamMember.deserialize.assert_called_once_with(member_payload)
+        mock_member = mock.MagicMock(applications.Team, user=mock.MagicMock(id=123))
+        with mock.patch.object(applications.TeamMember, "deserialize", return_value=mock_member):
+            team_obj = applications.Team.deserialize(team_payload)
+            applications.TeamMember.deserialize.assert_called_once_with(member_payload)
         assert team_obj.members == {123: mock_member}
         assert team_obj.icon_hash == "hashtag"
         assert team_obj.id == 202020202
@@ -174,20 +174,20 @@ class TestTeam:
 
     @pytest.fixture()
     def team_obj(self, team_payload):
-        return oauth2.Team(id=None, icon_hash="3o2o32o", members=None, owner_user_id=None,)
+        return applications.Team(id=None, icon_hash="3o2o32o", members=None, owner_user_id=None,)
 
     def test_format_icon_url(self):
-        mock_team = mock.MagicMock(oauth2.Team, icon_hash="3o2o32o", id=22323)
+        mock_team = mock.MagicMock(applications.Team, icon_hash="3o2o32o", id=22323)
         mock_url = "https://cdn.discordapp.com/team-icons/22323/3o2o32o.jpg?size=64"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
-            url = oauth2.Team.format_icon_url(mock_team, fmt="jpg", size=64)
+            url = applications.Team.format_icon_url(mock_team, fmt="jpg", size=64)
             urls.generate_cdn_url.assert_called_once_with("team-icons", "22323", "3o2o32o", fmt="jpg", size=64)
         assert url == mock_url
 
     def test_format_icon_url_returns_none(self):
-        mock_team = mock.MagicMock(oauth2.Team, icon_hash=None, id=22323)
+        mock_team = mock.MagicMock(applications.Team, icon_hash=None, id=22323)
         with mock.patch.object(urls, "generate_cdn_url", return_value=...):
-            url = oauth2.Team.format_icon_url(mock_team, fmt="jpg", size=64)
+            url = applications.Team.format_icon_url(mock_team, fmt="jpg", size=64)
             urls.generate_cdn_url.assert_not_called()
         assert url is None
 
@@ -201,9 +201,9 @@ class TestTeam:
 
 class TestApplication:
     def test_deserialize(self, application_information_payload, team_payload, owner_payload):
-        application_obj = oauth2.Application.deserialize(application_information_payload)
-        assert application_obj.team == oauth2.Team.deserialize(team_payload)
-        assert application_obj.owner == oauth2.ApplicationOwner.deserialize(owner_payload)
+        application_obj = applications.Application.deserialize(application_information_payload)
+        assert application_obj.team == applications.Team.deserialize(team_payload)
+        assert application_obj.owner == applications.ApplicationOwner.deserialize(owner_payload)
         assert application_obj.id == 209333111222
         assert application_obj.name == "Dream Sweet in Sea Major"
         assert application_obj.icon_hash == "iwiwiwiwiw"
@@ -220,7 +220,7 @@ class TestApplication:
 
     @pytest.fixture()
     def application_obj(self, application_information_payload):
-        return oauth2.Application(
+        return applications.Application(
             team=None,
             owner=None,
             id=209333111222,
@@ -240,7 +240,7 @@ class TestApplication:
 
     @pytest.fixture()
     def mock_application(self):
-        return mock.MagicMock(oauth2.Application, id=22222)
+        return mock.MagicMock(applications.Application, id=22222)
 
     def test_icon_url(self, application_obj):
         mock_url = "https://cdn.discordapp.com/app-icons/209333111222/iwiwiwiwiw.png?size=4096"
@@ -253,14 +253,14 @@ class TestApplication:
         mock_application.icon_hash = "wosososoos"
         mock_url = "https://cdn.discordapp.com/app-icons/22222/wosososoos.jpg?size=4"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
-            url = oauth2.Application.format_icon_url(mock_application, fmt="jpg", size=4)
+            url = applications.Application.format_icon_url(mock_application, fmt="jpg", size=4)
             urls.generate_cdn_url.assert_called_once_with("app-icons", "22222", "wosososoos", fmt="jpg", size=4)
         assert url == mock_url
 
     def test_format_icon_url_returns_none(self, mock_application):
         mock_application.icon_hash = None
         with mock.patch.object(urls, "generate_cdn_url", return_value=...):
-            url = oauth2.Application.format_icon_url(mock_application, fmt="jpg", size=4)
+            url = applications.Application.format_icon_url(mock_application, fmt="jpg", size=4)
             urls.generate_cdn_url.assert_not_called()
         assert url is None
 
@@ -275,13 +275,13 @@ class TestApplication:
         mock_application.cover_image_hash = "wowowowowo"
         mock_url = "https://cdn.discordapp.com/app-assets/22222/wowowowowo.jpg?size=42"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
-            url = oauth2.Application.format_cover_image_url(mock_application, fmt="jpg", size=42)
+            url = applications.Application.format_cover_image_url(mock_application, fmt="jpg", size=42)
             urls.generate_cdn_url.assert_called_once_with("app-assets", "22222", "wowowowowo", fmt="jpg", size=42)
         assert url == mock_url
 
     def test_format_cover_image_url_returns_none(self, mock_application):
         mock_application.cover_image_hash = None
         with mock.patch.object(urls, "generate_cdn_url", return_value=...):
-            url = oauth2.Application.format_cover_image_url(mock_application, fmt="jpg", size=42)
+            url = applications.Application.format_cover_image_url(mock_application, fmt="jpg", size=42)
             urls.generate_cdn_url.assert_not_called()
         assert url is None

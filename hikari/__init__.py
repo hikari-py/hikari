@@ -33,7 +33,7 @@ from hikari import intents
 from hikari import invites
 from hikari import messages
 from hikari import net
-from hikari import oauth2
+from hikari import applications
 from hikari import permissions
 from hikari import state
 from hikari import users
@@ -59,7 +59,7 @@ from hikari.guilds import *
 from hikari.invites import *
 from hikari.messages import *
 from hikari.net import *
-from hikari.oauth2 import *
+from hikari.applications import *
 from hikari.permissions import *
 from hikari.state import *
 from hikari.unset import *
@@ -85,7 +85,7 @@ __all__ = [
     *invites.__all__,
     *messages.__all__,
     *net.__all__,
-    *oauth2.__all__,
+    *applications.__all__,
     *permissions.__all__,
     *bases.__all__,
     *state.__all__,

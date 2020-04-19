@@ -77,7 +77,7 @@ from hikari import emojis as _emojis
 from hikari import guilds
 from hikari import invites
 from hikari import messages
-from hikari import oauth2
+from hikari import applications
 from hikari import unset
 from hikari import users
 from hikari import voices
@@ -888,8 +888,8 @@ class MessageUpdateEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializa
     #: The message's application.
     #:
     #: :type: :obj:`~typing.Union` [ :obj:`~hikari.oauth2.Application`, :obj:`~hikari.unset.UNSET` ]
-    application: typing.Optional[oauth2.Application] = marshaller.attrib(
-        deserializer=oauth2.Application.deserialize, if_undefined=unset.Unset, default=unset.UNSET
+    application: typing.Optional[applications.Application] = marshaller.attrib(
+        deserializer=applications.Application.deserialize, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The message's crossposted reference data.

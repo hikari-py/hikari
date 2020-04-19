@@ -20,7 +20,7 @@ import mock
 import pytest
 
 from hikari import invites
-from hikari.clients.rest_clients import invites_component
+from hikari.clients.rest_clients import invite
 from hikari.net import rest_sessions
 
 
@@ -29,7 +29,7 @@ class TestRESTInviteLogic:
     def rest_invite_logic_impl(self):
         mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
-        class RESTInviteLogicImpl(invites_component.RESTInviteComponent):
+        class RESTInviteLogicImpl(invite.RESTInviteComponent):
             def __init__(self):
                 super().__init__(mock_low_level_restful_client)
 

@@ -18,18 +18,18 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The logic for handling all requests to oauth2 endpoints."""
 
-__all__ = ["RESTOauth2Component"]
+__all__ = ["RESTOAuth2Component"]
 
 import abc
 
-from hikari import oauth2
-from hikari.clients.rest_clients import component_base
+from hikari import applications
+from hikari.clients.rest_clients import base
 
 
-class RESTOauth2Component(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTOAuth2Component(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
     """The REST client component for handling requests to oauth2 endpoints."""
 
-    async def fetch_my_application_info(self) -> oauth2.Application:
+    async def fetch_my_application_info(self) -> applications.Application:
         """Get the current application information.
 
         Returns
@@ -38,4 +38,4 @@ class RESTOauth2Component(component_base.BaseRESTComponent, abc.ABC):  # pylint:
             An application info object.
         """
         payload = await self._session.get_current_application_info()
-        return oauth2.Application.deserialize(payload)
+        return applications.Application.deserialize(payload)

@@ -25,30 +25,30 @@ API.
 __all__ = ["RESTClient"]
 
 from hikari.clients import configs
-from hikari.clients.rest_clients import channels_component
-from hikari.clients.rest_clients import current_users_component
-from hikari.clients.rest_clients import gateways_component
-from hikari.clients.rest_clients import guilds_component
-from hikari.clients.rest_clients import invites_component
-from hikari.clients.rest_clients import oauth2_component
-from hikari.clients.rest_clients import reactions_component
-from hikari.clients.rest_clients import users_component
-from hikari.clients.rest_clients import voices_component
-from hikari.clients.rest_clients import webhooks_component
+from hikari.clients.rest_clients import channel
+from hikari.clients.rest_clients import me
+from hikari.clients.rest_clients import gateway
+from hikari.clients.rest_clients import guild
+from hikari.clients.rest_clients import invite
+from hikari.clients.rest_clients import oauth2
+from hikari.clients.rest_clients import react
+from hikari.clients.rest_clients import user
+from hikari.clients.rest_clients import voice
+from hikari.clients.rest_clients import webhook
 from hikari.net import rest_sessions
 
 
 class RESTClient(
-    channels_component.RESTChannelComponent,
-    current_users_component.RESTCurrentUserComponent,
-    gateways_component.RESTGatewayComponent,
-    guilds_component.RESTGuildComponent,
-    invites_component.RESTInviteComponent,
-    oauth2_component.RESTOauth2Component,
-    reactions_component.RESTReactionComponent,
-    users_component.RESTUserComponent,
-    voices_component.RESTVoiceComponent,
-    webhooks_component.RESTWebhookComponent,
+    channel.RESTChannelComponent,
+    me.RESTCurrentUserComponent,
+    gateway.RESTGatewayComponent,
+    guild.RESTGuildComponent,
+    invite.RESTInviteComponent,
+    oauth2.RESTOAuth2Component,
+    react.RESTReactionComponent,
+    user.RESTUserComponent,
+    voice.RESTVoiceComponent,
+    webhook.RESTWebhookComponent,
 ):
     """
     A marshalling object-oriented REST API client.

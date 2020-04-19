@@ -24,10 +24,10 @@ import abc
 import typing
 
 from hikari import voices
-from hikari.clients.rest_clients import component_base
+from hikari.clients.rest_clients import base
 
 
-class RESTVoiceComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTVoiceComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
     """The REST client component for handling requests to voice endpoints."""
 
     async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:

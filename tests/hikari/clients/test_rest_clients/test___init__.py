@@ -55,16 +55,16 @@ class TestRESTClient:
         for attr, routine in (
             member
             for component in [
-                rest_clients.channels_component.RESTChannelComponent,
-                rest_clients.current_users_component.RESTCurrentUserComponent,
-                rest_clients.gateways_component.RESTGatewayComponent,
-                rest_clients.guilds_component.RESTGuildComponent,
-                rest_clients.invites_component.RESTInviteComponent,
-                rest_clients.oauth2_component.RESTOauth2Component,
-                rest_clients.reactions_component.RESTReactionComponent,
-                rest_clients.users_component.RESTUserComponent,
-                rest_clients.voices_component.RESTVoiceComponent,
-                rest_clients.webhooks_component.RESTWebhookComponent,
+                rest_clients.channel.RESTChannelComponent,
+                rest_clients.me.RESTCurrentUserComponent,
+                rest_clients.gateway.RESTGatewayComponent,
+                rest_clients.guild.RESTGuildComponent,
+                rest_clients.invite.RESTInviteComponent,
+                rest_clients.oauth2.RESTOAuth2Component,
+                rest_clients.react.RESTReactionComponent,
+                rest_clients.user.RESTUserComponent,
+                rest_clients.voice.RESTVoiceComponent,
+                rest_clients.webhook.RESTWebhookComponent,
             ]
             for member in inspect.getmembers(component, inspect.isroutine)
         ):

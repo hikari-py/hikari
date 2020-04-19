@@ -19,30 +19,28 @@
 import mock
 import pytest
 
-from hikari import users
-from hikari.clients.rest_clients import users_component
+from hikari import voices
+from hikari.clients.rest_clients import voice
 from hikari.net import rest_sessions
-from tests.hikari import _helpers
 
 
 class TestRESTUserLogic:
     @pytest.fixture()
-    def rest_user_logic_impl(self):
+    def rest_voice_logic_impl(self):
         mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
-        class RESTUserLogicImpl(users_component.RESTUserComponent):
+        class RESTVoiceLogicImpl(voice.RESTVoiceComponent):
             def __init__(self):
                 super().__init__(mock_low_level_restful_client)
 
-        return RESTUserLogicImpl()
+        return RESTVoiceLogicImpl()
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("user", 123123123, users.User)
-    async def test_fetch_user(self, rest_user_logic_impl, user):
-        mock_user_payload = {"id": "123", "username": "userName"}
-        mock_user_obj = mock.MagicMock(users.User)
-        rest_user_logic_impl._session.get_user.return_value = mock_user_payload
-        with mock.patch.object(users.User, "deserialize", return_value=mock_user_obj):
-            assert await rest_user_logic_impl.fetch_user(user) is mock_user_obj
-            rest_user_logic_impl._session.get_user.assert_called_once_with(user_id="123123123")
-            users.User.deserialize.assert_called_once_with(mock_user_payload)
+    async def test_fetch_voice_regions(self, rest_voice_logic_impl):
+        mock_voice_payload = {"id": "LONDON", "name": "london"}
+        mock_voice_obj = mock.MagicMock(voices.VoiceRegion)
+        rest_voice_logic_impl._session.list_voice_regions.return_value = [mock_voice_payload]
+        with mock.patch.object(voices.VoiceRegion, "deserialize", return_value=mock_voice_obj):
+            assert await rest_voice_logic_impl.fetch_voice_regions() == [mock_voice_obj]
+            rest_voice_logic_impl._session.list_voice_regions.assert_called_once()
+            voices.VoiceRegion.deserialize.assert_called_once_with(mock_voice_payload)

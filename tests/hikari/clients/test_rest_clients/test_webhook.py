@@ -26,7 +26,7 @@ from hikari import embeds
 from hikari import media
 from hikari import messages
 from hikari import webhooks
-from hikari.clients.rest_clients import webhooks_component
+from hikari.clients.rest_clients import webhook
 from hikari.internal import allowed_mentions
 from hikari.internal import conversions
 from hikari.net import rest_sessions
@@ -38,7 +38,7 @@ class TestRESTUserLogic:
     def rest_webhook_logic_impl(self):
         mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
-        class RESTWebhookLogicImpl(webhooks_component.RESTWebhookComponent):
+        class RESTWebhookLogicImpl(webhook.RESTWebhookComponent):
             def __init__(self):
                 super().__init__(mock_low_level_restful_client)
 
