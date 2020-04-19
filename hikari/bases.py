@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019-2020
+# Copyright © Nekokatt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,27 +16,28 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""A representation of the Discord Snowflake datatype.
+"""Datastructure bases."""
+__all__ = ["HikariEntity", "Snowflake", "UniqueEntity"]
 
-Each Snowflake integer used to uniquely identify entities
-on the server.
-"""
-
-__all__ = ["Snowflake", "UniqueEntity", "HashableT"]
-
+import abc
 import datetime
 import functools
 import typing
 
 import attr
 
-from hikari import bases
 from hikari.internal import conversions
 from hikari.internal import marshaller
 
 
+@marshaller.marshallable()
+@attr.s(slots=True, kw_only=True, init=False)
+class HikariEntity(abc.ABC):
+    """The base for any entity used in this API."""
+
+
 @functools.total_ordering
-class Snowflake(bases.HikariEntity, typing.SupportsInt):
+class Snowflake(HikariEntity, typing.SupportsInt):
     """A concrete representation of a unique identifier for an object on Discord.
 
     This object can be treated as a regular :obj:`~int` for most purposes.
@@ -50,7 +51,7 @@ class Snowflake(bases.HikariEntity, typing.SupportsInt):
     _value: int
 
     # noinspection PyMissingConstructor
-    def __init__(self, value: typing.Union[int, str]) -> None:  # pylint:disable=super-init-not-called
+    def __init__(self, value: typing.Union[int, str]) -> None:
         self._value = int(value)
 
     @property
@@ -74,22 +75,22 @@ class Snowflake(bases.HikariEntity, typing.SupportsInt):
         """Increment of Discord's system when this object was made."""
         return self._value & 0xFFF
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self._value)
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self._value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self._value)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self._value)
 
-    def __eq__(self, other):
+    def __eq__(self, other: typing.Any) -> bool:
         return isinstance(other, typing.SupportsInt) and int(other) == self._value
 
-    def __lt__(self, other):
+    def __lt__(self, other: "Snowflake") -> bool:
         return self._value < int(other)
 
     def serialize(self) -> str:
@@ -114,17 +115,21 @@ class Snowflake(bases.HikariEntity, typing.SupportsInt):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class UniqueEntity(bases.HikariEntity, typing.SupportsInt):
-    """An entity that has an integer ID of some sort."""
+class UniqueEntity(HikariEntity, typing.SupportsInt, abc.ABC):
+    """A base for an entity that has an integer ID of some sort.
+
+    Casting an object of this type to an :obj:`~int` will produce the
+    integer ID of the object.
+    """
 
     #: The ID of this entity.
     #:
     #: :type: :obj:`~Snowflake`
     id: Snowflake = marshaller.attrib(hash=True, eq=True, repr=True, deserializer=Snowflake, serializer=str)
 
-    def __int__(self):
+    def __int__(self) -> int:
         return int(self.id)
 
 
 T = typing.TypeVar("T", bound=UniqueEntity)
-HashableT = typing.Union[Snowflake, int, T]
+Hashable = typing.Union[Snowflake, int, T]

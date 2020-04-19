@@ -23,36 +23,35 @@ import typing
 
 import attr
 
-from hikari import entities
+from hikari import bases
 from hikari import guilds
-from hikari import snowflakes
 from hikari.internal import marshaller
 
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class VoiceState(entities.HikariEntity, marshaller.Deserializable):
+class VoiceState(bases.HikariEntity, marshaller.Deserializable):
     """Represents a user's voice connection status."""
 
     #: The ID of the guild this voice state is in, if applicable.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the channel this user is connected to, will be :obj:`~None` if
     #: they are leaving voice.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_none=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_none=None
     )
 
     #: The ID of the user this voice state is for.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    user_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The guild member this voice state is for if the voice state is in a
     #: guild.
@@ -100,7 +99,7 @@ class VoiceState(entities.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class VoiceRegion(entities.HikariEntity, marshaller.Deserializable):
+class VoiceRegion(bases.HikariEntity, marshaller.Deserializable):
     """Represent's a voice region server."""
 
     #: The ID of this region

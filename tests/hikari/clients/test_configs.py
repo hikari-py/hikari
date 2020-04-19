@@ -24,8 +24,8 @@ import pytest
 
 from hikari import gateway_entities
 from hikari import guilds
+from hikari import intents
 from hikari.clients import configs
-from hikari.net import codes
 from tests.hikari import _helpers
 
 
@@ -142,12 +142,12 @@ class TestWebsocketConfig:
 
         assert websocket_config_obj.gateway_use_compression is False
         assert websocket_config_obj.gateway_version == 7
-        assert websocket_config_obj.initial_activity == gateway_entities.GatewayActivity.deserialize(
+        assert websocket_config_obj.initial_activity == gateway_entities.Activity.deserialize(
             {"name": "test", "url": "some_url", "type": 0}
         )
         assert websocket_config_obj.initial_status == guilds.PresenceStatus.DND
         assert websocket_config_obj.initial_idle_since == datetime_obj
-        assert websocket_config_obj.intents == codes.GatewayIntent.GUILD_MESSAGES | codes.GatewayIntent.GUILDS
+        assert websocket_config_obj.intents == intents.Intent.GUILD_MESSAGES | intents.Intent.GUILDS
         assert websocket_config_obj.large_threshold == 1000
         assert websocket_config_obj.debug is True
         assert websocket_config_obj.allow_redirects is True
@@ -260,12 +260,12 @@ class TestBotConfig:  # TODO: Talk to esp about this because rest already has ai
         assert bot_config_obj.shard_count == 17
         assert bot_config_obj.gateway_use_compression is False
         assert bot_config_obj.gateway_version == 7
-        assert bot_config_obj.initial_activity == gateway_entities.GatewayActivity.deserialize(
+        assert bot_config_obj.initial_activity == gateway_entities.Activity.deserialize(
             {"name": "test", "url": "some_url", "type": 0}
         )
         assert bot_config_obj.initial_status == guilds.PresenceStatus.DND
         assert bot_config_obj.initial_idle_since == datetime_obj
-        assert bot_config_obj.intents == codes.GatewayIntent.GUILD_MESSAGES | codes.GatewayIntent.GUILDS
+        assert bot_config_obj.intents == intents.Intent.GUILD_MESSAGES | intents.Intent.GUILDS
         assert bot_config_obj.large_threshold == 1000
         assert bot_config_obj.debug is True
 

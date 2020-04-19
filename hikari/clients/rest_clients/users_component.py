@@ -22,20 +22,20 @@ __all__ = ["RESTUserComponent"]
 
 import abc
 
-from hikari.clients.rest_clients import component_base
-from hikari import snowflakes
+from hikari import bases
 from hikari import users
+from hikari.clients.rest_clients import component_base
 
 
 class RESTUserComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
     """The REST client component for handling requests to user endpoints."""
 
-    async def fetch_user(self, user: snowflakes.HashableT[users.User]) -> users.User:
+    async def fetch_user(self, user: bases.Hashable[users.User]) -> users.User:
         """Get a given user.
 
         Parameters
         ----------
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the user to get.
 
         Returns
@@ -52,6 +52,6 @@ class RESTUserComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: d
             If the user is not found.
         """
         payload = await self._session.get_user(
-            user_id=str(user.id if isinstance(user, snowflakes.UniqueEntity) else int(user))
+            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user))
         )
         return users.User.deserialize(payload)

@@ -40,7 +40,7 @@ from hikari.net import rest_sessions
 from tests.hikari import _helpers
 
 
-class TestRESTChannelLogig:
+class TestRESTChannelLogging:
     @pytest.fixture()
     def rest_channel_logic_impl(self):
         mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)

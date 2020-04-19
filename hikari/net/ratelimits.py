@@ -180,6 +180,7 @@ import typing
 import weakref
 
 from hikari.internal import more_asyncio
+from hikari.internal import more_typing
 from hikari.net import routes
 
 #: The hash used for an unknown bucket that has not yet been resolved.
@@ -201,7 +202,7 @@ class BaseRateLimiter(abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
-    def acquire(self) -> more_asyncio.Future[None]:
+    def acquire(self) -> more_typing.Future[None]:
         """Acquire permission to perform a task that needs to have rate limit management enforced.
 
         Returns
@@ -239,12 +240,12 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     #: The throttling task, or :obj:`~None` if it isn't running.
     #:
     #: :type: :obj:`~asyncio.Task`, optional
-    throttle_task: typing.Optional[more_asyncio.Task[None]]
+    throttle_task: typing.Optional[more_typing.Task[None]]
 
     #: The queue of any futures under a rate limit.
     #:
     #: :type: :obj:`~asyncio.Queue` [`asyncio.Future`]
-    queue: typing.Final[typing.List[more_asyncio.Future[None]]]
+    queue: typing.Final[typing.List[more_typing.Future[None]]]
 
     #: The logger used by this rate limiter.
     #:
@@ -258,7 +259,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         self.logger = logging.getLogger(f"hikari.net.ratelimits.{type(self).__qualname__}.{name}")
 
     @abc.abstractmethod
-    def acquire(self) -> more_asyncio.Future[None]:
+    def acquire(self) -> more_typing.Future[None]:
         """Acquire time on this rate limiter.
 
         The implementation should define this.
@@ -322,7 +323,7 @@ class ManualRateLimiter(BurstRateLimiter):
     def __init__(self) -> None:
         super().__init__("global")
 
-    def acquire(self) -> more_asyncio.Future[None]:
+    def acquire(self) -> more_typing.Future[None]:
         """Acquire time on this rate limiter.
 
         Returns
@@ -456,7 +457,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.limit = limit
         self.period = period
 
-    def acquire(self) -> more_asyncio.Future[None]:
+    def acquire(self) -> more_typing.Future[None]:
         """Acquire time on this rate limiter.
 
         Returns
@@ -614,7 +615,7 @@ class RESTBucket(WindowedBurstRateLimiter):
         """Return :obj:`~True` if the bucket represents an ``UNKNOWN`` bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
-    def acquire(self) -> more_asyncio.Future[None]:
+    def acquire(self) -> more_typing.Future[None]:
         """Acquire time on this rate limiter.
 
         Returns
@@ -702,7 +703,7 @@ class RESTBucketManager:
     #: The internal garbage collector task.
     #:
     #: :type: :obj:`~asyncio.Task`, optional
-    gc_task: typing.Optional[more_asyncio.Task[None]]
+    gc_task: typing.Optional[more_typing.Task[None]]
 
     #: The logger to use for this object.
     #:
@@ -814,7 +815,7 @@ class RESTBucketManager:
 
         self.logger.debug("purged %s stale buckets", len(buckets_to_purge))
 
-    def acquire(self, compiled_route: routes.CompiledRoute) -> more_asyncio.Future:
+    def acquire(self, compiled_route: routes.CompiledRoute) -> more_typing.Future:
         """Acquire a bucket for the given route.
 
         Parameters

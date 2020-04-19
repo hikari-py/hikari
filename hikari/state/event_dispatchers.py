@@ -35,12 +35,14 @@ from hikari.internal import more_asyncio
 from hikari.internal import more_collections
 
 # Prevents a circular reference that prevents importing correctly.
+from hikari.internal import more_typing
+
 if typing.TYPE_CHECKING:
     EventT = typing.TypeVar("EventT", bound=events.HikariEvent)
-    PredicateT = typing.Callable[[EventT], typing.Union[bool, typing.Coroutine[typing.Any, typing.Any, bool]]]
-    EventCallbackT = typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.Any, typing.Any]]
+    PredicateT = typing.Callable[[EventT], typing.Union[bool, more_typing.Coroutine[bool]]]
+    EventCallbackT = typing.Callable[[EventT], more_typing.Coroutine[typing.Any]]
     WaiterMapT = typing.Dict[
-        typing.Type[EventT], more_collections.WeakKeyDictionary[more_asyncio.Future[typing.Any], PredicateT]
+        typing.Type[EventT], more_collections.WeakKeyDictionary[more_typing.Future[typing.Any], PredicateT]
     ]
     ListenerMapT = typing.Dict[typing.Type[EventT], typing.List[EventCallbackT]]
 else:
@@ -100,7 +102,7 @@ class EventDispatcher(abc.ABC):
     @abc.abstractmethod
     def wait_for(
         self, event_type: typing.Type[EventT], *, timeout: typing.Optional[float], predicate: PredicateT
-    ) -> more_asyncio.Future:
+    ) -> more_typing.Future:
         """Wait for the given event type to occur.
 
         Parameters
@@ -230,7 +232,7 @@ class EventDispatcher(abc.ABC):
     # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
     # confusing telepathy comments to the user.
     @abc.abstractmethod
-    def dispatch_event(self, event: events.HikariEvent) -> more_asyncio.Future[typing.Any]:
+    def dispatch_event(self, event: events.HikariEvent) -> more_typing.Future[typing.Any]:
         """Dispatch a given event to any listeners and waiters.
 
         Parameters
@@ -437,7 +439,7 @@ class EventDispatcherImpl(EventDispatcher):
 
     def wait_for(
         self, event_type: typing.Type[EventT], *, timeout: typing.Optional[float], predicate: PredicateT,
-    ) -> more_asyncio.Future:
+    ) -> more_typing.Future:
         """Wait for a event to occur once and then return the arguments the event was called with.
 
         Events can be filtered using a given predicate function. If unspecified,

@@ -24,14 +24,14 @@ import abc
 import datetime
 import typing
 
-from hikari.clients.rest_clients import component_base
-from hikari.internal import conversions
-from hikari.internal import pagination
+from hikari import bases
 from hikari import channels as _channels
 from hikari import guilds
 from hikari import oauth2
-from hikari import snowflakes
 from hikari import users
+from hikari.clients.rest_clients import component_base
+from hikari.internal import conversions
+from hikari.internal import pagination
 
 
 class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
@@ -98,7 +98,7 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
     def fetch_my_guilds_after(
         self,
         *,
-        after: typing.Union[datetime.datetime, snowflakes.HashableT[guilds.Guild]] = 0,
+        after: typing.Union[datetime.datetime, bases.Hashable[guilds.Guild]] = 0,
         limit: typing.Optional[int] = None,
     ) -> typing.AsyncIterator[oauth2.OwnGuild]:
         """Get an async iterator of the guilds the current user is in.
@@ -108,7 +108,7 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
 
         Parameters
         ----------
-        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of a guild to get guilds that were created after
             it if specified, else this will start at the oldest guild.
         limit : :obj:`~int`
@@ -136,9 +136,9 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
             due to it being outside of the range of a 64 bit integer.
         """
         if isinstance(after, datetime.datetime):
-            after = str(snowflakes.Snowflake.from_datetime(after))
+            after = str(bases.Snowflake.from_datetime(after))
         else:
-            after = str(after.id if isinstance(after, snowflakes.UniqueEntity) else int(after))
+            after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
         return pagination.pagination_handler(
             deserializer=oauth2.OwnGuild.deserialize,
             direction="after",
@@ -151,7 +151,7 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
     def fetch_my_guilds_before(
         self,
         *,
-        before: typing.Union[datetime.datetime, snowflakes.HashableT[guilds.Guild], None] = None,
+        before: typing.Union[datetime.datetime, bases.Hashable[guilds.Guild], None] = None,
         limit: typing.Optional[int] = None,
     ) -> typing.AsyncIterator[oauth2.OwnGuild]:
         """Get an async iterator of the guilds the current user is in.
@@ -161,7 +161,7 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
 
         Parameters
         ----------
-        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of a guild to get guilds that were created
             before it if specified, else this will start at the newest guild.
         limit : :obj:`~int`
@@ -182,9 +182,9 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
             due to it being outside of the range of a 64 bit integer.
         """
         if isinstance(before, datetime.datetime):
-            before = str(snowflakes.Snowflake.from_datetime(before))
+            before = str(bases.Snowflake.from_datetime(before))
         elif before is not None:
-            before = str(before.id if isinstance(before, snowflakes.UniqueEntity) else int(before))
+            before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
         return pagination.pagination_handler(
             deserializer=oauth2.OwnGuild.deserialize,
             direction="before",
@@ -194,12 +194,12 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
             limit=limit,
         )
 
-    async def leave_guild(self, guild: snowflakes.HashableT[guilds.Guild]) -> None:
+    async def leave_guild(self, guild: bases.Hashable[guilds.Guild]) -> None:
         """Make the current user leave a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to leave.
 
         Raises
@@ -210,16 +210,14 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        await self._session.leave_guild(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
-        )
+        await self._session.leave_guild(guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)))
 
-    async def create_dm_channel(self, recipient: snowflakes.HashableT[users.User]) -> _channels.DMChannel:
+    async def create_dm_channel(self, recipient: bases.Hashable[users.User]) -> _channels.DMChannel:
         """Create a new DM channel with a given user.
 
         Parameters
         ----------
-        recipient : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        recipient : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the user to create the new DM channel with.
 
         Returns
@@ -236,6 +234,6 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_dm(
-            recipient_id=str(recipient.id if isinstance(recipient, snowflakes.UniqueEntity) else int(recipient))
+            recipient_id=str(recipient.id if isinstance(recipient, bases.UniqueEntity) else int(recipient))
         )
         return _channels.DMChannel.deserialize(payload)

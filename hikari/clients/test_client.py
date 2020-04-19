@@ -90,7 +90,7 @@ def run_gateway(compression, color, debug, intents, logger, shards, token, verif
             intents=intents,
             verify_ssl=verify_ssl,
             shard_count=shards,
-            initial_activity=hikari.GatewayActivity(name="people mention me", type=hikari.ActivityType.LISTENING,),
+            initial_activity=hikari.Activity(name="people mention me", type=hikari.ActivityType.LISTENING,),
         )
     )
 

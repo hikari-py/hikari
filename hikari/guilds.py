@@ -49,12 +49,11 @@ import typing
 
 import attr
 
+from hikari import bases
 from hikari import channels as _channels
 from hikari import colors
 from hikari import emojis as _emojis
-from hikari import entities
 from hikari import permissions as _permissions
-from hikari import snowflakes
 from hikari import unset
 from hikari import users
 from hikari.internal import conversions
@@ -199,14 +198,14 @@ class GuildVerificationLevel(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildEmbed(entities.HikariEntity, marshaller.Deserializable):
+class GuildEmbed(bases.HikariEntity, marshaller.Deserializable):
     """Represents a guild embed."""
 
     #: The ID of the channel the invite for this embed targets, if enabled
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, serializer=str, if_none=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, serializer=str, if_none=None
     )
 
     #: Whether this embed is enabled.
@@ -217,7 +216,7 @@ class GuildEmbed(entities.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMember(entities.HikariEntity, marshaller.Deserializable):
+class GuildMember(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent a guild bound member."""
 
     #: This member's user object, will be :obj:`~None` when attached to Message
@@ -237,9 +236,9 @@ class GuildMember(entities.HikariEntity, marshaller.Deserializable):
 
     #: A sequence of the IDs of the member's current roles.
     #:
-    #: :type: :obj:`~typing.Sequence` [ :obj:`~hikari.snowflakes.Snowflake` ]
-    role_ids: typing.Sequence[snowflakes.Snowflake] = marshaller.attrib(
-        raw_name="roles", deserializer=lambda role_ids: [snowflakes.Snowflake.deserialize(rid) for rid in role_ids],
+    #: :type: :obj:`~typing.Sequence` [ :obj:`~hikari.entities.Snowflake` ]
+    role_ids: typing.Sequence[bases.Snowflake] = marshaller.attrib(
+        raw_name="roles", deserializer=lambda role_ids: [bases.Snowflake.deserialize(rid) for rid in role_ids],
     )
 
     #: The datetime of when this member joined the guild they belong to.
@@ -268,7 +267,7 @@ class GuildMember(entities.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PartialGuildRole(snowflakes.UniqueEntity, marshaller.Deserializable):
+class PartialGuildRole(bases.UniqueEntity, marshaller.Deserializable):
     """Represents a partial guild bound Role object."""
 
     #: The role's name.
@@ -351,7 +350,7 @@ class ActivityType(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ActivityTimestamps(entities.HikariEntity, marshaller.Deserializable):
+class ActivityTimestamps(bases.HikariEntity, marshaller.Deserializable):
     """The datetimes for the start and/or end of an activity session."""
 
     #: When this activity's session was started, if applicable.
@@ -371,7 +370,7 @@ class ActivityTimestamps(entities.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ActivityParty(entities.HikariEntity, marshaller.Deserializable):
+class ActivityParty(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent activity groups of users."""
 
     #: The string id of this party instance, if set.
@@ -400,7 +399,7 @@ class ActivityParty(entities.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ActivityAssets(entities.HikariEntity, marshaller.Deserializable):
+class ActivityAssets(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent possible assets for an activity."""
 
     #: The ID of the asset's large image, if set.
@@ -426,7 +425,7 @@ class ActivityAssets(entities.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ActivitySecret(entities.HikariEntity, marshaller.Deserializable):
+class ActivitySecret(bases.HikariEntity, marshaller.Deserializable):
     """The secrets used for interacting with an activity party."""
 
     #: The secret used for joining a party, if applicable.
@@ -473,7 +472,7 @@ class ActivityFlag(enum.IntFlag):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PresenceActivity(entities.HikariEntity, marshaller.Deserializable):
+class PresenceActivity(bases.HikariEntity, marshaller.Deserializable):
     """Represents an activity that will be attached to a member's presence."""
 
     #: The activity's name.
@@ -506,9 +505,9 @@ class PresenceActivity(entities.HikariEntity, marshaller.Deserializable):
 
     #: The ID of the application this activity is for, if applicable.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    application_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The text that describes what the activity's target is doing, if set.
@@ -583,7 +582,7 @@ class PresenceStatus(str, enum.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ClientStatus(entities.HikariEntity, marshaller.Deserializable):
+class ClientStatus(bases.HikariEntity, marshaller.Deserializable):
     """The client statuses for this member."""
 
     #: The status of the target user's desktop session.
@@ -719,7 +718,7 @@ class PresenceUser(users.User):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberPresence(entities.HikariEntity, marshaller.Deserializable):
+class GuildMemberPresence(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent a guild member's presence."""
 
     #: The object of the user who this presence is for, only `id` is guaranteed
@@ -732,15 +731,15 @@ class GuildMemberPresence(entities.HikariEntity, marshaller.Deserializable):
     #: A sequence of the ids of the user's current roles in the guild this
     #: presence belongs to.
     #:
-    #: :type: :obj:`~typing.Sequence` [ :obj:`~hikari.snowflakes.Snowflake` ]
-    role_ids: typing.Sequence[snowflakes.Snowflake] = marshaller.attrib(
-        raw_name="roles", deserializer=lambda roles: [snowflakes.Snowflake.deserialize(rid) for rid in roles],
+    #: :type: :obj:`~typing.Sequence` [ :obj:`~hikari.entities.Snowflake` ]
+    role_ids: typing.Sequence[bases.Snowflake] = marshaller.attrib(
+        raw_name="roles", deserializer=lambda roles: [bases.Snowflake.deserialize(rid) for rid in roles],
     )
 
     #: The ID of the guild this presence belongs to.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: This user's current status being displayed by the client.
     #:
@@ -789,7 +788,7 @@ class IntegrationExpireBehaviour(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class IntegrationAccount(entities.HikariEntity, marshaller.Deserializable):
+class IntegrationAccount(bases.HikariEntity, marshaller.Deserializable):
     """An account that's linked to an integration."""
 
     #: The string ID of this (likely) third party account.
@@ -805,7 +804,7 @@ class IntegrationAccount(entities.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PartialGuildIntegration(snowflakes.UniqueEntity, marshaller.Deserializable):
+class PartialGuildIntegration(bases.UniqueEntity, marshaller.Deserializable):
     """A partial representation of an integration, found in audit logs."""
 
     #: The name of this integration.
@@ -826,7 +825,7 @@ class PartialGuildIntegration(snowflakes.UniqueEntity, marshaller.Deserializable
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildIntegration(snowflakes.UniqueEntity, marshaller.Deserializable):
+class GuildIntegration(bases.UniqueEntity, marshaller.Deserializable):
     """Represents a guild integration object."""
 
     #: Whether this integration is enabled.
@@ -841,8 +840,8 @@ class GuildIntegration(snowflakes.UniqueEntity, marshaller.Deserializable):
 
     #: The ID of the managed role used for this integration's subscribers.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    role_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    role_id: typing.Optional[bases.Snowflake] = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: Whether users under this integration are allowed to use it's custom
     #: emojis.
@@ -881,7 +880,7 @@ class GuildIntegration(snowflakes.UniqueEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberBan(entities.HikariEntity, marshaller.Deserializable):
+class GuildMemberBan(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent guild bans."""
 
     #: The reason for this ban, will be :obj:`~None` if no reason was given.
@@ -897,7 +896,7 @@ class GuildMemberBan(entities.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class UnavailableGuild(snowflakes.UniqueEntity, marshaller.Deserializable):
+class UnavailableGuild(bases.UniqueEntity, marshaller.Deserializable):
     """An unavailable guild object, received during gateway events such as READY.
 
     An unavailable guild cannot be interacted with, and most information may
@@ -916,7 +915,7 @@ class UnavailableGuild(snowflakes.UniqueEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PartialGuild(snowflakes.UniqueEntity, marshaller.Deserializable):
+class PartialGuild(bases.UniqueEntity, marshaller.Deserializable):
     """Base object for any partial guild objects."""
 
     #: The name of the guild.
@@ -993,8 +992,8 @@ class GuildPreview(PartialGuild):
     #: The emojis that this guild provides, represented as a mapping of ID to
     #: emoji object.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.emojis.GuildEmoji` ]
-    emojis: typing.Mapping[snowflakes.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.emojis.GuildEmoji` ]
+    emojis: typing.Mapping[bases.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
         deserializer=lambda emojis: {e.id: e for e in map(_emojis.GuildEmoji.deserialize, emojis)},
     )
 
@@ -1107,8 +1106,8 @@ class Guild(PartialGuild):
 
     #: The ID of the owner of this guild.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    owner_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    owner_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The guild level permissions that apply to the bot user,
     #: Will be :obj:`~None` when this object is retrieved through a REST request
@@ -1127,9 +1126,9 @@ class Guild(PartialGuild):
     #: The ID for the channel that AFK voice users get sent to, if set for the
     #: guild.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    afk_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_none=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    afk_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_none=None
     )
 
     #: How long a voice user has to be AFK for before they are classed as being
@@ -1156,9 +1155,9 @@ class Guild(PartialGuild):
     #:
     #: Will be :obj:`~None` if invites are disabled for this guild's embed.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    embed_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, if_none=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    embed_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, if_none=None, default=None
     )
 
     #: The verification level required for a user to participate in this guild.
@@ -1182,16 +1181,16 @@ class Guild(PartialGuild):
 
     #: The roles in this guild, represented as a mapping of ID to role object.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~GuildRole` ]
-    roles: typing.Mapping[snowflakes.Snowflake, GuildRole] = marshaller.attrib(
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~GuildRole` ]
+    roles: typing.Mapping[bases.Snowflake, GuildRole] = marshaller.attrib(
         deserializer=lambda roles: {r.id: r for r in map(GuildRole.deserialize, roles)},
     )
 
     #: The emojis that this guild provides, represented as a mapping of ID to
     #: emoji object.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.emojis.GuildEmoji` ]
-    emojis: typing.Mapping[snowflakes.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.emojis.GuildEmoji` ]
+    emojis: typing.Mapping[bases.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
         deserializer=lambda emojis: {e.id: e for e in map(_emojis.GuildEmoji.deserialize, emojis)},
     )
 
@@ -1203,9 +1202,9 @@ class Guild(PartialGuild):
     #: The ID of the application that created this guild, if it was created by
     #: a bot. If not, this is always :obj:`~None`.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_none=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    application_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_none=None
     )
 
     #: Whether the guild is unavailable or not.
@@ -1234,17 +1233,17 @@ class Guild(PartialGuild):
     #: The channel ID that the widget's generated invite will send the user to,
     #: if enabled. If this information is unavailable, this will be :obj:`~None`.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    widget_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, if_none=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    widget_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, if_none=None, default=None
     )
 
     #: The ID of the system channel (where welcome messages and Nitro boost
     #: messages are sent), or :obj:`~None` if it is not enabled.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    system_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        if_none=None, deserializer=snowflakes.Snowflake.deserialize
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    system_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        if_none=None, deserializer=bases.Snowflake.deserialize
     )
 
     #: Flags for the guild system channel to describe which notification
@@ -1259,9 +1258,9 @@ class Guild(PartialGuild):
     #: If the :obj:`~GuildFeature.PUBLIC` feature is not defined, then this is
     #: :obj:`~None`.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    rules_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        if_none=None, deserializer=snowflakes.Snowflake.deserialize
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    rules_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        if_none=None, deserializer=bases.Snowflake.deserialize
     )
 
     #: The date and time that the bot user joined this guild.
@@ -1315,8 +1314,8 @@ class Guild(PartialGuild):
     #: representation. If you need complete accurate information, you should
     #: query the members using the appropriate API call instead.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~GuildMember` ], optional
-    members: typing.Optional[typing.Mapping[snowflakes.Snowflake, GuildMember]] = marshaller.attrib(
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~GuildMember` ], optional
+    members: typing.Optional[typing.Mapping[bases.Snowflake, GuildMember]] = marshaller.attrib(
         deserializer=lambda members: {m.user.id: m for m in map(GuildMember.deserialize, members)},
         if_undefined=None,
         default=None,
@@ -1337,8 +1336,8 @@ class Guild(PartialGuild):
     #: To retrieve a list of channels in any other case, you should make an
     #: appropriate API call to retrieve this information.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.channels.GuildChannel` ], optional
-    channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, _channels.GuildChannel]] = marshaller.attrib(
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.channels.GuildChannel` ], optional
+    channels: typing.Optional[typing.Mapping[bases.Snowflake, _channels.GuildChannel]] = marshaller.attrib(
         deserializer=lambda guild_channels: {c.id: c for c in map(_channels.deserialize_channel, guild_channels)},
         if_undefined=None,
         default=None,
@@ -1360,8 +1359,8 @@ class Guild(PartialGuild):
     #: To retrieve a list of presences in any other case, you should make an
     #: appropriate API call to retrieve this information.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~GuildMemberPresence` ], optional
-    presences: typing.Optional[typing.Mapping[snowflakes.Snowflake, GuildMemberPresence]] = marshaller.attrib(
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~GuildMemberPresence` ], optional
+    presences: typing.Optional[typing.Mapping[bases.Snowflake, GuildMemberPresence]] = marshaller.attrib(
         deserializer=lambda presences: {p.user.id: p for p in map(GuildMemberPresence.deserialize, presences)},
         if_undefined=None,
         default=None,
@@ -1437,9 +1436,9 @@ class Guild(PartialGuild):
     #: ``features`` for this guild. For all other purposes, it should be
     #: considered to be :obj:`~None`.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        if_none=None, deserializer=snowflakes.Snowflake.deserialize
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    public_updates_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        if_none=None, deserializer=bases.Snowflake.deserialize
     )
 
     def format_splash_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
