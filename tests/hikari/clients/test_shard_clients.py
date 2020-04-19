@@ -155,23 +155,86 @@ class TestShardClientImplDelegateProperties:
 
 class TestShardClientImplStart:
     @pytest.mark.asyncio
-    async def test_start_when_ready_event_completes_first(self, shard_client_obj):
-        shard_client_obj._keep_alive = mock.AsyncMock()
-        task_mock = _generate_mock_task()
+    async def test_start_when_ready_event_completes_first_without_error(self, shard_client_obj):
+        shard_client_obj._connection.seq = 123
+        shard_client_obj._connection.session_id = 123
+        stop_event = asyncio.Event()
+        try:
 
-        with mock.patch("asyncio.create_task", return_value=task_mock):
-            with mock.patch("asyncio.wait", return_value=([], None)):
-                await shard_client_obj.start()
+            async def forever():
+                # make this so that it doesn't complete in time;
+                await stop_event.wait()
+
+            shard_client_obj._keep_alive = mock.MagicMock(wraps=forever)
+            # Make this last a really long time so it doesn't complete immediately.
+            shard_client_obj._connection.ready_event = mock.MagicMock(wait=mock.AsyncMock())
+
+            # Do iiiit.
+            await shard_client_obj.start()
+        finally:
+            stop_event.set()
+
+    @_helpers.assert_raises(type_=LookupError)
+    @pytest.mark.asyncio
+    async def test_start_when_ready_event_completes_first_with_error(self, shard_client_obj):
+        shard_client_obj._connection.seq = 123
+        shard_client_obj._connection.session_id = 123
+        stop_event = asyncio.Event()
+        try:
+
+            async def forever():
+                # make this so that it doesn't complete in time;
+                await stop_event.wait()
+
+            shard_client_obj._keep_alive = mock.MagicMock(wraps=forever)
+            # Make this last a really long time so it doesn't complete immediately.
+            shard_client_obj._connection.ready_event = mock.MagicMock(wait=mock.AsyncMock(side_effect=LookupError))
+
+            # Do iiiit.
+            await shard_client_obj.start()
+        finally:
+            stop_event.set()
+
+    @pytest.mark.asyncio
+    async def test_start_when_task_completes_with_no_exception(self, shard_client_obj):
+        shard_client_obj._connection.seq = 123
+        shard_client_obj._connection.session_id = 123
+        stop_event = asyncio.Event()
+        try:
+
+            async def forever():
+                # make this so that it doesn't complete in time;
+                await stop_event.wait()
+
+            shard_client_obj._keep_alive = mock.AsyncMock()
+            # Make this last a really long time so it doesn't complete immediately.
+            shard_client_obj._connection.ready_event = mock.MagicMock(wait=forever)
+
+            # Do iiiit.
+            await shard_client_obj.start()
+        finally:
+            stop_event.set()
 
     @_helpers.assert_raises(type_=RuntimeError)
     @pytest.mark.asyncio
-    async def test_start_when_task_completes(self, shard_client_obj):
-        shard_client_obj._keep_alive = mock.AsyncMock()
-        task_mock = _generate_mock_task(RuntimeError)
+    async def test_start_when_task_completes_with_exception(self, shard_client_obj):
+        shard_client_obj._connection.seq = 123
+        shard_client_obj._connection.session_id = 123
+        stop_event = asyncio.Event()
+        try:
 
-        with mock.patch("asyncio.create_task", return_value=task_mock):
-            with mock.patch("asyncio.wait", return_value=([task_mock], None)):
-                await shard_client_obj.start()
+            async def forever():
+                # make this so that it doesn't complete in time;
+                await stop_event.wait()
+
+            shard_client_obj._keep_alive = mock.AsyncMock(side_effect=RuntimeError)
+            # Make this last a really long time so it doesn't complete immediately.
+            shard_client_obj._connection.ready_event = mock.MagicMock(wait=forever)
+
+            # Do iiiit.
+            await shard_client_obj.start()
+        finally:
+            stop_event.set()
 
     @_helpers.assert_raises(type_=RuntimeError)
     @pytest.mark.asyncio
@@ -297,52 +360,127 @@ class TestShardClientImplSpinUp:
     @_helpers.assert_raises(type_=RuntimeError)
     @pytest.mark.asyncio
     async def test__spin_up_if_connect_task_is_completed_raises_exception_during_hello_event(self, shard_client_obj):
-        task_mock = _generate_mock_task(RuntimeError)
+        stop_event = asyncio.Event()
+        try:
 
-        with mock.patch("asyncio.create_task", return_value=task_mock):
-            with mock.patch("asyncio.wait", return_value=([task_mock], None)):
-                await shard_client_obj._spin_up()
+            async def forever():
+                # make this so that it doesn't complete in time;
+                await stop_event.wait()
+
+            # Make this last a really long time so it doesn't complete immediately.
+            shard_client_obj._connection.connect = mock.MagicMock(wraps=forever)
+
+            # Make these finish immediately.
+            shard_client_obj._connection.hello_event = mock.MagicMock(wait=mock.AsyncMock(side_effect=RuntimeError))
+
+            # Do iiiit.
+            await shard_client_obj._spin_up()
+        finally:
+            stop_event.set()
 
     @_helpers.assert_raises(type_=RuntimeError)
     @pytest.mark.asyncio
     async def test__spin_up_if_connect_task_is_completed_raises_exception_during_identify_event(self, shard_client_obj):
-        task_mock = _generate_mock_task(RuntimeError)
+        stop_event = asyncio.Event()
+        try:
 
-        with mock.patch("asyncio.create_task", return_value=task_mock):
-            with mock.patch("asyncio.wait", side_effect=[([], None), ([task_mock], None)]):
-                await shard_client_obj._spin_up()
+            async def forever():
+                # make this so that it doesn't complete in time;
+                await stop_event.wait()
+
+            # Make this last a really long time so it doesn't complete immediately.
+            shard_client_obj._connection.connect = mock.MagicMock(wraps=forever)
+
+            # Make these finish immediately.
+            shard_client_obj._connection.hello_event = mock.MagicMock(wait=mock.AsyncMock())
+            shard_client_obj._connection.handshake_event = mock.MagicMock(wait=mock.AsyncMock(side_effect=RuntimeError))
+
+            # Do iiiit.
+            await shard_client_obj._spin_up()
+        finally:
+            stop_event.set()
 
     @pytest.mark.asyncio
     async def test__spin_up_when_resuming(self, shard_client_obj):
         shard_client_obj._connection.seq = 123
         shard_client_obj._connection.session_id = 123
-        task_mock = _generate_mock_task()
+        stop_event = asyncio.Event()
+        try:
 
-        with mock.patch("asyncio.create_task", return_value=task_mock):
-            with mock.patch("asyncio.wait", side_effect=[([], None), ([], None), ([], None)]):
-                assert await shard_client_obj._spin_up() == task_mock
+            async def forever():
+                # make this so that it doesn't complete in time;
+                await stop_event.wait()
+
+            # Make this last a really long time so it doesn't complete immediately.
+            shard_client_obj._connection.connect = mock.MagicMock(wraps=forever)
+
+            # Make these finish immediately.
+            shard_client_obj._connection.hello_event = mock.MagicMock(wait=mock.AsyncMock())
+            shard_client_obj._connection.handshake_event = mock.MagicMock(wait=mock.AsyncMock())
+
+            # Make this one go boom.
+            shard_client_obj._connection.resumed_event = mock.MagicMock(wait=mock.AsyncMock())
+
+            # Do iiiit.
+            await shard_client_obj._spin_up()
+        finally:
+            stop_event.set()
 
     @_helpers.assert_raises(type_=RuntimeError)
     @pytest.mark.asyncio
     async def test__spin_up_if_connect_task_is_completed_raises_exception_during_resumed_event(self, shard_client_obj):
         shard_client_obj._connection.seq = 123
         shard_client_obj._connection.session_id = 123
-        task_mock = _generate_mock_task(RuntimeError)
+        stop_event = asyncio.Event()
+        try:
 
-        with mock.patch("asyncio.create_task", return_value=task_mock):
-            with mock.patch("asyncio.wait", side_effect=[([], None), ([], None), ([task_mock], None)]):
-                await shard_client_obj._spin_up()
+            async def forever():
+                # make this so that it doesn't complete in time;
+                await stop_event.wait()
+
+            # Make this last a really long time so it doesn't complete immediately.
+            shard_client_obj._connection.connect = mock.MagicMock(wraps=forever)
+
+            # Make these finish immediately.
+            shard_client_obj._connection.hello_event = mock.MagicMock(wait=mock.AsyncMock())
+            shard_client_obj._connection.handshake_event = mock.MagicMock(wait=mock.AsyncMock())
+
+            # Make this one go boom.
+            shard_client_obj._connection.resumed_event = mock.MagicMock(wait=mock.AsyncMock(side_effect=RuntimeError))
+
+            # Do iiiit.
+            await shard_client_obj._spin_up()
+        finally:
+            stop_event.set()
 
     @pytest.mark.asyncio
     async def test__spin_up_when_not_resuming(self, shard_client_obj):
-        task_mock = _generate_mock_task()
+        shard_client_obj._connection.seq = None
+        shard_client_obj._connection.session_id = None
+        stop_event = asyncio.Event()
+        try:
 
-        with mock.patch("asyncio.create_task", return_value=task_mock):
-            with mock.patch("asyncio.wait", side_effect=[([], None), ([], None), ([], None)]):
-                assert await shard_client_obj._spin_up() == task_mock
+            async def forever():
+                # make this so that it doesn't complete in time;
+                await stop_event.wait()
+
+            # Make this last a really long time so it doesn't complete immediately.
+            shard_client_obj._connection.connect = mock.MagicMock(wraps=forever)
+
+            # Make these finish immediately.
+            shard_client_obj._connection.hello_event = mock.MagicMock(wait=mock.AsyncMock())
+            shard_client_obj._connection.handshake_event = mock.MagicMock(wait=mock.AsyncMock())
+
+            # Make this one go boom.
+            shard_client_obj._connection.ready_event = mock.MagicMock(wait=mock.AsyncMock())
+
+            # Do iiiit.
+            await shard_client_obj._spin_up()
+        finally:
+            stop_event.set()
 
     @_helpers.timeout_after(10)
-    # @_helpers.assert_raises(type_=RuntimeError)
+    @_helpers.assert_raises(type_=RuntimeError)
     @pytest.mark.asyncio
     async def test__spin_up_if_connect_task_is_completed_raises_exception_during_ready_event(self, shard_client_obj):
         stop_event = asyncio.Event()
@@ -378,8 +516,8 @@ class TestShardClientImplUpdatePresence:
         )
 
         assert shard_client_obj._status == guilds.PresenceStatus.ONLINE
-        assert shard_client_obj._activity == None
-        assert shard_client_obj._idle_since == None
+        assert shard_client_obj._activity is None
+        assert shard_client_obj._idle_since is None
         assert shard_client_obj._is_afk is False
 
     @pytest.mark.asyncio
@@ -395,7 +533,7 @@ class TestShardClientImplUpdatePresence:
         )
 
         assert shard_client_obj._status == guilds.PresenceStatus.DND
-        assert shard_client_obj._activity == None
+        assert shard_client_obj._activity is None
         assert shard_client_obj._idle_since == datetime_obj
         assert shard_client_obj._is_afk is True
 

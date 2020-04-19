@@ -42,6 +42,7 @@ from hikari import errors
 from hikari import events
 from hikari import gateway_entities
 from hikari import guilds
+from hikari import intents as _intents
 from hikari.clients import configs
 from hikari.clients import runnable
 from hikari.net import codes
@@ -261,7 +262,7 @@ class ShardClient(runnable.RunnableClient, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def intents(self) -> typing.Optional[codes.GatewayIntent]:
+    def intents(self) -> typing.Optional[_intents.Intent]:
         """Intent values that this connection is using.
 
         Returns
@@ -460,7 +461,7 @@ class ShardClientImpl(ShardClient):
         return self._connection.version
 
     @property
-    def intents(self) -> typing.Optional[codes.GatewayIntent]:
+    def intents(self) -> typing.Optional[_intents.Intent]:
         return self._connection.intents
 
     async def start(self):
@@ -478,8 +479,9 @@ class ShardClientImpl(ShardClient):
             [self._task, self._connection.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
         )
 
-        if self._task in completed:
-            raise self._task.exception()
+        for task in completed:
+            if ex := task.exception():
+                raise ex
 
     async def join(self) -> None:
         """Wait for the shard to shut down fully."""
@@ -598,8 +600,9 @@ class ShardClientImpl(ShardClient):
             [connect_task, self._connection.hello_event.wait()], return_when=asyncio.FIRST_COMPLETED
         )
 
-        if connect_task in completed:
-            raise connect_task.exception()
+        for task in completed:
+            if ex := task.exception():
+                raise ex
 
         self.logger.info("received HELLO, interval is %ss", self._connection.heartbeat_interval)
 
@@ -607,8 +610,9 @@ class ShardClientImpl(ShardClient):
             [connect_task, self._connection.handshake_event.wait()], return_when=asyncio.FIRST_COMPLETED
         )
 
-        if connect_task in completed:
-            raise connect_task.exception()
+        for task in completed:
+            if ex := task.exception():
+                raise ex
 
         if is_resume:
             self.logger.info("sent RESUME, waiting for RESUMED event")
@@ -618,8 +622,9 @@ class ShardClientImpl(ShardClient):
                 [connect_task, self._connection.resumed_event.wait()], return_when=asyncio.FIRST_COMPLETED
             )
 
-            if connect_task in completed:
-                raise connect_task.exception()
+            for task in completed:
+                if ex := task.exception():
+                    raise ex
 
             self.logger.info("now RESUMED")
 
@@ -632,8 +637,9 @@ class ShardClientImpl(ShardClient):
                 [connect_task, self._connection.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
             )
 
-            if connect_task in completed:
-                raise connect_task.exception()
+            for task in completed:
+                if ex := task.exception():
+                    raise ex
 
             self.logger.info("now READY")
 
