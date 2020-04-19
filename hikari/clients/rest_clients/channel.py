@@ -35,7 +35,7 @@ from hikari import messages as _messages
 from hikari import permissions as _permissions
 from hikari import users
 from hikari import webhooks
-from hikari.clients.rest_clients import component_base
+from hikari.clients.rest_clients import base
 from hikari.internal import allowed_mentions
 from hikari.internal import assertions
 from hikari.internal import conversions
@@ -43,7 +43,7 @@ from hikari.internal import more_typing
 from hikari.internal import pagination
 
 
-class RESTChannelComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
     """The REST client component for handling requests to channel endpoints."""
 
     async def fetch_channel(self, channel: bases.Hashable[_channels.Channel]) -> _channels.Channel:

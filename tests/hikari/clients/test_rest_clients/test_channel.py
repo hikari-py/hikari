@@ -32,7 +32,7 @@ from hikari import messages
 from hikari import snowflakes
 from hikari import users
 from hikari import webhooks
-from hikari.clients.rest_clients import channels_component
+from hikari.clients.rest_clients import channel
 from hikari.internal import allowed_mentions
 from hikari.internal import conversions
 from hikari.internal import pagination
@@ -45,7 +45,7 @@ class TestRESTChannelLogging:
     def rest_channel_logic_impl(self):
         mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
-        class RESTChannelLogicImpl(channels_component.RESTChannelComponent):
+        class RESTChannelLogicImpl(channel.RESTChannelComponent):
             def __init__(self):
                 super().__init__(mock_low_level_restful_client)
 

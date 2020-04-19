@@ -31,12 +31,12 @@ from hikari import media
 from hikari import messages as _messages
 from hikari import users
 from hikari import webhooks
-from hikari.clients.rest_clients import component_base
+from hikari.clients.rest_clients import base
 from hikari.internal import allowed_mentions
 from hikari.internal import conversions
 
 
-class RESTWebhookComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
     """The REST client component for handling requests to webhook endpoints."""
 
     async def fetch_webhook(

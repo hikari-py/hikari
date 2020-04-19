@@ -27,14 +27,14 @@ import typing
 from hikari import bases
 from hikari import channels as _channels
 from hikari import guilds
-from hikari import oauth2
+from hikari import applications
 from hikari import users
-from hikari.clients.rest_clients import component_base
+from hikari.clients.rest_clients import base
 from hikari.internal import conversions
 from hikari.internal import pagination
 
 
-class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
     """The REST client component for handling requests to ``@me`` endpoints."""
 
     async def fetch_me(self) -> users.MyUser:
@@ -77,7 +77,7 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
         )
         return users.MyUser.deserialize(payload)
 
-    async def fetch_my_connections(self) -> typing.Sequence[oauth2.OwnConnection]:
+    async def fetch_my_connections(self) -> typing.Sequence[applications.OwnConnection]:
         """
         Get the current user's connections.
 
@@ -93,14 +93,14 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
             A list of connection objects.
         """
         payload = await self._session.get_current_user_connections()
-        return [oauth2.OwnConnection.deserialize(connection) for connection in payload]
+        return [applications.OwnConnection.deserialize(connection) for connection in payload]
 
     def fetch_my_guilds_after(
         self,
         *,
         after: typing.Union[datetime.datetime, bases.Hashable[guilds.Guild]] = 0,
         limit: typing.Optional[int] = None,
-    ) -> typing.AsyncIterator[oauth2.OwnGuild]:
+    ) -> typing.AsyncIterator[applications.OwnGuild]:
         """Get an async iterator of the guilds the current user is in.
 
         This returns the guilds created after a given guild object/ID or from
@@ -140,7 +140,7 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
         else:
             after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
         return pagination.pagination_handler(
-            deserializer=oauth2.OwnGuild.deserialize,
+            deserializer=applications.OwnGuild.deserialize,
             direction="after",
             request=self._session.get_current_user_guilds,
             reversing=False,
@@ -153,7 +153,7 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
         *,
         before: typing.Union[datetime.datetime, bases.Hashable[guilds.Guild], None] = None,
         limit: typing.Optional[int] = None,
-    ) -> typing.AsyncIterator[oauth2.OwnGuild]:
+    ) -> typing.AsyncIterator[applications.OwnGuild]:
         """Get an async iterator of the guilds the current user is in.
 
         This returns the guilds that were created before a given user object/ID
@@ -186,7 +186,7 @@ class RESTCurrentUserComponent(component_base.BaseRESTComponent, abc.ABC):  # py
         elif before is not None:
             before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
         return pagination.pagination_handler(
-            deserializer=oauth2.OwnGuild.deserialize,
+            deserializer=applications.OwnGuild.deserialize,
             direction="before",
             request=self._session.get_current_user_guilds,
             reversing=False,

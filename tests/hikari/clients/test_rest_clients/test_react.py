@@ -25,7 +25,7 @@ from hikari import channels
 from hikari import emojis
 from hikari import messages
 from hikari import users
-from hikari.clients.rest_clients import reactions_component
+from hikari.clients.rest_clients import react
 from hikari.internal import pagination
 from hikari.net import rest_sessions
 from tests.hikari import _helpers
@@ -36,7 +36,7 @@ class TestRESTReactionLogic:
     def rest_reaction_logic_impl(self):
         mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
-        class RESTReactionLogicImpl(reactions_component.RESTReactionComponent):
+        class RESTReactionLogicImpl(react.RESTReactionComponent):
             def __init__(self):
                 super().__init__(mock_low_level_restful_client)
 
