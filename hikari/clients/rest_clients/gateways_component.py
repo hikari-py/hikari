@@ -22,8 +22,8 @@ __all__ = ["RESTGatewayComponent"]
 
 import abc
 
-from hikari.clients.rest_clients import component_base
 from hikari import gateway_entities
+from hikari.clients.rest_clients import component_base
 
 
 class RESTGatewayComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223

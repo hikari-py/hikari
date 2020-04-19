@@ -70,15 +70,14 @@ import typing
 
 import attr
 
+from hikari import bases
 from hikari import channels
 from hikari import embeds as _embeds
 from hikari import emojis as _emojis
-from hikari import entities
 from hikari import guilds
 from hikari import invites
 from hikari import messages
 from hikari import oauth2
-from hikari import snowflakes
 from hikari import unset
 from hikari import users
 from hikari import voices
@@ -92,7 +91,7 @@ T_contra = typing.TypeVar("T_contra", contravariant=True)
 # Base event, is not deserialized
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class HikariEvent(entities.HikariEntity):
+class HikariEvent(bases.HikariEntity):
     """The base class that all events inherit from."""
 
 
@@ -192,8 +191,8 @@ class ReadyEvent(HikariEvent, marshaller.Deserializable):
     #: A mapping of the guilds this bot is currently in. All guilds will start
     #: off "unavailable".
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.guilds.UnavailableGuild` ]
-    unavailable_guilds: typing.Mapping[snowflakes.Snowflake, guilds.UnavailableGuild] = marshaller.attrib(
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.guilds.UnavailableGuild` ]
+    unavailable_guilds: typing.Mapping[bases.Snowflake, guilds.UnavailableGuild] = marshaller.attrib(
         raw_name="guilds",
         deserializer=lambda guilds_objs: {g.id: g for g in map(guilds.UnavailableGuild.deserialize, guilds_objs)},
     )
@@ -229,7 +228,7 @@ class ReadyEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deserializable):
+class BaseChannelEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
     """A base object that Channel events will inherit from."""
 
     #: The channel's type.
@@ -239,9 +238,9 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deserial
 
     #: The ID of the guild this channel is in, will be :obj:`~None` for DMs.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The sorting position of this channel, will be relative to the
@@ -252,9 +251,9 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deserial
 
     #: An mapping of the set permission overwrites for this channel, if applicable.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.channels.PermissionOverwrite` ], optional
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.channels.PermissionOverwrite` ], optional
     permission_overwrites: typing.Optional[
-        typing.Mapping[snowflakes.Snowflake, channels.PermissionOverwrite]
+        typing.Mapping[bases.Snowflake, channels.PermissionOverwrite]
     ] = marshaller.attrib(
         deserializer=lambda overwrites: {o.id: o for o in map(channels.PermissionOverwrite.deserialize, overwrites)},
         if_undefined=None,
@@ -280,9 +279,9 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deserial
 
     #: The ID of the last message sent, if it's a text type channel.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    last_message_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_none=None, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_none=None, if_undefined=None, default=None
     )
 
     #: The bitrate (in bits) of this channel, if it's a guild voice channel.
@@ -305,8 +304,8 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deserial
 
     #: A mapping of this channel's recipient users, if it's a DM or group DM.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.users.User` ], optional
-    recipients: typing.Optional[typing.Mapping[snowflakes.Snowflake, users.User]] = marshaller.attrib(
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.users.User` ], optional
+    recipients: typing.Optional[typing.Mapping[bases.Snowflake, users.User]] = marshaller.attrib(
         deserializer=lambda recipients: {user.id: user for user in map(users.User.deserialize, recipients)},
         if_undefined=None,
         default=None,
@@ -321,24 +320,24 @@ class BaseChannelEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deserial
 
     #: The ID of this channel's creator, if it's a DM channel.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    owner_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    owner_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the application that created the group DM, if it's a
     #: bot based group DM.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    application_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of this channels's parent category within guild, if set.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    parent_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, if_none=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    parent_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, if_none=None, default=None
     )
 
     #: The datetime of when the last message was pinned in this channel,
@@ -384,15 +383,15 @@ class ChannelPinUpdateEvent(HikariEvent, marshaller.Deserializable):
     #: The ID of the guild where this event happened.
     #: Will be :obj:`~None` if this happened in a DM channel.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the channel where the message was pinned or unpinned.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The datetime of when the most recent message was pinned in this channel.
     #: Will be :obj:`~None` if there are no messages pinned after this change.
@@ -421,7 +420,7 @@ class GuildUpdateEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildLeaveEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deserializable):
+class GuildLeaveEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
     """Fired when the current user leaves the guild or is kicked/banned from it.
 
     Notes
@@ -432,7 +431,7 @@ class GuildLeaveEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deseriali
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildUnavailableEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deserializable):
+class GuildUnavailableEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
     """Fired when a guild becomes temporarily unavailable due to an outage.
 
     Notes
@@ -448,8 +447,8 @@ class BaseGuildBanEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the guild this ban is in.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The object of the user this ban targets.
     #:
@@ -476,13 +475,13 @@ class GuildEmojisUpdateEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the guild this emoji was updated in.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The updated mapping of emojis by their ID.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.emojis.GuildEmoji` ]
-    emojis: typing.Mapping[snowflakes.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.emojis.GuildEmoji` ]
+    emojis: typing.Mapping[bases.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
         deserializer=lambda ems: {emoji.id: emoji for emoji in map(_emojis.GuildEmoji.deserialize, ems)}
     )
 
@@ -494,8 +493,8 @@ class GuildIntegrationsUpdateEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the guild the integration was updated in.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
 
 @marshaller.marshallable()
@@ -505,8 +504,8 @@ class GuildMemberAddEvent(HikariEvent, guilds.GuildMember):
 
     #: The ID of the guild where this member was added.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
 
 @marshaller.marshallable()
@@ -519,14 +518,14 @@ class GuildMemberUpdateEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the guild this member was updated in.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: A sequence of the IDs of the member's current roles.
     #:
-    #: :type: :obj:`~typing.Sequence` [ :obj:`~hikari.snowflakes.Snowflake` ]
-    role_ids: typing.Sequence[snowflakes.Snowflake] = marshaller.attrib(
-        raw_name="roles", deserializer=lambda role_ids: [snowflakes.Snowflake.deserialize(rid) for rid in role_ids],
+    #: :type: :obj:`~typing.Sequence` [ :obj:`~hikari.entities.Snowflake` ]
+    role_ids: typing.Sequence[bases.Snowflake] = marshaller.attrib(
+        raw_name="roles", deserializer=lambda role_ids: [bases.Snowflake.deserialize(rid) for rid in role_ids],
     )
 
     #: The object of the user who was updated.
@@ -561,8 +560,8 @@ class GuildMemberRemoveEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the guild this user was removed from.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The object of the user who was removed from this guild.
     #:
@@ -577,8 +576,8 @@ class GuildRoleCreateEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the guild where this role was created.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The object of the role that was created.
     #:
@@ -593,8 +592,8 @@ class GuildRoleUpdateEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the guild where this role was updated.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The updated role object.
     #:
@@ -609,13 +608,13 @@ class GuildRoleDeleteEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the guild where this role is being deleted.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the role being deleted.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    role_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    role_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
 
 @marshaller.marshallable()
@@ -625,8 +624,8 @@ class InviteCreateEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the channel this invite targets.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The code that identifies this invite
     #:
@@ -641,9 +640,9 @@ class InviteCreateEvent(HikariEvent, marshaller.Deserializable):
     #: The ID of the guild this invite was created in, if applicable.
     #: Will be :obj:`~None` for group DM invites.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The object of the user who created this invite, if applicable.
@@ -702,8 +701,8 @@ class InviteDeleteEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the channel this ID was attached to
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The code of this invite.
     #:
@@ -713,9 +712,9 @@ class InviteDeleteEvent(HikariEvent, marshaller.Deserializable):
     #: The ID of the guild this invite was deleted in.
     #: This will be :obj:`~None` if this invite belonged to a DM channel.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
 
@@ -728,7 +727,7 @@ class MessageCreateEvent(HikariEvent, messages.Message):
 # This is an arbitrarily partial version of `messages.Message`
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deserializable):
+class MessageUpdateEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
     """Represents Message Update gateway events.
 
     Note
@@ -741,14 +740,14 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deseri
 
     #: The ID of the channel that the message was sent in.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the guild that the message was sent in.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.unset.UNSET` ]
-    guild_id: typing.Union[snowflakes.Snowflake, unset.Unset] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=unset.Unset, default=unset.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.unset.UNSET` ]
+    guild_id: typing.Union[bases.Snowflake, unset.Unset] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The author of this message.
@@ -803,30 +802,30 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deseri
 
     #: The users the message mentions.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ], :obj:`~hikari.unset.UNSET` ]
-    user_mentions: typing.Union[typing.Set[snowflakes.Snowflake], unset.Unset] = marshaller.attrib(
+    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Set` [ :obj:`~hikari.entities.Snowflake` ], :obj:`~hikari.unset.UNSET` ]
+    user_mentions: typing.Union[typing.Set[bases.Snowflake], unset.Unset] = marshaller.attrib(
         raw_name="mentions",
-        deserializer=lambda user_mentions: {snowflakes.Snowflake.deserialize(u["id"]) for u in user_mentions},
+        deserializer=lambda user_mentions: {bases.Snowflake.deserialize(u["id"]) for u in user_mentions},
         if_undefined=unset.Unset,
         default=unset.UNSET,
     )
 
     #: The roles the message mentions.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ], :obj:`~hikari.unset.UNSET` ]
-    role_mentions: typing.Union[typing.Set[snowflakes.Snowflake], unset.Unset] = marshaller.attrib(
+    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Set` [ :obj:`~hikari.entities.Snowflake` ], :obj:`~hikari.unset.UNSET` ]
+    role_mentions: typing.Union[typing.Set[bases.Snowflake], unset.Unset] = marshaller.attrib(
         raw_name="mention_roles",
-        deserializer=lambda role_mentions: {snowflakes.Snowflake.deserialize(r) for r in role_mentions},
+        deserializer=lambda role_mentions: {bases.Snowflake.deserialize(r) for r in role_mentions},
         if_undefined=unset.Unset,
         default=unset.UNSET,
     )
 
     #: The channels the message mentions.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ], :obj:`~hikari.unset.UNSET` ]
-    channel_mentions: typing.Union[typing.Set[snowflakes.Snowflake], unset.Unset] = marshaller.attrib(
+    #: :type: :obj:`~typing.Union` [ :obj:`~typing.Set` [ :obj:`~hikari.entities.Snowflake` ], :obj:`~hikari.unset.UNSET` ]
+    channel_mentions: typing.Union[typing.Set[bases.Snowflake], unset.Unset] = marshaller.attrib(
         raw_name="mention_channels",
-        deserializer=lambda channel_mentions: {snowflakes.Snowflake.deserialize(c["id"]) for c in channel_mentions},
+        deserializer=lambda channel_mentions: {bases.Snowflake.deserialize(c["id"]) for c in channel_mentions},
         if_undefined=unset.Unset,
         default=unset.UNSET,
     )
@@ -867,9 +866,9 @@ class MessageUpdateEvent(HikariEvent, snowflakes.UniqueEntity, marshaller.Deseri
 
     #: If the message was generated by a webhook, the webhook's id.
     #:
-    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.unset.UNSET` ]
-    webhook_id: typing.Union[snowflakes.Snowflake, unset.Unset] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=unset.Unset, default=unset.UNSET
+    #: :type: :obj:`~typing.Union` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.unset.UNSET` ]
+    webhook_id: typing.Union[bases.Snowflake, unset.Unset] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=unset.Unset, default=unset.UNSET
     )
 
     #: The message's type.
@@ -926,20 +925,20 @@ class MessageDeleteEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the channel where this message was deleted.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the guild where this message was deleted.
     #: Will be :obj:`~None` if this message was deleted in a DM channel.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
     #: The ID of the message that was deleted.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    message_id: snowflakes.Snowflake = marshaller.attrib(raw_name="id", deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    message_id: bases.Snowflake = marshaller.attrib(raw_name="id", deserializer=bases.Snowflake.deserialize)
 
 
 @marshaller.marshallable()
@@ -952,22 +951,22 @@ class MessageDeleteBulkEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the channel these messages have been deleted in.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the channel these messages have been deleted in.
     #: Will be :obj:`~None` if these messages were bulk deleted in a DM channel.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_none=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_none=None
     )
 
     #: A collection of the IDs of the messages that were deleted.
     #:
-    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ]
-    message_ids: typing.Set[snowflakes.Snowflake] = marshaller.attrib(
-        raw_name="ids", deserializer=lambda msgs: {snowflakes.Snowflake.deserialize(m) for m in msgs}
+    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.entities.Snowflake` ]
+    message_ids: typing.Set[bases.Snowflake] = marshaller.attrib(
+        raw_name="ids", deserializer=lambda msgs: {bases.Snowflake.deserialize(m) for m in msgs}
     )
 
 
@@ -978,25 +977,25 @@ class MessageReactionAddEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the user adding the reaction.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    user_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the channel where this reaction is being added.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the message this reaction is being added to.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    message_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the guild where this reaction is being added, unless this is
     #: happening in a DM channel.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The member object of the user who's adding this reaction, if this is
@@ -1022,25 +1021,25 @@ class MessageReactionRemoveEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the user who is removing their reaction.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    user_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the channel where this reaction is being removed.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the message this reaction is being removed from.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    message_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the guild where this reaction is being removed, unless this is
     #: happening in a DM channel.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The object of the emoji being removed.
@@ -1061,19 +1060,19 @@ class MessageReactionRemoveAllEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the channel where the targeted message is.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the message all reactions are being removed from.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    message_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the guild where the targeted message is, if applicable.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
 
@@ -1087,20 +1086,20 @@ class MessageReactionRemoveEmojiEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the channel where the targeted message is.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the guild where the targeted message is, if applicable.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the message the reactions are being removed from.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    message_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The object of the emoji that's being removed.
     #:
@@ -1129,21 +1128,21 @@ class TypingStartEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the channel this typing event is occurring in.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the guild this typing event is occurring in.
     #: Will be :obj:`~None` if this event is happening in a DM channel.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the user who triggered this typing event.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    user_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The datetime of when this typing event started.
     #:
@@ -1195,8 +1194,8 @@ class VoiceServerUpdateEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the guild this voice server update is for
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The uri for this voice server host.
     #:
@@ -1214,10 +1213,10 @@ class WebhookUpdateEvent(HikariEvent, marshaller.Deserializable):
 
     #: The ID of the guild this webhook is being updated in.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the channel this webhook is being updated in.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)

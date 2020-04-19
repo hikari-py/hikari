@@ -24,7 +24,7 @@
     hikari.entities.HikariEntity
     hikari.entities.Deserializable
     hikari.entities.Serializable
-    hikari.snowflakes.UniqueEntity
+    hikari.entities.UniqueEntity
     :parts: 1
 """
 
@@ -42,7 +42,6 @@ __all__ = [
     "GuildStoreChannel",
     "GuildVoiceChannel",
     "GuildChannelBuilder",
-    "deserialize_channel",
 ]
 
 import datetime
@@ -51,9 +50,8 @@ import typing
 
 import attr
 
-from hikari import entities
+from hikari import bases
 from hikari import permissions
-from hikari import snowflakes
 from hikari import users
 from hikari.internal import marshaller
 from hikari.internal import more_collections
@@ -102,7 +100,7 @@ class PermissionOverwriteType(str, enum.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PermissionOverwrite(snowflakes.UniqueEntity, marshaller.Deserializable, marshaller.Serializable):
+class PermissionOverwrite(bases.UniqueEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents permission overwrites for a channel or role in a channel."""
 
     #: The type of entity this overwrite targets.
@@ -157,7 +155,7 @@ def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type["C
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Channel(snowflakes.UniqueEntity, marshaller.Deserializable):
+class Channel(bases.UniqueEntity, marshaller.Deserializable):
     """Base class for all channels."""
 
     #: The channel's type.
@@ -193,15 +191,13 @@ class DMChannel(Channel):
     #: This might point to an invalid or deleted message.
     #:
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    last_message_id: snowflakes.Snowflake = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_none=None
-    )
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize, if_none=None)
 
     #: The recipients of the DM.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.users.User` ]
-    recipients: typing.Mapping[snowflakes.Snowflake, users.User] = marshaller.attrib(
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.users.User` ]
+    recipients: typing.Mapping[bases.Snowflake, users.User] = marshaller.attrib(
         deserializer=lambda recipients: {user.id: user for user in map(users.User.deserialize, recipients)}
     )
 
@@ -219,8 +215,8 @@ class GroupDMChannel(DMChannel):
 
     #: The ID of the owner of the group.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    owner_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    owner_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The hash of the icon of the group.
     #:
@@ -230,9 +226,9 @@ class GroupDMChannel(DMChannel):
     #: The ID of the application that created the group DM, if it's a
     #: bot based group DM.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    application_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    application_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
 
@@ -243,8 +239,8 @@ class GuildChannel(Channel):
 
     #: The ID of the guild the channel belongs to.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    guild_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The sorting position of the channel.
     #:
@@ -253,7 +249,7 @@ class GuildChannel(Channel):
 
     #: The permission overwrites for the channel.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~PermissionOverwrite` ]
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~PermissionOverwrite` ]
     permission_overwrites: PermissionOverwrite = marshaller.attrib(
         deserializer=lambda overwrites: {o.id: o for o in map(PermissionOverwrite.deserialize, overwrites)}
     )
@@ -270,8 +266,8 @@ class GuildChannel(Channel):
 
     #: The ID of the parent category the channel belongs to.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    parent_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize, if_none=None)
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    parent_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize, if_none=None)
 
 
 @register_channel_type(ChannelType.GUILD_CATEGORY)
@@ -299,10 +295,8 @@ class GuildTextChannel(GuildChannel):
     #: This might point to an invalid or deleted message.
     #:
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    last_message_id: snowflakes.Snowflake = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_none=None
-    )
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize, if_none=None)
 
     #: The delay (in seconds) between a user can send a message
     #: to this channel.
@@ -336,10 +330,8 @@ class GuildNewsChannel(GuildChannel):
     #: This might point to an invalid or deleted message.
     #:
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    last_message_id: snowflakes.Snowflake = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_none=None
-    )
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize, if_none=None)
 
 
 @register_channel_type(ChannelType.GUILD_STORE)
@@ -398,8 +390,8 @@ class GuildChannelBuilder(marshaller.Serializable):
             "name": channel_name,
         }
 
-    def serialize(self: "GuildChannelBuilder") -> entities.RawEntityT:
-        """Serialize this instance into a naive value."""
+    def serialize(self: "GuildChannelBuilder") -> typing.Mapping[str, typing.Any]:
+        """Serialize this instance into a payload to send to Discord."""
         return self._payload
 
     def is_nsfw(self) -> "GuildChannelBuilder":
@@ -475,19 +467,19 @@ class GuildChannelBuilder(marshaller.Serializable):
         )
         return self
 
-    def with_parent_category(self, category: typing.Union[snowflakes.Snowflake, int]) -> "GuildChannelBuilder":
+    def with_parent_category(self, category: typing.Union[bases.Snowflake, int]) -> "GuildChannelBuilder":
         """Set the parent category for this channel.
 
         Parameters
         ----------
-        category : :obj:`~typing.Union` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        category : :obj:`~typing.Union` [ :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The placeholder ID of the category channel that should be this
             channel's parent.
         """
         self._payload["parent_id"] = str(int(category))
         return self
 
-    def with_id(self, channel_id: typing.Union[snowflakes.Snowflake, int]) -> "GuildChannelBuilder":
+    def with_id(self, channel_id: typing.Union[bases.Snowflake, int]) -> "GuildChannelBuilder":
         """Set the placeholder ID for this channel.
 
         Notes
@@ -497,7 +489,7 @@ class GuildChannelBuilder(marshaller.Serializable):
 
         Parameters
         ----------
-        channel_id : :obj:`~typing.Union` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel_id : :obj:`~typing.Union` [ :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The placeholder ID to use.
         """
         self._payload["id"] = str(int(channel_id))

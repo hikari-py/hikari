@@ -24,13 +24,13 @@ import abc
 import datetime
 import typing
 
+from hikari import bases
+from hikari import channels as _channels
+from hikari import emojis
+from hikari import messages as _messages
+from hikari import users
 from hikari.clients.rest_clients import component_base
 from hikari.internal import pagination
-from hikari import channels as _channels
-from hikari import messages as _messages
-from hikari import emojis
-from hikari import snowflakes
-from hikari import users
 
 
 class RESTReactionComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
@@ -38,17 +38,17 @@ class RESTReactionComponent(component_base.BaseRESTComponent, abc.ABC):  # pylin
 
     async def create_reaction(
         self,
-        channel: snowflakes.HashableT[_channels.Channel],
-        message: snowflakes.HashableT[_messages.Message],
+        channel: bases.Hashable[_channels.Channel],
+        message: bases.Hashable[_messages.Message],
         emoji: typing.Union[emojis.Emoji, str],
     ) -> None:
         """Add a reaction to the given message in the given channel.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to add this reaction in.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the message to add the reaction in.
         emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
             The emoji to add. This can either be an emoji object or a string
@@ -70,24 +70,24 @@ class RESTReactionComponent(component_base.BaseRESTComponent, abc.ABC):  # pylin
             due to it being outside of the range of a 64 bit integer.
         """
         await self._session.create_reaction(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, snowflakes.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
             emoji=str(getattr(emoji, "url_name", emoji)),
         )
 
     async def delete_reaction(
         self,
-        channel: snowflakes.HashableT[_channels.Channel],
-        message: snowflakes.HashableT[_messages.Message],
+        channel: bases.Hashable[_channels.Channel],
+        message: bases.Hashable[_messages.Message],
         emoji: typing.Union[emojis.Emoji, str],
     ) -> None:
         """Remove your own reaction from the given message in the given channel.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to add this reaction in.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the message to add the reaction in.
         emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
             The emoji to add. This can either be an emoji object or a
@@ -110,21 +110,21 @@ class RESTReactionComponent(component_base.BaseRESTComponent, abc.ABC):  # pylin
             due to it being outside of the range of a 64 bit integer.
         """
         await self._session.delete_own_reaction(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, snowflakes.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
             emoji=str(getattr(emoji, "url_name", emoji)),
         )
 
     async def delete_all_reactions(
-        self, channel: snowflakes.HashableT[_channels.Channel], message: snowflakes.HashableT[_messages.Message],
+        self, channel: bases.Hashable[_channels.Channel], message: bases.Hashable[_messages.Message],
     ) -> None:
         """Delete all reactions from a given message in a given channel.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the message to remove all reactions from.
 
         Raises
@@ -138,23 +138,23 @@ class RESTReactionComponent(component_base.BaseRESTComponent, abc.ABC):  # pylin
             If you lack the ``MANAGE_MESSAGES`` permission.
         """
         await self._session.delete_all_reactions(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, snowflakes.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
         )
 
     async def delete_all_reactions_for_emoji(
         self,
-        channel: snowflakes.HashableT[_channels.Channel],
-        message: snowflakes.HashableT[_messages.Message],
+        channel: bases.Hashable[_channels.Channel],
+        message: bases.Hashable[_messages.Message],
         emoji: typing.Union[emojis.Emoji, str],
     ) -> None:
         """Remove all reactions for a single given emoji on a given message.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the message to delete the reactions from.
         emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
             The object or string representatiom of the emoji to delete. The
@@ -173,18 +173,18 @@ class RESTReactionComponent(component_base.BaseRESTComponent, abc.ABC):  # pylin
             DM channel.
         """
         await self._session.delete_all_reactions_for_emoji(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, snowflakes.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
             emoji=str(getattr(emoji, "url_name", emoji)),
         )
 
     def fetch_reactors_after(
         self,
-        channel: snowflakes.HashableT[_channels.Channel],
-        message: snowflakes.HashableT[_messages.Message],
+        channel: bases.Hashable[_channels.Channel],
+        message: bases.Hashable[_messages.Message],
         emoji: typing.Union[emojis.Emoji, str],
         *,
-        after: typing.Union[datetime.datetime, snowflakes.HashableT[users.User]] = 0,
+        after: typing.Union[datetime.datetime, bases.Hashable[users.User]] = 0,
         limit: typing.Optional[int] = None,
     ) -> typing.AsyncIterator[users.User]:
         """Get an async iterator of the users who reacted to a message.
@@ -194,16 +194,16 @@ class RESTReactionComponent(component_base.BaseRESTComponent, abc.ABC):  # pylin
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the message to get the reactions from.
         emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
             The emoji to get. This can either be it's object or the string
             representation of the emoji. The string representation will be
             either ``"name:id"`` for custom emojis else it's unicode
             character(s) (can be UTF-32).
-        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             If specified, a object or ID user. If specified, only users with a
             snowflake that is lexicographically greater than the value will be
             returned.
@@ -235,12 +235,12 @@ class RESTReactionComponent(component_base.BaseRESTComponent, abc.ABC):  # pylin
             If the channel or message is not found.
         """
         if isinstance(after, datetime.datetime):
-            after = str(snowflakes.Snowflake.from_datetime(after))
+            after = str(bases.Snowflake.from_datetime(after))
         else:
-            after = str(after.id if isinstance(after, snowflakes.UniqueEntity) else int(after))
+            after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
         return pagination.pagination_handler(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, snowflakes.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
             emoji=getattr(emoji, "url_name", emoji),
             deserializer=users.User.deserialize,
             direction="after",

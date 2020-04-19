@@ -22,99 +22,21 @@
 """
 from __future__ import annotations
 
-__all__ = ["Future", "Task", "completed_future"]
+__all__ = ["completed_future"]
 
 import asyncio
-import contextvars
 import typing
 
-T = typing.TypeVar("T")
-T_co = typing.TypeVar("T_co")
-
-try:
-    raise Exception
-except Exception as ex:  # pylint:disable=broad-except
-    tb = ex.__traceback__
-    StackFrameType = type(tb.tb_frame)
-
-
-# pylint:disable=unused-variable
-@typing.runtime_checkable
-class Future(typing.Protocol[T]):
-    """Typed protocol representation of an :obj:`~asyncio.Future`.
-
-    You should consult the documentation for :obj:`~asyncio.Future` for usage.
-    """
-
-    def result(self) -> T:
-        """See :meth:`asyncio.Future.result`."""
-
-    def set_result(self, result: T, /) -> None:
-        """See :meth:`asyncio.Future.set_result`."""
-
-    def set_exception(self, exception: Exception, /) -> None:
-        """See :meth:`asyncio.Future.set_exception`."""
-
-    def done(self) -> bool:
-        """See :meth:`asyncio.Future.done`."""
-
-    def cancelled(self) -> bool:
-        """See :meth:`asyncio.Future.cancelled`."""
-
-    def add_done_callback(
-        self, callback: typing.Callable[[Future[T]], None], /, *, context: typing.Optional[contextvars.Context],
-    ) -> None:
-        """See :meth:`asyncio.Future.add_done_callback`."""
-
-    def remove_done_callback(self, callback: typing.Callable[[Future[T]], None], /) -> None:
-        """See :meth:`asyncio.Future.remove_done_callback`."""
-
-    def cancel(self) -> bool:
-        """See :meth:`asyncio.Future.cancel`."""
-
-    def exception(self) -> typing.Optional[Exception]:
-        """See :meth:`asyncio.Future.exception`."""
-
-    def get_loop(self) -> asyncio.AbstractEventLoop:
-        """See :meth:`asyncio.Future.get_loop`."""
-
-    def __await__(self) -> typing.Coroutine[None, None, T]:
-        ...
-
-
-# pylint:enable=unused-variable
-
-
-# pylint:disable=unused-variable
-class Task(Future[T]):
-    """Typed protocol representation of an :obj:`~asyncio.Task`.
-
-    You should consult the documentation for :obj:`~asyncio.Task` for usage.
-    """
-
-    def get_stack(self, *, limit: typing.Optional[int] = None) -> typing.Sequence[StackFrameType]:
-        """See :meth:`asyncio.Task.get_stack`."""
-
-    def print_stack(self, *, limit: typing.Optional[int] = None, file: typing.Optional[typing.IO] = None) -> None:
-        """See :meth:`asyncio.Task.print_stack`."""
-
-    def get_name(self) -> str:
-        """See :meth:`asyncio.Task.get_name`."""
-
-    def set_name(self, value: str, /) -> None:
-        """See :meth:`asyncio.Task.set_name`."""
-
-
-# pylint:enable=unused-variable
+from hikari.internal import more_typing
 
 
 @typing.overload
-def completed_future() -> Future[None]:
+def completed_future() -> more_typing.Future[None]:
     """Return a completed future with no result."""
 
 
 @typing.overload
-def completed_future(result: T, /) -> Future[T]:
+def completed_future(result: more_typing.T_contra, /) -> more_typing.Future[more_typing.T_contra]:
     """Return a completed future with the given value as the result."""
 
 
@@ -137,15 +59,15 @@ def completed_future(result=None, /):
 
 
 def wait(
-    aws, *, timeout=None, return_when=asyncio.ALL_COMPLETED
-) -> typing.Coroutine[typing.Any, typing.Any, typing.Tuple[typing.Set[Future], typing.Set[Future]]]:
+    aws: typing.Union[more_typing.Coroutine, typing.Awaitable], *, timeout=None, return_when=asyncio.ALL_COMPLETED
+) -> more_typing.Coroutine[typing.Tuple[typing.Set[more_typing.Future], typing.Set[more_typing.Future]]]:
     """Run awaitable objects in the aws set concurrently.
 
     This blocks until the condition specified by `return_value`.
 
     Returns
     -------
-    :obj:`~typing.Coroutine` [ :obj:`~typing.Any`, :obj:`~typing.Any`, :obj:`~typing.Tuple` [ :obj:`~typing.Set` [ :obj:`~Future` ], :obj:`~typing.Set` [ :obj:`~Future` ] ] ]
+    :obj:`~typing.Tuple` with two :obj:`~typing.Set` of futures.
         The coroutine returned by :obj:`~asyncio.wait` of two sets of
         Tasks/Futures (done, pending).
     """

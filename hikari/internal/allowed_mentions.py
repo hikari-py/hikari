@@ -25,8 +25,8 @@ __all__ = ["generate_allowed_mentions"]
 
 import typing
 
+from hikari import bases
 from hikari import guilds
-from hikari import snowflakes
 from hikari import users
 from hikari.internal import assertions
 from hikari.internal import more_collections
@@ -34,8 +34,8 @@ from hikari.internal import more_collections
 
 def generate_allowed_mentions(
     mentions_everyone: bool,
-    user_mentions: typing.Union[typing.Collection[snowflakes.HashableT[users.User]], bool],
-    role_mentions: typing.Union[typing.Collection[snowflakes.HashableT[guilds.GuildRole]], bool],
+    user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool],
+    role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool],
 ) -> typing.Dict[str, typing.Sequence[str]]:
     """Generate an allowed mentions object based on input mention rules.
 
@@ -44,11 +44,11 @@ def generate_allowed_mentions(
     mentions_everyone : :obj:`~bool`
         Whether ``@everyone`` and ``@here`` mentions should be resolved by
         discord and lead to actual pings.
-    user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
+    user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
         Either an array of user objects/IDs to allow mentions for,
         :obj:`~True` to allow all user mentions or :obj:`~False` to block all
         user mentions from resolving.
-    role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
+    role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
         Either an array of guild role objects/IDs to allow mentions for,
         :obj:`~True` to allow all role mentions or :obj:`~False` to block all
         role mentions from resolving.
@@ -61,7 +61,7 @@ def generate_allowed_mentions(
     Raises
     ------
     :obj:`~ValueError`
-        If more than 100 unique objects/snowflakes are passed for
+        If more than 100 unique objects/entities are passed for
         ``role_mentions`` or ``user_mentions.
     """
     parsed_mentions = []
@@ -76,7 +76,7 @@ def generate_allowed_mentions(
         allowed_mentions["users"] = list(
             # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
             dict.fromkeys(
-                str(user.id if isinstance(user, snowflakes.UniqueEntity) else int(user))
+                str(user.id if isinstance(user, bases.UniqueEntity) else int(user))
                 for user in user_mentions or more_collections.EMPTY_SEQUENCE
             )
         )
@@ -89,7 +89,7 @@ def generate_allowed_mentions(
         allowed_mentions["roles"] = list(
             # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
             dict.fromkeys(
-                str(role.id if isinstance(role, snowflakes.UniqueEntity) else int(role))
+                str(role.id if isinstance(role, bases.UniqueEntity) else int(role))
                 for role in role_mentions or more_collections.EMPTY_SEQUENCE
             )
         )

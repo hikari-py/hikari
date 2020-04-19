@@ -30,18 +30,17 @@ import typing
 from hikari import events
 from hikari import gateway_entities
 from hikari import guilds
+from hikari import intents
 from hikari.clients import configs
 from hikari.clients import rest_clients
 from hikari.clients import runnable
 from hikari.clients import shard_clients
 from hikari.internal import conversions
-from hikari.internal import more_asyncio
 from hikari.internal import more_collections
-from hikari.net import codes
+from hikari.internal import more_typing
 from hikari.state import event_dispatchers
 from hikari.state import event_managers
 from hikari.state import stateless_event_managers
-
 
 ShardClientT = typing.TypeVar("ShardClientT", bound=shard_clients.ShardClient)
 EventManagerT = typing.TypeVar("EventManagerT", bound=event_managers.EventManager)
@@ -159,12 +158,12 @@ class BotBase(
         return sum(s.reconnect_count for s in self.shards.values())
 
     @property
-    def intents(self) -> typing.Optional[codes.GatewayIntent]:
+    def intents(self) -> typing.Optional[intents.Intent]:
         """Intent values that any shard connections will be using.
 
         Returns
         -------
-        :obj:`~hikari.net.codes.GatewayIntent`, optional
+        :obj:`~hikari.intents.Intent`, optional
             A :obj:`~enum.IntFlag` enum containing each intent that is set. If
             intents are not being used at all, then this will return
             :obj:`~None` instead.
@@ -261,17 +260,17 @@ class BotBase(
         *,
         timeout: typing.Optional[float],
         predicate: event_dispatchers.PredicateT,
-    ) -> more_asyncio.Future:
+    ) -> more_typing.Future:
         return self.event_manager.event_dispatcher.wait_for(event_type, timeout=timeout, predicate=predicate)
 
-    def dispatch_event(self, event: events.HikariEvent) -> more_asyncio.Future[typing.Any]:
+    def dispatch_event(self, event: events.HikariEvent) -> more_typing.Future[typing.Any]:
         return self.event_manager.event_dispatcher.dispatch_event(event)
 
     async def update_presence(
         self,
         *,
         status: guilds.PresenceStatus = ...,
-        activity: typing.Optional[gateway_entities.GatewayActivity] = ...,
+        activity: typing.Optional[gateway_entities.Activity] = ...,
         idle_since: typing.Optional[datetime.datetime] = ...,
         is_afk: bool = ...,
     ) -> None:

@@ -25,8 +25,8 @@ from __future__ import annotations
 __all__ = ["RawEventConsumer"]
 
 import abc
+import typing
 
-from hikari import entities
 from hikari.clients import shard_clients
 
 
@@ -43,7 +43,7 @@ class RawEventConsumer(abc.ABC):
 
     @abc.abstractmethod
     def process_raw_event(
-        self, shard_client_obj: shard_clients.ShardClient, name: str, payload: entities.RawEntityT,
+        self, shard_client_obj: shard_clients.ShardClient, name: str, payload: typing.Mapping[str, str],
     ) -> None:
         """Consume a raw event that was received from a shard connection.
 

@@ -23,8 +23,8 @@ __all__ = ["RESTVoiceComponent"]
 import abc
 import typing
 
-from hikari.clients.rest_clients import component_base
 from hikari import voices
+from hikari.clients.rest_clients import component_base
 
 
 class RESTVoiceComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223

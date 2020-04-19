@@ -65,19 +65,19 @@ class TestGatewayActivity:
         return {"name": "Presence me baby", "url": "http://a-url-name", "type": 1}
 
     def test_deserialize_full_config(self, test_gateway_activity_config):
-        gateway_activity_obj = gateway_entities.GatewayActivity.deserialize(test_gateway_activity_config)
+        gateway_activity_obj = gateway_entities.Activity.deserialize(test_gateway_activity_config)
         assert gateway_activity_obj.name == "Presence me baby"
         assert gateway_activity_obj.url == "http://a-url-name"
         assert gateway_activity_obj.type is guilds.ActivityType.STREAMING
 
     def test_deserialize_partial_config(self):
-        gateway_activity_obj = gateway_entities.GatewayActivity.deserialize({"name": "Presence me baby"})
+        gateway_activity_obj = gateway_entities.Activity.deserialize({"name": "Presence me baby"})
         assert gateway_activity_obj.name == "Presence me baby"
         assert gateway_activity_obj.url == None
         assert gateway_activity_obj.type is guilds.ActivityType.PLAYING
 
     def test_serialize_full_activity(self):
-        gateway_activity_obj = gateway_entities.GatewayActivity(
+        gateway_activity_obj = gateway_entities.Activity(
             name="Presence me baby", url="http://a-url-name", type=guilds.ActivityType.STREAMING
         )
         assert gateway_activity_obj.serialize() == {
@@ -87,7 +87,7 @@ class TestGatewayActivity:
         }
 
     def test_serialize_partial_activity(self):
-        gateway_activity_obj = gateway_entities.GatewayActivity(name="Presence me baby",)
+        gateway_activity_obj = gateway_entities.Activity(name="Presence me baby",)
         assert gateway_activity_obj.serialize() == {
             "name": "Presence me baby",
             "type": 0,
