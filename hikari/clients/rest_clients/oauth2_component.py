@@ -22,8 +22,8 @@ __all__ = ["RESTOauth2Component"]
 
 import abc
 
-from hikari.clients.rest_clients import component_base
 from hikari import oauth2
+from hikari.clients.rest_clients import component_base
 
 
 class RESTOauth2Component(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223

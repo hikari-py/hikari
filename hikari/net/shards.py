@@ -47,6 +47,7 @@ import zlib
 import aiohttp.typedefs
 
 from hikari import errors
+from hikari import intents as _intents
 from hikari.internal import more_asyncio
 from hikari.net import codes
 from hikari.net import ratelimits
@@ -103,7 +104,7 @@ class ShardConnection:
         initial presence of the bot user once online. If :obj:`~None`, then it
         will be set to the default, which is showing up as online without a
         custom status message.
-    intents: :obj:`~hikari.net.codes.GatewayIntent`, optional
+    intents: :obj:`~hikari.intents.Intent`, optional
         Bitfield of intents to use. If you use the V7 API, this is mandatory.
         This field will determine what events you will receive.
     json_deserialize: ``deserialization function``
@@ -203,7 +204,7 @@ class ShardConnection:
     _connected_at: float
     _connector: typing.Optional[aiohttp.BaseConnector]
     _debug: bool
-    _intents: typing.Optional[codes.GatewayIntent]
+    _intents: typing.Optional[_intents.Intent]
     _large_threshold: int
     _json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict]
     _json_serialize: typing.Callable[[typing.Dict], typing.AnyStr]
@@ -342,7 +343,7 @@ class ShardConnection:
         debug: bool = False,
         dispatch: DispatchT = lambda gw, e, p: None,
         initial_presence: typing.Optional[typing.Dict] = None,
-        intents: typing.Optional[codes.GatewayIntent] = None,
+        intents: typing.Optional[_intents.Intent] = None,
         json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict] = json.loads,
         json_serialize: typing.Callable[[typing.Dict], typing.AnyStr] = json.dumps,
         large_threshold: int = 250,
@@ -436,7 +437,7 @@ class ShardConnection:
         return not math.isnan(self._connected_at)
 
     @property
-    def intents(self) -> typing.Optional[codes.GatewayIntent]:
+    def intents(self) -> typing.Optional[_intents.Intent]:
         """Intents being used.
 
         If this is :obj:`~None`, no intent usage was being
@@ -446,7 +447,7 @@ class ShardConnection:
 
         Returns
         -------
-        :obj:`~hikari.net.codes.GatewayIntent`, optional
+        :obj:`~hikari.intents.Intent`, optional
             The intents being used.
         """
         return self._intents
@@ -718,6 +719,7 @@ class ShardConnection:
     async def _identify(self):
         self.logger.debug("preparing to send IDENTIFY")
 
+        # noinspection PyArgumentList
         pl = {
             "op": codes.GatewayOpcode.IDENTIFY,
             "d": {
@@ -856,6 +858,7 @@ class ShardConnection:
             if message.type == aiohttp.WSMsgType.CLOSE:
                 close_code = self._ws.close_code
                 try:
+                    # noinspection PyArgumentList
                     close_code = codes.GatewayCloseCode(close_code)
                 except ValueError:
                     pass

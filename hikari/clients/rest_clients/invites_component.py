@@ -23,8 +23,8 @@ __all__ = ["RESTInviteComponent"]
 import abc
 import typing
 
-from hikari.clients.rest_clients import component_base
 from hikari import invites
+from hikari.clients.rest_clients import component_base
 
 
 class RESTInviteComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223

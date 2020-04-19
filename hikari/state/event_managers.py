@@ -23,7 +23,6 @@ import inspect
 import logging
 import typing
 
-from hikari import entities
 from hikari.clients import shard_clients
 from hikari.internal import assertions
 from hikari.state import event_dispatchers
@@ -31,7 +30,7 @@ from hikari.state import raw_event_consumers
 
 EVENT_MARKER_ATTR: typing.Final[str] = "___event_name___"
 
-EventConsumerT = typing.Callable[[str, entities.RawEntityT], typing.Awaitable[None]]
+EventConsumerT = typing.Callable[[str, typing.Mapping[str, str]], typing.Awaitable[None]]
 
 
 def raw_event_mapper(name: str) -> typing.Callable[[EventConsumerT], EventConsumerT]:
@@ -150,7 +149,7 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
                 self.raw_event_mappers[event_name] = member
 
     def process_raw_event(
-        self, shard_client_obj: shard_clients.ShardClient, name: str, payload: entities.RawEntityT,
+        self, shard_client_obj: shard_clients.ShardClient, name: str, payload: typing.Mapping[str, typing.Any],
     ) -> None:
         """Process a low level event.
 

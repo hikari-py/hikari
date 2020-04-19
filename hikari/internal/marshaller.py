@@ -43,6 +43,7 @@ import weakref
 import attr
 
 from hikari.internal import assertions
+from hikari.internal import more_typing
 
 _RAW_NAME_ATTR: typing.Final[str] = __name__ + "_RAW_NAME"
 _SERIALIZER_ATTR: typing.Final[str] = __name__ + "_SERIALIZER"
@@ -52,10 +53,6 @@ _IF_UNDEFINED: typing.Final[str] = __name__ + "IF_UNDEFINED"
 _IF_NONE: typing.Final[str] = __name__ + "_IF_NONE"
 _PASSED_THROUGH_SINGLETONS: typing.Final[typing.Sequence[bool]] = [False, True, None]
 RAISE: typing.Final[typing.Any] = object()
-
-T_contra = typing.TypeVar("T_contra", contravariant=True)
-T_co = typing.TypeVar("T_co", covariant=True)
-
 EntityT = typing.TypeVar("EntityT", contravariant=True)
 
 
@@ -229,7 +226,7 @@ class _AttributeDescriptor:
 class _EntityDescriptor:
     __slots__ = ("entity_type", "attribs")
 
-    def __init__(self, entity_type: typing.Type, attribs: typing.Collection[_AttributeDescriptor],) -> None:
+    def __init__(self, entity_type: typing.Type, attribs: typing.Collection[_AttributeDescriptor]) -> None:
         self.entity_type = entity_type
         self.attribs = tuple(attribs)
 
@@ -256,7 +253,7 @@ def _construct_attribute_descriptor(field: attr.Attribute) -> _AttributeDescript
     )
 
 
-def _construct_entity_descriptor(entity: typing.Any):
+def _construct_entity_descriptor(entity: typing.Any) -> _EntityDescriptor:
     assertions.assert_that(
         hasattr(entity, "__attrs_attrs__"),
         f"{entity.__module__}.{entity.__qualname__} is not an attr class",
@@ -274,6 +271,8 @@ class HikariEntityMarshaller:
     :func:`attr.s` classes using fields with the :obj:`~attrib` function call
     descriptor.
     """
+
+    __slots__ = ("_registered_entities",)
 
     def __init__(self) -> None:
         self._registered_entities: typing.MutableMapping[typing.Type, _EntityDescriptor] = {}
@@ -301,7 +300,7 @@ class HikariEntityMarshaller:
         self._registered_entities[cls] = entity_descriptor
         return cls
 
-    def deserialize(self, raw_data: typing.Mapping[str, typing.Any], target_type: typing.Type[EntityT]) -> EntityT:
+    def deserialize(self, raw_data: more_typing.JSONObject, target_type: typing.Type[EntityT]) -> EntityT:
         """Deserialize a given raw data item into the target type.
 
         Parameters
@@ -374,7 +373,7 @@ class HikariEntityMarshaller:
 
         return target_type(**kwargs)
 
-    def serialize(self, obj: typing.Optional[typing.Any]) -> typing.Optional[typing.Mapping[str, typing.Any]]:
+    def serialize(self, obj: typing.Optional[typing.Any]) -> more_typing.NullableJSONObject:
         """Serialize a given entity into a raw data item.
 
         Parameters
@@ -463,7 +462,7 @@ class Deserializable:
     __slots__ = ()
 
     @classmethod
-    def deserialize(cls: typing.Type[T_contra], payload: typing.Any) -> T_contra:
+    def deserialize(cls: typing.Type[more_typing.T_contra], payload: more_typing.JSONType) -> more_typing.T_contra:
         """Deserialize the given payload into the object.
 
         Parameters
@@ -479,6 +478,6 @@ class Serializable:
 
     __slots__ = ()
 
-    def serialize(self: T_co) -> typing.Any:
+    def serialize(self: more_typing.T_contra) -> more_typing.JSONType:
         """Serialize this instance into a naive value."""
         return HIKARI_ENTITY_MARSHALLER.serialize(self)

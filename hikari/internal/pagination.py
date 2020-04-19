@@ -25,11 +25,13 @@ __all__ = ["pagination_handler"]
 
 import typing
 
+from hikari.internal import more_typing
+
 
 async def pagination_handler(
     deserializer: typing.Callable[[typing.Any], typing.Any],
     direction: typing.Union[typing.Literal["before"], typing.Literal["after"]],
-    request: typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, typing.Any]],
+    request: typing.Callable[..., more_typing.Coroutine[typing.Any]],
     reversing: bool,
     start: typing.Union[str, None],
     limit: typing.Optional[int] = None,
@@ -88,4 +90,5 @@ async def pagination_handler(
             yield entity
         if limit == 0:
             break
+        # TODO: @FasterSpeeding: can `payloads` ever be empty, leading this to be undefined?
         start = id_getter(entity)

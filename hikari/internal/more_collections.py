@@ -35,18 +35,18 @@ import typing
 
 import weakref
 
-T = typing.TypeVar("T")
-K = typing.TypeVar("K", bound=typing.Hashable)
-V = typing.TypeVar("V")
+_T = typing.TypeVar("_T")
+_K = typing.TypeVar("_K", bound=typing.Hashable)
+_V = typing.TypeVar("_V")
 
-EMPTY_SEQUENCE: typing.Final[typing.Sequence[T]] = tuple()
-EMPTY_SET: typing.Final[typing.AbstractSet[T]] = frozenset()
-EMPTY_COLLECTION: typing.Final[typing.Collection[T]] = tuple()
-EMPTY_DICT: typing.Final[typing.Mapping[K, V]] = types.MappingProxyType({})
-EMPTY_GENERATOR_EXPRESSION: typing.Final[typing.Iterator[T]] = (_ for _ in EMPTY_COLLECTION)
+EMPTY_SEQUENCE: typing.Final[typing.Sequence[_T]] = tuple()
+EMPTY_SET: typing.Final[typing.AbstractSet[_T]] = frozenset()
+EMPTY_COLLECTION: typing.Final[typing.Collection[_T]] = tuple()
+EMPTY_DICT: typing.Final[typing.Mapping[_K, _V]] = types.MappingProxyType({})
+EMPTY_GENERATOR_EXPRESSION: typing.Final[typing.Iterator[_T]] = (_ for _ in EMPTY_COLLECTION)
 
 
-class WeakKeyDictionary(typing.Generic[K, V], weakref.WeakKeyDictionary, typing.MutableMapping[K, V]):
+class WeakKeyDictionary(typing.Generic[_K, _V], weakref.WeakKeyDictionary, typing.MutableMapping[_K, _V]):
     """A dictionary that has weak references to the keys.
 
     This is a type-safe version of :obj:`~weakref.WeakKeyDictionary` which
