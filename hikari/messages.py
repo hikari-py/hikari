@@ -38,7 +38,7 @@ from hikari import bases
 from hikari import embeds as _embeds
 from hikari import emojis as _emojis
 from hikari import guilds
-from hikari import oauth2
+from hikari import applications
 from hikari import users
 from hikari.internal import conversions
 from hikari.internal import marshaller
@@ -374,8 +374,8 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
     #: The message application.
     #:
     #: :type: :obj:`~hikari.oauth2.Application`, optional
-    application: typing.Optional[oauth2.Application] = marshaller.attrib(
-        deserializer=oauth2.Application.deserialize, if_undefined=None, default=None
+    application: typing.Optional[applications.Application] = marshaller.attrib(
+        deserializer=applications.Application.deserialize, if_undefined=None, default=None
     )
 
     #: The message crossposted reference data.

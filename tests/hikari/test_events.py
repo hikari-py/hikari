@@ -29,7 +29,7 @@ from hikari import events
 from hikari import guilds
 from hikari import invites
 from hikari import messages
-from hikari import oauth2
+from hikari import applications
 from hikari import unset
 from hikari import users
 from hikari.internal import conversions
@@ -638,7 +638,7 @@ class TestMessageUpdateEvent:
         mock_embed = mock.MagicMock(embeds.Embed)
         mock_reaction = mock.MagicMock(messages.Reaction)
         mock_activity = mock.MagicMock(messages.MessageActivity)
-        mock_application = mock.MagicMock(oauth2.Application)
+        mock_application = mock.MagicMock(applications.Application)
         mock_reference = mock.MagicMock(messages.MessageCrosspost)
         stack = contextlib.ExitStack()
         patched_author_deserializer = stack.enter_context(
@@ -682,7 +682,7 @@ class TestMessageUpdateEvent:
             _helpers.patch_marshal_attr(
                 events.MessageUpdateEvent,
                 "application",
-                deserializer=oauth2.Application.deserialize,
+                deserializer=applications.Application.deserialize,
                 return_value=mock_application,
             )
         )

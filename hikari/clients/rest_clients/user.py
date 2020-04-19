@@ -24,10 +24,10 @@ import abc
 
 from hikari import bases
 from hikari import users
-from hikari.clients.rest_clients import component_base
+from hikari.clients.rest_clients import base
 
 
-class RESTUserComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
     """The REST client component for handling requests to user endpoints."""
 
     async def fetch_user(self, user: bases.Hashable[users.User]) -> users.User:

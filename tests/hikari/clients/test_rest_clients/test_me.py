@@ -25,9 +25,9 @@ import pytest
 
 from hikari import channels
 from hikari import guilds
-from hikari import oauth2
+from hikari import applications
 from hikari import users
-from hikari.clients.rest_clients import current_users_component
+from hikari.clients.rest_clients import me
 from hikari.internal import conversions
 from hikari.internal import pagination
 from hikari.net import rest_sessions
@@ -39,7 +39,7 @@ class TestRESTInviteLogic:
     def rest_clients_impl(self):
         mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
-        class RESTCurrentUserLogicImpl(current_users_component.RESTCurrentUserComponent):
+        class RESTCurrentUserLogicImpl(me.RESTCurrentUserComponent):
             def __init__(self):
                 super().__init__(mock_low_level_restful_client)
 
@@ -86,12 +86,12 @@ class TestRESTInviteLogic:
     @pytest.mark.asyncio
     async def test_fetch_my_connections(self, rest_clients_impl):
         mock_connection_payload = {"id": "odnkwu", "type": "twitch", "name": "eric"}
-        mock_connection_obj = mock.MagicMock(oauth2.OwnConnection)
+        mock_connection_obj = mock.MagicMock(applications.OwnConnection)
         rest_clients_impl._session.get_current_user_connections.return_value = [mock_connection_payload]
-        with mock.patch.object(oauth2.OwnConnection, "deserialize", return_value=mock_connection_obj):
+        with mock.patch.object(applications.OwnConnection, "deserialize", return_value=mock_connection_obj):
             assert await rest_clients_impl.fetch_my_connections() == [mock_connection_obj]
             rest_clients_impl._session.get_current_user_connections.assert_called_once()
-            oauth2.OwnConnection.deserialize.assert_called_once_with(mock_connection_payload)
+            applications.OwnConnection.deserialize.assert_called_once_with(mock_connection_payload)
 
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
     def test_fetch_my_guilds_after_with_optionals(self, rest_clients_impl, guild):
@@ -99,7 +99,7 @@ class TestRESTInviteLogic:
         with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
             assert rest_clients_impl.fetch_my_guilds_after(after=guild, limit=50) is mock_generator
             pagination.pagination_handler.assert_called_once_with(
-                deserializer=oauth2.OwnGuild.deserialize,
+                deserializer=applications.OwnGuild.deserialize,
                 direction="after",
                 request=rest_clients_impl._session.get_current_user_guilds,
                 reversing=False,
@@ -112,7 +112,7 @@ class TestRESTInviteLogic:
         with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
             assert rest_clients_impl.fetch_my_guilds_after() is mock_generator
             pagination.pagination_handler.assert_called_once_with(
-                deserializer=oauth2.OwnGuild.deserialize,
+                deserializer=applications.OwnGuild.deserialize,
                 direction="after",
                 request=rest_clients_impl._session.get_current_user_guilds,
                 reversing=False,
@@ -126,7 +126,7 @@ class TestRESTInviteLogic:
         with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
             assert rest_clients_impl.fetch_my_guilds_after(after=date) is mock_generator
             pagination.pagination_handler.assert_called_once_with(
-                deserializer=oauth2.OwnGuild.deserialize,
+                deserializer=applications.OwnGuild.deserialize,
                 direction="after",
                 request=rest_clients_impl._session.get_current_user_guilds,
                 reversing=False,
@@ -140,7 +140,7 @@ class TestRESTInviteLogic:
         with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
             assert rest_clients_impl.fetch_my_guilds_before(before=guild, limit=50) is mock_generator
             pagination.pagination_handler.assert_called_once_with(
-                deserializer=oauth2.OwnGuild.deserialize,
+                deserializer=applications.OwnGuild.deserialize,
                 direction="before",
                 request=rest_clients_impl._session.get_current_user_guilds,
                 reversing=False,
@@ -153,7 +153,7 @@ class TestRESTInviteLogic:
         with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
             assert rest_clients_impl.fetch_my_guilds_before() is mock_generator
             pagination.pagination_handler.assert_called_once_with(
-                deserializer=oauth2.OwnGuild.deserialize,
+                deserializer=applications.OwnGuild.deserialize,
                 direction="before",
                 request=rest_clients_impl._session.get_current_user_guilds,
                 reversing=False,
@@ -167,7 +167,7 @@ class TestRESTInviteLogic:
         with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
             assert rest_clients_impl.fetch_my_guilds_before(before=date) is mock_generator
             pagination.pagination_handler.assert_called_once_with(
-                deserializer=oauth2.OwnGuild.deserialize,
+                deserializer=applications.OwnGuild.deserialize,
                 direction="before",
                 request=rest_clients_impl._session.get_current_user_guilds,
                 reversing=False,

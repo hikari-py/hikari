@@ -33,7 +33,7 @@ from hikari import permissions
 from hikari import users
 from hikari import voices
 from hikari import webhooks
-from hikari.clients.rest_clients import guilds_component
+from hikari.clients.rest_clients import guild as _guild
 from hikari.internal import conversions
 from hikari.internal import pagination
 from hikari.net import rest_sessions
@@ -44,7 +44,7 @@ def test__get_member_id():
     member = mock.MagicMock(
         guilds.GuildMember, user=mock.MagicMock(users.User, id=123123123, __int__=users.User.__int__)
     )
-    assert guilds_component._get_member_id(member) == "123123123"
+    assert _guild._get_member_id(member) == "123123123"
 
 
 class TestRESTGuildLogic:
@@ -52,7 +52,7 @@ class TestRESTGuildLogic:
     def rest_guild_logic_impl(self):
         mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
-        class RESTGuildLogicImpl(guilds_component.RESTGuildComponent):
+        class RESTGuildLogicImpl(_guild.RESTGuildComponent):
             def __init__(self):
                 super().__init__(mock_low_level_restful_client)
 
@@ -558,7 +558,7 @@ class TestRESTGuildLogic:
                 reversing=False,
                 start="115590097100865541",
                 limit=34,
-                id_getter=guilds_component._get_member_id,
+                id_getter=_guild._get_member_id,
             )
 
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -574,7 +574,7 @@ class TestRESTGuildLogic:
                 reversing=False,
                 start="0",
                 limit=None,
-                id_getter=guilds_component._get_member_id,
+                id_getter=_guild._get_member_id,
             )
 
     def test_fetch_members_after_with_datetime_object(self, rest_guild_logic_impl):
@@ -590,7 +590,7 @@ class TestRESTGuildLogic:
                 reversing=False,
                 start="537340988620800000",
                 limit=None,
-                id_getter=guilds_component._get_member_id,
+                id_getter=_guild._get_member_id,
             )
 
     @pytest.mark.asyncio

@@ -20,8 +20,8 @@
 import mock
 import pytest
 
-from hikari import oauth2
-from hikari.clients.rest_clients import oauth2_component
+from hikari import applications
+from hikari.clients.rest_clients import oauth2
 from hikari.net import rest_sessions
 
 
@@ -30,7 +30,7 @@ class TestRESTReactionLogic:
     def rest_oauth2_logic_impl(self):
         mock_low_level_restful_client = mock.MagicMock(rest_sessions.LowLevelRestfulClient)
 
-        class RESTOauth2LogicImpl(oauth2_component.RESTOauth2Component):
+        class RESTOauth2LogicImpl(oauth2.RESTOAuth2Component):
             def __init__(self):
                 super().__init__(mock_low_level_restful_client)
 
@@ -39,9 +39,9 @@ class TestRESTReactionLogic:
     @pytest.mark.asyncio
     async def test_fetch_my_application_info(self, rest_oauth2_logic_impl):
         mock_application_payload = {"id": "2929292", "name": "blah blah", "description": "an app"}
-        mock_application_obj = mock.MagicMock(oauth2.Application)
+        mock_application_obj = mock.MagicMock(applications.Application)
         rest_oauth2_logic_impl._session.get_current_application_info.return_value = mock_application_payload
-        with mock.patch.object(oauth2.Application, "deserialize", return_value=mock_application_obj):
+        with mock.patch.object(applications.Application, "deserialize", return_value=mock_application_obj):
             assert await rest_oauth2_logic_impl.fetch_my_application_info() is mock_application_obj
             rest_oauth2_logic_impl._session.get_current_application_info.assert_called_once_with()
-            oauth2.Application.deserialize.assert_called_once_with(mock_application_payload)
+            applications.Application.deserialize.assert_called_once_with(mock_application_payload)

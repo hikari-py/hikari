@@ -29,11 +29,11 @@ from hikari import channels as _channels
 from hikari import emojis
 from hikari import messages as _messages
 from hikari import users
-from hikari.clients.rest_clients import component_base
+from hikari.clients.rest_clients import base
 from hikari.internal import pagination
 
 
-class RESTReactionComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
     """The REST client component for handling requests to reaction endpoints."""
 
     async def create_reaction(
