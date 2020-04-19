@@ -32,9 +32,9 @@ import typing
 
 import click
 
-import hikari
+import hikari  # lgtm [py/import-and-import-from]
+from hikari import intents as _intents
 from hikari.internal import conversions
-from hikari.net import codes
 
 _LOGGER_LEVELS: typing.Final[typing.Sequence[str]] = ["DEBUG", "INFO", "WARNING", "ERROR", "NOTSET"]
 
@@ -75,7 +75,7 @@ def run_gateway(compression, color, debug, intents, logger, shards, token, verif
     """
     if intents is not None:
         intents = intents.split(",")
-        intents = conversions.dereference_int_flag(codes.GatewayIntent, intents)
+        intents = conversions.dereference_int_flag(_intents.Intent, intents)
 
     logging.captureWarnings(True)
 

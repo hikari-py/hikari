@@ -35,7 +35,7 @@ from hikari import permissions as _permissions
 from hikari import users
 from hikari import voices
 from hikari import webhooks
-from hikari.clients.rest_clients import component_base
+from hikari.clients.rest_clients import base
 from hikari.internal import conversions
 from hikari.internal import pagination
 
@@ -44,7 +44,7 @@ def _get_member_id(member: guilds.GuildMember) -> str:
     return str(member.user.id)
 
 
-class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
     """The REST client component for handling requests to guild endpoints."""
 
     async def fetch_audit_log(

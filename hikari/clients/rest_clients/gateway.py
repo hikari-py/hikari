@@ -23,10 +23,10 @@ __all__ = ["RESTGatewayComponent"]
 import abc
 
 from hikari import gateway_entities
-from hikari.clients.rest_clients import component_base
+from hikari.clients.rest_clients import base
 
 
-class RESTGatewayComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTGatewayComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
     """The REST client component for handling requests to gateway endpoints."""
 
     async def fetch_gateway_url(self) -> str:

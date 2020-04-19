@@ -24,10 +24,10 @@ import abc
 import typing
 
 from hikari import invites
-from hikari.clients.rest_clients import component_base
+from hikari.clients.rest_clients import base
 
 
-class RESTInviteComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTInviteComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
     """The REST client component for handling requests to invite endpoints."""
 
     async def fetch_invite(

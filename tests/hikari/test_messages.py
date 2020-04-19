@@ -26,7 +26,7 @@ from hikari import embeds
 from hikari import emojis
 from hikari import guilds
 from hikari import messages
-from hikari import oauth2
+from hikari import applications
 from hikari import users
 from hikari.internal import conversions
 from tests.hikari import _helpers
@@ -188,7 +188,7 @@ class TestMessage:
         mock_datetime = mock.MagicMock(datetime.datetime)
         mock_datetime2 = mock.MagicMock(datetime.datetime)
         mock_emoji = mock.MagicMock(messages._emojis)
-        mock_app = mock.MagicMock(oauth2.Application)
+        mock_app = mock.MagicMock(applications.Application)
 
         stack = contextlib.ExitStack()
         patched_author_deserializer = stack.enter_context(
@@ -216,7 +216,10 @@ class TestMessage:
         )
         patched_application_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
-                messages.Message, "application", deserializer=oauth2.Application.deserialize, return_value=mock_app,
+                messages.Message,
+                "application",
+                deserializer=applications.Application.deserialize,
+                return_value=mock_app,
             )
         )
         patched_emoji_deserializer = stack.enter_context(
