@@ -24,11 +24,7 @@ from ci import nox
 @nox.session(reuse_venv=True, default=True)
 def pdoc(session: nox.Session) -> None:
     """Generate documentation with pdoc."""
-    session.install(
-        "-r",
-        config.REQUIREMENTS,
-        "pdoc3==0.8.1"
-    )
+    session.install("-r", config.REQUIREMENTS, "pdoc3==0.8.1")
 
     session.run(
         "python",
@@ -36,7 +32,9 @@ def pdoc(session: nox.Session) -> None:
         "pdoc",
         config.MAIN_PACKAGE,
         "--html",
-        "-c",
-        "show_inherited_members=True",
+        "--output-dir",
+        config.ARTIFACT_DIRECTORY,
+        "--template-dir",
+        config.DOCUMENTATION_DIRECTORY,
         "--force",
     )
