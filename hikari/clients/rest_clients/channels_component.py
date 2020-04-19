@@ -20,15 +20,12 @@
 
 __all__ = ["RESTChannelComponent"]
 
+import abc
 import asyncio
 import datetime
 import typing
 
-from hikari.clients.rest_clients import component_base
-from hikari.internal import allowed_mentions
-from hikari.internal import assertions
-from hikari.internal import conversions
-from hikari.internal import pagination
+from hikari import bases
 from hikari import channels as _channels
 from hikari import embeds as _embeds
 from hikari import guilds
@@ -36,20 +33,25 @@ from hikari import invites
 from hikari import media
 from hikari import messages as _messages
 from hikari import permissions as _permissions
-from hikari import snowflakes
 from hikari import users
 from hikari import webhooks
+from hikari.clients.rest_clients import component_base
+from hikari.internal import allowed_mentions
+from hikari.internal import assertions
+from hikari.internal import conversions
+from hikari.internal import more_typing
+from hikari.internal import pagination
 
 
-class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable=W0223
+class RESTChannelComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
     """The REST client component for handling requests to channel endpoints."""
 
-    async def fetch_channel(self, channel: snowflakes.HashableT[_channels.Channel]) -> _channels.Channel:
+    async def fetch_channel(self, channel: bases.Hashable[_channels.Channel]) -> _channels.Channel:
         """Get an up to date channel object from a given channel object or ID.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object ID of the channel to look up.
 
         Returns
@@ -68,13 +70,13 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             If the channel does not exist.
         """
         payload = await self._session.get_channel(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel))
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
         )
         return _channels.deserialize_channel(payload)
 
     async def update_channel(
         self,
-        channel: snowflakes.HashableT[_channels.Channel],
+        channel: bases.Hashable[_channels.Channel],
         *,
         name: str = ...,
         position: int = ...,
@@ -84,14 +86,14 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         user_limit: int = ...,
         rate_limit_per_user: typing.Union[int, datetime.timedelta] = ...,
         permission_overwrites: typing.Sequence[_channels.PermissionOverwrite] = ...,
-        parent_category: typing.Optional[snowflakes.HashableT[_channels.GuildCategory]] = ...,
+        parent_category: typing.Optional[bases.Hashable[_channels.GuildCategory]] = ...,
         reason: str = ...,
     ) -> _channels.Channel:
         """Update one or more aspects of a given channel ID.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The channel ID to update.
         name : :obj:`~str`
             If specified, the new name for the channel. This must be
@@ -123,7 +125,7 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         permission_overwrites : :obj:`~typing.Sequence` [ :obj:`~hikari.channels.PermissionOverwrite` ]
             If specified, the new list of permission overwrites that are
             category specific to replace the existing overwrites with.
-        parent_category : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], optional
+        parent_category : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], optional
             If specified, the new parent category ID to set for the channel,
             pass :obj:`~None` to unset.
         reason : :obj:`~str`
@@ -148,7 +150,7 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.modify_channel(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             name=name,
             position=position,
             topic=topic,
@@ -164,9 +166,7 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
                 [po.serialize() for po in permission_overwrites] if permission_overwrites is not ... else ...
             ),
             parent_id=(
-                str(
-                    parent_category.id if isinstance(parent_category, snowflakes.UniqueEntity) else int(parent_category)
-                )
+                str(parent_category.id if isinstance(parent_category, bases.UniqueEntity) else int(parent_category))
                 if parent_category is not ... and parent_category is not None
                 else parent_category
             ),
@@ -174,12 +174,12 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         )
         return _channels.deserialize_channel(payload)
 
-    async def delete_channel(self, channel: snowflakes.HashableT[_channels.Channel]) -> None:
+    async def delete_channel(self, channel: bases.Hashable[_channels.Channel]) -> None:
         """Delete the given channel ID, or if it is a DM, close it.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake` :obj:`~str` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake` :obj:`~str` ]
             The object or ID of the channel to delete.
 
         Returns
@@ -210,14 +210,14 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         Deleted channels cannot be un-deleted.
         """
         await self._session.delete_close_channel(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel))
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
         )
 
     def fetch_messages_after(
         self,
-        channel: snowflakes.HashableT[_channels.Channel],
+        channel: bases.Hashable[_channels.Channel],
         *,
-        after: typing.Union[datetime.datetime, snowflakes.HashableT[_messages.Message]] = 0,
+        after: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]] = 0,
         limit: typing.Optional[int] = None,
     ) -> typing.AsyncIterator[_messages.Message]:
         """Return an async iterator that retrieves a channel's message history.
@@ -227,12 +227,12 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The ID of the channel to retrieve the messages from.
         limit : :obj:`~int`
             If specified, the maximum number of how many messages this iterator
             should return.
-        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             A object or ID message. Only return messages sent AFTER this
             message if it's specified else this will return every message after
             (and including) the first message in the channel.
@@ -269,11 +269,11 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         zero results, and thus an empty list will be returned instead.
         """
         if isinstance(after, datetime.datetime):
-            after = str(snowflakes.Snowflake.from_datetime(after))
+            after = str(bases.Snowflake.from_datetime(after))
         else:
-            after = str(after.id if isinstance(after, snowflakes.UniqueEntity) else int(after))
+            after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
         return pagination.pagination_handler(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             deserializer=_messages.Message.deserialize,
             direction="after",
             start=after,
@@ -284,9 +284,9 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
     def fetch_messages_before(
         self,
-        channel: snowflakes.HashableT[_channels.Channel],
+        channel: bases.Hashable[_channels.Channel],
         *,
-        before: typing.Union[datetime.datetime, snowflakes.HashableT[_messages.Message], None] = None,
+        before: typing.Union[datetime.datetime, bases.Hashable[_messages.Message], None] = None,
         limit: typing.Optional[int] = None,
     ) -> typing.AsyncIterator[_messages.Message]:
         """Return an async iterator that retrieves a channel's message history.
@@ -296,12 +296,12 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The ID of the channel to retrieve the messages from.
         limit : :obj:`~int`
             If specified, the maximum number of how many messages this iterator
             should return.
-        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             A message object or ID. Only return messages sent BEFORE
             this message if this is specified else this will return every
             message before (and including) the most recent message in the
@@ -339,11 +339,11 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         zero results, and thus an empty list will be returned instead.
         """
         if isinstance(before, datetime.datetime):
-            before = str(snowflakes.Snowflake.from_datetime(before))
+            before = str(bases.Snowflake.from_datetime(before))
         elif before is not None:
-            before = str(before.id if isinstance(before, snowflakes.UniqueEntity) else int(before))
+            before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
         return pagination.pagination_handler(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             deserializer=_messages.Message.deserialize,
             direction="before",
             start=before,
@@ -354,8 +354,8 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
     async def fetch_messages_around(
         self,
-        channel: snowflakes.HashableT[_channels.Channel],
-        around: typing.Union[datetime.datetime, snowflakes.HashableT[_messages.Message]],
+        channel: bases.Hashable[_channels.Channel],
+        around: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]],
         *,
         limit: int = ...,
     ) -> typing.AsyncIterator[_messages.Message]:
@@ -367,9 +367,9 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The ID of the channel to retrieve the messages from.
-        around : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        around : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the message to get messages that were sent
             AROUND it in the provided channel, unlike ``before`` and ``after``,
             this argument is required and the provided message will also be
@@ -410,26 +410,26 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         zero results, and thus an empty list will be returned instead.
         """
         if isinstance(around, datetime.datetime):
-            around = str(snowflakes.Snowflake.from_datetime(around))
+            around = str(bases.Snowflake.from_datetime(around))
         else:
-            around = str(around.id if isinstance(around, snowflakes.UniqueEntity) else int(around))
+            around = str(around.id if isinstance(around, bases.UniqueEntity) else int(around))
         for payload in await self._session.get_channel_messages(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             limit=limit,
             around=around,
         ):
             yield _messages.Message.deserialize(payload)
 
     async def fetch_message(
-        self, channel: snowflakes.HashableT[_channels.Channel], message: snowflakes.HashableT[_messages.Message],
+        self, channel: bases.Hashable[_channels.Channel], message: bases.Hashable[_messages.Message],
     ) -> _messages.Message:
         """Get a message from known channel that we can access.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the message to retrieve.
 
         Returns
@@ -452,14 +452,14 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             If the channel or message is not found.
         """
         payload = await self._session.get_channel_message(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, snowflakes.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
         )
         return _messages.Message.deserialize(payload)
 
     async def create_message(
         self,
-        channel: snowflakes.HashableT[_channels.Channel],
+        channel: bases.Hashable[_channels.Channel],
         *,
         content: str = ...,
         nonce: str = ...,
@@ -467,14 +467,14 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         files: typing.Collection[media.IO] = ...,
         embed: _embeds.Embed = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[snowflakes.HashableT[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[snowflakes.HashableT[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
+        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
     ) -> _messages.Message:
         """Create a message in the given channel.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The channel or ID of the channel to send to.
         content : :obj:`~str`
             If specified, the message content to send with the message.
@@ -492,11 +492,11 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         mentions_everyone : :obj:`~bool`
             Whether ``@everyone`` and ``@here`` mentions should be resolved by
             discord and lead to actual pings, defaults to :obj:`~True`.
-        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
+        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
             Either an array of user objects/IDs to allow mentions for,
             :obj:`~True` to allow all user mentions or :obj:`~False` to block all
             user mentions from resolving, defaults to :obj:`~True`.
-        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
+        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
             Either an array of guild role objects/IDs to allow mentions for,
             :obj:`~True` to allow all role mentions or :obj:`~False` to block all
             role mentions from resolving, defaults to :obj:`~True`.
@@ -520,11 +520,11 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         :obj:`~hikari.errors.ForbiddenHTTPError`
             If you lack permissions to send to this channel.
         :obj:`~ValueError`
-            If more than 100 unique objects/snowflakes are passed for
+            If more than 100 unique objects/entities are passed for
             ``role_mentions`` or ``user_mentions``.
         """
         payload = await self._session.create_message(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             content=content,
             nonce=nonce,
             tts=tts,
@@ -538,7 +538,7 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
     def safe_create_message(
         self,
-        channel: snowflakes.HashableT[_channels.Channel],
+        channel: bases.Hashable[_channels.Channel],
         *,
         content: str = ...,
         nonce: str = ...,
@@ -546,9 +546,9 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         files: typing.Collection[media.IO] = ...,
         embed: _embeds.Embed = ...,
         mentions_everyone: bool = False,
-        user_mentions: typing.Union[typing.Collection[snowflakes.HashableT[users.User]], bool] = False,
-        role_mentions: typing.Union[typing.Collection[snowflakes.HashableT[guilds.GuildRole]], bool] = False,
-    ) -> typing.Coroutine[typing.Any, typing.Any, _messages.Message]:
+        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = False,
+        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = False,
+    ) -> more_typing.Coroutine[_messages.Message]:
         """Create a message in the given channel with mention safety.
 
         This endpoint has the same signature as :attr:`create_message` with
@@ -569,23 +569,23 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
     async def update_message(
         self,
-        message: snowflakes.HashableT[_messages.Message],
-        channel: snowflakes.HashableT[_channels.Channel],
+        message: bases.Hashable[_messages.Message],
+        channel: bases.Hashable[_channels.Channel],
         *,
         content: typing.Optional[str] = ...,
         embed: typing.Optional[_embeds.Embed] = ...,
         flags: int = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[snowflakes.HashableT[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[snowflakes.HashableT[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
+        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
     ) -> _messages.Message:
         """Update the given message.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the message to edit.
         content : :obj:`~str`, optional
             If specified, the string content to replace with in the message.
@@ -600,11 +600,11 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         mentions_everyone : :obj:`~bool`
             Whether ``@everyone`` and ``@here`` mentions should be resolved by
             discord and lead to actual pings, defaults to :obj:`~True`.
-        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
+        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
             Either an array of user objects/IDs to allow mentions for,
             :obj:`~True` to allow all user mentions or :obj:`~False` to block all
             user mentions from resolving, defaults to :obj:`~True`.
-        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
+        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
             Either an array of guild role objects/IDs to allow mentions for,
             :obj:`~True` to allow all role mentions or :obj:`~False` to block all
             role mentions from resolving, defaults to :obj:`~True`.
@@ -631,12 +631,12 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             If you try to edit the flags on a message you did not author without
             the ``MANAGE_MESSAGES`` permission.
         :obj:`~ValueError`
-            If more than 100 unique objects/snowflakes are passed for
+            If more than 100 unique objects/entities are passed for
             ``role_mentions`` or ``user_mentions``.
         """
         payload = await self._session.edit_message(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, snowflakes.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
             content=content,
             embed=embed.serialize() if embed is not ... and embed is not None else embed,
             flags=flags,
@@ -648,15 +648,15 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
     def safe_update_message(
         self,
-        message: snowflakes.HashableT[_messages.Message],
-        channel: snowflakes.HashableT[_channels.Channel],
+        message: bases.Hashable[_messages.Message],
+        channel: bases.Hashable[_channels.Channel],
         *,
         content: typing.Optional[str] = ...,
         embed: typing.Optional[_embeds.Embed] = ...,
         flags: int = ...,
         mentions_everyone: bool = False,
-        user_mentions: typing.Union[typing.Collection[snowflakes.HashableT[users.User]], bool] = False,
-        role_mentions: typing.Union[typing.Collection[snowflakes.HashableT[guilds.GuildRole]], bool] = False,
+        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = False,
+        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = False,
     ) -> typing.Coroutine[typing.Any, typing.Any, _messages.Message]:
         """Update a message in the given channel with mention safety.
 
@@ -677,19 +677,19 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
     async def delete_messages(
         self,
-        channel: snowflakes.HashableT[_channels.Channel],
-        message: snowflakes.HashableT[_messages.Message],
-        *additional_messages: snowflakes.HashableT[_messages.Message],
+        channel: bases.Hashable[_channels.Channel],
+        message: bases.Hashable[_messages.Message],
+        *additional_messages: bases.Hashable[_messages.Message],
     ) -> None:
         """Delete a message in a given channel.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the message to delete.
-        *additional_messages : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        *additional_messages : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             Objects and/or IDs of additional messages to delete in the same
             channel, in total you can delete up to 100 messages in a request.
 
@@ -719,8 +719,7 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             messages = list(
                 # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
                 dict.fromkeys(
-                    str(m.id if isinstance(m, snowflakes.UniqueEntity) else int(m))
-                    for m in (message, *additional_messages)
+                    str(m.id if isinstance(m, bases.UniqueEntity) else int(m)) for m in (message, *additional_messages)
                 )
             )
             assertions.assert_that(
@@ -729,20 +728,20 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
             if len(messages) > 1:
                 await self._session.bulk_delete_messages(
-                    channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
+                    channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
                     messages=messages,
                 )
                 return None
 
         await self._session.delete_message(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, snowflakes.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
         )
 
     async def update_channel_overwrite(
         self,
-        channel: snowflakes.HashableT[_messages.Message],
-        overwrite: typing.Union[_channels.PermissionOverwrite, users.User, guilds.GuildRole, snowflakes.Snowflake, int],
+        channel: bases.Hashable[_messages.Message],
+        overwrite: typing.Union[_channels.PermissionOverwrite, users.User, guilds.GuildRole, bases.Snowflake, int],
         target_type: typing.Union[_channels.PermissionOverwriteType, str],
         *,
         allow: typing.Union[_permissions.Permission, int] = ...,
@@ -753,9 +752,9 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to edit permissions for.
-        overwrite : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwrite`, :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake` , :obj:`~int` ]
+        overwrite : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwrite`, :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake` , :obj:`~int` ]
             The object or ID of the target member or role to  edit/create the
             overwrite for.
         target_type : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwriteType`, :obj:`~int` ]
@@ -782,8 +781,8 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             If you lack permission to do this.
         """
         await self._session.edit_channel_permissions(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
-            overwrite_id=str(overwrite.id if isinstance(overwrite, snowflakes.UniqueEntity) else int(overwrite)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            overwrite_id=str(overwrite.id if isinstance(overwrite, bases.UniqueEntity) else int(overwrite)),
             type_=target_type,
             allow=allow,
             deny=deny,
@@ -791,13 +790,13 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         )
 
     async def fetch_invites_for_channel(
-        self, channel: snowflakes.HashableT[_channels.Channel]
+        self, channel: bases.Hashable[_channels.Channel]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         """Get invites for a given channel.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get invites for.
 
         Returns
@@ -816,19 +815,19 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             If the channel does not exist.
         """
         payload = await self._session.get_channel_invites(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel))
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
         )
         return [invites.InviteWithMetadata.deserialize(invite) for invite in payload]
 
     async def create_invite_for_channel(
         self,
-        channel: snowflakes.HashableT[_channels.Channel],
+        channel: bases.Hashable[_channels.Channel],
         *,
         max_age: typing.Union[int, datetime.timedelta] = ...,
         max_uses: int = ...,
         temporary: bool = ...,
         unique: bool = ...,
-        target_user: snowflakes.HashableT[users.User] = ...,
+        target_user: bases.Hashable[users.User] = ...,
         target_user_type: typing.Union[invites.TargetUserType, int] = ...,
         reason: str = ...,
     ) -> invites.InviteWithMetadata:
@@ -850,7 +849,7 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             user is kicked when their session ends unless they are given a role.
         unique : :obj:`~bool`
             If specified, whether to try to reuse a similar invite.
-        target_user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        target_user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the user this invite should
             target.
         target_user_type : :obj:`~typing.Union` [ :obj:`~hikari.invites.TargetUserType`, :obj:`~int` ]
@@ -877,13 +876,13 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_channel_invite(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             max_age=int(max_age.total_seconds()) if isinstance(max_age, datetime.timedelta) else max_age,
             max_uses=max_uses,
             temporary=temporary,
             unique=unique,
             target_user=(
-                str(target_user.id if isinstance(target_user, snowflakes.UniqueEntity) else int(target_user))
+                str(target_user.id if isinstance(target_user, bases.UniqueEntity) else int(target_user))
                 if target_user is not ...
                 else ...
             ),
@@ -894,16 +893,16 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
     async def delete_channel_overwrite(
         self,
-        channel: snowflakes.HashableT[_channels.Channel],
-        overwrite: typing.Union[_channels.PermissionOverwrite, guilds.GuildRole, users.User, snowflakes.Snowflake, int],
+        channel: bases.Hashable[_channels.Channel],
+        overwrite: typing.Union[_channels.PermissionOverwrite, guilds.GuildRole, users.User, bases.Snowflake, int],
     ) -> None:
         """Delete a channel permission overwrite for a user or a role.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to delete the overwrite from.
-        overwrite : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwrite`, :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:int ]
+        overwrite : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwrite`, :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:int ]
             The ID of the entity this overwrite targets.
 
         Raises
@@ -917,16 +916,16 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             If you lack the ``MANAGE_ROLES`` permission for that channel.
         """
         await self._session.delete_channel_permission(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
-            overwrite_id=str(overwrite.id if isinstance(overwrite, snowflakes.UniqueEntity) else int(overwrite)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            overwrite_id=str(overwrite.id if isinstance(overwrite, bases.UniqueEntity) else int(overwrite)),
         )
 
-    async def trigger_typing(self, channel: snowflakes.HashableT[_channels.Channel]) -> None:
+    async def trigger_typing(self, channel: bases.Hashable[_channels.Channel]) -> None:
         """Trigger the typing indicator for ``10`` seconds in a channel.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to appear to be typing in.
 
         Raises
@@ -940,22 +939,22 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             If you are not able to type in the channel.
         """
         await self._session.trigger_typing_indicator(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel))
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
         )
 
     async def fetch_pins(
-        self, channel: snowflakes.HashableT[_channels.Channel]
-    ) -> typing.Mapping[snowflakes.Snowflake, _messages.Message]:
+        self, channel: bases.Hashable[_channels.Channel]
+    ) -> typing.Mapping[bases.Snowflake, _messages.Message]:
         """Get pinned messages for a given channel.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get messages from.
 
         Returns
         -------
-        :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.messages.Message` ]
+        :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.messages.Message` ]
             A list of message objects.
 
         Raises
@@ -975,20 +974,20 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         will not be returned.
         """
         payload = await self._session.get_pinned_messages(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel))
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
         )
         return {message.id: message for message in map(_messages.Message.deserialize, payload)}
 
     async def pin_message(
-        self, channel: snowflakes.HashableT[_channels.Channel], message: snowflakes.HashableT[_messages.Message],
+        self, channel: bases.Hashable[_channels.Channel], message: bases.Hashable[_messages.Message],
     ) -> None:
         """Add a pinned message to the channel.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to pin a message to.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the message to pin.
 
         Raises
@@ -1002,12 +1001,12 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             If the message or channel do not exist.
         """
         await self._session.add_pinned_channel_message(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, snowflakes.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
         )
 
     async def unpin_message(
-        self, channel: snowflakes.HashableT[_channels.Channel], message: snowflakes.HashableT[_messages.Message],
+        self, channel: bases.Hashable[_channels.Channel], message: bases.Hashable[_messages.Message],
     ) -> None:
         """Remove a pinned message from the channel.
 
@@ -1015,9 +1014,9 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The ID of the channel to remove a pin from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the message to unpin.
 
         Raises
@@ -1031,13 +1030,13 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             If the message or channel do not exist.
         """
         await self._session.delete_pinned_channel_message(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, snowflakes.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
         )
 
     async def create_webhook(
         self,
-        channel: snowflakes.HashableT[_channels.GuildChannel],
+        channel: bases.Hashable[_channels.GuildChannel],
         name: str,
         *,
         avatar_data: conversions.FileLikeT = ...,
@@ -1047,7 +1046,7 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the channel for webhook to be created in.
         name : :obj:`~str`
             The webhook's name string.
@@ -1075,7 +1074,7 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_webhook(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)),
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             name=name,
             avatar=conversions.get_bytes_from_resource(avatar_data) if avatar_data is not ... else ...,
             reason=reason,
@@ -1083,13 +1082,13 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
         return webhooks.Webhook.deserialize(payload)
 
     async def fetch_channel_webhooks(
-        self, channel: snowflakes.HashableT[_channels.GuildChannel]
+        self, channel: bases.Hashable[_channels.GuildChannel]
     ) -> typing.Sequence[webhooks.Webhook]:
         """Get all webhooks from a given channel.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild channel to get the webhooks from.
 
         Returns
@@ -1109,6 +1108,6 @@ class RESTChannelComponent(component_base.BaseRESTComponent):  # pylint: disable
             can not see the given channel.
         """
         payload = await self._session.get_channel_webhooks(
-            channel_id=str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel))
+            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
         )
         return [webhooks.Webhook.deserialize(webhook) for webhook in payload]

@@ -121,7 +121,7 @@ class ShardClient(runnable.RunnableClient, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def activity(self) -> typing.Optional[gateway_entities.GatewayActivity]:
+    def activity(self) -> typing.Optional[gateway_entities.Activity]:
         """Activity for the user status for this shard.
 
         Returns
@@ -266,7 +266,7 @@ class ShardClient(runnable.RunnableClient, abc.ABC):
 
         Returns
         -------
-        :obj:`~hikari.net.codes.GatewayIntent`, optional
+        :obj:`~hikari.intents.Intent`, optional
             A :obj:`~enum.IntFlag` enum containing each intent that is set. If
             intents are not being used at all, then this will return
             :obj:`~None` instead.
@@ -277,7 +277,7 @@ class ShardClient(runnable.RunnableClient, abc.ABC):
         self,
         *,
         status: guilds.PresenceStatus = ...,
-        activity: typing.Optional[gateway_entities.GatewayActivity] = ...,
+        activity: typing.Optional[gateway_entities.Activity] = ...,
         idle_since: typing.Optional[datetime.datetime] = ...,
         is_afk: bool = ...,
     ) -> None:
@@ -412,7 +412,7 @@ class ShardClientImpl(ShardClient):
         return self._status
 
     @property
-    def activity(self) -> typing.Optional[gateway_entities.GatewayActivity]:
+    def activity(self) -> typing.Optional[gateway_entities.Activity]:
         return self._activity
 
     @property
@@ -645,7 +645,7 @@ class ShardClientImpl(ShardClient):
         self,
         *,
         status: guilds.PresenceStatus = ...,
-        activity: typing.Optional[gateway_entities.GatewayActivity] = ...,
+        activity: typing.Optional[gateway_entities.Activity] = ...,
         idle_since: typing.Optional[datetime.datetime] = ...,
         is_afk: bool = ...,
     ) -> None:
@@ -666,7 +666,7 @@ class ShardClientImpl(ShardClient):
     @staticmethod
     def _create_presence_pl(
         status: guilds.PresenceStatus,
-        activity: typing.Optional[gateway_entities.GatewayActivity],
+        activity: typing.Optional[gateway_entities.Activity],
         idle_since: typing.Optional[datetime.datetime],
         is_afk: bool,
     ) -> typing.Dict[str, typing.Any]:

@@ -42,7 +42,6 @@ from hikari.net import ratelimits
 from hikari.net import routes
 from hikari.net import user_agents
 
-
 VERSION_6: typing.Final[int] = 6
 VERSION_7: typing.Final[int] = 7
 

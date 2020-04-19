@@ -24,6 +24,7 @@ API.
 
 __all__ = ["RESTClient"]
 
+from hikari.clients import configs
 from hikari.clients.rest_clients import channels_component
 from hikari.clients.rest_clients import current_users_component
 from hikari.clients.rest_clients import gateways_component
@@ -34,7 +35,6 @@ from hikari.clients.rest_clients import reactions_component
 from hikari.clients.rest_clients import users_component
 from hikari.clients.rest_clients import voices_component
 from hikari.clients.rest_clients import webhooks_component
-from hikari.clients import configs
 from hikari.net import rest_sessions
 
 

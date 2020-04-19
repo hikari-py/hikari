@@ -18,7 +18,6 @@
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import datetime
-import math
 
 import aiohttp
 import mock

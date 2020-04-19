@@ -17,21 +17,21 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Entities directly related to creating and managing gateway shards."""
-__all__ = ["GatewayBot", "GatewayActivity"]
+__all__ = ["GatewayBot", "Activity"]
 
 import datetime
 import typing
 
 import attr
 
-from hikari import entities
+from hikari import bases
 from hikari import guilds
 from hikari.internal import marshaller
 
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class SessionStartLimit(entities.HikariEntity, marshaller.Deserializable):
+class SessionStartLimit(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent information about the current session start limits."""
 
     #: The total number of session starts the current bot is allowed.
@@ -55,7 +55,7 @@ class SessionStartLimit(entities.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GatewayBot(entities.HikariEntity, marshaller.Deserializable):
+class GatewayBot(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent gateway information for the connected bot."""
 
     #: The WSS URL that can be used for connecting to the gateway.
@@ -76,7 +76,7 @@ class GatewayBot(entities.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GatewayActivity(marshaller.Deserializable, marshaller.Serializable):
+class Activity(marshaller.Deserializable, marshaller.Serializable):
     """An activity that the bot can set for one or more shards.
 
     This will show the activity as the bot's presence.

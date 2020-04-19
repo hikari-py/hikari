@@ -38,9 +38,9 @@ import attr
 
 from hikari import gateway_entities
 from hikari import guilds
+from hikari import intents as _intents
 from hikari.internal import conversions
 from hikari.internal import marshaller
-from hikari.net import codes
 
 
 @marshaller.marshallable()
@@ -208,8 +208,8 @@ class GatewayConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #: :obj:`~None`, then no activity will be set.
     #:
     #: :type: :obj:`~hikari.gateway_entities.GatewayActivity`, optional
-    initial_activity: typing.Optional[gateway_entities.GatewayActivity] = marshaller.attrib(
-        deserializer=gateway_entities.GatewayActivity.deserialize, if_none=None, if_undefined=None, default=None
+    initial_activity: typing.Optional[gateway_entities.Activity] = marshaller.attrib(
+        deserializer=gateway_entities.Activity.deserialize, if_none=None, if_undefined=None, default=None
     )
 
     #: The initial status to set the shards to when starting the gateway.
@@ -255,7 +255,7 @@ class GatewayConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #:    // JSON example, using an array of names
     #:    [ "GUILDS", "GUILD_MESSAGES" ]
     #:
-    #: See :obj:`~hikari.net.codes.GatewayIntent` for valid names of
+    #: See :obj:`~hikari.intents.Intent` for valid names of
     #: intents you can use. Integer values are as documented on Discord's
     #: developer portal.
     #:
@@ -270,9 +270,9 @@ class GatewayConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     #: :obj:`~None` will simply opt you into every event you can subscribe to.
     #:
     #:
-    #: :type: :obj:`~hikari.net.codes.GatewayIntent`, optional
-    intents: typing.Optional[codes.GatewayIntent] = marshaller.attrib(
-        deserializer=lambda value: conversions.dereference_int_flag(codes.GatewayIntent, value),
+    #: :type: :obj:`~hikari.intents.Intent`, optional
+    intents: typing.Optional[_intents.Intent] = marshaller.attrib(
+        deserializer=lambda value: conversions.dereference_int_flag(_intents.Intent, value),
         if_undefined=None,
         default=None,
     )

@@ -23,30 +23,30 @@ __all__ = ["RESTWebhookComponent"]
 import abc
 import typing
 
-from hikari.clients.rest_clients import component_base
-from hikari.internal import allowed_mentions
-from hikari.internal import conversions
+from hikari import bases
 from hikari import channels as _channels
 from hikari import embeds as _embeds
 from hikari import guilds
 from hikari import media
 from hikari import messages as _messages
-from hikari import snowflakes
 from hikari import users
 from hikari import webhooks
+from hikari.clients.rest_clients import component_base
+from hikari.internal import allowed_mentions
+from hikari.internal import conversions
 
 
 class RESTWebhookComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
     """The REST client component for handling requests to webhook endpoints."""
 
     async def fetch_webhook(
-        self, webhook: snowflakes.HashableT[webhooks.Webhook], *, webhook_token: str = ...
+        self, webhook: bases.Hashable[webhooks.Webhook], *, webhook_token: str = ...
     ) -> webhooks.Webhook:
         """Get a given webhook.
 
         Parameters
         ----------
-        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the webhook to get.
         webhook_token : :obj:`~str`
             If specified, the webhook token to use to get it (bypassing this
@@ -71,26 +71,26 @@ class RESTWebhookComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint
             If you pass a token that's invalid for the target webhook.
         """
         payload = await self._session.get_webhook(
-            webhook_id=str(webhook.id if isinstance(webhook, snowflakes.UniqueEntity) else int(webhook)),
+            webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
             webhook_token=webhook_token,
         )
         return webhooks.Webhook.deserialize(payload)
 
     async def update_webhook(
         self,
-        webhook: snowflakes.HashableT[webhooks.Webhook],
+        webhook: bases.Hashable[webhooks.Webhook],
         *,
         webhook_token: str = ...,
         name: str = ...,
         avatar_data: typing.Optional[conversions.FileLikeT] = ...,
-        channel: snowflakes.HashableT[_channels.GuildChannel] = ...,
+        channel: bases.Hashable[_channels.GuildChannel] = ...,
         reason: str = ...,
     ) -> webhooks.Webhook:
         """Edit a given webhook.
 
         Parameters
         ----------
-        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the webhook to edit.
         webhook_token : :obj:`~str`
             If specified, the webhook token to use to modify it (bypassing this
@@ -100,7 +100,7 @@ class RESTWebhookComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint
         avatar_data : ``hikari.internal.conversions.FileLikeT``, optional
             If specified, the new avatar image file object. If :obj:`~None`, then
             it is removed.
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
         reason : :obj:`~str`
@@ -126,7 +126,7 @@ class RESTWebhookComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint
             If you pass a token that's invalid for the target webhook.
         """
         payload = await self._session.modify_webhook(
-            webhook_id=str(webhook.id if isinstance(webhook, snowflakes.UniqueEntity) else int(webhook)),
+            webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
             webhook_token=webhook_token,
             name=name,
             avatar=(
@@ -135,7 +135,7 @@ class RESTWebhookComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint
                 else avatar_data
             ),
             channel_id=(
-                str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel))
+                str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
                 if channel and channel is not ...
                 else channel
             ),
@@ -143,14 +143,12 @@ class RESTWebhookComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint
         )
         return webhooks.Webhook.deserialize(payload)
 
-    async def delete_webhook(
-        self, webhook: snowflakes.HashableT[webhooks.Webhook], *, webhook_token: str = ...
-    ) -> None:
+    async def delete_webhook(self, webhook: bases.Hashable[webhooks.Webhook], *, webhook_token: str = ...) -> None:
         """Delete a given webhook.
 
         Parameters
         ----------
-        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the webhook to delete
         webhook_token : :obj:`~str`
             If specified, the webhook token to use to delete it (bypassing this
@@ -170,13 +168,13 @@ class RESTWebhookComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint
                 If you pass a token that's invalid for the target webhook.
         """
         await self._session.delete_webhook(
-            webhook_id=str(webhook.id if isinstance(webhook, snowflakes.UniqueEntity) else int(webhook)),
+            webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
             webhook_token=webhook_token,
         )
 
     async def execute_webhook(
         self,
-        webhook: snowflakes.HashableT[webhooks.Webhook],
+        webhook: bases.Hashable[webhooks.Webhook],
         webhook_token: str,
         *,
         content: str = ...,
@@ -187,14 +185,14 @@ class RESTWebhookComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint
         file: media.IO = ...,
         embeds: typing.Sequence[_embeds.Embed] = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[snowflakes.HashableT[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[snowflakes.HashableT[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
+        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
     ) -> typing.Optional[_messages.Message]:
         """Execute a webhook to create a message.
 
         Parameters
         ----------
-        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the webhook to execute.
         webhook_token : :obj:`~str`
             The token of the webhook to execute.
@@ -220,11 +218,11 @@ class RESTWebhookComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint
         mentions_everyone : :obj:`~bool`
             Whether ``@everyone`` and ``@here`` mentions should be resolved by
             discord and lead to actual pings, defaults to :obj:`~True`.
-        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
+        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
             Either an array of user objects/IDs to allow mentions for,
             :obj:`~True` to allow all user mentions or :obj:`~False` to block all
             user mentions from resolving, defaults to :obj:`~True`.
-        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
+        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
             Either an array of guild role objects/IDs to allow mentions for,
             :obj:`~True` to allow all role mentions or :obj:`~False` to block all
             role mentions from resolving, defaults to :obj:`~True`.
@@ -251,11 +249,11 @@ class RESTWebhookComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint
         :obj:`~hikari.errors.UnauthorizedHTTPError`
             If you pass a token that's invalid for the target webhook.
         :obj:`~ValueError`
-            If more than 100 unique objects/snowflakes are passed for
+            If more than 100 unique objects/entities are passed for
             ``role_mentions`` or ``user_mentions``.
         """
         payload = await self._session.execute_webhook(
-            webhook_id=str(webhook.id if isinstance(webhook, snowflakes.UniqueEntity) else int(webhook)),
+            webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
             webhook_token=webhook_token,
             content=content,
             username=username,
@@ -274,7 +272,7 @@ class RESTWebhookComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint
 
     def safe_webhook_execute(
         self,
-        webhook: snowflakes.HashableT[webhooks.Webhook],
+        webhook: bases.Hashable[webhooks.Webhook],
         webhook_token: str,
         *,
         content: str = ...,
@@ -285,8 +283,8 @@ class RESTWebhookComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint
         file: media.IO = ...,
         embeds: typing.Sequence[_embeds.Embed] = ...,
         mentions_everyone: bool = False,
-        user_mentions: typing.Union[typing.Collection[snowflakes.HashableT[users.User]], bool] = False,
-        role_mentions: typing.Union[typing.Collection[snowflakes.HashableT[guilds.GuildRole]], bool] = False,
+        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = False,
+        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = False,
     ) -> typing.Coroutine[typing.Any, typing.Any, typing.Optional[_messages.Message]]:
         """Execute a webhook to create a message with mention safety.
 

@@ -24,20 +24,20 @@ import abc
 import datetime
 import typing
 
-from hikari.clients.rest_clients import component_base
-from hikari.internal import conversions
-from hikari.internal import pagination
 from hikari import audit_logs
+from hikari import bases
 from hikari import channels as _channels
 from hikari import colors
 from hikari import emojis
 from hikari import guilds
 from hikari import invites
 from hikari import permissions as _permissions
-from hikari import snowflakes
 from hikari import users
 from hikari import voices
 from hikari import webhooks
+from hikari.clients.rest_clients import component_base
+from hikari.internal import conversions
+from hikari.internal import pagination
 
 
 def _get_member_id(member: guilds.GuildMember) -> str:
@@ -49,20 +49,20 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
     async def fetch_audit_log(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
+        guild: bases.Hashable[guilds.Guild],
         *,
-        user: snowflakes.HashableT[users.User] = ...,
+        user: bases.Hashable[users.User] = ...,
         action_type: typing.Union[audit_logs.AuditLogEventType, int] = ...,
         limit: int = ...,
-        before: typing.Union[datetime.datetime, snowflakes.HashableT[audit_logs.AuditLogEntry]] = ...,
+        before: typing.Union[datetime.datetime, bases.Hashable[audit_logs.AuditLogEntry]] = ...,
     ) -> audit_logs.AuditLog:
         """Get an audit log object for the given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the audit logs for.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the user to filter by.
         action_type : :obj:`~typing.Union` [ :obj:`~hikari.audit_logs.AuditLogEventType`, :obj:`~int` ]
             If specified, the action type to look up. Passing a raw integer
@@ -70,7 +70,7 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
         limit : :obj:`~int`
             If specified, the limit to apply to the number of records.
             Defaults to ``50``. Must be between ``1`` and ``100`` inclusive.
-        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.audit_logs.AuditLogEntry`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.audit_logs.AuditLogEntry`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the entry that all retrieved
             entries should have occurred befor.
 
@@ -90,14 +90,12 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If the guild does not exist.
         """
         if isinstance(before, datetime.datetime):
-            before = str(snowflakes.Snowflake.from_datetime(before))
+            before = str(bases.Snowflake.from_datetime(before))
         elif before is not ...:
-            before = str(before.id if isinstance(before, snowflakes.UniqueEntity) else int(before))
+            before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
         payload = await self._session.get_guild_audit_log(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            user_id=(
-                str(user.id if isinstance(user, snowflakes.UniqueEntity) else int(user)) if user is not ... else ...
-            ),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            user_id=(str(user.id if isinstance(user, bases.UniqueEntity) else int(user)) if user is not ... else ...),
             action_type=action_type,
             limit=limit,
             before=before,
@@ -106,10 +104,10 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
     def fetch_audit_log_entries_before(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
+        guild: bases.Hashable[guilds.Guild],
         *,
-        before: typing.Union[datetime.datetime, snowflakes.HashableT[audit_logs.AuditLogEntry], None] = None,
-        user: snowflakes.HashableT[users.User] = ...,
+        before: typing.Union[datetime.datetime, bases.Hashable[audit_logs.AuditLogEntry], None] = None,
+        user: bases.Hashable[users.User] = ...,
         action_type: typing.Union[audit_logs.AuditLogEventType, int] = ...,
         limit: typing.Optional[int] = None,
     ) -> audit_logs.AuditLogIterator:
@@ -120,13 +118,13 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The ID or object of the guild to get audit log entries for
-        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.audit_logs.AuditLogEntry`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], optional
+        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.audit_logs.AuditLogEntry`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], optional
             If specified, the ID or object of the entry or datetime to get
             entries that happened before otherwise this will start from the
             newest entry.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the user to filter by.
         action_type : :obj:`~typing.Union` [ :obj:`~hikari.audit_logs.AuditLogEventType`, :obj:`~int` ]
             If specified, the action type to look up. Passing a raw integer
@@ -162,30 +160,28 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             to oldest).
         """
         if isinstance(before, datetime.datetime):
-            before = str(snowflakes.Snowflake.from_datetime(before))
+            before = str(bases.Snowflake.from_datetime(before))
         elif before is not None:
-            before = str(before.id if isinstance(before, snowflakes.UniqueEntity) else int(before))
+            before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
         return audit_logs.AuditLogIterator(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             request=self._session.get_guild_audit_log,
             before=before,
-            user_id=(
-                str(user.id if isinstance(user, snowflakes.UniqueEntity) else int(user)) if user is not ... else ...
-            ),
+            user_id=(str(user.id if isinstance(user, bases.UniqueEntity) else int(user)) if user is not ... else ...),
             action_type=action_type,
             limit=limit,
         )
 
     async def fetch_guild_emoji(
-        self, guild: snowflakes.HashableT[guilds.Guild], emoji: snowflakes.HashableT[emojis.GuildEmoji],
+        self, guild: bases.Hashable[guilds.Guild], emoji: bases.Hashable[emojis.GuildEmoji],
     ) -> emojis.GuildEmoji:
         """Get an updated emoji object from a specific guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the emoji from.
-        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the emoji to get.
 
         Returns
@@ -204,17 +200,17 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you aren't a member of said guild.
         """
         payload = await self._session.get_guild_emoji(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            emoji_id=str(emoji.id if isinstance(emoji, snowflakes.UniqueEntity) else int(emoji)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            emoji_id=str(emoji.id if isinstance(emoji, bases.UniqueEntity) else int(emoji)),
         )
         return emojis.GuildEmoji.deserialize(payload)
 
-    async def fetch_guild_emojis(self, guild: snowflakes.HashableT[guilds.Guild]) -> typing.Sequence[emojis.GuildEmoji]:
+    async def fetch_guild_emojis(self, guild: bases.Hashable[guilds.Guild]) -> typing.Sequence[emojis.GuildEmoji]:
         """Get emojis for a given guild object or ID.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the emojis for.
 
         Returns
@@ -233,30 +229,30 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you aren't a member of the guild.
         """
         payload = await self._session.list_guild_emojis(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
         return [emojis.GuildEmoji.deserialize(emoji) for emoji in payload]
 
     async def create_guild_emoji(
         self,
-        guild: snowflakes.HashableT[guilds.GuildRole],
+        guild: bases.Hashable[guilds.GuildRole],
         name: str,
         image_data: conversions.FileLikeT,
         *,
-        roles: typing.Sequence[snowflakes.HashableT[guilds.GuildRole]] = ...,
+        roles: typing.Sequence[bases.Hashable[guilds.GuildRole]] = ...,
         reason: str = ...,
     ) -> emojis.GuildEmoji:
         """Create a new emoji for a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to create the emoji in.
         name : :obj:`~str`
             The new emoji's name.
         image_data : ``hikari.internal.conversions.FileLikeT``
             The ``128x128`` image data.
-        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
             If specified, a list of role objects or IDs for which the emoji
             will be whitelisted. If empty, all roles are whitelisted.
         reason : :obj:`~str`
@@ -284,10 +280,10 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_guild_emoji(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             name=name,
             image=conversions.get_bytes_from_resource(image_data),
-            roles=[str(role.id if isinstance(role, snowflakes.UniqueEntity) else int(role)) for role in roles]
+            roles=[str(role.id if isinstance(role, bases.UniqueEntity) else int(role)) for role in roles]
             if roles is not ...
             else ...,
             reason=reason,
@@ -296,25 +292,25 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
     async def update_guild_emoji(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
-        emoji: snowflakes.HashableT[emojis.GuildEmoji],
+        guild: bases.Hashable[guilds.Guild],
+        emoji: bases.Hashable[emojis.GuildEmoji],
         *,
         name: str = ...,
-        roles: typing.Sequence[snowflakes.HashableT[guilds.GuildRole]] = ...,
+        roles: typing.Sequence[bases.Hashable[guilds.GuildRole]] = ...,
         reason: str = ...,
     ) -> emojis.GuildEmoji:
         """Edits an emoji of a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to which the emoji to edit belongs to.
-        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the emoji to edit.
         name : :obj:`~str`
             If specified, a new emoji name string. Keep unspecified to leave the
             name unchanged.
-        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
             If specified, a list of objects or IDs for the new whitelisted
             roles. Set to an empty list to whitelist all roles.
             Keep unspecified to leave the same roles already set.
@@ -339,10 +335,10 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             member of the given guild.
         """
         payload = await self._session.modify_guild_emoji(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            emoji_id=str(emoji.id if isinstance(emoji, snowflakes.UniqueEntity) else int(emoji)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            emoji_id=str(emoji.id if isinstance(emoji, bases.UniqueEntity) else int(emoji)),
             name=name,
-            roles=[str(role.id if isinstance(role, snowflakes.UniqueEntity) else int(role)) for role in roles]
+            roles=[str(role.id if isinstance(role, bases.UniqueEntity) else int(role)) for role in roles]
             if roles is not ...
             else ...,
             reason=reason,
@@ -350,15 +346,15 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
         return emojis.GuildEmoji.deserialize(payload)
 
     async def delete_guild_emoji(
-        self, guild: snowflakes.HashableT[guilds.Guild], emoji: snowflakes.HashableT[emojis.GuildEmoji],
+        self, guild: bases.Hashable[guilds.Guild], emoji: bases.Hashable[emojis.GuildEmoji],
     ) -> None:
         """Delete an emoji from a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to delete the emoji from.
-        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild emoji to be deleted.
 
         Raises
@@ -373,8 +369,8 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             member of said guild.
         """
         await self._session.delete_guild_emoji(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            emoji_id=str(emoji.id if isinstance(emoji, snowflakes.UniqueEntity) else int(emoji)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            emoji_id=str(emoji.id if isinstance(emoji, bases.UniqueEntity) else int(emoji)),
         )
 
     async def create_guild(
@@ -448,12 +444,12 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
         )
         return guilds.Guild.deserialize(payload)
 
-    async def fetch_guild(self, guild: snowflakes.HashableT[guilds.Guild]) -> guilds.Guild:
+    async def fetch_guild(self, guild: bases.Hashable[guilds.Guild]) -> guilds.Guild:
         """Get a given guild's object.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get.
 
         Returns
@@ -472,16 +468,16 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you don't have access to the guild.
         """
         payload = await self._session.get_guild(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
         return guilds.Guild.deserialize(payload)
 
-    async def fetch_guild_preview(self, guild: snowflakes.HashableT[guilds.Guild]) -> guilds.GuildPreview:
+    async def fetch_guild_preview(self, guild: bases.Hashable[guilds.Guild]) -> guilds.GuildPreview:
         """Get a given guild's object.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the preview object for.
 
         Returns
@@ -503,32 +499,32 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If the guild is not found or it isn't ``PUBLIC``.
         """
         payload = await self._session.get_guild_preview(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
         return guilds.GuildPreview.deserialize(payload)
 
     async def update_guild(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
+        guild: bases.Hashable[guilds.Guild],
         *,
         name: str = ...,
         region: typing.Union[voices.VoiceRegion, str] = ...,
         verification_level: typing.Union[guilds.GuildVerificationLevel, int] = ...,
         default_message_notifications: typing.Union[guilds.GuildMessageNotificationsLevel, int] = ...,
         explicit_content_filter: typing.Union[guilds.GuildExplicitContentFilterLevel, int] = ...,
-        afk_channel: snowflakes.HashableT[_channels.GuildVoiceChannel] = ...,
+        afk_channel: bases.Hashable[_channels.GuildVoiceChannel] = ...,
         afk_timeout: typing.Union[datetime.timedelta, int] = ...,
         icon_data: conversions.FileLikeT = ...,
-        owner: snowflakes.HashableT[users.User] = ...,
+        owner: bases.Hashable[users.User] = ...,
         splash_data: conversions.FileLikeT = ...,
-        system_channel: snowflakes.HashableT[_channels.Channel] = ...,
+        system_channel: bases.Hashable[_channels.Channel] = ...,
         reason: str = ...,
     ) -> guilds.Guild:
         """Edit a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to be edited.
         name : :obj:`~str`
             If specified, the new name string for the guild (``2-100`` characters).
@@ -545,17 +541,17 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
         explicit_content_filter : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildExplicitContentFilterLevel`, :obj:`~int` ]
             If specified, the new explicit content filter. Passing a raw int for
             this may lead to unexpected behaviour.
-        afk_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        afk_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             If specified, the object or ID for the new AFK voice channel.
         afk_timeout : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             If specified, the new AFK timeout seconds timedelta.
         icon_data : ``hikari.internal.conversions.FileLikeT``
             If specified, the new guild icon image file data.
-        owner : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        owner : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the new guild owner.
         splash_data : ``hikari.internal.conversions.FileLikeT``
             If specified, the new new splash image file data.
-        system_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        system_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the new system channel.
         reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
@@ -577,7 +573,7 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = await self._session.modify_guild(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             name=name,
             region=getattr(region, "id", region) if region is not ... else ...,
             verification_level=verification_level,
@@ -585,17 +581,17 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             explicit_content_filter=explicit_content_filter,
             afk_timeout=afk_timeout.total_seconds() if isinstance(afk_timeout, datetime.timedelta) else afk_timeout,
             afk_channel_id=(
-                str(afk_channel.id if isinstance(afk_channel, snowflakes.UniqueEntity) else int(afk_channel))
+                str(afk_channel.id if isinstance(afk_channel, bases.UniqueEntity) else int(afk_channel))
                 if afk_channel is not ...
                 else ...
             ),
             icon=conversions.get_bytes_from_resource(icon_data) if icon_data is not ... else ...,
             owner_id=(
-                str(owner.id if isinstance(owner, snowflakes.UniqueEntity) else int(owner)) if owner is not ... else ...
+                str(owner.id if isinstance(owner, bases.UniqueEntity) else int(owner)) if owner is not ... else ...
             ),
             splash=conversions.get_bytes_from_resource(splash_data) if splash_data is not ... else ...,
             system_channel_id=(
-                str(system_channel.id if isinstance(system_channel, snowflakes.UniqueEntity) else int(system_channel))
+                str(system_channel.id if isinstance(system_channel, bases.UniqueEntity) else int(system_channel))
                 if system_channel is not ...
                 else ...
             ),
@@ -603,14 +599,14 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
         )
         return guilds.Guild.deserialize(payload)
 
-    async def delete_guild(self, guild: snowflakes.HashableT[guilds.Guild]) -> None:
+    async def delete_guild(self, guild: bases.Hashable[guilds.Guild]) -> None:
         """Permanently deletes the given guild.
 
         You must be owner of the guild to perform this action.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to be deleted.
 
         Raises
@@ -624,17 +620,17 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you are not the guild owner.
         """
         await self._session.delete_guild(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
 
     async def fetch_guild_channels(
-        self, guild: snowflakes.HashableT[guilds.Guild]
+        self, guild: bases.Hashable[guilds.Guild]
     ) -> typing.Sequence[_channels.GuildChannel]:
         """Get all the channels for a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the channels from.
 
         Returns
@@ -653,13 +649,13 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you are not in the guild.
         """
         payload = await self._session.list_guild_channels(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
         return [_channels.deserialize_channel(channel) for channel in payload]
 
     async def create_guild_channel(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
+        guild: bases.Hashable[guilds.Guild],
         name: str,
         channel_type: typing.Union[_channels.ChannelType, int] = ...,
         position: int = ...,
@@ -669,14 +665,14 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
         bitrate: int = ...,
         user_limit: int = ...,
         permission_overwrites: typing.Sequence[_channels.PermissionOverwrite] = ...,
-        parent_category: snowflakes.HashableT[_channels.GuildCategory] = ...,
+        parent_category: bases.Hashable[_channels.GuildCategory] = ...,
         reason: str = ...,
     ) -> _channels.GuildChannel:
         """Create a channel in a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to create the channel in.
         name : :obj:`~str`
             If specified, the name for the channel. This must be
@@ -710,7 +706,7 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
         permission_overwrites : :obj:`~typing.Sequence` [ :obj:`~hikari.channels.PermissionOverwrite` ]
             If specified, the list of permission overwrite objects that are
             category specific to replace the existing overwrites with.
-        parent_category : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildCategory`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        parent_category : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildCategory`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the parent category to set for
              the channel.
         reason : :obj:`~str`
@@ -736,7 +732,7 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_guild_channel(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             name=name,
             type_=channel_type,
             position=position,
@@ -753,9 +749,7 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
                 [po.serialize() for po in permission_overwrites] if permission_overwrites is not ... else ...
             ),
             parent_id=(
-                str(
-                    parent_category.id if isinstance(parent_category, snowflakes.UniqueEntity) else int(parent_category)
-                )
+                str(parent_category.id if isinstance(parent_category, bases.UniqueEntity) else int(parent_category))
                 if parent_category is not ...
                 else ...
             ),
@@ -765,20 +759,20 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
     async def reposition_guild_channels(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
-        channel: typing.Tuple[int, snowflakes.HashableT[_channels.GuildChannel]],
-        *additional_channels: typing.Tuple[int, snowflakes.HashableT[_channels.GuildChannel]],
+        guild: bases.Hashable[guilds.Guild],
+        channel: typing.Tuple[int, bases.Hashable[_channels.GuildChannel]],
+        *additional_channels: typing.Tuple[int, bases.Hashable[_channels.GuildChannel]],
     ) -> None:
         """Edits the position of one or more given channels.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild in which to edit the channels.
-        channel : :obj:`~typing.Tuple` [ :obj:`~int` , :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
+        channel : :obj:`~typing.Tuple` [ :obj:`~int` , :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
             The first channel to change the position of. This is a tuple of the
             integer position the channel object or ID.
-        *additional_channels : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
+        *additional_channels : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
             Optional additional channels to change the position of. These must
             be tuples of integer positions to change to and the channel object
             or ID and the.
@@ -797,23 +791,23 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             due to it being outside of the range of a 64 bit integer.
         """
         await self._session.modify_guild_channel_positions(
-            str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
+            str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             *[
-                (str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)), position)
+                (str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)), position)
                 for position, channel in [channel, *additional_channels]
             ],
         )
 
     async def fetch_member(
-        self, guild: snowflakes.HashableT[guilds.Guild], user: snowflakes.HashableT[users.User],
+        self, guild: bases.Hashable[guilds.Guild], user: bases.Hashable[users.User],
     ) -> guilds.GuildMember:
         """Get a given guild member.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the member from.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the member to get.
 
         Returns
@@ -832,16 +826,16 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you don't have access to the target guild.
         """
         payload = await self._session.get_guild_member(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, snowflakes.UniqueEntity) else int(user)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
         )
         return guilds.GuildMember.deserialize(payload)
 
     def fetch_members_after(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
+        guild: bases.Hashable[guilds.Guild],
         *,
-        after: typing.Union[datetime.datetime, snowflakes.HashableT[users.User]] = 0,
+        after: typing.Union[datetime.datetime, bases.Hashable[users.User]] = 0,
         limit: typing.Optional[int] = None,
     ) -> typing.AsyncIterator[guilds.GuildMember]:
         """Get an async iterator of all the members in a given guild.
@@ -852,12 +846,12 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the members from.
         limit : :obj:`~int`
             If specified, the maximum number of members this iterator
             should return.
-        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the user this iterator should start
             after if specified, else this will start at the oldest user.
 
@@ -885,11 +879,11 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you are not in the guild.
         """
         if isinstance(after, datetime.datetime):
-            after = str(snowflakes.Snowflake.from_datetime(after))
+            after = str(bases.Snowflake.from_datetime(after))
         else:
-            after = str(after.id if isinstance(after, snowflakes.UniqueEntity) else int(after))
+            after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
         return pagination.pagination_handler(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             deserializer=guilds.GuildMember.deserialize,
             direction="after",
             request=self._session.list_guild_members,
@@ -901,27 +895,27 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
     async def update_member(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
-        user: snowflakes.HashableT[users.User],
+        guild: bases.Hashable[guilds.Guild],
+        user: bases.Hashable[users.User],
         nickname: typing.Optional[str] = ...,
-        roles: typing.Sequence[snowflakes.HashableT[guilds.GuildRole]] = ...,
+        roles: typing.Sequence[bases.Hashable[guilds.GuildRole]] = ...,
         mute: bool = ...,
         deaf: bool = ...,
-        voice_channel: typing.Optional[snowflakes.HashableT[_channels.GuildVoiceChannel]] = ...,
+        voice_channel: typing.Optional[bases.Hashable[_channels.GuildVoiceChannel]] = ...,
         reason: str = ...,
     ) -> None:
         """Edits a guild's member, any unspecified fields will not be changed.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to edit the member from.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildMember`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildMember`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the member to edit.
         nickname : :obj:`~str`, optional
             If specified, the new nickname string. Setting it to :obj:`~None`
             explicitly will clear the nickname.
-        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
             If specified, a list of role IDs the member should have.
         mute : :obj:`~bool`
             If specified, whether the user should be muted in the voice channel
@@ -929,7 +923,7 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
         deaf : :obj:`~bool`
             If specified, whether the user should be deafen in the voice
             channel or not.
-        voice_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], optional
+        voice_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], optional
             If specified, the ID of the channel to move the member to. Setting
             it to :obj:`~None` explicitly will disconnect the user.
         reason : :obj:`~str`
@@ -953,18 +947,18 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             due to it being outside of the range of a 64 bit integer.
         """
         await self._session.modify_guild_member(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, snowflakes.UniqueEntity) else int(user)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
             nick=nickname,
             roles=(
-                [str(role.id if isinstance(role, snowflakes.UniqueEntity) else int(role)) for role in roles]
+                [str(role.id if isinstance(role, bases.UniqueEntity) else int(role)) for role in roles]
                 if roles is not ...
                 else ...
             ),
             mute=mute,
             deaf=deaf,
             channel_id=(
-                str(voice_channel.id if isinstance(voice_channel, snowflakes.UniqueEntity) else int(voice_channel))
+                str(voice_channel.id if isinstance(voice_channel, bases.UniqueEntity) else int(voice_channel))
                 if voice_channel is not ...
                 else ...
             ),
@@ -972,13 +966,13 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
         )
 
     async def update_my_member_nickname(
-        self, guild: snowflakes.HashableT[guilds.Guild], nickname: typing.Optional[str], *, reason: str = ...,
+        self, guild: bases.Hashable[guilds.Guild], nickname: typing.Optional[str], *, reason: str = ...,
     ) -> None:
         """Edits the current user's nickname for a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to change the nick on.
         nickname : :obj:`~str`, optional
             The new nick string. Setting this to `None` clears the nickname.
@@ -1000,16 +994,16 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             due to it being outside of the range of a 64 bit integer.
         """
         await self._session.modify_current_user_nick(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             nick=nickname,
             reason=reason,
         )
 
     async def add_role_to_member(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
-        user: snowflakes.HashableT[users.User],
-        role: snowflakes.HashableT[guilds.GuildRole],
+        guild: bases.Hashable[guilds.Guild],
+        user: bases.Hashable[users.User],
+        role: bases.Hashable[guilds.GuildRole],
         *,
         reason: str = ...,
     ) -> None:
@@ -1017,11 +1011,11 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the member you want to add the role to.
-        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the role you want to add.
         reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
@@ -1038,17 +1032,17 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
         """
         await self._session.add_guild_member_role(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, snowflakes.UniqueEntity) else int(user)),
-            role_id=str(role.id if isinstance(role, snowflakes.UniqueEntity) else int(role)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
+            role_id=str(role.id if isinstance(role, bases.UniqueEntity) else int(role)),
             reason=reason,
         )
 
     async def remove_role_from_member(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
-        user: snowflakes.HashableT[users.User],
-        role: snowflakes.HashableT[guilds.GuildRole],
+        guild: bases.Hashable[guilds.Guild],
+        user: bases.Hashable[users.User],
+        role: bases.Hashable[guilds.GuildRole],
         *,
         reason: str = ...,
     ) -> None:
@@ -1056,11 +1050,11 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the member you want to remove the role from.
-        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the role you want to remove.
         reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
@@ -1077,22 +1071,22 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
         """
         await self._session.remove_guild_member_role(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, snowflakes.UniqueEntity) else int(user)),
-            role_id=str(role.id if isinstance(role, snowflakes.UniqueEntity) else int(role)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
+            role_id=str(role.id if isinstance(role, bases.UniqueEntity) else int(role)),
             reason=reason,
         )
 
     async def kick_member(
-        self, guild: snowflakes.HashableT[guilds.Guild], user: snowflakes.HashableT[users.User], *, reason: str = ...,
+        self, guild: bases.Hashable[guilds.Guild], user: bases.Hashable[users.User], *, reason: str = ...,
     ) -> None:
         """Kicks a user from a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the member you want to kick.
         reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
@@ -1109,21 +1103,21 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you lack the ``KICK_MEMBERS`` permission or are not in the guild.
         """
         await self._session.remove_guild_member(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, snowflakes.UniqueEntity) else int(user)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
             reason=reason,
         )
 
     async def fetch_ban(
-        self, guild: snowflakes.HashableT[guilds.Guild], user: snowflakes.HashableT[users.User],
+        self, guild: bases.Hashable[guilds.Guild], user: bases.Hashable[users.User],
     ) -> guilds.GuildMemberBan:
         """Get a ban from a given guild.
 
         Parameters
         ----------
-         guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+         guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to get the ban from.
-         user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+         user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the user to get the ban information for.
 
         Returns
@@ -1143,17 +1137,17 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
         """
         payload = await self._session.get_guild_ban(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, snowflakes.UniqueEntity) else int(user)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
         )
         return guilds.GuildMemberBan.deserialize(payload)
 
-    async def fetch_bans(self, guild: snowflakes.HashableT[guilds.Guild],) -> typing.Sequence[guilds.GuildMemberBan]:
+    async def fetch_bans(self, guild: bases.Hashable[guilds.Guild],) -> typing.Sequence[guilds.GuildMemberBan]:
         """Get the bans for a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to get the bans from.
 
         Returns
@@ -1172,14 +1166,14 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
         """
         payload = await self._session.get_guild_bans(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
         return [guilds.GuildMemberBan.deserialize(ban) for ban in payload]
 
     async def ban_member(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
-        user: snowflakes.HashableT[users.User],
+        guild: bases.Hashable[guilds.Guild],
+        user: bases.Hashable[users.User],
         *,
         delete_message_days: typing.Union[datetime.timedelta, int] = ...,
         reason: str = ...,
@@ -1188,9 +1182,9 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the member you want to ban.
         delete_message_days : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             If specified, the tim delta of how many days of messages from the
@@ -1210,22 +1204,22 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
         """
         await self._session.create_guild_ban(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, snowflakes.UniqueEntity) else int(user)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
             delete_message_days=getattr(delete_message_days, "days", delete_message_days),
             reason=reason,
         )
 
     async def unban_member(
-        self, guild: snowflakes.HashableT[guilds.Guild], user: snowflakes.HashableT[users.User], *, reason: str = ...,
+        self, guild: bases.Hashable[guilds.Guild], user: bases.Hashable[users.User], *, reason: str = ...,
     ) -> None:
         """Un-bans a user from a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to un-ban the user from.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The ID of the user you want to un-ban.
         reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
@@ -1244,24 +1238,24 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             guild.
         """
         await self._session.remove_guild_ban(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, snowflakes.UniqueEntity) else int(user)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
             reason=reason,
         )
 
     async def fetch_roles(
-        self, guild: snowflakes.HashableT[guilds.Guild],
-    ) -> typing.Mapping[snowflakes.Snowflake, guilds.GuildRole]:
+        self, guild: bases.Hashable[guilds.Guild],
+    ) -> typing.Mapping[bases.Snowflake, guilds.GuildRole]:
         """Get the roles for a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to get the roles from.
 
         Returns
         -------
-        :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~hikari.guilds.GuildRole` ]
+        :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.guilds.GuildRole` ]
             A list of role objects.
 
         Raises
@@ -1275,13 +1269,13 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you're not in the guild.
         """
         payload = await self._session.get_guild_roles(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
         return {role.id: role for role in map(guilds.GuildRole.deserialize, payload)}
 
     async def create_role(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
+        guild: bases.Hashable[guilds.Guild],
         *,
         name: str = ...,
         permissions: typing.Union[_permissions.Permission, int] = ...,
@@ -1294,7 +1288,7 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to create the role on.
         name : :obj:`~str`
             If specified, the new role name string.
@@ -1330,7 +1324,7 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_guild_role(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             name=name,
             permissions=permissions,
             color=color,
@@ -1342,20 +1336,20 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
     async def reposition_roles(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
-        role: typing.Tuple[int, snowflakes.HashableT[guilds.GuildRole]],
-        *additional_roles: typing.Tuple[int, snowflakes.HashableT[guilds.GuildRole]],
+        guild: bases.Hashable[guilds.Guild],
+        role: typing.Tuple[int, bases.Hashable[guilds.GuildRole]],
+        *additional_roles: typing.Tuple[int, bases.Hashable[guilds.GuildRole]],
     ) -> typing.Sequence[guilds.GuildRole]:
         """Edits the position of two or more roles in a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The ID of the guild the roles belong to.
-        role : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
+        role : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
             The first role to move. This is a tuple of the integer position and
             the role object or ID.
-        *additional_roles : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ] ]
+        *additional_roles : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
             Optional extra roles to move. These must be tuples of the integer
             position and the role object or ID.
 
@@ -1377,9 +1371,9 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.modify_guild_role_positions(
-            str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
+            str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             *[
-                (str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel)), position)
+                (str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)), position)
                 for position, channel in [role, *additional_roles]
             ],
         )
@@ -1387,8 +1381,8 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
     async def update_role(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
-        role: snowflakes.HashableT[guilds.GuildRole],
+        guild: bases.Hashable[guilds.Guild],
+        role: bases.Hashable[guilds.GuildRole],
         *,
         name: str = ...,
         permissions: typing.Union[_permissions.Permission, int] = ...,
@@ -1401,9 +1395,9 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the role belong to.
-        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the role you want to edit.
         name : :obj:`~str`
             If specified, the new role's name string.
@@ -1439,8 +1433,8 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.modify_guild_role(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            role_id=str(role.id if isinstance(role, snowflakes.UniqueEntity) else int(role)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            role_id=str(role.id if isinstance(role, bases.UniqueEntity) else int(role)),
             name=name,
             permissions=permissions,
             color=color,
@@ -1450,16 +1444,14 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
         )
         return guilds.GuildRole.deserialize(payload)
 
-    async def delete_role(
-        self, guild: snowflakes.HashableT[guilds.Guild], role: snowflakes.HashableT[guilds.GuildRole],
-    ) -> None:
+    async def delete_role(self, guild: bases.Hashable[guilds.Guild], role: bases.Hashable[guilds.GuildRole],) -> None:
         """Delete a role from a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to remove the role from.
-        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the role you want to delete.
 
         Raises
@@ -1473,18 +1465,18 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
         """
         await self._session.delete_guild_role(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            role_id=str(role.id if isinstance(role, snowflakes.UniqueEntity) else int(role)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            role_id=str(role.id if isinstance(role, bases.UniqueEntity) else int(role)),
         )
 
     async def estimate_guild_prune_count(
-        self, guild: snowflakes.HashableT[guilds.Guild], days: typing.Union[datetime.timedelta, int],
+        self, guild: bases.Hashable[guilds.Guild], days: typing.Union[datetime.timedelta, int],
     ) -> int:
         """Get the estimated prune count for a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to get the count for.
         days : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             The time delta of days to count prune for (at least ``1``).
@@ -1506,13 +1498,13 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             due to it being outside of the range of a 64 bit integer.
         """
         return await self._session.get_guild_prune_count(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             days=getattr(days, "days", days),
         )
 
     async def begin_guild_prune(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
+        guild: bases.Hashable[guilds.Guild],
         days: typing.Union[datetime.timedelta, int],
         *,
         compute_prune_count: bool = ...,
@@ -1522,7 +1514,7 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to prune member of.
         days : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             The time delta of inactivity days you want to use as filter.
@@ -1552,20 +1544,20 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             due to it being outside of the range of a 64 bit integer.
         """
         return await self._session.begin_guild_prune(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             days=getattr(days, "days", days),
             compute_prune_count=compute_prune_count,
             reason=reason,
         )
 
     async def fetch_guild_voice_regions(
-        self, guild: snowflakes.HashableT[guilds.Guild],
+        self, guild: bases.Hashable[guilds.Guild],
     ) -> typing.Sequence[voices.VoiceRegion]:
         """Get the voice regions for a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the voice regions for.
 
         Returns
@@ -1584,18 +1576,18 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you are not in the guild.
         """
         payload = await self._session.get_guild_voice_regions(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
         return [voices.VoiceRegion.deserialize(region) for region in payload]
 
     async def fetch_guild_invites(
-        self, guild: snowflakes.HashableT[guilds.Guild],
+        self, guild: bases.Hashable[guilds.Guild],
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         """Get the invites for a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the invites for.
 
         Returns
@@ -1614,18 +1606,16 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = await self._session.get_guild_invites(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
         return [invites.InviteWithMetadata.deserialize(invite) for invite in payload]
 
-    async def fetch_integrations(
-        self, guild: snowflakes.HashableT[guilds.Guild]
-    ) -> typing.Sequence[guilds.GuildIntegration]:
+    async def fetch_integrations(self, guild: bases.Hashable[guilds.Guild]) -> typing.Sequence[guilds.GuildIntegration]:
         """Get the integrations for a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the integrations for.
 
         Returns
@@ -1644,14 +1634,14 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         payload = await self._session.get_guild_integrations(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
         return [guilds.GuildIntegration.deserialize(integration) for integration in payload]
 
     async def update_integration(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
-        integration: snowflakes.HashableT[guilds.GuildIntegration],
+        guild: bases.Hashable[guilds.Guild],
+        integration: bases.Hashable[guilds.GuildIntegration],
         *,
         expire_behaviour: typing.Union[guilds.IntegrationExpireBehaviour, int] = ...,
         expire_grace_period: typing.Union[datetime.timedelta, int] = ...,
@@ -1662,9 +1652,9 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to which the integration belongs to.
-        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the integration to update.
         expire_behaviour : :obj:`~typing.Union` [ :obj:`~hikari.guilds.IntegrationExpireBehaviour`, :obj:`~int` ]
             If specified, the behaviour for when an integration subscription
@@ -1690,10 +1680,8 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         await self._session.modify_guild_integration(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            integration_id=str(
-                integration.id if isinstance(integration, snowflakes.UniqueEntity) else int(integration)
-            ),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            integration_id=str(integration.id if isinstance(integration, bases.UniqueEntity) else int(integration)),
             expire_behaviour=expire_behaviour,
             expire_grace_period=getattr(expire_grace_period, "days", expire_grace_period),
             enable_emojis=enable_emojis,
@@ -1702,8 +1690,8 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
     async def delete_integration(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
-        integration: snowflakes.HashableT[guilds.GuildIntegration],
+        guild: bases.Hashable[guilds.Guild],
+        integration: bases.Hashable[guilds.GuildIntegration],
         *,
         reason: str = ...,
     ) -> None:
@@ -1711,9 +1699,9 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to which the integration belongs to.
-        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the integration to delete.
         reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
@@ -1730,23 +1718,21 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         await self._session.delete_guild_integration(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            integration_id=str(
-                integration.id if isinstance(integration, snowflakes.UniqueEntity) else int(integration)
-            ),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            integration_id=str(integration.id if isinstance(integration, bases.UniqueEntity) else int(integration)),
             reason=reason,
         )
 
     async def sync_guild_integration(
-        self, guild: snowflakes.HashableT[guilds.Guild], integration: snowflakes.HashableT[guilds.GuildIntegration],
+        self, guild: bases.Hashable[guilds.Guild], integration: bases.Hashable[guilds.GuildIntegration],
     ) -> None:
         """Sync the given integration's subscribers/emojis.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to which the integration belongs to.
-        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The ID of the integration to sync.
 
         Raises
@@ -1760,18 +1746,16 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
         """
         await self._session.sync_guild_integration(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
-            integration_id=str(
-                integration.id if isinstance(integration, snowflakes.UniqueEntity) else int(integration)
-            ),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            integration_id=str(integration.id if isinstance(integration, bases.UniqueEntity) else int(integration)),
         )
 
-    async def fetch_guild_embed(self, guild: snowflakes.HashableT[guilds.Guild],) -> guilds.GuildEmbed:
+    async def fetch_guild_embed(self, guild: bases.Hashable[guilds.Guild],) -> guilds.GuildEmbed:
         """Get the embed for a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the embed for.
 
         Returns
@@ -1791,15 +1775,15 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             the guild.
         """
         payload = await self._session.get_guild_embed(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
         return guilds.GuildEmbed.deserialize(payload)
 
     async def update_guild_embed(
         self,
-        guild: snowflakes.HashableT[guilds.Guild],
+        guild: bases.Hashable[guilds.Guild],
         *,
-        channel: snowflakes.HashableT[_channels.GuildChannel] = ...,
+        channel: bases.Hashable[_channels.GuildChannel] = ...,
         enabled: bool = ...,
         reason: str = ...,
     ) -> guilds.GuildEmbed:
@@ -1807,9 +1791,9 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to edit the embed for.
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ], optional
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], optional
             If specified, the object or ID of the channel that this embed's
             invite should target. Set to :obj:`~None` to disable invites for this
             embed.
@@ -1836,9 +1820,9 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             the guild.
         """
         payload = await self._session.modify_guild_embed(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             channel_id=(
-                str(channel.id if isinstance(channel, snowflakes.UniqueEntity) else int(channel))
+                str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
                 if channel is not ...
                 else ...
             ),
@@ -1847,13 +1831,13 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
         )
         return guilds.GuildEmbed.deserialize(payload)
 
-    async def fetch_guild_vanity_url(self, guild: snowflakes.HashableT[guilds.Guild],) -> invites.VanityUrl:
+    async def fetch_guild_vanity_url(self, guild: bases.Hashable[guilds.Guild],) -> invites.VanityUrl:
         """
         Get the vanity URL for a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the vanity URL for.
 
         Returns
@@ -1874,16 +1858,16 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             the guild.
         """
         payload = await self._session.get_guild_vanity_url(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
         return invites.VanityUrl.deserialize(payload)
 
-    def format_guild_widget_image(self, guild: snowflakes.HashableT[guilds.Guild], *, style: str = ...) -> str:
+    def format_guild_widget_image(self, guild: bases.Hashable[guilds.Guild], *, style: str = ...) -> str:
         """Get the URL for a guild widget.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to form the widget.
         style : :obj:`~str`
             If specified, the syle of the widget.
@@ -1904,17 +1888,15 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
         to be valid.
         """
         return self._session.get_guild_widget_image_url(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild)), style=style
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)), style=style
         )
 
-    async def fetch_guild_webhooks(
-        self, guild: snowflakes.HashableT[guilds.Guild]
-    ) -> typing.Sequence[webhooks.Webhook]:
+    async def fetch_guild_webhooks(self, guild: bases.Hashable[guilds.Guild]) -> typing.Sequence[webhooks.Webhook]:
         """Get all webhooks for a given guild.
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.snowflakes.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
             The object or ID for the guild to get the webhooks from.
 
         Returns
@@ -1934,6 +1916,6 @@ class RESTGuildComponent(component_base.BaseRESTComponent, abc.ABC):  # pylint: 
             aren't a member of the given guild.
         """
         payload = await self._session.get_guild_webhooks(
-            guild_id=str(guild.id if isinstance(guild, snowflakes.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
         return [webhooks.Webhook.deserialize(webhook) for webhook in payload]

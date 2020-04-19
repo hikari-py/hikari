@@ -24,10 +24,9 @@ import typing
 
 import attr
 
-from hikari import entities
+from hikari import bases
 from hikari import guilds
 from hikari import permissions
-from hikari import snowflakes
 from hikari import users
 from hikari.internal import marshaller
 from hikari.internal import urls
@@ -46,7 +45,7 @@ class ConnectionVisibility(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class OwnConnection(entities.HikariEntity, marshaller.Deserializable):
+class OwnConnection(bases.HikariEntity, marshaller.Deserializable):
     """Represents a user's connection with a third party account.
 
     Returned by the ``GET Current User Connections`` endpoint.
@@ -141,7 +140,7 @@ class TeamMembershipState(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class TeamMember(entities.HikariEntity, marshaller.Deserializable):
+class TeamMember(bases.HikariEntity, marshaller.Deserializable):
     """Represents a member of a Team."""
 
     #: The state of this user's membership.
@@ -157,8 +156,8 @@ class TeamMember(entities.HikariEntity, marshaller.Deserializable):
 
     #: The ID of the team this member belongs to.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    team_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    team_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The user object of this team member.
     #:
@@ -168,7 +167,7 @@ class TeamMember(entities.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Team(snowflakes.UniqueEntity, marshaller.Deserializable):
+class Team(bases.UniqueEntity, marshaller.Deserializable):
     """Represents a development team, along with all its members."""
 
     #: The hash of this team's icon, if set.
@@ -178,15 +177,15 @@ class Team(snowflakes.UniqueEntity, marshaller.Deserializable):
 
     #: The member's that belong to this team.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.snowflakes.Snowflake`, :obj:`~TeamMember` ]
-    members: typing.Mapping[snowflakes.Snowflake, TeamMember] = marshaller.attrib(
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~TeamMember` ]
+    members: typing.Mapping[bases.Snowflake, TeamMember] = marshaller.attrib(
         deserializer=lambda members: {m.user.id: m for m in map(TeamMember.deserialize, members)}
     )
 
     #: The ID of this team's owner.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    owner_user_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    owner_user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     @property
     def icon_url(self) -> typing.Optional[str]:
@@ -238,7 +237,7 @@ class ApplicationOwner(users.User):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Application(snowflakes.UniqueEntity, marshaller.Deserializable):
+class Application(bases.UniqueEntity, marshaller.Deserializable):
     """Represents the information of an Oauth2 Application."""
 
     #: The name of this application.
@@ -311,16 +310,16 @@ class Application(snowflakes.UniqueEntity, marshaller.Deserializable):
     #: The ID of the guild this application is linked to
     #: if it's sold on Discord.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the primary "Game SKU" of a game that's sold on Discord.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    primary_sku_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    primary_sku_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The URL slug that links to this application's store page

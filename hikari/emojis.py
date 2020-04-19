@@ -21,8 +21,7 @@ import typing
 
 import attr
 
-from hikari import entities
-from hikari import snowflakes
+from hikari import bases
 from hikari import users
 from hikari.internal import marshaller
 
@@ -31,7 +30,7 @@ __all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji"]
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Emoji(entities.HikariEntity, marshaller.Deserializable):
+class Emoji(bases.HikariEntity, marshaller.Deserializable):
     """Base class for all emojis."""
 
 
@@ -58,7 +57,7 @@ class UnicodeEmoji(Emoji):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class UnknownEmoji(Emoji, snowflakes.UniqueEntity):
+class UnknownEmoji(Emoji, bases.UniqueEntity):
     """Represents a unknown emoji."""
 
     #: The name of the emoji.
@@ -89,10 +88,10 @@ class GuildEmoji(UnknownEmoji):
 
     #: The whitelisted role IDs to use this emoji.
     #:
-    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ]
-    role_ids: typing.Set[snowflakes.Snowflake] = marshaller.attrib(
+    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.entities.Snowflake` ]
+    role_ids: typing.Set[bases.Snowflake] = marshaller.attrib(
         raw_name="roles",
-        deserializer=lambda roles: {snowflakes.Snowflake.deserialize(r) for r in roles},
+        deserializer=lambda roles: {bases.Snowflake.deserialize(r) for r in roles},
         if_undefined=set,
         factory=set,
     )

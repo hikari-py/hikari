@@ -34,12 +34,11 @@ import typing
 
 import attr
 
+from hikari import bases
 from hikari import embeds as _embeds
 from hikari import emojis as _emojis
-from hikari import entities
 from hikari import guilds
 from hikari import oauth2
-from hikari import snowflakes
 from hikari import users
 from hikari.internal import conversions
 from hikari.internal import marshaller
@@ -133,7 +132,7 @@ class MessageActivityType(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Attachment(snowflakes.UniqueEntity, marshaller.Deserializable):
+class Attachment(bases.UniqueEntity, marshaller.Deserializable):
     """Represents a file attached to a message."""
 
     #: The name of the file.
@@ -169,7 +168,7 @@ class Attachment(snowflakes.UniqueEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Reaction(entities.HikariEntity, marshaller.Deserializable):
+class Reaction(bases.HikariEntity, marshaller.Deserializable):
     """Represents a reaction in a message."""
 
     #: The amount of times the emoji has been used to react.
@@ -192,7 +191,7 @@ class Reaction(entities.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageActivity(entities.HikariEntity, marshaller.Deserializable):
+class MessageActivity(bases.HikariEntity, marshaller.Deserializable):
     """Represents the activity of a rich presence-enabled message."""
 
     #: The type of message activity.
@@ -208,7 +207,7 @@ class MessageActivity(entities.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageCrosspost(entities.HikariEntity, marshaller.Deserializable):
+class MessageCrosspost(bases.HikariEntity, marshaller.Deserializable):
     """Represents information about a cross-posted message and the origin of the original message."""
 
     #: The ID of the original message.
@@ -220,15 +219,15 @@ class MessageCrosspost(entities.HikariEntity, marshaller.Deserializable):
     #: currently documented.
     #:
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    message_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the channel that the message originated from.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the guild that the message originated from.
     #:
@@ -238,27 +237,27 @@ class MessageCrosspost(entities.HikariEntity, marshaller.Deserializable):
     #: documentation, but the situations that cause this to occur are not
     #: currently documented.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Message(snowflakes.UniqueEntity, marshaller.Deserializable):
+class Message(bases.UniqueEntity, marshaller.Deserializable):
     """Represents a message."""
 
     #: The ID of the channel that the message was sent in.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The ID of the guild that the message was sent in.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The author of this message.
@@ -303,26 +302,26 @@ class Message(snowflakes.UniqueEntity, marshaller.Deserializable):
 
     #: The users the message mentions.
     #:
-    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ]
-    user_mentions: typing.Set[snowflakes.Snowflake] = marshaller.attrib(
+    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.entities.Snowflake` ]
+    user_mentions: typing.Set[bases.Snowflake] = marshaller.attrib(
         raw_name="mentions",
-        deserializer=lambda user_mentions: {snowflakes.Snowflake.deserialize(u["id"]) for u in user_mentions},
+        deserializer=lambda user_mentions: {bases.Snowflake.deserialize(u["id"]) for u in user_mentions},
     )
 
     #: The roles the message mentions.
     #:
-    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ]
-    role_mentions: typing.Set[snowflakes.Snowflake] = marshaller.attrib(
+    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.entities.Snowflake` ]
+    role_mentions: typing.Set[bases.Snowflake] = marshaller.attrib(
         raw_name="mention_roles",
-        deserializer=lambda role_mentions: {snowflakes.Snowflake.deserialize(mention) for mention in role_mentions},
+        deserializer=lambda role_mentions: {bases.Snowflake.deserialize(mention) for mention in role_mentions},
     )
 
     #: The channels the message mentions.
     #:
-    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.snowflakes.Snowflake` ]
-    channel_mentions: typing.Set[snowflakes.Snowflake] = marshaller.attrib(
+    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.entities.Snowflake` ]
+    channel_mentions: typing.Set[bases.Snowflake] = marshaller.attrib(
         raw_name="mention_channels",
-        deserializer=lambda channel_mentions: {snowflakes.Snowflake.deserialize(c["id"]) for c in channel_mentions},
+        deserializer=lambda channel_mentions: {bases.Snowflake.deserialize(c["id"]) for c in channel_mentions},
         if_undefined=set,
         factory=set,
     )
@@ -355,9 +354,9 @@ class Message(snowflakes.UniqueEntity, marshaller.Deserializable):
 
     #: If the message was generated by a webhook, the webhook's id.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    webhook_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    webhook_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The message type.

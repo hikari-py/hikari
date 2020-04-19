@@ -24,7 +24,7 @@ import typing
 
 import attr
 
-from hikari import snowflakes
+from hikari import bases
 from hikari import users
 from hikari.internal import marshaller
 
@@ -42,7 +42,7 @@ class WebhookType(enum.IntEnum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Webhook(snowflakes.UniqueEntity, marshaller.Deserializable):
+class Webhook(bases.UniqueEntity, marshaller.Deserializable):
     """Represents a webhook object on Discord.
 
     This is an endpoint that can have messages sent to it using standard
@@ -57,15 +57,15 @@ class Webhook(snowflakes.UniqueEntity, marshaller.Deserializable):
 
     #: The guild ID of the webhook.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`, optional
-    guild_id: typing.Optional[snowflakes.Snowflake] = marshaller.attrib(
-        deserializer=snowflakes.Snowflake.deserialize, if_undefined=None, default=None
+    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The channel ID this webhook is for.
     #:
-    #: :type: :obj:`~hikari.snowflakes.Snowflake`
-    channel_id: snowflakes.Snowflake = marshaller.attrib(deserializer=snowflakes.Snowflake.deserialize)
+    #: :type: :obj:`~hikari.entities.Snowflake`
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The user that created the webhook
     #:
