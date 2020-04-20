@@ -1,9 +1,9 @@
 version: "3"
 
 services:
-  gateway-test:
+  test-client:
     build: .
-    entrypoint: python -m hikari.clients.test_client --logger=DEBUG
+    entrypoint: python -m hikari.clients.test
     env_file:
       - credentials.env
     restart: always

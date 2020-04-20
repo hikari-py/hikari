@@ -3,6 +3,7 @@
 # Put this in .git/hooks to make sure 'black' runs every time you commit.
 
 if [[ -z ${SKIP_HOOK} ]]; then
+    command -v nox || pip install nox
     echo -e '\e[1;32mRUNNING HOOKS - prepend your invocation of git commit with SKIP_HOOK=1 to skip this.\e[0m'
     nox --sessions reformat-code pytest pylint pydocstyle
 else

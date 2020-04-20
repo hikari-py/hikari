@@ -23,10 +23,10 @@ import inspect
 import logging
 import typing
 
-from hikari.clients import shard_clients
+from hikari.clients import shards
 from hikari.internal import assertions
-from hikari.state import event_dispatchers
-from hikari.state import raw_event_consumers
+from hikari.state import dispatchers
+from hikari.state import consumers
 
 EVENT_MARKER_ATTR: typing.Final[str] = "___event_name___"
 
@@ -67,10 +67,10 @@ def _get_event_marker(obj: typing.Any) -> typing.Set[str]:
     return getattr(obj, EVENT_MARKER_ATTR)
 
 
-EventDispatcherT = typing.TypeVar("EventDispatcherT", bound=event_dispatchers.EventDispatcher)
+EventDispatcherT = typing.TypeVar("EventDispatcherT", bound=dispatchers.EventDispatcher)
 
 
-class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEventConsumer):
+class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer):
     """Abstract definition of the components for an event system for a bot.
 
     The class itself inherits from
@@ -136,7 +136,7 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
 
     def __init__(self, event_dispatcher_impl: typing.Optional[EventDispatcherT] = None) -> None:
         if event_dispatcher_impl is None:
-            event_dispatcher_impl = event_dispatchers.EventDispatcherImpl()
+            event_dispatcher_impl = dispatchers.EventDispatcherImpl()
 
         self.logger = logging.getLogger(type(self).__qualname__)
         self.event_dispatcher = event_dispatcher_impl
@@ -149,7 +149,7 @@ class EventManager(typing.Generic[EventDispatcherT], raw_event_consumers.RawEven
                 self.raw_event_mappers[event_name] = member
 
     def process_raw_event(
-        self, shard_client_obj: shard_clients.ShardClient, name: str, payload: typing.Mapping[str, typing.Any],
+        self, shard_client_obj: shards.ShardClient, name: str, payload: typing.Mapping[str, typing.Any],
     ) -> None:
         """Process a low level event.
 
