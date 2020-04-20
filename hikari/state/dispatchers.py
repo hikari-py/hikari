@@ -77,15 +77,15 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
+        event_type : typing.Type [ hikari.events.HikariEvent ]
             The event to register to.
-        callback : ``async def callback(event: HikariEvent) -> ...``
+        callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to invoke when this event is fired.
 
         Raises
         ------
-        :obj:`~TypeError`
-            If ``coroutine_function`` is not a coroutine.
+        TypeError
+            If `coroutine_function` is not a coroutine.
         """
 
     @abc.abstractmethod
@@ -96,9 +96,9 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
+        event_type : typing.Type [ hikari.events.HikariEvent ]
             The type of event to remove the callback from.
-        callback : ``async def callback(event: HikariEvent) -> ...``
+        callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to invoke when this event is fired.
         """
 
@@ -110,16 +110,16 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
+        event_type : typing.Type [ hikari.events.HikariEvent ]
             The name of the event to wait for.
-        timeout : :obj:`~float`, optional
+        timeout : float, optional
             The timeout to wait for before cancelling and raising an
-            :obj:`~asyncio.TimeoutError` instead. If this is :obj:`~None`, this
-            will wait forever. Care must be taken if you use :obj:`~None` as this
+            `asyncio.TimeoutError` instead. If this is `None`, this
+            will wait forever. Care must be taken if you use `None` as this
             may leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
             using an event listener instead of this function.
-        predicate : ``def predicate(event) -> bool`` or ``async def predicate(event) -> bool``
+        predicate : `def predicate(event) -> bool` or `async def predicate(event) -> bool`
             A function that takes the arguments for the event and returns True
             if it is a match, or False if it should be ignored.
             This can be a coroutine function that returns a boolean, or a
@@ -127,17 +127,16 @@ class EventDispatcher(abc.ABC):
 
         Returns
         -------
-        :obj:`~asyncio.Future`:
+        asyncio.Future:
             A future to await. When the given event is matched, this will be
             completed with the corresponding event body.
 
             If the predicate throws an exception, or the timeout is reached,
             then this will be set as an exception on the returned future.
 
-        Notes
-        -----
-        The event type is not expected to be considered in a polymorphic
-        lookup, but can be implemented this way optionally if documented.
+        !!! note
+            The event type is not expected to be considered in a polymorphic
+            lookup, but can be implemented this way optionally if documented.
         """
 
     @typing.overload
@@ -146,10 +145,8 @@ class EventDispatcher(abc.ABC):
 
         This considers the type hint on the signature to get the event type.
 
-        Example
-        -------
-        .. code-block:: python
-
+        Examples
+        --------
             @bot.on()
             async def on_message(event: hikari.MessageCreatedEvent):
                 print(event.content)
@@ -161,21 +158,19 @@ class EventDispatcher(abc.ABC):
 
         This considers the type given to the decorator.
 
-        Example
-        -------
-        .. code-block:: python
-
+        Examples
+        --------
             @bot.on(hikari.MessageCreatedEvent)
             async def on_message(event):
                 print(event.content)
         """
 
     def on(self, event_type=None):
-        """Return a decorator equivalent to invoking :meth:`add_listener`.
+        """Return a decorator equivalent to invoking `EventDispatcher.add_listener`.
 
         Parameters
         ----------
-        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ], optional
+        event_type : typing.Type [ hikari.events.HikariEvent ], optional
             The event type to register the produced decorator to. If this is not
             specified, then the given function is used instead and the type hint
             of the first argument is considered. If no type hint is present
@@ -183,8 +178,6 @@ class EventDispatcher(abc.ABC):
 
         Examples
         --------
-        .. code-block:: python
-
             # Type-hinted format.
             @bot.on()
             async def on_message(event: hikari.MessageCreatedEvent):
@@ -197,7 +190,7 @@ class EventDispatcher(abc.ABC):
 
         Returns
         -------
-        ``decorator(T) -> T``
+        decorator(T) -> T
             A decorator for a coroutine function that registers the given event.
         """
 
@@ -242,12 +235,12 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event : :obj:`~hikari.events.HikariEvent`
+        event : hikari.events.HikariEvent
             The event to dispatch.
 
         Returns
         -------
-        :obj:`~asyncio.Future`:
+        asyncio.Future:
             a future that can be optionally awaited if you need to wait for all
             listener callbacks and waiters to be processed. If this is not
             awaited, the invocation is invoked soon on the current event loop.
@@ -273,15 +266,13 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
 
     Parameters
     ----------
-    enabled_intents : :obj:`~hikari.intents.Intent`, optional
-        The intents that are enabled for the application. If ``None``, then no
+    enabled_intents : hikari.intents.Intent, optional
+        The intents that are enabled for the application. If `None`, then no
         intent checks are performed when subscribing a new event.
     """
 
-    #: The logger used to write log messages.
-    #:
-    #: :type: :obj:`~logging.Logger`
     logger: logging.Logger
+    """The logger used to write log messages."""
 
     def __init__(self, enabled_intents: typing.Optional[intents.Intent]) -> None:
         self._enabled_intents = enabled_intents
@@ -304,15 +295,15 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
+        event_type : typing.Type [ hikari.events.HikariEvent ]
             The event to register to.
-        callback : ``async def callback(event: HikariEvent) -> ...``
+        callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to invoke when this event is fired.
 
         Raises
         ------
-        :obj:`~TypeError`
-            If ``coroutine_function`` is not a coroutine.
+        TypeError
+            If `coroutine_function` is not a coroutine.
 
         Note
         ----
@@ -356,9 +347,9 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
+        event_type : typing.Type [ hikari.events.HikariEvent ]
             The type of event to remove the callback from.
-        callback : ``async def callback(event: HikariEvent) -> ...``
+        callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to remove.
         """
         if event_type in self._listeners and callback in self._listeners[event_type]:
@@ -374,12 +365,12 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event : :obj:`~hikari.events.HikariEvent`
+        event : hikari.events.HikariEvent
             The event to dispatch.
 
         Returns
         -------
-        :obj:`~asyncio.Future`
+        asyncio.Future
             This may be a gathering future of the callbacks to invoke, or it may
             be a completed future object. Regardless, this result will be
             scheduled on the event loop automatically, and does not need to be
@@ -452,17 +443,16 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
         This allows users to override this with a custom implementation if desired.
 
         This implementation will check to see if the event that triggered the
-        exception is an :obj:`~hikari.events.ExceptionEvent`. If this
-        exception was caused by the :obj:`~hikari.events.ExceptionEvent`,
-        then nothing is dispatched (thus preventing an exception handler recursively
-        re-triggering itself). Otherwise, an :obj:`~hikari.events.ExceptionEvent`
-        is dispatched.
+        exception is an `hikari.events.ExceptionEvent`. If this exception was
+        caused by the `hikari.events.ExceptionEvent`, then nothing is dispatched
+        (thus preventing an exception handler recursively re-triggering itself).
+        Otherwise, an `hikari.events.ExceptionEvent` is dispatched.
 
         Parameters
         ----------
-        exception: :obj:`~Exception`
+        exception : Exception
             The exception that triggered this call.
-        event: :obj:`~hikari.events.HikariEvent`
+        event : hikari.events.HikariEvent
             The event that was being dispatched.
         callback
             The callback that threw the exception.
@@ -495,35 +485,34 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
+        event_type : typing.Type [ hikari.events.HikariEvent ]
             The name of the event to wait for.
-        timeout : :obj:`~float`, optional
+        timeout : float, optional
             The timeout to wait for before cancelling and raising an
-            :obj:`~asyncio.TimeoutError` instead. If this is `None`, this will
-            wait forever. Care must be taken if you use `None` as this may
-            leak memory if you do this from an event listener that gets
-            repeatedly called. If you want to do this, you should consider
-            using an event listener instead of this function.
-        predicate : ``def predicate(event) -> bool`` or ``async def predicate(event) -> bool``
-            A function that takes the arguments for the event and returns True
-            if it is a match, or False if it should be ignored.
+            `asyncio.TimeoutError` instead. If this is `None`, this will wait
+            forever. Care must be taken if you use `None` as this may leak
+            memory if you do this from an event listener that gets repeatedly
+            called. If you want to do this, you should consider using an event
+            listener instead of this function.
+        predicate : `def predicate(event) -> bool` or `async def predicate(event) -> bool`
+            A function that takes the arguments for the event and returns `True`
+            if it is a match, or `False` if it should be ignored.
             This can be a coroutine function that returns a boolean, or a
             regular function.
 
         Returns
         -------
-        :obj:`~asyncio.Future`
+        asyncio.Future
             A future that when awaited will provide a the arguments passed to
             the first matching event. If no arguments are passed to the event,
             then `None` is the result. If one argument is passed to the event,
             then that argument is the result, otherwise a tuple of arguments is
             the result instead.
 
-        Notes
-        -----
-        Awaiting this result will raise an :obj:`~asyncio.TimeoutError` if the
-        timeout is hit and no match is found. If the predicate throws any
-        exception, this is raised immediately.
+        !!! note
+            Awaiting this result will raise an `asyncio.TimeoutError` if the
+            timeout is hit and no match is found. If the predicate throws any
+            exception, this is raised immediately.
         """
         future = asyncio.get_event_loop().create_future()
         if event_type not in self._waiters:

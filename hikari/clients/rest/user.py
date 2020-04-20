@@ -35,20 +35,20 @@ class RESTUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W02
 
         Parameters
         ----------
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        user : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
             The object or ID of the user to get.
 
         Returns
         -------
-        :obj:`~hikari.users.User`
+        hikari.users.User
             The requested user object.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the user is not found.
         """
         payload = await self._session.get_user(

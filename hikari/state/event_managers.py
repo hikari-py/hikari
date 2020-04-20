@@ -44,7 +44,7 @@ def raw_event_mapper(name: str) -> typing.Callable[[EventConsumerT], EventConsum
 
     Returns
     -------
-    ``decorator(T) -> T``
+    decorator(T) -> T
         A decorator for a method.
 
     """
@@ -74,8 +74,8 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
     """Abstract definition of the components for an event system for a bot.
 
     The class itself inherits from
-    :obj:`~hikari.state.raw_event_consumers.RawEventConsumer` (which allows
-    it to provide the ability to transform a raw payload into an event object).
+    `hikari.state.consumers.RawEventConsumer` (which allows it to provide the
+    ability to transform a raw payload into an event object).
 
     This is designed as a basis to enable transformation of raw incoming events
     from the websocket into more usable native Python objects, and to then
@@ -84,53 +84,54 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
 
     Parameters
     ----------
-    event_dispatcher_impl: :obj:`~hikari.state.event_dispatchers.EventDispatcher`
+    event_dispatcher_impl: hikari.state.dispatchers.EventDispatcher
         An implementation of event dispatcher that will store individual events
         and manage dispatching them after this object creates them.
 
-    Notes
-    -----
-    This object will detect internal event mapper functions by looking for
-    coroutine functions wrapped with :obj:`~raw_event_mapper`.
+    !!! note
+        This object will detect internal event mapper functions by looking for
+        coroutine functions wrapped with `raw_event_mapper`.
 
-    These methods are expected to have the following parameters:
+        These methods are expected to have the following parameters:
 
-    shard_obj: :obj:`~hikari.clients.shard_clients.ShardClient`
-        The shard client that emitted the event.
-    payload: :obj:`~typing.Any`
-        The received payload. This is expected to be a JSON-compatible type.
+        * shard_obj : `hikari.clients.shards.ShardClient`
 
-    For example, if you want to provide an implementation that can consume
-    and handle ``MESSAGE_CREATE`` events, you can do the following.
+            The shard client that emitted the event.
 
-    .. code-block:: python
+        * payload : `typing.Any`
 
-        class MyMappingEventConsumer(MappingEventConsumer):
-            @event_mapper("MESSAGE_CREATE")
-            def _process_message_create(self, shard, payload) -> MessageCreateEvent:
-                return MessageCreateEvent.deserialize(payload)
+            The received payload. This is expected to be a JSON-compatible type.
 
-    The decorator can be stacked if you wish to provide one mapper
+        For example, if you want to provide an implementation that can consume
+        and handle `MESSAGE_CREATE` events, you can do the following.
 
-    ... it is pretty simple. This is exposed in this way to enable you to write
-    code that may use a distributed system instead of a single-process bot.
+            class MyMappingEventConsumer(MappingEventConsumer):
+                @event_mapper("MESSAGE_CREATE")
+                def _process_message_create(self, shard, payload) -> MessageCreateEvent:
+                    return MessageCreateEvent.deserialize(payload)
 
-    Writing to a message queue is pretty simple using this mechanism, as you can
-    choose when and how to place the event on a queue to be consumed by other
-    application components.
+        The decorator can be stacked if you wish to provide one mapper
 
-    For the sake of simplicity, Hikari only provides implementations for single
-    process bots, since most of what you will need will be fairly bespoke if you
-    want to implement anything more complicated; regardless, the tools are here
-    for you to use as you see fit.
+        ... it is pretty simple. This is exposed in this way to enable you to
+        write code that may use a distributed system instead of a single-process
+        bot.
 
-    Warnings
-    --------
-    This class provides the scaffold for making an event consumer, but does not
-    physically implement the logic to deserialize and process specific events.
+        Writing to a message queue is pretty simple using this mechanism, as you
+        can choose when and how to place the event on a queue to be consumed by
+        other application components.
 
-    To provide this, use one of the provided implementations of this class, or
-    create your own as needed.
+        For the sake of simplicity, Hikari only provides implementations for
+        single process bots, since most of what you will need will be fairly
+        bespoke if you want to implement anything more complicated; regardless,
+        the tools are here for you to use as you see fit.
+
+    !!! warning
+        This class provides the scaffold for making an event consumer, but doe
+        not physically implement the logic to deserialize and process specific
+        events.
+
+        To provide this, use one of the provided implementations of this class,
+        or create your own as needed.
     """
 
     def __init__(self, event_dispatcher_impl: EventDispatcherT) -> None:
@@ -154,11 +155,11 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
 
         Parameters
         ----------
-        shard_client_obj: :obj:`~hikari.clients.shard_clients.ShardClient`
+        shard_client_obj : hikari.clients.shards.ShardClient
             The shard that triggered this event.
-        name : :obj:`~str`
+        name : str
             The raw event name.
-        payload : :obj:`~dict`
+        payload : dict
             The payload that was sent.
         """
         try:

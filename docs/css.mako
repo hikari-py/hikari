@@ -96,6 +96,7 @@
     line-height: 1.4em;
   }
   code {
+    background: #42464a;
     padding: 1px 4px;
     overflow-wrap: break-word;
     overflow: auto !important;
@@ -125,7 +126,7 @@
     padding: 0;
   }
     #index code {
-      background: transparent;
+      background: #42464a;
     }
     #index h3 {
       border-bottom: 1px solid #373b3e;
@@ -160,7 +161,7 @@
       margin: 10px 0;
     }
     .name {
-      background: #373b3e;
+      background: #42464a;
       font-weight: bold;
       font-size: .85em;
       padding: 5px 10px;

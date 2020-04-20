@@ -34,46 +34,41 @@ from hikari.internal import meta
 class UserAgent(metaclass=meta.SingletonMeta):
     """Platform version info.
 
-    Notes
-    -----
-    This is a singleton.
+    !!! note
+        This is a singleton.
     """
 
-    #: The version of the library.
-    #:
-    #: Example
-    #: -------
-    #: ``"hikari 1.0.1"``
-    #:
-    #: :type: :obj:`~typing.Final` [ :obj:`~str` ]
     library_version: typing.Final[str]
+    """The version of the library.
 
-    #: The platform version.
-    #:
-    #: Example
-    #: -------
-    #: ``"CPython 3.8.2 GCC 9.2.0"``
-    #:
-    #: :type: :obj:`~typing.Final` [ :obj:`~str` ]
+    Examples
+    --------
+    `"hikari 1.0.1"`
+    """
+
     platform_version: typing.Final[str]
+    """The platform version.
 
-    #: The operating system type.
-    #:
-    #: Example
-    #: -------
-    #: ``"Linux-5.4.15-2-MANJARO-x86_64-with-glibc2.2.5"``
-    #:
-    #: :type: :obj:`~typing.Final` [ :obj:`~str` ]
+    Examples
+    --------
+    `"CPython 3.8.2 GCC 9.2.0"`
+    """
+
     system_type: typing.Final[str]
+    """The operating system type.
 
-    #: The Hikari-specific user-agent to use in HTTP connections to Discord.
-    #:
-    #: Example
-    #: -------
-    #: ``"DiscordBot (https://gitlab.com/nekokatt/hikari; 1.0.1; Nekokatt) CPython 3.8.2 GCC 9.2.0 Linux"``
-    #:
-    #: :type: :obj:`~typing.Final` [ :obj:`~str` ]
+    Examples
+    --------
+    `"Linux-5.4.15-2-MANJARO-x86_64-with-glibc2.2.5"`
+    """
+
     user_agent: typing.Final[str]
+    """The Hikari-specific user-agent to use in HTTP connections to Discord.
+
+    Examples
+    --------
+    `"DiscordBot (https://gitlab.com/nekokatt/hikari; 1.0.1; Nekokatt) CPython 3.8.2 GCC 9.2.0 Linux"`
+    """
 
     def __init__(self):
         from hikari._about import __author__, __url__, __version__
@@ -96,16 +91,13 @@ class UserAgent(metaclass=meta.SingletonMeta):
     def _join_strip(*args):
         return " ".join((arg.strip() for arg in args if arg.strip()))
 
-    # Ignore docstring not starting in an imperative mood
+    # Inore docstring not starting in an imperativge mood
     @property
     def websocket_triplet(self) -> typing.Dict[str, str]:  # noqa: D401
         """A dict representing device and library info.
 
-        Returns
-        -------
-        :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~str` ]
-            The object to send to Discord representing device info when
-            IDENTIFYing with the gateway.
+        This is the object to send to Discord representing device info when
+        IDENTIFYing with the gateway in the format `typing.Dict` [ `str`, `str` ]
         """
         return {
             "$os": self.system_type,

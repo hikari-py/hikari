@@ -33,6 +33,7 @@ __all__ = [
     "MessageBulkDeleteEntryInfo",
     "MessageDeleteEntryInfo",
     "MessagePinEntryInfo",
+    "UnrecognisedAuditLogEntryInfo",
 ]
 
 import abc
@@ -111,8 +112,8 @@ class AuditLogChangeKey(str, enum.Enum):
     RATE_LIMIT_PER_USER = "rate_limit_per_user"
     SYSTEM_CHANNEL_ID = "system_channel_id"
 
-    #: Alias for "COLOR"
     COLOUR = COLOR
+    """Alias for "COLOR"""
 
     def __str__(self) -> str:
         return self.name
@@ -164,21 +165,16 @@ AUDIT_LOG_ENTRY_CONVERTERS = {
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class AuditLogChange(bases.HikariEntity, marshaller.Deserializable):
-    """Represents a change made to an audit log entry's target entity.
-
-    Attributes
-    ----------
-    new_value : typing.Any, optional
-        The new value of the key, if something was added or changed.
-    old_value : typing.Any, optional
-        The old value of the key, if something was removed or changed.
-    key : typing.Union [ AuditLogChangeKey, str ]
-        The name of the audit log change's key.
-    """
+    """Represents a change made to an audit log entry's target entity."""
 
     new_value: typing.Optional[typing.Any] = marshaller.attrib()
+    """The new value of the key, if something was added or changed."""
+
     old_value: typing.Optional[typing.Any] = marshaller.attrib()
+    """The old value of the key, if something was removed or changed."""
+
     key: typing.Union[AuditLogChangeKey, str] = marshaller.attrib()
+    """The name of the audit log change's key."""
 
     @classmethod
     def deserialize(cls, payload: typing.Mapping[str, str]) -> "AuditLogChange":
@@ -252,7 +248,7 @@ def register_audit_log_entry_info(
 
     Returns
     -------
-    ``decorator(T) -> T``
+    decorator(T) -> T
         The decorator to decorate the class with.
     """
 
@@ -284,21 +280,15 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo):
 
     Will be attached to the overwrite create, update and delete audit log
     entries.
-
-    Attributes
-    ----------
-    id : hikari.snowflakes.Snowflake
-        The ID of the overwrite being updated, added or removed (and the entity
-        it targets).
-    type : hikari.channels.PermissionOverwriteType
-        The type of entity this overwrite targets.
-    role_name : str, optional
-        The name of the role this overwrite targets, if it targets a role.
     """
 
     id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    """The ID of the overwrite being updated, added or removed."""
     type: channels.PermissionOverwriteType = marshaller.attrib(deserializer=channels.PermissionOverwriteType)
+    """The type of entity this overwrite targets."""
+
     role_name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
+    """The name of the role this overwrite targets, if it targets a role."""
 
 
 @register_audit_log_entry_info(AuditLogEventType.MESSAGE_PIN, AuditLogEventType.MESSAGE_UNPIN)
@@ -308,107 +298,77 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The extra information for message pin related audit log entries.
 
     Will be attached to the message pin and message unpin audit log entries.
-
-    Attributes
-    ----------
-    channel_id : hikari.snowflakes.Snowflake
-        The ID of the guild text based channel where this pinned message is
-        being added or removed.
-    message_id : hikari.snowflakes.Snowflake
-        The ID of the message that's being pinned or unpinned.
     """
 
     channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    """The ID of the text based channel where a pinned message is being targeted."""
+
     message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    """The ID of the message that's being pinned or unpinned."""
 
 
 @register_audit_log_entry_info(AuditLogEventType.MEMBER_PRUNE)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
-    """Represents the extra information attached to guild prune log entries.
-
-    Attributes
-    ----------
-    delete_member_days : datetime.timedelta
-        The timedelta of how many days members were pruned for inactivity based
-        on.
-    members_removed : int
-        The number of members who were removed by this prune.
-    """
+    """Represents the extra information attached to guild prune log entries."""
 
     delete_member_days: datetime.timedelta = marshaller.attrib(
         deserializer=lambda payload: datetime.timedelta(days=int(payload))
     )
+    """The timedelta of how many days members were pruned for inactivity based on."""
+
     members_removed: int = marshaller.attrib(deserializer=int)
+    """The number of members who were removed by this prune."""
 
 
 @register_audit_log_entry_info(AuditLogEventType.MESSAGE_BULK_DELETE)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
-    """Represents extra information for the message bulk delete audit entry.
-
-    Attributes
-    ----------
-    count : int
-        The amount of messages that were deleted.
-    """
+    """Represents extra information for the message bulk delete audit entry."""
 
     count: int = marshaller.attrib(deserializer=int)
+    """The amount of messages that were deleted."""
 
 
 @register_audit_log_entry_info(AuditLogEventType.MESSAGE_DELETE)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
-    """Represents extra information attached to the message delete audit entry.
-
-    Attributes
-    ----------
-    channel_id : hikari.snowflakes.Snowflake
-        The guild text based channel where these message(s) were deleted.
-    count : int
-        The amount of messages that were deleted.
-    """
+    """Represents extra information attached to the message delete audit entry."""
 
     channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    """The guild text based channel where these message(s) were deleted."""
 
 
 @register_audit_log_entry_info(AuditLogEventType.MEMBER_DISCONNECT)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
-    """Represents extra information for the voice chat member disconnect entry.
-
-    Attributes
-    ----------
-    count : int
-        The amount of members who were disconnected from voice in this entry.
-    """
+    """Represents extra information for the voice chat member disconnect entry."""
 
     count: int = marshaller.attrib(deserializer=int)
+    """The amount of members who were disconnected from voice in this entry."""
 
 
 @register_audit_log_entry_info(AuditLogEventType.MEMBER_MOVE)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
-    """Represents extra information for the voice chat based member move entry.
-
-    Attributes
-    ----------
-    channel_id : hikari.snowflakes.Snowflake
-        The channel these member(s) were moved to.
-    count : int
-        The amount of members who were disconnected from voice in this entry.
-    """
+    """Represents extra information for the voice chat based member move entry."""
 
     channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    """The amount of members who were disconnected from voice in this entry."""
 
 
 class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
-    """Represents any audit log entry options that haven't been implemented."""
+    """Represents any audit log entry options that haven't been implemented.
+
+    !!! note
+        This model has no slots and will have arbitrary undocumented attributes
+        (in it's `__dict__` based on the received payload).
+    """
 
     def __init__(self, payload: typing.Mapping[str, str]) -> None:
         self.__dict__.update(payload)
@@ -440,31 +400,23 @@ def get_entry_info_entity(type_: int) -> typing.Type[BaseAuditLogEntryInfo]:
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class AuditLogEntry(bases.UniqueEntity, marshaller.Deserializable):
-    """Represents an entry in a guild's audit log.
-
-    Attributes
-    ----------
-    target_id : hikari.snowflakes.Snowflake, optional
-        The ID of the entity affected by this change, if applicable.
-    changes : typing.Sequence [ AuditLogChange ]
-        A sequence of the changes made to `AuditLogEntry.target_id`.
-    user_id : hikari.snowflakes.Snowflake
-        The ID of the user who made this change.
-    action_type : typing.Union [ AuditLogEventType, str ]
-        The type of action this entry represents.
-    options : BaseAuditLogEntryInfo, optional
-        Extra information about this entry. Will only be provided for certain
-        `action_type`.
-    reason : str, optional
-        The reason for this change, if set (between 0-512 characters).
-    """
+    """Represents an entry in a guild's audit log."""
 
     target_id: typing.Optional[bases.Snowflake] = marshaller.attrib()
+    """The ID of the entity affected by this change, if applicable."""
     changes: typing.Sequence[AuditLogChange] = marshaller.attrib()
+    """A sequence of the changes made to `AuditLogEntry.target_id`."""
+
     user_id: bases.Snowflake = marshaller.attrib()
+    """The ID of the user who made this change."""
     action_type: typing.Union[AuditLogEventType, str] = marshaller.attrib()
+    """The type of action this entry represents."""
+
     options: typing.Optional[BaseAuditLogEntryInfo] = marshaller.attrib()
+    """Extra information about this entry. Only be provided for certain `action_type`."""
+
     reason: typing.Optional[str] = marshaller.attrib()
+    """The reason for this change, if set (between 0-512 characters)."""
 
     @classmethod
     def deserialize(cls, payload: typing.Mapping[str, str]) -> "AuditLogEntry":
@@ -495,34 +447,30 @@ class AuditLogEntry(bases.UniqueEntity, marshaller.Deserializable):
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class AuditLog(bases.HikariEntity, marshaller.Deserializable):
-    """Represents a guilds audit log.
+    """Represents a guilds audit log."""
 
-    Attributes
-    ----------
-    entries : typing.Mapping [ hikari.snowflakes.Snowflake, AuditLogEntry ]
-        A sequence of the audit log's entries.
-    integrations : typing.Mapping [ hikari.snowflakes.Snowflake, hikari.guilds.GuildIntegration ]
-        A mapping of the partial objects of integrations found in this audit log.
-    users : typing.Mapping [ hikari.bases.Snowflake, hikari.users.User` ]
-        A mapping of the objects of users found in this audit log.
-    webhooks : typing.Mapping [ hikari.snowflakes.Snowflake, hikari.webhooks.Webhook ]
-        A mapping of the objects of webhooks found in this audit log.
-    """
     entries: typing.Mapping[bases.Snowflake, AuditLogEntry] = marshaller.attrib(
         raw_name="audit_log_entries",
         deserializer=lambda payload: {entry.id: entry for entry in map(AuditLogEntry.deserialize, payload)},
     )
+    """A sequence of the audit log's entries."""
+
     integrations: typing.Mapping[bases.Snowflake, guilds.GuildIntegration] = marshaller.attrib(
         deserializer=lambda payload: {
             integration.id: integration for integration in map(guilds.PartialGuildIntegration.deserialize, payload)
         }
     )
+    """A mapping of the partial objects of integrations found in this audit log."""
+
     users: typing.Mapping[bases.Snowflake, _users.User] = marshaller.attrib(
         deserializer=lambda payload: {user.id: user for user in map(_users.User.deserialize, payload)}
     )
+    """A mapping of the objects of users found in this audit log."""
+
     webhooks: typing.Mapping[bases.Snowflake, _webhooks.Webhook] = marshaller.attrib(
         deserializer=lambda payload: {webhook.id: webhook for webhook in map(_webhooks.Webhook.deserialize, payload)}
     )
+    """A mapping of the objects of webhooks found in this audit log."""
 
 
 class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
@@ -530,16 +478,6 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
 
     This returns the audit log entries created before a given entry object/ID or
     from the newest audit log entry to the oldest.
-
-    Attributes
-    ----------
-    integrations : typing.Mapping [ hikari.snowflakes.Snowflake, hikari.guilds.GuildIntegration ]
-        A mapping of the partial objects of integrations found in this audit log
-        so far.
-    users : typing.Mapping [ hikari.snowflakes.Snowflake, hikari.users.User ]
-        A mapping of the objects of users found in this audit log so far.
-    webhooks : typing.Mapping [ hikari.snowflakes.Snowflake, hikari.webhooks.Webhook ]
-        A mapping of the objects of webhooks found in this audit log so far.
 
     Parameters
     ----------
@@ -557,14 +495,18 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
         else unlimited.
     before : str
         If specified, an entry ID to specify where this iterator's returned
-        audit log entries should start .
+        audit log entries should start.
 
-    Note
-    ----
-    This iterator's attributes `AuditLogIterator.integrations`,
-    `AuditLogIterator.users` and `AuditLogIterator.webhooks` will be filled up
-    as this iterator makes requests to the Get Guild Audit Log endpoint with
-    the relevant objects for entities referenced by returned entries.
+    Yields
+    ------
+    AuditLogEntry
+        The entries found in this audit log.
+
+    !!! note
+        This iterator's attributes `AuditLogIterator.integrations`,
+        `AuditLogIterator.users` and `AuditLogIterator.webhooks` will be filled
+        up as this iterator makes requests to the Get Guild Audit Log endpoint
+        with the relevant objects for entities referenced by returned entries.
     """
 
     __slots__ = (
@@ -579,8 +521,13 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
     )
 
     integrations: typing.Mapping[bases.Snowflake, guilds.GuildIntegration]
+    """A mapping of the partial integrations objects found in this log so far."""
+
     users: typing.Mapping[bases.Snowflake, _users.User]
+    """A mapping of the objects of users found in this audit log so far."""
+
     webhooks: typing.Mapping[bases.Snowflake, _webhooks.Webhook]
+    """A mapping of the objects of webhooks found in this audit log so far."""
 
     def __init__(
         self,
@@ -614,7 +561,7 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
             raise StopAsyncIteration
 
     async def _fill(self) -> None:
-        """Retrieve entries before :attr:`_front` and add to :attr:`_buffer`."""
+        """Retrieve entries before `_front` and add to `_buffer`."""
         payload = await self._request(
             **self._kwargs,
             before=self._front if self._front is not None else ...,

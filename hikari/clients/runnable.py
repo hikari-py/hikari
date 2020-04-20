@@ -33,10 +33,8 @@ class RunnableClient(abc.ABC):
 
     __slots__ = ("logger",)
 
-    #: The logger to use for this client.
-    #:
-    #: :type: :obj:`~logging.Logger`
     logger: logging.Logger
+    """The logger to use for this client."""
 
     @abc.abstractmethod
     def __init__(self, logger: typing.Union[logging.Logger, logging.LoggerAdapter]) -> None:
@@ -57,12 +55,12 @@ class RunnableClient(abc.ABC):
     def run(self) -> None:
         """Execute this component on an event loop.
 
-        Performs the same job as :meth:`start`, but provides additional
+        Performs the same job as `RunnableClient.start`, but provides additional
         preparation such as registering OS signal handlers for interrupts,
         and preparing the initial event loop.
 
         This enables the client to be run immediately without having to
-        set up the :mod:`asyncio` event loop manually first.
+        set up the `asyncio` event loop manually first.
         """
         loop = asyncio.get_event_loop()
 

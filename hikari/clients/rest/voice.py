@@ -35,12 +35,11 @@ class RESTVoiceComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Returns
         -------
-        :obj:`~typing.Sequence` [ :obj:`~hikari.voices.VoiceRegion` ]
+        typing.Sequence [ hikari.voices.VoiceRegion ]
             A list of voice regions available
 
-        Note
-        ----
-        This does not include VIP servers.
+        !!! note
+            This does not include VIP servers.
         """
         payload = await self._session.list_voice_regions()
         return [voices.VoiceRegion.deserialize(region) for region in payload]

@@ -60,33 +60,33 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to get the audit logs for.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        user : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
             If specified, the object or ID of the user to filter by.
-        action_type : :obj:`~typing.Union` [ :obj:`~hikari.audit_logs.AuditLogEventType`, :obj:`~int` ]
+        action_type : typing.Union [ hikari.audit_logs.AuditLogEventType, int ]
             If specified, the action type to look up. Passing a raw integer
             for this may lead to unexpected behaviour.
-        limit : :obj:`~int`
+        limit : int
             If specified, the limit to apply to the number of records.
-            Defaults to ``50``. Must be between ``1`` and ``100`` inclusive.
-        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.audit_logs.AuditLogEntry`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+            Defaults to `50`. Must be between `1` and `100` inclusive.
+        before : typing.Union [ datetime.datetime, hikari.audit_logs.AuditLogEntry, hikari.bases.Snowflake, int ]
             If specified, the object or ID of the entry that all retrieved
-            entries should have occurred befor.
+            entries should have occurred before.
 
         Returns
         -------
-        :obj:`~hikari.audit_logs.AuditLog`
+        hikari.audit_logs.AuditLog
             An audit log object.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you lack the given permissions to view an audit log.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild does not exist.
         """
         if isinstance(before, datetime.datetime):
@@ -118,44 +118,41 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The ID or object of the guild to get audit log entries for
-        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.audit_logs.AuditLogEntry`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], optional
+        before : typing.Union [ datetime.datetime, hikari.audit_logs.AuditLogEntry, hikari.bases.Snowflake, int ], optional
             If specified, the ID or object of the entry or datetime to get
             entries that happened before otherwise this will start from the
             newest entry.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        user : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
             If specified, the object or ID of the user to filter by.
-        action_type : :obj:`~typing.Union` [ :obj:`~hikari.audit_logs.AuditLogEventType`, :obj:`~int` ]
+        action_type : typing.Union [ hikari.audit_logs.AuditLogEventType, int ]
             If specified, the action type to look up. Passing a raw integer
             for this may lead to unexpected behaviour.
-        limit : :obj:`~int`, optional
+        limit : int, optional
             If specified, the limit for how many entries this iterator should
             return, defaults to unlimited.
 
-        Example
-        -------
-        .. code-block:: python
-
+        Examples
+        --------
             audit_log_entries = client.fetch_audit_log_entries_before(guild, before=9876543, limit=6969)
             async for entry in audit_log_entries:
                 if (user := audit_log_entries.users[entry.user_id]).is_bot:
                     await client.ban_member(guild, user)
 
-        Note
-        ----
-        The returned iterator has the attributes ``users``, ``members`` and
-        ``integrations`` which are mappings of snowflake IDs to objects for the
-        relevant entities that are referenced by the retrieved audit log
-        entries. These will be filled over time as more audit log entries are
-        fetched by the iterator.
+        !!! note
+            The returned iterator has the attributes `users`, `members` and
+            `integrations` which are mappings of snowflake IDs to objects for
+            the relevant entities that are referenced by the retrieved audit log
+            entries. These will be filled over time as more audit log entries
+            are fetched by the iterator.
 
         Returns
         -------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.audit_logs.AuditLogIterator`
+        hikari.audit_logs.AuditLogIterator
             An async iterator of the audit log entries in a guild (from newest
             to oldest).
         """
@@ -179,24 +176,24 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to get the emoji from.
-        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        emoji : typing.Union [ hikari.emojis.GuildEmoji, hikari.bases.Snowflake, int ]
             The object or ID of the emoji to get.
 
         Returns
         -------
-        :obj:`~hikari.emojis.GuildEmoji`
+        hikari.emojis.GuildEmoji
             A guild emoji object.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or the emoji aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you aren't a member of said guild.
         """
         payload = await self._session.get_guild_emoji(
@@ -210,22 +207,22 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to get the emojis for.
 
         Returns
         -------
-        :obj:`~typing.Sequence` [ :obj:`~hikari.emojis.GuildEmoji` ]
+        typing.Sequence [ hikari.emojis.GuildEmoji ]
             A list of guild emoji objects.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you aren't a member of the guild.
         """
         payload = await self._session.list_guild_emojis(
@@ -246,35 +243,35 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ]
             The object or ID of the guild to create the emoji in.
-        name : :obj:`~str`
+        name : str
             The new emoji's name.
-        image_data : ``hikari.internal.conversions.FileLikeT``
-            The ``128x128`` image data.
-        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
+        image_data : hikari.internal.conversions.FileLikeT
+            The `128x128` image data.
+        roles : typing.Sequence [ typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ]
             If specified, a list of role objects or IDs for which the emoji
             will be whitelisted. If empty, all roles are whitelisted.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`~hikari.emojis.GuildEmoji`
+        hikari.emojis.GuildEmoji
             The newly created emoji object.
 
         Raises
         ------
-        :obj:`~ValueError`
-            If ``image`` is :obj:`~None`.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        ValueError
+            If `image` is `None`.
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_EMOJIS`` permission or aren't a
+        hikari.errors.ForbiddenHTTPError
+            If you either lack the `MANAGE_EMOJIS` permission or aren't a
             member of said guild.
-        :obj:`~hikari.errors.BadRequestHTTPError`
-            If you attempt to upload an image larger than ``256kb``, an empty
+        hikari.errors.BadRequestHTTPError
+            If you attempt to upload an image larger than `256kb`, an empty
             image or an invalid image format.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -303,35 +300,35 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to which the emoji to edit belongs to.
-        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        emoji : typing.Union [ hikari.emojis.GuildEmoji, hikari.bases.Snowflake, int ]
             The object or ID of the emoji to edit.
-        name : :obj:`~str`
+        name : str
             If specified, a new emoji name string. Keep unspecified to leave the
             name unchanged.
-        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
+        roles : typing.Sequence [ typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ]
             If specified, a list of objects or IDs for the new whitelisted
             roles. Set to an empty list to whitelist all roles.
             Keep unspecified to leave the same roles already set.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`~hikari.emojis.GuildEmoji`
+        hikari.emojis.GuildEmoji
             The updated emoji object.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or the emoji aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_EMOJIS`` permission or are not a
+        hikari.errors.ForbiddenHTTPError
+            If you either lack the `MANAGE_EMOJIS` permission or are not a
             member of the given guild.
         """
         payload = await self._session.modify_guild_emoji(
@@ -352,20 +349,20 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to delete the emoji from.
-        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        emoji : typing.Union [ hikari.emojis.GuildEmoji, hikari.bases.Snowflake, int ]
             The object or ID of the guild emoji to be deleted.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or the emoji aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_EMOJIS`` permission or aren't a
+        hikari.errors.ForbiddenHTTPError
+            If you either lack the `MANAGE_EMOJIS` permission or aren't a
             member of said guild.
         """
         await self._session.delete_guild_emoji(
@@ -387,47 +384,46 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
     ) -> guilds.Guild:
         """Create a new guild.
 
-        Warning
-        -------
-        Can only be used by bots in less than ``10`` guilds.
+        !!! warning
+            Can only be used by bots in less than `10` guilds.
 
         Parameters
         ----------
-        name : :obj:`~str`
-            The name string for the new guild (``2-100`` characters).
-        region : :obj:`~str`
+        name : str
+            The name string for the new guild (`2-100` characters).
+        region : str
             If specified, the voice region ID for new guild. You can use
-            :meth:`fetch_guild_voice_regions` to see which region IDs are
-            available.
-        icon_data : ``hikari.internal.conversions.FileLikeT``
+            `RESTGuildComponent.fetch_guild_voice_regions` to see which region
+            IDs are available.
+        icon_data : hikari.internal.conversions.FileLikeT
             If specified, the guild icon image data.
-        verification_level : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildVerificationLevel`, :obj:`~int` ]
+        verification_level : typing.Union [ hikari.guilds.GuildVerificationLevel, int ]
             If specified, the verification level. Passing a raw int for this
             may lead to unexpected behaviour.
-        default_message_notifications : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildMessageNotificationsLevel`, :obj:`~int` ]
+        default_message_notifications : typing.Union [ hikari.guilds.GuildMessageNotificationsLevel, int ]
             If specified, the default notification level. Passing a raw int for
             this may lead to unexpected behaviour.
-        explicit_content_filter : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildExplicitContentFilterLevel`, :obj:`~int` ]
+        explicit_content_filter : typing.Union [ hikari.guilds.GuildExplicitContentFilterLevel, int ]
             If specified, the explicit content filter. Passing a raw int for
             this may lead to unexpected behaviour.
-        roles : :obj:`~typing.Sequence` [ :obj:`~hikari.guilds.GuildRole` ]
+        roles : typing.Sequence [ hikari.guilds.GuildRole ]
             If specified, an array of role objects to be created alongside the
-            guild. First element changes the ``@everyone`` role.
-        channels : :obj:`~typing.Sequence` [ :obj:`~hikari.channels.GuildChannelBuilder` ]
+            guild. First element changes the `@everyone` role.
+        channels : typing.Sequence [ hikari.channels.GuildChannelBuilder ]
             If specified, an array of guild channel builder objects to be
             created within the guild.
 
         Returns
         -------
-        :obj:`~hikari.guilds.Guild`
+        hikari.guilds.Guild
             The newly created guild object.
 
         Raises
         ------
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you are in ``10`` or more guilds.
-        :obj:`~hikari.errors.BadRequestHTTPError`
-            If you provide unsupported fields like ``parent_id`` in channel
+        hikari.errors.ForbiddenHTTPError
+            If you are in `10` or more guilds.
+        hikari.errors.BadRequestHTTPError
+            If you provide unsupported fields like `parent_id` in channel
             objects.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -449,22 +445,22 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to get.
 
         Returns
         -------
-        :obj:`~hikari.guilds.Guild`
+        hikari.guilds.Guild
             The requested guild object.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you don't have access to the guild.
         """
         payload = await self._session.get_guild(
@@ -477,26 +473,25 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to get the preview object for.
 
         Returns
         -------
-        :obj:`~hikari.guilds.GuildPreview`
+        hikari.guilds.GuildPreview
             The requested guild preview object.
 
-        Note
-        ----
-        Unlike other guild endpoints, the bot doesn't have to be in the target
-        guild to get it's preview.
+        !!! note
+            Unlike other guild endpoints, the bot doesn't have to be in the
+            target guild to get it's preview.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of UINT64.
-        :obj:`~hikari.errors.NotFoundHTTPError`
-            If the guild is not found or it isn't ``PUBLIC``.
+        hikari.errors.NotFoundHTTPError
+            If the guild is not found or it isn't `PUBLIC`.
         """
         payload = await self._session.get_guild_preview(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
@@ -524,53 +519,53 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to be edited.
-        name : :obj:`~str`
-            If specified, the new name string for the guild (``2-100`` characters).
-        region : :obj:`~str`
+        name : str
+            If specified, the new name string for the guild (`2-100` characters).
+        region : str
             If specified, the new voice region ID for guild. You can use
-            :meth:`fetch_guild_voice_regions` to see which region IDs are
-            available.
-        verification_level : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildVerificationLevel`, :obj:`~int` ]
+            `RESTGuildComponent.fetch_guild_voice_regions` to see which region
+            IDs are available.
+        verification_level : typing.Union [ hikari.guilds.GuildVerificationLevel, int ]
             If specified, the new verification level. Passing a raw int for this
             may lead to unexpected behaviour.
-        default_message_notifications : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildMessageNotificationsLevel`, :obj:`~int` ]
+        default_message_notifications : typing.Union [ hikari.guilds.GuildMessageNotificationsLevel, int ]
             If specified, the new default notification level. Passing a raw int
             for this may lead to unexpected behaviour.
-        explicit_content_filter : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildExplicitContentFilterLevel`, :obj:`~int` ]
+        explicit_content_filter : typing.Union [ hikari.guilds.GuildExplicitContentFilterLevel, int ]
             If specified, the new explicit content filter. Passing a raw int for
             this may lead to unexpected behaviour.
-        afk_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        afk_channel : typing.Union [ hikari.channels.GuildVoiceChannel, hikari.bases.Snowflake, int ]
             If specified, the object or ID for the new AFK voice channel.
-        afk_timeout : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
+        afk_timeout : typing.Union [ datetime.timedelta, int ]
             If specified, the new AFK timeout seconds timedelta.
-        icon_data : ``hikari.internal.conversions.FileLikeT``
+        icon_data : hikari.internal.conversions.FileLikeT
             If specified, the new guild icon image file data.
-        owner : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        owner : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
             If specified, the object or ID of the new guild owner.
-        splash_data : ``hikari.internal.conversions.FileLikeT``
+        splash_data : hikari.internal.conversions.FileLikeT
             If specified, the new new splash image file data.
-        system_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        system_channel : typing.Union [ hikari.channels.GuildVoiceChannel, hikari.bases.Snowflake, int ]
             If specified, the object or ID of the new system channel.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`~hikari.guilds.Guild`
+        hikari.guilds.Guild
             The edited guild object.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = await self._session.modify_guild(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
@@ -606,17 +601,17 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to be deleted.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you are not the guild owner.
         """
         await self._session.delete_guild(
@@ -630,22 +625,22 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to get the channels from.
 
         Returns
         -------
-        :obj:`~typing.Sequence` [ :obj:`~hikari.channels.GuildChannel` ]
+        typing.Sequence [ hikari.channels.GuildChannel ]
             A list of guild channel objects.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you are not in the guild.
         """
         payload = await self._session.list_guild_channels(
@@ -672,62 +667,62 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to create the channel in.
-        name : :obj:`~str`
+        name : str
             If specified, the name for the channel. This must be
-            inclusively between ``1` and ``100`` characters in length.
-        channel_type: :obj:`~typing.Union` [ :obj:`~hikari.channels.ChannelType`, :obj:`~int` ]
+            inclusively between `1` and `100` characters in length.
+        channel_type: typing.Union [ hikari.channels.ChannelType, int ]
             If specified, the channel type, passing through a raw integer here
             may lead to unexpected behaviour.
-        position : :obj:`~int`
+        position : int
             If specified, the position to change the channel to.
-        topic : :obj:`~str`
+        topic : str
             If specified, the topic to set. This is only applicable to
-            text channels. This must be inclusively between ``0`` and ``1024``
+            text channels. This must be inclusively between `0` and `1024`
             characters in length.
-        nsfw : :obj:`~bool`
+        nsfw : bool
             If specified, whether the channel will be marked as NSFW.
             Only applicable for text channels.
-        rate_limit_per_user : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
+        rate_limit_per_user : typing.Union [ datetime.timedelta, int ]
             If specified, the second time delta the user has to wait before
             sending another message.  This will not apply to bots, or to
-            members with ``MANAGE_MESSAGES`` or ``MANAGE_CHANNEL`` permissions.
-            This must be inclusively between ``0`` and ``21600`` seconds.
-        bitrate : :obj:`~int`
+            members with `MANAGE_MESSAGES` or `MANAGE_CHANNEL` permissions.
+            This must be inclusively between `0` and `21600` seconds.
+        bitrate : int
             If specified, the bitrate in bits per second allowable for the
             channel. This only applies to voice channels and must be inclusively
-            between ``8000`` and ``96000`` for normal servers or ``8000`` and
-            ``128000`` for VIP servers.
-        user_limit : :obj:`~int`
+            between `8000` and `96000` for normal servers or `8000` and
+            `128000` for VIP servers.
+        user_limit : int
             If specified, the max number of users to allow in a voice channel.
-            This must be between ``0`` and ``99`` inclusive, where
-            ``0`` implies no limit.
-        permission_overwrites : :obj:`~typing.Sequence` [ :obj:`~hikari.channels.PermissionOverwrite` ]
+            This must be between `0` and `99` inclusive, where
+            `0` implies no limit.
+        permission_overwrites : typing.Sequence [ hikari.channels.PermissionOverwrite ]
             If specified, the list of permission overwrite objects that are
             category specific to replace the existing overwrites with.
-        parent_category : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildCategory`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        parent_category : typing.Union [ hikari.channels.GuildCategory, hikari.bases.Snowflake, int ]
             If specified, the object or ID of the parent category to set for
              the channel.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`~hikari.channels.GuildChannel`
+        hikari.channels.GuildChannel
             The newly created channel object.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_CHANNEL`` permission or are not in the
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_CHANNEL` permission or are not in the
             guild.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If you provide incorrect options for the corresponding channel type
-            (e.g. a ``bitrate`` for a text channel).
+            (e.g. a `bitrate` for a text channel).
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
@@ -767,25 +762,25 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild in which to edit the channels.
-        channel : :obj:`~typing.Tuple` [ :obj:`~int` , :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
+        channel : typing.Tuple [ int , typing.Union [ hikari.channels.GuildChannel, hikari.bases.Snowflake, int ] ]
             The first channel to change the position of. This is a tuple of the
             integer position the channel object or ID.
-        *additional_channels : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
+        *additional_channels : typing.Tuple [ int, typing.Union [ hikari.channels.GuildChannel, hikari.bases.Snowflake, int ] ]
             Optional additional channels to change the position of. These must
             be tuples of integer positions to change to and the channel object
             or ID and the.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or any of the channels aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_CHANNELS`` permission or are not a
+        hikari.errors.ForbiddenHTTPError
+            If you either lack the `MANAGE_CHANNELS` permission or are not a
             member of said guild or are not in the guild.
-        :obj:`~hikari.errors.BadRequestHTTPError`
-            If you provide anything other than the ``id`` and ``position``
+        hikari.errors.BadRequestHTTPError
+            If you provide anything other than the `id` and `position`
             fields for the channels.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -805,24 +800,24 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to get the member from.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        user : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
             The object or ID of the member to get.
 
         Returns
         -------
-        :obj:`~hikari.guilds.GuildMember`
+        hikari.guilds.GuildMember
             The requested member object.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or the member aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you don't have access to the target guild.
         """
         payload = await self._session.get_guild_member(
@@ -846,36 +841,34 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to get the members from.
-        limit : :obj:`~int`
+        limit : int
             If specified, the maximum number of members this iterator
             should return.
-        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        after : typing.Union [ datetime.datetime, hikari.users.User, hikari.bases.Snowflake, int ]
             The object or ID of the user this iterator should start
             after if specified, else this will start at the oldest user.
 
-        Example
-        -------
-        .. code-block:: python
-
+        Examples
+        --------
             async for user in client.fetch_members_after(guild, after=9876543, limit=1231):
                 if member.user.username[0] in HOIST_BLACKLIST:
                     await client.update_member(member, nickname="💩")
 
         Returns
         -------
-        :obj:`~typing.AsyncIterator` [ :obj:`~hikari.guilds.GuildMember` ]
+        typing.AsyncIterator [ hikari.guilds.GuildMember ]
             An async iterator of member objects.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you are not in the guild.
         """
         if isinstance(after, datetime.datetime):
@@ -908,40 +901,40 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to edit the member from.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildMember`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        user : typing.Union [ hikari.guilds.GuildMember, hikari.bases.Snowflake, int ]
             The object or ID of the member to edit.
-        nickname : :obj:`~str`, optional
-            If specified, the new nickname string. Setting it to :obj:`~None`
+        nickname : str, optional
+            If specified, the new nickname string. Setting it to `None`
             explicitly will clear the nickname.
-        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
+        roles : typing.Sequence [ typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ]
             If specified, a list of role IDs the member should have.
-        mute : :obj:`~bool`
+        mute : bool
             If specified, whether the user should be muted in the voice channel
             or not.
-        deaf : :obj:`~bool`
+        deaf : bool
             If specified, whether the user should be deafen in the voice
             channel or not.
-        voice_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], optional
+        voice_channel : typing.Union [ hikari.channels.GuildVoiceChannel, hikari.bases.Snowflake, int ], optional
             If specified, the ID of the channel to move the member to. Setting
-            it to :obj:`~None` explicitly will disconnect the user.
-        reason : :obj:`~str`
+            it to `None` explicitly will disconnect the user.
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild, user, channel or any of the roles aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack any of the applicable permissions
-            (``MANAGE_NICKNAMES``, ``MANAGE_ROLES``, ``MUTE_MEMBERS``, ``DEAFEN_MEMBERS`` or ``MOVE_MEMBERS``).
+        hikari.errors.ForbiddenHTTPError
+            If you lack any of the applicable permissions (`MANAGE_NICKNAMES`,
+            `MANAGE_ROLES`, `MUTE_MEMBERS`, `DEAFEN_MEMBERS` or `MOVE_MEMBERS`).
             Note that to move a member you must also have permission to connect
             to the end channel. This will also be raised if you're not in the
             guild.
-        :obj:`~hikari.errors.BadRequestHTTPError`
-            If you pass ``mute``, ``deaf`` or ``channel_id`` while the member
+        hikari.errors.BadRequestHTTPError
+            If you pass `mute`, `deaf` or `channel_id` while the member
             is not connected to a voice channel.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -972,22 +965,22 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild you want to change the nick on.
-        nickname : :obj:`~str`, optional
+        nickname : str, optional
             The new nick string. Setting this to `None` clears the nickname.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``CHANGE_NICKNAME`` permission or are not in the
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `CHANGE_NICKNAME` permission or are not in the
             guild.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If you provide a disallowed nickname, one that is too long, or one
             that is empty.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -1011,25 +1004,25 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        user : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
             The object or ID of the member you want to add the role to.
-        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        role : typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ]
             The object or ID of the role you want to add.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild, member or role aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         await self._session.add_guild_member_role(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
@@ -1050,25 +1043,25 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        user : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
             The object or ID of the member you want to remove the role from.
-        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        role : typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ]
             The object or ID of the role you want to remove.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild, member or role aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         await self._session.remove_guild_member_role(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
@@ -1084,23 +1077,23 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        user : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
             The object or ID of the member you want to kick.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or member aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``KICK_MEMBERS`` permission or are not in the guild.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `KICK_MEMBERS` permission or are not in the guild.
         """
         await self._session.remove_guild_member(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
@@ -1115,26 +1108,26 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-         guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild you want to get the ban from.
-         user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        user : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
             The object or ID of the user to get the ban information for.
 
         Returns
         -------
-        :obj:`~hikari.guilds.GuildMemberBan`
+        hikari.guilds.GuildMemberBan
             A ban object for the requested user.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or the user aren't found, or if the user is not
             banned.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         payload = await self._session.get_guild_ban(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
@@ -1147,23 +1140,23 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild you want to get the bans from.
 
         Returns
         -------
-        :obj:`~typing.Sequence` [ :obj:`~hikari.guilds.GuildMemberBan` ]
+        typing.Sequence [ hikari.guilds.GuildMemberBan ]
             A list of ban objects.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         payload = await self._session.get_guild_bans(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
@@ -1182,26 +1175,26 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        user : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
             The object or ID of the member you want to ban.
-        delete_message_days : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
+        delete_message_days : typing.Union [ datetime.timedelta, int ]
             If specified, the tim delta of how many days of messages from the
             user should be removed.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or member aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``BAN_MEMBERS`` permission or are not in the guild.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         await self._session.create_guild_ban(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
@@ -1217,24 +1210,24 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to un-ban the user from.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        user : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
             The ID of the user you want to un-ban.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or member aren't found, or the member is not
             banned.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``BAN_MEMBERS`` permission or are not a in the
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `BAN_MEMBERS` permission or are not a in the
             guild.
         """
         await self._session.remove_guild_ban(
@@ -1250,22 +1243,22 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild you want to get the roles from.
 
         Returns
         -------
-        :obj:`~typing.Mapping` [ :obj:`~hikari.bases.Snowflake`, :obj:`~hikari.guilds.GuildRole` ]
+        typing.Mapping [ hikari.bases.Snowflake, hikari.guilds.GuildRole ]
             A list of role objects.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you're not in the guild.
         """
         payload = await self._session.get_guild_roles(
@@ -1288,37 +1281,37 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild you want to create the role on.
-        name : :obj:`~str`
+        name : str
             If specified, the new role name string.
-        permissions : :obj:`~typing.Union` [ :obj:`~hikari.permissions.Permission`, :obj:`~int` ]
+        permissions : typing.Union [ hikari.permissions.Permission, int ]
             If specified, the permissions integer for the role, passing a raw
             integer rather than the int flag may lead to unexpected results.
-        color : :obj:`~typing.Union` [ :obj:`~hikari.colors.Color`, :obj:`~int` ]
+        color : typing.Union [ hikari.colors.Color, int ]
             If specified, the color for the role.
-        hoist : :obj:`~bool`
+        hoist : bool
             If specified, whether the role will be hoisted.
-        mentionable : :obj:`~bool`
+        mentionable : bool
            If specified, whether the role will be able to be mentioned by any
            user.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`~hikari.guilds.GuildRole`
+        hikari.guilds.GuildRole
             The newly created role object.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_ROLES`` permission or you're not in the
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_ROLES` permission or you're not in the
             guild.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If you provide invalid values for the role attributes.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -1344,28 +1337,28 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The ID of the guild the roles belong to.
-        role : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
+        role : typing.Tuple [ int, typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ]
             The first role to move. This is a tuple of the integer position and
             the role object or ID.
-        *additional_roles : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
+        *additional_roles : typing.Tuple [ int, typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ]
             Optional extra roles to move. These must be tuples of the integer
             position and the role object or ID.
 
         Returns
         -------
-        :obj:`~typing.Sequence` [ :obj:`~hikari.guilds.GuildRole` ]
+        typing.Sequence [ hikari.guilds.GuildRole ]
             A list of all the guild roles.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or any of the roles aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_ROLES`` permission or you're not in the
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_ROLES` permission or you're not in the
             guild.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If you provide invalid values for the `position` fields.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -1395,39 +1388,39 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild the role belong to.
-        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        role : typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ]
             The object or ID of the role you want to edit.
-        name : :obj:`~str`
+        name : str
             If specified, the new role's name string.
-        permissions : :obj:`~typing.Union` [ :obj:`~hikari.permissions.Permission`, :obj:`~int` ]
+        permissions : typing.Union [ hikari.permissions.Permission, int ]
             If specified, the new permissions integer for the role, passing a
             raw integer for this may lead to unexpected behaviour.
-        color : :obj:`~typing.Union` [ :obj:`~hikari.colors.Color`, :obj:`~int` ]
+        color : typing.Union [ hikari.colors.Color, int ]
             If specified, the new color for the new role passing a raw integer
             for this may lead to unexpected behaviour.
-        hoist : :obj:`~bool`
+        hoist : bool
             If specified, whether the role should hoist or not.
-        mentionable : :obj:`~bool`
+        mentionable : bool
             If specified, whether the role should be mentionable or not.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`~hikari.guilds.GuildRole`
+        hikari.guilds.GuildRole
             The edited role object.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or role aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_ROLES`` permission or you're not in the
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_ROLES` permission or you're not in the
             guild.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If you provide invalid values for the role attributes.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -1449,20 +1442,20 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild you want to remove the role from.
-        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        role : typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ]
             The object or ID of the role you want to delete.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or the role aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_ROLES`` permission or are not in the guild.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         await self._session.delete_guild_role(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
@@ -1476,23 +1469,23 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild you want to get the count for.
-        days : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
-            The time delta of days to count prune for (at least ``1``).
+        days : typing.Union [ datetime.timedelta, int ]
+            The time delta of days to count prune for (at least `1`).
 
         Returns
         -------
-        :obj:`~int`
+        int
             The number of members estimated to be pruned.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``KICK_MEMBERS`` or you are not in the guild.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `KICK_MEMBERS` or you are not in the guild.
+        hikari.errors.BadRequestHTTPError
             If you pass an invalid amount of days.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -1514,32 +1507,32 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild you want to prune member of.
-        days : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
+        days : typing.Union [ datetime.timedelta, int ]
             The time delta of inactivity days you want to use as filter.
-        compute_prune_count : :obj:`~bool`
+        compute_prune_count : bool
             Whether a count of pruned members is returned or not.
             Discouraged for large guilds out of politeness.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`~int`, optional
-            The number of members who were kicked if ``compute_prune_count``
-            is :obj:`~True`, else :obj:`~None`.
+        int, optional
+            The number of members who were kicked if `compute_prune_count`
+            is `True`, else `None`.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found:
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``KICK_MEMBER`` permission or are not in the guild.
-        :obj:`~hikari.errors.BadRequestHTTPError`
-            If you provide invalid values for the ``days`` or
-            ``compute_prune_count`` fields.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `KICK_MEMBER` permission or are not in the guild.
+        hikari.errors.BadRequestHTTPError
+            If you provide invalid values for the `days` or
+            `compute_prune_count` fields.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
@@ -1557,22 +1550,22 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to get the voice regions for.
 
         Returns
         -------
-        :obj:`~typing.Sequence` [ :obj:`~hikari.voices.VoiceRegion` ]
+        typing.Sequence [ hikari.voices.VoiceRegion ]
             A list of voice region objects.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you are not in the guild.
         """
         payload = await self._session.get_guild_voice_regions(
@@ -1587,23 +1580,23 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to get the invites for.
 
         Returns
         -------
-        :obj:`~typing.Sequence` [ :obj:`~hikari.invites.InviteWithMetadata` ]
+        typing.Sequence [ hikari.invites.InviteWithMetadata ]
             A list of invite objects (with metadata).
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = await self._session.get_guild_invites(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
@@ -1615,23 +1608,23 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to get the integrations for.
 
         Returns
         -------
-        :obj:`~typing.Sequence` [ :obj:`~hikari.guilds.GuildIntegration` ]
+        typing.Sequence [ hikari.guilds.GuildIntegration ]
             A list of integration objects.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = await self._session.get_guild_integrations(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
@@ -1652,32 +1645,32 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to which the integration belongs to.
-        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        integration : typing.Union [ hikari.guilds.GuildIntegration, hikari.bases.Snowflake, int ]
             The object or ID of the integration to update.
-        expire_behaviour : :obj:`~typing.Union` [ :obj:`~hikari.guilds.IntegrationExpireBehaviour`, :obj:`~int` ]
+        expire_behaviour : typing.Union [ hikari.guilds.IntegrationExpireBehaviour, int ]
             If specified, the behaviour for when an integration subscription
             expires (passing a raw integer for this may lead to unexpected
             behaviour).
-        expire_grace_period : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
+        expire_grace_period : typing.Union [ datetime.timedelta, int ]
             If specified, time time delta of how many days the integration will
             ignore lapsed subscriptions for.
-        enable_emojis : :obj:`~bool`
+        enable_emojis : bool
             If specified, whether emojis should be synced for this integration.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or the integration aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         await self._session.modify_guild_integration(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
@@ -1699,22 +1692,22 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to which the integration belongs to.
-        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        integration : typing.Union [ hikari.guilds.GuildIntegration, hikari.bases.Snowflake, int ]
             The object or ID of the integration to delete.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or the integration aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         await self._session.delete_guild_integration(
@@ -1730,20 +1723,20 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to which the integration belongs to.
-        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        integration : typing.Union [ hikari.guilds.GuildIntegration, hikari.bases.Snowflake, int ]
             The ID of the integration to sync.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the guild or the integration aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_GUILD`` permission or are not in the guild.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         await self._session.sync_guild_integration(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
@@ -1755,23 +1748,23 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to get the embed for.
 
         Returns
         -------
-        :obj:`~hikari.guilds.GuildEmbed`
+        hikari.guilds.GuildEmbed
             A guild embed object.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_GUILD`` permission or are not in
+        hikari.errors.ForbiddenHTTPError
+            If you either lack the `MANAGE_GUILD` permission or are not in
             the guild.
         """
         payload = await self._session.get_guild_embed(
@@ -1791,32 +1784,32 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to edit the embed for.
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], optional
+        channel : typing.Union [ hikari.channels.GuildChannel, hikari.bases.Snowflake, int ], optional
             If specified, the object or ID of the channel that this embed's
-            invite should target. Set to :obj:`~None` to disable invites for this
+            invite should target. Set to `None` to disable invites for this
             embed.
-        enabled : :obj:`~bool`
+        enabled : bool
             If specified, whether this embed should be enabled.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`~hikari.guilds.GuildEmbed`
+        hikari.guilds.GuildEmbed
             The updated embed object.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_GUILD`` permission or are not in
+        hikari.errors.ForbiddenHTTPError
+            If you either lack the `MANAGE_GUILD` permission or are not in
             the guild.
         """
         payload = await self._session.modify_guild_embed(
@@ -1837,24 +1830,24 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to get the vanity URL for.
 
         Returns
         -------
-        :obj:`~hikari.invites.VanityUrl`
-            A partial invite object containing the vanity URL in the ``code``
+        hikari.invites.VanityUrl
+            A partial invite object containing the vanity URL in the `code`
             field.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_GUILD`` permission or are not in
+        hikari.errors.ForbiddenHTTPError
+            If you either lack the `MANAGE_GUILD` permission or are not in
             the guild.
         """
         payload = await self._session.get_guild_vanity_url(
@@ -1867,25 +1860,23 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID of the guild to form the widget.
-        style : :obj:`~str`
-            If specified, the syle of the widget.
+        style : str
+            If specified, the style of the widget.
 
         Returns
         -------
-        :obj:`~str`
+        str
             A URL to retrieve a PNG widget for your guild.
 
-        Note
-        ----
-        This does not actually make any form of request, and shouldn't be
-        awaited. Thus, it doesn't have rate limits either.
+        !!! note
+            This does not actually make any form of request, and shouldn't be
+            awaited. Thus, it doesn't have rate limits either.
 
-        Warning
-        -------
-        The guild must have the widget enabled in the guild settings for this
-        to be valid.
+        !!! warning
+            The guild must have the widget enabled in the guild settings for
+            this to be valid.
         """
         return self._session.get_guild_widget_image_url(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)), style=style
@@ -1896,23 +1887,23 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
             The object or ID for the guild to get the webhooks from.
 
         Returns
         -------
-        :obj:`~typing.Sequence` [ :obj:`~hikari.webhooks.Webhook` ]
+        typing.Sequence [ hikari.webhooks.Webhook ]
             A list of webhook objects for the given guild.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the guild is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_WEBHOOKS`` permission or
+        hikari.errors.ForbiddenHTTPError
+            If you either lack the `MANAGE_WEBHOOKS` permission or
             aren't a member of the given guild.
         """
         payload = await self._session.get_guild_webhooks(

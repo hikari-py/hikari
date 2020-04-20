@@ -39,10 +39,8 @@ class Emoji(bases.HikariEntity, marshaller.Deserializable):
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji."""
 
-    #: The codepoints that form the emoji.
-    #:
-    #: :type: :obj:`~str`
     name: str = marshaller.attrib(deserializer=str)
+    """The codepoints that form the emoji."""
 
     @property
     def url_name(self) -> str:
@@ -60,20 +58,17 @@ class UnicodeEmoji(Emoji):
 class UnknownEmoji(Emoji, bases.UniqueEntity):
     """Represents a unknown emoji."""
 
-    #: The name of the emoji.
-    #:
-    #: :type: :obj:`~str`, optional
     name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None)
+    """The name of the emoji."""
 
-    #: Whether the emoji is animated.
-    #:
-    #: Will be :obj:`None` when received in Message Reaction Remove and Message
-    #: Reaction Remove Emoji events.
-    #:
-    #: :type: :obj:`~bool`, optional
     is_animated: typing.Optional[bool] = marshaller.attrib(
         raw_name="animated", deserializer=bool, if_undefined=False, if_none=None, default=False
     )
+    """Whether the emoji is animated.
+
+    Will be `None` when received in Message Reaction Remove and Message
+    Reaction Remove Emoji events.
+    """
 
     @property
     def url_name(self) -> str:
@@ -86,44 +81,38 @@ class UnknownEmoji(Emoji, bases.UniqueEntity):
 class GuildEmoji(UnknownEmoji):
     """Represents a guild emoji."""
 
-    #: The whitelisted role IDs to use this emoji.
-    #:
-    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.bases.Snowflake` ]
     role_ids: typing.Set[bases.Snowflake] = marshaller.attrib(
         raw_name="roles",
         deserializer=lambda roles: {bases.Snowflake.deserialize(r) for r in roles},
         if_undefined=set,
         factory=set,
     )
+    """The IDs of the roles that are whitelisted to use this emoji.
 
-    #: The user that created the emoji.
-    #:
-    #: Note
-    #: ----
-    #: This will be :obj:`~None` if you are missing the ``MANAGE_EMOJIS``
-    #: permission in the server the emoji is from.
-    #:
-    #:
-    #: :type: :obj:`~hikari.users.User`, optional
+    If this is empty than any user can use this emoji regardless of their roles.
+    """
+
     user: typing.Optional[users.User] = marshaller.attrib(
         deserializer=users.User.deserialize, if_none=None, if_undefined=None, default=None
     )
+    """The user that created the emoji.
 
-    #: Whether this emoji must be wrapped in colons.
-    #:
-    #: :type: :obj:`~bool`
+    !!! note
+        This will be `None` if you are missing the `MANAGE_EMOJIS`
+        permission in the server the emoji is from.
+    """
+
     is_colons_required: bool = marshaller.attrib(raw_name="require_colons", deserializer=bool)
+    """Whether this emoji must be wrapped in colons."""
 
-    #: Whether the emoji is managed by an integration.
-    #:
-    #: :type: :obj:`~bool`
     is_managed: bool = marshaller.attrib(raw_name="managed", deserializer=bool)
+    """Whether the emoji is managed by an integration."""
 
-    #: Whether this emoji can currently be used, may be :obj:`False` due to
-    #: a loss of Sever Boosts on the emoji's guild.
-    #:
-    #: :type: :obj:`~bool`
     is_available: bool = marshaller.attrib(raw_name="available", deserializer=bool)
+    """Whether this emoji can currently be used.
+
+    May be `False` due to a loss of Sever Boosts on the emoji's guild.
+    """
 
     @property
     def mention(self) -> str:

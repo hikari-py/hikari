@@ -50,22 +50,22 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object ID of the channel to look up.
 
         Returns
         -------
-        :obj:`~hikari.channels.Channel`
+        hikari.channels.Channel
             The channel object that has been found.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you don't have access to the channel.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel does not exist.
         """
         payload = await self._session.get_channel(
@@ -92,59 +92,59 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The channel ID to update.
-        name : :obj:`~str`
+        name : str
             If specified, the new name for the channel. This must be
-            inclusively between ``1`` and ``100`` characters in length.
-        position : :obj:`~int`
+            inclusively between `1` and `100` characters in length.
+        position : int
             If specified, the position to change the channel to.
-        topic : :obj:`~str`
+        topic : str
             If specified, the topic to set. This is only applicable to
-            text channels. This must be inclusively between ``0`` and ``1024``
+            text channels. This must be inclusively between `0` and `1024`
             characters in length.
-        nsfw : :obj:`~bool`
-            Mark the channel as being not safe for work (NSFW) if :obj:`~True`.
-            If :obj:`~False` or unspecified, then the channel is not marked as
+        nsfw : bool
+            Mark the channel as being not safe for work (NSFW) if `True`.
+            If `False` or unspecified, then the channel is not marked as
             NSFW. Will have no visible effect for non-text guild channels.
-        rate_limit_per_user : :obj:`~typing.Union` [ :obj:`~int`, :obj:`~datetime.timedelta` ]
+        rate_limit_per_user : typing.Union [ int, datetime.timedelta ]
             If specified, the time delta of seconds  the user has to wait
             before sending another message. This will not apply to bots, or to
-            members with ``MANAGE_MESSAGES`` or ``MANAGE_CHANNEL`` permissions.
-            This must be inclusively between ``0`` and ``21600`` seconds.
-        bitrate : :obj:`~int`
+            members with `MANAGE_MESSAGES` or `MANAGE_CHANNEL` permissions.
+            This must be inclusively between `0` and `21600` seconds.
+        bitrate : int
             If specified, the bitrate in bits per second allowable for the
             channel. This only applies to voice channels and must be inclusively
-            between ``8000`` and ``96000`` for normal servers or ``8000`` and
-            ``128000`` for VIP servers.
-        user_limit : :obj:`~int`
+            between `8000` and `96000` for normal servers or `8000` and
+            `128000` for VIP servers.
+        user_limit : int
             If specified, the new max number of users to allow in a voice
-            channel. This must be between ``0`` and ``99`` inclusive, where
-            ``0`` implies no limit.
-        permission_overwrites : :obj:`~typing.Sequence` [ :obj:`~hikari.channels.PermissionOverwrite` ]
+            channel. This must be between `0` and `99` inclusive, where
+            `0` implies no limit.
+        permission_overwrites : typing.Sequence [ hikari.channels.PermissionOverwrite ]
             If specified, the new list of permission overwrites that are
             category specific to replace the existing overwrites with.
-        parent_category : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], optional
+        parent_category : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ], optional
             If specified, the new parent category ID to set for the channel,
-            pass :obj:`~None` to unset.
-        reason : :obj:`~str`
+            pass `None` to unset.
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`~hikari.channels.Channel`
+        hikari.channels.Channel
             The channel object that has been modified.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel does not exist.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you lack the permission to make the change.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If you provide incorrect options for the corresponding channel type
-            (e.g. a ``bitrate`` for a text channel).
+            (e.g. a `bitrate` for a text channel).
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
@@ -178,35 +178,33 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake` :obj:`~str` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake str ]
             The object or ID of the channel to delete.
 
         Returns
         -------
-        :obj:`~None`
+        None
             Nothing, unlike what the API specifies. This is done to maintain
             consistency with other calls of a similar nature in this API
             wrapper.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel does not exist.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you do not have permission to delete the channel.
 
-        Note
-        ----
-        Closing a DM channel won't raise an exception but will have no effect
-        and "closed" DM channels will not have to be reopened to send messages
-        in theme.
+        !!! note
+            Closing a DM channel won't raise an exception but will have no
+            effect and "closed" DM channels will not have to be reopened to send
+            messages in theme.
 
-        Warning
-        -------
-        Deleted channels cannot be un-deleted.
+        !!! warning
+            Deleted channels cannot be un-deleted.
         """
         await self._session.delete_close_channel(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
@@ -226,45 +224,43 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The ID of the channel to retrieve the messages from.
-        limit : :obj:`~int`
+        limit : int
             If specified, the maximum number of how many messages this iterator
             should return.
-        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        after : typing.Union [ datetime.datetime, hikari.channels.Channel, hikari.bases.Snowflake, int ]
             A object or ID message. Only return messages sent AFTER this
             message if it's specified else this will return every message after
             (and including) the first message in the channel.
 
-        Example
-        -------
-
+        Examples
+        --------
             async for message in client.fetch_messages_after(channel, after=9876543, limit=3232):
                 if message.author.id in BLACKLISTED_USERS:
                     await client.ban_member(channel.guild_id,  message.author)
 
         Returns
         -------
-        :obj:`~typing.AsyncIterator` [ :obj:`~hikari.messages.Message` ]
+        typing.AsyncIterator [ hikari.messages.Message ]
             An async iterator that retrieves the channel's message objects.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you lack permission to read the channel.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel is not found, or the message
             provided for one of the filter arguments is not found.
 
-        Note
-        ----
-        If you are missing the ``VIEW_CHANNEL`` permission, you will receive a
-        :obj:`~hikari.errors.ForbiddenHTTPError`. If you are instead missing
-        the ``READ_MESSAGE_HISTORY`` permission, you will always receive
-        zero results, and thus an empty list will be returned instead.
+        !!! note
+            If you are missing the `VIEW_CHANNEL` permission, you will receive a
+            hikari.errors.ForbiddenHTTPError. If you are instead missing
+            the `READ_MESSAGE_HISTORY` permission, you will always receive
+            zero results, and thus an empty list will be returned instead.
         """
         if isinstance(after, datetime.datetime):
             after = str(bases.Snowflake.from_datetime(after))
@@ -294,47 +290,44 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The ID of the channel to retrieve the messages from.
-        limit : :obj:`~int`
+        limit : int
             If specified, the maximum number of how many messages this iterator
             should return.
-        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        before : typing.Union [ datetime.datetime, hikari.channels.Channel, hikari.bases.Snowflake, int ]
             A message object or ID. Only return messages sent BEFORE
             this message if this is specified else this will return every
             message before (and including) the most recent message in the
             channel.
 
-        Example
-        -------
-        .. code-block:: python
-
+        Examples
+        --------
             async for message in client.fetch_messages_before(channel, before=9876543, limit=1231):
                 if message.content.lower().contains("delete this"):
                     await client.delete_message(channel, message)
 
         Returns
         -------
-        :obj:`~typing.AsyncIterator` [ :obj:`~hikari.messages.Message` ]
+        typing.AsyncIterator [ hikari.messages.Message ]
             An async iterator that retrieves the channel's message objects.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you lack permission to read the channel.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel is not found, or the message
             provided for one of the filter arguments is not found.
 
-        Note
-        ----
-        If you are missing the ``VIEW_CHANNEL`` permission, you will receive a
-        :obj:`~hikari.errors.ForbiddenHTTPError`. If you are instead missing
-        the ``READ_MESSAGE_HISTORY`` permission, you will always receive
-        zero results, and thus an empty list will be returned instead.
+        !!! note
+            If you are missing the `VIEW_CHANNEL` permission, you will receive a
+            hikari.errors.ForbiddenHTTPError. If you are instead missing
+            the `READ_MESSAGE_HISTORY` permission, you will always receive
+            zero results, and thus an empty list will be returned instead.
         """
         if isinstance(before, datetime.datetime):
             before = str(bases.Snowflake.from_datetime(before))
@@ -365,47 +358,44 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The ID of the channel to retrieve the messages from.
-        around : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        around : typing.Union [ datetime.datetime, hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the message to get messages that were sent
-            AROUND it in the provided channel, unlike ``before`` and ``after``,
+            AROUND it in the provided channel, unlike `before` and `after`,
             this argument is required and the provided message will also be
             returned if it still exists.
-        limit : :obj:`~int`
+        limit : int
             If specified, the maximum number of how many messages this iterator
             should return, cannot be more than `100`
 
-        Example
-        -------
-        .. code-block:: python
-
+        Examples
+        --------
             async for message in client.fetch_messages_around(channel, around=9876543, limit=42):
                 if message.embeds and not message.author.is_bot:
                     await client.delete_message(channel, message)
 
         Returns
         -------
-        :obj:`~typing.AsyncIterator` [ :obj:`~hikari.messages.Message` ]
+        typing.AsyncIterator [ hikari.messages.Message ]
             An async iterator that retrieves the found message objects.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you lack permission to read the channel.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel is not found, or the message
             provided for one of the filter arguments is not found.
 
-        Note
-        ----
-        If you are missing the ``VIEW_CHANNEL`` permission, you will receive a
-        :obj:`~hikari.errors.ForbiddenHTTPError`. If you are instead missing
-        the ``READ_MESSAGE_HISTORY`` permission, you will always receive
-        zero results, and thus an empty list will be returned instead.
+        !!! note
+            If you are missing the `VIEW_CHANNEL` permission, you will receive a
+            `hikari.errors.ForbiddenHTTPError`. If you are instead missing
+            the `READ_MESSAGE_HISTORY` permission, you will always receive
+            zero results, and thus an empty list will be returned instead.
         """
         if isinstance(around, datetime.datetime):
             around = str(bases.Snowflake.from_datetime(around))
@@ -425,28 +415,27 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
             The object or ID of the message to retrieve.
 
         Returns
         -------
-        :obj:`~hikari.messages.Message`
+        hikari.messages.Message
             The found message object.
 
-        Note
-        ----
-        This requires the ``READ_MESSAGE_HISTORY`` permission.
+        !!! note
+            This requires the `READ_MESSAGE_HISTORY` permission.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you lack permission to see the message.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel or message is not found.
         """
         payload = await self._session.get_channel_message(
@@ -472,54 +461,54 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The channel or ID of the channel to send to.
-        content : :obj:`~str`
+        content : str
             If specified, the message content to send with the message.
-        nonce : :obj:`~str`
+        nonce : str
             If specified, an optional ID to send for opportunistic message
             creation. This doesn't serve any real purpose for general use,
             and can usually be ignored.
-        tts : :obj:`~bool`
+        tts : bool
             If specified, whether the message will be sent as a TTS message.
-        files : :obj:`~typing.Collection` [ ``hikari.media.IO`` ]
-            If specified, this should be a list of inclusively between ``1`` and
-            ``5`` IO like media objects, as defined in :mod:`hikari.media`.
-        embed : :obj:`~hikari.embeds.Embed`
+        files : typing.Collection [ `hikari.media.IO` ]
+            If specified, this should be a list of inclusively between `1` and
+            `5` IO like media objects, as defined in `hikari.media`.
+        embed : hikari.embeds.Embed
             If specified, the embed object to send with the message.
-        mentions_everyone : :obj:`~bool`
-            Whether ``@everyone`` and ``@here`` mentions should be resolved by
-            discord and lead to actual pings, defaults to :obj:`~True`.
-        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
+        mentions_everyone : bool
+            Whether `@everyone` and `@here` mentions should be resolved by
+            discord and lead to actual pings, defaults to `True`.
+        user_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ], bool ]
             Either an array of user objects/IDs to allow mentions for,
-            :obj:`~True` to allow all user mentions or :obj:`~False` to block all
-            user mentions from resolving, defaults to :obj:`~True`.
-        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
+            `True` to allow all user mentions or `False` to block all
+            user mentions from resolving, defaults to `True`.
+        role_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ], bool ]
             Either an array of guild role objects/IDs to allow mentions for,
-            :obj:`~True` to allow all role mentions or :obj:`~False` to block all
-            role mentions from resolving, defaults to :obj:`~True`.
+            `True` to allow all role mentions or `False` to block all
+            role mentions from resolving, defaults to `True`.
 
         Returns
         -------
-        :obj:`~hikari.messages.Message`
+        hikari.messages.Message
             The created message object.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel is not found.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
-            empty or greater than ``2000`` characters; if neither content, files
+            empty or greater than `2000` characters; if neither content, files
             or embed are specified.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you lack permissions to send to this channel.
-        :obj:`~ValueError`
+        ValueError
             If more than 100 unique objects/entities are passed for
-            ``role_mentions`` or ``user_mentions``.
+            `role_mentions` or `user_mentions`.
         """
         payload = await self._session.create_message(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
@@ -549,9 +538,10 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
     ) -> more_typing.Coroutine[_messages.Message]:
         """Create a message in the given channel with mention safety.
 
-        This endpoint has the same signature as :attr:`create_message` with
-        the only difference being that ``mentions_everyone``,
-        ``user_mentions`` and ``role_mentions`` default to :obj:`~False`.
+        This endpoint has the same signature as
+        `RESTChannelComponent.create_message` with the only difference being
+        that `mentions_everyone`, `user_mentions` and `role_mentions` default to
+        `False`.
         """
         return self.create_message(
             channel=channel,
@@ -581,56 +571,56 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
             The object or ID of the message to edit.
-        content : :obj:`~str`, optional
+        content : str, optional
             If specified, the string content to replace with in the message.
-            If :obj:`~None`, the content will be removed from the message.
-        embed : :obj:`~hikari.embeds.Embed`, optional
-            If specified, the embed to replace with in the message.
-            If :obj:`~None`, the embed will be removed from the message.
-        flags : :obj:`~hikari.messages.MessageFlag`
+            If `None`, then the content will be removed from the message.
+        embed : hikari.embeds.Embed, optional
+            If specified, then the embed to replace with in the message.
+            If `None`, then the embed will be removed from the message.
+        flags : hikari.messages.MessageFlag
             If specified, the new flags for this message, while a raw int may
             be passed for this, this can lead to unexpected behaviour if it's
             outside the range of the MessageFlag int flag.
-        mentions_everyone : :obj:`~bool`
-            Whether ``@everyone`` and ``@here`` mentions should be resolved by
-            discord and lead to actual pings, defaults to :obj:`~True`.
-        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
+        mentions_everyone : bool
+            Whether `@everyone` and `@here` mentions should be resolved by
+            discord and lead to actual pings, defaults to `True`.
+        user_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ], bool ]
             Either an array of user objects/IDs to allow mentions for,
-            :obj:`~True` to allow all user mentions or :obj:`~False` to block all
-            user mentions from resolving, defaults to :obj:`~True`.
-        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
+            `True` to allow all user mentions or `False` to block all
+            user mentions from resolving, defaults to `True`.
+        role_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ], bool ]
             Either an array of guild role objects/IDs to allow mentions for,
-            :obj:`~True` to allow all role mentions or :obj:`~False` to block all
-            role mentions from resolving, defaults to :obj:`~True`.
+            `True` to allow all role mentions or `False` to block all
+            role mentions from resolving, defaults to `True`.
 
         Returns
         -------
-        :obj:`~hikari.messages.Message`
+        hikari.messages.Message
             The edited message object.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel or message is not found.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             This can be raised if the embed exceeds the defined limits;
             if the message content is specified only and empty or greater
-            than ``2000`` characters; if neither content, file or embed
+            than `2000` characters; if neither content, file or embed
             are specified.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you try to edit ``content`` or ``embed`` or ``allowed_mentions`
+        hikari.errors.ForbiddenHTTPError
+            If you try to edit `content` or `embed` or `allowed_mentions`
             on a message you did not author.
             If you try to edit the flags on a message you did not author without
-            the ``MANAGE_MESSAGES`` permission.
-        :obj:`~ValueError`
+            the `MANAGE_MESSAGES` permission.
+        ValueError
             If more than 100 unique objects/entities are passed for
-            ``role_mentions`` or ``user_mentions``.
+            `role_mentions` or `user_mentions`.
         """
         payload = await self._session.edit_message(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
@@ -658,9 +648,10 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
     ) -> typing.Coroutine[typing.Any, typing.Any, _messages.Message]:
         """Update a message in the given channel with mention safety.
 
-        This endpoint has the same signature as :attr:`update_message` with
-        the only difference being that ``mentions_everyone``,
-        ``user_mentions`` and ``role_mentions`` default to :obj:`~False`.
+        This endpoint has the same signature as
+        `RESTChannelComponent.update_message` with the only difference being
+        that `mentions_everyone`, `user_mentions` and `role_mentions` default to
+        `False`.
         """
         return self.update_message(
             message=message,
@@ -683,35 +674,34 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
             The object or ID of the message to delete.
-        *additional_messages : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        *additional_messages : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
             Objects and/or IDs of additional messages to delete in the same
             channel, in total you can delete up to 100 messages in a request.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you did not author the message and are in a DM, or if you did
-            not author the message and lack the ``MANAGE_MESSAGES``
+            not author the message and lack the `MANAGE_MESSAGES`
             permission in a guild channel.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel or message is not found.
-        :obj:`~ValueError`
-            If you try to delete over ``100`` messages in a single request.
+        ValueError
+            If you try to delete over `100` messages in a single request.
 
-        Note
-        ----
-        This can only be used on guild text channels.
-        Any message IDs that do not exist or are invalid still add towards the
-        total ``100`` max messages to remove. This can only delete messages
-        that are newer than ``2`` weeks in age. If any of the messages ar
-        older than ``2`` weeks then this call will fail.
+        !!! note
+            This can only be used on guild text channels.
+            Any message IDs that do not exist or are invalid still add towards
+            the total `100` max messages to remove. This can only delete
+            messages that are newer than `2` weeks in age. If any of the
+            messages are older than `2` weeks then this call will fail.
         """
         if additional_messages:
             messages = list(
@@ -750,32 +740,32 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
             The object or ID of the channel to edit permissions for.
-        overwrite : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwrite`, :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake` , :obj:`~int` ]
+        overwrite : typing.Union [ hikari.channels.PermissionOverwrite, hikari.guilds.GuildRole, hikari.users.User, hikari.bases.Snowflake , int ]
             The object or ID of the target member or role to  edit/create the
             overwrite for.
-        target_type : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwriteType`, :obj:`~int` ]
+        target_type : typing.Union [ hikari.channels.PermissionOverwriteType, int ]
             The type of overwrite, passing a raw string that's outside of the
             enum's range for this may lead to unexpected behaviour.
-        allow : :obj:`~typing.Union` [ :obj:`~hikari.permissions.Permission`, :obj:`~int` ]
+        allow : typing.Union [ hikari.permissions.Permission, int ]
             If specified, the value of all permissions to set to be allowed,
             passing a raw integer for this may lead to unexpected behaviour.
-        deny : :obj:`~typing.Union` [ :obj:`~hikari.permissions.Permission`, :obj:`~int` ]
+        deny : typing.Union [ hikari.permissions.Permission, int ]
             If specified, the value of all permissions to set to be denied,
             passing a raw integer for this may lead to unexpected behaviour.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the target channel or overwrite doesn't exist.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you lack permission to do this.
         """
         await self._session.edit_channel_permissions(
@@ -794,22 +784,22 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the channel to get invites for.
 
         Returns
         -------
-        :obj:`~typing.Sequence` [ :obj:`~hikari.invites.InviteWithMetadata` ]
+        typing.Sequence [ hikari.invites.InviteWithMetadata ]
             A list of invite objects.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_CHANNELS`` permission.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_CHANNELS` permission.
+        hikari.errors.NotFoundHTTPError
             If the channel does not exist.
         """
         payload = await self._session.get_channel_invites(
@@ -833,42 +823,42 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~str` ]
+        channel : typing.Union [ datetime.timedelta, str ]
             The object or ID of the channel to create the invite for.
-        max_age : :obj:`~int`
+        max_age : int
             If specified, the seconds time delta for the max age of the invite,
-            defaults to ``86400`` seconds (``24`` hours).
-            Set to ``0`` seconds to never expire.
-        max_uses : :obj:`~int`
-            If specified, the max number of uses this invite can have, or ``0``
+            defaults to `86400` seconds (`24` hours).
+            Set to `0` seconds to never expire.
+        max_uses : int
+            If specified, the max number of uses this invite can have, or `0`
             for unlimited (as per the default).
-        temporary : :obj:`~bool`
+        temporary : bool
             If specified, whether to grant temporary membership, meaning the
             user is kicked when their session ends unless they are given a role.
-        unique : :obj:`~bool`
+        unique : bool
             If specified, whether to try to reuse a similar invite.
-        target_user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        target_user : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
             If specified, the object or ID of the user this invite should
             target.
-        target_user_type : :obj:`~typing.Union` [ :obj:`~hikari.invites.TargetUserType`, :obj:`~int` ]
+        target_user_type : typing.Union [ hikari.invites.TargetUserType, int ]
             If specified, the type of target for this invite, passing a raw
             integer for this may lead to unexpected results.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`~hikari.invites.InviteWithMetadata`
+        hikari.invites.InviteWithMetadata
             The created invite object.
 
         Raises
         ------
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``CREATE_INSTANT_MESSAGES`` permission.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `CREATE_INSTANT_MESSAGES` permission.
+        hikari.errors.NotFoundHTTPError
             If the channel does not exist.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If the arguments provided are not valid (e.g. negative age, etc).
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -898,20 +888,20 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the channel to delete the overwrite from.
-        overwrite : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwrite`, :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:int ]
+        overwrite : typing.Union [ hikari.channels.PermissionOverwrite, hikari.guilds.GuildRole, hikari.users.User, hikari.bases.Snowflake, int ]
             The ID of the entity this overwrite targets.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the overwrite or channel do not exist.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_ROLES`` permission for that channel.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_ROLES` permission for that channel.
         """
         await self._session.delete_channel_permission(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
@@ -919,21 +909,21 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
 
     async def trigger_typing(self, channel: bases.Hashable[_channels.Channel]) -> None:
-        """Trigger the typing indicator for ``10`` seconds in a channel.
+        """Trigger the typing indicator for `10` seconds in a channel.
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the channel to appear to be typing in.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you are not able to type in the channel.
         """
         await self._session.trigger_typing_indicator(
@@ -947,29 +937,28 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the channel to get messages from.
 
         Returns
         -------
-        :obj:`~typing.Mapping` [ :obj:`~hikari.bases.Snowflake`, :obj:`~hikari.messages.Message` ]
+        typing.Mapping [ hikari.bases.Snowflake, hikari.messages.Message ]
             A list of message objects.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you are not able to see the channel.
 
-        Note
-        ----
-        If you are not able to see the pinned message (eg. you are missing
-        ``READ_MESSAGE_HISTORY`` and the pinned message is an old message), it
-        will not be returned.
+        !!! note
+            If you are not able to see the pinned message (eg. you are missing
+            `READ_MESSAGE_HISTORY` and the pinned message is an old message), it
+            will not be returned.
         """
         payload = await self._session.get_pinned_messages(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
@@ -983,19 +972,19 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the channel to pin a message to.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
             The object or ID of the message to pin.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_MESSAGES`` permission.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_MESSAGES` permission.
+        hikari.errors.NotFoundHTTPError
             If the message or channel do not exist.
         """
         await self._session.add_pinned_channel_message(
@@ -1012,19 +1001,19 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The ID of the channel to remove a pin from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
             The object or ID of the message to unpin.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_MESSAGES`` permission.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_MESSAGES` permission.
+        hikari.errors.NotFoundHTTPError
             If the message or channel do not exist.
         """
         await self._session.delete_pinned_channel_message(
@@ -1044,29 +1033,29 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.GuildChannel, hikari.bases.Snowflake, int ]
             The object or ID of the channel for webhook to be created in.
-        name : :obj:`~str`
+        name : str
             The webhook's name string.
-        avatar_data : ``hikari.internal.conversions.FileLikeT``
+        avatar_data : `hikari.internal.conversions.FileLikeT`
             If specified, the avatar image data.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`~hikari.webhooks.Webhook`
+        hikari.webhooks.Webhook
             The newly created webhook object.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_WEBHOOKS`` permission or
+        hikari.errors.ForbiddenHTTPError
+            If you either lack the `MANAGE_WEBHOOKS` permission or
             can not see the given channel.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If the avatar image is too big or the format is invalid.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -1086,23 +1075,23 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.GuildChannel, hikari.bases.Snowflake, int ]
             The object or ID of the guild channel to get the webhooks from.
 
         Returns
         -------
-        :obj:`~typing.Sequence` [ :obj:`~hikari.webhooks.Webhook` ]
+        typing.Sequence [ hikari.webhooks.Webhook ]
             A list of webhook objects for the give channel.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_WEBHOOKS`` permission or
+        hikari.errors.ForbiddenHTTPError
+            If you either lack the `MANAGE_WEBHOOKS` permission or
             can not see the given channel.
         """
         payload = await self._session.get_channel_webhooks(

@@ -22,7 +22,7 @@
     # config.mako only needs to contain values you want overridden.
     # You can also run pdoc with `--config KEY=VALUE` to override
     # individual values.
-    html_lang = 'en'
+    html_lang = "en"
     show_inherited_members = True
     extract_module_toc_into_sidebar = True
     list_class_variables_in_index = True
@@ -34,19 +34,19 @@
     # If set, format links to objects in online source code repository
     # according to this template. Supported keywords for interpolation
     # are: commit, path, start_line, end_line.
-    git_link_template = 'https://gitlab.com/nekokatt/hikari/blob/{commit}/{path}#L{start_line}-L{end_line}'
+    git_link_template = "https://gitlab.com/nekokatt/hikari/blob/{commit}/{path}#L{start_line}"
     # A prefix to use for every HTML hyperlink in the generated documentation.
     # No prefix results in all links being relative.
-    link_prefix = ''
+    link_prefix = ""
     # Enable syntax highlighting for code/source blocks by including Highlight.js
     syntax_highlighting = True
     # Set the style keyword such as 'atom-one-light' or 'github-gist'
     #     Options: https://github.com/highlightjs/highlight.js/tree/master/src/styles
     #     Demo: https://highlightjs.org/static/demo/
-    hljs_style = 'rainbow'
+    hljs_style = "rainbow"
     # If set, insert Google Analytics tracking code. Value is GA
     # tracking id (UA-XXXXXX-Y).
-    google_analytics = ''
+    google_analytics = ""
     # If set, insert Google Custom Search search bar widget above the sidebar index.
     # The whitespace-separated tokens represent arbitrary extra queries (at least one
     # must match) passed to regular Google search. Example:

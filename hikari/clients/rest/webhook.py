@@ -46,28 +46,28 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        webhook : typing.Union [ hikari.webhooks.Webhook, hikari.bases.Snowflake, int ]
             The object or ID of the webhook to get.
-        webhook_token : :obj:`~str`
+        webhook_token : str
             If specified, the webhook token to use to get it (bypassing this
-            session's provided authorization ``token``).
+            session's provided authorization `token`).
 
         Returns
         -------
-        :obj:`~hikari.webhooks.Webhook`
+        hikari.webhooks.Webhook
             The requested webhook object.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the webhook is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you're not in the guild that owns this webhook or
-            lack the ``MANAGE_WEBHOOKS`` permission.
-        :obj:`~hikari.errors.UnauthorizedHTTPError`
+            lack the `MANAGE_WEBHOOKS` permission.
+        hikari.errors.UnauthorizedHTTPError
             If you pass a token that's invalid for the target webhook.
         """
         payload = await self._session.get_webhook(
@@ -90,39 +90,39 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        webhook : typing.Union [ hikari.webhooks.Webhook, hikari.bases.Snowflake, int ]
             The object or ID of the webhook to edit.
-        webhook_token : :obj:`~str`
+        webhook_token : str
             If specified, the webhook token to use to modify it (bypassing this
-            session's provided authorization ``token``).
-        name : :obj:`~str`
+            session's provided authorization `token`).
+        name : str
             If specified, the new name string.
-        avatar_data : ``hikari.internal.conversions.FileLikeT``, optional
-            If specified, the new avatar image file object. If :obj:`~None`, then
+        avatar_data : hikari.internal.conversions.FileLikeT, optional
+            If specified, the new avatar image file object. If `None`, then
             it is removed.
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.GuildChannel, hikari.bases.Snowflake, int ]
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
-        reason : :obj:`~str`
+        reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
 
         Returns
         -------
-        :obj:`~hikari.webhooks.Webhook`
+        hikari.webhooks.Webhook
             The updated webhook object.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If either the webhook or the channel aren't found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_WEBHOOKS`` permission or
+        hikari.errors.ForbiddenHTTPError
+            If you either lack the `MANAGE_WEBHOOKS` permission or
             aren't a member of the guild this webhook belongs to.
-        :obj:`~hikari.errors.UnauthorizedHTTPError`
+        hikari.errors.UnauthorizedHTTPError
             If you pass a token that's invalid for the target webhook.
         """
         payload = await self._session.modify_webhook(
@@ -148,23 +148,23 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        webhook : typing.Union [ hikari.webhooks.Webhook, hikari.bases.Snowflake, int ]
             The object or ID of the webhook to delete
-        webhook_token : :obj:`~str`
+        webhook_token : str
             If specified, the webhook token to use to delete it (bypassing this
-            session's provided authorization ``token``).
+            session's provided authorization `token`).
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the webhook is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you either lack the ``MANAGE_WEBHOOKS`` permission or
+        hikari.errors.ForbiddenHTTPError
+            If you either lack the `MANAGE_WEBHOOKS` permission or
             aren't a member of the guild this webhook belongs to.
-        :obj:`~hikari.errors.UnauthorizedHTTPError`
+        hikari.errors.UnauthorizedHTTPError
                 If you pass a token that's invalid for the target webhook.
         """
         await self._session.delete_webhook(
@@ -192,65 +192,64 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        webhook : typing.Union [ hikari.webhooks.Webhook, hikari.bases.Snowflake, int ]
             The object or ID of the webhook to execute.
-        webhook_token : :obj:`~str`
+        webhook_token : str
             The token of the webhook to execute.
-        content : :obj:`~str`
+        content : str
             If specified, the message content to send with the message.
-        username : :obj:`~str`
+        username : str
             If specified, the username to override the webhook's username
             for this request.
-        avatar_url : :obj:`~str`
+        avatar_url : str
             If specified, the url of an image to override the webhook's
             avatar with for this request.
-        tts : :obj:`~bool`
+        tts : bool
             If specified, whether the message will be sent as a TTS message.
-        wait : :obj:`~bool`
+        wait : bool
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
-        file : ``hikari.media.IO``
+        file : hikari.media.IO
             If specified, this is a file object to send along with the webhook
-            as defined in :mod:`hikari.media`.
-        embeds : :obj:`~typing.Sequence` [ :obj:`~hikari.embeds.Embed` ]
-            If specified, a sequence of ``1`` to ``10`` embed objects to send
+            as defined in `hikari.media`.
+        embeds : typing.Sequence [ hikari.embeds.Embed ]
+            If specified, a sequence of `1` to `10` embed objects to send
             with the embed.
-        mentions_everyone : :obj:`~bool`
-            Whether ``@everyone`` and ``@here`` mentions should be resolved by
-            discord and lead to actual pings, defaults to :obj:`~True`.
-        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
+        mentions_everyone : bool
+            Whether `@everyone` and `@here` mentions should be resolved by
+            discord and lead to actual pings, defaults to `True`.
+        user_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ], bool ]
             Either an array of user objects/IDs to allow mentions for,
-            :obj:`~True` to allow all user mentions or :obj:`~False` to block all
-            user mentions from resolving, defaults to :obj:`~True`.
-        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
+            `True` to allow all user mentions or `False` to block all
+            user mentions from resolving, defaults to `True`.
+        role_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ], bool ]
             Either an array of guild role objects/IDs to allow mentions for,
-            :obj:`~True` to allow all role mentions or :obj:`~False` to block all
-            role mentions from resolving, defaults to :obj:`~True`.
+            `True` to allow all role mentions or `False` to block all
+            role mentions from resolving, defaults to `True`.
 
         Returns
         -------
-        :obj:`~hikari.messages.Message`, optional
-            The created message object, if ``wait`` is :obj:`~True`, else
-            :obj:`~None`.
+        hikari.messages.Message, optional
+            The created message object, if `wait` is `True`, else `None`.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel ID or webhook ID is not found.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
-            empty or greater than ``2000`` characters; if neither content, file
+            empty or greater than `2000` characters; if neither content, file
             or embeds are specified.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you lack permissions to send to this channel.
-        :obj:`~hikari.errors.UnauthorizedHTTPError`
+        hikari.errors.UnauthorizedHTTPError
             If you pass a token that's invalid for the target webhook.
-        :obj:`~ValueError`
+        ValueError
             If more than 100 unique objects/entities are passed for
-            ``role_mentions`` or ``user_mentions``.
+            `role_mentions` or `user_mentions`.
         """
         payload = await self._session.execute_webhook(
             webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
@@ -288,9 +287,10 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
     ) -> typing.Coroutine[typing.Any, typing.Any, typing.Optional[_messages.Message]]:
         """Execute a webhook to create a message with mention safety.
 
-        This endpoint has the same signature as :attr:`execute_webhook` with
-        the only difference being that ``mentions_everyone``,
-        ``user_mentions`` and ``role_mentions`` default to :obj:`~False`.
+        This endpoint has the same signature as
+        `RESTWebhookComponent.execute_webhook` with the only difference being
+        that `mentions_everyone`, `user_mentions` and `role_mentions` default to
+        `False`.
         """
         return self.execute_webhook(
             webhook=webhook,

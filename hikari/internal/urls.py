@@ -16,10 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Discord-specific URIs that have to be hard-coded.
-
-|internal|
-"""
+"""Discord-specific URIs that have to be hard-coded."""
 
 __all__ = [
     "generate_cdn_url",
@@ -30,16 +27,13 @@ import urllib.parse
 
 from hikari.internal import assertions
 
-#: The URL for the CDN.
-#:
-#: :type: :obj:`~str`
 BASE_CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
+"""The URL for the CDN."""
 
-#: The URL for the REST API. This contains a version number parameter that
-#: should be interpolated.
-#:
-#: :type: :obj:`~str`
 REST_API_URL: typing.Final[str] = "https://discordapp.com/api/v{0.version}"
+"""The URL for the REST API. This contains a version number parameter that
+should be interpolated.
+"""
 
 
 def generate_cdn_url(*route_parts: str, fmt: str, size: typing.Optional[int]) -> str:
@@ -47,26 +41,26 @@ def generate_cdn_url(*route_parts: str, fmt: str, size: typing.Optional[int]) ->
 
     Parameters
     ----------
-    route_parts : :obj:`~str`
+    route_parts : str
         The string route parts that will be used to form the link.
-    fmt : :obj:`~str`
+    fmt : str
         The format to use for the wanted cdn entity, will usually be one of
-        ``webp``, ``png``, ``jpeg``, ``jpg`` or ``gif`` (which will be invalid
+        `webp`, `png`, `jpeg`, `jpg` or `gif` (which will be invalid
         if the target entity doesn't have an animated version available).
-    size : :obj:`~int`, optional
+    size : int, optional
         The size to specify for the image in the query string if applicable,
-        should be passed through as :obj:`~None` to avoid the param being set.
+        should be passed through as None to avoid the param being set.
         Must be any power of two between 16 and 4096.
 
     Returns
     -------
-    :obj:`~str`
+    str
         The URL to the resource on the Discord CDN.
 
     Raises
     ------
-    :obj:`~ValueError`
-        If ``size`` is not a power of two or not between 16 and 4096.
+    ValueError
+        If `size` is not a power of two or not between 16 and 4096.
     """
     if size:
         assertions.assert_in_range(size, 16, 4096)
