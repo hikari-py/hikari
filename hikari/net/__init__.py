@@ -23,13 +23,13 @@ for these; the majority of communication is done via JSON arrays and objects.
 """
 from hikari.net import codes
 from hikari.net import ratelimits
-from hikari.net import rest_sessions
+from hikari.net import rest
 from hikari.net import routes
 from hikari.net import shards
 from hikari.net import user_agents
 
 from hikari.net.codes import *
-from hikari.net.rest_sessions import *
+from hikari.net.rest import *
 from hikari.net.shards import *
 
-__all__ = codes.__all__ + shards.__all__ + rest_sessions.__all__
+__all__ = codes.__all__ + shards.__all__ + rest.__all__
