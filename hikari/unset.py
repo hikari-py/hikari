@@ -50,20 +50,20 @@ class Unset(meta.Singleton):
 T = typing.TypeVar("T")
 MayBeUnset = typing.Union[T, Unset]
 
-#: A global instance of :class:`~Unset`.
 UNSET: typing.Final[Unset] = Unset()
+"""A global instance of `Unset`."""
 
 
 @typing.overload
 def is_unset(obj: UNSET) -> typing.Literal[True]:
-    """Return ``True`` always."""
+    """Return `True` always."""
 
 
 @typing.overload
 def is_unset(obj: typing.Any) -> typing.Literal[False]:
-    """Return ``False`` always."""
+    """Return `False` always."""
 
 
 def is_unset(obj):
-    """Return ``True`` if the object is an :obj:`~Unset` value."""
+    """Return `True` if the object is an `Unset` value."""
     return isinstance(obj, Unset)

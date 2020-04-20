@@ -25,17 +25,15 @@ import typing
 class EnumMixin:
     """Mixin for a non-flag enum type.
 
-    This gives a more meaningful ``__str__`` implementation.
+    This gives a more meaningful `__str__` implementation.
 
-    The class should inherit this mixin before any type defined in :mod:`~enum`.
+    The class should inherit this mixin before any type defined in `enum`.
     """
 
     __slots__ = ()
 
-    #: The name of the enum member.
-    #:
-    #: :obj:`~str`
     name: str
+    """The name of the enum member."""
 
     def __str__(self) -> str:
         return self.name
@@ -44,17 +42,15 @@ class EnumMixin:
 class FlagMixin:
     """Mixin for a flag enum type.
 
-    This gives a more meaningful ``__str__`` implementation.
+    This gives a more meaningful `__str__` implementation.
 
-    The class should inherit this mixin before any type defined in :mod:`~enum`.
+    The class should inherit this mixin before any type defined in `enum`.
     """
 
     __slots__ = ()
 
-    #: The name of the enum member.
-    #:
-    #: :obj:`~str`
     name: str
+    """The name of the enum member."""
 
     def __str__(self) -> str:
         return ", ".join(flag.name for flag in typing.cast(typing.Iterable, type(self)) if flag & self)

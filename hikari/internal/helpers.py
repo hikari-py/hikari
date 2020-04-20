@@ -37,11 +37,11 @@ def warning(message: str, category: typing.Type[Warning], stack_level: int = 1) 
 
     Parameters
     ----------
-    message : :obj:`~str`
+    message : str
         The message to display.
-    category : :obj:`~typing.Type` [ :obj:`~Warning` ]
+    category : typing.Type [ Warning ]
         The type of warning to raise.
-    stack_level : :obj:`int`
+    stack_level : int
         How many stack frames to go back to find the user's invocation.
 
     """
@@ -57,28 +57,28 @@ def generate_allowed_mentions(
 
     Parameters
     ----------
-    mentions_everyone : :obj:`~bool`
-        Whether ``@everyone`` and ``@here`` mentions should be resolved by
+    mentions_everyone : bool
+        Whether `@everyone` and `@here` mentions should be resolved by
         discord and lead to actual pings.
-    user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
+    user_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ], bool ]
         Either an array of user objects/IDs to allow mentions for,
-        :obj:`~True` to allow all user mentions or :obj:`~False` to block all
+        `True` to allow all user mentions or `False` to block all
         user mentions from resolving.
-    role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
+    role_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ], bool ]
         Either an array of guild role objects/IDs to allow mentions for,
-        :obj:`~True` to allow all role mentions or :obj:`~False` to block all
+        `True` to allow all role mentions or `False` to block all
         role mentions from resolving.
 
     Returns
     -------
-    :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Sequence` [ :obj:`~str` ] ]
+    typing.Dict [ str, typing.Sequence [ str ] ]
         The resulting allowed mentions dict object.
 
     Raises
     ------
-    :obj:`~ValueError`
+    ValueError
         If more than 100 unique objects/entities are passed for
-        ``role_mentions`` or ``user_mentions.
+        `role_mentions` or `user_mentions.
     """
     parsed_mentions = []
     allowed_mentions = {}
@@ -128,40 +128,39 @@ async def pagination_handler(
 ) -> typing.AsyncIterator[typing.Any]:
     """Generate an async iterator for handling paginated endpoints.
 
-    This will handle Discord's ``before`` and ``after`` pagination.
+    This will handle Discord's `before` and `after` pagination.
 
     Parameters
     ----------
-    deserializer : :obj:`~typing.Callable` [ [ :obj:`~typing.Any` ], :obj:`~typing.Any` ]
+    deserializer : typing.Callable [ [ typing.Any ], typing.Any ]
         The deserializer to use to deserialize raw elements.
-    direction : :obj:`~typing.Union` [ ``"before"``, ``"after"`` ]
+    direction : typing.Union [ `"before"`, `"after"` ]
         The direction that this paginator should go in.
-    request : :obj:`~typing.Callable` [ ``...``, :obj:`~typing.Coroutine` [ :obj:`~typing.Any`, :obj:`~typing.Any`, :obj:`~typing.Any` ] ]
-        The :obj:`hikari.net.rest_sessions.LowLevelRestfulClient` method that should be
+    request : typing.Callable [ ..., typing.Coroutine [ typing.Any, typing.Any, typing.Any ] ]
+        The `hikari.net.rest.REST` method that should be
         called to make requests for this paginator.
-    reversing : :obj:`~bool`
+    reversing : bool
         Whether the retrieved array of objects should be reversed before
         iterating through it, this is needed for certain endpoints like
-        ``fetch_messages_before`` where the order is static regardless of
-        if you're using ``before`` or ``after``.
-    start : :obj:`~int`, optional
-        The snowflake ID that this paginator should start at, ``0`` may be
-        passed for ``forward`` pagination to start at the first created
-        entity and :obj:`~None` may be passed for ``before`` pagination to
+        `fetch_messages_before` where the order is static regardless of
+        if you're using `before` or `after`.
+    start : int, optional
+        The snowflake ID that this paginator should start at, `0` may be
+        passed for `forward` pagination to start at the first created
+        entity and `None` may be passed for `before` pagination to
         start at the newest entity (based on when it's snowflake timestamp).
-    limit : :obj:`~int`, optional
+    limit : int, optional
         The amount of deserialized entities that the iterator should return
-        total, will be unlimited if set to :obj:`~None`.
-    id_getter : :obj:`~typing.Callable` [ [ :obj:`~typing.Any` ], :obj:`~str` ]
+        total, will be unlimited if set to `None`.
+    id_getter : typing.Callable [ [ typing.Any ], str ]
     **kwargs
-        Kwargs to pass through to ``request`` for every request made along
+        Kwargs to pass through to `request` for every request made along
         with the current decided limit and direction snowflake.
 
     Returns
     -------
-    :obj:`~typing.AsyncIterator` [ :obj:`~typing.Any` ]
+    typing.AsyncIterator [ typing.Any ]
         An async iterator of the found deserialized found objects.
-
     """
     while payloads := await request(
         limit=100 if limit is None or limit > 100 else limit,

@@ -33,11 +33,11 @@ from hikari.internal import marshaller
 class WebhookType(enum.IntEnum):
     """Types of webhook."""
 
-    #: Incoming webhook.
     INCOMING = 1
+    """Incoming webhook."""
 
-    #: Channel Follower webhook.
     CHANNEL_FOLLOWER = 2
+    """Channel Follower webhook."""
 
 
 @marshaller.marshallable()
@@ -50,52 +50,36 @@ class Webhook(bases.UniqueEntity, marshaller.Deserializable):
     send informational messages to specific channels.
     """
 
-    #: The type of the webhook.
-    #:
-    #: :type: :obj:`~WebhookType`
     type: WebhookType = marshaller.attrib(deserializer=WebhookType)
+    """The type of the webhook."""
 
-    #: The guild ID of the webhook.
-    #:
-    #: :type: :obj:`~hikari.bases.Snowflake`, optional
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
         deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
+    """The guild ID of the webhook."""
 
-    #: The channel ID this webhook is for.
-    #:
-    #: :type: :obj:`~hikari.bases.Snowflake`
     channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    """The channel ID this webhook is for."""
 
-    #: The user that created the webhook
-    #:
-    #: Note
-    #: ----
-    #: This will be :obj:`~None` when getting a webhook with bot authorization
-    #: rather than the webhook's token.
-    #:
-    #:
-    #: :type: :obj:`~hikari.users.User`, optional
     user: typing.Optional[users.User] = marshaller.attrib(
         deserializer=users.User.deserialize, if_undefined=None, default=None
     )
+    """The user that created the webhook
 
-    #: The default name of the webhook.
-    #:
-    #: :type: :obj:`~str`, optional
+    !!! info
+        This will be `None` when getting a webhook with bot authorization rather
+        than the webhook's token.
+    """
+
     name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None)
+    """The default name of the webhook."""
 
-    #: The default avatar hash of the webhook.
-    #:
-    #: :type: :obj:`~str`, optional
     avatar_hash: typing.Optional[str] = marshaller.attrib(raw_name="avatar", deserializer=str, if_none=None)
+    """The default avatar hash of the webhook."""
 
-    #: The token of the webhook.
-    #:
-    #: Note
-    #: ----
-    #: This is only available for Incoming webhooks.
-    #:
-    #:
-    #: :type: :obj:`~str`, optional
     token: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
+    """The token of the webhook.
+
+    !!! info
+        This is only available for Incoming webhooks.
+    """

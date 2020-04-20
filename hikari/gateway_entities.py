@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Entities directly related to creating and managing gateway shards."""
-__all__ = ["GatewayBot", "Activity"]
+__all__ = ["Activity", "GatewayBot", "SessionStartLimit"]
 
 import datetime
 import typing
@@ -34,23 +34,19 @@ from hikari.internal import marshaller
 class SessionStartLimit(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent information about the current session start limits."""
 
-    #: The total number of session starts the current bot is allowed.
-    #:
-    #: :type: :obj:`~int`
     total: int = marshaller.attrib(deserializer=int)
+    """The total number of session starts the current bot is allowed."""
 
-    #: The remaining number of session starts this bot has.
-    #:
-    #: :type: :obj:`~int`
     remaining: int = marshaller.attrib(deserializer=int)
+    """The remaining number of session starts this bot has."""
 
-    #: The timedelta of when :attr:`remaining` will reset back to :attr:`total`
-    #: for the current bot.
-    #:
-    #: :type: :obj:`~datetime.timedelta`
     reset_after: datetime.timedelta = marshaller.attrib(
         deserializer=lambda after: datetime.timedelta(milliseconds=after),
     )
+    """When `SessionStartLimit.remaining` will reset for the current bot.
+
+    After it resets it will be set to `SessionStartLimit.total`.
+    """
 
 
 @marshaller.marshallable()
@@ -58,20 +54,14 @@ class SessionStartLimit(bases.HikariEntity, marshaller.Deserializable):
 class GatewayBot(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent gateway information for the connected bot."""
 
-    #: The WSS URL that can be used for connecting to the gateway.
-    #:
-    #: :type: :obj:`~str`
     url: str = marshaller.attrib(deserializer=str)
+    """The WSS URL that can be used for connecting to the gateway."""
 
-    #: The recommended number of shards to use when connecting to the gateway.
-    #:
-    #: :type: :obj:`~int`
     shard_count: int = marshaller.attrib(raw_name="shards", deserializer=int)
+    """The recommended number of shards to use when connecting to the gateway."""
 
-    #: Information about the bot's current session start limit.
-    #:
-    #: :type: :obj:`~SessionStartLimit`
     session_start_limit: SessionStartLimit = marshaller.attrib(deserializer=SessionStartLimit.deserialize)
+    """Information about the bot's current session start limit."""
 
 
 @marshaller.marshallable()
@@ -82,24 +72,18 @@ class Activity(marshaller.Deserializable, marshaller.Serializable):
     This will show the activity as the bot's presence.
     """
 
-    #: The activity name.
-    #:
-    #: :type: :obj:`~str`
     name: str = marshaller.attrib(deserializer=str, serializer=str)
+    """The activity name."""
 
-    #: The activity URL. Only valid for ``STREAMING`` activities.
-    #:
-    #: :type: :obj:`~str`, optional
     url: typing.Optional[str] = marshaller.attrib(
         deserializer=str, serializer=str, if_none=None, if_undefined=None, default=None
     )
+    """The activity URL. Only valid for `STREAMING` activities."""
 
-    #: The activity type.
-    #:
-    #: :type: :obj:`~hikari.guilds.ActivityType`
     type: guilds.ActivityType = marshaller.attrib(
         deserializer=guilds.ActivityType,
         serializer=int,
         if_undefined=lambda: guilds.ActivityType.PLAYING,
         default=guilds.ActivityType.PLAYING,
     )
+    """The activity type."""

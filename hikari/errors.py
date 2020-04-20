@@ -22,6 +22,7 @@ __all__ = [
     "HikariWarning",
     "NotFoundHTTPError",
     "UnauthorizedHTTPError",
+    "ForbiddenHTTPError",
     "BadRequestHTTPError",
     "ClientHTTPError",
     "ServerHTTPError",
@@ -49,9 +50,8 @@ class HikariError(RuntimeError):
 
     Any exceptions should derive from this.
 
-    Note
-    ----
-    You should never initialize this exception directly.
+    !!! note
+        You should never initialize this exception directly.
     """
 
     __slots__ = ()
@@ -75,14 +75,12 @@ class GatewayError(HikariError):
 
     Parameters
     ----------
-    reason : :obj:`~str`
+    reason : st
         A string explaining the issue.
     """
 
-    #: A string to explain the issue.
-    #:
-    #: :type: :obj:`~str`
     reason: str
+    """A string to explain the issue."""
 
     def __init__(self, reason: str) -> None:
         super().__init__()
@@ -97,7 +95,7 @@ class GatewayClientClosedError(GatewayError):
 
     Parameters
     ----------
-    reason : :obj:`~str`
+    reason : str
         A string explaining the issue.
     """
 
@@ -110,7 +108,7 @@ class GatewayClientDisconnectedError(GatewayError):
 
     Parameters
     ----------
-    reason : :obj:`~str`
+    reason : str
         A string explaining the issue.
     """
 
@@ -123,9 +121,9 @@ class GatewayServerClosedConnectionError(GatewayError):
 
     Parameters
     ----------
-    close_code : :obj:`~hikari.net.codes.GatewayCloseCode`, :obj:`~int`, optional
+    close_code : typing.Union [ hikari.net.codes.GatewayCloseCode, int ], optional
         The close code provided by the server, if there was one.
-    reason : :obj:`~str`, optional
+    reason : str, optional
         A string explaining the issue.
     """
 
@@ -163,17 +161,16 @@ class GatewayInvalidSessionError(GatewayServerClosedConnectionError):
 
     Parameters
     ----------
-    can_resume : :obj:`~bool`
-        :obj:`~True` if the connection will be able to RESUME next time it starts
-        rather than re-IDENTIFYing, or :obj:`~False` if you need to IDENTIFY
+    can_resume : bool
+        `True` if the connection will be able to RESUME next time it starts
+        rather than re-IDENTIFYing, or `False` if you need to IDENTIFY
         again instead.
     """
 
-    #: :obj:`~True` if the next reconnection can be RESUMED. :obj:`~False` if it
-    #: has to be coordinated by re-IDENFITYing.
-    #:
-    #: :type: :obj:`~bool`
     can_resume: bool
+    """`True` if the next reconnection can be RESUMED,
+    `False` if it has to be coordinated by re-IDENFITYing.
+    """
 
     def __init__(self, can_resume: bool) -> None:
         self.can_resume = can_resume
@@ -220,14 +217,12 @@ class HTTPError(HikariError):
 
     Parameters
     ----------
-    reason : :obj:`~str`
+    reason : str
         A meaningful explanation of the problem.
     """
 
-    #: A meaningful explanation of the problem.
-    #:
-    #: :type: :obj:`~str`
     reason: str
+    """A meaningful explanation of the problem."""
 
     def __init__(self, reason: str) -> None:
         super().__init__()
@@ -242,37 +237,27 @@ class CodedHTTPError(HTTPError):
 
     Parameters
     ----------
-    status : :obj:`~int` or :obj:`~hikari.net.codes.HTTPStatusCode`
+    status : int or hikari.net.codes.HTTPStatusCode
         The HTTP status code that was returned by the server.
-    route : :obj:`~hikari.net.routes.CompiledRoute`
+    route : hikari.net.routes.CompiledRoute
         The HTTP route that was being invoked when this exception occurred.
-    message : :obj:`~str`, optional
+    message : str, optional
         An optional message if provided in the response payload.
-    json_code : :obj:`~hikari.net.codes.JSONErrorCode`, :obj:`~int`, optional
+    json_code : hikari.net.codes.JSONErrorCode, int, optional
         An optional error code the server provided us.
     """
 
-    #: The HTTP status code that was returned by the server.
-    #:
-    #: :type: :obj:`~int` or :obj:`~hikari.net.codes.HTTPStatusCode`
     status: typing.Union[int, codes.HTTPStatusCode]
+    """The HTTP status code that was returned by the server."""
 
-    #: The HTTP route that was being invoked when this exception occurred.
-    #:
-    #: :type: :obj:`~hikari.net.routes.CompiledRoute`
     route: routes.CompiledRoute
+    """The HTTP route that was being invoked when this exception occurred."""
 
-    #: An optional contextual message the server provided us with in the
-    #: response body.
-    #
-    #: :type: :obj:`~str`, optional
     message: typing.Optional[str]
+    """An optional contextual message the server provided us with in the response body."""
 
-    #: An optional contextual error code the server provided us with in the
-    #: response body.
-    #
-    #: :type: :obj:`~hikari.net.codes.JSONErrorCode` or :obj:`~int`, optional
-    json_code: typing.Optional[typing.Union[codes.JSONErrorCode, int]]
+    json_code: typing.Union[codes.JSONErrorCode, int, None]
+    """An optional contextual error code the server provided us with in the response body."""
 
     def __init__(
         self,
@@ -311,7 +296,7 @@ class ClientHTTPError(CodedHTTPError):
 
 
 class BadRequestHTTPError(CodedHTTPError):
-    """A specific case of :obj:`~CodedHTTPError`.
+    """A specific case of CodedHTTPError.
 
     This can occur hat occurs when you send Discord information in an unexpected
     format, miss required information out, or give bad values for stuff.
@@ -321,11 +306,11 @@ class BadRequestHTTPError(CodedHTTPError):
 
     Parameters
     ----------
-    route : :obj:`~hikari.net.routes.CompiledRoute`
+    route : hikari.net.routes.CompiledRoute
         The HTTP route that was being invoked when this exception occurred.
-    message : :obj:`~str`, optional
+    message : str, optional
         An optional message if provided in the response payload.
-    json_code : :obj:`~hikari.net.codes.JSONErrorCode`, :obj:`~int`, optional
+    json_code : hikari.net.codes.JSONErrorCode, int, optional
         An optional error code the server provided us.
     """
 
@@ -339,7 +324,7 @@ class BadRequestHTTPError(CodedHTTPError):
 
 
 class UnauthorizedHTTPError(ClientHTTPError):
-    """A specific case of :obj:`~ClientHTTPError`.
+    """A specific case of ClientHTTPError.
 
     This occurs when you have invalid authorization details to access
     the given resource.
@@ -348,11 +333,11 @@ class UnauthorizedHTTPError(ClientHTTPError):
 
     Parameters
     ----------
-    route : :obj:`~hikari.net.routes.CompiledRoute`
+    route : hikari.net.routes.CompiledRoute
         The HTTP route that was being invoked when this exception occurred.
-    message : :obj:`~str`, optional
+    message : str, optional
         An optional message if provided in the response payload.
-    json_code : :obj:`~hikari.net.codes.JSONErrorCode`, :obj:`~int`, optional
+    json_code : hikari.net.codes.JSONErrorCode, int, optional
         An optional error code the server provided us.
     """
 
@@ -366,7 +351,7 @@ class UnauthorizedHTTPError(ClientHTTPError):
 
 
 class ForbiddenHTTPError(ClientHTTPError):
-    """A specific case of :obj:`~ClientHTTPError`.
+    """A specific case of ClientHTTPError.
 
     This occurs when you are missing permissions, or are using an endpoint that
     your account is not allowed to see without being whitelisted.
@@ -375,11 +360,11 @@ class ForbiddenHTTPError(ClientHTTPError):
 
     Parameters
     ----------
-    route : :obj:`~hikari.net.routes.CompiledRoute`
+    route : hikari.net.routes.CompiledRoute
         The HTTP route that was being invoked when this exception occurred.
-    message : :obj:`~str`, optional
+    message : str, optional
         An optional message if provided in the response payload.
-    json_code : :obj:`~hikari.net.codes.JSONErrorCode`, :obj:`~int`, optional
+    json_code : hikari.net.codes.JSONErrorCode, int, optional
         An optional error code the server provided us.
     """
 
@@ -393,7 +378,7 @@ class ForbiddenHTTPError(ClientHTTPError):
 
 
 class NotFoundHTTPError(ClientHTTPError):
-    """A specific case of :obj:`~ClientHTTPError`.
+    """A specific case of ClientHTTPError.
 
     This occurs when you try to refer to something that doesn't exist on Discord.
     This might be referring to a user ID, channel ID, guild ID, etc that does
@@ -402,11 +387,11 @@ class NotFoundHTTPError(ClientHTTPError):
 
     Parameters
     ----------
-    route : :obj:`~hikari.net.routes.CompiledRoute`
+    route : hikari.net.routes.CompiledRoute
         The HTTP route that was being invoked when this exception occurred.
-    message : :obj:`~str`, optional
+    message : str, optional
         An optional message if provided in the response payload.
-    json_code : :obj:`~hikari.net.codes.JSONErrorCode`, :obj:`~int`, optional
+    json_code : hikari.net.codes.JSONErrorCode, int, optional
         An optional error code the server provided us.
     """
 

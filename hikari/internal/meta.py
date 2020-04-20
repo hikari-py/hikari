@@ -16,10 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Various functional types and metatypes.
-
-|internal|
-"""
+"""Various functional types and metatypes."""
 __all__ = ["SingletonMeta", "Singleton"]
 
 import abc
@@ -35,25 +32,21 @@ class SingletonMeta(type):
     Once an instance has been defined at runtime, it will exist until the
     interpreter that created it is terminated.
 
-    Example
-    -------
-    .. code-block:: python
-
+    Examples
+    --------
         >>> class Unknown(metaclass=SingletonMeta):
         ...     def __init__(self):
         ...         print("Initialized an Unknown!")
 
         >>> Unknown() is Unknown()    # True
 
-    Note
-    ----
-    The constructors of instances of this metaclass must not take any arguments
-    other than ``self``.
+    !!! note
+        The constructors of instances of this metaclass must not take any
+        arguments other than `self`.
 
-    Warning
-    -------
-    Constructing instances of class instances of this metaclass may not be
-    thread safe.
+    !!! warning
+        Constructing instances of class instances of this metaclass may not be
+        thread safe.
     """
 
     # pylint: disable=E1136
@@ -69,29 +62,25 @@ class SingletonMeta(type):
 
 
 class Singleton(metaclass=SingletonMeta):
-    """Base type for anything implementing the :obj:`~SingletonMeta` metaclass.
+    """Base type for anything implementing the `SingletonMeta` metaclass.
 
     Once an instance has been defined at runtime, it will exist until the
     interpreter that created it is terminated.
 
-    Example
-    -------
-    .. code-block:: python
-
+    Examples
+    --------
         >>> class MySingleton(Singleton):
         ...    pass
 
         >>> assert MySingleton() is MySingleton()
 
-    Note
-    ----
-    The constructors of child classes must not take any arguments other than
-    ``self``.
+    !!! note
+        The constructors of child classes must not take any arguments other than
+        `self`.
 
-    Warning
-    -------
-    Constructing instances of this class or derived classes may not be thread
-    safe.
+    !!! warning
+        Constructing instances of this class or derived classes may not be
+        thread safe.
     """
 
 
@@ -102,10 +91,9 @@ class UniqueFunctionMeta(abc.ABCMeta):
     mixins provide the same function, a type error is raised when the class is
     defined.
 
-    Note
-    ----
-    This metaclass derives from :obj:`~abc.ABCMeta`, and thus is compatible
-    with abstract method conduit.
+    !!! note
+        This metaclass derives from `abc.ABCMeta`, and thus is compatible with
+        abstract method conduit.
     """
 
     @classmethod

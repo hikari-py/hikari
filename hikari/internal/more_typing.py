@@ -20,8 +20,18 @@
 # pylint:disable=unused-variable
 from __future__ import annotations
 
-# Don't export anything.
-__all__ = []
+__all__ = [
+    "JSONType",
+    "NullableJSONArray",
+    "JSONObject",
+    "NullableJSONObject",
+    "JSONArray",
+    "NullableJSONType",
+    "Headers",
+    "Coroutine",
+    "Future",
+    "Task",
+]
 
 import asyncio
 import contextvars
@@ -50,78 +60,78 @@ T_co = _TypeVar("T_co", covariant=True)
 # HTTP TYPE HINT HELPERS #
 ##########################
 
-#: Any JSON type.
 JSONType = _Union[
     _Mapping[str, "NullableJSONType"], _Sequence["NullableJSONType"], _AnyStr, int, float, bool,
 ]
+"""Any JSON type."""
 
-#: Any JSON type, including ``null``.
 NullableJSONType = _Optional[JSONType]
+"""Any JSON type, including `null`."""
 
-#: A mapping produced from a JSON object.
 JSONObject = _Mapping[str, NullableJSONType]
+"""A mapping produced from a JSON object."""
 
-#: A mapping produced from a JSON object that may or may not be present.
 NullableJSONObject = _Optional[JSONObject]
+"""A mapping produced from a JSON object that may or may not be present."""
 
-#: A sequence produced from a JSON array.
 JSONArray = _Sequence[NullableJSONType]
+"""A sequence produced from a JSON array."""
 
-#: A sequence produced from a JSON array that may or may not be present.
 NullableJSONArray = _Optional[JSONArray]
+"""A sequence produced from a JSON array that may or may not be present."""
 
-#: HTTP headers.
 Headers = _Mapping[str, _Union[_Sequence[str], str]]
+"""HTTP headers."""
 
 #############################
 # ASYNCIO TYPE HINT HELPERS #
 #############################
 
-#: A coroutine object.
-#:
-#: This is awaitable but MUST be awaited somewhere to be
-#: completed correctly.
 Coroutine = _Coroutine[_Any, _Any, T_co]
+"""A coroutine object.
+
+This is awaitable but MUST be awaited somewhere to be completed correctly.
+"""
 
 
 @_runtime_checkable
 class Future(_Protocol[T_contra]):
-    """Typed protocol representation of an :obj:`~asyncio.Future`.
+    """Typed protocol representation of an `asyncio.Future`.
 
-    You should consult the documentation for :obj:`~asyncio.Future` for usage.
+    You should consult the documentation for `asyncio.Future` for usage.
     """
 
     def result(self) -> T_contra:
-        """See :meth:`asyncio.Future.result`."""
+        """See `asyncio.Future.result`."""
 
     def set_result(self, result: T_contra, /) -> None:
-        """See :meth:`asyncio.Future.set_result`."""
+        """See `asyncio.Future.set_result`."""
 
     def set_exception(self, exception: Exception, /) -> None:
-        """See :meth:`asyncio.Future.set_exception`."""
+        """See `asyncio.Future.set_exception`."""
 
     def done(self) -> bool:
-        """See :meth:`asyncio.Future.done`."""
+        """See `asyncio.Future.done`."""
 
     def cancelled(self) -> bool:
-        """See :meth:`asyncio.Future.cancelled`."""
+        """See `asyncio.Future.cancelled`."""
 
     def add_done_callback(
         self, callback: _Callable[[Future[T_contra]], None], /, *, context: _Optional[contextvars.Context],
     ) -> None:
-        """See :meth:`asyncio.Future.add_done_callback`."""
+        """See `asyncio.Future.add_done_callback`."""
 
     def remove_done_callback(self, callback: _Callable[[Future[T_contra]], None], /) -> None:
-        """See :meth:`asyncio.Future.remove_done_callback`."""
+        """See `asyncio.Future.remove_done_callback`."""
 
     def cancel(self) -> bool:
-        """See :meth:`asyncio.Future.cancel`."""
+        """See `asyncio.Future.cancel`."""
 
     def exception(self) -> _Optional[Exception]:
-        """See :meth:`asyncio.Future.exception`."""
+        """See `asyncio.Future.exception`."""
 
     def get_loop(self) -> asyncio.AbstractEventLoop:
-        """See :meth:`asyncio.Future.get_loop`."""
+        """See `asyncio.Future.get_loop`."""
 
     def __await__(self) -> Coroutine[T_contra]:
         ...
@@ -129,54 +139,54 @@ class Future(_Protocol[T_contra]):
 
 @_runtime_checkable
 class Task(_Protocol[T_contra]):
-    """Typed protocol representation of an :obj:`~asyncio.Task`.
+    """Typed protocol representation of an `asyncio.Task`.
 
-    You should consult the documentation for :obj:`~asyncio.Task` for usage.
+    You should consult the documentation for `asyncio.Task` for usage.
     """
 
     def result(self) -> T_contra:
-        """See :meth:`asyncio.Future.result`."""
+        """See`asyncio.Future.result`."""
 
     def set_result(self, result: T_contra, /) -> None:
-        """See :meth:`asyncio.Future.set_result`."""
+        """See `asyncio.Future.set_result`."""
 
     def set_exception(self, exception: Exception, /) -> None:
-        """See :meth:`asyncio.Future.set_exception`."""
+        """See `asyncio.Future.set_exception`."""
 
     def done(self) -> bool:
-        """See :meth:`asyncio.Future.done`."""
+        """See `asyncio.Future.done`."""
 
     def cancelled(self) -> bool:
-        """See :meth:`asyncio.Future.cancelled`."""
+        """See `asyncio.Future.cancelled`."""
 
     def add_done_callback(
         self, callback: _Callable[[Future[T_contra]], None], /, *, context: _Optional[contextvars.Context],
     ) -> None:
-        """See :meth:`asyncio.Future.add_done_callback`."""
+        """See `asyncio.Future.add_done_callback`."""
 
     def remove_done_callback(self, callback: _Callable[[Future[T_contra]], None], /) -> None:
-        """See :meth:`asyncio.Future.remove_done_callback`."""
+        """See `asyncio.Future.remove_done_callback`."""
 
     def cancel(self) -> bool:
-        """See :meth:`asyncio.Future.cancel`."""
+        """See `asyncio.Future.cancel`."""
 
     def exception(self) -> _Optional[Exception]:
-        """See :meth:`asyncio.Future.exception`."""
+        """See `asyncio.Future.exception`."""
 
     def get_loop(self) -> asyncio.AbstractEventLoop:
-        """See :meth:`asyncio.Future.get_loop`."""
+        """See `asyncio.Future.get_loop`."""
 
     def get_stack(self, *, limit: _Optional[int] = None) -> _Sequence[_FrameType]:
-        """See :meth:`asyncio.Task.get_stack`."""
+        """See `asyncio.Task.get_stack`."""
 
     def print_stack(self, *, limit: _Optional[int] = None, file: _Optional[_IO] = None) -> None:
-        """See :meth:`asyncio.Task.print_stack`."""
+        """See `asyncio.Task.print_stack`."""
 
     def get_name(self) -> str:
-        """See :meth:`asyncio.Task.get_name`."""
+        """See `asyncio.Task.get_name`."""
 
     def set_name(self, value: str, /) -> None:
-        """See :meth:`asyncio.Task.set_name`."""
+        """See `asyncio.Task.set_name`."""
 
     def __await__(self) -> Coroutine[T_contra]:
         ...

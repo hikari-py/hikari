@@ -32,8 +32,8 @@ class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
     """An abstract class that all REST client logic classes should inherit from.
 
     This defines the abstract method `__init__` which will assign an instance
-    of `hikari.net.rest_sessions.LowLevelRestfulClient` to the attribute that
-    all components will expect to make calls to.
+    of `hikari.net.rest.REST` to the attribute that all components will expect
+    to make calls to.
     """
 
     @abc.abstractmethod

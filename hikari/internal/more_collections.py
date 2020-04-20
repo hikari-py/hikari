@@ -16,10 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Special data structures and utilities.
-
-|internal|
-"""
+"""Special data structures and utilities."""
 
 __all__ = [
     "EMPTY_SEQUENCE",
@@ -49,18 +46,15 @@ EMPTY_GENERATOR_EXPRESSION: typing.Final[typing.Iterator[_T]] = (_ for _ in EMPT
 class WeakKeyDictionary(typing.Generic[_K, _V], weakref.WeakKeyDictionary, typing.MutableMapping[_K, _V]):
     """A dictionary that has weak references to the keys.
 
-    This is a type-safe version of :obj:`~weakref.WeakKeyDictionary` which
-    is subscriptable.
+    This is a type-safe version of `weakref.WeakKeyDictionary` which is
+    subscriptable.
 
-    Example
-    -------
-    .. code-block:: python
-
+    Examples
+    --------
         @attr.s(auto_attribs=True)
         class Commands:
             instances: Set[Command]
             aliases: WeakKeyDictionary[Command, str]
-
     """
 
     __slots__ = ()

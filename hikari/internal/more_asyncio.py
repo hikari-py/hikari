@@ -16,13 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Asyncio extensions and utilities.
-
-|internal|
-"""
+"""Asyncio extensions and utilities."""
 from __future__ import annotations
 
-__all__ = ["completed_future"]
+__all__ = ["completed_future", "wait"]
 
 import asyncio
 import typing
@@ -45,12 +42,12 @@ def completed_future(result=None, /):
 
     Parameters
     ----------
-    result : :obj:`~typing.Any`
+    result : typing.Any
         The value to set for the result of the future.
 
     Returns
     -------
-    :obj:`~asyncio.Future`
+    asyncio.Future
         The completed future.
     """
     future = asyncio.get_event_loop().create_future()
@@ -67,8 +64,8 @@ def wait(
 
     Returns
     -------
-    :obj:`~typing.Tuple` with two :obj:`~typing.Set` of futures.
-        The coroutine returned by :obj:`~asyncio.wait` of two sets of
+    `typing.Tuple with two typing.Set of futures`
+        The coroutine returned by `asyncio.wait` of two sets of
         Tasks/Futures (done, pending).
     """
     # noinspection PyTypeChecker

@@ -18,12 +18,9 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """An internal marshalling utility used by internal API components.
 
-Warning
--------
-You should not change anything in this file, if you do, you will likely get
-unexpected behaviour elsewhere.
-
-|internal|
+!!! warning
+    You should not change anything in this file, if you do, you will likely get
+    unexpected behaviour elsewhere.
 """
 __all__ = [
     "RAISE",
@@ -61,27 +58,34 @@ def dereference_handle(handle_string: str) -> typing.Any:
 
     Parameters
     ----------
-    handle_string : :obj:`~str`
+    handle_string : str
         The handle to the object to refer to. This is in the format
-        ``fully.qualified.module.name#object.attribute``. If no ``#`` is
+        `fully.qualified.module.name#object.attribute`. If no `#` is
         input, then the reference will be made to the module itself.
 
     Returns
     -------
-    :obj:`~typing.Any`
+    typing.Any
         The thing that is referred to from this reference.
 
     Examples
     --------
-    ``"collections#deque"``:
-        Refers to :obj:`~collections.deque`
-    ``"asyncio.tasks#Task"``:
-        Refers to ``asyncio.tasks.Task``
-    ``"hikari.net"``:
-        Refers to :obj:`~hikari.net`
-    ``"foo.bar#baz.bork.qux"``:
-        Would refer to a theoretical ``qux`` attribute on a ``bork``
-        attribute on a ``baz`` object in the ``foo.bar`` module.
+    * `"collections#deque"`:
+
+        Refers to `collections.deque`
+
+    * `"asyncio.tasks#Task"`:
+
+        Refers to `asyncio.tasks.Task`
+
+    * `"hikari.net"`:
+
+        Refers to `hikari.net`
+
+    * `"foo.bar#baz.bork.qux"`:
+
+        Would refer to a theoretical `qux` attribute on a `bork`
+        attribute on a `baz` object in the `foo.bar` module.
     """
     if "#" not in handle_string:
         module, attribute_names = handle_string, ()
@@ -112,42 +116,38 @@ def attrib(
     serializer: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
     **kwargs,
 ) -> attr.Attribute:
-    """Create an :func:`attr.ib` with marshaller metadata attached.
+    """Create an `attr.ib` with marshaller metadata attached.
 
     Parameters
     ----------
-    deserializer : :obj:`~typing.Callable` [ [ :obj:`~typing.Any` ], :obj:`~typing.Any` ], optional
+    deserializer : typing.Callable [ [ typing.Any ], typing.Any ], optional
         The deserializer to use to deserialize raw elements.
-    raw_name : :obj:`~str`, optional
+    raw_name : str, optional
         The raw name of the element in its raw serialized form. If not provided,
         then this will use the field's default name later.
-    transient : :obj:`~bool`
-        If :obj:`~True`, the field is marked as transient, meaning it will not be
-        serialized. Defaults to :obj:`~False`.
+    transient : bool
+        If `True`, the field is marked as transient, meaning it will not be
+        serialized. Defaults to `False`.
     if_none
         Either a default factory function called to get the default for when
-        this field is :obj:`~None` or one of :obj:`~None`, :obj:`~False` or
-        :obj:`~True` to specify that this should default to the given singleton.
-        Will raise an exception when :obj:`~None` is received for this field
-        later if this isn't specified.
+        this field is `None` or one of `None`, `False` or `True` to specify that
+        this should default to the given singleton. Will raise an exception when
+        `None` is received for this field later if this isn't specified.
     if_undefined
         Either a default factory function called to get the default for when
-        this field isn't defined or one of :obj:`~None`, :obj:`~False` or
-        :obj:`~True` to specify that this should default to the given singleton.
-        Will raise an exception when this field is undefined later on if this
-        isn't specified.
-    serializer : :obj:`~typing.Callable` [ [ :obj:`~typing.Any` ], :obj:`~typing.Any` ], optional
+        this field isn't defined or one of `None`, `False` or `True` to specify
+        that this should default to the given singleton. Will raise an exception
+        when this field is undefined later on if this isn't specified.
+    serializer : typing.Callable [ [ typing.Any ], typing.Any ], optional
         The serializer to use. If not specified, then serializing the entire
-        class that this attribute is in will trigger a :obj:`~TypeError`
-        later.
+        class that this attribute is in will trigger a `TypeError` later.
     **kwargs :
-        Any kwargs to pass to :func:`attr.ib`.
+        Any kwargs to pass to `attr.ib`.
 
     Returns
     -------
-    :obj:`~typing.Any`
-        The result of :func:`attr.ib` internally being called with additional
-        metadata.
+    typing.Any
+        The result of `attr.ib` internally being called with additional metadata.
     """
     # Sphinx decides to be really awkward and inject the wrong default values
     # by default. Not helpful when it documents non-optional shit as defaulting
@@ -267,9 +267,8 @@ class HikariEntityMarshaller:
     """Hikari's utility to manage automated serialization and deserialization.
 
     It can deserialize and serialize any internal components that that are
-    decorated with the :obj:`~marshallable` decorator, and that are
-    :func:`attr.s` classes using fields with the :obj:`~attrib` function call
-    descriptor.
+    decorated with the `marshallable` decorator, and that are
+    `attr.s` classes using fields with the`attrib` function call descriptor.
     """
 
     __slots__ = ("_registered_entities",)
@@ -282,19 +281,19 @@ class HikariEntityMarshaller:
 
         Parameters
         ----------
-        cls : :obj:`~typing.Type` [ :obj:`~typing.Any` ]
+        cls : typing.Type [ typing.Any ]
             The type to register.
 
         Returns
         -------
-        :obj:`~typing.Type` [ :obj:`~typing.Any` ]
+        typing.Type [ typing.Any ]
             The input argument. This enables this to be used as a decorator if
             desired.
 
         Raises
         ------
-        :obj:`~TypeError`
-            If the class is not an :obj:`~attr.s` class.
+        TypeError
+            If the class is not an `attr.s` class.
         """
         entity_descriptor = _construct_entity_descriptor(cls)
         self._registered_entities[cls] = entity_descriptor
@@ -305,24 +304,24 @@ class HikariEntityMarshaller:
 
         Parameters
         ----------
-        raw_data : :obj:`~typing.Mapping` [ :obj:`~str`, :obj:`~typing.Any` ]
+        raw_data : typing.Mapping [ str, typing.Any ]
             The raw data to deserialize.
-        target_type : :obj:`~typing.Type` [ :obj:`~typing.Any` ]
+        target_type : typing.Type [ typing.Any ]
             The type to deserialize to.
 
         Returns
         -------
-        :obj:`~typing.Any`
+        typing.Any
             The deserialized instance.
 
         Raises
         ------
-        :obj:`~LookupError`
+        LookupError
             If the entity is not registered.
-        :obj:`~AttributeError`
+        AttributeError
             If the field is not optional, but the field was not present in the
-            raw payload, or it was present, but it was assigned :obj:`~None`.
-        :obj:`~TypeError`
+            raw payload, or it was present, but it was assigned `None`.
+        TypeError
             If the deserialization call failed for some reason.
         """
         try:
@@ -378,17 +377,17 @@ class HikariEntityMarshaller:
 
         Parameters
         ----------
-        obj : :obj:`~typing.Any`, optional
+        obj : typing.Any, optional
             The entity to serialize.
 
         Returns
         -------
-        :obj:`~typing.Mapping` [ :obj:`~str`, :obj:`~typing.Any` ], optional
+        typing.Mapping [ str, typing.Any ], optional
             The serialized raw data item.
 
         Raises
         ------
-        :obj:`~LookupError`
+        LookupError
             If the entity is not registered.
         """
         if obj is None:
@@ -417,11 +416,11 @@ HIKARI_ENTITY_MARSHALLER = HikariEntityMarshaller()
 
 
 def marshallable(*, marshaller: HikariEntityMarshaller = HIKARI_ENTITY_MARSHALLER):
-    """Create a decorator for a class to make it into an :obj:`~attr.s` class.
+    """Create a decorator for a class to make it into an `attr.s` class.
 
     Parameters
     ----------
-    marshaller : :obj:`~HikariEntityMarshaller`
+    marshaller : HikariEntityMarshaller
         If specified, this should be an instance of a marshaller to use. For
         most internal purposes, you want to not specify this, since it will
         then default to the hikari-global marshaller instead. This is
@@ -429,25 +428,20 @@ def marshallable(*, marshaller: HikariEntityMarshaller = HIKARI_ENTITY_MARSHALLE
 
     Returns
     -------
-    ``decorator(T) -> T``
+    `decorator(T) -> T`
         A decorator to decorate a class with.
 
-    Notes
-    -----
-    The ``auto_attribs`` functionality provided by :obj:`~attr.s` is not
-    supported by this marshaller utility. Do not attempt to use it!
+    !!! note
+        The `auto_attribs` functionality provided by `attr.s` is not
+        supported by this marshaller utility. Do not attempt to use it!
 
-    Example
-    -------
-
-    .. code-block:: python
-
+    Examples
+    --------
         @attrs()
         class MyEntity:
             id: int = attrib(deserializer=int, serializer=str)
             password: str = attrib(deserializer=int, transient=True)
             ...
-
     """
 
     def decorator(cls):
