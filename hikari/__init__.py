@@ -56,6 +56,7 @@ from hikari.emojis import *
 from hikari.events import *
 from hikari.gateway_entities import *
 from hikari.guilds import *
+from hikari.intents import *
 from hikari.invites import *
 from hikari.messages import *
 from hikari.net import *

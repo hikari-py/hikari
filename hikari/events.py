@@ -81,7 +81,7 @@ from hikari import applications
 from hikari import unset
 from hikari import users
 from hikari import voices
-from hikari.clients import shard_clients
+from hikari.clients import shards
 from hikari.internal import conversions
 from hikari.internal import marshaller
 
@@ -147,7 +147,7 @@ class ConnectedEvent(HikariEvent, marshaller.Deserializable):
     #: The shard that connected.
     #:
     #: :type: :obj:`~hikari.clients.shard_clients.ShardClient`
-    shard: shard_clients.ShardClient
+    shard: shards.ShardClient
 
 
 @attr.s(slots=True, kw_only=True, auto_attribs=True)
@@ -157,7 +157,7 @@ class DisconnectedEvent(HikariEvent, marshaller.Deserializable):
     #: The shard that disconnected.
     #:
     #: :type: :obj:`~hikari.clients.shard_clients.ShardClient`
-    shard: shard_clients.ShardClient
+    shard: shards.ShardClient
 
 
 @attr.s(slots=True, kw_only=True, auto_attribs=True)
@@ -167,7 +167,7 @@ class ResumedEvent(HikariEvent):
     #: The shard that reconnected.
     #:
     #: :type: :obj:`~hikari.clients.shard_clients.ShardClient`
-    shard: shard_clients.ShardClient
+    shard: shards.ShardClient
 
 
 @marshaller.marshallable()
