@@ -264,11 +264,14 @@ class JSONErrorCode(more_enums.EnumMixin, enum.IntEnum):
     #: Unknown user
     UNKNOWN_USER = 10_013
 
-    #: Unknown Emoji
+    #: Unknown emoji
     UNKNOWN_EMOJI = 10_014
 
-    #: Unknown Webhook
+    #: Unknown webhook
     UNKNOWN_WEBHOOK = 10_015
+
+    #: Unknown ban
+    UNKNOWN_BAN = 10_026
 
     #: Bots cannot use this endpoint
     #:
@@ -327,6 +330,9 @@ class JSONErrorCode(more_enums.EnumMixin, enum.IntEnum):
 
     #: Unauthorized
     UNAUTHORIZED = 40_001
+
+    #: You need to verify your account to perform this action.
+    NEEDS_VERIFICATION = 40_002
 
     #: Request entity too large. Try sending something smaller in size
     TOO_LARGE = 40_005
