@@ -30,7 +30,7 @@ See Also
 * Gateway documentation: https://discordapp.com/developers/docs/topics/gateway
 * Opcode documentation: https://discordapp.com/developers/docs/topics/opcodes-and-status-codes
 """
-__all__ = ["ShardConnection"]
+__all__ = ["Shard"]
 
 import asyncio
 import contextlib
@@ -54,21 +54,21 @@ from hikari.net import ratelimits
 from hikari.net import user_agents
 
 #: The signature for an event dispatch callback.
-DispatchT = typing.Callable[["ShardConnection", str, typing.Dict], None]
+DispatchT = typing.Callable[["Shard", str, typing.Dict], None]
 
 
 VERSION_6: typing.Final[int] = 6
 VERSION_7: typing.Final[int] = 7
 
 
-class ShardConnection:
+class Shard:
     """Implementation of a client for the Discord Gateway.
 
     This is a websocket connection to Discord that is used to inform your
     application of events that occur, and to allow you to change your presence,
     amongst other real-time applications.
 
-    Each :obj:`~ShardConnection` represents a single shard.
+    Each :obj:`~Shard` represents a single shard.
 
     Expected events that may be passed to the event dispatcher are documented in the
     `gateway event reference <https://discordapp.com/developers/docs/topics/gateway#commands-and-events>`_.
@@ -97,7 +97,7 @@ class ShardConnection:
     dispatch: ``dispatch function``
         The function to invoke with any dispatched events. This must not be a
         coroutine function, and must take three arguments only. The first is
-        the reference to this :obj:`~ShardConnection` The second is the
+        the reference to this :obj:`~Shard` The second is the
         event name.
     initial_presence: :obj:`~typing.Dict`, optional
         A raw JSON object as a :obj:`~typing.Dict` that should be set as the
