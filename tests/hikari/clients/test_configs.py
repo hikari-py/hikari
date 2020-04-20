@@ -238,7 +238,7 @@ class TestRESTConfig:
         assert rest_config_obj.token is None
 
 
-class TestBotConfig:  # TODO: Talk to esp about this because rest already has aiohttp and token, but websocket too.
+class TestBotConfig:
     def test_deserialize(self, test_bot_config):
         datetime_obj = datetime.datetime.now()
         test_bot_config["initial_idle_since"] = datetime_obj.timestamp()

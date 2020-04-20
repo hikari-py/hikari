@@ -21,23 +21,21 @@
 __all__ = ["RESTChannelComponent"]
 
 import abc
-import asyncio
 import datetime
 import typing
 
 from hikari import bases
 from hikari import channels as _channels
 from hikari import embeds as _embeds
+from hikari import files as _files
 from hikari import guilds
 from hikari import invites
-from hikari import media
 from hikari import messages as _messages
 from hikari import permissions as _permissions
 from hikari import users
 from hikari import webhooks
 from hikari.clients.rest import base
 from hikari.internal import assertions
-from hikari.internal import conversions
 from hikari.internal import helpers
 from hikari.internal import more_typing
 
@@ -332,6 +330,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         if isinstance(before, datetime.datetime):
             before = str(bases.Snowflake.from_datetime(before))
         elif before is not None:
+            # noinspection PyTypeChecker
             before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
         return helpers.pagination_handler(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
@@ -451,7 +450,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         content: str = ...,
         nonce: str = ...,
         tts: bool = ...,
-        files: typing.Collection[media.IO] = ...,
+        files: typing.Sequence[_files.File] = ...,
         embed: _embeds.Embed = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
@@ -471,10 +470,10 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             and can usually be ignored.
         tts : bool
             If specified, whether the message will be sent as a TTS message.
-        files : typing.Collection [ `hikari.media.IO` ]
-            If specified, this should be a list of inclusively between `1` and
-            `5` IO like media objects, as defined in `hikari.media`.
-        embed : hikari.embeds.Embed
+        files : typing.Sequence [ hikari.files.File ]
+            A sequence of files to upload, if desired. If specified, should be
+            between 1 and 5 objects in size (inclusive).
+        embed : :obj:`~hikari.embeds.Embed`
             If specified, the embed object to send with the message.
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
@@ -515,7 +514,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             content=content,
             nonce=nonce,
             tts=tts,
-            files=await asyncio.gather(*(media.safe_read_file(file) for file in files)) if files is not ... else ...,
+            files=files,
             embed=embed.serialize() if embed is not ... else ...,
             allowed_mentions=helpers.generate_allowed_mentions(
                 mentions_everyone=mentions_everyone, user_mentions=user_mentions, role_mentions=role_mentions
@@ -530,7 +529,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         content: str = ...,
         nonce: str = ...,
         tts: bool = ...,
-        files: typing.Collection[media.IO] = ...,
+        files: typing.Sequence[_files.File] = ...,
         embed: _embeds.Embed = ...,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = False,
@@ -1026,7 +1025,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         channel: bases.Hashable[_channels.GuildChannel],
         name: str,
         *,
-        avatar_data: conversions.FileLikeT = ...,
+        avatar: _files.File = ...,
         reason: str = ...,
     ) -> webhooks.Webhook:
         """Create a webhook for a given channel.
@@ -1037,8 +1036,8 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             The object or ID of the channel for webhook to be created in.
         name : str
             The webhook's name string.
-        avatar_data : `hikari.internal.conversions.FileLikeT`
-            If specified, the avatar image data.
+        avatar : hikari.files.File
+            If specified, the avatar image to use.
         reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
@@ -1063,7 +1062,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         payload = await self._session.create_webhook(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             name=name,
-            avatar=conversions.get_bytes_from_resource(avatar_data) if avatar_data is not ... else ...,
+            avatar=await avatar.read_all() if avatar is not ... else ...,
             reason=reason,
         )
         return webhooks.Webhook.deserialize(payload)

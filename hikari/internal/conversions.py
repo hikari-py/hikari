@@ -27,12 +27,8 @@ __all__ = [
     "parse_iso_8601_ts",
     "discord_epoch_to_datetime",
     "unix_epoch_to_datetime",
-    "Seekable",
-    "make_resource_seekable",
     "pluralize",
     "snoop_typehint_from_scope",
-    "FileLikeT",
-    "BytesLikeT",
 ]
 
 import base64
@@ -41,7 +37,6 @@ import datetime
 import email.utils
 import enum
 import functools
-import io
 import operator
 import re
 import types
@@ -59,8 +54,6 @@ CastOutputT = typing.TypeVar("CastOutputT")
 DefaultT = typing.TypeVar("DefaultT")
 TypeCastT = typing.Callable[[CastInputT], CastOutputT]
 ResultT = typing.Union[CastOutputT, DefaultT]
-BytesLikeT = typing.Union[bytes, bytearray, memoryview, str, io.StringIO, io.BytesIO]
-FileLikeT = typing.Union[BytesLikeT, io.BufferedRandom, io.BufferedReader, io.BufferedRWPair]
 
 
 def nullable_cast(value: CastInputT, cast: TypeCastT, /) -> ResultT:
@@ -252,99 +245,6 @@ def unix_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
         Number of seconds since 1/1/1970 within a datetime object (UTC).
     """
     return datetime.datetime.fromtimestamp(epoch / 1000, datetime.timezone.utc)
-
-
-class Seekable(typing.Protocol[typing.AnyStr]):
-    """Structural type for an IO object that supports seek operations."""
-
-    def seek(
-        self, offset: int, whence: typing.Union[typing.Literal[0], typing.Literal[1], typing.Literal[2]] = 0, /
-    ) -> None:
-        """Seek to the given offset.
-
-        Parameters
-        ----------
-        offset : int
-            The offset to seek to.
-        whence : int
-            If `0`, as the default, then use absolute file positioning.
-            If `1`, then seek to the current position.
-            If `2`, then seek relative to the end of the file.
-        """
-
-    def tell(self) -> int:
-        """Return the stream position.
-
-        Returns
-        -------
-        int
-            The stream position.
-        """
-
-    def read(self) -> typing.AnyStr:
-        """Read part of a string.
-
-        Returns
-        -------
-        str
-            The string that was read.
-        """
-
-    def close(self) -> None:
-        """Close the stream."""
-
-
-def make_resource_seekable(resource: typing.Any, /) -> Seekable:
-    """Make a seekable resource to use off some representation of data.
-
-    This supports `bytes`,`bytearray`, `memoryview`, and
-    `str`. Anything else is just returned.
-
-    Parameters
-    ----------
-    resource : typing.Any
-        The resource to check.
-
-    Returns
-    -------
-    typing.Union [ io.BytesIO, io.StringIO ]
-        An stream-compatible resource where possible.
-    """
-    if isinstance(resource, (bytes, bytearray)):
-        resource = io.BytesIO(resource)
-    elif isinstance(resource, memoryview):
-        resource = io.BytesIO(resource.tobytes())
-    elif isinstance(resource, str):
-        resource = io.StringIO(resource)
-
-    return resource
-
-
-def get_bytes_from_resource(resource: typing.Any) -> bytes:
-    """Take in any file-like object and return the raw bytes data from it.
-
-    Supports any `FileLikeT` type that isn't string based.
-    Anything else is just returned.
-
-    Parameters
-    ----------
-    resource : FileLikeT
-        The resource to get bytes from.
-
-    Returns
-    -------
-    byte
-        The resulting bytes.
-    """
-    if isinstance(resource, bytearray):
-        resource = bytes(resource)
-    elif isinstance(resource, memoryview):
-        resource = resource.tobytes()
-    # Targets the io types found in FileLikeT and BytesLikeT
-    elif hasattr(resource, "read"):
-        resource = resource.read()
-
-    return resource
 
 
 def pluralize(count: int, name: str, suffix: str = "s") -> str:

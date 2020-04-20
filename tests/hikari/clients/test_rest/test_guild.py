@@ -23,11 +23,11 @@ import io
 import mock
 import pytest
 
-from hikari.internal import helpers
 from hikari import audit_logs
 from hikari import channels
 from hikari import colors
 from hikari import emojis
+from hikari import files
 from hikari import guilds
 from hikari import invites
 from hikari import permissions
@@ -35,7 +35,6 @@ from hikari import users
 from hikari import voices
 from hikari import webhooks
 from hikari.clients.rest import guild as _guild
-from hikari.internal import conversions
 from hikari.internal import helpers
 from hikari.net import rest
 from tests.hikari import _helpers
@@ -185,18 +184,18 @@ class TestRESTGuildLogic:
         mock_emoji_payload = {"id": "229292929", "animated": True}
         mock_emoji_obj = mock.MagicMock(emojis.GuildEmoji)
         rest_guild_logic_impl._session.create_guild_emoji.return_value = mock_emoji_payload
-        mock_image_obj = mock.MagicMock(io.BytesIO)
         mock_image_data = mock.MagicMock(bytes)
+        mock_image_obj = mock.MagicMock(files.File)
+        mock_image_obj.read_all = mock.AsyncMock(return_value=mock_image_data)
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data))
         stack.enter_context(mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj))
         with stack:
             result = await rest_guild_logic_impl.create_guild_emoji(
-                guild=guild, name="fairEmoji", image_data=mock_image_obj, roles=[role], reason="hello",
+                guild=guild, name="fairEmoji", image=mock_image_obj, roles=[role], reason="hello",
             )
             assert result is mock_emoji_obj
             emojis.GuildEmoji.deserialize.assert_called_once_with(mock_emoji_payload)
-            conversions.get_bytes_from_resource.assert_called_once_with(mock_image_obj)
+            mock_image_obj.read_all.assert_awaited_once()
         rest_guild_logic_impl._session.create_guild_emoji.assert_called_once_with(
             guild_id="93443949", name="fairEmoji", image=mock_image_data, roles=["537340989808050216"], reason="hello",
         )
@@ -207,18 +206,19 @@ class TestRESTGuildLogic:
         mock_emoji_payload = {"id": "229292929", "animated": True}
         mock_emoji_obj = mock.MagicMock(emojis.GuildEmoji)
         rest_guild_logic_impl._session.create_guild_emoji.return_value = mock_emoji_payload
-        mock_image_obj = mock.MagicMock(io.BytesIO)
+        mock_image_obj = mock.MagicMock(files.File)
         mock_image_data = mock.MagicMock(bytes)
+        mock_image_obj = mock.MagicMock(files.File)
+        mock_image_obj.read_all = mock.AsyncMock(return_value=mock_image_data)
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data))
         stack.enter_context(mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj))
         with stack:
             result = await rest_guild_logic_impl.create_guild_emoji(
-                guild=guild, name="fairEmoji", image_data=mock_image_obj,
+                guild=guild, name="fairEmoji", image=mock_image_obj,
             )
             assert result is mock_emoji_obj
             emojis.GuildEmoji.deserialize.assert_called_once_with(mock_emoji_payload)
-            conversions.get_bytes_from_resource.assert_called_once_with(mock_image_obj)
+            mock_image_obj.read_all.assert_awaited_once()
         rest_guild_logic_impl._session.create_guild_emoji.assert_called_once_with(
             guild_id="93443949", name="fairEmoji", image=mock_image_data, roles=..., reason=...,
         )
@@ -271,8 +271,9 @@ class TestRESTGuildLogic:
         mock_guild_payload = {"id": "299292929292992", "region": "LONDON"}
         mock_guild_obj = mock.MagicMock(guilds.Guild)
         rest_guild_logic_impl._session.create_guild.return_value = mock_guild_payload
-        mock_image_obj = mock.MagicMock(io.BytesIO)
         mock_image_data = mock.MagicMock(bytes)
+        mock_image_obj = mock.MagicMock(files.File)
+        mock_image_obj.read_all = mock.AsyncMock(return_value=mock_image_data)
         mock_role_payload = {"permissions": 123123}
         mock_role_obj = mock.MagicMock(guilds.GuildRole)
         mock_role_obj.serialize = mock.MagicMock(return_value=mock_role_payload)
@@ -281,12 +282,11 @@ class TestRESTGuildLogic:
         mock_channel_obj.serialize = mock.MagicMock(return_value=mock_channel_payload)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(guilds.Guild, "deserialize", return_value=mock_guild_obj))
-        stack.enter_context(mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data))
         with stack:
             result = await rest_guild_logic_impl.create_guild(
                 name="OK",
                 region=region,
-                icon_data=mock_image_obj,
+                icon=mock_image_obj,
                 verification_level=guilds.GuildVerificationLevel.NONE,
                 default_message_notifications=guilds.GuildMessageNotificationsLevel.ONLY_MENTIONS,
                 explicit_content_filter=guilds.GuildExplicitContentFilterLevel.MEMBERS_WITHOUT_ROLES,
@@ -294,7 +294,7 @@ class TestRESTGuildLogic:
                 channels=[mock_channel_obj],
             )
             assert result is mock_guild_obj
-            conversions.get_bytes_from_resource.assert_called_once_with(mock_image_obj)
+            mock_image_obj.read_all.assert_awaited_once()
             guilds.Guild.deserialize.assert_called_once_with(mock_guild_payload)
         mock_channel_obj.serialize.assert_called_once()
         mock_role_obj.serialize.assert_called_once()
@@ -364,14 +364,13 @@ class TestRESTGuildLogic:
         mock_guild_obj = mock.MagicMock(guilds.Guild)
         rest_guild_logic_impl._session.modify_guild.return_value = mock_guild_payload
         mock_icon_data = mock.MagicMock(bytes)
-        mock_icon_obj = mock.MagicMock(io.BytesIO)
+        mock_icon_obj = mock.MagicMock(files.File)
+        mock_icon_obj.read_all = mock.AsyncMock(return_value=mock_icon_data)
         mock_splash_data = mock.MagicMock(bytes)
-        mock_splash_obj = mock.MagicMock(io.BytesIO)
+        mock_splash_obj = mock.MagicMock(files.File)
+        mock_splash_obj.read_all = mock.AsyncMock(return_value=mock_splash_data)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(guilds.Guild, "deserialize", return_value=mock_guild_obj))
-        stack.enter_context(
-            mock.patch.object(conversions, "get_bytes_from_resource", side_effect=[mock_icon_data, mock_splash_data])
-        )
         with stack:
             result = await rest_guild_logic_impl.update_guild(
                 guild,
@@ -382,15 +381,16 @@ class TestRESTGuildLogic:
                 explicit_content_filter=guilds.GuildExplicitContentFilterLevel.ALL_MEMBERS,
                 afk_channel=afk_channel,
                 afk_timeout=afk_timeout,
-                icon_data=mock_icon_obj,
+                icon=mock_icon_obj,
                 owner=owner,
-                splash_data=mock_splash_obj,
+                splash=mock_splash_obj,
                 system_channel=system_channel,
                 reason="A good reason",
             )
             assert result is mock_guild_obj
             guilds.Guild.deserialize.assert_called_once_with(mock_guild_payload)
-            conversions.get_bytes_from_resource.has_calls(mock.call(mock_icon_obj), mock.call(mock_splash_obj))
+            mock_icon_obj.read_all.assert_awaited_once()
+            mock_splash_obj.read_all.assert_awaited_once()
         rest_guild_logic_impl._session.modify_guild.assert_called_once_with(
             guild_id="379953393319542784",
             name="aNewName",

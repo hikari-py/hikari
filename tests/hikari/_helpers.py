@@ -374,6 +374,17 @@ class AwaitableMock:
     is_resolved = False
 
 
+class AsyncWithContextMock:
+    def __init__(self, return_value=None):
+        self.return_value = return_value
+
+    async def __aenter__(self):
+        return self.return_value
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
 def retry(max_retries):
     def decorator(func):
         assert asyncio.iscoroutinefunction(func), "retry only supports coroutine functions currently"

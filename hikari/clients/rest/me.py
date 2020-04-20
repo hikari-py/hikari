@@ -29,8 +29,8 @@ from hikari import bases
 from hikari import channels as _channels
 from hikari import guilds
 from hikari import users
+from hikari import files
 from hikari.clients.rest import base
-from hikari.internal import conversions
 from hikari.internal import helpers
 
 
@@ -48,16 +48,14 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         payload = await self._session.get_current_user()
         return users.MyUser.deserialize(payload)
 
-    async def update_me(
-        self, *, username: str = ..., avatar_data: typing.Optional[conversions.FileLikeT] = ...,
-    ) -> users.MyUser:
+    async def update_me(self, *, username: str = ..., avatar: typing.Optional[files.File] = ...,) -> users.MyUser:
         """Edit the current user.
 
         Parameters
         ----------
         username : str
             If specified, the new username string.
-        avatar_data : hikari.internal.conversions.FileLikeT, optional
+        avatar : :obj:`~hikari.files.File`, optional
             If specified, the new avatar image data.
             If it is None, the avatar is removed.
 
@@ -72,8 +70,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             If you pass username longer than the limit (`2-32`) or an invalid image.
         """
         payload = await self._session.modify_current_user(
-            username=username,
-            avatar=conversions.get_bytes_from_resource(avatar_data) if avatar_data is not ... else ...,
+            username=username, avatar=await avatar.read_all() if avatar is not ... else ...,
         )
         return users.MyUser.deserialize(payload)
 

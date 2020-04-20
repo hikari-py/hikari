@@ -19,7 +19,6 @@
 import concurrent.futures
 import datetime
 import inspect
-import io
 import typing
 
 import mock
@@ -188,19 +187,6 @@ def test_parse_unix_epoch_to_datetime():
 
 
 @pytest.mark.parametrize(
-    ["input_arg", "expected_result_type"],
-    [
-        ("hello", io.StringIO),
-        (b"hello", io.BytesIO),
-        (bytearray("hello", "utf-8"), io.BytesIO),
-        (memoryview(b"hello"), io.BytesIO),
-    ],
-)
-def test_make_resource_seekable(input_arg, expected_result_type):
-    assert isinstance(conversions.make_resource_seekable(input_arg), expected_result_type)
-
-
-@pytest.mark.parametrize(
     ["count", "name", "kwargs", "expect"],
     [
         (0, "foo", {}, "0 foos"),
@@ -276,21 +262,3 @@ class TestSnoopTypeHints:
             conversions.snoop_typehint_from_scope(frame, attr)
         finally:
             del frame
-
-
-@pytest.mark.parametrize(
-    "input",
-    [
-        b"hello",
-        bytearray("hello", "utf-8"),
-        memoryview(b"hello"),
-        io.BytesIO(b"hello"),
-        mock.MagicMock(io.BufferedRandom, read=mock.MagicMock(return_value=b"hello")),
-        mock.MagicMock(io.BufferedReader, read=mock.MagicMock(return_value=b"hello")),
-        mock.MagicMock(io.BufferedRWPair, read=mock.MagicMock(return_value=b"hello")),
-    ],
-)
-def test_get_bytes_from_resource(input):
-    assert conversions.get_bytes_from_resource(input) == b"hello"
-    if isinstance(input, mock.MagicMock):
-        input.read.assert_called_once()
