@@ -44,6 +44,17 @@ def test_assert_not_none_when_not_none(arg):
 
 
 @_helpers.assert_does_not_raise(type_=ValueError)
+def test_assert_none_when_none():
+    assertions.assert_none(None)
+
+
+@_helpers.assert_raises(type_=ValueError)
+@pytest.mark.parametrize("arg", [9, "foo", False, 0, 0.0, "", [], {}, set(), ..., NotImplemented])
+def test_assert_none_when_not_none(arg):
+    assertions.assert_none(arg)
+
+
+@_helpers.assert_does_not_raise(type_=ValueError)
 @pytest.mark.parametrize(
     ["min_r", "max_r", "test"],
     [

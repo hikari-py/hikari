@@ -27,6 +27,7 @@ import mock
 import pytest
 
 from hikari import errors
+from hikari import files
 from hikari.internal import conversions
 from hikari.net import ratelimits
 from hikari.net import rest
@@ -393,49 +394,6 @@ class TestLowLevelRestfulClient:
             )
 
     @pytest.mark.asyncio
-    async def test__request_resets_seek_on_seekable_resources(
-        self, compiled_route, exit_error, rest_impl_with__request
-    ):
-        class SeekableResource:
-            seeked: bool
-            pos: int
-            initial_pos: int
-
-            def __init__(self, pos):
-                self.pos = pos
-                self.initial_pos = pos
-                self.seeked = False
-
-            def seek(self, pos):
-                self.seeked = True
-                self.pos = pos
-
-            def tell(self):
-                return self.pos
-
-            def assert_seek_called(self):
-                assert self.seeked
-
-            def read(self):
-                ...
-
-            def close(self):
-                ...
-
-        rest_impl_with__request.logger.debug.side_effect = exit_error
-        seekable_resources = [SeekableResource(5), SeekableResource(37), SeekableResource(16)]
-
-        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            try:
-                await rest_impl_with__request._request(compiled_route, re_seekable_resources=seekable_resources)
-            except exit_error:
-                pass
-
-            for resource in seekable_resources:
-                resource.assert_seek_called()
-                assert resource.pos == resource.initial_pos
-
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "content_type", ["text/plain", "text/html"],
     )
@@ -738,30 +696,27 @@ class TestLowLevelRestfulClient:
         mock_route = mock.MagicMock(routes.CHANNEL_MESSAGE)
         mock_form = mock.MagicMock(aiohttp.FormData, add_field=mock.MagicMock())
         with mock.patch.object(routes, "CHANNEL_MESSAGES", compile=mock.MagicMock(return_value=mock_route)):
-            with mock.patch.object(aiohttp, "FormData", autospec=True, return_value=mock_form):
+            with mock.patch.object(aiohttp, "FormData", return_value=mock_form):
                 assert await rest_impl.create_message("22222222") is mock_response
                 routes.CHANNEL_MESSAGES.compile.assert_called_once_with(rest_impl.POST, channel_id="22222222")
                 mock_form.add_field.assert_called_once_with(
                     "payload_json", json.dumps({}), content_type="application/json"
                 )
-        rest_impl._request.assert_called_once_with(mock_route, form_body=mock_form, re_seekable_resources=[])
+        rest_impl._request.assert_called_once_with(mock_route, form_body=mock_form)
 
     @pytest.mark.asyncio
     @mock.patch.object(routes, "CHANNEL_MESSAGES")
-    @mock.patch.object(aiohttp, "FormData", autospec=True)
-    @mock.patch.object(conversions, "make_resource_seekable")
+    @mock.patch.object(aiohttp, "FormData")
     @mock.patch.object(json, "dumps")
-    async def test_create_message_with_optionals(
-        self, dumps, make_resource_seekable, FormData, CHANNEL_MESSAGES, rest_impl
-    ):
+    async def test_create_message_with_optionals(self, dumps, FormData, CHANNEL_MESSAGES, rest_impl):
         mock_response = {"content": "nyaa, nyaa, nyaa."}
         rest_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_MESSAGE)
         CHANNEL_MESSAGES.compile.return_value = mock_route
         mock_form = mock.MagicMock(aiohttp.FormData, add_field=mock.MagicMock())
         FormData.return_value = mock_form
-        mock_file = mock.MagicMock(io.BytesIO)
-        make_resource_seekable.return_value = mock_file
+        mock_file = mock.MagicMock(files.File)
+        mock_file.name = "file.txt"
         mock_json = '{"description": "I am a message", "tts": "True"}'
         dumps.return_value = mock_json
 
@@ -770,13 +725,12 @@ class TestLowLevelRestfulClient:
             content="I am a message",
             nonce="ag993okskm_cdolsio",
             tts=True,
-            files=[("file.txt", b"okdsio9u8oij32")],
+            files=[mock_file],
             embed={"description": "I am an embed"},
             allowed_mentions={"users": ["123"], "roles": ["456"]},
         )
         assert result is mock_response
         CHANNEL_MESSAGES.compile.assert_called_once_with(rest_impl.POST, channel_id="22222222")
-        make_resource_seekable.assert_called_once_with(b"okdsio9u8oij32")
         dumps.assert_called_once_with(
             {
                 "tts": True,
@@ -795,7 +749,7 @@ class TestLowLevelRestfulClient:
             any_order=True,
         )
         assert mock_form.add_field.call_count == 2
-        rest_impl._request.assert_called_once_with(mock_route, form_body=mock_form, re_seekable_resources=[mock_file])
+        rest_impl._request.assert_called_once_with(mock_route, form_body=mock_form)
 
     @pytest.mark.asyncio
     async def test_create_reaction(self, rest_impl):
@@ -2111,7 +2065,7 @@ class TestLowLevelRestfulClient:
         mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
         rest_impl._request.return_value = None
         mock_json = "{}"
-        with mock.patch.object(aiohttp, "FormData", autospec=True, return_value=mock_form):
+        with mock.patch.object(aiohttp, "FormData", return_value=mock_form):
             with mock.patch.object(routes, "WEBHOOK_WITH_TOKEN", compile=mock.MagicMock(return_value=mock_route)):
                 with mock.patch.object(json, "dumps", return_value=mock_json):
                     assert await rest_impl.execute_webhook("9393939", "a_webhook_token") is None
@@ -2121,25 +2075,22 @@ class TestLowLevelRestfulClient:
                     json.dumps.assert_called_once_with({})
         mock_form.add_field.assert_called_once_with("payload_json", mock_json, content_type="application/json")
         rest_impl._request.assert_called_once_with(
-            mock_route, form_body=mock_form, re_seekable_resources=[], query={}, suppress_authorization_header=True,
+            mock_route, form_body=mock_form, query={}, suppress_authorization_header=True,
         )
 
     @pytest.mark.asyncio
-    @mock.patch.object(aiohttp, "FormData", autospec=True)
+    @mock.patch.object(aiohttp, "FormData")
     @mock.patch.object(routes, "WEBHOOK_WITH_TOKEN")
     @mock.patch.object(json, "dumps")
-    @mock.patch.object(conversions, "make_resource_seekable")
-    async def test_execute_webhook_with_optionals(
-        self, make_resource_seekable, dumps, WEBHOOK_WITH_TOKEN, FormData, rest_impl
-    ):
+    async def test_execute_webhook_with_optionals(self, dumps, WEBHOOK_WITH_TOKEN, FormData, rest_impl):
         mock_form = mock.MagicMock(aiohttp.FormData, add_field=mock.MagicMock())
         FormData.return_value = mock_form
         mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
         WEBHOOK_WITH_TOKEN.compile.return_value = mock_route
         mock_response = {"id": "53", "content": "la"}
         rest_impl._request.return_value = mock_response
-        mock_bytes = mock.MagicMock(io.BytesIO)
-        make_resource_seekable.return_value = mock_bytes
+        mock_file = mock.MagicMock(files.File)
+        mock_file.name = "file.txt"
         mock_json = '{"content": "A messages", "username": "agent 42"}'
         dumps.return_value = mock_json
         response = await rest_impl.execute_webhook(
@@ -2150,12 +2101,11 @@ class TestLowLevelRestfulClient:
             avatar_url="https://localhost.bump",
             tts=True,
             wait=True,
-            file=("file.txt", b"4444ididid"),
+            file=mock_file,
             embeds=[{"type": "rich", "description": "A DESCRIPTION"}],
             allowed_mentions={"users": ["123"], "roles": ["456"]},
         )
         assert response is mock_response
-        make_resource_seekable.assert_called_once_with(b"4444ididid")
         routes.WEBHOOK_WITH_TOKEN.compile.assert_called_once_with(
             rest_impl.POST, webhook_id="9393939", webhook_token="a_webhook_token"
         )
@@ -2174,15 +2124,11 @@ class TestLowLevelRestfulClient:
         mock_form.add_field.assert_has_calls(
             (
                 mock.call("payload_json", mock_json, content_type="application/json"),
-                mock.call("file", mock_bytes, filename="file.txt", content_type="application/octet-stream"),
+                mock.call("file", mock_file, filename="file.txt", content_type="application/octet-stream"),
             ),
             any_order=True,
         )
 
         rest_impl._request.assert_called_once_with(
-            mock_route,
-            form_body=mock_form,
-            re_seekable_resources=[mock_bytes],
-            query={"wait": "True"},
-            suppress_authorization_header=True,
+            mock_route, form_body=mock_form, query={"wait": "True"}, suppress_authorization_header=True,
         )

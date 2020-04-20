@@ -33,6 +33,7 @@ import uuid
 import aiohttp.typedefs
 
 from hikari import errors
+from hikari import files as _files
 from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import more_collections
@@ -275,7 +276,6 @@ class REST:
         form_body: typing.Optional[aiohttp.FormData] = None,
         json_body: typing.Optional[typing.Union[typing.Dict[str, typing.Any], typing.Sequence[typing.Any]]] = None,
         reason: str = ...,
-        re_seekable_resources: typing.Collection[conversions.Seekable] = more_collections.EMPTY_COLLECTION,
         suppress_authorization_header: bool = False,
         **kwargs,
     ) -> typing.Union[typing.Dict[str, typing.Any], typing.Sequence[typing.Any], None]:
@@ -301,14 +301,7 @@ class REST:
 
         backoff = ratelimits.ExponentialBackOff()
 
-        seeks = {r.tell(): r for r in re_seekable_resources}
-
         while True:
-            # If we are uploading files with io objects in a form body, we need to reset the seeks to 0 to ensure
-            # we can re-read the buffer.
-            for pos, r in seeks.items():
-                r.seek(pos)
-
             # Aids logging when lots of entries are being logged at once by matching a unique UUID
             # between the request and response
             request_uuid = uuid.uuid4()
@@ -744,7 +737,7 @@ class REST:
         content: str = ...,
         nonce: str = ...,
         tts: bool = ...,
-        files: typing.Sequence[typing.Tuple[str, conversions.FileLikeT]] = ...,
+        files: typing.Sequence[_files.File] = ...,
         embed: typing.Dict[str, typing.Any] = ...,
         allowed_mentions: typing.Dict[str, typing.Any] = ...,
     ) -> typing.Dict[str, typing.Any]:
@@ -762,12 +755,10 @@ class REST:
             and can usually be ignored.
         tts : bool
             If specified, whether the message will be sent as a TTS message.
-        files : typing.Sequence [ typing.Tuple [ str, io.IOBase ] ]
-            If specified, this should be a list of between `1` and `5` tuples.
-            Each tuple should consist of the file name, and either
-            raw `bytes` or an `io.IOBase` derived object with
-            a seek that points to a buffer containing said file.
-        embed : typing.Dict [ str, typing.Any ]
+        files : :obj:`~typing.Sequence` [ :obj:`~hikari.files.File` ]
+            If specified, this should be a list of between ``1`` and ``5`` file
+            objects to upload. Each should have a unique name.
+        embed : :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
             If specified, the embed to send with the message.
         allowed_mentions : typing.Dict [ str, typing.Any ]
             If specified, the mentions to parse from the `content`.
@@ -804,15 +795,15 @@ class REST:
 
         form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
 
-        re_seekable_resources = []
-        if files is not ...:
-            for i, (file_name, file) in enumerate(files):
-                file = conversions.make_resource_seekable(file)
-                re_seekable_resources.append(file)
-                form.add_field(f"file{i}", file, filename=file_name, content_type="application/octet-stream")
+        if files is ...:
+            files = more_collections.EMPTY_SEQUENCE
+
+        for i, file in enumerate(files):
+            form.add_field(f"file{i}", file, filename=file.name, content_type="application/octet-stream")
 
         route = routes.CHANNEL_MESSAGES.compile(self.POST, channel_id=channel_id)
-        return await self._request(route, form_body=form, re_seekable_resources=re_seekable_resources)
+
+        return await self._request(route, form_body=form)
 
     async def create_reaction(self, channel_id: str, message_id: str, emoji: str) -> None:
         """Add a reaction to the given message in the given channel.
@@ -3104,7 +3095,7 @@ class REST:
         avatar_url: str = ...,
         tts: bool = ...,
         wait: bool = ...,
-        file: typing.Tuple[str, conversions.FileLikeT] = ...,
+        file: _files.File = ...,
         embeds: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
         allowed_mentions: typing.Dict[str, typing.Any] = ...,
     ) -> typing.Optional[typing.Dict[str, typing.Any]]:
@@ -3129,10 +3120,8 @@ class REST:
         wait : bool
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
-        file : typing.Tuple [ str, io.IOBase ]
-            If specified, a tuple of the file name and either raw `bytes`
-            or a `io.IOBase` derived object that points to a buffer
-            containing said file.
+        file : hikari.files.File
+            An optional file object to upload.
         embeds : typing.Sequence [typing.Dict [ str, typing.Any ]]
             If specified, the sequence of embed objects that will be sent
             with this message.
@@ -3176,24 +3165,13 @@ class REST:
         form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
 
         if file is not ...:
-            file_name, file = file
-            file = conversions.make_resource_seekable(file)
-            re_seekable_resources = [file]
-            form.add_field("file", file, filename=file_name, content_type="application/octet-stream")
-        else:
-            re_seekable_resources = []
+            form.add_field("file", file, filename=file.name, content_type="application/octet-stream")
 
         query = {}
         conversions.put_if_specified(query, "wait", wait, str)
 
         route = routes.WEBHOOK_WITH_TOKEN.compile(self.POST, webhook_id=webhook_id, webhook_token=webhook_token)
-        return await self._request(
-            route,
-            form_body=form,
-            re_seekable_resources=re_seekable_resources,
-            query=query,
-            suppress_authorization_header=True,
-        )
+        return await self._request(route, form_body=form, query=query, suppress_authorization_header=True)
 
     ##########
     # OAUTH2 #

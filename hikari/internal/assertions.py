@@ -25,6 +25,7 @@ conditions that might break the function or cause it to misbehave.
 __all__ = [
     "assert_that",
     "assert_not_none",
+    "assert_none",
     "assert_in_range",
     "assert_is_int_power",
 ]
@@ -52,6 +53,16 @@ def assert_not_none(value: ValueT, message: typing.Optional[str] = None) -> Valu
     """
     if value is None:
         raise ValueError(message or "value must not be None")
+    return value
+
+
+def assert_none(value: ValueT, message: typing.Optional[str] = None) -> ValueT:
+    """If the given value is not :obj:`~None`, raise a :obj:`~ValueError`.
+
+    Will be raised with the optional description if provided.
+    """
+    if value is not None:
+        raise ValueError(message or "value must be None")
     return value
 
 
