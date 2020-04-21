@@ -19,6 +19,7 @@
 """Core errors that may be raised by this API implementation."""
 __all__ = [
     "HikariError",
+    "HikariWarning",
     "NotFoundHTTPError",
     "UnauthorizedHTTPError",
     "BadRequestHTTPError",
@@ -46,11 +47,24 @@ from hikari.net import routes
 class HikariError(RuntimeError):
     """Base for an error raised by this API.
 
-    Any should derive from this.
+    Any exceptions should derive from this.
 
     Note
     ----
     You should never initialize this exception directly.
+    """
+
+    __slots__ = ()
+
+
+class HikariWarning(RuntimeWarning):
+    """Base for a warning raised by this API.
+
+    Any warnings should derive from this.
+
+    Note
+    ----
+    You should never initialize this warning directly.
     """
 
     __slots__ = ()
@@ -403,3 +417,10 @@ class NotFoundHTTPError(ClientHTTPError):
         json_code: typing.Optional[typing.Union[codes.JSONErrorCode, int]],
     ) -> None:
         super().__init__(codes.HTTPStatusCode.NOT_FOUND, route, message, json_code)
+
+
+class IntentWarning(HikariWarning):
+    """Warning raised when subscribing to an event that cannot be fired.
+
+    This is caused by your application missing certain intents.
+    """

@@ -26,7 +26,7 @@ from hikari import emojis
 from hikari import messages
 from hikari import users
 from hikari.clients.rest import react
-from hikari.internal import pagination
+from hikari.internal import helpers
 from hikari.net import rest
 from tests.hikari import _helpers
 
@@ -96,10 +96,10 @@ class TestRESTReactionLogic:
     @_helpers.parametrize_valid_id_formats_for_models("user", 140502780547694592, users.User)
     def test_fetch_reactors_after_with_optionals(self, rest_reaction_logic_impl, message, channel, emoji, user):
         mock_generator = mock.AsyncMock()
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             result = rest_reaction_logic_impl.fetch_reactors_after(channel, message, emoji, after=user, limit=47)
             assert result is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 channel_id="123",
                 message_id="432",
                 emoji="tutu1:456371206225002499",
@@ -118,9 +118,9 @@ class TestRESTReactionLogic:
     )
     def test_fetch_reactors_after_without_optionals(self, rest_reaction_logic_impl, message, channel, emoji):
         mock_generator = mock.AsyncMock()
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_reaction_logic_impl.fetch_reactors_after(channel, message, emoji) is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 channel_id="123",
                 message_id="432",
                 emoji="tutu1:456371206225002499",
@@ -135,10 +135,10 @@ class TestRESTReactionLogic:
     def test_fetch_reactors_after_with_datetime_object(self, rest_reaction_logic_impl):
         mock_generator = mock.AsyncMock()
         date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             result = rest_reaction_logic_impl.fetch_reactors_after(123, 432, "tutu1:456371206225002499", after=date)
             assert result is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 channel_id="123",
                 message_id="432",
                 emoji="tutu1:456371206225002499",

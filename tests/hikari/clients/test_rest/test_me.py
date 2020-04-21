@@ -23,13 +23,14 @@ import io
 import mock
 import pytest
 
+from hikari.internal import helpers
 from hikari import channels
 from hikari import guilds
 from hikari import applications
 from hikari import users
 from hikari.clients.rest import me
 from hikari.internal import conversions
-from hikari.internal import pagination
+from hikari.internal import helpers
 from hikari.net import rest
 from tests.hikari import _helpers
 
@@ -96,9 +97,9 @@ class TestRESTInviteLogic:
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
     def test_fetch_my_guilds_after_with_optionals(self, rest_clients_impl, guild):
         mock_generator = mock.AsyncMock()
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_clients_impl.fetch_my_guilds_after(after=guild, limit=50) is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 deserializer=applications.OwnGuild.deserialize,
                 direction="after",
                 request=rest_clients_impl._session.get_current_user_guilds,
@@ -109,9 +110,9 @@ class TestRESTInviteLogic:
 
     def test_fetch_my_guilds_after_without_optionals(self, rest_clients_impl):
         mock_generator = mock.AsyncMock()
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_clients_impl.fetch_my_guilds_after() is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 deserializer=applications.OwnGuild.deserialize,
                 direction="after",
                 request=rest_clients_impl._session.get_current_user_guilds,
@@ -123,9 +124,9 @@ class TestRESTInviteLogic:
     def test_fetch_my_guilds_after_with_datetime_object(self, rest_clients_impl):
         mock_generator = mock.AsyncMock()
         date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_clients_impl.fetch_my_guilds_after(after=date) is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 deserializer=applications.OwnGuild.deserialize,
                 direction="after",
                 request=rest_clients_impl._session.get_current_user_guilds,
@@ -137,9 +138,9 @@ class TestRESTInviteLogic:
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
     def test_fetch_my_guilds_before_with_optionals(self, rest_clients_impl, guild):
         mock_generator = mock.AsyncMock()
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_clients_impl.fetch_my_guilds_before(before=guild, limit=50) is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 deserializer=applications.OwnGuild.deserialize,
                 direction="before",
                 request=rest_clients_impl._session.get_current_user_guilds,
@@ -150,9 +151,9 @@ class TestRESTInviteLogic:
 
     def test_fetch_my_guilds_before_without_optionals(self, rest_clients_impl):
         mock_generator = mock.AsyncMock()
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_clients_impl.fetch_my_guilds_before() is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 deserializer=applications.OwnGuild.deserialize,
                 direction="before",
                 request=rest_clients_impl._session.get_current_user_guilds,
@@ -164,9 +165,9 @@ class TestRESTInviteLogic:
     def test_fetch_my_guilds_before_with_datetime_object(self, rest_clients_impl):
         mock_generator = mock.AsyncMock()
         date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_clients_impl.fetch_my_guilds_before(before=date) is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 deserializer=applications.OwnGuild.deserialize,
                 direction="before",
                 request=rest_clients_impl._session.get_current_user_guilds,
