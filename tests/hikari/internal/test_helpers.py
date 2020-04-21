@@ -19,14 +19,104 @@
 import mock
 import pytest
 
-from hikari.internal import pagination
+from hikari.internal import helpers
+from hikari import guilds
+from hikari import users
+from tests.hikari import _helpers
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "expected_result"),
+    [
+        (
+            {"mentions_everyone": True, "user_mentions": True, "role_mentions": True},
+            {"parse": ["everyone", "users", "roles"]},
+        ),
+        (
+            {"mentions_everyone": False, "user_mentions": False, "role_mentions": False},
+            {"parse": [], "users": [], "roles": []},
+        ),
+        (
+            {"mentions_everyone": True, "user_mentions": ["1123123"], "role_mentions": True},
+            {"parse": ["everyone", "roles"], "users": ["1123123"]},
+        ),
+        (
+            {"mentions_everyone": True, "user_mentions": True, "role_mentions": ["1231123"]},
+            {"parse": ["everyone", "users"], "roles": ["1231123"]},
+        ),
+        (
+            {"mentions_everyone": False, "user_mentions": ["1123123"], "role_mentions": True},
+            {"parse": ["roles"], "users": ["1123123"]},
+        ),
+        (
+            {"mentions_everyone": False, "user_mentions": True, "role_mentions": ["1231123"]},
+            {"parse": ["users"], "roles": ["1231123"]},
+        ),
+        (
+            {"mentions_everyone": False, "user_mentions": ["1123123"], "role_mentions": False},
+            {"parse": [], "roles": [], "users": ["1123123"]},
+        ),
+        (
+            {"mentions_everyone": False, "user_mentions": False, "role_mentions": ["1231123"]},
+            {"parse": [], "roles": ["1231123"], "users": []},
+        ),
+        (
+            {"mentions_everyone": False, "user_mentions": ["22222"], "role_mentions": ["1231123"]},
+            {"parse": [], "users": ["22222"], "roles": ["1231123"]},
+        ),
+        (
+            {"mentions_everyone": True, "user_mentions": ["22222"], "role_mentions": ["1231123"]},
+            {"parse": ["everyone"], "users": ["22222"], "roles": ["1231123"]},
+        ),
+    ],
+)
+def test_generate_allowed_mentions(kwargs, expected_result):
+    assert helpers.generate_allowed_mentions(**kwargs) == expected_result
+
+
+@_helpers.parametrize_valid_id_formats_for_models("role", 3, guilds.GuildRole)
+def test_generate_allowed_mentions_removes_duplicate_role_ids(role):
+    result = helpers.generate_allowed_mentions(
+        role_mentions=["1", "2", "1", "3", "5", "7", "2", role], user_mentions=True, mentions_everyone=True
+    )
+    assert result == {"roles": ["1", "2", "3", "5", "7"], "parse": ["everyone", "users"]}
+
+
+@_helpers.parametrize_valid_id_formats_for_models("user", 3, users.User)
+def test_generate_allowed_mentions_removes_duplicate_user_ids(user):
+    result = helpers.generate_allowed_mentions(
+        role_mentions=True, user_mentions=["1", "2", "1", "3", "5", "7", "2", user], mentions_everyone=True
+    )
+    assert result == {"users": ["1", "2", "3", "5", "7"], "parse": ["everyone", "roles"]}
+
+
+@_helpers.parametrize_valid_id_formats_for_models("role", 190007233919057920, guilds.GuildRole)
+def test_generate_allowed_mentions_handles_all_role_formats(role):
+    result = helpers.generate_allowed_mentions(role_mentions=[role], user_mentions=True, mentions_everyone=True)
+    assert result == {"roles": ["190007233919057920"], "parse": ["everyone", "users"]}
+
+
+@_helpers.parametrize_valid_id_formats_for_models("user", 190007233919057920, users.User)
+def test_generate_allowed_mentions_handles_all_user_formats(user):
+    result = helpers.generate_allowed_mentions(role_mentions=True, user_mentions=[user], mentions_everyone=True)
+    assert result == {"users": ["190007233919057920"], "parse": ["everyone", "roles"]}
+
+
+@_helpers.assert_raises(type_=ValueError)
+def test_generate_allowed_mentions_raises_error_on_too_many_roles():
+    helpers.generate_allowed_mentions(user_mentions=False, role_mentions=list(range(101)), mentions_everyone=False)
+
+
+@_helpers.assert_raises(type_=ValueError)
+def test_generate_allowed_mentions_raises_error_on_too_many_users():
+    helpers.generate_allowed_mentions(user_mentions=list(range(101)), role_mentions=False, mentions_everyone=False)
 
 
 @pytest.mark.asyncio
 async def test__pagination_handler_ends_handles_empty_resource():
     mock_deserialize = mock.MagicMock()
     mock_request = mock.AsyncMock(side_effect=[[]])
-    async for _ in pagination.pagination_handler(
+    async for _ in helpers.pagination_handler(
         random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
@@ -49,7 +139,7 @@ async def test__pagination_handler_ends_without_limit_with_start():
     mock_deserialize = mock.MagicMock(side_effect=mock_models)
     mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
     results = []
-    async for result in pagination.pagination_handler(
+    async for result in helpers.pagination_handler(
         random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
@@ -78,7 +168,7 @@ async def test__pagination_handler_ends_without_limit_without_start():
     mock_deserialize = mock.MagicMock(side_effect=mock_models)
     mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
     results = []
-    async for result in pagination.pagination_handler(
+    async for result in helpers.pagination_handler(
         random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
@@ -107,7 +197,7 @@ async def test__pagination_handler_tracks_ends_when_hits_limit():
     mock_deserialize = mock.MagicMock(side_effect=mock_models)
     mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
     results = []
-    async for result in pagination.pagination_handler(
+    async for result in helpers.pagination_handler(
         random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
@@ -129,7 +219,7 @@ async def test__pagination_handler_tracks_ends_when_limit_set_but_exhausts_reque
     mock_deserialize = mock.MagicMock(side_effect=mock_models)
     mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
     results = []
-    async for result in pagination.pagination_handler(
+    async for result in helpers.pagination_handler(
         random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
@@ -158,7 +248,7 @@ async def test__pagination_handler_reverses_data_when_reverse_is_true():
     mock_deserialize = mock.MagicMock(side_effect=mock_models)
     mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
     results = []
-    async for result in pagination.pagination_handler(
+    async for result in helpers.pagination_handler(
         random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
@@ -187,7 +277,7 @@ async def test__pagination_handler_id_getter():
     mock_deserialize = mock.MagicMock(side_effect=mock_models)
     mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
     results = []
-    async for result in pagination.pagination_handler(
+    async for result in helpers.pagination_handler(
         random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
@@ -212,7 +302,7 @@ async def test__pagination_handler_id_getter():
 async def test__pagination_handler_handles_no_initial_data():
     mock_deserialize = mock.MagicMock()
     mock_request = mock.AsyncMock(side_effect=[[]])
-    async for _ in pagination.pagination_handler(
+    async for _ in helpers.pagination_handler(
         random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",

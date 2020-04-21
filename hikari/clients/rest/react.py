@@ -30,7 +30,7 @@ from hikari import emojis
 from hikari import messages as _messages
 from hikari import users
 from hikari.clients.rest import base
-from hikari.internal import pagination
+from hikari.internal import helpers
 
 
 class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
@@ -238,7 +238,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             after = str(bases.Snowflake.from_datetime(after))
         else:
             after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
-        return pagination.pagination_handler(
+        return helpers.pagination_handler(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
             emoji=getattr(emoji, "url_name", emoji),

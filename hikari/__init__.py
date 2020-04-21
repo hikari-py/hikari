@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Hikari's models framework for writing Discord bots in Python."""
+from hikari import applications
 from hikari import audit_logs
 from hikari import bases
 from hikari import channels
@@ -33,7 +34,6 @@ from hikari import intents
 from hikari import invites
 from hikari import messages
 from hikari import net
-from hikari import applications
 from hikari import permissions
 from hikari import state
 from hikari import users
@@ -45,6 +45,7 @@ from hikari._about import __email__
 from hikari._about import __license__
 from hikari._about import __url__
 from hikari._about import __version__
+from hikari.applications import *
 from hikari.audit_logs import *
 from hikari.bases import *
 from hikari.channels import *
@@ -60,7 +61,6 @@ from hikari.intents import *
 from hikari.invites import *
 from hikari.messages import *
 from hikari.net import *
-from hikari.applications import *
 from hikari.permissions import *
 from hikari.state import *
 from hikari.unset import *

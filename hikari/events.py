@@ -65,25 +65,28 @@ __all__ = [
     "WebhookUpdateEvent",
 ]
 
+import abc
 import datetime
 import typing
 
 import attr
 
+from hikari import applications
 from hikari import bases
 from hikari import channels
 from hikari import embeds as _embeds
 from hikari import emojis as _emojis
 from hikari import guilds
+from hikari import intents
 from hikari import invites
 from hikari import messages
-from hikari import applications
 from hikari import unset
 from hikari import users
 from hikari import voices
 from hikari.clients import shards
 from hikari.internal import conversions
 from hikari.internal import marshaller
+from hikari.internal import more_collections
 
 T_contra = typing.TypeVar("T_contra", contravariant=True)
 
@@ -91,12 +94,57 @@ T_contra = typing.TypeVar("T_contra", contravariant=True)
 # Base event, is not deserialized
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class HikariEvent(bases.HikariEntity):
+class HikariEvent(bases.HikariEntity, abc.ABC):
     """The base class that all events inherit from."""
 
 
+_HikariEventT = typing.TypeVar("_HikariEventT", contravariant=True)
+
+_REQUIRED_INTENTS_ATTR: typing.Final[str] = "___required_intents___"
+
+
+def get_required_intents_for(event_type: typing.Type[HikariEvent]) -> typing.Collection[intents.Intent]:
+    """Retrieve the intents that are required to listen to an event type.
+
+    Parameters
+    ----------
+    event_type : :obj:`~typing.Type` [ :obj:`~HikariEvent` ]
+        The event type to get required intents for.
+
+    Returns
+    -------
+    :obj:`~typing.Collection` [ :obj:`~hikari.intents.Intent` ]
+        Collection of acceptable subset combinations of intent needed to
+        be able to receive the given event type.
+    """
+    return getattr(event_type, _REQUIRED_INTENTS_ATTR, more_collections.EMPTY_COLLECTION)
+
+
+def requires_intents(
+    first: intents.Intent, *rest: intents.Intent
+) -> typing.Callable[[typing.Type[_HikariEventT]], typing.Type[_HikariEventT]]:
+    """Decorate an event type to define what intents it requires.
+
+    Parameters
+    ----------
+    first : :obj:`~hikari.intents.Intent`
+        First combination of intents that are acceptable in order to receive
+        the decorated event type.
+    *rest : :obj:`~hikari.intents.Intent`
+        Zero or more additional combinations of intents to require for this
+        event to be subscribed to.
+
+    """
+
+    def decorator(cls: typing.Type[_HikariEventT]) -> typing.Type[_HikariEventT]:
+        cls.___required_intents___ = [first, *rest]
+        return cls
+
+    return decorator
+
+
 # Synthetic event, is not deserialized, and is produced by the dispatcher.
-@attr.attrs(slots=True, auto_attribs=True)
+@attr.s(slots=True, auto_attribs=True)
 class ExceptionEvent(HikariEvent):
     """Descriptor for an exception thrown while processing an event."""
 
@@ -117,25 +165,25 @@ class ExceptionEvent(HikariEvent):
 
 
 # Synthetic event, is not deserialized
-@attr.attrs(slots=True, auto_attribs=True)
+@attr.s(slots=True, auto_attribs=True)
 class StartingEvent(HikariEvent):
     """Event that is fired before the gateway client starts all shards."""
 
 
 # Synthetic event, is not deserialized
-@attr.attrs(slots=True, auto_attribs=True)
+@attr.s(slots=True, auto_attribs=True)
 class StartedEvent(HikariEvent):
     """Event that is fired when the gateway client starts all shards."""
 
 
 # Synthetic event, is not deserialized
-@attr.attrs(slots=True, auto_attribs=True)
+@attr.s(slots=True, auto_attribs=True)
 class StoppingEvent(HikariEvent):
     """Event that is fired when the gateway client is instructed to disconnect all shards."""
 
 
 # Synthetic event, is not deserialized
-@attr.attrs(slots=True, auto_attribs=True)
+@attr.s(slots=True, auto_attribs=True)
 class StoppedEvent(HikariEvent):
     """Event that is fired when the gateway client has finished disconnecting all shards."""
 
@@ -226,9 +274,10 @@ class ReadyEvent(HikariEvent, marshaller.Deserializable):
         return self._shard_information[1] if self._shard_information else None
 
 
+@requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class BaseChannelEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
+class BaseChannelEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable, abc.ABC):
     """A base object that Channel events will inherit from."""
 
     #: The channel's type.
@@ -349,6 +398,7 @@ class BaseChannelEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializabl
     )
 
 
+@requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class ChannelCreateEvent(BaseChannelEvent):
@@ -359,18 +409,21 @@ class ChannelCreateEvent(BaseChannelEvent):
     """
 
 
+@requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class ChannelUpdateEvent(BaseChannelEvent):
     """Represents Channel Update gateway events."""
 
 
+@requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class ChannelDeleteEvent(BaseChannelEvent):
     """Represents Channel Delete gateway events."""
 
 
+@requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class ChannelPinUpdateEvent(HikariEvent, marshaller.Deserializable):
@@ -402,6 +455,7 @@ class ChannelPinUpdateEvent(HikariEvent, marshaller.Deserializable):
     )
 
 
+@requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildCreateEvent(HikariEvent, marshaller.Deserializable):
@@ -412,12 +466,14 @@ class GuildCreateEvent(HikariEvent, marshaller.Deserializable):
     """
 
 
+@requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildUpdateEvent(HikariEvent, marshaller.Deserializable):
     """Used to represent Guild Update gateway events."""
 
 
+@requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildLeaveEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
@@ -429,6 +485,7 @@ class GuildLeaveEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable
     """
 
 
+@requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildUnavailableEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
@@ -440,9 +497,10 @@ class GuildUnavailableEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserial
     """
 
 
+@requires_intents(intents.Intent.GUILD_BANS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class BaseGuildBanEvent(HikariEvent, marshaller.Deserializable):
+class BaseGuildBanEvent(HikariEvent, marshaller.Deserializable, abc.ABC):
     """A base object that guild ban events will inherit from."""
 
     #: The ID of the guild this ban is in.
@@ -456,18 +514,21 @@ class BaseGuildBanEvent(HikariEvent, marshaller.Deserializable):
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
 
 
+@requires_intents(intents.Intent.GUILD_BANS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildBanAddEvent(BaseGuildBanEvent):
     """Used to represent a Guild Ban Add gateway event."""
 
 
+@requires_intents(intents.Intent.GUILD_BANS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildBanRemoveEvent(BaseGuildBanEvent):
     """Used to represent a Guild Ban Remove gateway event."""
 
 
+@requires_intents(intents.Intent.GUILD_EMOJIS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildEmojisUpdateEvent(HikariEvent, marshaller.Deserializable):
@@ -486,6 +547,7 @@ class GuildEmojisUpdateEvent(HikariEvent, marshaller.Deserializable):
     )
 
 
+@requires_intents(intents.Intent.GUILD_INTEGRATIONS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildIntegrationsUpdateEvent(HikariEvent, marshaller.Deserializable):
@@ -497,6 +559,7 @@ class GuildIntegrationsUpdateEvent(HikariEvent, marshaller.Deserializable):
     guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
 
+@requires_intents(intents.Intent.GUILD_MEMBERS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildMemberAddEvent(HikariEvent, guilds.GuildMember):
@@ -508,6 +571,7 @@ class GuildMemberAddEvent(HikariEvent, guilds.GuildMember):
     guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
 
+@requires_intents(intents.Intent.GUILD_MEMBERS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildMemberUpdateEvent(HikariEvent, marshaller.Deserializable):
@@ -550,6 +614,7 @@ class GuildMemberUpdateEvent(HikariEvent, marshaller.Deserializable):
     )
 
 
+@requires_intents(intents.Intent.GUILD_MEMBERS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildMemberRemoveEvent(HikariEvent, marshaller.Deserializable):
@@ -569,6 +634,7 @@ class GuildMemberRemoveEvent(HikariEvent, marshaller.Deserializable):
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
 
 
+@requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildRoleCreateEvent(HikariEvent, marshaller.Deserializable):
@@ -585,6 +651,7 @@ class GuildRoleCreateEvent(HikariEvent, marshaller.Deserializable):
     role: guilds.GuildRole = marshaller.attrib(deserializer=guilds.GuildRole.deserialize)
 
 
+@requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildRoleUpdateEvent(HikariEvent, marshaller.Deserializable):
@@ -601,6 +668,7 @@ class GuildRoleUpdateEvent(HikariEvent, marshaller.Deserializable):
     role: guilds.GuildRole = marshaller.attrib(deserializer=guilds.GuildRole.deserialize)
 
 
+@requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildRoleDeleteEvent(HikariEvent, marshaller.Deserializable):
@@ -617,6 +685,7 @@ class GuildRoleDeleteEvent(HikariEvent, marshaller.Deserializable):
     role_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
 
+@requires_intents(intents.Intent.GUILD_INVITES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class InviteCreateEvent(HikariEvent, marshaller.Deserializable):
@@ -691,6 +760,7 @@ class InviteCreateEvent(HikariEvent, marshaller.Deserializable):
     uses: int = marshaller.attrib(deserializer=int)
 
 
+@requires_intents(intents.Intent.GUILD_INVITES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class InviteDeleteEvent(HikariEvent, marshaller.Deserializable):
@@ -718,6 +788,7 @@ class InviteDeleteEvent(HikariEvent, marshaller.Deserializable):
     )
 
 
+@requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MessageCreateEvent(HikariEvent, messages.Message):
@@ -725,6 +796,7 @@ class MessageCreateEvent(HikariEvent, messages.Message):
 
 
 # This is an arbitrarily partial version of `messages.Message`
+@requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MessageUpdateEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
@@ -915,6 +987,7 @@ class MessageUpdateEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializa
     )
 
 
+@requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MessageDeleteEvent(HikariEvent, marshaller.Deserializable):
@@ -941,6 +1014,7 @@ class MessageDeleteEvent(HikariEvent, marshaller.Deserializable):
     message_id: bases.Snowflake = marshaller.attrib(raw_name="id", deserializer=bases.Snowflake.deserialize)
 
 
+@requires_intents(intents.Intent.GUILD_MESSAGES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MessageDeleteBulkEvent(HikariEvent, marshaller.Deserializable):
@@ -970,6 +1044,7 @@ class MessageDeleteBulkEvent(HikariEvent, marshaller.Deserializable):
     )
 
 
+@requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MessageReactionAddEvent(HikariEvent, marshaller.Deserializable):
@@ -1014,6 +1089,7 @@ class MessageReactionAddEvent(HikariEvent, marshaller.Deserializable):
     )
 
 
+@requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MessageReactionRemoveEvent(HikariEvent, marshaller.Deserializable):
@@ -1050,6 +1126,7 @@ class MessageReactionRemoveEvent(HikariEvent, marshaller.Deserializable):
     )
 
 
+@requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MessageReactionRemoveAllEvent(HikariEvent, marshaller.Deserializable):
@@ -1076,6 +1153,7 @@ class MessageReactionRemoveAllEvent(HikariEvent, marshaller.Deserializable):
     )
 
 
+@requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MessageReactionRemoveEmojiEvent(HikariEvent, marshaller.Deserializable):
@@ -1109,6 +1187,7 @@ class MessageReactionRemoveEmojiEvent(HikariEvent, marshaller.Deserializable):
     )
 
 
+@requires_intents(intents.Intent.GUILD_PRESENCES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class PresenceUpdateEvent(HikariEvent, guilds.GuildMemberPresence):
@@ -1118,6 +1197,7 @@ class PresenceUpdateEvent(HikariEvent, guilds.GuildMemberPresence):
     """
 
 
+@requires_intents(intents.Intent.GUILD_MESSAGE_TYPING, intents.Intent.DIRECT_MESSAGE_TYPING)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class TypingStartEvent(HikariEvent, marshaller.Deserializable):
@@ -1169,6 +1249,7 @@ class UserUpdateEvent(HikariEvent, users.MyUser):
     """
 
 
+@requires_intents(intents.Intent.GUILD_VOICE_STATES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class VoiceStateUpdateEvent(HikariEvent, voices.VoiceState):
@@ -1203,6 +1284,7 @@ class VoiceServerUpdateEvent(HikariEvent, marshaller.Deserializable):
     endpoint: str = marshaller.attrib(deserializer=str)
 
 
+@requires_intents(intents.Intent.GUILD_WEBHOOKS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class WebhookUpdateEvent(HikariEvent, marshaller.Deserializable):

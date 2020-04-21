@@ -25,8 +25,8 @@ import typing
 
 from hikari.clients import shards
 from hikari.internal import assertions
-from hikari.state import dispatchers
 from hikari.state import consumers
+from hikari.state import dispatchers
 
 EVENT_MARKER_ATTR: typing.Final[str] = "___event_name___"
 
@@ -84,10 +84,9 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
 
     Parameters
     ----------
-    event_dispatcher_impl: :obj:`~hikari.state.event_dispatchers.EventDispatcher`, optional
+    event_dispatcher_impl: :obj:`~hikari.state.event_dispatchers.EventDispatcher`
         An implementation of event dispatcher that will store individual events
-        and manage dispatching them after this object creates them. If
-        :obj:`~None`, then a default implementation is chosen.
+        and manage dispatching them after this object creates them.
 
     Notes
     -----
@@ -134,10 +133,7 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
     create your own as needed.
     """
 
-    def __init__(self, event_dispatcher_impl: typing.Optional[EventDispatcherT] = None) -> None:
-        if event_dispatcher_impl is None:
-            event_dispatcher_impl = dispatchers.EventDispatcherImpl()
-
+    def __init__(self, event_dispatcher_impl: EventDispatcherT) -> None:
         self.logger = logging.getLogger(type(self).__qualname__)
         self.event_dispatcher = event_dispatcher_impl
         self.raw_event_mappers = {}

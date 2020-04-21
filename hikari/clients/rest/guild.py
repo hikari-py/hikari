@@ -37,7 +37,7 @@ from hikari import voices
 from hikari import webhooks
 from hikari.clients.rest import base
 from hikari.internal import conversions
-from hikari.internal import pagination
+from hikari.internal import helpers
 
 
 def _get_member_id(member: guilds.GuildMember) -> str:
@@ -882,7 +882,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
             after = str(bases.Snowflake.from_datetime(after))
         else:
             after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
-        return pagination.pagination_handler(
+        return helpers.pagination_handler(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             deserializer=guilds.GuildMember.deserialize,
             direction="after",
