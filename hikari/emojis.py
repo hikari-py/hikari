@@ -88,7 +88,7 @@ class GuildEmoji(UnknownEmoji):
 
     #: The whitelisted role IDs to use this emoji.
     #:
-    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.entities.Snowflake` ]
+    #: :type: :obj:`~typing.Set` [ :obj:`~hikari.bases.Snowflake` ]
     role_ids: typing.Set[bases.Snowflake] = marshaller.attrib(
         raw_name="roles",
         deserializer=lambda roles: {bases.Snowflake.deserialize(r) for r in roles},

@@ -60,9 +60,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the audit logs for.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the user to filter by.
         action_type : :obj:`~typing.Union` [ :obj:`~hikari.audit_logs.AuditLogEventType`, :obj:`~int` ]
             If specified, the action type to look up. Passing a raw integer
@@ -70,7 +70,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
         limit : :obj:`~int`
             If specified, the limit to apply to the number of records.
             Defaults to ``50``. Must be between ``1`` and ``100`` inclusive.
-        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.audit_logs.AuditLogEntry`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.audit_logs.AuditLogEntry`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the entry that all retrieved
             entries should have occurred befor.
 
@@ -118,13 +118,13 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The ID or object of the guild to get audit log entries for
-        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.audit_logs.AuditLogEntry`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], optional
+        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.audit_logs.AuditLogEntry`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], optional
             If specified, the ID or object of the entry or datetime to get
             entries that happened before otherwise this will start from the
             newest entry.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the user to filter by.
         action_type : :obj:`~typing.Union` [ :obj:`~hikari.audit_logs.AuditLogEventType`, :obj:`~int` ]
             If specified, the action type to look up. Passing a raw integer
@@ -179,9 +179,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the emoji from.
-        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the emoji to get.
 
         Returns
@@ -210,7 +210,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the emojis for.
 
         Returns
@@ -246,13 +246,13 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to create the emoji in.
         name : :obj:`~str`
             The new emoji's name.
         image_data : ``hikari.internal.conversions.FileLikeT``
             The ``128x128`` image data.
-        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
             If specified, a list of role objects or IDs for which the emoji
             will be whitelisted. If empty, all roles are whitelisted.
         reason : :obj:`~str`
@@ -303,14 +303,14 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to which the emoji to edit belongs to.
-        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the emoji to edit.
         name : :obj:`~str`
             If specified, a new emoji name string. Keep unspecified to leave the
             name unchanged.
-        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
             If specified, a list of objects or IDs for the new whitelisted
             roles. Set to an empty list to whitelist all roles.
             Keep unspecified to leave the same roles already set.
@@ -352,9 +352,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to delete the emoji from.
-        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.GuildEmoji`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild emoji to be deleted.
 
         Raises
@@ -449,7 +449,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get.
 
         Returns
@@ -477,7 +477,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the preview object for.
 
         Returns
@@ -524,7 +524,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to be edited.
         name : :obj:`~str`
             If specified, the new name string for the guild (``2-100`` characters).
@@ -541,17 +541,17 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
         explicit_content_filter : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildExplicitContentFilterLevel`, :obj:`~int` ]
             If specified, the new explicit content filter. Passing a raw int for
             this may lead to unexpected behaviour.
-        afk_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        afk_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             If specified, the object or ID for the new AFK voice channel.
         afk_timeout : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             If specified, the new AFK timeout seconds timedelta.
         icon_data : ``hikari.internal.conversions.FileLikeT``
             If specified, the new guild icon image file data.
-        owner : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        owner : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the new guild owner.
         splash_data : ``hikari.internal.conversions.FileLikeT``
             If specified, the new new splash image file data.
-        system_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        system_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the new system channel.
         reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
@@ -606,7 +606,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to be deleted.
 
         Raises
@@ -630,7 +630,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the channels from.
 
         Returns
@@ -672,7 +672,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to create the channel in.
         name : :obj:`~str`
             If specified, the name for the channel. This must be
@@ -706,7 +706,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
         permission_overwrites : :obj:`~typing.Sequence` [ :obj:`~hikari.channels.PermissionOverwrite` ]
             If specified, the list of permission overwrite objects that are
             category specific to replace the existing overwrites with.
-        parent_category : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildCategory`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        parent_category : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildCategory`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the parent category to set for
              the channel.
         reason : :obj:`~str`
@@ -767,12 +767,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild in which to edit the channels.
-        channel : :obj:`~typing.Tuple` [ :obj:`~int` , :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
+        channel : :obj:`~typing.Tuple` [ :obj:`~int` , :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
             The first channel to change the position of. This is a tuple of the
             integer position the channel object or ID.
-        *additional_channels : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
+        *additional_channels : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
             Optional additional channels to change the position of. These must
             be tuples of integer positions to change to and the channel object
             or ID and the.
@@ -805,9 +805,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the member from.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the member to get.
 
         Returns
@@ -846,12 +846,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the members from.
         limit : :obj:`~int`
             If specified, the maximum number of members this iterator
             should return.
-        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the user this iterator should start
             after if specified, else this will start at the oldest user.
 
@@ -908,14 +908,14 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to edit the member from.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildMember`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildMember`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the member to edit.
         nickname : :obj:`~str`, optional
             If specified, the new nickname string. Setting it to :obj:`~None`
             explicitly will clear the nickname.
-        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
+        roles : :obj:`~typing.Sequence` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
             If specified, a list of role IDs the member should have.
         mute : :obj:`~bool`
             If specified, whether the user should be muted in the voice channel
@@ -923,7 +923,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
         deaf : :obj:`~bool`
             If specified, whether the user should be deafen in the voice
             channel or not.
-        voice_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], optional
+        voice_channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildVoiceChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], optional
             If specified, the ID of the channel to move the member to. Setting
             it to :obj:`~None` explicitly will disconnect the user.
         reason : :obj:`~str`
@@ -972,7 +972,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to change the nick on.
         nickname : :obj:`~str`, optional
             The new nick string. Setting this to `None` clears the nickname.
@@ -1011,11 +1011,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the member you want to add the role to.
-        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the role you want to add.
         reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
@@ -1050,11 +1050,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the member you want to remove the role from.
-        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the role you want to remove.
         reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
@@ -1084,9 +1084,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the member you want to kick.
         reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
@@ -1115,9 +1115,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-         guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+         guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to get the ban from.
-         user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+         user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the user to get the ban information for.
 
         Returns
@@ -1147,7 +1147,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to get the bans from.
 
         Returns
@@ -1182,9 +1182,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the member belongs to.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the member you want to ban.
         delete_message_days : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             If specified, the tim delta of how many days of messages from the
@@ -1217,9 +1217,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to un-ban the user from.
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The ID of the user you want to un-ban.
         reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
@@ -1250,12 +1250,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to get the roles from.
 
         Returns
         -------
-        :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.guilds.GuildRole` ]
+        :obj:`~typing.Mapping` [ :obj:`~hikari.bases.Snowflake`, :obj:`~hikari.guilds.GuildRole` ]
             A list of role objects.
 
         Raises
@@ -1288,7 +1288,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to create the role on.
         name : :obj:`~str`
             If specified, the new role name string.
@@ -1344,12 +1344,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The ID of the guild the roles belong to.
-        role : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
+        role : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
             The first role to move. This is a tuple of the integer position and
             the role object or ID.
-        *additional_roles : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ]
+        *additional_roles : :obj:`~typing.Tuple` [ :obj:`~int`, :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ]
             Optional extra roles to move. These must be tuples of the integer
             position and the role object or ID.
 
@@ -1395,9 +1395,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild the role belong to.
-        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the role you want to edit.
         name : :obj:`~str`
             If specified, the new role's name string.
@@ -1449,9 +1449,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to remove the role from.
-        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        role : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the role you want to delete.
 
         Raises
@@ -1476,7 +1476,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to get the count for.
         days : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             The time delta of days to count prune for (at least ``1``).
@@ -1514,7 +1514,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild you want to prune member of.
         days : :obj:`~typing.Union` [ :obj:`~datetime.timedelta`, :obj:`~int` ]
             The time delta of inactivity days you want to use as filter.
@@ -1557,7 +1557,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the voice regions for.
 
         Returns
@@ -1587,7 +1587,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the invites for.
 
         Returns
@@ -1615,7 +1615,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the integrations for.
 
         Returns
@@ -1652,9 +1652,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to which the integration belongs to.
-        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the integration to update.
         expire_behaviour : :obj:`~typing.Union` [ :obj:`~hikari.guilds.IntegrationExpireBehaviour`, :obj:`~int` ]
             If specified, the behaviour for when an integration subscription
@@ -1699,9 +1699,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to which the integration belongs to.
-        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the integration to delete.
         reason : :obj:`~str`
             If specified, the audit log reason explaining why the operation
@@ -1730,9 +1730,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to which the integration belongs to.
-        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        integration : :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildIntegration`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The ID of the integration to sync.
 
         Raises
@@ -1755,7 +1755,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the embed for.
 
         Returns
@@ -1791,9 +1791,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to edit the embed for.
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], optional
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], optional
             If specified, the object or ID of the channel that this embed's
             invite should target. Set to :obj:`~None` to disable invites for this
             embed.
@@ -1837,7 +1837,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to get the vanity URL for.
 
         Returns
@@ -1867,7 +1867,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to form the widget.
         style : :obj:`~str`
             If specified, the syle of the widget.
@@ -1896,7 +1896,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID for the guild to get the webhooks from.
 
         Returns
