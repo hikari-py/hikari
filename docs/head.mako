@@ -17,11 +17,25 @@
  | along with Hikari. If not, see <https://www.gnu.org/licenses/>.
  !-->
 <%!
+    import os
     from pdoc.html_helpers import minify_css
 %>
+% if "CI_MERGE_REQUEST_IID" in os.environ:
+    <script data-project-id="${os.environ['CI_PROJECT_ID']}"
+            data-merge-request-id="${os.environ['CI_MERGE_REQUEST_IID']}"
+            data-mr-url="https://gitlab.com"
+            data-project-path="${os.environ['CI_PROJECT_PATH']}"
+            id="review-app-toolbar-script"
+            src="https://gitlab.com/assets/webpack/visual_review_toolbar.js">
+    </script>
+% endif
 
 <link rel="shortcut icon" type="image/png" href="https://assets.gitlab-static.net/uploads/-/system/project/avatar/12050696/Hikari-Logo_1.png"/>
-<meta property="og:title" content="${module.name} API Documentation" />
+% if "." in module.name:
+    <meta property="og:title" content="${module.name.lower()} module documentation" />
+% else:
+    <meta property="og:title" content="${module.name.capitalize()} API Documentation" />
+% endif
 <meta property="og:type" content="website" />
 <meta property="og:image" content="https://assets.gitlab-static.net/uploads/-/system/project/avatar/12050696/Hikari-Logo_1.png" />
 <meta property="og:description" content="A Discord Bot framework for modern Python and asyncio built on good intentions" />

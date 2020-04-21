@@ -23,7 +23,7 @@
 %>
 
 <header>
-    <a class="homelink" rel="home" title="Hikari Home" href="https://nekokatt.gitlab.io/hikari/">
+    <a class="homelink" rel="home" title="Hikari Home" href="https://nekokatt.gitlab.io/hikari/hikari/">
         <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/12050696/Hikari-Logo_1.png" alt="">
         Hikari
     </a>
@@ -31,7 +31,7 @@
     % if version == "production":
         <p class="homelink-footer">
             For staging please visit
-            <a href="https://nekokatt.gitlab.io/hikari/staging">this page</a>.
+            <a href="https://nekokatt.gitlab.io/hikari/hikari/staging">this page</a>.
         </p>
     % endif
     <ul class="links">

@@ -32,6 +32,7 @@ TEST_PACKAGE = "tests"
 # Generating documentation and artifacts.
 ARTIFACT_DIRECTORY = "public"
 DOCUMENTATION_DIRECTORY = "docs"
+ROOT_INDEX_SOURCE = "index.html"
 
 # Linting and test configs.
 PYDOCSTYLE_INI = "pydocstyle.ini"

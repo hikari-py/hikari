@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Pdoc documentation generation."""
+import os
+import shutil
+
 from ci import config
 from ci import nox
 
@@ -24,6 +27,21 @@ from ci import nox
 @nox.session(reuse_venv=True, default=True)
 def pdoc(session: nox.Session) -> None:
     """Generate documentation with pdoc."""
+
+    # Inherit environment GitLab CI vars, where appropriate.
+    for n, v in os.environ.items():
+        if n.startswith(("GITLAB_", "CI")) or n == "CI":
+            session.env[n] = v
+
+    #: Copy over the root index html file if it's set.
+    if config.ROOT_INDEX_SOURCE:
+        if not os.path.exists(config.ARTIFACT_DIRECTORY):
+            os.mkdir(config.ARTIFACT_DIRECTORY)
+        shutil.copy(
+            os.path.join(config.DOCUMENTATION_DIRECTORY, config.ROOT_INDEX_SOURCE),
+            os.path.join(config.ARTIFACT_DIRECTORY, "index.html")
+        )
+
     session.install("-r", config.REQUIREMENTS, "pdoc3==0.8.1")
 
     session.run(
