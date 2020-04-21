@@ -156,7 +156,7 @@ class TeamMember(bases.HikariEntity, marshaller.Deserializable):
 
     #: The ID of the team this member belongs to.
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`
+    #: :type: :obj:`~hikari.bases.Snowflake`
     team_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The user object of this team member.
@@ -177,14 +177,14 @@ class Team(bases.UniqueEntity, marshaller.Deserializable):
 
     #: The member's that belong to this team.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~TeamMember` ]
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.bases.Snowflake`, :obj:`~TeamMember` ]
     members: typing.Mapping[bases.Snowflake, TeamMember] = marshaller.attrib(
         deserializer=lambda members: {m.user.id: m for m in map(TeamMember.deserialize, members)}
     )
 
     #: The ID of this team's owner.
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`
+    #: :type: :obj:`~hikari.bases.Snowflake`
     owner_user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     @property
@@ -310,14 +310,14 @@ class Application(bases.UniqueEntity, marshaller.Deserializable):
     #: The ID of the guild this application is linked to
     #: if it's sold on Discord.
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    #: :type: :obj:`~hikari.bases.Snowflake`, optional
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
         deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The ID of the primary "Game SKU" of a game that's sold on Discord.
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    #: :type: :obj:`~hikari.bases.Snowflake`, optional
     primary_sku_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
         deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )

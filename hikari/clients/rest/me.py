@@ -108,7 +108,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Parameters
         ----------
-        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of a guild to get guilds that were created after
             it if specified, else this will start at the oldest guild.
         limit : :obj:`~int`
@@ -161,7 +161,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Parameters
         ----------
-        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of a guild to get guilds that were created
             before it if specified, else this will start at the newest guild.
         limit : :obj:`~int`
@@ -199,7 +199,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Parameters
         ----------
-        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        guild : :obj:`~typing.Union` [ :obj:`~hikari.guilds.Guild`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild to leave.
 
         Raises
@@ -217,7 +217,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Parameters
         ----------
-        recipient : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        recipient : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the user to create the new DM channel with.
 
         Returns

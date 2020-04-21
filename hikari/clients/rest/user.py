@@ -35,7 +35,7 @@ class RESTUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W02
 
         Parameters
         ----------
-        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the user to get.
 
         Returns

@@ -44,11 +44,11 @@ def generate_allowed_mentions(
     mentions_everyone : :obj:`~bool`
         Whether ``@everyone`` and ``@here`` mentions should be resolved by
         discord and lead to actual pings.
-    user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
+    user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
         Either an array of user objects/IDs to allow mentions for,
         :obj:`~True` to allow all user mentions or :obj:`~False` to block all
         user mentions from resolving.
-    role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
+    role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
         Either an array of guild role objects/IDs to allow mentions for,
         :obj:`~True` to allow all role mentions or :obj:`~False` to block all
         role mentions from resolving.
