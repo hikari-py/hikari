@@ -21,10 +21,10 @@
 .. inheritance-diagram::
     hikari.channels
     enum.IntEnum
-    hikari.entities.HikariEntity
-    hikari.entities.Deserializable
-    hikari.entities.Serializable
-    hikari.entities.UniqueEntity
+    hikari.bases.HikariEntity
+    hikari.bases.Deserializable
+    hikari.bases.Serializable
+    hikari.bases.UniqueEntity
     :parts: 1
 """
 
@@ -191,12 +191,12 @@ class DMChannel(Channel):
     #: This might point to an invalid or deleted message.
     #:
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    #: :type: :obj:`~hikari.bases.Snowflake`, optional
     last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize, if_none=None)
 
     #: The recipients of the DM.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.users.User` ]
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.bases.Snowflake`, :obj:`~hikari.users.User` ]
     recipients: typing.Mapping[bases.Snowflake, users.User] = marshaller.attrib(
         deserializer=lambda recipients: {user.id: user for user in map(users.User.deserialize, recipients)}
     )
@@ -215,7 +215,7 @@ class GroupDMChannel(DMChannel):
 
     #: The ID of the owner of the group.
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`
+    #: :type: :obj:`~hikari.bases.Snowflake`
     owner_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The hash of the icon of the group.
@@ -226,7 +226,7 @@ class GroupDMChannel(DMChannel):
     #: The ID of the application that created the group DM, if it's a
     #: bot based group DM.
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    #: :type: :obj:`~hikari.bases.Snowflake`, optional
     application_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
         deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
@@ -239,7 +239,7 @@ class GuildChannel(Channel):
 
     #: The ID of the guild the channel belongs to.
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`
+    #: :type: :obj:`~hikari.bases.Snowflake`
     guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The sorting position of the channel.
@@ -249,7 +249,7 @@ class GuildChannel(Channel):
 
     #: The permission overwrites for the channel.
     #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~PermissionOverwrite` ]
+    #: :type: :obj:`~typing.Mapping` [ :obj:`~hikari.bases.Snowflake`, :obj:`~PermissionOverwrite` ]
     permission_overwrites: PermissionOverwrite = marshaller.attrib(
         deserializer=lambda overwrites: {o.id: o for o in map(PermissionOverwrite.deserialize, overwrites)}
     )
@@ -266,7 +266,7 @@ class GuildChannel(Channel):
 
     #: The ID of the parent category the channel belongs to.
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    #: :type: :obj:`~hikari.bases.Snowflake`, optional
     parent_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize, if_none=None)
 
 
@@ -295,7 +295,7 @@ class GuildTextChannel(GuildChannel):
     #: This might point to an invalid or deleted message.
     #:
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    #: :type: :obj:`~hikari.bases.Snowflake`, optional
     last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize, if_none=None)
 
     #: The delay (in seconds) between a user can send a message
@@ -330,7 +330,7 @@ class GuildNewsChannel(GuildChannel):
     #: This might point to an invalid or deleted message.
     #:
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    #: :type: :obj:`~hikari.bases.Snowflake`, optional
     last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize, if_none=None)
 
 
@@ -472,7 +472,7 @@ class GuildChannelBuilder(marshaller.Serializable):
 
         Parameters
         ----------
-        category : :obj:`~typing.Union` [ :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        category : :obj:`~typing.Union` [ :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The placeholder ID of the category channel that should be this
             channel's parent.
         """
@@ -489,7 +489,7 @@ class GuildChannelBuilder(marshaller.Serializable):
 
         Parameters
         ----------
-        channel_id : :obj:`~typing.Union` [ :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel_id : :obj:`~typing.Union` [ :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The placeholder ID to use.
         """
         self._payload["id"] = str(int(channel_id))
