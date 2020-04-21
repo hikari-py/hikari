@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,20 +16,36 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Logic for generating a allowed mentions dict objects.
+"""General helper functions and classes that are not categorised elsewhere."""
 
-|internal|
-"""
+__all__ = ["warning"]
 
-__all__ = ["generate_allowed_mentions"]
-
+import textwrap
 import typing
+import warnings
 
 from hikari import bases
 from hikari import guilds
 from hikari import users
 from hikari.internal import assertions
 from hikari.internal import more_collections
+from hikari.internal import more_typing
+
+
+def warning(message: str, category: typing.Type[Warning], stack_level: int = 1) -> None:
+    """Generate a warning in a style consistent for this library.
+
+    Parameters
+    ----------
+    message : :obj:`~str`
+        The message to display.
+    category : :obj:`~typing.Type` [ :obj:`~Warning` ]
+        The type of warning to raise.
+    stack_level : :obj:`int`
+        How many stack frames to go back to find the user's invocation.
+
+    """
+    warnings.warn("\n" + textwrap.indent(message, " " * 6), category, stacklevel=stack_level + 1)
 
 
 def generate_allowed_mentions(
@@ -98,3 +114,69 @@ def generate_allowed_mentions(
     # As a note, discord will also treat an empty `allowed_mentions` object as if it wasn't passed at all, so we
     # want to use empty lists for blacklisting elements rather than just not including blacklisted elements.
     return allowed_mentions
+
+
+async def pagination_handler(
+    deserializer: typing.Callable[[typing.Any], typing.Any],
+    direction: typing.Union[typing.Literal["before"], typing.Literal["after"]],
+    request: typing.Callable[..., more_typing.Coroutine[typing.Any]],
+    reversing: bool,
+    start: typing.Union[str, None],
+    limit: typing.Optional[int] = None,
+    id_getter: typing.Callable[[typing.Any], str] = lambda entity: str(entity.id),
+    **kwargs,
+) -> typing.AsyncIterator[typing.Any]:
+    """Generate an async iterator for handling paginated endpoints.
+
+    This will handle Discord's ``before`` and ``after`` pagination.
+
+    Parameters
+    ----------
+    deserializer : :obj:`~typing.Callable` [ [ :obj:`~typing.Any` ], :obj:`~typing.Any` ]
+        The deserializer to use to deserialize raw elements.
+    direction : :obj:`~typing.Union` [ ``"before"``, ``"after"`` ]
+        The direction that this paginator should go in.
+    request : :obj:`~typing.Callable` [ ``...``, :obj:`~typing.Coroutine` [ :obj:`~typing.Any`, :obj:`~typing.Any`, :obj:`~typing.Any` ] ]
+        The :obj:`hikari.net.rest_sessions.LowLevelRestfulClient` method that should be
+        called to make requests for this paginator.
+    reversing : :obj:`~bool`
+        Whether the retrieved array of objects should be reversed before
+        iterating through it, this is needed for certain endpoints like
+        ``fetch_messages_before`` where the order is static regardless of
+        if you're using ``before`` or ``after``.
+    start : :obj:`~int`, optional
+        The snowflake ID that this paginator should start at, ``0`` may be
+        passed for ``forward`` pagination to start at the first created
+        entity and :obj:`~None` may be passed for ``before`` pagination to
+        start at the newest entity (based on when it's snowflake timestamp).
+    limit : :obj:`~int`, optional
+        The amount of deserialized entities that the iterator should return
+        total, will be unlimited if set to :obj:`~None`.
+    id_getter : :obj:`~typing.Callable` [ [ :obj:`~typing.Any` ], :obj:`~str` ]
+    **kwargs
+        Kwargs to pass through to ``request`` for every request made along
+        with the current decided limit and direction snowflake.
+
+    Returns
+    -------
+    :obj:`~typing.AsyncIterator` [ :obj:`~typing.Any` ]
+        An async iterator of the found deserialized found objects.
+
+    """
+    while payloads := await request(
+        limit=100 if limit is None or limit > 100 else limit,
+        **{direction: start if start is not None else ...},
+        **kwargs,
+    ):
+        if reversing:
+            payloads.reverse()
+        if limit is not None:
+            limit -= len(payloads)
+
+        for payload in payloads:
+            entity = deserializer(payload)
+            yield entity
+        if limit == 0:
+            break
+        # TODO: @FasterSpeeding: can `payloads` ever be empty, leading this to be undefined?
+        start = id_getter(entity)

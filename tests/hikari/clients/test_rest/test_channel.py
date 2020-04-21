@@ -23,6 +23,7 @@ import io
 import mock
 import pytest
 
+from hikari.internal import helpers
 from hikari import channels
 from hikari import embeds
 from hikari import guilds
@@ -33,9 +34,8 @@ from hikari import snowflakes
 from hikari import users
 from hikari import webhooks
 from hikari.clients.rest import channel
-from hikari.internal import allowed_mentions
 from hikari.internal import conversions
-from hikari.internal import pagination
+from hikari.internal import helpers
 from hikari.net import rest
 from tests.hikari import _helpers
 
@@ -143,10 +143,10 @@ class TestRESTChannelLogging:
     @_helpers.parametrize_valid_id_formats_for_models("message", 777777777, messages.Message)
     def test_fetch_messages_after_with_optionals(self, rest_channel_logic_impl, channel, message):
         mock_generator = mock.AsyncMock()
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             result = rest_channel_logic_impl.fetch_messages_after(channel=channel, after=message, limit=52)
             assert result is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 channel_id="123123123",
                 deserializer=messages.Message.deserialize,
                 direction="after",
@@ -159,9 +159,9 @@ class TestRESTChannelLogging:
     @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.Channel)
     def test_fetch_messages_after_without_optionals(self, rest_channel_logic_impl, channel):
         mock_generator = mock.AsyncMock()
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_channel_logic_impl.fetch_messages_after(channel=channel) is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 channel_id="123123123",
                 deserializer=messages.Message.deserialize,
                 direction="after",
@@ -174,9 +174,9 @@ class TestRESTChannelLogging:
     def test_fetch_messages_after_with_datetime_object(self, rest_channel_logic_impl):
         mock_generator = mock.AsyncMock()
         date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_channel_logic_impl.fetch_messages_after(channel=123123123, after=date) is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 channel_id="123123123",
                 deserializer=messages.Message.deserialize,
                 direction="after",
@@ -190,10 +190,10 @@ class TestRESTChannelLogging:
     @_helpers.parametrize_valid_id_formats_for_models("message", 777777777, messages.Message)
     def test_fetch_messages_before_with_optionals(self, rest_channel_logic_impl, channel, message):
         mock_generator = mock.AsyncMock()
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             result = rest_channel_logic_impl.fetch_messages_before(channel=channel, before=message, limit=52)
             assert result is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 channel_id="123123123",
                 deserializer=messages.Message.deserialize,
                 direction="before",
@@ -206,9 +206,9 @@ class TestRESTChannelLogging:
     @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.Channel)
     def test_fetch_messages_before_without_optionals(self, rest_channel_logic_impl, channel):
         mock_generator = mock.AsyncMock()
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_channel_logic_impl.fetch_messages_before(channel=channel) is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 channel_id="123123123",
                 deserializer=messages.Message.deserialize,
                 direction="before",
@@ -221,9 +221,9 @@ class TestRESTChannelLogging:
     def test_fetch_messages_before_with_datetime_object(self, rest_channel_logic_impl):
         mock_generator = mock.AsyncMock()
         date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_channel_logic_impl.fetch_messages_before(channel=123123123, before=date) is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 channel_id="123123123",
                 deserializer=messages.Message.deserialize,
                 direction="before",
@@ -317,7 +317,7 @@ class TestRESTChannelLogging:
         mock_media_payload = ("aName.png", mock.MagicMock())
         stack = contextlib.ExitStack()
         stack.enter_context(
-            mock.patch.object(allowed_mentions, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
+            mock.patch.object(helpers, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
         )
         stack.enter_context(mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj))
         stack.enter_context(mock.patch.object(media, "safe_read_file", return_value=mock_media_payload))
@@ -336,7 +336,7 @@ class TestRESTChannelLogging:
             assert result is mock_message_obj
             media.safe_read_file.assert_called_once_with(mock_media_obj)
             messages.Message.deserialize.assert_called_once_with(mock_message_payload)
-            allowed_mentions.generate_allowed_mentions.assert_called_once_with(
+            helpers.generate_allowed_mentions.assert_called_once_with(
                 mentions_everyone=False, user_mentions=False, role_mentions=False
             )
         rest_channel_logic_impl._session.create_message.assert_called_once_with(
@@ -359,13 +359,13 @@ class TestRESTChannelLogging:
         mock_allowed_mentions_payload = {"parse": ["everyone", "users", "roles"]}
         stack = contextlib.ExitStack()
         stack.enter_context(
-            mock.patch.object(allowed_mentions, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
+            mock.patch.object(helpers, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
         )
         stack.enter_context(mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj))
         with stack:
             assert await rest_channel_logic_impl.create_message(channel) is mock_message_obj
             messages.Message.deserialize.assert_called_once_with(mock_message_payload)
-            allowed_mentions.generate_allowed_mentions.assert_called_once_with(
+            helpers.generate_allowed_mentions.assert_called_once_with(
                 mentions_everyone=True, user_mentions=True, role_mentions=True
             )
         rest_channel_logic_impl._session.create_message.assert_called_once_with(
@@ -441,7 +441,7 @@ class TestRESTChannelLogging:
         rest_channel_logic_impl._session.edit_message.return_value = mock_payload
         stack = contextlib.ExitStack()
         stack.enter_context(
-            mock.patch.object(allowed_mentions, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
+            mock.patch.object(helpers, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
         )
         stack.enter_context(mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj))
         with stack:
@@ -466,7 +466,7 @@ class TestRESTChannelLogging:
             )
             mock_embed.serialize.assert_called_once()
             messages.Message.deserialize.assert_called_once_with(mock_payload)
-            allowed_mentions.generate_allowed_mentions.assert_called_once_with(
+            helpers.generate_allowed_mentions.assert_called_once_with(
                 mentions_everyone=False, role_mentions=False, user_mentions=[123123123]
             )
 
@@ -480,7 +480,7 @@ class TestRESTChannelLogging:
         rest_channel_logic_impl._session.edit_message.return_value = mock_payload
         stack = contextlib.ExitStack()
         stack.enter_context(
-            mock.patch.object(allowed_mentions, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
+            mock.patch.object(helpers, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
         )
         stack.enter_context(mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj))
         with stack:
@@ -494,7 +494,7 @@ class TestRESTChannelLogging:
                 allowed_mentions=mock_allowed_mentions_payload,
             )
             messages.Message.deserialize.assert_called_once_with(mock_payload)
-            allowed_mentions.generate_allowed_mentions.assert_called_once_with(
+            helpers.generate_allowed_mentions.assert_called_once_with(
                 mentions_everyone=True, user_mentions=True, role_mentions=True
             )
 

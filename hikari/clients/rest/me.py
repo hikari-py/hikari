@@ -24,14 +24,14 @@ import abc
 import datetime
 import typing
 
+from hikari import applications
 from hikari import bases
 from hikari import channels as _channels
 from hikari import guilds
-from hikari import applications
 from hikari import users
 from hikari.clients.rest import base
 from hikari.internal import conversions
-from hikari.internal import pagination
+from hikari.internal import helpers
 
 
 class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
@@ -139,7 +139,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             after = str(bases.Snowflake.from_datetime(after))
         else:
             after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
-        return pagination.pagination_handler(
+        return helpers.pagination_handler(
             deserializer=applications.OwnGuild.deserialize,
             direction="after",
             request=self._session.get_current_user_guilds,
@@ -185,7 +185,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             before = str(bases.Snowflake.from_datetime(before))
         elif before is not None:
             before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
-        return pagination.pagination_handler(
+        return helpers.pagination_handler(
             deserializer=applications.OwnGuild.deserialize,
             direction="before",
             request=self._session.get_current_user_guilds,

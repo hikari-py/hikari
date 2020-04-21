@@ -48,8 +48,8 @@ from hikari.clients import runnable
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import shards
-from hikari.state import dispatchers
 from hikari.state import consumers
+from hikari.state import dispatchers
 
 
 @enum.unique

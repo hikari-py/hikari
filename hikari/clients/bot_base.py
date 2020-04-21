@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """A bot client might go here... eventually..."""
-__all__ = ["BotBase", "StatelessBot"]
+__all__ = ["BotBase"]
 
 import abc
 import asyncio
@@ -40,16 +40,16 @@ from hikari.internal import more_collections
 from hikari.internal import more_typing
 from hikari.state import dispatchers
 from hikari.state import event_managers
-from hikari.state import stateless
 
 ShardClientT = typing.TypeVar("ShardClientT", bound=shards.ShardClient)
 EventManagerT = typing.TypeVar("EventManagerT", bound=event_managers.EventManager)
+EventDispatcherT = typing.TypeVar("EventDispatcherT", bound=dispatchers.EventDispatcher)
 RESTClientT = typing.TypeVar("RESTClientT", bound=rest.RESTClient)
 BotConfigT = typing.TypeVar("BotConfigT", bound=configs.BotConfig)
 
 
 class BotBase(
-    typing.Generic[ShardClientT, RESTClientT, EventManagerT, BotConfigT],
+    typing.Generic[ShardClientT, RESTClientT, EventDispatcherT, EventManagerT, BotConfigT],
     runnable.RunnableClient,
     dispatchers.EventDispatcher,
     abc.ABC,
@@ -61,6 +61,11 @@ class BotBase(
         :obj:`~hikari.clients.shard_clients.ShardClient` to use for shards.
     - ``RESTClientT`` - the implementation of
         :obj:`~hikari.clients.rest.RESTClient` to use for API calls.
+    - ``EventDispatcherT`` - the implementation of
+        :obj:`~hikari.state.dispatchers.EventDispacher` to use for
+        dispatching events. This class will then delegate any calls inherited
+        from :obj:`~hikari.state.dispatchers.EventDispacher` to that
+        implementation when provided.
     - ``EventManagerT`` - the implementation of
         :obj:`~hikari.state.event_managers.EventManager` to use for
         event management, translation, and dispatching.
@@ -78,6 +83,11 @@ class BotBase(
     #:
     #: :type: :obj:`~hikari.clients.configs.BotConfig`
     _config: BotConfigT
+
+    #: The event dispatcher for this bot.
+    #:
+    #: :type: an implementation instance of :obj:`~hikari.state.dispatcher.EventDispatcher`
+    event_dispatcher: EventDispatcherT
 
     #: The event manager for this bot.
     #:
@@ -101,11 +111,11 @@ class BotBase(
     #: :type: :obj:`~typing.Mapping` [ :obj:`~int`, ? extends :obj:`~hikari.clients.shard_client.ShardClient` ]
     shards: typing.Mapping[int, ShardClientT]
 
-    @abc.abstractmethod
     def __init__(self, config: configs.BotConfig) -> None:
         super().__init__(logging.getLogger(f"hikari.{type(self).__qualname__}"))
         self._config = config
-        self.event_manager = self._create_event_manager()
+        self.event_dispatcher = self._create_event_dispatcher(config)
+        self.event_manager = self._create_event_manager(config, self.event_dispatcher)
         self.rest = self._create_rest(config)
         self.shards = more_collections.EMPTY_DICT
 
@@ -200,12 +210,12 @@ class BotBase(
 
         self.logger.info("will connect shards to %s", url)
 
-        shards = {}
+        shard_clients = {}
         for shard_id in shard_ids:
             shard = self._create_shard(shard_id, shard_count, url, self._config, self.event_manager)
-            shards[shard_id] = shard
+            shard_clients[shard_id] = shard
 
-        self.shards = shards
+        self.shards = shard_clients
 
         self.logger.info("starting %s", conversions.pluralize(len(self.shards), "shard"))
 
@@ -245,9 +255,9 @@ class BotBase(
         await asyncio.gather(*(shard_obj.join() for shard_obj in self.shards.values()))
 
     def add_listener(
-        self, event_type: typing.Type[dispatchers.EventT], callback: dispatchers.EventCallbackT
+        self, event_type: typing.Type[dispatchers.EventT], callback: dispatchers.EventCallbackT, **kwargs
     ) -> dispatchers.EventCallbackT:
-        return self.event_manager.event_dispatcher.add_listener(event_type, callback)
+        return self.event_manager.event_dispatcher.add_listener(event_type, callback, _stack_level=4)
 
     def remove_listener(
         self, event_type: typing.Type[dispatchers.EventT], callback: dispatchers.EventCallbackT
@@ -302,6 +312,7 @@ class BotBase(
         is_afk : :obj:`~bool`
             If specified, :obj:`~True` if the user should be marked as AFK,
             or :obj:`~False` otherwise.
+
         """
         await asyncio.gather(
             *(
@@ -365,46 +376,33 @@ class BotBase(
 
     @classmethod
     @abc.abstractmethod
-    def _create_event_manager(cls):
+    def _create_event_manager(cls, config: BotConfigT, dispatcher: EventDispatcherT) -> EventManagerT:
         """Return a new instance of an event manager implementation.
+
+        Parameters
+        ----------
+        config : :obj:`~hikari.clients.configs.BotConfig`
+            The bot config to use.
 
         Returns
         -------
         :obj:`~hikari.state.event_managers.EventManager`
             The event manager to use internally.
+
         """
 
-
-class StatelessBot(
-    BotBase[shards.ShardClientImpl, rest.RESTClient, stateless.StatelessEventManagerImpl, configs.BotConfig,]
-):
-    """Bot client without any state internals."""
-
-    def __init__(self, config=configs.BotConfig) -> None:
-        super().__init__(config)
-
     @classmethod
-    def _create_shard(
-        cls,
-        shard_id: int,
-        shard_count: int,
-        url: str,
-        config: configs.BotConfig,
-        event_manager: stateless.StatelessEventManagerImpl,
-    ) -> shards.ShardClientImpl:
-        return shards.ShardClientImpl(
-            shard_id=shard_id,
-            shard_count=shard_count,
-            config=config,
-            raw_event_consumer_impl=event_manager,
-            url=url,
-            dispatcher=event_manager.event_dispatcher,
-        )
+    @abc.abstractmethod
+    def _create_event_dispatcher(cls, config: BotConfigT) -> EventDispatcherT:
+        """Return a new instance of an event dispatcher implementation.
 
-    @classmethod
-    def _create_rest(cls, config: BotConfigT) -> rest.RESTClient:
-        return rest.RESTClient(config)
+        Parameters
+        ----------
+        config : :obj:`~hikari.clients.configs.BotConfig`
+            The bot config to use.
 
-    @classmethod
-    def _create_event_manager(cls) -> EventManagerT:
-        return stateless.StatelessEventManagerImpl()
+        Returns
+        -------
+        :obj:`~hikari.state.dispatchers.EventDispatcher`
+
+        """

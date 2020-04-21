@@ -34,11 +34,11 @@ import typing
 
 import attr
 
+from hikari import applications
 from hikari import bases
 from hikari import embeds as _embeds
 from hikari import emojis as _emojis
 from hikari import guilds
-from hikari import applications
 from hikari import users
 from hikari.internal import conversions
 from hikari.internal import marshaller

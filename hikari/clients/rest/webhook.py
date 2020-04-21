@@ -32,8 +32,8 @@ from hikari import messages as _messages
 from hikari import users
 from hikari import webhooks
 from hikari.clients.rest import base
-from hikari.internal import allowed_mentions
 from hikari.internal import conversions
+from hikari.internal import helpers
 
 
 class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
@@ -262,7 +262,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             wait=wait,
             file=await media.safe_read_file(file) if file is not ... else ...,
             embeds=[embed.serialize() for embed in embeds] if embeds is not ... else ...,
-            allowed_mentions=allowed_mentions.generate_allowed_mentions(
+            allowed_mentions=helpers.generate_allowed_mentions(
                 mentions_everyone=mentions_everyone, user_mentions=user_mentions, role_mentions=role_mentions
             ),
         )
