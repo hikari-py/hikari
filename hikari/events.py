@@ -65,6 +65,7 @@ __all__ = [
     "WebhookUpdateEvent",
 ]
 
+import abc
 import datetime
 import typing
 
@@ -75,6 +76,7 @@ from hikari import channels
 from hikari import embeds as _embeds
 from hikari import emojis as _emojis
 from hikari import guilds
+from hikari import intents
 from hikari import invites
 from hikari import messages
 from hikari import applications
@@ -82,6 +84,7 @@ from hikari import unset
 from hikari import users
 from hikari import voices
 from hikari.clients import shards
+from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import marshaller
 
@@ -91,8 +94,28 @@ T_contra = typing.TypeVar("T_contra", contravariant=True)
 # Base event, is not deserialized
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class HikariEvent(bases.HikariEntity):
+class HikariEvent(bases.HikariEntity, abc.ABC):
     """The base class that all events inherit from."""
+
+    ___required_intents___: typing.ClassVar[intents.Intent]
+
+    def __init_subclass__(cls, *, intent: intents.Intent = intents.Intent(0), **kwargs) -> None:
+        super().__init_subclass__()
+        assertions.assert_that(isinstance(intent, intents.Intent), "expected an intent type", TypeError)
+        cls.___required_intents___ = intent
+
+        if intent:
+            new_doc = (cls.__doc__ + "\n\n") if cls.__doc__ is not None else ""
+            new_doc += "This event will only fire if the following intents are enabled: "
+            new_doc += ", ".join(i.name for i in intents.Intent if i & intent)
+            if intent.is_privileged:
+                new_doc += "\n\n"
+                new_doc += (
+                    "This event is privileged, meaning you will need to opt into using one or more "
+                    "intents on the Discord Developer Portal."
+                )
+
+            cls.__doc__ = new_doc
 
 
 # Synthetic event, is not deserialized, and is produced by the dispatcher.
@@ -228,7 +251,9 @@ class ReadyEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class BaseChannelEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
+class BaseChannelEvent(
+    HikariEvent, bases.UniqueEntity, marshaller.Deserializable, abc.ABC, intent=intents.Intent.GUILDS
+):
     """A base object that Channel events will inherit from."""
 
     #: The channel's type.
@@ -351,7 +376,7 @@ class BaseChannelEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializabl
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ChannelCreateEvent(BaseChannelEvent):
+class ChannelCreateEvent(BaseChannelEvent, intent=intents.Intent.GUILDS):
     """Represents Channel Create gateway events.
 
     Will be sent when a guild channel is created and before all Create Message
@@ -361,19 +386,19 @@ class ChannelCreateEvent(BaseChannelEvent):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ChannelUpdateEvent(BaseChannelEvent):
+class ChannelUpdateEvent(BaseChannelEvent, intent=intents.Intent.GUILDS):
     """Represents Channel Update gateway events."""
 
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ChannelDeleteEvent(BaseChannelEvent):
+class ChannelDeleteEvent(BaseChannelEvent, intent=intents.Intent.GUILDS):
     """Represents Channel Delete gateway events."""
 
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ChannelPinUpdateEvent(HikariEvent, marshaller.Deserializable):
+class ChannelPinUpdateEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILDS):
     """Used to represent the Channel Pins Update gateway event.
 
     Sent when a message is pinned or unpinned in a channel but not
@@ -404,7 +429,7 @@ class ChannelPinUpdateEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildCreateEvent(HikariEvent, marshaller.Deserializable):
+class GuildCreateEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILDS):
     """Used to represent Guild Create gateway events.
 
     Will be received when the bot joins a guild, and when a guild becomes
@@ -414,13 +439,13 @@ class GuildCreateEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildUpdateEvent(HikariEvent, marshaller.Deserializable):
+class GuildUpdateEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILDS):
     """Used to represent Guild Update gateway events."""
 
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildLeaveEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
+class GuildLeaveEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable, intent=intents.Intent.GUILDS):
     """Fired when the current user leaves the guild or is kicked/banned from it.
 
     Notes
@@ -431,7 +456,7 @@ class GuildLeaveEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildUnavailableEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
+class GuildUnavailableEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable, intent=intents.Intent.GUILDS):
     """Fired when a guild becomes temporarily unavailable due to an outage.
 
     Notes
@@ -442,7 +467,7 @@ class GuildUnavailableEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserial
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class BaseGuildBanEvent(HikariEvent, marshaller.Deserializable):
+class BaseGuildBanEvent(HikariEvent, marshaller.Deserializable, abc.ABC, intent=intents.Intent.GUILD_BANS):
     """A base object that guild ban events will inherit from."""
 
     #: The ID of the guild this ban is in.
@@ -458,19 +483,19 @@ class BaseGuildBanEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildBanAddEvent(BaseGuildBanEvent):
+class GuildBanAddEvent(BaseGuildBanEvent, intent=intents.Intent.GUILD_BANS):
     """Used to represent a Guild Ban Add gateway event."""
 
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildBanRemoveEvent(BaseGuildBanEvent):
+class GuildBanRemoveEvent(BaseGuildBanEvent, intent=intents.Intent.GUILD_BANS):
     """Used to represent a Guild Ban Remove gateway event."""
 
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildEmojisUpdateEvent(HikariEvent, marshaller.Deserializable):
+class GuildEmojisUpdateEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_EMOJIS):
     """Represents a Guild Emoji Update gateway event."""
 
     #: The ID of the guild this emoji was updated in.
@@ -488,7 +513,7 @@ class GuildEmojisUpdateEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildIntegrationsUpdateEvent(HikariEvent, marshaller.Deserializable):
+class GuildIntegrationsUpdateEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_INTEGRATIONS):
     """Used to represent Guild Integration Update gateway events."""
 
     #: The ID of the guild the integration was updated in.
@@ -499,7 +524,7 @@ class GuildIntegrationsUpdateEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberAddEvent(HikariEvent, guilds.GuildMember):
+class GuildMemberAddEvent(HikariEvent, guilds.GuildMember, intent=intents.Intent.GUILD_MEMBERS):
     """Used to represent a Guild Member Add gateway event."""
 
     #: The ID of the guild where this member was added.
@@ -510,7 +535,7 @@ class GuildMemberAddEvent(HikariEvent, guilds.GuildMember):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberUpdateEvent(HikariEvent, marshaller.Deserializable):
+class GuildMemberUpdateEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_MEMBERS):
     """Used to represent a Guild Member Update gateway event.
 
     Sent when a guild member or their inner user object is updated.
@@ -552,7 +577,7 @@ class GuildMemberUpdateEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberRemoveEvent(HikariEvent, marshaller.Deserializable):
+class GuildMemberRemoveEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_MEMBERS):
     """Used to represent Guild Member Remove gateway events.
 
     Sent when a member is kicked, banned or leaves a guild.
@@ -571,7 +596,7 @@ class GuildMemberRemoveEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildRoleCreateEvent(HikariEvent, marshaller.Deserializable):
+class GuildRoleCreateEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILDS):
     """Used to represent a Guild Role Create gateway event."""
 
     #: The ID of the guild where this role was created.
@@ -587,7 +612,7 @@ class GuildRoleCreateEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildRoleUpdateEvent(HikariEvent, marshaller.Deserializable):
+class GuildRoleUpdateEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILDS):
     """Used to represent a Guild Role Create gateway event."""
 
     #: The ID of the guild where this role was updated.
@@ -603,7 +628,7 @@ class GuildRoleUpdateEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildRoleDeleteEvent(HikariEvent, marshaller.Deserializable):
+class GuildRoleDeleteEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILDS):
     """Represents a gateway Guild Role Delete Event."""
 
     #: The ID of the guild where this role is being deleted.
@@ -619,7 +644,7 @@ class GuildRoleDeleteEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class InviteCreateEvent(HikariEvent, marshaller.Deserializable):
+class InviteCreateEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_INVITES):
     """Represents a gateway Invite Create event."""
 
     #: The ID of the channel this invite targets.
@@ -693,7 +718,7 @@ class InviteCreateEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class InviteDeleteEvent(HikariEvent, marshaller.Deserializable):
+class InviteDeleteEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_INVITES):
     """Used to represent Invite Delete gateway events.
 
     Sent when an invite is deleted for a channel we can access.
@@ -720,14 +745,16 @@ class InviteDeleteEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageCreateEvent(HikariEvent, messages.Message):
+class MessageCreateEvent(HikariEvent, messages.Message, intent=intents.Intent.GUILD_MESSAGES):
     """Used to represent Message Create gateway events."""
 
 
 # This is an arbitrarily partial version of `messages.Message`
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageUpdateEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
+class MessageUpdateEvent(
+    HikariEvent, bases.UniqueEntity, marshaller.Deserializable, intent=intents.Intent.GUILD_MESSAGES
+):
     """Represents Message Update gateway events.
 
     Note
@@ -917,7 +944,7 @@ class MessageUpdateEvent(HikariEvent, bases.UniqueEntity, marshaller.Deserializa
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageDeleteEvent(HikariEvent, marshaller.Deserializable):
+class MessageDeleteEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_MESSAGES):
     """Used to represent Message Delete gateway events.
 
     Sent when a message is deleted in a channel we have access to.
@@ -943,7 +970,7 @@ class MessageDeleteEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageDeleteBulkEvent(HikariEvent, marshaller.Deserializable):
+class MessageDeleteBulkEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_MESSAGES):
     """Used to represent Message Bulk Delete gateway events.
 
     Sent when multiple messages are deleted in a channel at once.
@@ -972,7 +999,7 @@ class MessageDeleteBulkEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageReactionAddEvent(HikariEvent, marshaller.Deserializable):
+class MessageReactionAddEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_MESSAGE_REACTIONS):
     """Used to represent Message Reaction Add gateway events."""
 
     #: The ID of the user adding the reaction.
@@ -1016,7 +1043,7 @@ class MessageReactionAddEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageReactionRemoveEvent(HikariEvent, marshaller.Deserializable):
+class MessageReactionRemoveEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_MESSAGE_REACTIONS):
     """Used to represent Message Reaction Remove gateway events."""
 
     #: The ID of the user who is removing their reaction.
@@ -1052,7 +1079,9 @@ class MessageReactionRemoveEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageReactionRemoveAllEvent(HikariEvent, marshaller.Deserializable):
+class MessageReactionRemoveAllEvent(
+    HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_MESSAGE_REACTIONS
+):
     """Used to represent Message Reaction Remove All gateway events.
 
     Sent when all the reactions are removed from a message, regardless of emoji.
@@ -1078,7 +1107,9 @@ class MessageReactionRemoveAllEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageReactionRemoveEmojiEvent(HikariEvent, marshaller.Deserializable):
+class MessageReactionRemoveEmojiEvent(
+    HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_MESSAGE_REACTIONS
+):
     """Represents Message Reaction Remove Emoji events.
 
     Sent when all the reactions for a single emoji are removed from a message.
@@ -1111,7 +1142,7 @@ class MessageReactionRemoveEmojiEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PresenceUpdateEvent(HikariEvent, guilds.GuildMemberPresence):
+class PresenceUpdateEvent(HikariEvent, guilds.GuildMemberPresence, intent=intents.Intent.GUILD_PRESENCES):
     """Used to represent Presence Update gateway events.
 
     Sent when a guild member changes their presence.
@@ -1120,7 +1151,7 @@ class PresenceUpdateEvent(HikariEvent, guilds.GuildMemberPresence):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class TypingStartEvent(HikariEvent, marshaller.Deserializable):
+class TypingStartEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_MESSAGE_TYPING):
     """Used to represent typing start gateway events.
 
     Received when a user or bot starts "typing" in a channel.
@@ -1171,7 +1202,7 @@ class UserUpdateEvent(HikariEvent, users.MyUser):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class VoiceStateUpdateEvent(HikariEvent, voices.VoiceState):
+class VoiceStateUpdateEvent(HikariEvent, voices.VoiceState, intent=intents.Intent.GUILD_VOICE_STATES):
     """Used to represent voice state update gateway events.
 
     Sent when a user joins, leaves or moves voice channel(s).
@@ -1205,7 +1236,7 @@ class VoiceServerUpdateEvent(HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class WebhookUpdateEvent(HikariEvent, marshaller.Deserializable):
+class WebhookUpdateEvent(HikariEvent, marshaller.Deserializable, intent=intents.Intent.GUILD_MESSAGE_TYPING):
     """Used to represent webhook update gateway events.
 
     Sent when a webhook is updated, created or deleted in a guild.
