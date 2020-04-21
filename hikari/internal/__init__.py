@@ -16,7 +16,4 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Various utilities used internally within this API.
-
-|internal|
-"""
+"""Various utilities used internally within this API."""

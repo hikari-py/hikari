@@ -37,23 +37,23 @@ class RESTInviteComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W
 
         Parameters
         ----------
-        invite : :obj:`~typing.Union` [ :obj:`~hikari.invites.Invite`, :obj:`~str` ]
+        invite : typing.Union [ hikari.invites.Invite, str ]
             The object or code of the wanted invite.
-        with_counts : :bool:
+        with_counts : bool
             If specified, whether to attempt to count the number of
             times the invite has been used.
 
         Returns
         -------
-        :obj:`~hikari.invites.Invite`
+        hikari.invites.Invite
             The requested invite object.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the invite is not found.
         """
         payload = await self._session.get_invite(invite_code=getattr(invite, "code", invite), with_counts=with_counts)
@@ -64,21 +64,21 @@ class RESTInviteComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W
 
         Parameters
         ----------
-        invite : :obj:`~typing.Union` [ :obj:`~hikari.invites.Invite`, :obj:`~str` ]
+        invite : typing.Union [ hikari.invites.Invite, str ]
             The object or ID for the invite to be deleted.
 
         Returns
         -------
-        :obj:`~None`
+        None
             Nothing, unlike what the API specifies. This is done to maintain
             consistency with other calls of a similar nature in this API wrapper.
 
         Raises
         ------
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the invite is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack either ``MANAGE_CHANNELS`` on the channel the invite
-            belongs to or ``MANAGE_GUILD`` for guild-global delete.
+        hikari.errors.ForbiddenHTTPError
+            If you lack either `MANAGE_CHANNELS` on the channel the invite
+            belongs to or `MANAGE_GUILD` for guild-global delete.
         """
         await self._session.delete_invite(invite_code=getattr(invite, "code", invite))

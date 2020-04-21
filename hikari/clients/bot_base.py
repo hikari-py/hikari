@@ -57,59 +57,49 @@ class BotBase(
     """An abstract base class for a bot implementation.
 
     This takes several generic parameter types in the following order:
-    - ``ShardClientT`` - the implementation of
-        :obj:`~hikari.clients.shard_clients.ShardClient` to use for shards.
-    - ``RESTClientT`` - the implementation of
-        :obj:`~hikari.clients.rest.RESTClient` to use for API calls.
-    - ``EventDispatcherT`` - the implementation of
-        :obj:`~hikari.state.dispatchers.EventDispacher` to use for
+
+    * `ShardClientT` - the implementation of
+        `hikari.clients.shards.ShardClient` to use for shards.
+    * `RESTClientT` - the implementation of
+        `hikari.clients.rest.RESTClient` to use for API calls.
+    * `EventDispatcherT` - the implementation of
+        `hikari.state.dispatchers.EventDispatcher` to use for
         dispatching events. This class will then delegate any calls inherited
-        from :obj:`~hikari.state.dispatchers.EventDispacher` to that
+        from `hikari.state.dispatchers.EventDispatcher` to that
         implementation when provided.
-    - ``EventManagerT`` - the implementation of
-        :obj:`~hikari.state.event_managers.EventManager` to use for
+    * `EventManagerT` - the implementation of
+        `hikari.state.event_managers.EventManager` to use for
         event management, translation, and dispatching.
-    - ``BotConfigT`` - the implementation of
-        :obj:`~hikari.clients.configs.BotConfig` to read component-specific
+    * `BotConfigT` - the implementation of
+        `hikari.clients.configs.BotConfig` to read component-specific
         details from.
 
     Parameters
     ----------
-    config : :obj:`~hikari.clients.configs.BotConfig`
+    config : hikari.clients.configs.BotConfig
         The config object to use.
     """
 
-    #: The config for this bot.
-    #:
-    #: :type: :obj:`~hikari.clients.configs.BotConfig`
     _config: BotConfigT
+    """The config for this bot."""
 
-    #: The event dispatcher for this bot.
-    #:
-    #: :type: an implementation instance of :obj:`~hikari.state.dispatcher.EventDispatcher`
     event_dispatcher: EventDispatcherT
+    """The event dispatcher for this bot."""
 
-    #: The event manager for this bot.
-    #:
-    #: :type: an implementation instance of :obj:`~hikari.state.event_managers.EventManager`
     event_manager: EventManagerT
+    """The event manager for this bot."""
 
-    #: The logger to use for this bot.
-    #:
-    #: :type: :obj:`~logging.Logger`
     logger: logging.Logger
+    """The logger to use for this bot."""
 
-    #: The REST HTTP client to use for this bot.
-    #:
-    #: :type: :obj:`~hikari.clients.rest.RESTClient`
     rest: RESTClientT
+    """The REST HTTP client to use for this bot."""
 
-    #: Shards registered to this bot.
-    #:
-    #: These will be created once the bot has started execution.
-    #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~int`, ? extends :obj:`~hikari.clients.shard_client.ShardClient` ]
     shards: typing.Mapping[int, ShardClientT]
+    """Shards registered to this bot.
+
+    These will be created once the bot has started execution.
+    """
 
     def __init__(self, config: configs.BotConfig) -> None:
         super().__init__(logging.getLogger(f"hikari.{type(self).__qualname__}"))
@@ -125,18 +115,18 @@ class BotBase(
 
         This will return a mean of all the heartbeat intervals for all shards
         with a valid heartbeat latency that are in the
-        :obj:`~hikari.clients.shard_clients.ShardState.READY` state.
+        `hikari.clients.shards.ShardState.READY` state.
 
-        If no shards are in this state, this will return ``float('nan')``
+        If no shards are in this state, this will return `float("nan")`
         instead.
 
         Returns
         -------
-        :obj:`~float`
-            The mean latency for all ``READY`` shards that have sent at least
-            one acknowledged ``HEARTBEAT`` payload. If there is not at least
+        float
+            The mean latency for all `READY` shards that have sent at least
+            one acknowledged `HEARTBEAT` payload. If there is not at least
             one shard that meets this criteria, this will instead return
-            ``float('nan')``.
+            `float("nan")`.
         """
         latencies = []
         for shard in self.shards.values():
@@ -147,48 +137,25 @@ class BotBase(
 
     @property
     def total_disconnect_count(self) -> int:
-        """Total number of times any shard has disconnected.
-
-        Returns
-        -------
-        :obj:`int`
-            Total disconnect count.
-        """
+        """Total number of times any shard has disconnected."""
         return sum(s.disconnect_count for s in self.shards.values())
 
     @property
     def total_reconnect_count(self) -> int:
-        """Total number of times any shard has reconnected.
-
-        Returns
-        -------
-        :obj:`int`
-            Total reconnect count.
-        """
+        """Total number of times any shard has reconnected."""
         return sum(s.reconnect_count for s in self.shards.values())
 
     @property
-    def intents(self) -> typing.Optional[intents.Intent]:
-        """Intent values that any shard connections will be using.
+    def intents(self) -> typing.Optional[intents.Intent]:  # noqa: D401
+        """Intents that are in use for the connection.
 
-        Returns
-        -------
-        :obj:`~hikari.intents.Intent`, optional
-            A :obj:`~enum.IntFlag` enum containing each intent that is set. If
-            intents are not being used at all, then this will return
-            :obj:`~None` instead.
+        If intents are not being used at all, then this will be `None` instead.
         """
         return self._config.intents
 
     @property
     def version(self) -> float:
-        """Version being used for the gateway API.
-
-        Returns
-        -------
-        :obj:`~int`
-            The API version being used.
-        """
+        """Version being used for the gateway API."""
         return self._config.gateway_version
 
     async def start(self):
@@ -290,29 +257,26 @@ class BotBase(
         Any arguments that you do not explicitly provide some value for will
         not be changed.
 
-        Warning
-        -------
-        This will only apply to connected shards.
+        !!! warning
+            This will only apply to connected shards.
 
-        Notes
-        -----
-        If you wish to update a presence for a specific shard, you can do this
-        by using the ``shards`` :obj:`~typing.Mapping` to find the shard you
-        wish to update.
+        !!! note
+            If you wish to update a presence for a specific shard, you can do this
+            by using the `shards` `typing.Mapping` to find the shard you wish to
+            update.
 
         Parameters
         ----------
-        status : :obj:`~hikari.guilds.PresenceStatus`
+        status : hikari.guilds.PresenceStatus
             If specified, the new status to set.
-        activity : :obj:`~hikari.gateway_entities.GatewayActivity`, optional
+        activity : hikari.gateway_entities.Activity, optional
             If specified, the new activity to set.
-        idle_since : :obj:`~datetime.datetime`, optional
+        idle_since : datetime.datetime, optional
             If specified, the time to show up as being idle since,
-            or :obj:`~None` if not applicable.
-        is_afk : :obj:`~bool`
-            If specified, :obj:`~True` if the user should be marked as AFK,
-            or :obj:`~False` otherwise.
-
+            or `None` if not applicable.
+        is_afk : bool
+            If specified, `True` if the user should be marked as AFK,
+            or `False` otherwise.
         """
         await asyncio.gather(
             *(
@@ -331,30 +295,28 @@ class BotBase(
 
         Parameters
         ----------
-        shard_id : :obj:`~int`
+        shard_id : int
             The shard ID to use.
-        shard_count : :obj:`~int`
+        shard_count : int
             The shard count to use.
-        url : :obj:`~str`
+        url : str
             The gateway URL to connect to.
-        config : :obj:`~hikari.clients.configs.BotConfig`
+        config : hikari.clients.configs.BotConfig
             The bot config to use.
-        event_manager :obj:`~hikari.state.event_managers.EventManager`
+        event_manager hikari.state.event_managers.EventManager
             The event manager to use.
 
         Returns
         -------
-        :obj:`~hikari.clients.shard_clients.ShardClient`
+        hikari.clients.shards.ShardClient
             The shard client implementation to use for the given shard ID.
 
-        Notes
-        -----
-        The ``shard_id`` and ``shard_count`` may be set within the ``config``
-        object passed, but any conforming implementations are expected to
-        use the value passed in the ``shard_id` and ``shard_count`` parameters
-        regardless. Failure to do so may result in an invalid sharding
-        configuration being used.
-
+        !!! note
+            The `shard_id` and `shard_count` may be set within the `config`
+            object passed, but any conforming implementations are expected to
+            use the value passed in the `shard_id` and `shard_count` parameters
+            regardless. Failure to do so may result in an invalid sharding
+            configuration being used.
         """
 
     @classmethod
@@ -364,12 +326,12 @@ class BotBase(
 
         Parameters
         ----------
-        config : :obj:`~hikari.clients.configs.BotConfig`
+        config : hikari.clients.configs.BotConfig
             The bot config to use.
 
         Returns
         -------
-        :obj:`~hikari.clients.rest.RESTClient`
+        hikari.clients.rest.RESTClient
             The REST client to use.
 
         """
@@ -381,12 +343,12 @@ class BotBase(
 
         Parameters
         ----------
-        config : :obj:`~hikari.clients.configs.BotConfig`
+        config : hikari.clients.configs.BotConfig
             The bot config to use.
 
         Returns
         -------
-        :obj:`~hikari.state.event_managers.EventManager`
+        hikari.state.event_managers.EventManager
             The event manager to use internally.
 
         """
@@ -398,11 +360,10 @@ class BotBase(
 
         Parameters
         ----------
-        config : :obj:`~hikari.clients.configs.BotConfig`
+        config : hikari.clients.configs.BotConfig`
             The bot config to use.
 
         Returns
         -------
-        :obj:`~hikari.state.dispatchers.EventDispatcher`
-
+        hikari.state.dispatchers.EventDispatcher
         """

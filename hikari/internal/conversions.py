@@ -64,10 +64,10 @@ FileLikeT = typing.Union[BytesLikeT, io.BufferedRandom, io.BufferedReader, io.Bu
 
 
 def nullable_cast(value: CastInputT, cast: TypeCastT, /) -> ResultT:
-    """Attempt to cast the given ``value`` with the given ``cast``.
+    """Attempt to cast the given `value` with the given `cast`.
 
-    This will only succeed if ``value`` is not :obj:`~None`. If it is
-    :obj:`~None`, then :obj:`~None` is returned instead.
+    This will only succeed if `value` is not `None`. If it is `None`, then
+    `None` is returned instead.
     """
     if value is None:
         return None
@@ -77,7 +77,7 @@ def nullable_cast(value: CastInputT, cast: TypeCastT, /) -> ResultT:
 def try_cast(value: CastInputT, cast: TypeCastT, default: DefaultT = None, /) -> ResultT:
     """Try to cast the given value to the given cast.
 
-    If it throws a :obj:`~Exception` or derivative, it will return ``default``
+    If it throws a `Exception` or derivative, it will return `default`
     instead of the cast value instead.
     """
     with contextlib.suppress(Exception):
@@ -90,7 +90,7 @@ def try_cast_or_defer_unary_operator(type_: typing.Type, /):
 
     Parameters
     ----------
-    type_ : :obj:`~typing.Callable` [ ..., ``output type`` ]
+    type_ : typing.Callable [ ..., `output type` ]
         The type to cast to.
     """
     return lambda data: try_cast(data, type_, data)
@@ -103,17 +103,17 @@ def put_if_specified(
     type_after: typing.Optional[TypeCastT] = None,
     /,
 ) -> None:
-    """Add a value to the mapping under the given key as long as the value is not ``...``.
+    """Add a value to the mapping under the given key as long as the value is not `...`.
 
     Parameters
     ----------
-    mapping : :obj:`~typing.Dict` [ :obj:`~typing.Hashable`, :obj:`~typing.Any` ]
+    mapping : typing.Dict [ typing.Hashable, typing.Any ]
         The mapping to add to.
-    key : :obj:`~typing.Hashable`
+    key : typing.Hashable
         The key to add the value under.
-    value : :obj:`~typing.Any`
+    value : typing.Any
         The value to add.
-    type_after : :obj:`~typing.Callable` [ [ ``input type`` ], ``output type`` ], optional
+    type_after : typing.Callable [ [ `input type` ], `output type` ], optional
         Type to apply to the value when added.
     """
     if value is not ...:
@@ -128,23 +128,22 @@ def image_bytes_to_image_data(img_bytes: typing.Optional[bytes] = None, /) -> ty
 
     Parameters
     ----------
-    img_bytes : :obj:`~bytes`, optional
+    img_bytes : bytes, optional
         The image bytes.
 
     Raises
     ------
-    :obj:`~ValueError`
+    ValueError
         If the image type passed is not supported.
 
     Returns
     -------
-    :obj:`~str`, optional
-        The ``image_bytes`` given encoded into an image data string or
-        :obj:`~None`.
+    str, optional
+        The `image_bytes` given encoded into an image data string or
+        `None`.
 
-    Note
-    ----
-    Supported image types: ``.png``, ``.jpeg``, ``.jfif``, ``.gif``, ``.webp``
+    !!! note
+        Supported image types: `.png`, `.jpeg`, `.jfif`, `.gif`, `.webp`
     """
     if img_bytes is None:
         return None
@@ -170,12 +169,12 @@ def parse_http_date(date_str: str, /) -> datetime.datetime:
 
     Parameters
     ----------
-    date_str : :obj:`~str`
+    date_str : str
         The RFC-2822 (section 3.3) compliant date string to parse.
 
     Returns
     -------
-    :obj:`~datetime.datetime`
+    datetime.datetime
         The HTTP date as a datetime object.
 
     See Also
@@ -186,21 +185,21 @@ def parse_http_date(date_str: str, /) -> datetime.datetime:
 
 
 def parse_iso_8601_ts(date_string: str, /) -> datetime.datetime:
-    """Parse an ISO 8601 date string into a :obj:`~datetime.datetime` object.
+    """Parse an ISO 8601 date string into a `datetime.datetime` object.
 
     Parameters
     ----------
-    date_string : :obj:`~str`
+    date_string : str
         The ISO 8601 compliant date string to parse.
 
     Returns
     -------
-    :obj:`~datetime.datetime`
+    datetime.datetime
         The ISO 8601 date string as a datetime object.
 
     See Also
     --------
-    `<https://en.wikipedia.org/wiki/ISO_8601>`_
+    https://en.wikipedia.org/wiki/ISO_8601
     """
     year, month, day = map(int, ISO_8601_DATE_PART.findall(date_string)[0])
 
@@ -224,32 +223,32 @@ def parse_iso_8601_ts(date_string: str, /) -> datetime.datetime:
 
 
 def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
-    """Parse a Discord epoch into a :obj:`~datetime.datetime` object.
+    """Parse a Discord epoch into a `datetime.datetime` object.
 
     Parameters
     ----------
-    epoch : :obj:`~int`
+    epoch : int
         Number of milliseconds since 1/1/2015 (UTC)
 
     Returns
     -------
-    :obj:`~datetime.datetime`
+    datetime.datetime
         Number of seconds since 1/1/1970 within a datetime object (UTC).
     """
     return datetime.datetime.fromtimestamp(epoch / 1000 + DISCORD_EPOCH, datetime.timezone.utc)
 
 
 def unix_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
-    """Parse a UNIX epoch to a :obj:`~datetime.datetime` object.
+    """Parse a UNIX epoch to a `datetime.datetime` object.
 
     Parameters
     ----------
-    epoch : :obj:`~int`
+    epoch : int
         Number of milliseconds since 1/1/1970 (UTC)
 
     Returns
     -------
-    :obj:`~datetime.datetime`
+    datetime.datetime
         Number of seconds since 1/1/1970 within a datetime object (UTC).
     """
     return datetime.datetime.fromtimestamp(epoch / 1000, datetime.timezone.utc)
@@ -265,12 +264,12 @@ class Seekable(typing.Protocol[typing.AnyStr]):
 
         Parameters
         ----------
-        offset : :obj:`~int`
+        offset : int
             The offset to seek to.
-        whence : :obj:`~int`
-            If ``0``, as the default, then use absolute file positioning.
-            If ``1``, then seek to the current position.
-            If ``2``, then seek relative to the end of the file.
+        whence : int
+            If `0`, as the default, then use absolute file positioning.
+            If `1`, then seek to the current position.
+            If `2`, then seek relative to the end of the file.
         """
 
     def tell(self) -> int:
@@ -278,7 +277,7 @@ class Seekable(typing.Protocol[typing.AnyStr]):
 
         Returns
         -------
-        :obj:`~int`
+        int
             The stream position.
         """
 
@@ -287,7 +286,7 @@ class Seekable(typing.Protocol[typing.AnyStr]):
 
         Returns
         -------
-        :obj:`~str`
+        str
             The string that was read.
         """
 
@@ -298,17 +297,17 @@ class Seekable(typing.Protocol[typing.AnyStr]):
 def make_resource_seekable(resource: typing.Any, /) -> Seekable:
     """Make a seekable resource to use off some representation of data.
 
-    This supports :obj:`~bytes`, :obj:`~bytearray`, :obj:`~memoryview`, and
-    :obj:`~str`. Anything else is just returned.
+    This supports `bytes`,`bytearray`, `memoryview`, and
+    `str`. Anything else is just returned.
 
     Parameters
     ----------
-    resource : :obj:`~typing.Any`
+    resource : typing.Any
         The resource to check.
 
     Returns
     -------
-    :obj:`~typing.Union` [ :obj:`~io.BytesIO`, :obj:`~io.StringIO` ]
+    typing.Union [ io.BytesIO, io.StringIO` ]
         An stream-compatible resource where possible.
     """
     if isinstance(resource, (bytes, bytearray)):
@@ -324,17 +323,17 @@ def make_resource_seekable(resource: typing.Any, /) -> Seekable:
 def get_bytes_from_resource(resource: typing.Any) -> bytes:
     """Take in any file-like object and return the raw bytes data from it.
 
-    Supports any ``FileLikeT`` type that isn't string based.
+    Supports any `FileLikeT` type that isn't string based.
     Anything else is just returned.
 
     Parameters
     ----------
-    resource : ``FileLikeT``
+    resource : FileLikeT
         The resource to get bytes from.
 
     Returns
     -------
-    :obj:`~bytes`
+    byte
         The resulting bytes.
     """
     if isinstance(resource, bytearray):
@@ -359,46 +358,45 @@ def snoop_typehint_from_scope(frame: types.FrameType, typehint: typing.Union[str
     This snoops around the local and global scope for the given frame to find
     the given attribute name, taking into account nested function calls. The
     reason to do this is that if a string type hint is used, or the
-    ``from __future__ import annotations`` directive is used, the physical thing
+    `from __future__ import annotations` directive is used, the physical thing
     that the type hint represents will no longer be evaluated by the
     interpreter. This is an implementation that does not require the use of
-    :obj:`~eval`, and thus reduces the risk of arbitrary code execution as a
+    `eval`, and thus reduces the risk of arbitrary code execution as a
     result.
 
-    Nested parameters such as :obj:`~typing.Sequence` should also be able to be
+    Nested parameters such as `typing.Sequence` should also be able to be
     resolved correctly.
 
     Parameters
     ----------
-    frame : :obj:`~types.FrameType`
+    frame : types.FrameType
         The stack frame that the element with the typehint was defined in.
-        This is retrieved using :obj:`~inspect.stack` ``(frame_no)[0][0]``,
-        where ``frame_no`` is the number of frames from this invocation that
+        This is retrieved using `inspect.stack` `(frame_no)[0][0]`,
+        where `frame_no` is the number of frames from this invocation that
         you want to snoop the scope at.
-    typehint : :obj:`~typing.Union` [ :obj:`~str`, :obj:`~typing.Any` ]
-        The type hint to resolve. If a non-:obj:`~str` is passed, then this is
+    typehint : typing.Union [ str, typing.Any ]
+        The type hint to resolve. If a non-`str` is passed, then this is
         returned immediately as the result.
 
     Returns
     -------
-    :obj:`~typing.Any`
+    typing.Any
         The physical representation of the given type hint.
 
     Raises
     ------
-    :obj:`~NameError`
+    NameError
         If the attribute was not found.
 
-    Warnings
-    --------
-    The input frame must be manually dereferenced using the ``del`` keyword
-    after use. Any functions that are decorated and wrapped when using this
-    lookup must use :obj:`~functools.wraps` to ensure that the correct scope is
-    identified on the stack.
+    !!! warning
+        The input frame must be manually dereferenced using the `del` keyword
+        after use. Any functions that are decorated and wrapped when using this
+        lookup must use `functools.wraps` to ensure that the correct scope is
+        identified on the stack.
 
-    This is incredibly unpythonic and baremetal, but due to
-    `PEP 563 <https://www.python.org/dev/peps/pep-0563/>` there is no other
-    consistent way of making this work correctly.
+        This is incredibly unpythonic and baremetal, but due to
+        [PEP 563](https://www.python.org/dev/peps/pep-0563/) there is no other
+        consistent way of making this work correctly.
     """
     if not isinstance(typehint, str):
         return typehint
@@ -420,33 +418,32 @@ def dereference_int_flag(
     int_flag_type: typing.Type[IntFlagT],
     raw_value: typing.Union[RawIntFlagValueT, typing.Collection[RawIntFlagValueT]],
 ) -> IntFlagT:
-    """Cast to the provided :obj:`~enum.IntFlag` type.
+    """Cast to the provided `enum.IntFlag` type.
 
     This supports resolving bitfield integers as well as decoding a sequence
     of case insensitive flag names into one combined value.
 
     Parameters
     ----------
-    int_flag_type : :obj:`~typing.Type` [ :obj:`~enum.IntFlag` ]
+    int_flag_type : typing.Type [ enum.IntFlag ]
         The type of the int flag to check.
-    raw_value : ``Castable Value``
+    raw_value : Castable Value
         The raw value to convert.
 
     Returns
     -------
-    :obj:`~enum.IntFlag`
+    enum.IntFlag
         The cast value as a flag.
 
-    Notes
-    -----
-    Types that are a ``Castable Value`` include:
-    - :obj:`~str`
-    - :obj:`~int`
-    - :obj:`~typing.SupportsInt`
-    - :obj:`~typing.Collection` [ ``Castable Value`` ]
+    !!! note
+        Types that are a `Castable Value` include:
+        - `str`
+        - `int`
+        - `typing.SupportsInt`
+        - `typing.Collection` [ `Castable Value` ]
 
-    When a collection is passed, values will be combined using functional
-    reduction via the :obj:operator.or_` operator.
+        When a collection is passed, values will be combined using functional
+        reduction via the `operator.or_` operator.
     """
     if isinstance(raw_value, str) and raw_value.isdigit():
         raw_value = int(raw_value)

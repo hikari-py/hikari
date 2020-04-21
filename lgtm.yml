@@ -1,12 +1,18 @@
 path_classifiers:
+  library:
+    - exclude: /
+    - hikari/
   test:
     - exclude: /
     - tests/
-    - noxfile.old.py
-    - noxfile.py
-    - ci/
+  generated:
+    - exclude: /
+  docs:
+    - exclude: /
     - docs/
-    - tasks/
+  template:
+    - exclude: /
+
 queries:
   # Breaks with `from __future__ import annotations'
   - exclude: py/unsafe-cyclic-import
@@ -18,3 +24,8 @@ queries:
   - exclude: py/similar-function
   # Gives false positives everywhere for package `__init__.py`'s that import submodules into their namespace.
   - exclude: py/import-own-module
+
+extraction:
+  python:
+    python_setup:
+      version: 3

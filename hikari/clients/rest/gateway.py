@@ -34,12 +34,11 @@ class RESTGatewayComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Returns
         -------
-        :obj:`~str`
+        str
             A static URL to use to connect to the gateway with.
 
-        Note
-        ----
-        Users are expected to attempt to cache this result.
+        !!! note
+            Users are expected to attempt to cache this result.
         """
         return await self._session.get_gateway()
 
@@ -48,12 +47,12 @@ class RESTGatewayComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Returns
         -------
-        :obj:`~hikari.gateway_entities.GatewayBot`
+        hikari.gateway_entities.GatewayBot
             The bot specific gateway information object.
 
-        Note
-        ----
-        Unlike :meth:`fetch_gateway_url`, this requires a valid token to work.
+        !!! note
+            Unlike `RESTGatewayComponent.fetch_gateway_url`, this requires a
+            valid token to work.
         """
         payload = await self._session.get_gateway_bot()
         return gateway_entities.GatewayBot.deserialize(payload)

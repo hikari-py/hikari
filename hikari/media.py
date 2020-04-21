@@ -43,5 +43,5 @@ IO = typing.Union[TextIO, BytesIO]
 
 
 async def safe_read_file(file: IO) -> typing.Tuple[str, conversions.FileLikeT]:
-    """Safely read an ``IO`` like object."""
+    """Safely read an `IO` like object."""
     raise NotImplementedError  # TODO: Nekokatt: update this.

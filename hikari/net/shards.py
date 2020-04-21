@@ -26,9 +26,9 @@ specific shard in a swarm of shards making up a larger bot.
 
 See Also
 --------
-* IANA WS closure code standards: https://www.iana.org/assignments/websocket/websocket.xhtml
-* Gateway documentation: https://discordapp.com/developers/docs/topics/gateway
-* Opcode documentation: https://discordapp.com/developers/docs/topics/opcodes-and-status-codes
+* [IANA WS closure code standards](https://www.iana.org/assignments/websocket/websocket.xhtml)
+* [Gateway documentation](https://discordapp.com/developers/docs/topics/gateway)
+* [Opcode documentation](https://discordapp.com/developers/docs/topics/opcodes-and-status-codes)
 """
 __all__ = ["Shard"]
 
@@ -53,8 +53,8 @@ from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import user_agents
 
-#: The signature for an event dispatch callback.
 DispatchT = typing.Callable[["Shard", str, typing.Dict], None]
+"""The signature for an event dispatch callback."""
 
 
 VERSION_6: typing.Final[int] = 6
@@ -68,92 +68,88 @@ class Shard:
     application of events that occur, and to allow you to change your presence,
     amongst other real-time applications.
 
-    Each :obj:`~Shard` represents a single shard.
+    Each `Shard` represents a single shard.
 
     Expected events that may be passed to the event dispatcher are documented in the
-    `gateway event reference <https://discordapp.com/developers/docs/topics/gateway#commands-and-events>`_.
+    [gateway event reference](https://discordapp.com/developers/docs/topics/gateway#commands-and-events) .
     No normalization of the gateway event names occurs. In addition to this,
     some internal events can also be triggered to notify you of changes to
     the connection state.
 
-    * ``CONNECTED`` - fired on initial connection to Discord.
-    * ``DISCONNECTED`` - fired when the connection is closed for any reason.
+    * `CONNECTED` - fired on initial connection to Discord.
+    * `DISCONNECTED` - fired when the connection is closed for any reason.
 
     Parameters
     ----------
-    compression: :obj:`~bool`
-        If True, then payload compression is enabled on the connection.
-        If False, no payloads are compressed. You usually want to keep this
+    compression : bool
+        If `True`, then payload compression is enabled on the connection.
+        If `False`, no payloads are compressed. You usually want to keep this
         enabled.
-    connector: :obj:`~aiohttp.BaseConnector`, optional
-        The :obj:`~aiohttp.BaseConnector` to use for the HTTP session that
+    connector : aiohttp.BaseConnector, optional
+        The `aiohttp.BaseConnector` to use for the HTTP session that
         gets upgraded to a websocket connection. You can use this to customise
         connection pooling, etc.
-    debug: :obj:`~bool`
-        If True, the client is configured to provide extra contextual
+    debug : bool
+        If `True`, the client is configured to provide extra contextual
         information to use when debugging this library or extending it. This
         includes logging every payload that is sent or received to the logger
         as debug entries. Generally it is best to keep this disabled.
-    dispatch: ``dispatch function``
+    dispatch : `dispatch function`
         The function to invoke with any dispatched events. This must not be a
         coroutine function, and must take three arguments only. The first is
-        the reference to this :obj:`~Shard` The second is the
+        the reference to this `Shard` The second is the
         event name.
-    initial_presence: :obj:`~typing.Dict`, optional
-        A raw JSON object as a :obj:`~typing.Dict` that should be set as the
-        initial presence of the bot user once online. If :obj:`~None`, then it
+    initial_presence : typing.Dict, optional
+        A raw JSON object as a `typing.Dict` that should be set as the
+        initial presence of the bot user once online. If `None`, then it
         will be set to the default, which is showing up as online without a
         custom status message.
-    intents: :obj:`~hikari.intents.Intent`, optional
+    intents : hikari.intents.Intent, optional
         Bitfield of intents to use. If you use the V7 API, this is mandatory.
         This field will determine what events you will receive.
-    json_deserialize: ``deserialization function``
-        A custom JSON deserializer function to use. Defaults to
-        :func:`json.loads`.
-    json_serialize: ``serialization function``
-        A custom JSON serializer function to use. Defaults to
-        :func:`json.dumps`.
-    large_threshold: :obj:`~int`
+    json_deserialize : `deserialization function`
+        A custom JSON deserializer function to use. Defaults to `json.loads`.
+    json_serialize : `serialization function`
+        A custom JSON serializer function to use. Defaults to `json.dumps`.
+    large_threshold : int
         The number of members that have to be in a guild for it to be
         considered to be "large". Large guilds will not have member information
         sent automatically, and must manually request that member chunks be
-        sent using :meth:`request_guild_members`.
-    proxy_auth: :obj:`~aiohttp.BasicAuth`, optional
-        Optional :obj:`~aiohttp.BasicAuth` object that can be provided to
-        allow authenticating with a proxy if you use one. Leave :obj:`~None` to
-        ignore.
-    proxy_headers: :obj:`~typing.Mapping` [ :obj:`~str`, :obj:`~str` ], optional
-        Optional :obj:`~typing.Mapping` to provide as headers to allow the
-        connection through a proxy if you use one. Leave :obj:`~None` to ignore.
-    proxy_url: :obj:`~str`, optional
-        Optional :obj:`~str` to use for a proxy server. If :obj:`~None`, then it
-        is ignored.
-    session_id: :obj:`~str`, optional
-        The session ID to use. If specified along with ``seq``, then the
-        gateway client will attempt to ``RESUME`` an existing session rather than
-        re-``IDENTIFY``. Otherwise, it will be ignored.
-    seq: :obj:`~int`, optional
-        The sequence number to use. If specified along with ``session_id``, then
-        the gateway client will attempt to ``RESUME`` an existing session rather
-        than re-``IDENTIFY``. Otherwise, it will be ignored.
-    shard_id: :obj:`~int`
-        The shard ID of this gateway client. Defaults to ``0``.
-    shard_count: :obj:`~int`
-        The number of shards on this gateway. Defaults to ``1``, which implies no
+        sent using `ShardConnection.request_guild_members`.
+    proxy_auth : aiohttp.BasicAuth, optional
+        Optional `aiohttp.BasicAuth` object that can be provided to
+        allow authenticating with a proxy if you use one. Leave `None` to ignore.
+    proxy_headers : typing.Mapping [ str, str ], optional
+        Optional `typing.Mapping` to provide as headers to allow the
+        connection through a proxy if you use one. Leave `None` to ignore.
+    proxy_url : str, optional
+        Optional `str` to use for a proxy server. If `None`, then it is ignored.
+    session_id : str, optional
+        The session ID to use. If specified along with `seq`, then the
+        gateway client will attempt to `RESUME` an existing session rather than
+        re-`IDENTIFY`. Otherwise, it will be ignored.
+    seq : int, optional
+        The sequence number to use. If specified along with `session_id`, then
+        the gateway client will attempt to `RESUME` an existing session rather
+        than re-`IDENTIFY`. Otherwise, it will be ignored.
+    shard_id : int
+        The shard ID of this gateway client. Defaults to `0`.
+    shard_count : int
+        The number of shards on this gateway. Defaults to `1`, which implies no
         sharding is taking place.
-    ssl_context: :obj:`~ssl.SSLContext`, optional
-        An optional custom :obj:`~ssl.SSLContext` to provide to customise how
+    ssl_context : ssl.SSLContext, optional
+        An optional custom `ssl.SSLContext` to provide to customise how
         SSL works.
-    token: :obj:`~str`
+    token : str
         The mandatory bot token for the bot account to use, minus the "Bot"
         authentication prefix used elsewhere.
-    url: :obj:`~str`
+    url : str
         The websocket URL to use.
-    verify_ssl: :obj:`~bool`
-        If :obj:`~True`, SSL verification is enabled, which is generally what you
+    verify_ssl : bool
+        If `True`, SSL verification is enabled, which is generally what you
         want. If you get SSL issues, you can try turning this off at your own
         risk.
-    version: :obj:`~int`
+    version : int
         The version of the API to use. Defaults to the most recent stable
         version (v6).
     """
@@ -221,119 +217,103 @@ class Shard:
     _ws: typing.Optional[aiohttp.ClientWebSocketResponse]
     _zlib: typing.Optional[zlib.decompressobj]
 
-    #: An event that is set when the connection closes.
-    #:
-    #: :type: :obj:`~asyncio.Event`
     closed_event: typing.Final[asyncio.Event]
+    """An event that is set when the connection closes."""
 
-    #: The number of times we have disconnected from the gateway on this
-    #: client instance.
-    #:
-    #: :type: :obj:`~int`
     disconnect_count: int
+    """The number of times we have disconnected from the gateway on this
+    client instance.
+    """
 
-    #: The dispatch method to call when dispatching a new event. This is
-    #: the method passed in the constructor.
     dispatch: DispatchT
+    """The dispatch method to call when dispatching a new event.
 
-    #: The heartbeat interval Discord instructed the client to beat at.
-    #: This is ``nan`` until this information is received.
-    #:
-    #: :type: :obj:`~float`
+    This is the method passed in the constructor.
+    """
+
     heartbeat_interval: float
+    """The heartbeat interval Discord instructed the client to beat at.
 
-    #: The most recent heartbeat latency measurement in seconds. This is
-    #: ``nan`` until this information is available. The latency is calculated
-    #: as the time between sending a ``HEARTBEAT`` payload and receiving a
-    #: ``HEARTBEAT_ACK`` response.
-    #:
-    #: :type: :obj:`~float`
+    This is `nan` until this information is received.
+    """
+
     heartbeat_latency: float
+    """The most recent heartbeat latency measurement in seconds.
 
-    #: An event that is set when Discord sends a ``HELLO`` payload. This
-    #: indicates some sort of connection has successfully been made.
-    #:
-    #: :type: :obj:`~asyncio.Event`
+    This is `nan` until this information is available. The latency is calculated
+    as the time between sending a `HEARTBEAT` payload and receiving a
+    `HEARTBEAT_ACK` response.
+    """
+
     hello_event: typing.Final[asyncio.Event]
+    """An event that is set when Discord sends a `HELLO` payload.
 
-    #: An event that is set when the client has successfully ``IDENTIFY``ed
-    #: or ``RESUMED`` with the gateway. This indicates regular communication
-    #: can now take place on the connection and events can be expected to
-    #: be received.
-    #:
-    #: :type: :obj:`~asyncio.Event`
+    This indicates some sort of connection has successfully been made.
+    """
+
     handshake_event: typing.Final[asyncio.Event]
+    """An event that is set when the client has successfully `IDENTIFY`ed
+    or `RESUMED` with the gateway.
 
-    #: The monotonic timestamp that the last ``HEARTBEAT`` was sent at, or
-    #: ``nan`` if no ``HEARTBEAT`` has yet been sent.
-    #:
-    #: :type: :obj:`~float`
+    This indicates regular communication can now take place on the connection
+    and events can be expected to be received.
+    """
+
     last_heartbeat_sent: float
+    """The monotonic timestamp that the last `HEARTBEAT` was sent at.
 
-    #: The monotonic timestamp at which the last payload was received from
-    #: Discord. If this was more than the ``heartbeat_interval`` from
-    #: the current time, then the connection is assumed to be zombied and
-    #: is shut down. If no messages have been received yet, this is ``nan``.
-    #:
-    #: :type: :obj:`~float`
+    This will be `nan` if no `HEARTBEAT` has yet been sent.
+    """
+
     last_message_received: float
+    """The monotonic timestamp at which the last payload was received from Discord.
 
-    #: The logger used for dumping information about what this client is doing.
-    #:
-    #: :type: :obj:`~logging.Logger`
+    If this was more than the `heartbeat_interval` from the current time, then
+    the connection is assumed to be zombied and is shut down.
+    If no messages have been received yet, this is `nan`.
+    """
+
     logger: typing.Final[logging.Logger]
+    """The logger used for dumping information about what this client is doing."""
 
-    #: An event that is triggered when a ``READY`` payload is received for the
-    #: shard. This indicates that it successfully started up and had a correct
-    #: sharding configuration. This is more appropriate to wait for than
-    #: :attr:`identify_event` since the former will still fire if starting
-    #: shards too closely together, for example. This would still lead to an
-    #: immediate invalid session being fired afterwards.
-    #
-    #: It is worth noting that this event is only set for the first ``READY``
-    #: event after connecting with a fresh connection. For all other purposes,
-    #: you should wait for the event to be fired in the ``dispatch`` function
-    #: you provide.
-    #:
-    #: :type: :obj:`~asyncio.Event`
     ready_event: typing.Final[asyncio.Event]
+    """An event that is triggered when a `READY` payload is received for the shard.
 
-    #: An event that is triggered when a resume has succeeded on the gateway.
-    #:
-    #: :type: :obj:`~asyncio.Event`
+    This indicates that it successfully started up and had a correct sharding
+    configuration. This is more appropriate to wait for than
+    `Shard.handshake_event` since the former will still fire if starting
+    shards too closely together, for example. This would still lead to an
+    immediate invalid session being fired afterwards.
+
+    It is worth noting that this event is only set for the first `READY` event
+    after connecting with a fresh connection. For all other purposes, you should
+    wait for the event to be fired in the `dispatch` function you provide.
+    """
+
     resumed_event: typing.Final[asyncio.Event]
+    """An event that is triggered when a resume has succeeded on the gateway."""
 
-    #: An event that is set when something requests that the connection
-    #: should close somewhere.
-    #:
-    #: :type: :obj:`~asyncio.Event`
     requesting_close_event: typing.Final[asyncio.Event]
+    """An event that is set when something requests that the connection should
+    close somewhere.
+    """
 
-    #: The current session ID, if known.
-    #:
-    #: :type: :obj:`~str`, optional
     session_id: typing.Optional[str]
+    """The current session ID, if known."""
 
-    #: The current sequence number for state synchronization with the API,
-    #: if known.
-    #:
-    #: :type: :obj:`~int`, optional.
     seq: typing.Optional[int]
+    """The current sequence number for state synchronization with the API,
+    if known.
+    """
 
-    #: The shard ID.
-    #:
-    #: :type: :obj:`~int`
     shard_id: typing.Final[int]
+    """The shard ID."""
 
-    #: The number of shards in use for the bot.
-    #:
-    #: :type: :obj:`~int`
     shard_count: typing.Final[int]
+    """The number of shards in use for the bot."""
 
-    #: The API version to use on Discord.
-    #:
-    #: :type: :obj:`~int`
     version: typing.Final[int]
+    """The API version to use on Discord."""
 
     def __init__(
         self,
@@ -415,54 +395,33 @@ class Shard:
     def uptime(self) -> datetime.timedelta:
         """Amount of time the connection has been running for.
 
-        Returns
-        -------
-        :obj:`~datetime.timedelta`
-            The amount of time the connection has been running for. If it isn't
-            running, this will always return ``0`` seconds.
+        If this connection isn't running, this will always be `0` seconds.
         """
         delta = time.perf_counter() - self._connected_at
         return datetime.timedelta(seconds=0 if math.isnan(delta) else delta)
 
     @property
     def is_connected(self) -> bool:
-        """Whether the gateway is connected or not.
-
-        Returns
-        -------
-        :obj:`~bool`
-            True if this gateway client is actively connected to something, or
-            False if it is not running.
-        """
+        """Whether the gateway is connected or not."""
         return not math.isnan(self._connected_at)
 
     @property
     def intents(self) -> typing.Optional[_intents.Intent]:
         """Intents being used.
 
-        If this is :obj:`~None`, no intent usage was being
-        used on this shard. On V6 this would be regular usage as prior to
-        the intents change in January 2020. If on V7, you just won't be
-        able to connect at all to the gateway.
-
-        Returns
-        -------
-        :obj:`~hikari.intents.Intent`, optional
-            The intents being used.
+        If this is `None`, no intent usage was being used on this shard.
+        On V6 this would be regular usage as prior to the intents change in
+        January 2020. If on V7, you just won't be able to connect at all to the
+        gateway.
         """
         return self._intents
 
     @property
     def reconnect_count(self) -> int:
-        """Reconnection count for this shard connection instance.
+        """Amount of times the gateway has reconnected since initialization.
 
         This can be used as a debugging context, but is also used internally
         for exception management.
-
-        Returns
-        -------
-        :obj:`~int`
-            The amount of times the gateway has reconnected since initialization.
         """
         # 0 disconnects + not is_connected => 0
         # 0 disconnects + is_connected => 0
@@ -475,13 +434,7 @@ class Shard:
     # Ignore docstring not starting in an imperative mood
     @property
     def current_presence(self) -> typing.Dict:  # noqa: D401
-        """Current presence for the gateway.
-
-        Returns
-        -------
-        :obj:`~typing.Dict`
-            The current presence for the gateway.
-        """
+        """Current presence for the gateway."""
         # Make a shallow copy to prevent mutation.
         return dict(self._presence or {})
 
@@ -497,35 +450,35 @@ class Shard:
         """Request the guild members for a guild or set of guilds.
 
         These guilds must be being served by this shard, and the results will be
-        provided to the dispatcher with ``GUILD_MEMBER_CHUNK`` events.
+        provided to the dispatcher with `GUILD_MEMBER_CHUNK` events.
 
         Parameters
         ----------
-        guild_id : :obj:`~str`
+        guild_id : str
             The first guild to request members for.
-        *guild_ids : :obj:`~str`
+        *guild_ids : str
             Additional guilds to request members for.
         **kwargs
             Optional arguments.
 
         Keyword Args
         ------------
-        limit : :obj:`~int`
-            Limit for the number of members to respond with. Set to ``0`` to be
+        limit : int
+            Limit for the number of members to respond with. Set to `0` to be
             unlimited.
-        query : :obj:`~str`
+        query : str
             An optional string to filter members with. If specified, only
             members who have a username starting with this string will be
             returned.
-        user_ids : :obj:`~typing.Sequence` [ :obj:`~str` ]
+        user_ids : typing.Sequence [ str ]
             An optional list of user IDs to return member info about.
 
-        Note
-        ----
-        You may not specify ``user_ids`` at the same time as ``limit`` and
-        ``query``. Likewise, if you specify one of ``limit`` or ``query``,
-        the other must also be included. The default, if no optional arguments
-        are specified, is to use a ``limit = 0`` and a ``query = ""`` (empty-string).
+        !!! note
+            You may not specify `user_id` at the same time as `limit` and
+            `query`. Likewise, if you specify one of `limit` or `query`, the
+            other must also be included. The default, if no optional arguments
+            are specified, is to use a `limit = 0` and a `query = ""`
+            (empty-string).
         """
         guilds = [guild_id, *guild_ids]
         constraints = {}
@@ -550,7 +503,7 @@ class Shard:
 
         Parameters
         ----------
-        presence : :obj:`~typing.Dict`
+        presence : typing.Dict
             The new presence payload to set.
         """
         presence.setdefault("since", None)
@@ -567,9 +520,9 @@ class Shard:
 
         Parameters
         ----------
-        client_session_type
+        client_session_type : aiohttp.ClientSession
             The client session implementation to use. You generally do not want
-            to change this from the default, which is :obj:`~aiohttp.ClientSession`.
+            to change this from the default, which is `aiohttp.ClientSession`.
         """
         if self.is_connected:
             raise RuntimeError("Already connected")
@@ -666,8 +619,8 @@ class Shard:
 
         Parameters
         ----------
-        close_code : :obj:`~int`
-            The close code to use. Defaults to ``1000`` (normal closure).
+        close_code : int
+            The close code to use. Defaults to `1000` (normal closure).
         """
         if not self.requesting_close_event.is_set():
             self.logger.debug("closing websocket connection")

@@ -68,30 +68,5 @@ from hikari.users import *
 from hikari.voices import *
 from hikari.webhooks import *
 
-# Import everything into this namespace.
-
-__all__ = [
-    *audit_logs.__all__,
-    *channels.__all__,
-    *clients.__all__,
-    *colors.__all__,
-    *colours.__all__,
-    *embeds.__all__,
-    *emojis.__all__,
-    *bases.__all__,
-    *events.__all__,
-    *gateway_entities.__all__,
-    *guilds.__all__,
-    *intents.__all__,
-    *invites.__all__,
-    *messages.__all__,
-    *net.__all__,
-    *applications.__all__,
-    *permissions.__all__,
-    *bases.__all__,
-    *state.__all__,
-    *unset.__all__,
-    *users.__all__,
-    *voices.__all__,
-    *webhooks.__all__,
-]
+# Adding everything to `__all__` pollutes the top level index in our documentation, therefore this is left empty.
+__all__ = []

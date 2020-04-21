@@ -32,11 +32,11 @@
   script: |+
     set -x
     apt-get update
-    apt-get install -qy graphviz git
+    apt-get install -qy graphviz git # FIXME: Remove once in master.
     pip install nox
     git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari_docs_${TARGET_BRANCH} --depth=1
     cd "hikari_docs_${TARGET_BRANCH}"
-    nox -s sphinx || nox -s documentation  # FIXME: remove once in master.
+    nox -s pdoc || nox -s documentation  # FIXME: remove once in master.
     rm ../public -rf && mkdir ../public
     if [[ "$TARGET_BRANCH" = master ]]; then
         cd public
@@ -95,13 +95,25 @@
       set -e
       set -x
       apt-get update
-      apt-get install -qy graphviz
+      apt-get install -qy graphviz # FIXME: remove once in master
       pip install nox
-      nox -s sphinx || nox -s documentation  # FIXME: remove once in master.
+      nox -s pdoc || nox -s documentation  # FIXME: remove once in master.
   except:
     - master
     - staging
   only:
-    - merge_requests
     - branches
 
+"dry-run pages with visual feedback":
+  extends:
+    # DO NOT EXTEND ANYTHING WITH AN only/except BLOCK!
+    - .pages
+  script:
+    - |+
+      set -e
+      set -x
+      pip install nox
+      nox -s pdoc
+  only:
+    # THIS MUST ONLY CONTAIN merge_requests!
+    - merge_requests

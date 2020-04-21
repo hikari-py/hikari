@@ -30,77 +30,77 @@ from hikari.internal import more_enums
 class HTTPStatusCode(more_enums.EnumMixin, enum.IntEnum):
     """HTTP response codes expected from RESTful components."""
 
-    #: Continue
     CONTINUE = 100
+    """Continue"""
 
-    #: OK
     OK = 200
+    """OK"""
 
-    #: Created
     CREATED = 201
+    """Created"""
 
-    #: Accepted
     ACCEPTED = 202
+    """Accepted"""
 
-    #: No content
     NO_CONTENT = 204
+    """No content"""
 
-    #: Moved permanently
     MOVED_PERMANENTLY = 301
+    """Moved permanently"""
 
-    #: Bad request
     BAD_REQUEST = 400
+    """Bad request"""
 
-    #: Unauthorized
     UNAUTHORIZED = 401
+    """Unauthorized"""
 
-    #: Forbidden
     FORBIDDEN = 403
+    """Forbidden"""
 
-    #: Not found
     NOT_FOUND = 404
+    """Not found"""
 
-    #: Method not allowed
     METHOD_NOT_ALLOWED = 405
+    """Method not allowed"""
 
-    #: Not acceptable
     NOT_ACCEPTABLE = 406
+    """Not acceptable"""
 
-    #: Proxy authentication required
     PROXY_AUTHENTICATION_REQUIRED = 407
+    """Proxy authentication required"""
 
-    #: Request entitiy too large
     REQUEST_ENTITY_TOO_LARGE = 413
+    """Request entity too large"""
 
-    #: Request URI too long
     REQUEST_URI_TOO_LONG = 414
+    """Request URI too long"""
 
-    #: Unsupported media type
     UNSUPPORTED_MEDIA_TYPE = 415
+    """Unsupported media type"""
 
-    #: Im a teapot
     IM_A_TEAPOT = 418
+    """The server refused the attempt to brew coffee with a teapot."""
 
-    #: Too many requests
     TOO_MANY_REQUESTS = 429
+    """Too many requests"""
 
-    #: Internal server error
     INTERNAL_SERVER_ERROR = 500
+    """Internal server error"""
 
-    #: Not implemented
     NOT_IMPLEMENTED = 501
+    """Not implemented"""
 
-    #: Bad gateway
     BAD_GATEWAY = 502
+    """Bad gateway"""
 
-    #: Service unavailable
     SERVICE_UNAVAILABLE = 503
+    """Service unavailable"""
 
-    #: Gateway timeout
     GATEWAY_TIMEOUT = 504
+    """Gateway timeout"""
 
-    #: HTTP Version not supported
     HTTP_VERSION_NOT_SUPPORTED = 505
+    """HTTP Version not supported"""
 
     def __str__(self) -> str:
         name = self.name.replace("_", " ").title() if self is not HTTPStatusCode.IM_A_TEAPOT else "I'm a teapot"
@@ -111,61 +111,71 @@ class HTTPStatusCode(more_enums.EnumMixin, enum.IntEnum):
 class GatewayCloseCode(more_enums.EnumMixin, enum.IntEnum):
     """Reasons for closing a gateway connection.
 
-    Note
-    ----
-    Any codes greater than or equal to ``4000`` are server-side codes. Any codes
-    between ``1000`` and ``1999`` inclusive are generally client-side codes.
+    !!! note
+        Any codes greater than or equal to `4000` are server-side codes. Any
+        codes between `1000` and `1999` inclusive are generally client-side codes.
     """
 
-    #: The application running closed.
     NORMAL_CLOSURE = 1000
+    """The application running closed."""
 
-    #: Discord is not sure what went wrong. Try reconnecting?
     UNKNOWN_ERROR = 4000
+    """Discord is not sure what went wrong. Try reconnecting?"""
 
-    #: You sent an invalid Gateway opcode or an invalid payload for an opcode.
-    #: Don't do that!
     UNKNOWN_OPCODE = 4001
+    """You sent an invalid Gateway opcode or an invalid payload for an opcode.
 
-    #: You sent an invalid payload to Discord. Don't do that!
+    Don't do that!
+    """
+
     DECODE_ERROR = 4002
+    """You sent an invalid payload to Discord. Don't do that!"""
 
-    #: You sent Discord a payload prior to IDENTIFYing.
     NOT_AUTHENTICATED = 4003
+    """You sent Discord a payload prior to IDENTIFYing."""
 
-    #: The account token sent with your identify payload is incorrect.
     AUTHENTICATION_FAILED = 4004
+    """The account token sent with your identify payload is incorrect."""
 
-    #: You sent more than one identify payload. Don't do that!
     ALREADY_AUTHENTICATED = 4005
+    """You sent more than one identify payload. Don't do that!"""
 
-    #: The sequence sent when resuming the session was invalid. Reconnect and
-    #: start a new session.
     INVALID_SEQ = 4007
+    """The sequence sent when resuming the session was invalid.
 
-    #: Woah nelly! You're sending payloads to Discord too quickly. Slow it down!
+    Reconnect and start a new session.
+    """
+
     RATE_LIMITED = 4008
+    """Woah nelly! You're sending payloads to Discord too quickly. Slow it down!"""
 
-    #: Your session timed out. Reconnect and start a new one.
     SESSION_TIMEOUT = 4009
+    """Your session timed out. Reconnect and start a new one."""
 
-    #: You sent Discord an invalid shard when IDENTIFYing.
     INVALID_SHARD = 4010
+    """You sent Discord an invalid shard when IDENTIFYing."""
 
-    #: The session would have handled too many guilds - you are required to
-    #: shard your connection in order to connect.
     SHARDING_REQUIRED = 4011
+    """The session would have handled too many guilds.
 
-    #: You sent an invalid version for the gateway.
+    You are required to shard your connection in order to connect.
+    """
+
     INVALID_VERSION = 4012
+    """You sent an invalid version for the gateway."""
 
-    #: You sent an invalid intent for a Gateway Intent. You may have incorrectly
-    #: calculated the bitwise value.
     INVALID_INTENT = 4013
+    """You sent an invalid intent for a Gateway Intent.
 
-    #: You sent a disallowed intent for a Gateway Intent. You may have tried to
-    #: specify an intent that you have not enabled or are not whitelisted for.
+    You may have incorrectly calculated the bitwise value.
+    """
+
     DISALLOWED_INTENT = 4014
+    """You sent a disallowed intent for a Gateway Intent.
+
+    You may have tried to specify an intent that you have not enabled or are not
+    whitelisted for.
+    """
 
     def __str__(self) -> str:
         name = self.name.replace("_", " ").title()
@@ -176,42 +186,44 @@ class GatewayCloseCode(more_enums.EnumMixin, enum.IntEnum):
 class GatewayOpcode(more_enums.EnumMixin, enum.IntEnum):
     """Opcodes that the gateway uses internally."""
 
-    #: An event was dispatched.
     DISPATCH = 0
+    """An event was dispatched."""
 
-    #: Used for ping checking.
     HEARTBEAT = 1
+    """Used for ping checking."""
 
-    #: Used for client handshake.
     IDENTIFY = 2
+    """Used for client handshake."""
 
-    #: Used to update the client status.
     PRESENCE_UPDATE = 3
+    """Used to update the client status."""
 
-    #: Used to join/move/leave voice channels.
     VOICE_STATE_UPDATE = 4
+    """Used to join/move/leave voice channels."""
 
-    #: Used to resume a closed connection.
     RESUME = 6
+    """Used to resume a closed connection."""
 
-    #: Used to tell clients to reconnect to the gateway.
     RECONNECT = 7
+    """Used to tell clients to reconnect to the gateway."""
 
-    #: Used to request guild members.
     REQUEST_GUILD_MEMBERS = 8
+    """Used to request guild members."""
 
-    #: Used to notify client they have an invalid session id.
     INVALID_SESSION = 9
+    """Used to notify client they have an invalid session id."""
 
-    #: Sent immediately after connecting, contains heartbeat and server debug
-    #: information.
     HELLO = 10
+    """Sent immediately after connecting.
 
-    #: Sent immediately following a client heartbeat that was received.
+    Contains heartbeat and server debug information.
+    """
+
     HEARTBEAT_ACK = 11
+    """Sent immediately following a client heartbeat that was received."""
 
-    #: Not yet documented, so do not use.
     GUILD_SYNC = 12
+    """Not yet documented, so do not use."""
 
     def __str__(self) -> str:
         name = self.name.replace("_", " ").title()
@@ -222,205 +234,207 @@ class GatewayOpcode(more_enums.EnumMixin, enum.IntEnum):
 class JSONErrorCode(more_enums.EnumMixin, enum.IntEnum):
     """Error codes that can be returned by the REST API."""
 
-    #: This is sent if the payload is screwed up, etc.
     GENERAL_ERROR = 0
+    """This is sent if the payload is screwed up, etc."""
 
-    #: Unknown account
     UNKNOWN_ACCOUNT = 10_001
+    """Unknown account"""
 
-    #: Unknown application
     UNKNOWN_APPLICATION = 10_002
+    """Unknown application"""
 
-    #: Unknown channel
     UNKNOWN_CHANNEL = 10_003
+    """Unknown channel"""
 
-    #: Unknown guild
     UNKNOWN_GUILD = 10_004
+    """Unknown guild"""
 
-    #: Unknown integration
     UNKNOWN_INTEGRATION = 10_005
+    """Unknown integration"""
 
-    #: Unknown invite
     UNKNOWN_INVITE = 10_006
+    """Unknown invite"""
 
-    #: Unknown member
     UNKNOWN_MEMBER = 10_007
+    """Unknown member"""
 
-    #: Unknown message
     UNKNOWN_MESSAGE = 10_008
+    """Unknown message"""
 
-    #: Unknown overwrite
     UNKNOWN_OVERWRITE = 10_009
+    """Unknown overwrite"""
 
-    #: Unknown provider
     UNKNOWN_PROVIDER = 10_010
+    """Unknown provider"""
 
-    #: Unknown role
     UNKNOWN_ROLE = 10_011
+    """Unknown role"""
 
-    #: Unknown token
     UNKNOWN_TOKEN = 10_012
+    """Unknown token"""
 
-    #: Unknown user
     UNKNOWN_USER = 10_013
+    """Unknown user"""
 
-    #: Unknown emoji
     UNKNOWN_EMOJI = 10_014
+    """Unknown emoji"""
 
-    #: Unknown webhook
     UNKNOWN_WEBHOOK = 10_015
+    """Unknown Webhook"""
 
-    #: Unknown ban
     UNKNOWN_BAN = 10_026
+    """Unknown ban"""
 
-    #: Bots cannot use this endpoint
-    #:
-    #: Note
-    #: ----
-    #: You should never expect to receive this in normal API usage.
     USERS_ONLY = 20_001
+    """Bots cannot use this endpoint
 
-    #: Only bots can use this endpoint.
-    #:
-    #: Note
-    #: ----
-    #: You should never expect to receive this in normal API usage.
+    !!! note
+        You should never expect to receive this in normal API usage.
+    """
+
     BOTS_ONLY = 20_002
+    """Only bots can use this endpoint.
 
-    #: Maximum number of guilds reached (100)
-    #:
-    #: Note
-    #: ----
-    #: You should never expect to receive this in normal API usage as this only
-    #: applies to user accounts.
-    #:
-    #: This is unlimited for bot accounts.
+    !!! note
+        You should never expect to receive this in normal API usage.
+    """
+
     MAX_GUILDS_REACHED = 30_001
+    """Maximum number of guilds reached (100)
 
-    #: Maximum number of friends reached (1000)
-    #:
-    #: Note
-    #: ----
-    #: You should never expect to receive this in normal API usage as this only
-    #: applies to user accounts.
-    #:
-    #: Bots cannot have friends :( .
+    !!! note
+        You should never expect to receive this in normal API usage as this only
+        applies to user accounts.
+
+    This is unlimited for bot accounts.
+    """
+
     MAX_FRIENDS_REACHED = 30_002
+    """Maximum number of friends reached (1000)
 
-    #: Maximum number of pins reached (50)
+    !!! note
+        You should never expect to receive this in normal API usage as this only
+        applies to user accounts.
+
+        Bots cannot have friends :( .
+    """
+
     MAX_PINS_REACHED = 30_003
+    """Maximum number of pins reached (50)"""
 
-    #: Maximum number of guild roles reached (250)
     MAX_GUILD_ROLES_REACHED = 30_005
+    """Maximum number of guild roles reached (250)"""
 
-    #: Maximum number of webhooks reached (10)
     MAX_WEBHOOKS_REACHED = 30_007
+    """Maximum number of webhooks reached (10)"""
 
-    #: Maximum number of reactions reached (20)
     MAX_REACTIONS_REACHED = 30_010
+    """Maximum number of reactions reached (20)"""
 
-    #: Maximum number of guild channels reached (500)
     MAX_GUILD_CHANNELS_REACHED = 30_013
+    """Maximum number of guild channels reached (500)"""
 
-    #: Maximum number of attachments in a message reached (10)
     MAX_MESSAGE_ATTACHMENTS_REACHED = 30_015
+    """Maximum number of attachments in a message reached (10)"""
 
-    #: Maximum number of invites reached (10000)
     MAX_INVITES_REACHED = 30_016
+    """Maximum number of invites reached (10000)"""
 
-    #: Unauthorized
-    UNAUTHORIZED = 40_001
-
-    #: You need to verify your account to perform this action.
     NEEDS_VERIFICATION = 40_002
+    """You need to verify your account to perform this action."""
 
-    #: Request entity too large. Try sending something smaller in size
+    UNAUTHORIZED = 40_001
+    """Unauthorized"""
+
     TOO_LARGE = 40_005
+    """Request entity too large. Try sending something smaller in size"""
 
-    #: This feature has been temporarily disabled server-side
     DISABLED_TEMPORARILY = 40_006
+    """This feature has been temporarily disabled server-side"""
 
-    #: The user is banned from this guild
     USER_BANNED = 40_007
+    """The user is banned from this guild"""
 
-    #: Missing access
     MISSING_ACCESS = 50_001
+    """Missing access"""
 
-    #: Invalid account type
     INVALID_ACCOUNT_TYPE = 50_002
+    """Invalid account type"""
 
-    #: Cannot execute action on a DM channel
     CANNOT_EXECUTE_ACTION_ON_DM_CHANNEL = 50_003
+    """Cannot execute action on a DM channel"""
 
-    #: Widget Disabled
     WIDGET_DISABLED = 50_004
+    """Widget Disabled"""
 
-    #: Cannot edit a message authored by another user
     CANNOT_EDIT_A_MESSAGE_AUTHORED_BY_ANOTHER_USER = 50_005
+    """Cannot edit a message authored by another user"""
 
-    #: Cannot send an empty message
     CANNOT_SEND_AN_EMPTY_MESSAGE = 50_006
+    """Cannot send an empty message"""
 
-    #: Cannot send messages to this user
     CANNOT_SEND_MESSAGES_TO_THIS_USER = 50_007
+    """Cannot send messages to this user"""
 
-    #: Cannot send messages in a voice channel
     CANNOT_SEND_MESSAGES_IN_VOICE_CHANNEL = 50_008
+    """Cannot send messages in a voice channel"""
 
-    #: Channel verification level is too high
     CHANNEL_VERIFICATION_TOO_HIGH = 50_009
+    """Channel verification level is too high"""
 
-    #: OAuth2 application does not have a bot
     OAUTH2_APPLICATION_DOES_NOT_HAVE_A_BOT = 50_010
+    """OAuth2 application does not have a bot"""
 
-    #: OAuth2 application limit reached
     OAUTH2_APPLICATION_LIMIT_REACHED = 50_011
+    """OAuth2 application limit reached"""
 
-    #: Invalid OAuth state
     INVALID_OAUTH2_STATE = 50_012
+    """Invalid OAuth state"""
 
-    #: Missing permissions
     MISSING_PERMISSIONS = 50_013
+    """Missing permissions"""
 
-    #: Invalid authentication token
     INVALID_AUTHENTICATION_TOKEN = 50_014
+    """Invalid authentication token"""
 
-    #: Note is too long
     NOTE_IS_TOO_LONG = 50_015
+    """Note is too long"""
 
-    #: Provided too few or too many messages to delete. Must provide at least 2
-    #: and fewer than 100 messages to delete.
     INVALID_NUMBER_OF_MESSAGES_TO_DELETE = 50_016
+    """Provided too few or too many messages to delete.
 
-    #: A message can only be pinned to the channel it was sent in
+    Must provide at least 2 and fewer than 100 messages to delete.
+    """
+
     CANNOT_PIN_A_MESSAGE_IN_A_DIFFERENT_CHANNEL = 50_019
+    """A message can only be pinned to the channel it was sent in"""
 
-    #: Invite code is either invalid or taken.
     INVALID_INVITE = 50_020
+    """Invite code is either invalid or taken."""
 
-    #: Cannot execute action on a system message
     CANNOT_EXECUTE_ACTION_ON_SYSTEM_MESSAGE = 50_021
+    """Cannot execute action on a system message"""
 
-    #: Invalid OAuth2 access token
     INVALID_OAUTH2_TOKEN = 50_025
+    """Invalid OAuth2 access token"""
 
-    #: A message provided was too old to bulk delete
     MESSAGE_PROVIDED_WAS_TOO_OLD_TO_BULK_DELETE = 50_034
+    """A message provided was too old to bulk delete"""
 
-    #: Invalid Form Body
     INVALID_FORM_BODY = 50_035
+    """Invalid Form Body"""
 
-    #: An invite was accepted to a guild the application's bot is not in
     ACCEPTED_INVITE_TO_GUILD_BOT_IS_NOT_IN = 50_036
+    """An invite was accepted to a guild the application's bot is not in"""
 
-    #: Invalid API version
     INVALID_API_VERSION = 50_041
+    """Invalid API version"""
 
-    #: Reaction blocked
     REACTION_BLOCKED = 90_001
+    """Reaction blocked"""
 
-    #: The resource is overloaded.
     RESOURCE_OVERLOADED = 130_000
+    """The resource is overloaded."""
 
     def __str__(self) -> str:
         name = self.name.replace("_", " ").title()
