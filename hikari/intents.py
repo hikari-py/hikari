@@ -143,3 +143,13 @@ class Intent(more_enums.FlagMixin, enum.IntFlag):
     #: Subscribes to the following events
     #: * TYPING_START
     DIRECT_MESSAGE_TYPING = 1 << 14
+
+    @property
+    def is_privileged(self) -> bool:
+        """Whether the intent requires elevated privileges.
+
+        If this is ``True``, you will be required to opt-in to using this intent
+        on the Discord Developer Portal before you can utilise it in your
+        application.
+        """
+        return bool(self & (Intent.GUILD_MEMBERS | Intent.GUILD_PRESENCES))
