@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,20 +16,24 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""The models API for interacting with Discord directly."""
+"""Clang-tidy."""
+import subprocess
 
-from hikari.clients.bot_base import *
-from hikari.clients.configs import *
-from hikari.clients.rest import *
-from hikari.clients.runnable import *
-from hikari.clients.shards import *
-from hikari.clients.stateless import *
+from ci import config
+from ci import nox
 
-__all__ = [
-    *bot_base.__all__,
-    *configs.__all__,
-    *rest.__all__,
-    *shards.__all__,
-    *runnable.__all__,
-    *stateless.__all__,
-]
+
+def _clang_tidy(*args):
+    invocation = f"clang-tidy $(find {config.MAIN_PACKAGE} -name '*.c' -o -name '*.h') "
+    invocation += " ".join(args)
+    print(subprocess.check_output(invocation, shell=True))
+
+
+@nox.session(reuse_venv=True)
+def clang_tidy_check(session: nox.Session) -> None:
+    _clang_tidy()
+
+
+@nox.session(reuse_venv=True)
+def clang_tidy_fix(session: nox.Session) -> None:
+    _clang_tidy("--fix")

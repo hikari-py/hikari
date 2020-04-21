@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,20 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""The models API for interacting with Discord directly."""
+import pytest
+import cymock as mock
 
-from hikari.clients.bot_base import *
-from hikari.clients.configs import *
-from hikari.clients.rest import *
-from hikari.clients.runnable import *
-from hikari.clients.shards import *
-from hikari.clients.stateless import *
 
-__all__ = [
-    *bot_base.__all__,
-    *configs.__all__,
-    *rest.__all__,
-    *shards.__all__,
-    *runnable.__all__,
-    *stateless.__all__,
-]
+@pytest.mark.asyncio
+async def test_something():
+    assert True, "This passes."

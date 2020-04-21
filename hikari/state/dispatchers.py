@@ -20,41 +20,22 @@
 
 from __future__ import annotations
 
-__all__ = ["EventDispatcher", "IntentAwareEventDispatcherImpl"]
+__all__ = ["EventDispatcher"]
 
 import abc
-import asyncio
 import inspect
-import logging
 import typing
 
-from hikari import errors
-from hikari import intents
-from hikari.events import bases
-from hikari.events import other
-from hikari.internal import assertions
+from hikari import events
 from hikari.internal import conversions
-from hikari.internal import helpers
-from hikari.internal import more_asyncio
-from hikari.internal import more_collections
 
 # Prevents a circular reference that prevents importing correctly.
 from hikari.internal import more_typing
 
-if typing.TYPE_CHECKING:
-    EventT = typing.TypeVar("EventT", bound=bases.HikariEvent)
-    PredicateT = typing.Callable[[EventT], typing.Union[bool, more_typing.Coroutine[bool]]]
-    EventCallbackT = typing.Callable[[EventT], more_typing.Coroutine[typing.Any]]
-    WaiterMapT = typing.Dict[
-        typing.Type[EventT], more_collections.WeakKeyDictionary[more_typing.Future[typing.Any], PredicateT]
-    ]
-    ListenerMapT = typing.Dict[typing.Type[EventT], typing.List[EventCallbackT]]
-else:
-    EventT = typing.Any
-    PredicateT = typing.Any
-    EventCallbackT = typing.Any
-    WaiterMapT = typing.Any
-    ListenerMapT = typing.Any
+
+EventT = typing.TypeVar("EventT", bound="events.HikariEvent")
+PredicateT = typing.Callable[[EventT], typing.Union[more_typing.Coroutine[bool], bool]]
+EventCallbackT = typing.Callable[[EventT], more_typing.Coroutine[typing.Any]]
 
 
 class EventDispatcher(abc.ABC):
@@ -120,7 +101,7 @@ class EventDispatcher(abc.ABC):
             may leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
             using an event listener instead of this function.
-        predicate : `def predicate(event) -> bool` or `async def predicate(event) -> bool`
+        predicate : ``def predicate(event) -> bool`` or ``async def predicate(event) -> bool``
             A function that takes the arguments for the event and returns True
             if it is a match, or False if it should be ignored.
             This can be a coroutine function that returns a boolean, or a
@@ -140,33 +121,7 @@ class EventDispatcher(abc.ABC):
             lookup, but can be implemented this way optionally if documented.
         """
 
-    @typing.overload
-    def on(self) -> typing.Callable[[EventCallbackT], EventCallbackT]:
-        """Return a decorator to create an event listener.
-
-        This considers the type hint on the signature to get the event type.
-
-        Examples
-        --------
-            @bot.on()
-            async def on_message(event: hikari.MessageCreatedEvent):
-                print(event.content)
-        """
-
-    @typing.overload
-    def on(self, event_type: typing.Type[EventCallbackT]) -> typing.Callable[[EventCallbackT], EventCallbackT]:
-        """Return a decorator to create an event listener.
-
-        This considers the type given to the decorator.
-
-        Examples
-        --------
-            @bot.on(hikari.MessageCreatedEvent)
-            async def on_message(event):
-                print(event.content)
-        """
-
-    def on(self, event_type=None):
+    def on(self, event_type: typing.Optional[typing.Type[EventT]] = None) -> typing.Callable[[EventCallbackT], EventCallbackT]:
         """Return a decorator equivalent to invoking `EventDispatcher.add_listener`.
 
         Parameters
@@ -181,7 +136,7 @@ class EventDispatcher(abc.ABC):
         --------
             # Type-hinted format.
             @bot.on()
-            async def on_message(event: hikari.MessageCreatedEvent):
+            async def on_message(event: hikari.MessageCreatedEvent) -> None:
                 print(event.content)
 
             # Explicit format.
@@ -196,6 +151,8 @@ class EventDispatcher(abc.ABC):
         """
 
         def decorator(callback: EventCallbackT) -> EventCallbackT:
+            nonlocal event_type
+
             if event_type is None:
                 signature = inspect.signature(callback)
                 parameters = list(signature.parameters.values())
@@ -206,23 +163,19 @@ class EventDispatcher(abc.ABC):
                     event_param = parameters[0]
 
                     if event_param.annotation is inspect.Parameter.empty:
-                        raise TypeError(f"No typehint given for parameter: async def {callback}({signature}): ...")
+                        raise TypeError(f"No type hint given for parameter: async def {callback}({signature}): ...")
                 else:
                     raise TypeError(f"Invalid signature for event: async def {callback.__name__}({signature}): ...")
 
                 frame, *_, = inspect.stack(2)[0]
 
                 try:
-                    resolved_type = conversions.snoop_typehint_from_scope(frame, event_param.annotation)
-
-                    if not issubclass(resolved_type, bases.HikariEvent):
-                        raise TypeError("Event typehints should subclass hikari.events.bases.HikariEvent to be valid")
-
-                    return self.add_listener(
-                        typing.cast(typing.Type[bases.HikariEvent], resolved_type), callback, _stack_level=3
-                    )
+                    event_type = conversions.snoop_typehint_from_scope(frame, event_param.annotation)
                 finally:
                     del frame, _
+
+            if not issubclass(event_type, events.HikariEvent):
+                raise TypeError(f"Event type should subclass hikari.events.HikariEvent (received {event_type.mro()})")
 
             return self.add_listener(event_type, callback, _stack_level=3)
 
@@ -246,280 +199,3 @@ class EventDispatcher(abc.ABC):
             listener callbacks and waiters to be processed. If this is not
             awaited, the invocation is invoked soon on the current event loop.
         """
-
-
-class IntentAwareEventDispatcherImpl(EventDispatcher):
-    """Handles storing and dispatching to event listeners and one-time event waiters.
-
-    Event listeners once registered will be stored until they are manually
-    removed. Each time an event is dispatched with a matching name, they will
-    be invoked on the event loop.
-
-    One-time event waiters are futures that will be completed when a matching
-    event is fired. Once they are matched, they are removed from the listener
-    list. Each listener has a corresponding predicate that is invoked prior
-    to completing the waiter, with any event parameters being passed to the
-    predicate. If the predicate returns False, the waiter is not completed. This
-    allows filtering of certain events and conditions in a procedural way.
-
-    Events that require a specific intent will trigger warnings on subscription
-    if the provided enabled intents are not a superset of this.
-
-    Parameters
-    ----------
-    enabled_intents : hikari.intents.Intent, optional
-        The intents that are enabled for the application. If `None`, then no
-        intent checks are performed when subscribing a new event.
-    """
-
-    logger: logging.Logger
-    """The logger used to write log messages."""
-
-    def __init__(self, enabled_intents: typing.Optional[intents.Intent]) -> None:
-        self._enabled_intents = enabled_intents
-        self._listeners: ListenerMapT = {}
-        # pylint: disable=unsubscriptable-object
-        self._waiters: WaiterMapT = {}
-        # pylint: enable=unsubscriptable-object
-        self.logger = logging.getLogger(type(self).__qualname__)
-
-    def close(self) -> None:
-        """Cancel anything that is waiting for an event to be dispatched."""
-        self._listeners.clear()
-        for waiter in self._waiters.values():
-            for future in waiter.keys():
-                future.cancel()
-        self._waiters.clear()
-
-    def add_listener(self, event_type: typing.Type[bases.HikariEvent], callback: EventCallbackT, **kwargs) -> None:
-        """Register a new event callback to a given event name.
-
-        Parameters
-        ----------
-        event_type : typing.Type[hikari.events.bases.HikariEvent]
-            The event to register to.
-        callback : `async def callback(event: HikariEvent) -> ...`
-            The event callback to invoke when this event is fired.
-
-        Raises
-        ------
-        TypeError
-            If `coroutine_function` is not a coroutine.
-
-        Note
-        ----
-        If you subscribe to an event that requires intents that you do not have
-        set, you will receive a warning.
-        """
-        assertions.assert_that(
-            asyncio.iscoroutinefunction(callback), "You must subscribe a coroutine function only", TypeError
-        )
-
-        required_intents = bases.get_required_intents_for(event_type)
-        enabled_intents = self._enabled_intents if self._enabled_intents is not None else 0
-
-        any_intent_match = any(enabled_intents & i == i for i in required_intents)
-
-        if self._enabled_intents is not None and required_intents and not any_intent_match:
-            intents_lists = []
-            for required in required_intents:
-                set_of_intents = []
-                for intent in intents.Intent:
-                    if required & intent:
-                        set_of_intents.append(f"{intent.name} <PRIVILEGED>" if intent.is_privileged else intent.name)
-                intents_lists.append(" + ".join(set_of_intents))
-
-            message = (
-                f"Event {event_type.__module__}.{event_type.__qualname__} will never be triggered\n"
-                f"unless you enable one of the following intents:\n"
-                + "\n".join(f"    - {intent_list}" for intent_list in intents_lists)
-            )
-
-            helpers.warning(message, category=errors.IntentWarning, stack_level=kwargs.pop("_stack_level", 1))
-
-        if event_type not in self._listeners:
-            self._listeners[event_type] = []
-        self._listeners[event_type].append(callback)
-
-    def remove_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT) -> None:
-        """Remove the given coroutine function from the handlers for the given event.
-
-        The name is mandatory to enable supporting registering the same event callback for multiple event types.
-
-        Parameters
-        ----------
-        event_type : typing.Type[hikari.events.bases.HikariEvent]
-            The type of event to remove the callback from.
-        callback : `async def callback(event: HikariEvent) -> ...`
-            The event callback to remove.
-        """
-        if event_type in self._listeners and callback in self._listeners[event_type]:
-            if len(self._listeners[event_type]) - 1 == 0:
-                del self._listeners[event_type]
-            else:
-                self._listeners[event_type].remove(callback)
-
-    # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
-    # confusing telepathy comments to the user.
-    def dispatch_event(self, event: bases.HikariEvent):
-        """Dispatch a given event to all listeners and waiters that are applicable.
-
-        Parameters
-        ----------
-        event : hikari.events.bases.HikariEvent
-            The event to dispatch.
-
-        Returns
-        -------
-        asyncio.Future
-            This may be a gathering future of the callbacks to invoke, or it may
-            be a completed future object. Regardless, this result will be
-            scheduled on the event loop automatically, and does not need to be
-            awaited. Awaiting this future will await completion of all invoked
-            event handlers.
-        """
-        event_t = type(event)
-        self.logger.debug("dispatching %s", event_t.__name__)
-
-        futs = []
-
-        if event_t in self._listeners:
-            for callback in self._listeners[event_t]:
-                futs.append(self._catch(callback, event))
-
-        # Only try to awaken waiters when the waiter is registered as a valid
-        # event type and there is more than 0 waiters in that dict.
-        if (waiters := self._waiters.get(event_t)) is not None:
-            # Run this in the background as a coroutine so that any async predicates
-            # can be awaited concurrently.
-            # noinspection PyTypeChecker
-            futs.append(asyncio.create_task(self._awaken_waiters(waiters, event)))
-
-        result = asyncio.gather(*futs) if futs else more_asyncio.completed_future()  # lgtm [py/unused-local-variable]
-
-        # Stop false positives from linters that now assume this is a coroutine function
-        result: typing.Any
-
-        return result
-
-    async def _awaken_waiters(self, waiters, event):
-        await asyncio.gather(
-            *(self._maybe_awaken_waiter(event, future, predicate) for future, predicate in tuple(waiters.items()))
-        )
-
-    async def _maybe_awaken_waiter(self, event, future, predicate):
-        delete_waiter = True
-        try:
-            result = predicate(event)
-            if result or asyncio.iscoroutine(result) and await result:
-                future.set_result(event)
-            else:
-                delete_waiter = False
-        except Exception as ex:  # pylint:disable=broad-except
-            delete_waiter = True
-            future.set_exception(ex)
-
-        event_t = type(event)
-
-        if delete_waiter:
-            if not len(self._waiters[event_t]) - 1:
-                del self._waiters[event_t]
-            else:
-                del self._waiters[event_t][future]
-
-    async def _catch(self, callback, event):
-        try:
-            return await callback(event)
-        except Exception as ex:  # pylint:disable=broad-except
-            # Pop the top-most frame to remove this _catch call.
-            # The user doesn't need it in their traceback.
-            ex.__traceback__ = ex.__traceback__.tb_next
-            self.handle_exception(ex, event, callback)
-
-    def handle_exception(
-        self, exception: Exception, event: bases.HikariEvent, callback: typing.Callable[..., typing.Awaitable[None]]
-    ) -> None:
-        """Handle raised exception.
-
-        This allows users to override this with a custom implementation if desired.
-
-        This implementation will check to see if the event that triggered the
-        exception is an `hikari.events.other.ExceptionEvent`. If this exception was
-        caused by the `hikari.events.other.ExceptionEvent`, then nothing is dispatched
-        (thus preventing an exception handler recursively re-triggering itself).
-        Otherwise, an `hikari.events.other.ExceptionEvent` is dispatched.
-
-        Parameters
-        ----------
-        exception : Exception
-            The exception that triggered this call.
-        event : hikari.events.bases.HikariEvent
-            The event that was being dispatched.
-        callback
-            The callback that threw the exception.
-        """
-        # Do not recurse if a dodgy exception handler is added.
-        if not isinstance(event, other.ExceptionEvent):
-            self.logger.exception(
-                'Exception occurred in handler for event "%s"', type(event).__name__, exc_info=exception
-            )
-            self.dispatch_event(other.ExceptionEvent(exception=exception, event=event, callback=callback))
-        else:
-            self.logger.exception(
-                'Exception occurred in handler for event "%s", and the exception has been dropped',
-                type(event).__name__,
-                exc_info=exception,
-            )
-
-    def wait_for(
-        self, event_type: typing.Type[EventT], *, timeout: typing.Optional[float], predicate: PredicateT,
-    ) -> more_typing.Future:
-        """Wait for a event to occur once and then return the arguments the event was called with.
-
-        Events can be filtered using a given predicate function. If unspecified,
-        the first event of the given name will be a match.
-
-        Every event that matches the event name that the bot receives will be
-        checked. Thus, if you need to wait for events in a specific guild or
-        channel, or from a specific person, you want to give a predicate that
-        checks this.
-
-        Parameters
-        ----------
-        event_type : typing.Type[hikari.events.bases.HikariEvent]
-            The name of the event to wait for.
-        timeout : float, optional
-            The timeout to wait for before cancelling and raising an
-            `asyncio.TimeoutError` instead. If this is `None`, this will wait
-            forever. Care must be taken if you use `None` as this may leak
-            memory if you do this from an event listener that gets repeatedly
-            called. If you want to do this, you should consider using an event
-            listener instead of this function.
-        predicate : `def predicate(event) -> bool` or `async def predicate(event) -> bool`
-            A function that takes the arguments for the event and returns `True`
-            if it is a match, or `False` if it should be ignored.
-            This can be a coroutine function that returns a boolean, or a
-            regular function.
-
-        Returns
-        -------
-        asyncio.Future
-            A future that when awaited will provide a the arguments passed to
-            the first matching event. If no arguments are passed to the event,
-            then `None` is the result. If one argument is passed to the event,
-            then that argument is the result, otherwise a tuple of arguments is
-            the result instead.
-
-        !!! note
-            Awaiting this result will raise an `asyncio.TimeoutError` if the
-            timeout is hit and no match is found. If the predicate throws any
-            exception, this is raised immediately.
-        """
-        future = asyncio.get_event_loop().create_future()
-        if event_type not in self._waiters:
-            # This is used as a weakref dict to allow automatically tidying up
-            # any future that falls out of scope entirely.
-            self._waiters[event_type] = more_collections.WeakKeyDictionary()
-        self._waiters[event_type][future] = predicate
-        # noinspection PyTypeChecker
-        return asyncio.ensure_future(asyncio.wait_for(future, timeout))
