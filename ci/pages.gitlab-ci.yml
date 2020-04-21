@@ -102,6 +102,18 @@
     - master
     - staging
   only:
-    - merge_requests
     - branches
 
+"dry-run pages with visual feedback":
+  extends:
+    # DO NOT EXTEND ANYTHING WITH AN only/except BLOCK!
+    - .pages
+  script:
+    - |+
+      set -e
+      set -x
+      pip install nox
+      nox -s pdoc
+  only:
+    # THIS MUST ONLY CONTAIN merge_requests!
+    - merge_requests
