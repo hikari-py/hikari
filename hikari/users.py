@@ -33,61 +33,61 @@ from hikari.internal import urls
 class UserFlag(enum.IntFlag):
     """The known user flags that represent account badges."""
 
-    #: None
     NONE = 0
+    """None"""
 
-    #: Discord Empoloyee
     DISCORD_EMPLOYEE = 1 << 0
+    """Discord Employee"""
 
-    #: Discord Partner
     DISCORD_PARTNER = 1 << 1
+    """Discord Partner"""
 
-    #: HypeSquad Events
     HYPESQUAD_EVENTS = 1 << 2
+    """HypeSquad Events"""
 
-    #: Bug Hunter Level 1
     BUG_HUNTER_LEVEL_1 = 1 << 3
+    """Bug Hunter Level 1"""
 
-    #: House of Bravery
     HOUSE_BRAVERY = 1 << 6
+    """House of Bravery"""
 
-    #: House of Brilliance
     HOUSE_BRILLIANCE = 1 << 7
+    """House of Brilliance"""
 
-    #: House of Balance
     HOUSE_BALANCE = 1 << 8
+    """House of Balance"""
 
-    #: Early Supporter
     EARLY_SUPPORTER = 1 << 9
+    """Early Supporter"""
 
-    #: Team user
     TEAM_USER = 1 << 10
+    """Team user"""
 
-    #: System
     SYSTEM = 1 << 12
+    """System"""
 
-    #: Bug Hunter Level 2
     BUG_HUNTER_LEVEL_2 = 1 << 14
+    """Bug Hunter Level 2"""
 
-    #: Verified Bot
     VERIFIED_BOT = 1 << 16
+    """Verified Bot"""
 
-    #: Verified Bot Developer
     VERIFIED_BOT_DEVELOPER = 1 << 17
+    """Verified Bot Developer"""
 
 
 @enum.unique
 class PremiumType(enum.IntEnum):
     """The types of Nitro."""
 
-    #: No premium.
     NONE = 0
+    """No premium."""
 
-    #: Premium including basic perks like animated emojis and avatars.
     NITRO_CLASSIC = 1
+    """Premium including basic perks like animated emojis and avatars."""
 
-    #: Premium including all perks (e.g. 2 server boosts).
     NITRO = 2
+    """Premium including all perks (e.g. 2 server boosts)."""
 
 
 @marshaller.marshallable()
@@ -95,42 +95,29 @@ class PremiumType(enum.IntEnum):
 class User(bases.UniqueEntity, marshaller.Deserializable):
     """Represents a user."""
 
-    #: This user's discriminator.
-    #:
-    #: :type: :obj:`~str`
     discriminator: str = marshaller.attrib(deserializer=str)
+    """This user's discriminator."""
 
-    #: This user's username.
-    #:
-    #: :type: :obj:`~str`
     username: str = marshaller.attrib(deserializer=str)
+    """This user's username."""
 
-    #: This user's avatar hash, if set.
-    #:
-    #: :type: :obj:`~str`, optional
     avatar_hash: typing.Optional[str] = marshaller.attrib(raw_name="avatar", deserializer=str, if_none=None)
+    """This user's avatar hash, if set."""
 
-    #: Whether this user is a bot account.
-    #:
-    #: :type: :obj:`~bool`
     is_bot: bool = marshaller.attrib(raw_name="bot", deserializer=bool, if_undefined=False, default=False)
+    """Whether this user is a bot account."""
 
-    #: Whether this user is a system account.
-    #:
-    #: :type: :obj:`~bool`
     is_system: bool = marshaller.attrib(raw_name="system", deserializer=bool, if_undefined=False, default=False)
+    """Whether this user is a system account."""
 
-    #: The public flags for this user.
-    #:
-    #: Note
-    #: ----
-    #: This will be :obj:`~None` if it's a webhook user.
-    #:
-    #:
-    #: :type: :obj:`~UserFlag`, optional
     flags: typing.Optional[UserFlag] = marshaller.attrib(
         raw_name="public_flags", deserializer=UserFlag, if_undefined=None, default=None
     )
+    """The public flags for this user.
+
+    !!! info
+    This will be `None` if it's a webhook user.
+    """
 
     @property
     def avatar_url(self) -> str:
@@ -142,25 +129,25 @@ class User(bases.UniqueEntity, marshaller.Deserializable):
 
         Parameters
         ----------
-        fmt : :obj:`~str`
-            The format to use for this URL, defaults to ``png`` or ``gif``.
-            Supports ``png``, ``jpeg``, ``jpg``, ``webp`` and ``gif`` (when
+        fmt : str
+            The format to use for this URL, defaults to `png` or `gif`.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated). Will be ignored for default avatars which can only be
-            ``png``.
-        size : :obj:`~int`
-            The size to set for the URL, defaults to ``4096``.
+            `png`.
+        size : int
+            The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
             Will be ignored for default avatars.
 
         Returns
         -------
-        :obj:`~str`
+        str
             The string URL.
 
         Raises
         ------
-        :obj:`~ValueError`
-            If ``size`` is not a power of two or not between 16 and 4096.
+        ValueError
+            If `size` is not a power of two or not between 16 and 4096.
         """
         if not self.avatar_hash:
             return urls.generate_cdn_url("embed/avatars", str(self.default_avatar), fmt="png", size=None)
@@ -181,41 +168,35 @@ class User(bases.UniqueEntity, marshaller.Deserializable):
 class MyUser(User):
     """Represents a user with extended oauth2 information."""
 
-    #: Whether the user's account has 2fa enabled.
-    #:
-    #: :type: :obj:`~bool`
     is_mfa_enabled: bool = marshaller.attrib(raw_name="mfa_enabled", deserializer=bool)
+    """Whether the user's account has 2fa enabled."""
 
-    #: The user's set language. This is not provided by the ``READY`` event.
-    #:
-    #: :type: :obj:`~str`, optional
     locale: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, if_undefined=None, default=None)
+    """The user's set language. This is not provided by the `READY` event."""
 
-    #: Whether the email for this user's account has been verified.
-    #: Will be :obj:`~None` if retrieved through the oauth2 flow without the
-    #: ``email`` scope.
-    #:
-    #: :type: :obj:`~bool`, optional
     is_verified: typing.Optional[bool] = marshaller.attrib(
         raw_name="verified", deserializer=bool, if_undefined=None, default=None
     )
+    """Whether the email for this user's account has been verified.
 
-    #: The user's set email.
-    #: Will be :obj:`~None` if retrieved through the oauth2 flow without the
-    #: ``email`` scope and for bot users.
-    #:
-    #: :type: :obj:`~str`, optional
+    Will be `None` if retrieved through the oauth2 flow without the `email`
+    scope.
+    """
+
     email: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None, default=None)
+    """The user's set email.
 
-    #: This user account's flags.
-    #:
-    #: :type: :obj:`~UserFlag`
+    Will be `None` if retrieved through the oauth2 flow without the `email`
+    scope and for bot users.
+    """
+
     flags: UserFlag = marshaller.attrib(deserializer=UserFlag)
+    """This user account's flags."""
 
-    #: The type of Nitro Subscription this user account had.
-    #: This will always be :obj:`~None` for bots.
-    #:
-    #: :type: :obj:`~PremiumType`, optional
     premium_type: typing.Optional[PremiumType] = marshaller.attrib(
         deserializer=PremiumType, if_undefined=None, default=None
     )
+    """The type of Nitro Subscription this user account had.
+
+    This will always be `None` for bots.
+    """

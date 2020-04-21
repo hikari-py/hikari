@@ -52,118 +52,106 @@ class BaseConfig(marshaller.Deserializable):
 @marshaller.marshallable()
 @attr.s(kw_only=True)
 class DebugConfig(BaseConfig):
-    """Configuration for anything with a debugging mode."""
+    """Configuration for anything with a debugging mode.
 
-    #: Whether to enable debugging mode. Usually you don't want to enable this.
-    #:
-    #: :type: :obj:`~bool`
+    Attributes
+    ----------
+    debug : bool
+        Whether to enable debugging mode. Usually you don't want to enable this.
+    """
+
     debug: bool = marshaller.attrib(deserializer=bool, if_undefined=False, default=False)
 
 
 @marshaller.marshallable()
 @attr.s(kw_only=True)
 class AIOHTTPConfig(BaseConfig):
-    """Config for components that use AIOHTTP somewhere."""
+    """Config for components that use AIOHTTP somewhere.
 
-    #: If :obj:`~True`, allow following redirects from ``3xx`` HTTP responses.
-    #: Generally you do not want to enable this unless you have a good reason
-    #: to.
-    #:
-    #: Defaults to :obj:`~False` if unspecified during deserialization.
-    #:
-    #: :type: :obj:`~bool`
+    Attributes
+    ----------
+    allow_redirects : bool
+        If `True`, allow following redirects from `3xx` HTTP responses.
+        Generally you do not want to enable this unless you have a good reason to.
+        Defaults to `False` if unspecified during deserialization.
+    tcp_connector : aiohttp.TCPConnector, optional
+        This may otherwise be `None` to use the default settings provided by
+        `aiohttp`.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_headers : typing.Mapping [ str, str ], optional
+        Optional proxy headers to provide in any HTTP requests.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_auth : aiohttp.BasicAuth, optional
+        Optional proxy authorization to provide in any HTTP requests.
+        This is deserialized using the format `"basic {{base 64 string here}}"`.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_url : str, optional
+        The optional URL of the proxy to send requests via.
+        Defaults to `None` if unspecified during deserialization.
+    request_timeout : float, optional
+        Optional request timeout to use. If an HTTP request takes longer than
+        this, it will be aborted.
+        If not `None`, the value represents a number of seconds as a floating
+        point number.
+        Defaults to `None` if unspecified during deserialization.
+    ssl_context : ssl.SSLContext, optional
+        The optional SSL context to use.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    verify_ssl : bool
+        If `True`, then responses with invalid SSL certificates will be
+        rejected. Generally you want to keep this enabled unless you have a
+        problem with SSL and you know exactly what you are doing by disabling
+        this. Disabling SSL  verification can have major security implications.
+        You turn this off at your own risk.
+        Defaults to `True` if unspecified during deserialization.
+    """
+
     allow_redirects: bool = marshaller.attrib(deserializer=bool, if_undefined=False, default=False)
 
-    #: Either an implementation of :obj:`~aiohttp.TCPConnector`.
-    #:
-    #: This may otherwise be :obj:`~None` to use the default settings provided
-    #: by :mod:`aiohttp`.
-    #:
-    #: This is deserialized as an object reference in the format
-    #: ``package.module#object.attribute`` that is expected to point to the
-    #: desired value.
-    #:
-    #: Defaults to :obj:`~None` if unspecified during deserialization.
-    #:
-    #: :type: :obj:`~aiohttp.TCPConnector`, optional
     tcp_connector: typing.Optional[aiohttp.TCPConnector] = marshaller.attrib(
         deserializer=marshaller.dereference_handle, if_none=None, if_undefined=None, default=None
     )
 
-    #: Optional proxy headers to provide in any HTTP requests.
-    #:
-    #: Defaults to :obj:`~None` if unspecified during deserialization.
-    #:
-    #: :type: :obj:`~typing.Mapping` [ :obj:`~str`, :obj:`~str` ], optional
     proxy_headers: typing.Optional[typing.Mapping[str, str]] = marshaller.attrib(
         deserializer=dict, if_none=None, if_undefined=None, default=None
     )
 
-    #: Optional proxy authorization to provide in any HTTP requests.
-    #:
-    #: This is deserialized using the format ``"basic {{base 64 string here}}"``.
-    #:
-    #: Defaults to :obj:`~None` if unspecified during deserialization.
-    #:
-    #: :type: :obj:`~aiohttp.BasicAuth`, optional
     proxy_auth: typing.Optional[aiohttp.BasicAuth] = marshaller.attrib(
         deserializer=aiohttp.BasicAuth.decode, if_none=None, if_undefined=None, default=None
     )
 
-    #: The optional URL of the proxy to send requests via.
-    #:
-    #: Defaults to :obj:`~None` if unspecified during deserialization.
-    #:
-    #: :type: :obj:`~str`, optional
     proxy_url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None, default=None)
 
-    #: Optional request timeout to use. If an HTTP request takes longer than
-    #: this, it will be aborted.
-    #:
-    #: If not :obj:`~None`, the value represents a number of seconds as a
-    #: floating point number.
-    #:
-    #: Defaults to :obj:`~None` if unspecified during deserialization.
-    #:
-    #: :type: :obj:`~float`, optional
     request_timeout: typing.Optional[float] = marshaller.attrib(
         deserializer=float, if_undefined=None, if_none=None, default=None
     )
 
-    #: The optional SSL context to use.
-    #:
-    #: This is deserialized as an object reference in the format
-    #: ``package.module#object.attribute`` that is expected to point to the
-    #: desired value.
-    #:
-    #: Defaults to :obj:`~None` if unspecified during deserialization.
-    #:
-    #: :type: :obj:`~ssl.SSLContext`, optional
     ssl_context: typing.Optional[ssl.SSLContext] = marshaller.attrib(
         deserializer=marshaller.dereference_handle, if_none=None, if_undefined=None, default=None
     )
 
-    #: If :obj:`~True`, then responses with invalid SSL certificates will be
-    #: rejected. Generally you want to keep this enabled unless you have a
-    #: problem with SSL and you know exactly what you are doing by disabling
-    #: this. Disabling SSL verification can have major security implications.
-    #: You turn this off at your own risk.
-    #:
-    #: Defaults to :obj:`~True` if unspecified during deserialization.
-    #:
-    #: :type: :obj:`~bool`
     verify_ssl: bool = marshaller.attrib(deserializer=bool, if_undefined=True, default=True)
 
 
 @marshaller.marshallable()
 @attr.s(kw_only=True)
 class TokenConfig(BaseConfig):
-    """Token config options."""
+    """Token config options.
 
-    #: The token to use.
-    #:
-    #: :type: :obj:`~str`, optional
+    Attributes
+    ----------
+    token : str, optional
+        The token to use.
+    """
+
     token: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, if_undefined=None, default=None)
+    """The token to use."""
 
 
 def _parse_shard_info(payload):
@@ -189,160 +177,334 @@ def _parse_shard_info(payload):
 @marshaller.marshallable()
 @attr.s(kw_only=True)
 class GatewayConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
-    """Single-websocket specific configuration options."""
+    """Single-websocket specific configuration options.
 
-    #: Whether to use zlib compression on the gateway for inbound messages or
-    #: not. Usually you want this turned on.
-    #:
-    #: :type: :obj:`~bool`
+    Attributes
+    ----------
+    allow_redirects : bool
+        If `True`, allow following redirects from `3xx` HTTP responses.
+        Generally you do not want to enable this unless you have a good reason to.
+        Defaults to `False` if unspecified during deserialization.
+    tcp_connector : aiohttp.TCPConnector, optional
+        This may otherwise be `None` to use the default settings provided by
+        `aiohttp`.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_headers : typing.Mapping [ str, str ], optional
+        Optional proxy headers to provide in any HTTP requests.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_auth : aiohttp.BasicAuth, optional
+        Optional proxy authorization to provide in any HTTP requests.
+        This is deserialized using the format `"basic {{base 64 string here}}"`.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_url : str, optional
+        The optional URL of the proxy to send requests via.
+        Defaults to `None` if unspecified during deserialization.
+    request_timeout : float, optional
+        Optional request timeout to use. If an HTTP request takes longer than
+        this, it will be aborted.
+        If not `None`, the value represents a number of seconds as a floating
+        point number.
+        Defaults to `None` if unspecified during deserialization.
+    ssl_context : ssl.SSLContext, optional
+        The optional SSL context to use.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    verify_ssl : bool
+        If `True`, then responses with invalid SSL certificates will be
+        rejected. Generally you want to keep this enabled unless you have a
+        problem with SSL and you know exactly what you are doing by disabling
+        this. Disabling SSL  verification can have major security implications.
+        You turn this off at your own risk.
+        Defaults to `True` if unspecified during deserialization.
+    token : str, optional
+        The token to use.
+    debug : bool
+        Whether to enable debugging mode. Usually you don't want to enable this.
+    gateway_use_compression : bool
+        Whether to use zlib compression on the gateway for inbound messages.
+        Usually you want this turned on.
+    gateway_version : int
+        The gateway API version to use. Defaults to v6
+    initial_activity : hikari.gateway_entities.Activity, optional
+        The initial activity to set all shards to when starting the gateway.
+        If this is `None` then no activity will be set, this is the default.
+    initial_status : hikari.guilds.PresenceStatus
+        The initial status to set the shards to when starting the gateway.
+        Defaults to `ONLINE`.
+    initial_is_afk : bool
+        Whether to show up as AFK or not on sign-in.
+    initial_idle_since : datetime.datetime, optional
+        The idle time to show on signing in.
+        If set to `None` to not show an idle time, this is the default.
+    intents : hikari.intents.Intent
+        The intents to use for the connection.
+        If being deserialized, this can be an integer bitfield, or a sequence of
+        intent names. If unspecified, this will be set to `None`.
+    large_threshold : int
+        The large threshold to use.
+    shard_id : typing.Sequence [ int ], optional
+        The shard IDs to produce shard connections for.
+        If being deserialized, this can be several formats shown in `notes`.
+    shard_count : int, optional
+        The number of shards the entire distributed application should consists
+        of. If you run multiple distributed instances of the bot, you should
+        ensure this value is consistent.
+        This can be set to `None` to enable auto-sharding. This is the default.
+
+    !!! note
+        The several formats for `shard_id` are as follows:
+
+        * A specific shard ID (e.g. `12`);
+        * A sequence of shard IDs (e.g. `[0, 1, 2, 3, 8, 9, 10]`);
+        * A range string. Two periods indicate a range of `[5, 16]`
+            (inclusive beginning, exclusive end).
+        * A range string. Three periods indicate a range of
+            `[5, 17]` (inclusive beginning, inclusive end);
+        * `None` this means `shard_count` will be considered and that many
+            shards will be created for you. If the `shard_count` is also
+            `None` then auto-sharding will be performed for you.
+
+    !!! note
+
+        If being deserialized, `intents` can be an integer bitfield, or a
+        sequence of intent names. If unspecified, `intents` will be set to
+        `None`.
+
+        See `hikari.intents.Intent` for valid names of intents you
+        can use. Integer values are as documented on Discord's developer portal.
+
+    !!! warning
+        If you are using the V7 gateway implementation, you will NEED to provide
+        explicit `intents` values for this field in order to get online.
+        Additionally, intents that are classed by Discord as being privileged
+        will require you to whitelist your application in order to use them.
+
+        If you are using the V6 gateway implementation, setting `intents` to
+        `None` will simply opt you into every event you can subscribe to.
+    """
+
     gateway_use_compression: bool = marshaller.attrib(deserializer=bool, if_undefined=True, default=True)
 
-    #: The gateway API version to use.
-    #:
-    #: If unspecified, then V6 is used.
-    #:
-    #: :type: :obj:`~int`
     gateway_version: int = marshaller.attrib(deserializer=int, if_undefined=lambda: 6, default=6)
 
-    #: The initial activity to set all shards to when starting the gateway. If
-    #: :obj:`~None`, then no activity will be set.
-    #:
-    #: :type: :obj:`~hikari.gateway_entities.GatewayActivity`, optional
     initial_activity: typing.Optional[gateway_entities.Activity] = marshaller.attrib(
         deserializer=gateway_entities.Activity.deserialize, if_none=None, if_undefined=None, default=None
     )
 
-    #: The initial status to set the shards to when starting the gateway.
-    #:
-    #: :type: :obj:`~hikari.guilds.PresenceStatus`
     initial_status: guilds.PresenceStatus = marshaller.attrib(
         deserializer=guilds.PresenceStatus,
         if_undefined=lambda: guilds.PresenceStatus.ONLINE,
         default=guilds.PresenceStatus.ONLINE,
     )
 
-    #: Whether to show up as AFK or not on sign-in.
-    #:
-    #: :type: :obj:`~bool`
     initial_is_afk: bool = marshaller.attrib(deserializer=bool, if_undefined=False, default=False)
 
-    #: The idle time to show on signing in, or :obj:`~None` to not show an idle
-    #: time.
-    #:
-    #: :type: :obj:`~datetime.datetime`, optional
     initial_idle_since: typing.Optional[datetime.datetime] = marshaller.attrib(
         deserializer=datetime.datetime.fromtimestamp, if_none=None, if_undefined=None, default=None
     )
 
-    #: The intents to use for the connection.
-    #:
-    #: If being deserialized, this can be an integer bitfield, or a sequence of
-    #: intent names. If
-    #: unspecified, this will be set to :obj:`~None`.
-    #:
-    #: Examples
-    #: --------
-    #:
-    #: .. code-block:: python
-    #:
-    #:    # Python example
-    #:    GatewayIntent.GUILDS | GatewayIntent.GUILD_MESSAGES
-    #:
-    #: .. code-block:: js
-    #:
-    #:    // JSON example, using explicit bitfield values
-    #:    513
-    #:    // JSON example, using an array of names
-    #:    [ "GUILDS", "GUILD_MESSAGES" ]
-    #:
-    #: See :obj:`~hikari.intents.Intent` for valid names of
-    #: intents you can use. Integer values are as documented on Discord's
-    #: developer portal.
-    #:
-    #: Warnings
-    #: --------
-    #: If you are using the V7 gateway implementation, you will NEED to provide
-    #: explicit intent values for this field in order to get online.
-    #: Additionally, intents that are classed by Discord as being privileged
-    #: will require you to whitelist your application in order to use them.
-    #:
-    #: If you are using the V6 gateway implementation, setting this to
-    #: :obj:`~None` will simply opt you into every event you can subscribe to.
-    #:
-    #:
-    #: :type: :obj:`~hikari.intents.Intent`, optional
     intents: typing.Optional[_intents.Intent] = marshaller.attrib(
         deserializer=lambda value: conversions.dereference_int_flag(_intents.Intent, value),
         if_undefined=None,
         default=None,
     )
 
-    #: The large threshold to use.
-    #:
-    #: :type: :obj:`~int`
     large_threshold: int = marshaller.attrib(deserializer=int, if_undefined=lambda: 250, default=250)
 
     """Definition of shard management configuration settings."""
 
-    #: The shard IDs to produce shard connections for.
-    #:
-    #: If being deserialized, this can be several formats.
-    #:     ``12``:
-    #:         A specific shard ID.
-    #:     ``[0, 1, 2, 3, 8, 9, 10]``:
-    #:         A sequence of shard IDs.
-    #:     ``"5..16"``:
-    #:         A range string. Two periods indicate a range of ``[5, 16)``
-    #:         (inclusive beginning, exclusive end).
-    #:     ``"5...16"``:
-    #:         A range string. Three periods indicate a range of
-    #:         ``[5, 17]`` (inclusive beginning, inclusive end).
-    #:     :obj:`~None`:
-    #:         The ``shard_count`` will be considered and that many shards will
-    #:         be created for you. If the ``shard_count`` is also :obj:`~None`,
-    #:         then auto-sharding will be performed for you.
-    #:
-    #: :type: :obj:`~typing.Sequence` [ :obj:`~int` ], optional
     shard_ids: typing.Optional[typing.Sequence[int]] = marshaller.attrib(
         deserializer=_parse_shard_info, if_none=None, if_undefined=None, default=None
     )
 
-    #: The number of shards the entire distributed application should consist
-    #: of. If you run multiple distributed instances of the bot, you should
-    #: ensure this value is consistent.
-    #:
-    #: This can be set to :obj:`~None` to enable auto-sharding. This is the
-    #: default behaviour.
-    #:
-    #: :type: :obj:`~int`, optional.
     shard_count: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
 
 
 @marshaller.marshallable()
 @attr.s(kw_only=True)
 class RESTConfig(AIOHTTPConfig, TokenConfig):
-    """REST-specific configuration details."""
+    """Single-websocket specific configuration options.
 
-    #: Token authentication scheme.
-    #:
-    #: Should be ``"Bot"`` or ``"Bearer"``, or ``None`` if not relevant.
-    #:
-    #: Defaults to ``"Bot"``
-    #:
-    #: :type: :obj:`~str`, optional
+    Attributes
+    ----------
+    allow_redirects : bool
+        If `True`, allow following redirects from `3xx` HTTP responses.
+        Generally you do not want to enable this unless you have a good reason to.
+        Defaults to `False` if unspecified during deserialization.
+    tcp_connector : aiohttp.TCPConnector, optional
+        This may otherwise be `None` to use the default settings provided by
+        `aiohttp`.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_headers : typing.Mapping [ str, str ], optional
+        Optional proxy headers to provide in any HTTP requests.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_auth : aiohttp.BasicAuth, optional
+        Optional proxy authorization to provide in any HTTP requests.
+        This is deserialized using the format `"basic {{base 64 string here}}"`.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_url : str, optional
+        The optional URL of the proxy to send requests via.
+        Defaults to `None` if unspecified during deserialization.
+    request_timeout : float, optional
+        Optional request timeout to use. If an HTTP request takes longer than
+        this, it will be aborted.
+        If not `None`, the value represents a number of seconds as a floating
+        point number.
+        Defaults to `None` if unspecified during deserialization.
+    ssl_context : ssl.SSLContext, optional
+        The optional SSL context to use.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    verify_ssl : bool
+        If `True`, then responses with invalid SSL certificates will be
+        rejected. Generally you want to keep this enabled unless you have a
+        problem with SSL and you know exactly what you are doing by disabling
+        this. Disabling SSL  verification can have major security implications.
+        You turn this off at your own risk.
+        Defaults to `True` if unspecified during deserialization.
+    token : str, optional
+        The token to use.
+    debug : bool
+        Whether to enable debugging mode. Usually you don't want to enable this.
+    token_type : str, optional
+        Token authentication scheme, this defaults to `"Bot"` and  should be
+        one of `"Bot"` or `"Bearer"`, or `None` if not relevant.
+    rest_version : int
+        The HTTP API version to use. If unspecified, then V7 is used.
+    """
+
     token_type: typing.Optional[str] = marshaller.attrib(
         deserializer=str, if_undefined=lambda: "Bot", if_none=None, default="Bot"
     )
 
-    #: The HTTP API version to use.
-    #:
-    #: If unspecified, then V7 is used.
-    #:
-    #: :type: :obj:`~int`
     rest_version: int = marshaller.attrib(deserializer=int, if_undefined=lambda: 7, default=7)
 
 
 @marshaller.marshallable()
 @attr.s(kw_only=True)
 class BotConfig(RESTConfig, GatewayConfig):
-    """Configuration for a standard bot."""
+    """Configuration for a standard bot.
+
+    Attributes
+    ----------
+    allow_redirects : bool
+        If `True`, allow following redirects from `3xx` HTTP responses.
+        Generally you do not want to enable this unless you have a good reason to.
+        Defaults to `False` if unspecified during deserialization.
+    tcp_connector : aiohttp.TCPConnector, optional
+        This may otherwise be `None` to use the default settings provided by
+        `aiohttp`.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_headers : typing.Mapping [ str, str ], optional
+        Optional proxy headers to provide in any HTTP requests.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_auth : aiohttp.BasicAuth, optional
+        Optional proxy authorization to provide in any HTTP requests.
+        This is deserialized using the format `"basic {{base 64 string here}}"`.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_url : str, optional
+        The optional URL of the proxy to send requests via.
+        Defaults to `None` if unspecified during deserialization.
+    request_timeout : float, optional
+        Optional request timeout to use. If an HTTP request takes longer than
+        this, it will be aborted.
+        If not `None`, the value represents a number of seconds as a floating
+        point number.
+        Defaults to `None` if unspecified during deserialization.
+    ssl_context : ssl.SSLContext, optional
+        The optional SSL context to use.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    verify_ssl : bool
+        If `True`, then responses with invalid SSL certificates will be
+        rejected. Generally you want to keep this enabled unless you have a
+        problem with SSL and you know exactly what you are doing by disabling
+        this. Disabling SSL  verification can have major security implications.
+        You turn this off at your own risk.
+        Defaults to `True` if unspecified during deserialization.
+    token : str, optional
+        The token to use.
+    debug : bool
+        Whether to enable debugging mode. Usually you don't want to enable this.
+    gateway_use_compression : bool
+        Whether to use zlib compression on the gateway for inbound messages.
+        Usually you want this turned on.
+    gateway_version : int
+        The gateway API version to use. Defaults to v6
+    initial_activity : hikari.gateway_entities.Activity, optional
+        The initial activity to set all shards to when starting the gateway.
+        If this is `None` then no activity will be set, this is the default.
+    initial_status : hikari.guilds.PresenceStatus
+        The initial status to set the shards to when starting the gateway.
+        Defaults to `ONLINE`.
+    initial_is_afk : bool
+        Whether to show up as AFK or not on sign-in.
+    initial_idle_since : datetime.datetime, optional
+        The idle time to show on signing in.
+        If set to `None` to not show an idle time, this is the default.
+    intents : hikari.intents.Intent
+        The intents to use for the connection.
+        If being deserialized, this can be an integer bitfield, or a sequence of
+        intent names. If unspecified, this will be set to `None`.
+    large_threshold : int
+        The large threshold to use.
+    shard_id : typing.Sequence [ int ], optional
+        The shard IDs to produce shard connections for.
+        If being deserialized, this can be several formats shown in `notes`.
+    shard_count : int, optional
+        The number of shards the entire distributed application should consists
+        of. If you run multiple distributed instances of the bot, you should
+        ensure this value is consistent.
+        This can be set to `None` to enable auto-sharding. This is the default.
+    token_type : str, optional
+        Token authentication scheme, this defaults to `"Bot"` and  should be
+        one of `"Bot"` or `"Bearer"`, or `None` if not relevant.
+    rest_version : int
+        The HTTP API version to use. If unspecified, then V7 is used.
+
+    !!! note
+        The several formats for `shard_id` are as follows:
+
+        * A specific shard ID (e.g. `12`);
+        * A sequence of shard IDs (e.g. `[0, 1, 2, 3, 8, 9, 10]`);
+        * A range string. Two periods indicate a range of `[5, 16]`
+            (inclusive beginning, exclusive end).
+        * A range string. Three periods indicate a range of
+            `[5, 17]` (inclusive beginning, inclusive end);
+        * `None` this means `shard_count` will be considered and that many
+            shards will be created for you. If the `shard_count` is also
+            `None` then auto-sharding will be performed for you.
+
+    !!! note
+
+        If being deserialized, `intents` can be an integer bitfield, or a
+        sequence of intent names. If unspecified, `intents` will be set to
+        `None`.
+
+        See `hikari.intents.Intent` for valid names of intents you
+        can use. Integer values are as documented on Discord's developer portal.
+
+    !!! warning
+        If you are using the V7 gateway implementation, you will NEED to provide
+        explicit `intents` values for this field in order to get online.
+        Additionally, intents that are classed by Discord as being privileged
+        will require you to whitelist your application in order to use them.
+
+        If you are using the V6 gateway implementation, setting `intents` to
+        `None` will simply opt you into every event you can subscribe to.
+    """

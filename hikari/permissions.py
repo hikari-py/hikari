@@ -27,9 +27,7 @@ class Permission(enum.IntFlag):
     """Represents the permissions available in a given channel or guild.
 
     This is an int-flag enum. This means that you can **combine multiple
-    permissions together** into one value using the bitwise-OR operator (``|``).
-
-    .. code-block:: python
+    permissions together** into one value using the bitwise-OR operator (`|`).
 
         my_perms = Permission.MANAGE_CHANNELS | Permission.MANAGE_GUILD
 
@@ -41,10 +39,8 @@ class Permission(enum.IntFlag):
         )
 
     You can **check if a permission is present** in a set of combined
-    permissions by using the bitwise-AND operator (``&``). This will return
-    the int-value of the permission if it is present, or ``0`` if not present.
-
-    .. code-block:: python
+    permissions by using the bitwise-AND operator (`&`). This will return
+    the int-value of the permission if it is present, or `0` if not present.
 
         my_perms = Permission.MANAGE_CHANNELS | Permission.MANAGE_GUILD
 
@@ -66,10 +62,8 @@ class Permission(enum.IntFlag):
             print("I don't have the permission to manage channels!")
 
     If you need to **check that a permission is not present**, you can use the
-    bitwise-XOR operator (``^``) to check. If the permission is not present, it
-    will return a non-zero value, otherwise if it is present, it will return ``0``.
-
-    .. code-block:: python
+    bitwise-XOR operator (`^`) to check. If the permission is not present, it
+    will return a non-zero value, otherwise if it is present, it will return `0`.
 
         my_perms = Permission.MANAGE_CHANNELS | Permission.MANAGE_GUILD
 
@@ -77,106 +71,106 @@ class Permission(enum.IntFlag):
             print("Please give me the MANAGE_CHANNELS permission!")
 
     Lastly, if you need all the permissions set except the permission you want,
-    you can use the inversion operator (``~``) to do that.
-
-    .. code-block:: python
+    you can use the inversion operator (`~`) to do that.
 
         # All permissions except ADMINISTRATOR.
         my_perms = ~Permission.ADMINISTRATOR
 
     """
 
-    #: Empty permission.
     NONE = 0
+    """Empty permission."""
 
-    #: Allows creation of instant invites.
     CREATE_INSTANT_INVITE = 1 << 0
+    """Allows creation of instant invites."""
 
-    #: Allows kicking members
     KICK_MEMBERS = 1 << 1
+    """Allows kicking members"""
 
-    #: Allows banning members.
     BAN_MEMBERS = 1 << 2
+    """Allows banning members."""
 
-    #: Allows all permissions and bypasses channel permission overwrites.
     ADMINISTRATOR = 1 << 3
+    """Allows all permissions and bypasses channel permission overwrites."""
 
-    #: Allows management and editing of channels.
     MANAGE_CHANNELS = 1 << 4
+    """Allows management and editing of channels."""
 
-    #: Allows management and editing of the guild.
     MANAGE_GUILD = 1 << 5
+    """Allows management and editing of the guild."""
 
-    #: Allows for the addition of reactions to messages.
     ADD_REACTIONS = 1 << 6
+    """Allows for the addition of reactions to messages."""
 
-    #: Allows for viewing of audit logs.
     VIEW_AUDIT_LOG = 1 << 7
+    """Allows for viewing of audit logs."""
 
-    #: Allows for using priority speaker in a voice channel.
     PRIORITY_SPEAKER = 1 << 8
+    """Allows for using priority speaker in a voice channel."""
 
-    #: Allows the user to go live.
     STREAM = 1 << 9
+    """Allows the user to go live."""
 
-    #: Allows guild members to view a channel, which includes reading messages in text channels.
     VIEW_CHANNEL = 1 << 10
+    """Allows guild members to view a channel, which includes reading messages in text channels."""
 
-    #: Allows for sending messages in a channel.
     SEND_MESSAGES = 1 << 11
+    """Allows for sending messages in a channel."""
 
-    #: Allows for sending of ``/tts`` messages.
     SEND_TTS_MESSAGES = 1 << 12
+    """Allows for sending of `/tts` messages."""
 
-    #: Allows for deletion of other users messages.
     MANAGE_MESSAGES = 1 << 13
+    """Allows for deletion of other users messages."""
 
-    #: Links sent by users with this permission will be auto-embedded.
     EMBED_LINKS = 1 << 14
+    """Links sent by users with this permission will be auto-embedded."""
 
-    #: Allows for uploading images and files
     ATTACH_FILES = 1 << 15
+    """Allows for uploading images and files."""
 
-    #: Allows for reading of message history.
     READ_MESSAGE_HISTORY = 1 << 16
+    """Allows for reading of message history."""
 
-    #: Allows for using the ``@everyone`` tag to notify all users in a channel, and the
-    #: ``@here`` tag to notify all online users in a channel, and the ``@role`` tag (even
-    #: if the role is not mentionable) to notify all users with that role in a channel.
     MENTION_EVERYONE = 1 << 17
+    """Allows for using the `@everyone` tag to notify all users in a channel,
+    and the `@here` tag to notify all online users in a channel, and the
+    `@role` tag (even if the role is not mentionable) to notify all users with
+    that role in a channel.
+    """
 
-    #: Allows the usage of custom emojis from other servers.
     USE_EXTERNAL_EMOJIS = 1 << 18
+    """Allows the usage of custom emojis from other servers."""
 
-    #: Allows for joining of a voice channel.
     CONNECT = 1 << 20
+    """Allows for joining of a voice channel."""
 
-    #: Allows for speaking in a voice channel.
     SPEAK = 1 << 21
+    """Allows for speaking in a voice channel."""
 
-    #: Allows for muting members in a voice channel.
     MUTE_MEMBERS = 1 << 22
+    """Allows for muting members in a voice channel."""
 
-    #: Allows for deafening of members in a voice channel.
     DEAFEN_MEMBERS = 1 << 23
+    """Allows for deafening of members in a voice channel."""
 
-    #: Allows for moving of members between voice channels.
     MOVE_MEMBERS = 1 << 24
+    """Allows for moving of members between voice channels."""
 
-    #: Allows for using voice-activity-detection in a voice channel.
     USE_VAD = 1 << 25
+    """Allows for using voice-activity-detection in a voice channel."""
 
-    #: Allows for modification of own nickname.
     CHANGE_NICKNAME = 1 << 26
+    """Allows for modification of own nickname."""
 
-    #: Allows for modification of other users nicknames.
     MANAGE_NICKNAMES = 1 << 27
+    """Allows for modification of other users nicknames."""
 
-    #: Allows management and editing of roles.
     MANAGE_ROLES = 1 << 28
+    """Allows management and editing of roles."""
 
-    #: Allows management and editing of webhooks.
     MANAGE_WEBHOOKS = 1 << 29
+    """Allows management and editing of webhooks."""
 
-    #: Allows management and editing of emojis.
     MANAGE_EMOJIS = 1 << 30
+    """Allows management and editing of emojis."""

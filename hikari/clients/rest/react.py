@@ -46,25 +46,25 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the channel to add this reaction in.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
             The object or ID of the message to add the reaction in.
-        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
+        emoji : typing.Union [ hikari.emojis.Emoji, str ]
             The emoji to add. This can either be an emoji object or a string
             representation of an emoji. The string representation will be either
-            ``"name:id"`` for custom emojis else it's unicode character(s)  (can
+            `"name:id"` for custom emojis else it's unicode character(s)  (can
             be UTF-32).
 
         Raises
         ------
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If this is the first reaction using this specific emoji on this
-            message and you lack the ``ADD_REACTIONS`` permission. If you lack
-            ``READ_MESSAGE_HISTORY``, this may also raise this error.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+            message and you lack the `ADD_REACTIONS` permission. If you lack
+            `READ_MESSAGE_HISTORY`, this may also raise this error.
+        hikari.errors.NotFoundHTTPError
             If the channel or message is not found, or if the emoji is not found.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If the emoji is not valid, unknown, or formatted incorrectly.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -85,26 +85,26 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the channel to add this reaction in.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
             The object or ID of the message to add the reaction in.
-        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
+        emoji : typing.Union [ hikari.emojis.Emoji, str ]
             The emoji to add. This can either be an emoji object or a
             string representation of an emoji. The string representation will be
-            either ``"name:id"`` for custom emojis else it's unicode
+            either `"name:id"` for custom emojis else it's unicode
             character(s) (can be UTF-32).
 
         Raises
         ------
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If this is the first reaction using this specific emoji on this
-            message and you lack the ``ADD_REACTIONS`` permission. If you lack
-            ``READ_MESSAGE_HISTORY``, this may also raise this error.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+            message and you lack the `ADD_REACTIONS` permission. If you lack
+            `READ_MESSAGE_HISTORY`, this may also raise this error.
+        hikari.errors.NotFoundHTTPError
             If the channel or message is not found, or if the emoji is not
             found.
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If the emoji is not valid, unknown, or formatted incorrectly.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -122,20 +122,20 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
             The object or ID of the message to remove all reactions from.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel or message is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_MESSAGES`` permission.
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_MESSAGES` permission.
         """
         await self._session.delete_all_reactions(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
@@ -152,24 +152,24 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
             The object or ID of the message to delete the reactions from.
-        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
-            The object or string representatiom of the emoji to delete. The
-            string representation will be either ``"name:id"`` for custom emojis
+        emoji : typing.Union [ hikari.emojis.Emoji, str ]
+            The object or string representation of the emoji to delete. The
+            string representation will be either `"name:id"` for custom emojis
             else it's unicode character(s) (can be UTF-32).
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel or message or emoji or user is not found.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
-            If you lack the ``MANAGE_MESSAGES`` permission, or the channel is a
+        hikari.errors.ForbiddenHTTPError
+            If you lack the `MANAGE_MESSAGES` permission, or the channel is a
             DM channel.
         """
         await self._session.delete_all_reactions_for_emoji(
@@ -194,44 +194,42 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
             The object or ID of the message to get the reactions from.
-        emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
+        emoji : typing.Union [ hikari.emojis.Emoji, str ]
             The emoji to get. This can either be it's object or the string
             representation of the emoji. The string representation will be
-            either ``"name:id"`` for custom emojis else it's unicode
+            either `"name:id"` for custom emojis else it's unicode
             character(s) (can be UTF-32).
-        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
+        after : typing.Union [ datetime.datetime, hikari.users.User, hikari.bases.Snowflake, int ]
             If specified, a object or ID user. If specified, only users with a
             snowflake that is lexicographically greater than the value will be
             returned.
-        limit : :obj:`~str`
+        limit : str
             If specified, the limit of the number of users this iterator should
             return.
 
-        Example
-        -------
-        .. code-block:: python
-
+        Examples
+        --------
             async for user in client.fetch_reactors_after(channel, message, emoji, after=9876543, limit=1231):
                 if user.is_bot:
                     await client.kick_member(channel.guild_id, user)
 
         Returns
         -------
-        :obj:`~typing.AsyncIterator` [ :obj:`~hikari.users.User` ]
+        typing.AsyncIterator [ hikari.users.User ]
             An async iterator of user objects.
 
         Raises
         ------
-        :obj:`~hikari.errors.BadRequestHTTPError`
+        hikari.errors.BadRequestHTTPError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        :obj:`~hikari.errors.ForbiddenHTTPError`
+        hikari.errors.ForbiddenHTTPError
             If you lack access to the message.
-        :obj:`~hikari.errors.NotFoundHTTPError`
+        hikari.errors.NotFoundHTTPError
             If the channel or message is not found.
         """
         if isinstance(after, datetime.datetime):

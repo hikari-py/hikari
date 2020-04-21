@@ -23,13 +23,5 @@ abstract base classes, and corresponding implementations. This allows
 several key components to be implemented separately, in case you have a
 specific use case you want to provide (such as placing stuff on a message
 queue if you distribute your bot).
-
-The overall structure is as follows:
-
-.. inheritance-diagram::
-    hikari.state.event_dispatchers
-    hikari.state.raw_event_consumers
-    hikari.state.event_managers
-    hikari.state.stateless_event_managers
 """
 __all__ = []

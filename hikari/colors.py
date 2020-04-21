@@ -16,13 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Model that represents a common RGB color and provides simple conversions to other common color systems.
-
-.. inheritance-diagram::
-    builtins.int
-    hikari.colors
-    :parts: 1
-"""
+"""Model that represents a common RGB color and provides simple conversions to other common color systems."""
 from __future__ import annotations
 
 __all__ = ["Color", "ColorCompatibleT"]
@@ -38,8 +32,8 @@ class Color(int, typing.SupportsInt):
 
     This value is immutable.
 
-    This is a specialization of :obj:`~int` which provides alternative overrides for common methods and color system
-    conversions.
+    This is a specialization of `int` which provides alternative overrides for
+    common methods and color system conversions.
 
     This currently supports:
 
@@ -53,7 +47,6 @@ class Color(int, typing.SupportsInt):
     Examples
     --------
     Examples of conversions to given formats include:
-    .. code-block::python
 
         >>> c = Color(0xFF051A)
         Color(r=0xff, g=0x5, b=0x1a)
@@ -72,7 +65,6 @@ class Color(int, typing.SupportsInt):
 
     Alternatively, if you have an arbitrary input in one of the above formats that you wish to become a color, you can
     use the get-attribute operator on the class itself to automatically attempt to resolve the color:
-    .. code-block::python
 
         >>> Color[0xFF051A]
         Color(r=0xff, g=0x5, b=0x1a)
@@ -92,7 +84,6 @@ class Color(int, typing.SupportsInt):
         Color(r=0xff, g=0x5, b=0x1a)
 
     Examples of initialization of Color objects from given formats include:
-    .. code-block::python
 
         >>> c = Color(16712986)
         Color(r=0xff, g=0x5, b=0x1a)
@@ -146,11 +137,11 @@ class Color(int, typing.SupportsInt):
     def hex_code(self) -> str:
         """Six-digit hexadecimal color code for this Color.
 
-        This is prepended with a ``#`` symbol, and will be in upper case.
+        This is prepended with a `#` symbol, and will be in upper case.
 
-        Example
-        -------
-        ``#1A2B3C``
+        Examples
+        --------
+        `#1A2B3C`
         """
         return "#" + self.raw_hex_code
 
@@ -158,9 +149,9 @@ class Color(int, typing.SupportsInt):
     def raw_hex_code(self) -> str:
         """Raw hex code.
 
-        Example
-        -------
-        ``1A2B3C``
+        Examples
+        --------
+        `1A2B3C`
         """
         components = self.rgb
         return "".join(hex(c)[2:].zfill(2) for c in components).upper()
@@ -168,33 +159,33 @@ class Color(int, typing.SupportsInt):
     # Ignore docstring not starting in an imperative mood
     @property
     def is_web_safe(self) -> bool:  # noqa: D401
-        """:obj:`~True` if the color is web safe, :obj:`~False` otherwise."""
+        """`True` if the color is web safe, `False` otherwise."""
         hex_code = self.raw_hex_code
         return all(_all_same(*c) for c in (hex_code[:2], hex_code[2:4], hex_code[4:]))
 
     @classmethod
     def from_rgb(cls, red: int, green: int, blue: int) -> Color:
-        """Convert the given RGB to a :obj:`~Color` object.
+        """Convert the given RGB to a `Color` object.
 
         Each channel must be withing the range [0, 255] (0x0, 0xFF).
 
         Parameters
         ----------
-        red : :obj:`~int`
+        red : int
             Red channel.
-        green : :obj:`~int`
+        green : int
             Green channel.
-        blue : :obj:`~int`
+        blue : int
             Blue channel.
 
         Returns
         -------
-        :obj:`~Color`
+        Color
             A Color object.
 
         Raises
         ------
-        :obj:`~ValueError`
+        ValueError
             If red, green, or blue are outside the range [0x0, 0xFF].
         """
         assertions.assert_in_range(red, 0, 0xFF, "red")
@@ -205,28 +196,28 @@ class Color(int, typing.SupportsInt):
 
     @classmethod
     def from_rgb_float(cls, red_f: float, green_f: float, blue_f: float) -> Color:
-        """Convert the given RGB to a :obj:`~Color` object.
+        """Convert the given RGB to a `Color` object.
 
         The colorspace represented values have to be within the
         range [0, 1].
 
         Parameters
         ----------
-        red_f : :obj:`~float`
+        red_f : float
             Red channel.
-        green_f : :obj:`~float`
+        green_f : float
             Green channel.
-        blue_f : :obj:`~float`
+        blue_f : float
             Blue channel.
 
         Returns
         -------
-        :obj:`~Color`
+        Color
             A Color object.
 
         Raises
         ------
-        :obj:`~ValueError`
+        ValueError
             If red, green or blue are outside the range [0, 1].
         """
         assertions.assert_in_range(red_f, 0, 1, "red")
@@ -237,26 +228,26 @@ class Color(int, typing.SupportsInt):
 
     @classmethod
     def from_hex_code(cls, hex_code: str) -> Color:
-        """Convert the given hexadecimal color code to a :obj:`~Color`.
+        """Convert the given hexadecimal color code to a `Color`.
 
         The inputs may be of the following format (case insensitive):
-        ``1a2``, ``#1a2``, ``0x1a2`` (for websafe colors), or
-        ``1a2b3c``, ``#1a2b3c``, ``0x1a2b3c`` (for regular 3-byte color-codes).
+        `1a2`, `#1a2`, `0x1a2` (for websafe colors), or
+        `1a2b3c`, `#1a2b3c`, `0x1a2b3c` (for regular 3-byte color-codes).
 
         Parameters
         ----------
-        hex_code : :obj:`~str`
+        hex_code : str
             A hexadecimal color code to parse.
 
         Returns
         -------
-        :obj:`~Color`
+        Color
             A corresponding Color object.
 
         Raises
         ------
-        :obj:`~ValueError`
-            If ``hex_code`` is not a hexadecimal or is a inalid length.
+        ValueError
+            If `hex_code` is not a hexadecimal or is a invalid length.
         """
         if hex_code.startswith("#"):
             hex_code = hex_code[1:]
@@ -279,16 +270,16 @@ class Color(int, typing.SupportsInt):
 
     @classmethod
     def from_int(cls, i: typing.SupportsInt) -> Color:
-        """Convert the given :obj:`~typing.SupportsInt` to a :obj:`~Color`.
+        """Convert the given `typing.SupportsInt` to a `Color`.
 
         Parameters
         ----------
-        i : :obj:`~typing.SupportsInt`
+        i : typing.SupportsInt
             The raw color integer.
 
         Returns
         -------
-        :obj:`~Color`
+        Color
             The Color object.
         """
         return cls(i)
@@ -296,23 +287,23 @@ class Color(int, typing.SupportsInt):
     # Partially chose to override these as the docstrings contain typos according to Sphinx.
     @classmethod
     def from_bytes(cls, bytes_: typing.Sequence[int], byteorder: str, *, signed: bool = True) -> Color:
-        """Convert the bytes to a :obj:`~Color`.
+        """Convert the bytes to a `Color`.
 
         Parameters
         ----------
-        bytes_ : :obj:`~typing.Iterable` [ :obj:`~int` ]
-            A iterable of :obj:`~int` byte values.
+        bytes_ : typing.Iterable [ int ]
+            A iterable of int byte values.
 
-        byteorder : :obj:`~str`
+        byteorder : str
             The endianess of the value represented by the bytes.
-            Can be ``"big"`` endian or ``"little"`` endian.
+            Can be `"big"` endian or `"little"` endian.
 
-        signed : :obj:`~bool`
+        signed : bool
             Whether the value is signed or unsigned.
 
         Returns
         -------
-        :obj:`~Color`
+        Color
             The Color object.
         """
         return Color(int.from_bytes(bytes_, byteorder, signed=signed))
@@ -322,19 +313,19 @@ class Color(int, typing.SupportsInt):
 
         Parameters
         ----------
-        length : :obj:`~int`
-            The number of bytes to produce. Should be around ``3``, but not less.
+        length : int
+            The number of bytes to produce. Should be around `3`, but not less.
 
-        byteorder : :obj:`~str`
+        byteorder : str
             The endianess of the value represented by the bytes.
-            Can be ``"big"`` endian or ``"little"`` endian.
+            Can be `"big"` endian or `"little"` endian.
 
-        signed : :obj:`~bool`
+        signed : bool
             Whether the value is signed or unsigned.
 
         Returns
         -------
-        :obj:`~bytes`
+        bytes
             The bytes representation of the Color.
         """
         return int(self).to_bytes(length, byteorder, signed=signed)
@@ -377,7 +368,6 @@ def _all_same(first, *rest):
     return True
 
 
-#: Any type that can be converted into a color object.
 ColorCompatibleT = typing.Union[
     Color,
     typing.SupportsInt,
@@ -387,3 +377,4 @@ ColorCompatibleT = typing.Union[
     typing.Sequence[typing.SupportsFloat],
     str,
 ]
+"""Any type that can be converted into a color object."""

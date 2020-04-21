@@ -16,13 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Provides a facade around :obj:`~hikari.net.shards.Shard`.
+"""Provides a facade around `hikari.net.shards.Shard`.
 
 This handles parsing and initializing the object from a configuration, as
 well as restarting it if it disconnects.
 
 Additional functions and coroutines are provided to update the presence on the
-shard using models defined in :mod:`hikari`.
+shard using models defined in `hikari`.
 """
 from __future__ import annotations
 
@@ -56,27 +56,29 @@ from hikari.state import dispatchers
 class ShardState(enum.IntEnum):
     """Describes the state of a shard."""
 
-    #: The shard is not running.
     NOT_RUNNING = 0
+    """The shard is not running."""
 
-    #: The shard is undergoing the initial connection handshake.
     CONNECTING = enum.auto()
+    """The shard is undergoing the initial connection handshake."""
 
-    #: The initialization handshake has completed. We are waiting for the shard
-    #: to receive the ``READY`` event.
     WAITING_FOR_READY = enum.auto()
+    """The initialization handshake has completed.
 
-    #: The shard is ``READY``.
+    We are waiting for the shard to receive the `READY` event.
+    """
+
     READY = enum.auto()
+    """The shard is `READY`."""
 
-    #: The shard has sent a request to ``RESUME`` and is waiting for a response.
     RESUMING = enum.auto()
+    """The shard has sent a request to `RESUME` and is waiting for a response."""
 
-    #: The shard is currently shutting down permanently.
     STOPPING = enum.auto()
+    """The shard is currently shutting down permanently."""
 
-    #: The shard has shut down and is no longer connected.
     STOPPED = enum.auto()
+    """The shard has shut down and is no longer connected."""
 
     def __str__(self) -> str:
         return self.name
@@ -90,187 +92,107 @@ class ShardClient(runnable.RunnableClient, abc.ABC):
     @property
     @abc.abstractmethod
     def shard_id(self) -> int:
-        """Shard ID.
-
-        Returns
-        -------
-        :obj:`~int`
-            The 0-indexed shard ID.
-        """
+        """Shard ID (this is 0-indexed)."""
 
     @property
     @abc.abstractmethod
     def shard_count(self) -> int:
-        """Shard count.
-
-        Returns
-        -------
-        :obj:`~int`
-            The number of shards that make up this bot.
-        """
+        """Count of how many shards make up this bot."""
 
     @property
     @abc.abstractmethod
     def status(self) -> guilds.PresenceStatus:
-        """User status for this shard.
-
-        Returns
-        -------
-        :obj:`~hikari.guilds.PresenceStatus`
-            The current user status for this shard.
-        """
+        """User status for this shard."""
 
     @property
     @abc.abstractmethod
     def activity(self) -> typing.Optional[gateway_entities.Activity]:
         """Activity for the user status for this shard.
 
-        Returns
-        -------
-        :obj:`~hikari.gateway_entities.GatewayActivity`, optional
-            The current activity for the user on this shard, or :obj:`~None` if
-            there is no activity.
+        This will be `None` if there is no activity.
         """
 
     @property
     @abc.abstractmethod
     def idle_since(self) -> typing.Optional[datetime.datetime]:
-        """Timestamp when the user of this shard appeared to be idle.
+        """Timestamp of when the user of this shard appeared to be idle.
 
-        Returns
-        -------
-        :obj:`~datetime.datetime`, optional
-            The timestamp when the user of this shard appeared to be idle, or
-            :obj:`~None` if not applicable.
+        This will be `None` if not applicable.
         """
 
     @property
     @abc.abstractmethod
     def is_afk(self) -> bool:
-        """Whether the user is AFK or not.
-
-        Returns
-        -------
-        :obj:`~bool`
-            :obj:`~True` if the user is AFK, :obj:`~False` otherwise.
-        """
+        """Whether the user is appearing as AFK or not.."""
 
     @property
     @abc.abstractmethod
     def heartbeat_latency(self) -> float:
-        """Latency between sending a HEARTBEAT and receiving an ACK.
+        """Latency between sending a HEARTBEAT and receiving an ACK in seconds.
 
-        Returns
-        -------
-        :obj:`~float`
-            The heartbeat latency in seconds. This will be ``float('nan')``
-            until the first heartbeat is performed.
+        This will be `float("nan")` until the first heartbeat is performed.
         """
 
     @property
     @abc.abstractmethod
     def heartbeat_interval(self) -> float:
-        """Time period to wait between sending HEARTBEAT payloads.
+        """Time period to wait between sending HEARTBEAT payloads in seconds.
 
-        Returns
-        -------
-        :obj:`~float`
-            The heartbeat interval in seconds. This will be ``float('nan')``
-            until the connection has received a ``HELLO`` payload.
+        This will be `float("nan")` until the connection has received a `HELLO`
+        payload.
         """
 
     @property
     @abc.abstractmethod
     def disconnect_count(self) -> int:
-        """Count of number of times the internal connection has disconnected.
-
-        Returns
-        -------
-        :obj:`~int`
-            The number of disconnects this shard has performed.
-        """
+        """Count of number of times this shard's connection has disconnected."""
 
     @property
     @abc.abstractmethod
     def reconnect_count(self) -> int:
-        """Count of number of times the internal connection has reconnected.
+        """Count of number of times this shard's connection has reconnected.
 
         This includes RESUME and re-IDENTIFY events.
-
-        Returns
-        -------
-        :obj:`~int`
-            The number of reconnects this shard has performed.
         """
 
     @property
     @abc.abstractmethod
     def connection_state(self) -> ShardState:
-        """State of this shard.
-
-        Returns
-        -------
-        :obj:`~ShardState`
-            The state of this shard.
-        """
+        """State of this shard's connection."""
 
     @property
     @abc.abstractmethod
     def is_connected(self) -> bool:
-        """Whether the shard is connected or not.
-
-        Returns
-        -------
-        :obj:`~bool`
-            :obj:`~True` if connected; :obj:`~False` otherwise.
-        """
+        """Whether the shard is connected or not."""
 
     @property
     @abc.abstractmethod
     def seq(self) -> typing.Optional[int]:
         """Sequence ID of the shard.
 
-        Returns
-        -------
-        :obj:`~int`, optional
-            The sequence number for the shard. This is the number of payloads
-            that have been received since an ``IDENTIFY`` was sent.
+        This is the number of payloads that have been received since the last
+        `IDENTIFY` was sent.
         """
 
     @property
     @abc.abstractmethod
     def session_id(self) -> typing.Optional[str]:
-        """Session ID.
+        """Session ID of the shard connection.
 
-        Returns
-        -------
-        :obj:`~str`, optional
-            The session ID for the shard connection, if there is one. If not,
-            then :obj:`~None`.
+        Will be `None` if there is no session.
         """
 
     @property
     @abc.abstractmethod
     def version(self) -> float:
-        """Version being used for the gateway API.
-
-        Returns
-        -------
-        :obj:`~int`
-            The API version being used.
-        """
+        """Version being used for the gateway API."""
 
     @property
     @abc.abstractmethod
     def intents(self) -> typing.Optional[_intents.Intent]:
-        """Intent values that this connection is using.
+        """Intents that are in use for the shard connection.
 
-        Returns
-        -------
-        :obj:`~hikari.intents.Intent`, optional
-            A :obj:`~enum.IntFlag` enum containing each intent that is set. If
-            intents are not being used at all, then this will return
-            :obj:`~None` instead.
+        If intents are not being used at all, then this will be `None` instead.
         """
 
     @abc.abstractmethod
@@ -288,20 +210,19 @@ class ShardClient(runnable.RunnableClient, abc.ABC):
         Any arguments that you do not explicitly provide some value for will
         not be changed.
 
-        Warnings
-        --------
-        This will fail if the shard is not online.
+        !!! warning
+            This will fail if the shard is not online.
 
         Parameters
         ----------
-        status : :obj:`~hikari.guilds.PresenceStatus`
+        status : hikari.guilds.PresenceStatus
             If specified, the new status to set.
-        activity : :obj:`~hikari.gateway_entities.GatewayActivity`, optional
+        activity : hikari.gateway_entities.Activity, optional
             If specified, the new activity to set.
-        idle_since : :obj:`~datetime.datetime`, optional
+        idle_since : datetime.datetime, optional
             If specified, the time to show up as being idle since, or
-            :obj:`~None` if not applicable.
-        is_afk : :obj:`~bool`
+            `None` if not applicable.
+        is_afk : bool
             If specified, whether the user should be marked as AFK.
         """
 
@@ -311,35 +232,34 @@ class ShardClientImpl(ShardClient):
 
     This contains several abstractions to enable usage of the low
     level gateway network interface with the higher level constructs
-    in :mod:`hikari`.
+    in `hikari`.
 
     Parameters
     ----------
-    shard_id : :obj:`~int`
+    shard_id : int
         The ID of this specific shard.
-    shard_id : :obj:`~int`
+    shard_id : int
         The number of shards that make up this distributed application.
-    config : :obj:`~hikari.clients.configs.WebsocketConfig`
+    config : hikari.clients.configs.GatewayConfig
         The gateway configuration to use to initialize this shard.
-    raw_event_consumer_impl : :obj:`~hikari.state.raw_event_consumers.RawEventConsumer`
+    raw_event_consumer_impl : hikari.state.consumers.RawEventConsumer
         The consumer of a raw event.
-    url : :obj:`~str`
+    url : str
         The URL to connect the gateway to.
-    dispatcher : :obj:`~hikari.state.event_dispatchers.EventDispatcher`, optional
+    dispatcher : hikari.state.dispatchers.EventDispatcher, optional
         The high level event dispatcher to use for dispatching start and stop
-        events. Set this to :obj:`~None` to disable that functionality (useful if
+        events. Set this to `None` to disable that functionality (useful if
         you use a gateway manager to orchestrate multiple shards instead and
-        provide this functionality there). Defaults to :obj:`~None` if
+        provide this functionality there). Defaults to `None` if
         unspecified.
 
-    Notes
-    -----
-    Generally, you want to use
-    :obj:`~hikari.clients.gateway_managers.GatewayManager` rather than this class
-    directly, as that will handle sharding where enabled and applicable, and
-    provides a few more bits and pieces that may be useful such as state
-    management and event dispatcher integration. and If you want to customize
-    this, you can subclass it and simply override anything you want.
+    !!! note
+        Generally, you want to use
+        `hikari.clients.bot_base.BotBase` rather than this class
+        directly, as that will handle sharding where enabled and applicable,
+        and provides a few more bits and pieces that may be useful such as state
+        management and event dispatcher integration. and If you want to customize
+        this, you can subclass it and simply override anything you want.
     """
 
     __slots__ = (
@@ -467,7 +387,7 @@ class ShardClientImpl(ShardClient):
     async def start(self):
         """Connect to the gateway on this shard and keep the connection alive.
 
-        This will wait for the shard to dispatch a ``READY`` event, and
+        This will wait for the shard to dispatch a `READY` event, and
         then return.
         """
         if self._shard_state not in (ShardState.NOT_RUNNING, ShardState.STOPPED):

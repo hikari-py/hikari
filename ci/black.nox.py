@@ -23,7 +23,6 @@ from ci import nox
 PATHS = [
     "hikari",
     "tests",
-    "docs",
     "setup.py",
     "noxfile.py",
 ]
