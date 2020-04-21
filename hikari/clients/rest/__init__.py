@@ -26,10 +26,10 @@ __all__ = ["RESTClient"]
 
 from hikari.clients import configs
 from hikari.clients.rest import channel
-from hikari.clients.rest import me
 from hikari.clients.rest import gateway
 from hikari.clients.rest import guild
 from hikari.clients.rest import invite
+from hikari.clients.rest import me
 from hikari.clients.rest import oauth2
 from hikari.clients.rest import react
 from hikari.clients.rest import user

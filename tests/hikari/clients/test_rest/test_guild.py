@@ -23,6 +23,7 @@ import io
 import mock
 import pytest
 
+from hikari.internal import helpers
 from hikari import audit_logs
 from hikari import channels
 from hikari import colors
@@ -35,7 +36,7 @@ from hikari import voices
 from hikari import webhooks
 from hikari.clients.rest import guild as _guild
 from hikari.internal import conversions
-from hikari.internal import pagination
+from hikari.internal import helpers
 from hikari.net import rest
 from tests.hikari import _helpers
 
@@ -548,9 +549,9 @@ class TestRESTGuildLogic:
     @_helpers.parametrize_valid_id_formats_for_models("user", 115590097100865541, users.User)
     def test_fetch_members_after_with_optionals(self, rest_guild_logic_impl, guild, user):
         mock_generator = mock.AsyncMock()
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_guild_logic_impl.fetch_members_after(guild, after=user, limit=34) is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 guild_id="574921006817476608",
                 deserializer=guilds.GuildMember.deserialize,
                 direction="after",
@@ -564,9 +565,9 @@ class TestRESTGuildLogic:
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
     def test_fetch_members_after_without_optionals(self, rest_guild_logic_impl, guild):
         mock_generator = mock.AsyncMock()
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_guild_logic_impl.fetch_members_after(guild) is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 guild_id="574921006817476608",
                 deserializer=guilds.GuildMember.deserialize,
                 direction="after",
@@ -580,9 +581,9 @@ class TestRESTGuildLogic:
     def test_fetch_members_after_with_datetime_object(self, rest_guild_logic_impl):
         mock_generator = mock.AsyncMock()
         date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        with mock.patch.object(pagination, "pagination_handler", return_value=mock_generator):
+        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
             assert rest_guild_logic_impl.fetch_members_after(574921006817476608, after=date) is mock_generator
-            pagination.pagination_handler.assert_called_once_with(
+            helpers.pagination_handler.assert_called_once_with(
                 guild_id="574921006817476608",
                 deserializer=guilds.GuildMember.deserialize,
                 direction="after",

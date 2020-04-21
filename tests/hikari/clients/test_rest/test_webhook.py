@@ -27,8 +27,8 @@ from hikari import media
 from hikari import messages
 from hikari import webhooks
 from hikari.clients.rest import webhook
-from hikari.internal import allowed_mentions
 from hikari.internal import conversions
+from hikari.internal import helpers
 from hikari.net import rest
 from tests.hikari import _helpers
 
@@ -142,11 +142,9 @@ class TestRESTUserLogic:
     async def test_execute_webhook_without_optionals(self, rest_webhook_logic_impl, webhook):
         rest_webhook_logic_impl._session.execute_webhook.return_value = ...
         mock_allowed_mentions_payload = {"parse": ["everyone", "users", "roles"]}
-        with mock.patch.object(
-            allowed_mentions, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload
-        ):
+        with mock.patch.object(helpers, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload):
             assert await rest_webhook_logic_impl.execute_webhook(webhook, "a.webhook.token") is None
-            allowed_mentions.generate_allowed_mentions.assert_called_once_with(
+            helpers.generate_allowed_mentions.assert_called_once_with(
                 mentions_everyone=True, user_mentions=True, role_mentions=True
             )
         rest_webhook_logic_impl._session.execute_webhook.assert_called_once_with(
@@ -176,7 +174,7 @@ class TestRESTUserLogic:
         stack.enter_context(mock.patch.object(media, "safe_read_file", return_value=mock_media_payload))
         stack.enter_context(mock.patch.object(messages.Message, "deserialize"))
         stack.enter_context(
-            mock.patch.object(allowed_mentions, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
+            mock.patch.object(helpers, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
         )
         with stack:
             await rest_webhook_logic_impl.execute_webhook(
@@ -194,7 +192,7 @@ class TestRESTUserLogic:
                 user_mentions=False,
             )
             media.safe_read_file.assert_called_once_with(mock_media_obj)
-            allowed_mentions.generate_allowed_mentions.assert_called_once_with(
+            helpers.generate_allowed_mentions.assert_called_once_with(
                 mentions_everyone=False, user_mentions=False, role_mentions=False
             )
         rest_webhook_logic_impl._session.execute_webhook.assert_called_once_with(
@@ -220,7 +218,7 @@ class TestRESTUserLogic:
         mock_allowed_mentions_payload = {"parse": ["everyone", "users", "roles"]}
         stack = contextlib.ExitStack()
         stack.enter_context(
-            mock.patch.object(allowed_mentions, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
+            mock.patch.object(helpers, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
         )
         stack.enter_context(mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj))
         with stack:

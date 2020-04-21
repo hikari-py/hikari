@@ -36,11 +36,10 @@ from hikari import permissions as _permissions
 from hikari import users
 from hikari import webhooks
 from hikari.clients.rest import base
-from hikari.internal import allowed_mentions
 from hikari.internal import assertions
 from hikari.internal import conversions
+from hikari.internal import helpers
 from hikari.internal import more_typing
-from hikari.internal import pagination
 
 
 class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
@@ -272,7 +271,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             after = str(bases.Snowflake.from_datetime(after))
         else:
             after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
-        return pagination.pagination_handler(
+        return helpers.pagination_handler(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             deserializer=_messages.Message.deserialize,
             direction="after",
@@ -342,7 +341,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             before = str(bases.Snowflake.from_datetime(before))
         elif before is not None:
             before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
-        return pagination.pagination_handler(
+        return helpers.pagination_handler(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             deserializer=_messages.Message.deserialize,
             direction="before",
@@ -530,7 +529,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             tts=tts,
             files=await asyncio.gather(*(media.safe_read_file(file) for file in files)) if files is not ... else ...,
             embed=embed.serialize() if embed is not ... else ...,
-            allowed_mentions=allowed_mentions.generate_allowed_mentions(
+            allowed_mentions=helpers.generate_allowed_mentions(
                 mentions_everyone=mentions_everyone, user_mentions=user_mentions, role_mentions=role_mentions
             ),
         )
@@ -640,7 +639,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             content=content,
             embed=embed.serialize() if embed is not ... and embed is not None else embed,
             flags=flags,
-            allowed_mentions=allowed_mentions.generate_allowed_mentions(
+            allowed_mentions=helpers.generate_allowed_mentions(
                 mentions_everyone=mentions_everyone, user_mentions=user_mentions, role_mentions=role_mentions,
             ),
         )

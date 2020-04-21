@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["EventDispatcher", "EventDispatcherImpl"]
+__all__ = ["EventDispatcher", "IntentAwareEventDispatcherImpl"]
 
 import abc
 import asyncio
@@ -28,9 +28,12 @@ import inspect
 import logging
 import typing
 
+from hikari import errors
 from hikari import events
+from hikari import intents
 from hikari.internal import assertions
 from hikari.internal import conversions
+from hikari.internal import helpers
 from hikari.internal import more_asyncio
 from hikari.internal import more_collections
 
@@ -69,7 +72,7 @@ class EventDispatcher(abc.ABC):
         """Cancel anything that is waiting for an event to be dispatched."""
 
     @abc.abstractmethod
-    def add_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT) -> EventCallbackT:
+    def add_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT, **kwargs) -> EventCallbackT:
         """Register a new event callback to a given event name.
 
         Parameters
@@ -221,11 +224,13 @@ class EventDispatcher(abc.ABC):
                     if not issubclass(resolved_type, events.HikariEvent):
                         raise TypeError("Event typehints should subclass hikari.events.HikariEvent to be valid")
 
-                    return self.add_listener(typing.cast(typing.Type[events.HikariEvent], resolved_type), callback)
+                    return self.add_listener(
+                        typing.cast(typing.Type[events.HikariEvent], resolved_type), callback, _stack_level=3
+                    )
                 finally:
                     del frame, _
 
-            return self.add_listener(event_type, callback)
+            return self.add_listener(event_type, callback, _stack_level=3)
 
         return decorator
 
@@ -249,7 +254,7 @@ class EventDispatcher(abc.ABC):
         """
 
 
-class EventDispatcherImpl(EventDispatcher):
+class IntentAwareEventDispatcherImpl(EventDispatcher):
     """Handles storing and dispatching to event listeners and one-time event waiters.
 
     Event listeners once registered will be stored until they are manually
@@ -262,6 +267,15 @@ class EventDispatcherImpl(EventDispatcher):
     to completing the waiter, with any event parameters being passed to the
     predicate. If the predicate returns False, the waiter is not completed. This
     allows filtering of certain events and conditions in a procedural way.
+
+    Events that require a specific intent will trigger warnings on subscription
+    if the provided enabled intents are not a superset of this.
+
+    Parameters
+    ----------
+    enabled_intents : :obj:`~hikari.intents.Intent`, optional
+        The intents that are enabled for the application. If ``None``, then no
+        intent checks are performed when subscribing a new event.
     """
 
     #: The logger used to write log messages.
@@ -269,7 +283,8 @@ class EventDispatcherImpl(EventDispatcher):
     #: :type: :obj:`~logging.Logger`
     logger: logging.Logger
 
-    def __init__(self) -> None:
+    def __init__(self, enabled_intents: typing.Optional[intents.Intent]) -> None:
+        self._enabled_intents = enabled_intents
         self._listeners: ListenerMapT = {}
         # pylint: disable=E1136
         self._waiters: WaiterMapT = {}
@@ -284,7 +299,7 @@ class EventDispatcherImpl(EventDispatcher):
                 future.cancel()
         self._waiters.clear()
 
-    def add_listener(self, event_type: typing.Type[events.HikariEvent], callback: EventCallbackT) -> None:
+    def add_listener(self, event_type: typing.Type[events.HikariEvent], callback: EventCallbackT, **kwargs) -> None:
         """Register a new event callback to a given event name.
 
         Parameters
@@ -298,10 +313,38 @@ class EventDispatcherImpl(EventDispatcher):
         ------
         :obj:`~TypeError`
             If ``coroutine_function`` is not a coroutine.
+
+        Note
+        ----
+        If you subscribe to an event that requires intents that you do not have
+        set, you will receive a warning.
         """
         assertions.assert_that(
             asyncio.iscoroutinefunction(callback), "You must subscribe a coroutine function only", TypeError
         )
+
+        required_intents = events.get_required_intents_for(event_type)
+        enabled_intents = self._enabled_intents if self._enabled_intents is not None else 0
+
+        any_intent_match = any(enabled_intents & i == i for i in required_intents)
+
+        if self._enabled_intents is not None and required_intents and not any_intent_match:
+            intents_lists = []
+            for required in required_intents:
+                set_of_intents = []
+                for intent in intents.Intent:
+                    if required & intent:
+                        set_of_intents.append(f"{intent.name} <PRIVILEGED>" if intent.is_privileged else intent.name)
+                intents_lists.append(" + ".join(set_of_intents))
+
+            message = (
+                f"Event {event_type.__module__}.{event_type.__qualname__} will never be triggered\n"
+                f"unless you enable one of the following intents:\n"
+                + "\n".join(f"    - {intent_list}" for intent_list in intents_lists)
+            )
+
+            helpers.warning(message, category=errors.IntentWarning, stack_level=kwargs.pop("_stack_level", 1))
+
         if event_type not in self._listeners:
             self._listeners[event_type] = []
         self._listeners[event_type].append(callback)
