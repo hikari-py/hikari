@@ -32,7 +32,7 @@
   script: |+
     set -x
     apt-get update
-    apt-get install -qy graphviz git
+    apt-get install -qy graphviz git # FIXME: Remove once in master.
     pip install nox
     git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari_docs_${TARGET_BRANCH} --depth=1
     cd "hikari_docs_${TARGET_BRANCH}"
@@ -95,7 +95,7 @@
       set -e
       set -x
       apt-get update
-      apt-get install -qy graphviz
+      apt-get install -qy graphviz # FIXME: remove once in master
       pip install nox
       nox -s pdoc || nox -s documentation  # FIXME: remove once in master.
   except:
