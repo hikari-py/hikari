@@ -48,6 +48,7 @@ from hikari._about import __email__
 from hikari._about import __license__
 from hikari._about import __url__
 from hikari._about import __version__
+
 from hikari.applications import *
 from hikari.audit_logs import *
 from hikari.bases import *
@@ -64,9 +65,7 @@ from hikari.guilds import *
 from hikari.intents import *
 from hikari.invites import *
 from hikari.messages import *
-from hikari.net import *
 from hikari.permissions import *
-from hikari.state import *
 from hikari.unset import *
 from hikari.users import *
 from hikari.voices import *

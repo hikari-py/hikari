@@ -23,7 +23,7 @@ from hikari.clients import bot_base
 from hikari.clients import configs
 from hikari.clients import rest
 from hikari.clients import shards
-from hikari.state import dispatchers
+from hikari.state import intent_aware_dispatchers
 from hikari.state import stateless
 
 
@@ -31,7 +31,7 @@ class StatelessBot(
     bot_base.BotBase[
         shards.ShardClientImpl,
         rest.RESTClient,
-        dispatchers.IntentAwareEventDispatcherImpl,
+        intent_aware_dispatchers.IntentAwareEventDispatcherImpl,
         stateless.StatelessEventManagerImpl,
         configs.BotConfig,
     ]
@@ -65,10 +65,12 @@ class StatelessBot(
 
     @classmethod
     def _create_event_manager(
-        cls, config: configs.BotConfig, dispatcher: dispatchers.IntentAwareEventDispatcherImpl
+        cls, config: configs.BotConfig, dispatcher: intent_aware_dispatchers.IntentAwareEventDispatcherImpl
     ) -> stateless.StatelessEventManagerImpl:
         return stateless.StatelessEventManagerImpl(dispatcher)
 
     @classmethod
-    def _create_event_dispatcher(cls, config: configs.BotConfig) -> dispatchers.IntentAwareEventDispatcherImpl:
-        return dispatchers.IntentAwareEventDispatcherImpl(config.intents)
+    def _create_event_dispatcher(
+        cls, config: configs.BotConfig
+    ) -> intent_aware_dispatchers.IntentAwareEventDispatcherImpl:
+        return intent_aware_dispatchers.IntentAwareEventDispatcherImpl(config.intents)
