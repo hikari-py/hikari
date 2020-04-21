@@ -46,9 +46,9 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to add this reaction in.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the message to add the reaction in.
         emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
             The emoji to add. This can either be an emoji object or a string
@@ -85,9 +85,9 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to add this reaction in.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the message to add the reaction in.
         emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
             The emoji to add. This can either be an emoji object or a
@@ -122,9 +122,9 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the message to remove all reactions from.
 
         Raises
@@ -152,9 +152,9 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the message to delete the reactions from.
         emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
             The object or string representatiom of the emoji to delete. The
@@ -194,16 +194,16 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the message to get the reactions from.
         emoji : :obj:`~typing.Union` [ :obj:`~hikari.emojis.Emoji`, :obj:`~str` ]
             The emoji to get. This can either be it's object or the string
             representation of the emoji. The string representation will be
             either ``"name:id"`` for custom emojis else it's unicode
             character(s) (can be UTF-32).
-        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             If specified, a object or ID user. If specified, only users with a
             snowflake that is lexicographically greater than the value will be
             returned.

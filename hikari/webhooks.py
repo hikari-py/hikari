@@ -57,14 +57,14 @@ class Webhook(bases.UniqueEntity, marshaller.Deserializable):
 
     #: The guild ID of the webhook.
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    #: :type: :obj:`~hikari.bases.Snowflake`, optional
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
         deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
 
     #: The channel ID this webhook is for.
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`
+    #: :type: :obj:`~hikari.bases.Snowflake`
     channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The user that created the webhook

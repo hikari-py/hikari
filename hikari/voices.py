@@ -35,7 +35,7 @@ class VoiceState(bases.HikariEntity, marshaller.Deserializable):
 
     #: The ID of the guild this voice state is in, if applicable.
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    #: :type: :obj:`~hikari.bases.Snowflake`, optional
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
         deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
@@ -43,14 +43,14 @@ class VoiceState(bases.HikariEntity, marshaller.Deserializable):
     #: The ID of the channel this user is connected to, will be :obj:`~None` if
     #: they are leaving voice.
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`, optional
+    #: :type: :obj:`~hikari.bases.Snowflake`, optional
     channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
         deserializer=bases.Snowflake.deserialize, if_none=None
     )
 
     #: The ID of the user this voice state is for.
     #:
-    #: :type: :obj:`~hikari.entities.Snowflake`
+    #: :type: :obj:`~hikari.bases.Snowflake`
     user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
 
     #: The guild member this voice state is for if the voice state is in a

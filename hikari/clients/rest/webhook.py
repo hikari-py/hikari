@@ -46,7 +46,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the webhook to get.
         webhook_token : :obj:`~str`
             If specified, the webhook token to use to get it (bypassing this
@@ -90,7 +90,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the webhook to edit.
         webhook_token : :obj:`~str`
             If specified, the webhook token to use to modify it (bypassing this
@@ -100,7 +100,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         avatar_data : ``hikari.internal.conversions.FileLikeT``, optional
             If specified, the new avatar image file object. If :obj:`~None`, then
             it is removed.
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
         reason : :obj:`~str`
@@ -148,7 +148,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the webhook to delete
         webhook_token : :obj:`~str`
             If specified, the webhook token to use to delete it (bypassing this
@@ -192,7 +192,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        webhook : :obj:`~typing.Union` [ :obj:`~hikari.webhooks.Webhook`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the webhook to execute.
         webhook_token : :obj:`~str`
             The token of the webhook to execute.
@@ -218,11 +218,11 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         mentions_everyone : :obj:`~bool`
             Whether ``@everyone`` and ``@here`` mentions should be resolved by
             discord and lead to actual pings, defaults to :obj:`~True`.
-        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
+        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
             Either an array of user objects/IDs to allow mentions for,
             :obj:`~True` to allow all user mentions or :obj:`~False` to block all
             user mentions from resolving, defaults to :obj:`~True`.
-        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
+        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
             Either an array of guild role objects/IDs to allow mentions for,
             :obj:`~True` to allow all role mentions or :obj:`~False` to block all
             role mentions from resolving, defaults to :obj:`~True`.

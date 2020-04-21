@@ -51,7 +51,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object ID of the channel to look up.
 
         Returns
@@ -93,7 +93,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The channel ID to update.
         name : :obj:`~str`
             If specified, the new name for the channel. This must be
@@ -125,7 +125,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         permission_overwrites : :obj:`~typing.Sequence` [ :obj:`~hikari.channels.PermissionOverwrite` ]
             If specified, the new list of permission overwrites that are
             category specific to replace the existing overwrites with.
-        parent_category : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], optional
+        parent_category : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], optional
             If specified, the new parent category ID to set for the channel,
             pass :obj:`~None` to unset.
         reason : :obj:`~str`
@@ -179,7 +179,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake` :obj:`~str` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake` :obj:`~str` ]
             The object or ID of the channel to delete.
 
         Returns
@@ -227,12 +227,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The ID of the channel to retrieve the messages from.
         limit : :obj:`~int`
             If specified, the maximum number of how many messages this iterator
             should return.
-        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        after : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             A object or ID message. Only return messages sent AFTER this
             message if it's specified else this will return every message after
             (and including) the first message in the channel.
@@ -296,12 +296,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The ID of the channel to retrieve the messages from.
         limit : :obj:`~int`
             If specified, the maximum number of how many messages this iterator
             should return.
-        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        before : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             A message object or ID. Only return messages sent BEFORE
             this message if this is specified else this will return every
             message before (and including) the most recent message in the
@@ -367,9 +367,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The ID of the channel to retrieve the messages from.
-        around : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        around : :obj:`~typing.Union` [ :obj:`~datetime.datetime`, :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the message to get messages that were sent
             AROUND it in the provided channel, unlike ``before`` and ``after``,
             this argument is required and the provided message will also be
@@ -427,9 +427,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the message to retrieve.
 
         Returns
@@ -474,7 +474,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The channel or ID of the channel to send to.
         content : :obj:`~str`
             If specified, the message content to send with the message.
@@ -492,11 +492,11 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         mentions_everyone : :obj:`~bool`
             Whether ``@everyone`` and ``@here`` mentions should be resolved by
             discord and lead to actual pings, defaults to :obj:`~True`.
-        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
+        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
             Either an array of user objects/IDs to allow mentions for,
             :obj:`~True` to allow all user mentions or :obj:`~False` to block all
             user mentions from resolving, defaults to :obj:`~True`.
-        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
+        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
             Either an array of guild role objects/IDs to allow mentions for,
             :obj:`~True` to allow all role mentions or :obj:`~False` to block all
             role mentions from resolving, defaults to :obj:`~True`.
@@ -583,9 +583,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the message to edit.
         content : :obj:`~str`, optional
             If specified, the string content to replace with in the message.
@@ -600,11 +600,11 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         mentions_everyone : :obj:`~bool`
             Whether ``@everyone`` and ``@here`` mentions should be resolved by
             discord and lead to actual pings, defaults to :obj:`~True`.
-        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
+        user_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ], :obj:`~bool` ]
             Either an array of user objects/IDs to allow mentions for,
             :obj:`~True` to allow all user mentions or :obj:`~False` to block all
             user mentions from resolving, defaults to :obj:`~True`.
-        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
+        role_mentions : :obj:`~typing.Union` [ :obj:`~typing.Collection` [ :obj:`~typing.Union` [ :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ] ], :obj:`~bool` ]
             Either an array of guild role objects/IDs to allow mentions for,
             :obj:`~True` to allow all role mentions or :obj:`~False` to block all
             role mentions from resolving, defaults to :obj:`~True`.
@@ -685,11 +685,11 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get the message from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the message to delete.
-        *additional_messages : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        *additional_messages : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             Objects and/or IDs of additional messages to delete in the same
             channel, in total you can delete up to 100 messages in a request.
 
@@ -752,9 +752,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to edit permissions for.
-        overwrite : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwrite`, :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake` , :obj:`~int` ]
+        overwrite : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwrite`, :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake` , :obj:`~int` ]
             The object or ID of the target member or role to  edit/create the
             overwrite for.
         target_type : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwriteType`, :obj:`~int` ]
@@ -796,7 +796,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get invites for.
 
         Returns
@@ -849,7 +849,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             user is kicked when their session ends unless they are given a role.
         unique : :obj:`~bool`
             If specified, whether to try to reuse a similar invite.
-        target_user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        target_user : :obj:`~typing.Union` [ :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             If specified, the object or ID of the user this invite should
             target.
         target_user_type : :obj:`~typing.Union` [ :obj:`~hikari.invites.TargetUserType`, :obj:`~int` ]
@@ -900,9 +900,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to delete the overwrite from.
-        overwrite : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwrite`, :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.users.User`, :obj:`~hikari.entities.Snowflake`, :obj:int ]
+        overwrite : :obj:`~typing.Union` [ :obj:`~hikari.channels.PermissionOverwrite`, :obj:`~hikari.guilds.GuildRole`, :obj:`~hikari.users.User`, :obj:`~hikari.bases.Snowflake`, :obj:int ]
             The ID of the entity this overwrite targets.
 
         Raises
@@ -925,7 +925,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to appear to be typing in.
 
         Raises
@@ -949,12 +949,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to get messages from.
 
         Returns
         -------
-        :obj:`~typing.Mapping` [ :obj:`~hikari.entities.Snowflake`, :obj:`~hikari.messages.Message` ]
+        :obj:`~typing.Mapping` [ :obj:`~hikari.bases.Snowflake`, :obj:`~hikari.messages.Message` ]
             A list of message objects.
 
         Raises
@@ -985,9 +985,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel to pin a message to.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the message to pin.
 
         Raises
@@ -1014,9 +1014,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.Channel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The ID of the channel to remove a pin from.
-        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        message : :obj:`~typing.Union` [ :obj:`~hikari.messages.Message`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the message to unpin.
 
         Raises
@@ -1046,7 +1046,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the channel for webhook to be created in.
         name : :obj:`~str`
             The webhook's name string.
@@ -1088,7 +1088,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.entities.Snowflake`, :obj:`~int` ]
+        channel : :obj:`~typing.Union` [ :obj:`~hikari.channels.GuildChannel`, :obj:`~hikari.bases.Snowflake`, :obj:`~int` ]
             The object or ID of the guild channel to get the webhooks from.
 
         Returns
