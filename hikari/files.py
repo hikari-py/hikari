@@ -44,6 +44,14 @@ class File(typing.AsyncIterable[bytes]):
     `io.IOBase`, `Iterator[bytes]`, `Iterator[bytearray]`, `AsyncIterator[bytes]`,
     `AsyncIterator[bytearray]`, and for file-system paths that are passed as either
     `str` or `os.PathLike` objects.
+
+    Yields
+    ------
+    This class is an async iterable, so it can be iterated across asynchronously
+    to yield arbitrary sized chunks of `bytes` objects from the data stream.
+
+    These iterators do not alter any internal seek of the stream, but will
+    result in the data being cached in-memory after the first full iteration.
     """
 
     __slots__ = ("name", "_data", "_path", "_executor")

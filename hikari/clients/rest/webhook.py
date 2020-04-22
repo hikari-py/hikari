@@ -206,7 +206,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             to be executed and return the resultant message object.
         file : hikari.files.File
             If specified, this is a file object to send along with the webhook.
-        embeds : typing.Sequence` [ hikari.embeds.Embed ]
+        embeds : typing.Sequence [ hikari.embeds.Embed ]
             If specified, a sequence of between `1` to `10` embed objects
             (inclusive) to send with the embed.
         mentions_everyone : bool

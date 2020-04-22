@@ -55,7 +55,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         ----------
         username : str
             If specified, the new username string.
-        avatar : :obj:`~hikari.files.File`, optional
+        avatar : hikari.files.File, optional
             If specified, the new avatar image data.
             If it is None, the avatar is removed.
 

@@ -755,10 +755,10 @@ class REST:
             and can usually be ignored.
         tts : bool
             If specified, whether the message will be sent as a TTS message.
-        files : :obj:`~typing.Sequence` [ :obj:`~hikari.files.File` ]
-            If specified, this should be a list of between ``1`` and ``5`` file
+        files : typing.Sequence [ hikari.files.File ]
+            If specified, this should be a list of between `1` and `5` file
             objects to upload. Each should have a unique name.
-        embed : :obj:`~typing.Dict` [ :obj:`~str`, :obj:`~typing.Any` ]
+        embed : typing.Dict [ str, typing.Any ]
             If specified, the embed to send with the message.
         allowed_mentions : typing.Dict [ str, typing.Any ]
             If specified, the mentions to parse from the `content`.
