@@ -1531,13 +1531,16 @@ class REST:
         route = routes.GUILDS.compile(self.POST)
         return await self._request(route, json_body=payload)
 
-    async def get_guild(self, guild_id: str) -> typing.Dict[str, typing.Any]:
-        """Get a given guild's object.
+    async def get_guild(self, guild_id: str, *, with_counts: bool = True) -> typing.Dict[str, typing.Any]:
+        """Get the information for the guild with the given ID.
 
         Parameters
         ----------
         guild_id : str
             The ID of the guild to get.
+        with_counts: bool
+            `True` if you wish to receive approximate member and presence counts
+            in the response, or `False` otherwise. Will default to `True`.
 
         Returns
         -------
@@ -1549,10 +1552,10 @@ class REST:
         hikari.errors.NotFoundHTTPError
             If the guild is not found.
         hikari.errors.ForbiddenHTTPError
-            If you don't have access to the guild.
+            If you do not have access to the guild.
         """
         route = routes.GUILD.compile(self.GET, guild_id=guild_id)
-        return await self._request(route)
+        return await self._request(route, query={"with_counts": with_counts})
 
     async def get_guild_preview(self, guild_id: str) -> typing.Dict[str, typing.Any]:
         """Get a public guild's preview object.

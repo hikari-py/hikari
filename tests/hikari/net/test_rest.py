@@ -1194,14 +1194,18 @@ class TestLowLevelRestfulClient:
         )
 
     @pytest.mark.asyncio
-    async def test_get_guild(self, rest_impl):
+    @pytest.mark.parametrize(
+        ("kwargs", "with_counts"),
+        [({"with_counts": True}, True), ({"with_counts": False}, False), ({}, True),],  # default value only
+    )
+    async def test_get_guild(self, rest_impl, kwargs, with_counts):
         mock_response = {"id": "42", "name": "Hikari"}
         rest_impl._request.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD)
         with mock.patch.object(routes, "GUILD", compile=mock.MagicMock(return_value=mock_route)):
-            assert await rest_impl.get_guild("3939393993939") is mock_response
+            assert await rest_impl.get_guild("3939393993939", **kwargs) is mock_response
             routes.GUILD.compile.assert_called_once_with(rest_impl.GET, guild_id="3939393993939")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request.assert_called_once_with(mock_route, query={"with_counts": with_counts})
 
     @pytest.mark.asyncio
     async def test_get_guild_preview(self, rest_impl):

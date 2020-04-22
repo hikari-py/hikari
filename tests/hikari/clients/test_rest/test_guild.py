@@ -336,7 +336,9 @@ class TestRESTGuildLogic:
         rest_guild_logic_impl._session.get_guild.return_value = mock_guild_payload
         with mock.patch.object(guilds.Guild, "deserialize", return_value=mock_guild_obj):
             assert await rest_guild_logic_impl.fetch_guild(guild) is mock_guild_obj
-            rest_guild_logic_impl._session.get_guild.assert_called_once_with(guild_id="379953393319542784")
+            rest_guild_logic_impl._session.get_guild.assert_called_once_with(
+                guild_id="379953393319542784", with_counts=True
+            )
             guilds.Guild.deserialize.assert_called_once_with(mock_guild_payload)
 
     @pytest.mark.asyncio

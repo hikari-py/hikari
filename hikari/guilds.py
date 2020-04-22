@@ -959,7 +959,10 @@ class Guild(PartialGuild):
     my_permissions: _permissions.Permission = marshaller.attrib(
         raw_name="permissions", deserializer=_permissions.Permission, if_undefined=None, default=None
     )
-    """The guild level permissions that apply to the bot user.
+    """The guild-level permissions that apply to the bot user.
+
+    This will not take into account permission overwrites or implied
+    permissions (for example, ADMINISTRATOR implies all other permissions).
 
     This will be `None` when this object is retrieved through a REST request
     rather than from the gateway.
@@ -971,23 +974,27 @@ class Guild(PartialGuild):
     afk_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
         deserializer=bases.Snowflake.deserialize, if_none=None
     )
-    """The ID for the channel that AFK voice users get sent to, if set."""
+    """The ID for the channel that AFK voice users get sent to.
+
+    If `None`, then no AFK channel is set up for this guild.
+    """
 
     afk_timeout: datetime.timedelta = marshaller.attrib(
         deserializer=lambda seconds: datetime.timedelta(seconds=seconds)
     )
-    """How long a voice user has to be AFK for before they are classed as being
+    """Timeout for activity before a member is classed as AFK.
+
+    How long a voice user has to be AFK for before they are classed as being
     AFK and are moved to the AFK channel (`Guild.afk_channel_id`).
     """
 
-    # TODO: document when this is not specified.
     is_embed_enabled: typing.Optional[bool] = marshaller.attrib(
         raw_name="embed_enabled", deserializer=bool, if_undefined=False, default=False
     )
     """Defines if the guild embed is enabled or not.
 
     This information may not be present, in which case, it will be `None`
-    instead.
+    instead. This will be `None` for guilds that the bot is not a member in.
     """
 
     embed_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
@@ -1045,13 +1052,15 @@ class Guild(PartialGuild):
     be outdated if that is the case.
     """
 
-    # TODO: document in which cases this information is not available.
     is_widget_enabled: typing.Optional[bool] = marshaller.attrib(
         raw_name="widget_enabled", deserializer=bool, if_undefined=None, default=None
     )
     """Describes whether the guild widget is enabled or not.
 
     If this information is not present, this will be `None`.
+
+    This will only be provided for guilds that the application user is a member
+    of. For all other purposes, this should be ignored.
     """
 
     widget_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
@@ -1185,13 +1194,19 @@ class Guild(PartialGuild):
     )
     """The maximum number of presences for the guild.
 
-    If this is `None`, then the default value is used (currently 5000).
+    If this is `None`, then the default value is used (currently 25000).
     """
 
     max_members: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
     """The maximum number of members allowed in this guild.
 
     This information may not be present, in which case, it will be `None`.
+    """
+
+    max_video_channel_users: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
+    """The maximum number of users allowed in a video channel together.
+
+    If not available, this field will be `None`.
     """
 
     vanity_url_code: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None)
@@ -1241,6 +1256,27 @@ class Guild(PartialGuild):
 
     This is only present if `GuildFeature.PUBLIC` is in `Guild.features` for
     this guild. For all other purposes, it should be considered to be `None`.
+    """
+
+    # TODO: if this is `None`, then should we attempt to look at the known member count if present?
+    approximate_member_count: typing.Optional[int] = marshaller.attrib(
+        if_undefined=None, deserializer=int, default=None
+    )
+    """The approximate number of members in the guild.
+
+    This information will be provided by REST API calls fetching the guilds that
+    a bot account is in. For all other purposes, this should be expected to
+    remain `None`.
+    """
+
+    approximate_active_member_count: typing.Optional[int] = marshaller.attrib(
+        raw_name="approximate_presence_count", if_undefined=None, deserializer=int, default=None
+    )
+    """The approximate number of members in the guild that are not offline.
+
+    This information will be provided by REST API calls fetching the guilds that
+    a bot account is in. For all other purposes, this should be expected to
+    remain `None`.
     """
 
     def format_splash_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
