@@ -464,7 +464,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
             If you don't have access to the guild.
         """
         payload = await self._session.get_guild(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            # Always get counts. There is no reason you would _not_ want this info, right?
+            with_counts=True,
         )
         return guilds.Guild.deserialize(payload)
 
