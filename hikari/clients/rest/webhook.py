@@ -27,12 +27,11 @@ from hikari import bases
 from hikari import channels as _channels
 from hikari import embeds as _embeds
 from hikari import guilds
-from hikari import media
 from hikari import messages as _messages
 from hikari import users
 from hikari import webhooks
+from hikari import files
 from hikari.clients.rest import base
-from hikari.internal import conversions
 from hikari.internal import helpers
 
 
@@ -82,7 +81,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         *,
         webhook_token: str = ...,
         name: str = ...,
-        avatar_data: typing.Optional[conversions.FileLikeT] = ...,
+        avatar: typing.Optional[files.File] = ...,
         channel: bases.Hashable[_channels.GuildChannel] = ...,
         reason: str = ...,
     ) -> webhooks.Webhook:
@@ -97,8 +96,8 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             session's provided authorization `token`).
         name : str
             If specified, the new name string.
-        avatar_data : hikari.internal.conversions.FileLikeT, optional
-            If specified, the new avatar image file object. If `None`, then
+        avatar : hikari.files.File, optional
+            If specified, the new avatar image. If `None`, then
             it is removed.
         channel : typing.Union [ hikari.channels.GuildChannel, hikari.bases.Snowflake, int ]
             If specified, the object or ID of the new channel the given
@@ -129,11 +128,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
             webhook_token=webhook_token,
             name=name,
-            avatar=(
-                conversions.get_bytes_from_resource(avatar_data)
-                if avatar_data and avatar_data is not ...
-                else avatar_data
-            ),
+            avatar=await avatar.read_all() if avatar is not ... else ...,
             channel_id=(
                 str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
                 if channel and channel is not ...
@@ -182,7 +177,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         avatar_url: str = ...,
         tts: bool = ...,
         wait: bool = False,
-        file: media.IO = ...,
+        file: files.File = ...,
         embeds: typing.Sequence[_embeds.Embed] = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
@@ -209,12 +204,11 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         wait : bool
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
-        file : hikari.media.IO
-            If specified, this is a file object to send along with the webhook
-            as defined in `hikari.media`.
+        file : hikari.files.File
+            If specified, this is a file object to send along with the webhook.
         embeds : typing.Sequence [ hikari.embeds.Embed ]
-            If specified, a sequence of `1` to `10` embed objects to send
-            with the embed.
+            If specified, a sequence of between `1` to `10` embed objects
+            (inclusive) to send with the embed.
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
@@ -259,7 +253,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             avatar_url=avatar_url,
             tts=tts,
             wait=wait,
-            file=await media.safe_read_file(file) if file is not ... else ...,
+            file=file,
             embeds=[embed.serialize() for embed in embeds] if embeds is not ... else ...,
             allowed_mentions=helpers.generate_allowed_mentions(
                 mentions_everyone=mentions_everyone, user_mentions=user_mentions, role_mentions=role_mentions
@@ -279,7 +273,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         avatar_url: str = ...,
         tts: bool = ...,
         wait: bool = False,
-        file: media.IO = ...,
+        file: files.File = ...,
         embeds: typing.Sequence[_embeds.Embed] = ...,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = False,

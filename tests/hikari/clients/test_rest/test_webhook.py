@@ -23,11 +23,10 @@ import mock
 import pytest
 
 from hikari import embeds
-from hikari import media
+from hikari import files
 from hikari import messages
 from hikari import webhooks
 from hikari.clients.rest import webhook
-from hikari.internal import conversions
 from hikari.internal import helpers
 from hikari.net import rest
 from tests.hikari import _helpers
@@ -80,17 +79,17 @@ class TestRESTUserLogic:
         mock_webhook_obj = mock.MagicMock(webhooks.Webhook)
         mock_webhook_payload = {"id": "123123", "avatar": "1wedoklpasdoiksdoka"}
         rest_webhook_logic_impl._session.modify_webhook.return_value = mock_webhook_payload
-        mock_image_obj = mock.MagicMock(io.BytesIO)
         mock_image_data = mock.MagicMock(bytes)
+        mock_image_obj = mock.MagicMock(files.File)
+        mock_image_obj.read_all = mock.AsyncMock(return_value=mock_image_data)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj))
-        stack.enter_context(mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data))
         with stack:
             result = await rest_webhook_logic_impl.update_webhook(
                 webhook,
                 webhook_token="a.wEbHoOk.ToKeN",
                 name="blah_blah_blah",
-                avatar_data=mock_image_obj,
+                avatar=mock_image_obj,
                 channel=channel,
                 reason="A reason",
             )
@@ -104,7 +103,7 @@ class TestRESTUserLogic:
                 reason="A reason",
             )
             webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
-            conversions.get_bytes_from_resource.assert_called_once_with(mock_image_obj)
+            mock_image_obj.read_all.assert_awaited_once()
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("webhook", 379953393319542784, webhooks.Webhook)
@@ -168,10 +167,8 @@ class TestRESTUserLogic:
         mock_embed_payload = {"description": "424242"}
         mock_embed_obj = mock.MagicMock(embeds.Embed)
         mock_embed_obj.serialize = mock.MagicMock(return_value=mock_embed_payload)
-        mock_media_obj = mock.MagicMock()
-        mock_media_payload = ("aName.png", mock.MagicMock())
+        mock_file_obj = mock.MagicMock(files.File)
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(media, "safe_read_file", return_value=mock_media_payload))
         stack.enter_context(mock.patch.object(messages.Message, "deserialize"))
         stack.enter_context(
             mock.patch.object(helpers, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
@@ -185,13 +182,12 @@ class TestRESTUserLogic:
                 avatar_url="httttttt/L//",
                 tts=True,
                 wait=True,
-                file=mock_media_obj,
+                file=mock_file_obj,
                 embeds=[mock_embed_obj],
                 mentions_everyone=False,
                 role_mentions=False,
                 user_mentions=False,
             )
-            media.safe_read_file.assert_called_once_with(mock_media_obj)
             helpers.generate_allowed_mentions.assert_called_once_with(
                 mentions_everyone=False, user_mentions=False, role_mentions=False
             )
@@ -203,7 +199,7 @@ class TestRESTUserLogic:
             avatar_url="httttttt/L//",
             tts=True,
             wait=True,
-            file=mock_media_payload,
+            file=mock_file_obj,
             embeds=[mock_embed_payload],
             allowed_mentions=mock_allowed_mentions_payload,
         )
@@ -252,7 +248,7 @@ class TestRESTUserLogic:
     @pytest.mark.asyncio
     async def test_safe_execute_webhook_with_optionals(self, rest_webhook_logic_impl):
         webhook = mock.MagicMock(webhooks.Webhook)
-        mock_media_obj = mock.MagicMock(bytes)
+        mock_file_obj = mock.MagicMock(files.File)
         mock_embed_obj = mock.MagicMock(embeds.Embed)
         mock_message_obj = mock.MagicMock(messages.Message)
         rest_webhook_logic_impl.execute_webhook = mock.AsyncMock(return_value=mock_message_obj)
@@ -264,7 +260,7 @@ class TestRESTUserLogic:
             avatar_url="httttttt/L//",
             tts=True,
             wait=True,
-            file=mock_media_obj,
+            file=mock_file_obj,
             embeds=[mock_embed_obj],
             mentions_everyone=False,
             role_mentions=False,
@@ -279,7 +275,7 @@ class TestRESTUserLogic:
             avatar_url="httttttt/L//",
             tts=True,
             wait=True,
-            file=mock_media_obj,
+            file=mock_file_obj,
             embeds=[mock_embed_obj],
             mentions_everyone=False,
             role_mentions=False,
