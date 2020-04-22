@@ -28,6 +28,7 @@ from hikari import embeds
 from hikari import emojis
 from hikari import errors
 from hikari import events
+from hikari import files
 from hikari import gateway_entities
 from hikari import guilds
 from hikari import intents
@@ -39,6 +40,7 @@ from hikari import state
 from hikari import users
 from hikari import voices
 from hikari import webhooks
+
 from hikari._about import __author__
 from hikari._about import __copyright__
 from hikari._about import __email__
@@ -55,6 +57,7 @@ from hikari.colours import *
 from hikari.embeds import *
 from hikari.emojis import *
 from hikari.events import *
+from hikari.files import *
 from hikari.gateway_entities import *
 from hikari.guilds import *
 from hikari.intents import *

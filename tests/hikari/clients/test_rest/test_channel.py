@@ -28,7 +28,7 @@ from hikari import channels
 from hikari import embeds
 from hikari import guilds
 from hikari import invites
-from hikari import media
+from hikari import files
 from hikari import messages
 from hikari import snowflakes
 from hikari import users
@@ -313,28 +313,26 @@ class TestRESTChannelLogging:
         mock_embed_payload = {"description": "424242"}
         mock_embed_obj = mock.MagicMock(embeds.Embed)
         mock_embed_obj.serialize = mock.MagicMock(return_value=mock_embed_payload)
-        mock_media_obj = mock.MagicMock()
-        mock_media_payload = ("aName.png", mock.MagicMock())
+        mock_file_obj = mock.MagicMock(files.File)
+        mock_file_obj2 = mock.MagicMock(files.File)
         stack = contextlib.ExitStack()
         stack.enter_context(
             mock.patch.object(helpers, "generate_allowed_mentions", return_value=mock_allowed_mentions_payload)
         )
         stack.enter_context(mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj))
-        stack.enter_context(mock.patch.object(media, "safe_read_file", return_value=mock_media_payload))
         with stack:
             result = await rest_channel_logic_impl.create_message(
                 channel,
                 content="A CONTENT",
                 nonce="69696969696969",
                 tts=True,
-                files=[mock_media_obj],
+                files=[mock_file_obj, mock_file_obj2],
                 embed=mock_embed_obj,
                 mentions_everyone=False,
                 user_mentions=False,
                 role_mentions=False,
             )
             assert result is mock_message_obj
-            media.safe_read_file.assert_called_once_with(mock_media_obj)
             messages.Message.deserialize.assert_called_once_with(mock_message_payload)
             helpers.generate_allowed_mentions.assert_called_once_with(
                 mentions_everyone=False, user_mentions=False, role_mentions=False
@@ -344,7 +342,7 @@ class TestRESTChannelLogging:
             content="A CONTENT",
             nonce="69696969696969",
             tts=True,
-            files=[mock_media_payload],
+            files=[mock_file_obj, mock_file_obj2],
             embed=mock_embed_payload,
             allowed_mentions=mock_allowed_mentions_payload,
         )
@@ -402,14 +400,14 @@ class TestRESTChannelLogging:
         channel = mock.MagicMock(channels.Channel)
         mock_embed_obj = mock.MagicMock(embeds.Embed)
         mock_message_obj = mock.MagicMock(messages.Message)
-        mock_media_obj = mock.MagicMock(bytes)
+        mock_file_obj = mock.MagicMock(files.File)
         rest_channel_logic_impl.create_message = mock.AsyncMock(return_value=mock_message_obj)
         result = await rest_channel_logic_impl.safe_create_message(
             channel=channel,
             content="A CONTENT",
             nonce="69696969696969",
             tts=True,
-            files=[mock_media_obj],
+            files=[mock_file_obj],
             embed=mock_embed_obj,
             mentions_everyone=True,
             user_mentions=True,
@@ -421,7 +419,7 @@ class TestRESTChannelLogging:
             content="A CONTENT",
             nonce="69696969696969",
             tts=True,
-            files=[mock_media_obj],
+            files=[mock_file_obj],
             embed=mock_embed_obj,
             mentions_everyone=True,
             user_mentions=True,
@@ -777,17 +775,17 @@ class TestRESTChannelLogging:
         mock_webhook_payload = {"id": "29292929", "channel_id": "2292992"}
         mock_webhook_obj = mock.MagicMock(webhooks.Webhook)
         rest_channel_logic_impl._session.create_webhook.return_value = mock_webhook_payload
-        mock_image_obj = mock.MagicMock(io.BytesIO)
         mock_image_data = mock.MagicMock(bytes)
+        mock_image_obj = mock.MagicMock(files.File)
+        mock_image_obj.read_all = mock.AsyncMock(return_value=mock_image_data)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj))
-        stack.enter_context(mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_image_data))
         with stack:
             result = await rest_channel_logic_impl.create_webhook(
-                channel=channel, name="aWebhook", avatar_data=mock_image_obj, reason="And a webhook is born."
+                channel=channel, name="aWebhook", avatar=mock_image_obj, reason="And a webhook is born."
             )
             assert result is mock_webhook_obj
-            conversions.get_bytes_from_resource.assert_called_once_with(mock_image_obj)
+            mock_image_obj.read_all.assert_awaited_once()
             webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
         rest_channel_logic_impl._session.create_webhook.assert_called_once_with(
             channel_id="115590097100865541", name="aWebhook", avatar=mock_image_data, reason="And a webhook is born."

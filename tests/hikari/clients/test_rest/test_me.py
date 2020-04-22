@@ -22,14 +22,12 @@ import io
 
 import mock
 import pytest
-
-from hikari.internal import helpers
 from hikari import channels
+from hikari import files
 from hikari import guilds
 from hikari import applications
 from hikari import users
 from hikari.clients.rest import me
-from hikari.internal import conversions
 from hikari.internal import helpers
 from hikari.net import rest
 from tests.hikari import _helpers
@@ -61,17 +59,17 @@ class TestRESTInviteLogic:
         mock_user_payload = {"id": "424242", "flags": "420", "discriminator": "6969"}
         mock_user_obj = mock.MagicMock(users.MyUser)
         rest_clients_impl._session.modify_current_user.return_value = mock_user_payload
-        mock_avatar_obj = mock.MagicMock(io.BytesIO)
         mock_avatar_data = mock.MagicMock(bytes)
+        mock_avatar_obj = mock.MagicMock(files.File)
+        mock_avatar_obj.read_all = mock.AsyncMock(return_value=mock_avatar_data)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(users.MyUser, "deserialize", return_value=mock_user_obj))
-        stack.enter_context(mock.patch.object(conversions, "get_bytes_from_resource", return_value=mock_avatar_data))
         with stack:
-            assert await rest_clients_impl.update_me(username="aNewName", avatar_data=mock_avatar_obj) is mock_user_obj
+            assert await rest_clients_impl.update_me(username="aNewName", avatar=mock_avatar_obj) is mock_user_obj
             rest_clients_impl._session.modify_current_user.assert_called_once_with(
                 username="aNewName", avatar=mock_avatar_data
             )
-            conversions.get_bytes_from_resource.assert_called_once_with(mock_avatar_obj)
+            mock_avatar_obj.read_all.assert_awaited_once()
             users.MyUser.deserialize.assert_called_once_with(mock_user_payload)
 
     @pytest.mark.asyncio

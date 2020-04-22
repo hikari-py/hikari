@@ -35,9 +35,9 @@ from hikari import permissions as _permissions
 from hikari import users
 from hikari import voices
 from hikari import webhooks
-from hikari.clients.rest import base
-from hikari.internal import conversions
 from hikari.internal import helpers
+from hikari import files
+from hikari.clients.rest import base
 
 
 def _get_member_id(member: guilds.GuildMember) -> str:
@@ -234,7 +234,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
         self,
         guild: bases.Hashable[guilds.GuildRole],
         name: str,
-        image_data: conversions.FileLikeT,
+        image: files.File,
         *,
         roles: typing.Sequence[bases.Hashable[guilds.GuildRole]] = ...,
         reason: str = ...,
@@ -247,7 +247,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
             The object or ID of the guild to create the emoji in.
         name : str
             The new emoji's name.
-        image_data : hikari.internal.conversions.FileLikeT
+        image : hikari.files.File
             The `128x128` image data.
         roles : typing.Sequence [ typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ]
             If specified, a list of role objects or IDs for which the emoji
@@ -279,7 +279,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
         payload = await self._session.create_guild_emoji(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             name=name,
-            image=conversions.get_bytes_from_resource(image_data),
+            image=await image.read_all(),
             roles=[str(role.id if isinstance(role, bases.UniqueEntity) else int(role)) for role in roles]
             if roles is not ...
             else ...,
@@ -375,7 +375,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
         name: str,
         *,
         region: typing.Union[voices.VoiceRegion, str] = ...,
-        icon_data: conversions.FileLikeT = ...,
+        icon: files.File = ...,
         verification_level: typing.Union[guilds.GuildVerificationLevel, int] = ...,
         default_message_notifications: typing.Union[guilds.GuildMessageNotificationsLevel, int] = ...,
         explicit_content_filter: typing.Union[guilds.GuildExplicitContentFilterLevel, int] = ...,
@@ -395,7 +395,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
             If specified, the voice region ID for new guild. You can use
             `RESTGuildComponent.fetch_guild_voice_regions` to see which region
             IDs are available.
-        icon_data : hikari.internal.conversions.FileLikeT
+        icon : hikari.files.File
             If specified, the guild icon image data.
         verification_level : typing.Union [ hikari.guilds.GuildVerificationLevel, int ]
             If specified, the verification level. Passing a raw int for this
@@ -431,7 +431,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
         payload = await self._session.create_guild(
             name=name,
             region=getattr(region, "id", region),
-            icon=conversions.get_bytes_from_resource(icon_data),
+            icon=await icon.read_all() if icon is not ... else ...,
             verification_level=verification_level,
             default_message_notifications=default_message_notifications,
             explicit_content_filter=explicit_content_filter,
@@ -511,9 +511,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
         explicit_content_filter: typing.Union[guilds.GuildExplicitContentFilterLevel, int] = ...,
         afk_channel: bases.Hashable[_channels.GuildVoiceChannel] = ...,
         afk_timeout: typing.Union[datetime.timedelta, int] = ...,
-        icon_data: conversions.FileLikeT = ...,
+        icon: files.File = ...,
         owner: bases.Hashable[users.User] = ...,
-        splash_data: conversions.FileLikeT = ...,
+        splash: files.File = ...,
         system_channel: bases.Hashable[_channels.Channel] = ...,
         reason: str = ...,
     ) -> guilds.Guild:
@@ -542,12 +542,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
             If specified, the object or ID for the new AFK voice channel.
         afk_timeout : typing.Union [ datetime.timedelta, int ]
             If specified, the new AFK timeout seconds timedelta.
-        icon_data : hikari.internal.conversions.FileLikeT
-            If specified, the new guild icon image file data.
+        icon : hikari.files.File
+            If specified, the new guild icon image file.
         owner : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
             If specified, the object or ID of the new guild owner.
-        splash_data : hikari.internal.conversions.FileLikeT
-            If specified, the new new splash image file data.
+        splash : hikari.files.File
+            If specified, the new new splash image file.
         system_channel : typing.Union [ hikari.channels.GuildVoiceChannel, hikari.bases.Snowflake, int ]
             If specified, the object or ID of the new system channel.
         reason : str
@@ -582,11 +582,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
                 if afk_channel is not ...
                 else ...
             ),
-            icon=conversions.get_bytes_from_resource(icon_data) if icon_data is not ... else ...,
+            icon=await icon.read_all() if icon is not ... else ...,
             owner_id=(
                 str(owner.id if isinstance(owner, bases.UniqueEntity) else int(owner)) if owner is not ... else ...
             ),
-            splash=conversions.get_bytes_from_resource(splash_data) if splash_data is not ... else ...,
+            splash=await splash.read_all() if splash is not ... else ...,
             system_channel_id=(
                 str(system_channel.id if isinstance(system_channel, bases.UniqueEntity) else int(system_channel))
                 if system_channel is not ...

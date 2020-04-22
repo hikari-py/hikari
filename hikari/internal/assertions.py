@@ -25,6 +25,7 @@ conditions that might break the function or cause it to misbehave.
 __all__ = [
     "assert_that",
     "assert_not_none",
+    "assert_none",
     "assert_in_range",
     "assert_is_int_power",
 ]
@@ -33,10 +34,11 @@ import math
 import typing
 
 ValueT = typing.TypeVar("ValueT")
-BaseTypeInstanceT = typing.TypeVar("BaseTypeInstanceT")
 
 
-def assert_that(condition: bool, message: str = None, error_type: type = ValueError) -> None:
+def assert_that(
+    condition: bool, message: typing.Optional[str] = None, error_type: typing.Type[BaseException] = ValueError
+) -> None:
     """If the given condition is falsified, raise a `ValueError`.
 
     Will be raised with the optional description if provided.
@@ -55,14 +57,28 @@ def assert_not_none(value: ValueT, message: typing.Optional[str] = None) -> Valu
     return value
 
 
-def assert_in_range(value, min_inclusive, max_inclusive, name: str = None):
+def assert_none(value: ValueT, message: typing.Optional[str] = None) -> ValueT:
+    """If the given value is not None, raise a ValueError.
+
+    Will be raised with the optional description if provided.
+    """
+    if value is not None:
+        raise ValueError(message or "value must be None")
+    return value
+
+
+def assert_in_range(
+    value: ValueT, min_inclusive: float, max_inclusive: float, name: typing.Optional[str] = None
+) -> ValueT:
     """If a value is not in the range [min, max], raise a `ValueError`."""
     if not (min_inclusive <= value <= max_inclusive):
         name = name or "The value"
         raise ValueError(f"{name} must be in the inclusive range of {min_inclusive} and {max_inclusive}")
+    return value
 
 
-def assert_is_int_power(value: int, power: int) -> bool:
+def assert_is_int_power(value: int, power: int) -> int:
     """If a value is not a power the given int, raise `ValueError`."""
     logarithm = math.log(value, power)
     assert_that(logarithm.is_integer(), f"value must be an integer power of {power}")
+    return value
