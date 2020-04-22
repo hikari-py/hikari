@@ -1,17 +1,8 @@
 path_classifiers:
-  library:
-    - exclude: /
-    - hikari/
   test:
-    - exclude: /
     - tests/
-  generated:
-    - exclude: /
   docs:
-    - exclude: /
     - docs/
-  template:
-    - exclude: /
 
 queries:
   # Breaks with `from __future__ import annotations'
