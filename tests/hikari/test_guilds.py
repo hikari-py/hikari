@@ -231,48 +231,51 @@ def test_guild_payload(
     test_guild_member_presence,
 ):
     return {
-        "id": "265828729970753537",
         "afk_channel_id": "99998888777766",
-        "owner_id": "6969696",
-        "region": "eu-central",
-        "system_channel_id": "19216801",
-        "application_id": "39494949",
-        "name": "L33t guild",
-        "icon": "1a2b3c4d",
-        "splash": "0ff0ff0ff",
         "afk_timeout": 1200,
-        "verification_level": 4,
+        "application_id": "39494949",
+        "approximate_member_count": 15,
+        "approximate_presence_count": 7,
+        "banner": "1a2b3c",
+        "channels": [test_channel_payload],
         "default_message_notifications": 1,
-        "explicit_content_filter": 2,
-        "roles": test_roles_payloads,
+        "description": "This is a server I guess, its a bit crap though",
+        "discovery_splash": "famfamFAMFAMfam",
+        "embed_channel_id": "9439394949",
+        "embed_enabled": True,
         "emojis": [test_emoji_payload],
+        "explicit_content_filter": 2,
         "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
-        "voice_states": [test_voice_state_payload],
-        "member_count": 14,
-        "mfa_level": 1,
+        "icon": "1a2b3c4d",
+        "id": "265828729970753537",
         "joined_at": "2019-05-17T06:26:56.936000+00:00",
         "large": False,
-        "unavailable": False,
-        "permissions": 66_321_471,
-        "members": [test_member_payload],
-        "channels": [test_channel_payload],
         "max_members": 25000,
-        "vanity_url_code": "loool",
-        "description": "This is a server I guess, its a bit crap though",
-        "banner": "1a2b3c",
-        "premium_tier": 2,
-        "premium_subscription_count": 1,
-        "preferred_locale": "en-GB",
-        "system_channel_flags": 3,
-        "rules_channel_id": "42042069",
-        "discovery_splash": "famfamFAMFAMfam",
-        "embed_enabled": True,
-        "embed_channel_id": "9439394949",
-        "widget_enabled": True,
-        "widget_channel_id": "9439394949",
-        "public_updates_channel_id": "33333333",
-        "presences": [test_guild_member_presence],
         "max_presences": 250,
+        "max_video_channel_users": 25,
+        "member_count": 14,
+        "members": [test_member_payload],
+        "mfa_level": 1,
+        "name": "L33t guild",
+        "owner_id": "6969696",
+        "permissions": 66_321_471,
+        "preferred_locale": "en-GB",
+        "premium_subscription_count": 1,
+        "premium_tier": 2,
+        "presences": [test_guild_member_presence],
+        "public_updates_channel_id": "33333333",
+        "region": "eu-central",
+        "roles": test_roles_payloads,
+        "rules_channel_id": "42042069",
+        "splash": "0ff0ff0ff",
+        "system_channel_flags": 3,
+        "system_channel_id": "19216801",
+        "unavailable": False,
+        "vanity_url_code": "loool",
+        "verification_level": 4,
+        "voice_states": [test_voice_state_payload],
+        "widget_channel_id": "9439394949",
+        "widget_enabled": True,
     }
 
 
@@ -957,10 +960,14 @@ class TestGuild:
         assert guild_obj.premium_subscription_count == 1
         assert guild_obj.preferred_locale == "en-GB"
         assert guild_obj.public_updates_channel_id == 33333333
+        assert guild_obj.max_video_channel_users == 25
+        assert guild_obj.approximate_member_count == 15
+        assert guild_obj.approximate_active_member_count == 7
 
     @pytest.fixture()
     def test_guild_obj(self):
         return guilds.Guild(
+            # TODO: fix null spam here, it is terrible test data, as it is not possible!!!!
             id=265828729970753537,
             icon_hash=None,
             name=None,
@@ -1002,6 +1009,9 @@ class TestGuild:
             premium_subscription_count=None,
             preferred_locale=None,
             public_updates_channel_id=None,
+            approximate_active_member_count=None,
+            approximate_member_count=None,
+            max_video_channel_users=None,
         )
 
     def test_format_banner_url(self, test_guild_obj):
