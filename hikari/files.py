@@ -33,7 +33,7 @@ from hikari.internal import assertions
 
 class File(typing.AsyncIterable[bytes]):
     """A file object.
-    
+
     It is an async iterator of bytes that is compatible with being passed into
     aiohttp requests and read asynchronously. By doing this, it facades multiple
     otherwise incompatible and sometimes blocking IO protocols that Python provides
@@ -84,11 +84,11 @@ class File(typing.AsyncIterable[bytes]):
         self._LOGGER.debug("file name is %s", self.name)
 
         if isinstance(data, memoryview):
-            self._LOGGER.debug("given a memoryview to interpret as a file, will first convert into bytes", data)
+            self._LOGGER.debug("given a memoryview to interpret as a file, will first convert into bytes")
             data = data.tobytes()
 
         elif isinstance(data, io.BytesIO):
-            self._LOGGER.debug("given a bytesio to interpret as a file, will read the buffer immediately", data)
+            self._LOGGER.debug("given a bytesio to interpret as a file, will read the buffer immediately")
             data = data.read()
 
         if isinstance(data, os.PathLike):
@@ -124,7 +124,7 @@ class File(typing.AsyncIterable[bytes]):
             yield self._data
 
         elif isinstance(self._data, io.IOBase):
-            self._LOGGER.debug("reading blocking IO object using executor", self._data)
+            self._LOGGER.debug("reading blocking IO object using executor")
             # Some raw IO object that was not a bytesio we decoded earlier.
             # Try to make sure nothing blocks.
             start = time.perf_counter()
@@ -134,7 +134,7 @@ class File(typing.AsyncIterable[bytes]):
             yield self._data
 
         elif isinstance(self._data, typing.AsyncIterable):
-            self._LOGGER.debug("yielding chunks of data from async iterable", self._data)
+            self._LOGGER.debug("yielding chunks of data from async iterable")
             # An async iterable of (hopefully) bytes.
             async for chunk in self._data:
                 assertions.assert_that(isinstance(chunk, bytes), "async iterator must yield bytes only")
@@ -147,7 +147,7 @@ class File(typing.AsyncIterable[bytes]):
             yield self._data
 
         elif isinstance(self._data, typing.Iterable):
-            self._LOGGER.debug("yielding chunks of data from iterable", self._data)
+            self._LOGGER.debug("yielding chunks of data from iterable")
 
             # A normal iterable of (hopefully) bytes.
             for chunk in self._data:
