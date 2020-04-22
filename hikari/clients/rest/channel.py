@@ -473,7 +473,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         files : typing.Sequence [ hikari.files.File ]
             A sequence of files to upload, if desired. If specified, should be
             between 1 and 5 objects in size (inclusive).
-        embed : :obj:`~hikari.embeds.Embed`
+        embed : hikari.embeds.Embed
             If specified, the embed object to send with the message.
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
