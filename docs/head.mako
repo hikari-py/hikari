@@ -82,6 +82,12 @@
     .links > li {
         display: inline;
     }
+    .links li:after {
+        content: ","
+    }
+    .links li:last-child:after {
+        content: none
+    }
 </%def>
 <style>${homelink()}</style>
 <style>${links()}</style>

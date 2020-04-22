@@ -116,7 +116,7 @@ class User(bases.UniqueEntity, marshaller.Deserializable):
     """The public flags for this user.
 
     !!! info
-    This will be `None` if it's a webhook user.
+        This will be `None` if it's a webhook user.
     """
 
     @property

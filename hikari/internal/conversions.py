@@ -177,9 +177,9 @@ def parse_http_date(date_str: str, /) -> datetime.datetime:
     datetime.datetime
         The HTTP date as a datetime object.
 
-    See Also
-    --------
-    `<https://www.ietf.org/rfc/rfc2822.txt>`_
+    References
+    ----------
+    [RFC 2822](https://www.ietf.org/rfc/rfc2822.txt)
     """
     return email.utils.parsedate_to_datetime(date_str)
 
@@ -197,9 +197,9 @@ def parse_iso_8601_ts(date_string: str, /) -> datetime.datetime:
     datetime.datetime
         The ISO 8601 date string as a datetime object.
 
-    See Also
-    --------
-    https://en.wikipedia.org/wiki/ISO_8601
+    References
+    ----------
+    [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)
     """
     year, month, day = map(int, ISO_8601_DATE_PART.findall(date_string)[0])
 
@@ -307,7 +307,7 @@ def make_resource_seekable(resource: typing.Any, /) -> Seekable:
 
     Returns
     -------
-    typing.Union [ io.BytesIO, io.StringIO` ]
+    typing.Union [ io.BytesIO, io.StringIO ]
         An stream-compatible resource where possible.
     """
     if isinstance(resource, (bytes, bytearray)):

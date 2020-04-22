@@ -24,8 +24,8 @@ on the same event loop. Implements zlib transport compression only.
 Can be used as the main gateway connection for a single-sharded bot, or the gateway connection for a
 specific shard in a swarm of shards making up a larger bot.
 
-See Also
---------
+References
+----------
 * [IANA WS closure code standards](https://www.iana.org/assignments/websocket/websocket.xhtml)
 * [Gateway documentation](https://discordapp.com/developers/docs/topics/gateway)
 * [Opcode documentation](https://discordapp.com/developers/docs/topics/opcodes-and-status-codes)
