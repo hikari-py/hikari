@@ -473,8 +473,7 @@ class REST:
             `session_start_limit` object.
 
         !!! note
-            Unlike `LowLevelRestfulClient.get_gateway`, this requires a valid
-            token to work.
+            Unlike `REST.get_gateway`, this requires a valid token to work.
         """
         return await self._request(routes.GATEWAY_BOT.compile(self.GET))
 
@@ -1494,8 +1493,7 @@ class REST:
             The name string for the new guild (`2-100` characters).
         region : str
             If specified, the voice region ID for new guild. You can use
-            `LowLevelRestfulClient.list_voice_regions` to see which region IDs
-            are available.
+            `REST.list_voice_regions` to see which region IDs are available.
         icon : bytes
             If specified, the guild icon image in bytes form.
         verification_level : int
@@ -1609,8 +1607,7 @@ class REST:
             If specified, the new name string for the guild (`2-100` characters).
         region : str
             If specified, the new voice region ID for guild. You can use
-            `LowLevelRestfulClient.list_voice_regions` to see which region IDs
-            are available.
+            `REST.list_voice_regions` to see which region IDs are available.
         verification_level : int
             If specified, the new verification level integer (`0-5`).
         default_message_notifications : int
@@ -1854,14 +1851,14 @@ class REST:
 
         Parameters
         ----------
-            guild_id : str
-                The ID of the guild to get the members from.
-            limit : int
-                If specified, the maximum number of members to return. This has to be between
-                `1` and `1000` inclusive.
-            after : str
-                If specified, the highest ID in the previous page. This is used for retrieving more
-                than `1000` members in a server using consecutive requests.
+        guild_id : str
+            The ID of the guild to get the members from.
+        limit : int
+            If specified, the maximum number of members to return. This has to be between
+            `1` and `1000` inclusive.
+        after : str
+            If specified, the highest ID in the previous page. This is used for retrieving more
+            than `1000` members in a server using consecutive requests.
 
         Examples
         --------
