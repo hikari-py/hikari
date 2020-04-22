@@ -390,7 +390,7 @@ def get_entry_info_entity(type_: int) -> typing.Type[BaseAuditLogEntryInfo]:
     -------
     typing.Type [ BaseAuditLogEntryInfo ]
         The associated options entity. If not implemented then this will be
-        UnrecognisedAuditLogEntryInfo`
+        `UnrecognisedAuditLogEntryInfo`.
     """
     types = getattr(register_audit_log_entry_info, "types", more_collections.EMPTY_DICT)
     entry_type = types.get(type_)

@@ -241,7 +241,7 @@ class EventDispatcher(abc.ABC):
         Returns
         -------
         asyncio.Future:
-            a future that can be optionally awaited if you need to wait for all
+            A future that can be optionally awaited if you need to wait for all
             listener callbacks and waiters to be processed. If this is not
             awaited, the invocation is invoked soon on the current event loop.
         """
