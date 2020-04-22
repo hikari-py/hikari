@@ -64,7 +64,7 @@ def wait(
 
     Returns
     -------
-    `typing.Tuple with two typing.Set of futures`
+    typing.Tuple with two typing.Set of futures
         The coroutine returned by `asyncio.wait` of two sets of
         Tasks/Futures (done, pending).
     """

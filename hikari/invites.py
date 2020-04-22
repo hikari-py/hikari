@@ -195,7 +195,7 @@ class Invite(bases.HikariEntity, marshaller.Deserializable):
     approximate_member_count: typing.Optional[int] = marshaller.attrib(
         deserializer=int, if_undefined=None, default=None
     )
-    """The approximate amount of members in this invite's guild, only present
+    """The approximate amount of members in this invite's guild.
 
     This is only present when `with_counts` is passed as `True` to the GET
     Invites endpoint.

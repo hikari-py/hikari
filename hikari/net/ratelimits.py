@@ -332,6 +332,8 @@ class ManualRateLimiter(BurstRateLimiter):
         Iterates repeatedly while the queue is not empty, adhering to any
         rate limits that occur in the mean time.
 
+        Parameters
+        ----------
         retry_after : float
             How long to sleep for before unlocking and releasing any futures
             in the queue.

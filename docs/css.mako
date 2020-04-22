@@ -27,6 +27,7 @@
     background-color: #373b3e;
     color: #FFFFFF;
     line-height: 1.5em;
+    min-width: 512px;
   }
   #content {
     padding: 20px;
