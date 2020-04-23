@@ -172,7 +172,7 @@ class BotBase(
         )
 
         shard_count = self._config.shard_count if self._config.shard_count else gateway_bot.shard_count
-        shard_ids = self._config.shard_ids if self._config.shard_ids else [*range(shard_count)]
+        shard_ids = self._config.shard_ids if self._config.shard_ids else range(shard_count)
         url = gateway_bot.url
 
         self.logger.info("will connect shards to %s", url)
