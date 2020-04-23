@@ -21,9 +21,13 @@
 
     version = "staging" if "dev" in version.LooseVersion(hikari.__version__).version else "production"
 %>
-
 <header>
-    <a class="homelink" rel="home" title="Hikari Home" href="https://nekokatt.gitlab.io/hikari/">
+    % if version == "staging":
+        <a class="homelink" rel="home" title="Hikari Home" href="https://nekokatt.gitlab.io/hikari/staging/hikari">
+    % else:
+        ## TODO: Change this to https://nekokatt.gitlab.io/hikari/hikari when in master
+        <a class="homelink" rel="home" title="Hikari Home" href="https://nekokatt.gitlab.io/hikari">
+    % endif
         <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/12050696/Hikari-Logo_1.png" alt="">
         Hikari
     </a>
