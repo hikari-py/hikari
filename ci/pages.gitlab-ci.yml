@@ -21,7 +21,6 @@
 ###
 .generate-pages:
   except:
-    - merge_requests
     - tags
   extends: .pages
   only:
@@ -36,6 +35,7 @@
     pip install nox
     git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari_docs_${TARGET_BRANCH} --depth=1
     cd "hikari_docs_${TARGET_BRANCH}"
+    mkdir public || true
     nox --sessions pages pdoc || nox -s documentation  # FIXME: remove once in master.
     rm ../public -rf && mkdir ../public
     if [[ "$TARGET_BRANCH" = master ]]; then
