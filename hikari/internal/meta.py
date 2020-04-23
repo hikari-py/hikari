@@ -49,9 +49,9 @@ class SingletonMeta(type):
         thread safe.
     """
 
-    # pylint: disable=E1136
+    # pylint: disable=unsubscriptable-object
     ___instance_dict_t___ = more_collections.WeakKeyDictionary[typing.Type[typing.Any], typing.Any]
-    # pylint: enable=E1136
+    # pylint: enable=unsubscriptable-object
     ___instances___: ___instance_dict_t___ = more_collections.WeakKeyDictionary()
     __slots__ = ()
 

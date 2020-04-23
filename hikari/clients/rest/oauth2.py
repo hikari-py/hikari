@@ -26,7 +26,7 @@ from hikari import applications
 from hikari.clients.rest import base
 
 
-class RESTOAuth2Component(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTOAuth2Component(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
     """The REST client component for handling requests to oauth2 endpoints."""
 
     async def fetch_my_application_info(self) -> applications.Application:

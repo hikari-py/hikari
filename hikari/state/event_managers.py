@@ -170,7 +170,7 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
 
         try:
             handler(shard_client_obj, payload)
-        except Exception as ex:  # pylint: disable=W0703
+        except Exception as ex:  # pylint: disable=broad-except
             self.logger.exception(
                 "Failed to unmarshal %r event payload. This is likely a bug in Hikari itself. "
                 "Please contact a library dev or make an issue on the issue tracker for more support.",

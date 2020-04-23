@@ -34,7 +34,7 @@ from hikari.clients.rest import base
 from hikari.internal import helpers
 
 
-class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
     """The REST client component for handling requests to `@me` endpoints."""
 
     async def fetch_me(self) -> users.MyUser:
@@ -86,7 +86,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Returns
         -------
-        typing.Sequence [ hikari.applications.OwnConnection ]
+        typing.Sequence[hikari.applications.OwnConnection]
             A list of connection objects.
         """
         payload = await self._session.get_current_user_connections()
@@ -105,7 +105,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Parameters
         ----------
-        after : typing.Union [ datetime.datetime, hikari.guilds.Guild, hikari.bases.Snowflake, int ]
+        after : typing.Union[datetime.datetime, hikari.guilds.Guild, hikari.bases.Snowflake, int]
             The object or ID of a guild to get guilds that were created after
             it if specified, else this will start at the oldest guild.
         limit : int
@@ -119,7 +119,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Returns
         -------
-        typing.AsyncIterator [ hikari.applications.OwnGuild ]
+        typing.AsyncIterator[hikari.applications.OwnGuild]
             An async iterator of partial guild objects.
 
         Raises
@@ -156,7 +156,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Parameters
         ----------
-        before : typing.Union [ datetime.datetime, hikari.guilds.Guild, hikari.bases.Snowflake, int ]
+        before : typing.Union[datetime.datetime, hikari.guilds.Guild, hikari.bases.Snowflake, int]
             The object or ID of a guild to get guilds that were created
             before it if specified, else this will start at the newest guild.
         limit : int
@@ -165,7 +165,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Returns
         -------
-        typing.AsyncIterator [ hikari.applications.OwnGuild ]
+        typing.AsyncIterator[hikari.applications.OwnGuild]
             An async iterator of partial guild objects.
 
         Raises
@@ -194,7 +194,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Parameters
         ----------
-        guild : typing.Union [ hikari.guilds.Guild, hikari.bases.Snowflake, int ]
+        guild : typing.Union[hikari.guilds.Guild, hikari.bases.Snowflake, int]
             The object or ID of the guild to leave.
 
         Raises
@@ -212,7 +212,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Parameters
         ----------
-        recipient : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
+        recipient : typing.Union[hikari.users.User, hikari.bases.Snowflake, int]
             The object or ID of the user to create the new DM channel with.
 
         Returns

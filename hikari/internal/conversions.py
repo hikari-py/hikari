@@ -83,7 +83,7 @@ def try_cast_or_defer_unary_operator(type_: typing.Type, /):
 
     Parameters
     ----------
-    type_ : typing.Callable [ ..., `output type` ]
+    type_ : typing.Callable[..., `output type`]
         The type to cast to.
     """
     return lambda data: try_cast(data, type_, data)
@@ -100,13 +100,13 @@ def put_if_specified(
 
     Parameters
     ----------
-    mapping : typing.Dict [ typing.Hashable, typing.Any ]
+    mapping : typing.Dict[typing.Hashable, typing.Any]
         The mapping to add to.
     key : typing.Hashable
         The key to add the value under.
     value : typing.Any
         The value to add.
-    type_after : typing.Callable [ [ `input type` ], `output type` ], optional
+    type_after : typing.Callable[[`input type`], `output type`], optional
         Type to apply to the value when added.
     """
     if value is not ...:
@@ -274,7 +274,7 @@ def snoop_typehint_from_scope(frame: types.FrameType, typehint: typing.Union[str
         This is retrieved using `inspect.stack` `(frame_no)[0][0]`,
         where `frame_no` is the number of frames from this invocation that
         you want to snoop the scope at.
-    typehint : typing.Union [ str, typing.Any ]
+    typehint : typing.Union[str, typing.Any]
         The type hint to resolve. If a non-`str` is passed, then this is
         returned immediately as the result.
 
@@ -325,7 +325,7 @@ def dereference_int_flag(
 
     Parameters
     ----------
-    int_flag_type : typing.Type [ enum.IntFlag ]
+    int_flag_type : typing.Type[enum.IntFlag]
         The type of the int flag to check.
     raw_value : Castable Value
         The raw value to convert.
@@ -340,7 +340,7 @@ def dereference_int_flag(
         - `str`
         - `int`
         - `typing.SupportsInt`
-        - `typing.Collection` [ `Castable Value` ]
+        - `typing.Collection`[`Castable Value`]
 
         When a collection is passed, values will be combined using functional
         reduction via the `operator.or_` operator.
