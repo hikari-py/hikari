@@ -428,7 +428,7 @@ class ShardClientImpl(ShardClient):
             if self._dispatcher is not None:
                 await self._dispatcher.dispatch_event(events.StoppedEvent())
 
-    async def _keep_alive(self):
+    async def _keep_alive(self):  # pylint: disable=too-many-branches
         back_off = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         last_start = time.perf_counter()
         do_not_back_off = True

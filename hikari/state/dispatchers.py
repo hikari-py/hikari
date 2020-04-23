@@ -77,7 +77,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type [ hikari.events.HikariEvent ]
+        event_type : typing.Type[hikari.events.HikariEvent]
             The event to register to.
         callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to invoke when this event is fired.
@@ -96,7 +96,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type [ hikari.events.HikariEvent ]
+        event_type : typing.Type[hikari.events.HikariEvent]
             The type of event to remove the callback from.
         callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to invoke when this event is fired.
@@ -110,7 +110,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type [ hikari.events.HikariEvent ]
+        event_type : typing.Type[hikari.events.HikariEvent]
             The name of the event to wait for.
         timeout : float, optional
             The timeout to wait for before cancelling and raising an
@@ -170,7 +170,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type [ hikari.events.HikariEvent ], optional
+        event_type : typing.Type[hikari.events.HikariEvent], optional
             The event type to register the produced decorator to. If this is not
             specified, then the given function is used instead and the type hint
             of the first argument is considered. If no type hint is present
@@ -277,9 +277,9 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
     def __init__(self, enabled_intents: typing.Optional[intents.Intent]) -> None:
         self._enabled_intents = enabled_intents
         self._listeners: ListenerMapT = {}
-        # pylint: disable=E1136
+        # pylint: disable=unsubscriptable-object
         self._waiters: WaiterMapT = {}
-        # pylint: enable=E1136
+        # pylint: enable=unsubscriptable-object
         self.logger = logging.getLogger(type(self).__qualname__)
 
     def close(self) -> None:
@@ -295,7 +295,7 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : typing.Type [ hikari.events.HikariEvent ]
+        event_type : typing.Type[hikari.events.HikariEvent]
             The event to register to.
         callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to invoke when this event is fired.
@@ -347,7 +347,7 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : typing.Type [ hikari.events.HikariEvent ]
+        event_type : typing.Type[hikari.events.HikariEvent]
             The type of event to remove the callback from.
         callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to remove.
@@ -485,7 +485,7 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : typing.Type [ hikari.events.HikariEvent ]
+        event_type : typing.Type[hikari.events.HikariEvent]
             The name of the event to wait for.
         timeout : float, optional
             The timeout to wait for before cancelling and raising an

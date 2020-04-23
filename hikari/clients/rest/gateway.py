@@ -26,7 +26,7 @@ from hikari import gateway_entities
 from hikari.clients.rest import base
 
 
-class RESTGatewayComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTGatewayComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
     """The REST client component for handling requests to gateway endpoints."""
 
     async def fetch_gateway_url(self) -> str:

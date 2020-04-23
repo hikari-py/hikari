@@ -27,7 +27,7 @@ from hikari import invites
 from hikari.clients.rest import base
 
 
-class RESTInviteComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTInviteComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
     """The REST client component for handling requests to invite endpoints."""
 
     async def fetch_invite(
@@ -37,7 +37,7 @@ class RESTInviteComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W
 
         Parameters
         ----------
-        invite : typing.Union [ hikari.invites.Invite, str ]
+        invite : typing.Union[hikari.invites.Invite, str]
             The object or code of the wanted invite.
         with_counts : bool
             If specified, whether to attempt to count the number of
@@ -64,7 +64,7 @@ class RESTInviteComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W
 
         Parameters
         ----------
-        invite : typing.Union [ hikari.invites.Invite, str ]
+        invite : typing.Union[hikari.invites.Invite, str]
             The object or ID for the invite to be deleted.
 
         Returns

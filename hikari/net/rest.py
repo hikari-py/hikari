@@ -47,43 +47,43 @@ VERSION_6: typing.Final[int] = 6
 VERSION_7: typing.Final[int] = 7
 
 
-class REST:
+class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attributes
     """A low-level RESTful client to allow you to interact with the Discord API.
 
     Parameters
     ----------
-    base_url: str
+    base_url : str
         The base URL and route for the discord API
-    allow_redirects: bool
+    allow_redirects : bool
         Whether to allow redirects or not.
-    connector: aiohttp.BaseConnector, optional
+    connector : aiohttp.BaseConnector, optional
         Optional aiohttp connector info for making an HTTP connection
-    proxy_headers: typing.Mapping [ str, str ], optional
+    proxy_headers : typing.Mapping[str, str], optional
         Optional proxy headers to pass to HTTP requests.
-    proxy_auth: aiohttp.BasicAuth, optional
+    proxy_auth : aiohttp.BasicAuth, optional
         Optional authorization to be used if using a proxy.
-    proxy_url: str, optional
+    proxy_url : str, optional
         Optional proxy URL to use for HTTP requests.
-    ssl_context: ssl.SSLContext, optional
+    ssl_context : ssl.SSLContext, optional
         The optional SSL context to be used.
-    verify_ssl: bool
+    verify_ssl : bool
         Whether or not the client should enforce SSL signed certificate
         verification. If 1 it will ignore potentially malicious
         SSL certificates.
-    timeout: float, optional
+    timeout : float, optional
         The optional timeout for all HTTP requests.
-    json_deserialize: `deserialization function`
+    json_deserialize : deserialization function
         A custom JSON deserializer function to use. Defaults to `json.loads`.
-    json_serialize: `serialization function`
+    json_serialize : serialization function
         A custom JSON serializer function to use. Defaults to `json.dumps`.
-    token: string, optional
+    token : string, optional
         The bot token for the client to use. You may start this with
         a prefix of either `Bot` or `Bearer` to force the token type, or
         not provide this information if you want to have it auto-detected.
         If this is passed as `None`, then no token is used.
         This will be passed as the `Authorization` header if not `None`
         for each request.
-    version: int
+    version : int
         The version of the API to use. Defaults to the most recent stable
         version (v6).
     """
@@ -205,7 +205,7 @@ class REST:
     version: int
     """The API version number that is being used."""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-locals
         self,
         *,
         base_url: str = urls.REST_API_URL,
@@ -267,7 +267,7 @@ class REST:
     ) -> None:
         await self.close()
 
-    async def _request(
+    async def _request(  # pylint: disable=too-many-locals
         self,
         compiled_route: routes.CompiledRoute,
         *,
@@ -308,21 +308,14 @@ class REST:
 
             await asyncio.gather(bucket_ratelimit_future, self.global_ratelimiter.acquire())
 
-            if json_body is not None:
-                body_type = "json"
-            elif form_body is not None:
-                body_type = "form"
-            else:
-                body_type = "None"
-
             self.logger.debug(
-                "%s send to %s headers=%s query=%s body_type=%s body=%s",
+                "%s send to %s headers=%s query=%s json_body=%s, form_body=%s",
                 request_uuid,
                 compiled_route,
                 request_headers,
                 query,
-                body_type,
-                json_body if json_body is not None else form_body,
+                json_body,
+                form_body,
             )
 
             async with self.client_session.request(
@@ -372,7 +365,7 @@ class REST:
                 elif content_type == "application/json":
                     body = self.json_deserialize(raw_body)
                 elif content_type in ("text/plain", "text/html"):
-                    await self._handle_bad_response(
+                    await self._backoff_request(
                         backoff,
                         status,
                         compiled_route,
@@ -399,34 +392,44 @@ class REST:
                 continue
 
             if status >= codes.HTTPStatusCode.BAD_REQUEST:
-                code = None
-
-                if body is None:
-                    message = raw_body
-                elif self.version == VERSION_7:
-                    message = ", ".join(f"{k} - {v}" for k, v in body.items())
-                else:
-                    message = body.get("message")
-                    with contextlib.suppress(ValueError):
-                        code = codes.JSONErrorCode(body.get("code"))
-
-                if status == codes.HTTPStatusCode.BAD_REQUEST:
-                    raise errors.BadRequestHTTPError(compiled_route, message, code)
-                if status == codes.HTTPStatusCode.UNAUTHORIZED:
-                    raise errors.UnauthorizedHTTPError(compiled_route, message, code)
-                if status == codes.HTTPStatusCode.FORBIDDEN:
-                    raise errors.ForbiddenHTTPError(compiled_route, message, code)
-                if status == codes.HTTPStatusCode.NOT_FOUND:
-                    raise errors.NotFoundHTTPError(compiled_route, message, code)
-                if status < codes.HTTPStatusCode.INTERNAL_SERVER_ERROR:
-                    raise errors.ClientHTTPError(status, compiled_route, message, code)
-
-                await self._handle_bad_response(backoff, status, compiled_route, message, code)
+                await self._handle_bad_response(backoff, body, raw_body, status, compiled_route)
                 continue
 
             return body
 
     async def _handle_bad_response(
+        self,
+        backoff: ratelimits.ExponentialBackOff,
+        body: typing.Dict[str, typing.Any],
+        raw_body: bytes,
+        status: typing.Union[codes.HTTPStatusCode, int, None],
+        compiled_route: routes.CompiledRoute,
+    ) -> None:
+        code = None
+
+        if body is None:
+            message = raw_body
+        elif self.version == VERSION_7:
+            message = ", ".join(f"{k} - {v}" for k, v in body.items())
+        else:
+            message = body.get("message")
+            with contextlib.suppress(ValueError):
+                code = codes.JSONErrorCode(body.get("code"))
+
+        if status == codes.HTTPStatusCode.BAD_REQUEST:
+            raise errors.BadRequestHTTPError(compiled_route, message, code)
+        if status == codes.HTTPStatusCode.UNAUTHORIZED:
+            raise errors.UnauthorizedHTTPError(compiled_route, message, code)
+        if status == codes.HTTPStatusCode.FORBIDDEN:
+            raise errors.ForbiddenHTTPError(compiled_route, message, code)
+        if status == codes.HTTPStatusCode.NOT_FOUND:
+            raise errors.NotFoundHTTPError(compiled_route, message, code)
+        if status < codes.HTTPStatusCode.INTERNAL_SERVER_ERROR:
+            raise errors.ClientHTTPError(status, compiled_route, message, code)
+
+        await self._backoff_request(backoff, status, compiled_route, message, code)
+
+    async def _backoff_request(
         self,
         backoff: ratelimits.ExponentialBackOff,
         status: typing.Union[codes.HTTPStatusCode, int, None],
@@ -460,7 +463,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             An object containing a `url` to connect to, an `int` number of
             shards recommended to use for connecting, and a
             `session_start_limit` object.
@@ -492,7 +495,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             An audit log object.
 
         Raises
@@ -520,7 +523,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The channel object that has been found.
 
         Raises
@@ -580,7 +583,7 @@ class REST:
             If specified, the new max number of users to allow in a voice channel.
             This must be between `0` and `99` inclusive, where
             `0` implies no limit.
-        permission_overwrites : typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        permission_overwrites : typing.Sequence[typing.Dict[str, typing.Any]]
             If specified, the new list of permission overwrites that are category
             specific to replace the existing overwrites with.
         parent_id : str, optional
@@ -592,7 +595,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The channel object that has been modified.
 
         Raises
@@ -669,7 +672,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of message objects.
 
         Raises
@@ -714,7 +717,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             A message object.
 
         !!! note
@@ -755,18 +758,18 @@ class REST:
             and can usually be ignored.
         tts : bool
             If specified, whether the message will be sent as a TTS message.
-        files : typing.Sequence [ hikari.files.File ]
+        files : typing.Sequence[hikari.files.File]
             If specified, this should be a list of between `1` and `5` file
             objects to upload. Each should have a unique name.
-        embed : typing.Dict [ str, typing.Any ]
+        embed : typing.Dict[str, typing.Any]
             If specified, the embed to send with the message.
-        allowed_mentions : typing.Dict [ str, typing.Any ]
+        allowed_mentions : typing.Dict[str, typing.Any]
             If specified, the mentions to parse from the `content`.
             If not specified, will parse all mentions from the `content`.
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The created message object.
 
         Raises
@@ -934,7 +937,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of user objects.
 
         Raises
@@ -991,18 +994,18 @@ class REST:
         content : str, optional
             If specified, the string content to replace with in the message.
             If `None`, the content will be removed from the message.
-        embed : typing.Dict [ str, typing.Any ], optional
+        embed : typing.Dict[str, typing.Any], optional
             If specified, the embed to replace with in the message.
             If `None`, the embed will be removed from the message.
         flags : int
             If specified, the integer to replace the message's current flags.
-        allowed_mentions : typing.Dict [ str, typing.Any ]
+        allowed_mentions : typing.Dict[str, typing.Any]
             If specified, the mentions to parse from the `content`.
             If not specified, will parse all mentions from the `content`.
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The edited message object.
 
         Raises
@@ -1057,7 +1060,7 @@ class REST:
         ----------
         channel_id : str
             The ID of the channel to get the message from.
-        messages : typing.Sequence [ str ]
+        messages : typing.Sequence[str]
             A list of `2-100` message IDs to remove in the channel.
 
         Raises
@@ -1126,7 +1129,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of invite objects.
 
         Raises
@@ -1179,7 +1182,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             An invite object.
 
         Raises
@@ -1249,7 +1252,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of messages.
 
         Raises
@@ -1319,7 +1322,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of emoji objects.
 
         Raises
@@ -1344,7 +1347,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             An emoji object.
 
         Raises
@@ -1370,7 +1373,7 @@ class REST:
             The new emoji's name.
         image : bytes
             The `128x128` image in bytes form.
-        roles : typing.Sequence [ str ]
+        roles : typing.Sequence[str]
             If specified, a list of roles for which the emoji will be whitelisted.
             If empty, all roles are whitelisted.
         reason : str
@@ -1379,7 +1382,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The newly created emoji object.
 
         Raises
@@ -1415,7 +1418,7 @@ class REST:
             The ID of the emoji to update.
         name : str
             If specified, a new emoji name string. Keep unspecified to keep the name the same.
-        roles : typing.Sequence [ str ]
+        roles : typing.Sequence[str]
             If specified, a list of IDs for the new whitelisted roles.
             Set to an empty list to whitelist all roles.
             Keep unspecified to leave the same roles already set.
@@ -1425,7 +1428,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The updated emoji object.
 
         Raises
@@ -1493,15 +1496,15 @@ class REST:
             If specified, the default notification level integer (`0-1`).
         explicit_content_filter : int
             If specified, the explicit content filter integer (`0-2`).
-        roles : typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        roles : typing.Sequence[typing.Dict[str, typing.Any]]
             If specified, an array of role objects to be created alongside the
             guild. First element changes the `@everyone` role.
-        channels : typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        channels : typing.Sequence[typing.Dict[str, typing.Any]]
             If specified, an array of channel objects to be created alongside the guild.
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The newly created guild object.
 
         Raises
@@ -1535,7 +1538,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The requested guild object.
 
         Raises
@@ -1558,7 +1561,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The requested guild preview object.
 
         !!! note
@@ -1626,7 +1629,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The edited guild object.
 
         Raises
@@ -1683,7 +1686,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of channel objects.
 
         Raises
@@ -1746,7 +1749,7 @@ class REST:
             If specified, the max number of users to allow in a voice channel.
             This must be between `0` and `99` inclusive, where
             `0` implies no limit.
-        permission_overwrites : typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        permission_overwrites : typing.Sequence[typing.Dict[str, typing.Any]]
             If specified, the list of permission overwrites that are category
             specific to replace the existing overwrites with.
         parent_id : str
@@ -1757,7 +1760,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The newly created channel object.
 
         Raises
@@ -1793,9 +1796,9 @@ class REST:
         ----------
         guild_id : str
             The ID of the guild in which to edit the channels.
-        channel : typing.Tuple [ str, int ]
+        channel : typing.Tuple[str, int]
             The first channel to change the position of. This is a tuple of the channel ID and the integer position.
-        *channels : typing.Tuple [ str, int ]
+        *channels : typing.Tuple[str, int]
             Optional additional channels to change the position of. These must be tuples of the channel ID and the
             integer positions to change to.
 
@@ -1825,7 +1828,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The requested member object.
 
         Raises
@@ -1870,7 +1873,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             A list of member objects.
 
         Raises
@@ -1911,7 +1914,7 @@ class REST:
         nick : str, optional
             If specified, the new nickname string. Setting it to None
             explicitly will clear the nickname.
-        roles : typing.Sequence [ str ]
+        roles : typing.Sequence[str]
             If specified, a list of role IDs the member should have.
         mute : bool
             If specified, whether the user should be muted in the voice channel
@@ -2057,7 +2060,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of ban objects.
 
         Raises
@@ -2082,7 +2085,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             A ban object for the requested user.
 
         Raises
@@ -2159,7 +2162,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of role objects.
 
         Raises
@@ -2205,7 +2208,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The newly created role object.
 
         Raises
@@ -2235,16 +2238,16 @@ class REST:
         ----------
         guild_id : str
             The ID of the guild the roles belong to.
-        role : typing.Tuple [ str, int ]
+        role : typing.Tuple[str, int]
             The first role to move. This is a tuple of the role ID and the
             integer position.
-        *roles : typing.Tuple [ str, int ]
+        *roles : typing.Tuple[str, int]
             Optional extra roles to move. These must be tuples of the role ID
             and the integer position.
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of all the guild roles.
 
         Raises
@@ -2296,7 +2299,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The edited role object.
 
         Raises
@@ -2419,7 +2422,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of voice region objects.
 
         Raises
@@ -2442,7 +2445,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of invite objects (with metadata).
 
         Raises
@@ -2465,7 +2468,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of integration objects.
 
         Raises
@@ -2576,7 +2579,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             A guild embed object.
 
         Raises
@@ -2609,7 +2612,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The updated embed object.
 
         Raises
@@ -2635,7 +2638,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             A partial invite object containing the vanity URL in the `code` field.
 
         Raises
@@ -2687,7 +2690,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The requested invite object.
 
         Raises
@@ -2730,7 +2733,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The current user object.
         """
         route = routes.OWN_USER.compile(self.GET)
@@ -2746,7 +2749,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The requested user object.
 
         Raises
@@ -2772,7 +2775,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The updated user object.
 
         Raises
@@ -2795,7 +2798,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of connection objects.
         """
         route = routes.OWN_CONNECTIONS.compile(self.GET)
@@ -2820,7 +2823,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of partial guild objects.
 
         Raises
@@ -2862,7 +2865,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The newly created DM channel object.
 
         Raises
@@ -2879,7 +2882,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of voice regions available
 
         !!! note
@@ -2907,7 +2910,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The newly created webhook object.
 
         Raises
@@ -2935,7 +2938,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of webhook objects for the give channel.
 
         Raises
@@ -2959,7 +2962,7 @@ class REST:
 
         Returns
         -------
-        typing.Sequence [ typing.Dict [ str, typing.Any ] ]
+        typing.Sequence[typing.Dict[str, typing.Any]]
             A list of webhook objects for the given guild.
 
         Raises
@@ -2985,7 +2988,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The requested webhook object.
 
         Raises
@@ -3036,7 +3039,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             The updated webhook object.
 
         Raises
@@ -3125,16 +3128,16 @@ class REST:
             to be executed and return the resultant message object.
         file : hikari.files.File
             An optional file object to upload.
-        embeds : typing.Sequence [typing.Dict [ str, typing.Any ]]
+        embeds : typing.Sequence [typing.Dict[str, typing.Any]]
             If specified, the sequence of embed objects that will be sent
             with this message.
-        allowed_mentions : typing.Dict [ str, typing.Any ]
+        allowed_mentions : typing.Dict[str, typing.Any]
             If specified, the mentions to parse from the `content`.
             If not specified, will parse all mentions from the `content`.
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ], optional
+        typing.Dict[str, typing.Any], optional
             The created message object if `wait` is `True`, else
             `None`.
 
@@ -3185,7 +3188,7 @@ class REST:
 
         Returns
         -------
-        typing.Dict [ str, typing.Any ]
+        typing.Dict[str, typing.Any]
             An application info object.
         """
         route = routes.OAUTH2_APPLICATIONS_ME.compile(self.GET)

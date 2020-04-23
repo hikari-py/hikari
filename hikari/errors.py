@@ -62,9 +62,8 @@ class HikariWarning(RuntimeWarning):
 
     Any warnings should derive from this.
 
-    Note
-    ----
-    You should never initialize this warning directly.
+    !!! note
+        You should never initialize this warning directly.
     """
 
     __slots__ = ()
@@ -121,7 +120,7 @@ class GatewayServerClosedConnectionError(GatewayError):
 
     Parameters
     ----------
-    close_code : typing.Union [ hikari.net.codes.GatewayCloseCode, int ], optional
+    close_code : typing.Union[hikari.net.codes.GatewayCloseCode, int], optional
         The close code provided by the server, if there was one.
     reason : str, optional
         A string explaining the issue.

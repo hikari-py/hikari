@@ -39,7 +39,7 @@ def warning(message: str, category: typing.Type[Warning], stack_level: int = 1) 
     ----------
     message : str
         The message to display.
-    category : typing.Type [ Warning ]
+    category : typing.Type[Warning]
         The type of warning to raise.
     stack_level : int
         How many stack frames to go back to find the user's invocation.
@@ -60,18 +60,18 @@ def generate_allowed_mentions(
     mentions_everyone : bool
         Whether `@everyone` and `@here` mentions should be resolved by
         discord and lead to actual pings.
-    user_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ], bool ]
+    user_mentions : typing.Collection[typing.Union[hikari.users.User, hikari.bases.Snowflake, int]] OR bool
         Either an array of user objects/IDs to allow mentions for,
         `True` to allow all user mentions or `False` to block all
         user mentions from resolving.
-    role_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ], bool ]
+    role_mentions : typing.Collection[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]] OR bool
         Either an array of guild role objects/IDs to allow mentions for,
         `True` to allow all role mentions or `False` to block all
         role mentions from resolving.
 
     Returns
     -------
-    typing.Dict [ str, typing.Sequence [ str ] ]
+    typing.Dict[str, typing.Sequence[str]]
         The resulting allowed mentions dict object.
 
     Raises
@@ -132,11 +132,11 @@ async def pagination_handler(
 
     Parameters
     ----------
-    deserializer : typing.Callable [ [ typing.Any ], typing.Any ]
+    deserializer : typing.Callable[[typing.Any], typing.Any]
         The deserializer to use to deserialize raw elements.
-    direction : typing.Union [ `"before"`, `"after"` ]
+    direction : typing.Union[`"before"`, `"after"`]
         The direction that this paginator should go in.
-    request : typing.Callable [ ..., typing.Coroutine [ typing.Any, typing.Any, typing.Any ] ]
+    request : typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, typing.Any]]
         The `hikari.net.rest.REST` method that should be
         called to make requests for this paginator.
     reversing : bool
@@ -152,14 +152,14 @@ async def pagination_handler(
     limit : int, optional
         The amount of deserialized entities that the iterator should return
         total, will be unlimited if set to `None`.
-    id_getter : typing.Callable [ [ typing.Any ], str ]
+    id_getter : typing.Callable[[typing.Any], str]
     **kwargs
         Kwargs to pass through to `request` for every request made along
         with the current decided limit and direction snowflake.
 
     Returns
     -------
-    typing.AsyncIterator [ typing.Any ]
+    typing.AsyncIterator[typing.Any]
         An async iterator of the found deserialized found objects.
     """
     while payloads := await request(

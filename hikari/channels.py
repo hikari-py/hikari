@@ -339,7 +339,7 @@ class GuildChannelBuilder(marshaller.Serializable):
 
         Parameters
         ----------
-        overwrites : typing.Sequence [ PermissionOverwrite ]
+        overwrites : typing.Sequence[PermissionOverwrite]
             A sequence of overwrite objects to add, where the first overwrite
             object
 
@@ -390,7 +390,7 @@ class GuildChannelBuilder(marshaller.Serializable):
 
         Parameters
         ----------
-        rate_limit_per_user : typing.Union [ datetime.timedelta, int ]
+        rate_limit_per_user : typing.Union[datetime.timedelta, int]
             The amount of seconds users will have to wait before sending another
             message in the channel to set.
         """
@@ -406,7 +406,7 @@ class GuildChannelBuilder(marshaller.Serializable):
 
         Parameters
         ----------
-        category : typing.Union [ hikari.bases.Snowflake, int ]
+        category : typing.Union[hikari.bases.Snowflake, int]
             The placeholder ID of the category channel that should be this
             channel's parent.
         """
@@ -418,7 +418,7 @@ class GuildChannelBuilder(marshaller.Serializable):
 
         Parameters
         ----------
-        channel_id : typing.Union [ hikari.bases.Snowflake, int ]
+        channel_id : typing.Union[hikari.bases.Snowflake, int]
             The placeholder ID to use.
 
         !!! note

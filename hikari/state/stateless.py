@@ -25,6 +25,7 @@ from hikari.state import dispatchers
 from hikari.state import event_managers
 
 
+# pylint: disable=too-many-public-methods
 class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDispatcher]):
     """Stateless event manager implementation for stateless bots.
 
@@ -258,3 +259,6 @@ class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDis
         """Handle WEBHOOK_UPDATE events."""
         event = events.WebhookUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
+
+
+# pylint: enable=too-many-public-methods
