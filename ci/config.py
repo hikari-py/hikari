@@ -31,6 +31,7 @@ TEST_PACKAGE = "tests"
 
 # Generating documentation and artifacts.
 ARTIFACT_DIRECTORY = "public"
+PAGES_DIRECTORY = "pages"
 DOCUMENTATION_DIRECTORY = "docs"
 ROOT_INDEX_SOURCE = "index.html"
 
