@@ -18,31 +18,28 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Pdoc documentation generation."""
 import os
+import shutil
 
 from ci import config
 from ci import nox
 
 
-@nox.session(reuse_venv=True, default=True)
-def pdoc(session: nox.Session) -> None:
-    """Generate documentation with pdoc."""
+def copy_from_in(src: str, dest: str) -> None:
+    for parent, dirs, files in os.walk(src):
+        sub_parent = os.path.relpath(parent, src)
 
-    # Inherit environment GitLab CI vars, where appropriate.
+        for file in files:
+            sub_src = os.path.join(parent, file)
+            sub_dest = os.path.normpath(os.path.join(dest, sub_parent, file))
+            print(sub_src, "->", sub_dest)
+            shutil.copy(sub_src, sub_dest)
+
+
+@nox.session(reuse_venv=True, default=True)
+def pages(session: nox.Session) -> None:
+    """Generate static pages containing resources and tutorials."""
     for n, v in os.environ.items():
         if n.startswith(("GITLAB_", "CI")) or n == "CI":
             session.env[n] = v
 
-    session.install("-r", config.REQUIREMENTS, "pdoc3==0.8.1")
-
-    session.run(
-        "python",
-        "-m",
-        "pdoc",
-        config.MAIN_PACKAGE,
-        "--html",
-        "--output-dir",
-        config.ARTIFACT_DIRECTORY,
-        "--template-dir",
-        config.DOCUMENTATION_DIRECTORY,
-        "--force",
-    )
+    copy_from_in(config.PAGES_DIRECTORY, config.ARTIFACT_DIRECTORY)
