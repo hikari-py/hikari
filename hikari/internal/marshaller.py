@@ -120,7 +120,7 @@ def attrib(
 
     Parameters
     ----------
-    deserializer : typing.Callable [ [ typing.Any ], typing.Any ], optional
+    deserializer : typing.Callable[[ typing.Any], typing.Any], optional
         The deserializer to use to deserialize raw elements.
     raw_name : str, optional
         The raw name of the element in its raw serialized form. If not provided,
@@ -138,7 +138,7 @@ def attrib(
         this field isn't defined or one of `None`, `False` or `True` to specify
         that this should default to the given singleton. Will raise an exception
         when this field is undefined later on if this isn't specified.
-    serializer : typing.Callable [ [ typing.Any ], typing.Any ], optional
+    serializer : typing.Callable[[ typing.Any], typing.Any], optional
         The serializer to use. If not specified, then serializing the entire
         class that this attribute is in will trigger a `TypeError` later.
     **kwargs :
@@ -200,7 +200,7 @@ class _AttributeDescriptor:
         "serializer",
     )
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         raw_name: str,
         field_name: str,
@@ -281,12 +281,12 @@ class HikariEntityMarshaller:
 
         Parameters
         ----------
-        cls : typing.Type [ typing.Any ]
+        cls : typing.Type[typing.Any]
             The type to register.
 
         Returns
         -------
-        typing.Type [ typing.Any ]
+        typing.Type[typing.Any]
             The input argument. This enables this to be used as a decorator if
             desired.
 
@@ -304,9 +304,9 @@ class HikariEntityMarshaller:
 
         Parameters
         ----------
-        raw_data : typing.Mapping [ str, typing.Any ]
+        raw_data : typing.Mapping[str, typing.Any]
             The raw data to deserialize.
-        target_type : typing.Type [ typing.Any ]
+        target_type : typing.Type[typing.Any]
             The type to deserialize to.
 
         Returns
@@ -382,7 +382,7 @@ class HikariEntityMarshaller:
 
         Returns
         -------
-        typing.Mapping [ str, typing.Any ], optional
+        typing.Mapping[str, typing.Any], optional
             The serialized raw data item.
 
         Raises

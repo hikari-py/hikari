@@ -61,7 +61,7 @@ VERSION_6: typing.Final[int] = 6
 VERSION_7: typing.Final[int] = 7
 
 
-class Shard:
+class Shard:  # pylint: disable=too-many-instance-attributes
     """Implementation of a client for the Discord Gateway.
 
     This is a websocket connection to Discord that is used to inform your
@@ -119,7 +119,7 @@ class Shard:
     proxy_auth : aiohttp.BasicAuth, optional
         Optional `aiohttp.BasicAuth` object that can be provided to
         allow authenticating with a proxy if you use one. Leave `None` to ignore.
-    proxy_headers : typing.Mapping [ str, str ], optional
+    proxy_headers : typing.Mapping[str, str], optional
         Optional `typing.Mapping` to provide as headers to allow the
         connection through a proxy if you use one. Leave `None` to ignore.
     proxy_url : str, optional
@@ -315,7 +315,7 @@ class Shard:
     version: typing.Final[int]
     """The API version to use on Discord."""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-locals
         self,
         *,
         compression: bool = True,
@@ -470,7 +470,7 @@ class Shard:
             An optional string to filter members with. If specified, only
             members who have a username starting with this string will be
             returned.
-        user_ids : typing.Sequence [ str ]
+        user_ids : typing.Sequence[str]
             An optional list of user IDs to return member info about.
 
         !!! note
@@ -762,7 +762,7 @@ class Shard:
             else:
                 self.logger.debug("ignoring opcode %s with data %r", op, d)
 
-    async def _receive(self):
+    async def _receive(self):  # pylint: disable=too-many-branches
         while True:
             message = await self._receive_one_packet()
 
@@ -781,7 +781,7 @@ class Shard:
                     )
                 return obj
 
-            elif message.type == aiohttp.WSMsgType.BINARY:
+            if message.type == aiohttp.WSMsgType.BINARY:
                 buffer = bytearray(message.data)
                 packets = 1
                 while not buffer.endswith(b"\x00\x00\xff\xff"):

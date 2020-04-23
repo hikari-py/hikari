@@ -40,7 +40,7 @@ from hikari.internal import helpers
 from hikari.internal import more_typing
 
 
-class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method, too-many-public-methods
     """The REST client component for handling requests to channel endpoints."""
 
     async def fetch_channel(self, channel: bases.Hashable[_channels.Channel]) -> _channels.Channel:
@@ -48,7 +48,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object ID of the channel to look up.
 
         Returns
@@ -90,7 +90,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The channel ID to update.
         name : str
             If specified, the new name for the channel. This must be
@@ -105,7 +105,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             Mark the channel as being not safe for work (NSFW) if `True`.
             If `False` or unspecified, then the channel is not marked as
             NSFW. Will have no visible effect for non-text guild channels.
-        rate_limit_per_user : typing.Union [ int, datetime.timedelta ]
+        rate_limit_per_user : typing.Union[int, datetime.timedelta]
             If specified, the time delta of seconds  the user has to wait
             before sending another message. This will not apply to bots, or to
             members with `MANAGE_MESSAGES` or `MANAGE_CHANNEL` permissions.
@@ -119,10 +119,10 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             If specified, the new max number of users to allow in a voice
             channel. This must be between `0` and `99` inclusive, where
             `0` implies no limit.
-        permission_overwrites : typing.Sequence [ hikari.channels.PermissionOverwrite ]
+        permission_overwrites : typing.Sequence[hikari.channels.PermissionOverwrite]
             If specified, the new list of permission overwrites that are
             category specific to replace the existing overwrites with.
-        parent_category : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ], optional
+        parent_category : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int], optional
             If specified, the new parent category ID to set for the channel,
             pass `None` to unset.
         reason : str
@@ -176,7 +176,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake str ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake str]
             The object or ID of the channel to delete.
 
         Returns
@@ -222,12 +222,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The ID of the channel to retrieve the messages from.
         limit : int
             If specified, the maximum number of how many messages this iterator
             should return.
-        after : typing.Union [ datetime.datetime, hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        after : typing.Union[datetime.datetime, hikari.channels.Channel, hikari.bases.Snowflake, int]
             A object or ID message. Only return messages sent AFTER this
             message if it's specified else this will return every message after
             (and including) the first message in the channel.
@@ -240,7 +240,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Returns
         -------
-        typing.AsyncIterator [ hikari.messages.Message ]
+        typing.AsyncIterator[hikari.messages.Message]
             An async iterator that retrieves the channel's message objects.
 
         Raises
@@ -288,12 +288,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The ID of the channel to retrieve the messages from.
         limit : int
             If specified, the maximum number of how many messages this iterator
             should return.
-        before : typing.Union [ datetime.datetime, hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        before : typing.Union[datetime.datetime, hikari.channels.Channel, hikari.bases.Snowflake, int]
             A message object or ID. Only return messages sent BEFORE
             this message if this is specified else this will return every
             message before (and including) the most recent message in the
@@ -307,7 +307,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Returns
         -------
-        typing.AsyncIterator [ hikari.messages.Message ]
+        typing.AsyncIterator[hikari.messages.Message]
             An async iterator that retrieves the channel's message objects.
 
         Raises
@@ -349,7 +349,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         *,
         limit: int = ...,
     ) -> typing.AsyncIterator[_messages.Message]:
-        """Return an async iterator that retrieves up to 100 messages.
+        """Yield up to 100 messages found around a given point.
 
         This will return messages in order from newest to oldest, is based
         around the creation time of the supplied message object/ID and will
@@ -357,9 +357,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The ID of the channel to retrieve the messages from.
-        around : typing.Union [ datetime.datetime, hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        around : typing.Union[datetime.datetime, hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the message to get messages that were sent
             AROUND it in the provided channel, unlike `before` and `after`,
             this argument is required and the provided message will also be
@@ -374,10 +374,10 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
                 if message.embeds and not message.author.is_bot:
                     await client.delete_message(channel, message)
 
-        Returns
-        -------
-        typing.AsyncIterator [ hikari.messages.Message ]
-            An async iterator that retrieves the found message objects.
+        Yields
+        ------
+        hikari.messages.Message
+            The messages found around the given point.
 
         Raises
         ------
@@ -414,9 +414,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get the message from.
-        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
+        message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to retrieve.
 
         Returns
@@ -460,7 +460,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The channel or ID of the channel to send to.
         content : str
             If specified, the message content to send with the message.
@@ -470,7 +470,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             and can usually be ignored.
         tts : bool
             If specified, whether the message will be sent as a TTS message.
-        files : typing.Sequence [ hikari.files.File ]
+        files : typing.Sequence[hikari.files.File]
             A sequence of files to upload, if desired. If specified, should be
             between 1 and 5 objects in size (inclusive).
         embed : hikari.embeds.Embed
@@ -478,11 +478,11 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ], bool ]
+        user_mentions : typing.Collection[typing.Union[hikari.users.User, hikari.bases.Snowflake, int]] OR bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ], bool ]
+        role_mentions: typing.Collection[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]] OR bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -570,9 +570,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get the message from.
-        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
+        message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to edit.
         content : str, optional
             If specified, the string content to replace with in the message.
@@ -587,11 +587,11 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ], bool ]
+        user_mentions: typing.Collection[typing.Union[hikari.users.User, hikari.bases.Snowflake, int]] OR bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ], bool ]
+        role_mentions: typing.Collection[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]] bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -673,11 +673,11 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get the message from.
-        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
+        message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to delete.
-        *additional_messages : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
+        *additional_messages : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             Objects and/or IDs of additional messages to delete in the same
             channel, in total you can delete up to 100 messages in a request.
 
@@ -725,6 +725,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
         )
 
+    # pylint: disable=line-too-long
     async def update_channel_overwrite(
         self,
         channel: bases.Hashable[_messages.Message],
@@ -739,18 +740,18 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the channel to edit permissions for.
-        overwrite : typing.Union [ hikari.channels.PermissionOverwrite, hikari.guilds.GuildRole, hikari.users.User, hikari.bases.Snowflake , int ]
+        overwrite : typing.Union[hikari.channels.PermissionOverwrite, hikari.guilds.GuildRole, hikari.users.User, hikari.bases.Snowflake , int]
             The object or ID of the target member or role to  edit/create the
             overwrite for.
-        target_type : typing.Union [ hikari.channels.PermissionOverwriteType, int ]
+        target_type : typing.Union[hikari.channels.PermissionOverwriteType, int]
             The type of overwrite, passing a raw string that's outside of the
             enum's range for this may lead to unexpected behaviour.
-        allow : typing.Union [ hikari.permissions.Permission, int ]
+        allow : typing.Union[hikari.permissions.Permission, int]
             If specified, the value of all permissions to set to be allowed,
             passing a raw integer for this may lead to unexpected behaviour.
-        deny : typing.Union [ hikari.permissions.Permission, int ]
+        deny : typing.Union[hikari.permissions.Permission, int]
             If specified, the value of all permissions to set to be denied,
             passing a raw integer for this may lead to unexpected behaviour.
         reason : str
@@ -767,6 +768,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         hikari.errors.ForbiddenHTTPError
             If you lack permission to do this.
         """
+        # pylint: enable=line-too-long
         await self._session.edit_channel_permissions(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             overwrite_id=str(overwrite.id if isinstance(overwrite, bases.UniqueEntity) else int(overwrite)),
@@ -783,12 +785,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get invites for.
 
         Returns
         -------
-        typing.Sequence [ hikari.invites.InviteWithMetadata ]
+        typing.Sequence[hikari.invites.InviteWithMetadata]
             A list of invite objects.
 
         Raises
@@ -822,7 +824,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ datetime.timedelta, str ]
+        channel : typing.Union[datetime.timedelta, str]
             The object or ID of the channel to create the invite for.
         max_age : int
             If specified, the seconds time delta for the max age of the invite,
@@ -836,10 +838,10 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             user is kicked when their session ends unless they are given a role.
         unique : bool
             If specified, whether to try to reuse a similar invite.
-        target_user : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
+        target_user : typing.Union[hikari.users.User, hikari.bases.Snowflake, int]
             If specified, the object or ID of the user this invite should
             target.
-        target_user_type : typing.Union [ hikari.invites.TargetUserType, int ]
+        target_user_type : typing.Union[hikari.invites.TargetUserType, int]
             If specified, the type of target for this invite, passing a raw
             integer for this may lead to unexpected results.
         reason : str
@@ -878,6 +880,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
         return invites.InviteWithMetadata.deserialize(payload)
 
+    # pylint: disable=line-too-long
     async def delete_channel_overwrite(
         self,
         channel: bases.Hashable[_channels.Channel],
@@ -887,9 +890,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the channel to delete the overwrite from.
-        overwrite : typing.Union [ hikari.channels.PermissionOverwrite, hikari.guilds.GuildRole, hikari.users.User, hikari.bases.Snowflake, int ]
+        overwrite : typing.Union[hikari.channels.PermissionOverwrite, hikari.guilds.GuildRole, hikari.users.User, hikari.bases.Snowflake, int]
             The ID of the entity this overwrite targets.
 
         Raises
@@ -902,6 +905,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         hikari.errors.ForbiddenHTTPError
             If you lack the `MANAGE_ROLES` permission for that channel.
         """
+        # pylint: enable=line-too-long
         await self._session.delete_channel_permission(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             overwrite_id=str(overwrite.id if isinstance(overwrite, bases.UniqueEntity) else int(overwrite)),
@@ -912,7 +916,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the channel to appear to be typing in.
 
         Raises
@@ -936,12 +940,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get messages from.
 
         Returns
         -------
-        typing.Mapping [ hikari.bases.Snowflake, hikari.messages.Message ]
+        typing.Mapping[hikari.bases.Snowflake, hikari.messages.Message]
             A list of message objects.
 
         Raises
@@ -971,9 +975,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the channel to pin a message to.
-        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
+        message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to pin.
 
         Raises
@@ -1000,9 +1004,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The ID of the channel to remove a pin from.
-        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
+        message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to unpin.
 
         Raises
@@ -1032,7 +1036,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.GuildChannel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.GuildChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel for webhook to be created in.
         name : str
             The webhook's name string.
@@ -1074,12 +1078,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.GuildChannel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.GuildChannel, hikari.bases.Snowflake, int]
             The object or ID of the guild channel to get the webhooks from.
 
         Returns
         -------
-        typing.Sequence [ hikari.webhooks.Webhook ]
+        typing.Sequence[hikari.webhooks.Webhook]
             A list of webhook objects for the give channel.
 
         Raises

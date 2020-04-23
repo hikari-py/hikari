@@ -291,7 +291,7 @@ class Color(int, typing.SupportsInt):
 
         Parameters
         ----------
-        bytes_ : typing.Iterable [ int ]
+        bytes_ : typing.Iterable[int]
             A iterable of int byte values.
 
         byteorder : str
@@ -334,9 +334,9 @@ class Color(int, typing.SupportsInt):
     def __class_getitem__(cls, color: ColorCompatibleT) -> Color:  # pylint:disable=arguments-differ
         if isinstance(color, cls):
             return color
-        elif isinstance(color, int):
+        if isinstance(color, int):
             return cls.from_int(color)
-        elif isinstance(color, (list, tuple)):
+        if isinstance(color, (list, tuple)):
             assertions.assert_that(
                 len(color) == 3, f"color must be an RGB triplet if set to a {type(color).__name__} type"
             )

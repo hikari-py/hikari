@@ -601,7 +601,7 @@ class PresenceUser(users.User):
 
         Returns
         -------
-        typing.Union [ str, hikari.unset.UNSET ]
+        typing.Union[str, hikari.unset.UNSET]
             The string URL of the user's custom avatar if
             either `PresenceUser.avatar_hash` is set or their default avatar if
             `PresenceUser.discriminator` is set, else `hikari.unset.UNSET`.

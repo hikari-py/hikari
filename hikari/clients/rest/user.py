@@ -27,7 +27,7 @@ from hikari import users
 from hikari.clients.rest import base
 
 
-class RESTUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
     """The REST client component for handling requests to user endpoints."""
 
     async def fetch_user(self, user: bases.Hashable[users.User]) -> users.User:
@@ -35,7 +35,7 @@ class RESTUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W02
 
         Parameters
         ----------
-        user : typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ]
+        user : typing.Union[hikari.users.User, hikari.bases.Snowflake, int]
             The object or ID of the user to get.
 
         Returns

@@ -27,7 +27,7 @@ from hikari import voices
 from hikari.clients.rest import base
 
 
-class RESTVoiceComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTVoiceComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
     """The REST client component for handling requests to voice endpoints."""
 
     async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:
@@ -35,7 +35,7 @@ class RESTVoiceComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0
 
         Returns
         -------
-        typing.Sequence [ hikari.voices.VoiceRegion ]
+        typing.Sequence[hikari.voices.VoiceRegion]
             A list of voice regions available
 
         !!! note

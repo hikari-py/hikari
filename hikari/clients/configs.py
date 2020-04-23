@@ -81,7 +81,7 @@ class AIOHTTPConfig(BaseConfig):
         `package.module#object.attribute` that is expected to point to the
         desired value.
         Defaults to `None` if unspecified during deserialization.
-    proxy_headers : typing.Mapping [ str, str ], optional
+    proxy_headers : typing.Mapping[str, str], optional
         Optional proxy headers to provide in any HTTP requests.
         Defaults to `None` if unspecified during deserialization.
     proxy_auth : aiohttp.BasicAuth, optional
@@ -192,7 +192,7 @@ class GatewayConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
         `package.module#object.attribute` that is expected to point to the
         desired value.
         Defaults to `None` if unspecified during deserialization.
-    proxy_headers : typing.Mapping [ str, str ], optional
+    proxy_headers : typing.Mapping[str, str], optional
         Optional proxy headers to provide in any HTTP requests.
         Defaults to `None` if unspecified during deserialization.
     proxy_auth : aiohttp.BasicAuth, optional
@@ -247,7 +247,7 @@ class GatewayConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
         intent names. If unspecified, this will be set to `None`.
     large_threshold : int
         The large threshold to use.
-    shard_id : typing.Sequence [ int ], optional
+    shard_id : typing.Sequence[int], optional
         The shard IDs to produce shard connections for.
         If being deserialized, this can be several formats shown in `notes`.
     shard_count : int, optional
@@ -343,7 +343,7 @@ class RESTConfig(AIOHTTPConfig, TokenConfig):
         `package.module#object.attribute` that is expected to point to the
         desired value.
         Defaults to `None` if unspecified during deserialization.
-    proxy_headers : typing.Mapping [ str, str ], optional
+    proxy_headers : typing.Mapping[str, str], optional
         Optional proxy headers to provide in any HTTP requests.
         Defaults to `None` if unspecified during deserialization.
     proxy_auth : aiohttp.BasicAuth, optional
@@ -408,7 +408,7 @@ class BotConfig(RESTConfig, GatewayConfig):
         `package.module#object.attribute` that is expected to point to the
         desired value.
         Defaults to `None` if unspecified during deserialization.
-    proxy_headers : typing.Mapping [ str, str ], optional
+    proxy_headers : typing.Mapping[str, str], optional
         Optional proxy headers to provide in any HTTP requests.
         Defaults to `None` if unspecified during deserialization.
     proxy_auth : aiohttp.BasicAuth, optional
@@ -463,7 +463,7 @@ class BotConfig(RESTConfig, GatewayConfig):
         intent names. If unspecified, this will be set to `None`.
     large_threshold : int
         The large threshold to use.
-    shard_id : typing.Sequence [ int ], optional
+    shard_id : typing.Sequence[int], optional
         The shard IDs to produce shard connections for.
         If being deserialized, this can be several formats shown in `notes`.
     shard_count : int, optional

@@ -48,8 +48,8 @@ class Snowflake(HikariEntity, typing.SupportsInt):
     _value: int
     """The integer value of this ID."""
 
-    # noinspection PyMissingConstructor
     def __init__(self, value: typing.Union[int, str]) -> None:
+        super().__init__()
         self._value = int(value)
 
     @property

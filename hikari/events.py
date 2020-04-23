@@ -110,12 +110,12 @@ def get_required_intents_for(event_type: typing.Type[HikariEvent]) -> typing.Col
 
     Parameters
     ----------
-    event_type : typing.Type [ HikariEvent ]
+    event_type : typing.Type[HikariEvent]
         The event type to get required intents for.
 
     Returns
     -------
-    typing.Collection [ hikari.intents.Intent ]
+    typing.Collection[hikari.intents.Intent]
         Collection of acceptable subset combinations of intent needed to
         be able to receive the given event type.
     """
