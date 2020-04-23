@@ -35,7 +35,7 @@ from hikari.clients.rest import base
 from hikari.internal import helpers
 
 
-class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
     """The REST client component for handling requests to webhook endpoints."""
 
     async def fetch_webhook(
@@ -45,7 +45,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : typing.Union [ hikari.webhooks.Webhook, hikari.bases.Snowflake, int ]
+        webhook : typing.Union[hikari.webhooks.Webhook, hikari.bases.Snowflake, int]
             The object or ID of the webhook to get.
         webhook_token : str
             If specified, the webhook token to use to get it (bypassing this
@@ -89,7 +89,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : typing.Union [ hikari.webhooks.Webhook, hikari.bases.Snowflake, int ]
+        webhook : typing.Union[hikari.webhooks.Webhook, hikari.bases.Snowflake, int]
             The object or ID of the webhook to edit.
         webhook_token : str
             If specified, the webhook token to use to modify it (bypassing this
@@ -99,7 +99,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         avatar : hikari.files.File, optional
             If specified, the new avatar image. If `None`, then
             it is removed.
-        channel : typing.Union [ hikari.channels.GuildChannel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.GuildChannel, hikari.bases.Snowflake, int]
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
         reason : str
@@ -143,7 +143,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : typing.Union [ hikari.webhooks.Webhook, hikari.bases.Snowflake, int ]
+        webhook : typing.Union[hikari.webhooks.Webhook, hikari.bases.Snowflake, int]
             The object or ID of the webhook to delete
         webhook_token : str
             If specified, the webhook token to use to delete it (bypassing this
@@ -187,7 +187,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : typing.Union [ hikari.webhooks.Webhook, hikari.bases.Snowflake, int ]
+        webhook : typing.Union[hikari.webhooks.Webhook, hikari.bases.Snowflake, int]
             The object or ID of the webhook to execute.
         webhook_token : str
             The token of the webhook to execute.
@@ -206,17 +206,17 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             to be executed and return the resultant message object.
         file : hikari.files.File
             If specified, this is a file object to send along with the webhook.
-        embeds : typing.Sequence [ hikari.embeds.Embed ]
+        embeds : typing.Sequence[hikari.embeds.Embed]
             If specified, a sequence of between `1` to `10` embed objects
             (inclusive) to send with the embed.
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.users.User, hikari.bases.Snowflake, int ], bool ]
+        user_mentions : typing.Collection[typing.Union[hikari.users.User, hikari.bases.Snowflake, int]] OR bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions : typing.Union [ typing.Collection [ typing.Union [ hikari.guilds.GuildRole, hikari.bases.Snowflake, int ] ], bool ]
+        role_mentions : typing.Collection[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]] OR bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.

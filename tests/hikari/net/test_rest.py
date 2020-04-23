@@ -18,7 +18,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import contextlib
-import io
 import json
 import ssl
 
@@ -29,6 +28,7 @@ import pytest
 from hikari import errors
 from hikari import files
 from hikari.internal import conversions
+from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import rest
 from hikari.net import routes
@@ -401,7 +401,7 @@ class TestLowLevelRestfulClient:
         self, content_type, exit_error, compiled_route, discord_response, rest_impl_with__request
     ):
         discord_response.headers["Content-Type"] = content_type
-        rest_impl_with__request._handle_bad_response = mock.AsyncMock(side_effect=[None, exit_error])
+        rest_impl_with__request._backoff_request = mock.AsyncMock(side_effect=[None, exit_error])
 
         rest_impl_with__request.client_session.request = mock.MagicMock(return_value=discord_response)
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
@@ -410,7 +410,7 @@ class TestLowLevelRestfulClient:
             except exit_error:
                 pass
 
-            rest_impl_with__request._handle_bad_response.assert_called()
+            rest_impl_with__request._backoff_request.assert_called()
 
     @pytest.mark.asyncio
     async def test__request_when_invalid_content_type(self, compiled_route, discord_response, rest_impl_with__request):
@@ -455,39 +455,6 @@ class TestLowLevelRestfulClient:
                 rest_impl_with__request.global_ratelimiter.throttle.assert_not_called()
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("api_version", [6, 7])
-    @pytest.mark.parametrize(
-        ["status_code", "error"],
-        [
-            (400, errors.BadRequestHTTPError),
-            (401, errors.UnauthorizedHTTPError),
-            (403, errors.ForbiddenHTTPError),
-            (404, errors.NotFoundHTTPError),
-            (405, errors.ClientHTTPError),
-        ],
-    )
-    async def test__request_raises_appropriate_error_for_status_code(
-        self, status_code, error, compiled_route, discord_response, api_version
-    ):
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
-        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
-        discord_response.status = status_code
-        with stack:
-            rest_impl = rest.REST(token="Bot token", version=api_version)
-        rest_impl.bucket_ratelimiters = mock.MagicMock()
-        rest_impl.global_ratelimiter = mock.MagicMock()
-        rest_impl.client_session = mock.MagicMock(aiohttp.ClientSession)
-        rest_impl.client_session.request = mock.MagicMock(return_value=discord_response)
-
-        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            try:
-                await rest_impl._request(compiled_route)
-                assert False
-            except error:
-                assert True
-
-    @pytest.mark.asyncio
     async def test__request_when_NO_CONTENT(self, compiled_route, discord_response, rest_impl_with__request):
         discord_response.status = 204
         rest_impl_with__request.client_session.request = mock.MagicMock(return_value=discord_response)
@@ -502,6 +469,7 @@ class TestLowLevelRestfulClient:
         discord_response.raw_body = "{}"
         discord_response.status = 1000
         rest_impl_with__request._handle_bad_response = mock.AsyncMock(side_effect=[None, exit_error])
+        rest_impl_with__request._backoff_request = mock.AsyncMock()
         rest_impl_with__request.client_session.request.return_value = discord_response
 
         with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
@@ -513,15 +481,131 @@ class TestLowLevelRestfulClient:
             assert rest_impl_with__request._handle_bad_response.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_handle_bad_response(self, rest_impl):
+    async def test__request_calls_handle_bad_response(
+        self, exit_error, compiled_route, discord_response, rest_impl_with__request
+    ):
+        discord_response.raw_body = "{}"
+        discord_response.status = 1000
+        rest_impl_with__request._handle_bad_response = mock.AsyncMock(side_effect=[exit_error])
+        rest_impl_with__request.client_session.request.return_value = discord_response
+        mock_exponential_backoff = mock.MagicMock(ratelimits.ExponentialBackOff)
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()))
+        stack.enter_context(mock.patch.object(ratelimits, "ExponentialBackOff", return_value=mock_exponential_backoff))
+        with stack:
+            try:
+                await rest_impl_with__request._request(compiled_route)
+            except exit_error:
+                pass
+
+            rest_impl_with__request._handle_bad_response.assert_called_once_with(
+                mock_exponential_backoff, {}, "{}", 1000, compiled_route
+            )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["status_code", "error"],
+        [
+            (400, errors.BadRequestHTTPError),
+            (401, errors.UnauthorizedHTTPError),
+            (403, errors.ForbiddenHTTPError),
+            (404, errors.NotFoundHTTPError),
+        ],
+    )
+    async def test__handle_bad_response_raises_appropriate_error_for_status_code(
+        self, rest_impl, status_code, error, compiled_route, discord_response
+    ):
+        mock_body = {"message": "test", "code": 10_001}
+        mock_raw_body = mock.MagicMock(bytes)
+        mock_backoff = mock.MagicMock(ratelimits.ExponentialBackOff)
+
+        class StubError(error):
+            def __init__(self):
+                ...
+
+        with mock.patch.object(errors, error.__name__, return_value=StubError()) as patched_error:
+            try:
+                await rest_impl._handle_bad_response(
+                    mock_backoff, mock_body, mock_raw_body, status_code, compiled_route
+                )
+                assert False
+            except error:
+                patched_error.assert_called_once_with(compiled_route, "test", codes.JSONErrorCode.UNKNOWN_ACCOUNT)
+                assert True
+
+    @pytest.mark.asyncio
+    async def test__handle_bad_response_raises_appropriate_error_for_client_http_error(
+        self, rest_impl, compiled_route, discord_response
+    ):
+        mock_body = {"message": "test", "code": 10_001}
+        mock_raw_body = mock.MagicMock(bytes)
+        mock_backoff = mock.MagicMock(ratelimits.ExponentialBackOff)
+        error = errors.ClientHTTPError
+
+        class StubError(error):
+            def __init__(self):
+                ...
+
+        with mock.patch.object(errors, "ClientHTTPError", return_value=StubError()) as patched_error:
+            try:
+                await rest_impl._handle_bad_response(mock_backoff, mock_body, mock_raw_body, 405, compiled_route)
+                assert False
+            except error:
+                patched_error.assert_called_once_with(405, compiled_route, "test", codes.JSONErrorCode.UNKNOWN_ACCOUNT)
+                assert True
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("api_version", "body", "raw_body", "expected_message", "expected_code"),
+        [
+            (rest.VERSION_7, {"blah": "foo"}, bytes, "blah - foo", None),
+            (rest.VERSION_6, None, bytes, bytes, None),
+            (rest.VERSION_6, {"message": "test", "code": 10_001}, bytes, "test", codes.JSONErrorCode.UNKNOWN_ACCOUNT),
+        ],
+    )
+    async def test__handle_bad_response_handles_different_message_results(
+        self, api_version, body, raw_body, expected_message, expected_code, rest_impl, compiled_route, discord_response
+    ):
+        mock_backoff = mock.MagicMock(ratelimits.ExponentialBackOff)
+        error = errors.UnauthorizedHTTPError
+
+        class StubError(error):
+            def __init__(self):
+                ...
+
+        rest_impl.version = api_version
+        with mock.patch.object(errors, "ClientHTTPError", return_value=StubError()) as patched_error:
+            try:
+                await rest_impl._handle_bad_response(mock_backoff, body, raw_body, 405, compiled_route)
+                assert False
+            except error:
+                patched_error.assert_called_once_with(405, compiled_route, expected_message, expected_code)
+                assert True
+
+    @pytest.mark.asyncio
+    async def test__handle_bad_response_backoffs_on_internal_server_error(
+        self, rest_impl, compiled_route, discord_response
+    ):
+        mock_body = {"message": "test", "code": 10_001}
+        mock_raw_body = mock.MagicMock(bytes)
+        mock_backoff = mock.MagicMock(ratelimits.ExponentialBackOff)
+        rest_impl._backoff_request = mock.AsyncMock()
+        error = errors.ClientHTTPError
+        await rest_impl._handle_bad_response(mock_backoff, mock_body, mock_raw_body, 501, compiled_route)
+        rest_impl._backoff_request.assert_called_once_with(
+            mock_backoff, 501, compiled_route, "test", codes.JSONErrorCode.UNKNOWN_ACCOUNT
+        )
+
+    @pytest.mark.asyncio
+    async def test__backoff_request(self, rest_impl):
         backoff = mock.MagicMock(ratelimits.ExponentialBackOff, __next__=mock.MagicMock(return_value=4))
         mock_route = mock.MagicMock(routes.CompiledRoute)
         with mock.patch.object(asyncio, "sleep"):
-            await rest_impl._handle_bad_response(backoff, "Being spammy", mock_route, "You are being rate limited", 429)
+            await rest_impl._backoff_request(backoff, "Being spammy", mock_route, "You are being rate limited", 429)
             asyncio.sleep.assert_called_once_with(4)
 
     @pytest.mark.asyncio
-    async def test_handle_bad_response_raises_server_http_error_on_timeout(self, rest_impl):
+    async def test__backoff_request_raises_server_http_error_on_timeout(self, rest_impl):
         backoff = mock.MagicMock(
             ratelimits.ExponentialBackOff, __next__=mock.MagicMock(side_effect=asyncio.TimeoutError())
         )
@@ -530,9 +614,7 @@ class TestLowLevelRestfulClient:
         excepted_exception = errors.ServerHTTPError
         with mock.patch.object(errors, "ServerHTTPError", side_effect=mock_exception):
             try:
-                await rest_impl._handle_bad_response(
-                    backoff, "Being spammy", mock_route, "You are being rate limited", 429
-                )
+                await rest_impl._backoff_request(backoff, "Being spammy", mock_route, "You are being rate limited", 429)
             except excepted_exception as e:
                 assert e is mock_exception
                 errors.ServerHTTPError.assert_called_once_with(

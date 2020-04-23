@@ -97,7 +97,7 @@ class UserAgent(metaclass=meta.SingletonMeta):
         """A dict representing device and library info.
 
         This is the object to send to Discord representing device info when
-        IDENTIFYing with the gateway in the format `typing.Dict` [ `str`, `str` ]
+        IDENTIFYing with the gateway in the format `typing.Dict`[`str`, `str`]
         """
         return {
             "$os": self.system_type,

@@ -388,7 +388,7 @@ def get_entry_info_entity(type_: int) -> typing.Type[BaseAuditLogEntryInfo]:
 
     Returns
     -------
-    typing.Type [ BaseAuditLogEntryInfo ]
+    typing.Type[BaseAuditLogEntryInfo]
         The associated options entity. If not implemented then this will be
         `UnrecognisedAuditLogEntryInfo`.
     """
@@ -483,7 +483,7 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
     ----------
     guild_id : str
         The guild ID to look up.
-    request : typing.Callable [ `...`, typing.Coroutine [ typing.Any, typing.Any, typing.Any ] ]
+    request : typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, typing.Any]]
         The session bound function that this iterator should use for making
         Get Guild Audit Log requests.
     user_id : str

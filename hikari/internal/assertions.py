@@ -71,7 +71,7 @@ def assert_in_range(
     value: ValueT, min_inclusive: float, max_inclusive: float, name: typing.Optional[str] = None
 ) -> ValueT:
     """If a value is not in the range [min, max], raise a `ValueError`."""
-    if not (min_inclusive <= value <= max_inclusive):
+    if not min_inclusive <= value <= max_inclusive:
         name = name or "The value"
         raise ValueError(f"{name} must be in the inclusive range of {min_inclusive} and {max_inclusive}")
     return value

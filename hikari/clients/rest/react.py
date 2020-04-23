@@ -33,7 +33,7 @@ from hikari.clients.rest import base
 from hikari.internal import helpers
 
 
-class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=W0223
+class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
     """The REST client component for handling requests to reaction endpoints."""
 
     async def create_reaction(
@@ -46,11 +46,11 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the channel to add this reaction in.
-        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
+        message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to add the reaction in.
-        emoji : typing.Union [ hikari.emojis.Emoji, str ]
+        emoji : typing.Union[hikari.emojis.Emoji, str]
             The emoji to add. This can either be an emoji object or a string
             representation of an emoji. The string representation will be either
             `"name:id"` for custom emojis else it's unicode character(s)  (can
@@ -85,11 +85,11 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the channel to add this reaction in.
-        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
+        message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to add the reaction in.
-        emoji : typing.Union [ hikari.emojis.Emoji, str ]
+        emoji : typing.Union[hikari.emojis.Emoji, str]
             The emoji to add. This can either be an emoji object or a
             string representation of an emoji. The string representation will be
             either `"name:id"` for custom emojis else it's unicode
@@ -122,9 +122,9 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get the message from.
-        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
+        message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to remove all reactions from.
 
         Raises
@@ -152,11 +152,11 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get the message from.
-        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
+        message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to delete the reactions from.
-        emoji : typing.Union [ hikari.emojis.Emoji, str ]
+        emoji : typing.Union[hikari.emojis.Emoji, str]
             The object or string representation of the emoji to delete. The
             string representation will be either `"name:id"` for custom emojis
             else it's unicode character(s) (can be UTF-32).
@@ -194,16 +194,16 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : typing.Union [ hikari.channels.Channel, hikari.bases.Snowflake, int ]
+        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get the message from.
-        message : typing.Union [ hikari.messages.Message, hikari.bases.Snowflake, int ]
+        message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to get the reactions from.
-        emoji : typing.Union [ hikari.emojis.Emoji, str ]
+        emoji : typing.Union[hikari.emojis.Emoji, str]
             The emoji to get. This can either be it's object or the string
             representation of the emoji. The string representation will be
             either `"name:id"` for custom emojis else it's unicode
             character(s) (can be UTF-32).
-        after : typing.Union [ datetime.datetime, hikari.users.User, hikari.bases.Snowflake, int ]
+        after : typing.Union[datetime.datetime, hikari.users.User, hikari.bases.Snowflake, int]
             If specified, a object or ID user. If specified, only users with a
             snowflake that is lexicographically greater than the value will be
             returned.
@@ -219,7 +219,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Returns
         -------
-        typing.AsyncIterator [ hikari.users.User ]
+        typing.AsyncIterator[hikari.users.User]
             An async iterator of user objects.
 
         Raises
