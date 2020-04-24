@@ -167,7 +167,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             webhook_token=webhook_token,
         )
 
-    async def execute_webhook(
+    async def execute_webhook(  # pylint:disable=too-many-locals
         self,
         webhook: bases.Hashable[webhooks.Webhook],
         webhook_token: str,
@@ -245,6 +245,13 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
         """
+        file_resources = []
+        if embeds is not ...:
+            for embed in embeds:
+                file_resources += embed.assets_to_upload
+        if file is not ...:
+            file_resources.append(file)
+
         payload = await self._session.execute_webhook(
             webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
             webhook_token=webhook_token,
@@ -253,7 +260,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             avatar_url=avatar_url,
             tts=tts,
             wait=wait,
-            file=file,
+            files=file_resources if file_resources else ...,
             embeds=[embed.serialize() for embed in embeds] if embeds is not ... else ...,
             allowed_mentions=helpers.generate_allowed_mentions(
                 mentions_everyone=mentions_everyone, user_mentions=user_mentions, role_mentions=role_mentions
