@@ -23,6 +23,7 @@ import pytest
 
 from hikari import colors
 from hikari import embeds
+from hikari import files
 from hikari.internal import conversions
 from tests.hikari import _helpers
 
@@ -269,18 +270,208 @@ class TestEmbed:
             fields=[embeds.EmbedField(name="aField", value="agent69", is_inline=True)],
         )
 
-        assert embed_obj.serialize() == {
-            "title": "Nyaa me pls >////<",
-            "description": "Nyan >////<",
-            "url": "https://a-url-now",
-            "timestamp": "2020-03-22T16:40:39.218000+00:00",
-            "color": 123123,
-            "footer": {"text": "HI"},
-            "image": {"url": "https://not-a-url"},
-            "thumbnail": {"url": "https://url-a-not"},
-            "author": {"name": "a name", "url": "https://a-man"},
-            "fields": [{"name": "aField", "value": "agent69", "inline": True}],
-        }
+        with mock.patch("hikari.embeds.Embed._check_total_length") as mock_check:
+            assert embed_obj.serialize() == {
+                "title": "Nyaa me pls >////<",
+                "description": "Nyan >////<",
+                "url": "https://a-url-now",
+                "timestamp": "2020-03-22T16:40:39.218000+00:00",
+                "color": 123123,
+                "footer": {"text": "HI"},
+                "image": {"url": "https://not-a-url"},
+                "thumbnail": {"url": "https://url-a-not"},
+                "author": {"name": "a name", "url": "https://a-man"},
+                "fields": [{"name": "aField", "value": "agent69", "inline": True}],
+            }
+            mock_check.assert_called_once()
 
     def test_serialize_empty_embed(self):
         assert embeds.Embed().serialize() == {"fields": []}
+
+    def test_assets_to_upload(self):
+        em = embeds.Embed()
+        em._assets_to_upload = ["asset_1", "asset_2"]
+        assert em.assets_to_upload == ["asset_1", "asset_2"]
+
+    @pytest.mark.parametrize(
+        ["input", "expected_output"],
+        [
+            ("https://some.url/to/somewhere.png", ("https://some.url/to/somewhere.png", None)),
+            (files.File("test.png"), ["attachment://test.png", "the inputed file"]),
+            (None, (None, None)),
+        ],
+    )
+    def test__extract_url(self, input, expected_output):
+        if isinstance(input, files.File):
+            expected_output[1] = input
+            expected_output = tuple(expected_output)
+        em = embeds.Embed()
+        assert em._extract_url(input) == expected_output
+
+    def test__maybe_ref_file_obj(self):
+        mock_file_obj = mock.MagicMock(files.File)
+        em = embeds.Embed()
+        em._maybe_ref_file_obj(mock_file_obj)
+        assert em.assets_to_upload == [mock_file_obj]
+
+    def test__maybe_ref_file_obj_when_None(self):
+        em = embeds.Embed()
+        em._maybe_ref_file_obj(None)
+        assert em.assets_to_upload == []
+
+    def test_set_footer_without_optionals(self):
+        em = embeds.Embed()
+        assert em.set_footer(text="test") == em
+        assert em.footer.text == "test"
+        assert em.footer.icon_url is None
+        assert em._assets_to_upload == []
+
+    def test_set_footer_with_optionals_with_image_as_file(self):
+        mock_file_obj = mock.MagicMock(files.File)
+        mock_file_obj.name = "test.png"
+        em = embeds.Embed()
+        assert em.set_footer(text="test", icon=mock_file_obj) == em
+        assert em.footer.text == "test"
+        assert em.footer.icon_url == "attachment://test.png"
+        assert em._assets_to_upload == [mock_file_obj]
+
+    def test_set_image_with_optionals_with_image_as_string(self):
+        em = embeds.Embed()
+        assert em.set_footer(text="test", icon="https://somewhere.url/image.png") == em
+        assert em.footer.text == "test"
+        assert em.footer.icon_url == "https://somewhere.url/image.png"
+        assert em._assets_to_upload == []
+
+    def test_set_image_without_optionals(self):
+        em = embeds.Embed()
+        assert em.set_image() == em
+        assert em.image.url is None
+        assert em._assets_to_upload == []
+
+    def test_set_image_with_optionals_with_image_as_file(self):
+        mock_file_obj = mock.MagicMock(files.File)
+        mock_file_obj.name = "test.png"
+        em = embeds.Embed()
+        assert em.set_image(mock_file_obj) == em
+        assert em.image.url == "attachment://test.png"
+        assert em._assets_to_upload == [mock_file_obj]
+
+    def test_set_image_with_optionals_with_image_as_string(self):
+        em = embeds.Embed()
+        assert em.set_image("https://somewhere.url/image.png") == em
+        assert em.image.url == "https://somewhere.url/image.png"
+        assert em._assets_to_upload == []
+
+    def test_set_thumbnail_without_optionals(self):
+        em = embeds.Embed()
+        assert em.set_thumbnail() == em
+        assert em.thumbnail.url is None
+        assert em._assets_to_upload == []
+
+    def test_set_thumbnail_with_optionals_with_image_as_file(self):
+        mock_file_obj = mock.MagicMock(files.File)
+        mock_file_obj.name = "test.png"
+        em = embeds.Embed()
+        assert em.set_thumbnail(mock_file_obj) == em
+        assert em.thumbnail.url == "attachment://test.png"
+        assert em._assets_to_upload == [mock_file_obj]
+
+    def test_set_thumbnail_with_optionals_with_image_as_string(self):
+        em = embeds.Embed()
+        assert em.set_thumbnail("https://somewhere.url/image.png") == em
+        assert em.thumbnail.url == "https://somewhere.url/image.png"
+        assert em._assets_to_upload == []
+
+    def test_set_author_without_optionals(self):
+        em = embeds.Embed()
+        assert em.set_author() == em
+        assert em.author.name is None
+        assert em.author.url is None
+        assert em.author.icon_url is None
+        assert em._assets_to_upload == []
+
+    def test_set_author_with_optionals_with_icon_as_file(self):
+        mock_file_obj = mock.MagicMock(files.File)
+        mock_file_obj.name = "test.png"
+        em = embeds.Embed()
+        assert em.set_author(name="hikari", url="nekokatt.gitlab.io/hikari", icon=mock_file_obj) == em
+        assert em.author.name == "hikari"
+        assert em.author.url == "nekokatt.gitlab.io/hikari"
+        assert em.author.icon_url == "attachment://test.png"
+        assert em._assets_to_upload == [mock_file_obj]
+
+    def test_set_author_with_optionals_with_icon_as_string(self):
+        em = embeds.Embed()
+        assert (
+            em.set_author(name="hikari", url="nekokatt.gitlab.io/hikari", icon="https://somewhere.url/image.png") == em
+        )
+        assert em.author.name == "hikari"
+        assert em.author.url == "nekokatt.gitlab.io/hikari"
+        assert em.author.icon_url == "https://somewhere.url/image.png"
+        assert em._assets_to_upload == []
+
+    def test_add_field_without_optionals(self):
+        em = embeds.Embed()
+        assert em.add_field(name="test_name", value="test_value") == em
+        assert len(em.fields) == 1
+        assert em.fields[0].name == "test_name"
+        assert em.fields[0].value == "test_value"
+        assert em.fields[0].is_inline is False
+
+    def test_add_field_with_optionals(self):
+        field_obj1 = embeds.EmbedField(name="nothing to see here", value="still nothing")
+        field_obj2 = embeds.EmbedField(name="test_name", value="test_value", is_inline=True)
+        em = embeds.Embed()
+        em.fields = [field_obj1]
+        with mock.patch("hikari.embeds.EmbedField", return_value=field_obj2) as mock_embed_field:
+            assert em.add_field(name="test_name", value="test_value", inline=True, index=0) == em
+            mock_embed_field.assert_called_once_with(name="test_name", value="test_value", is_inline=True)
+            assert em.fields == [field_obj2, field_obj1]
+            assert em.fields[0].name == "test_name"
+            assert em.fields[0].value == "test_value"
+            assert em.fields[0].is_inline is True
+
+    def test_edit_field_without_optionals(self):
+        field_obj = embeds.EmbedField(name="nothing to see here", value="still nothing")
+        em = embeds.Embed()
+        em.fields = [field_obj]
+        assert em.edit_field(0) == em
+        assert em.fields == [field_obj]
+        assert em.fields[0].name == "nothing to see here"
+        assert em.fields[0].value == "still nothing"
+        assert em.fields[0].is_inline is False
+
+    def test_edit_field_with_optionals(self):
+        field_obj = embeds.EmbedField(name="nothing to see here", value="still nothing")
+        em = embeds.Embed()
+        em.fields = [field_obj]
+        assert em.edit_field(0, name="test_name", value="test_value", inline=True) == em
+        assert em.fields == [field_obj]
+        assert em.fields[0].name == "test_name"
+        assert em.fields[0].value == "test_value"
+        assert em.fields[0].is_inline is True
+
+    def test_remove_field(self):
+        mock_field1 = mock.MagicMock(embeds.EmbedField)
+        mock_field2 = mock.MagicMock(embeds.EmbedField)
+        em = embeds.Embed()
+        em.fields = [mock_field1, mock_field2]
+
+        assert em.remove_field(0) == em
+        assert em.fields == [mock_field2]
+
+    @pytest.mark.parametrize(["input", "expected_output"], [(None, 0), ("this is 21 characters", 21)])
+    def test__safe_len(self, input, expected_output):
+        em = embeds.Embed()
+        assert em._safe_len(input) == expected_output
+
+    @_helpers.assert_raises(type_=ValueError)
+    def test__check_total(self):
+        em = embeds.Embed()
+        em.title = "a" * 1000
+        em.description = "b" * 1000
+        em.author = embeds.EmbedAuthor(name="c" * 1000)
+        em.footer = embeds.EmbedFooter(text="d" * 1000)
+        em.fields.append(embeds.EmbedField(name="e" * 1000, value="f" * 1001))
+
+        em._check_total_length()
