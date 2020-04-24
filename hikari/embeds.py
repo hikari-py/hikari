@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe message embeds on Discord."""
+from __future__ import annotations
+
 __all__ = [
     "Embed",
     "EmbedThumbnail",
@@ -35,8 +37,20 @@ import attr
 
 from hikari import bases
 from hikari import colors
+from hikari import files
 from hikari.internal import conversions
 from hikari.internal import marshaller
+from hikari.internal import assertions
+from hikari.internal import more_typing
+
+_MAX_FOOTER_TEXT: typing.Final[int] = 2048
+_MAX_AUTHOR_NAME: typing.Final[int] = 256
+_MAX_FIELD_NAME: typing.Final[int] = 256
+_MAX_FIELD_VALUE: typing.Final[int] = 1024
+_MAX_EMBED_TITLE: typing.Final[int] = 256
+_MAX_EMBED_DESCRIPTION: typing.Final[int] = 2048
+_MAX_EMBED_FIELDS: typing.Final[int] = 25
+_MAX_EMBED_SIZE: typing.Final[int] = 6000
 
 
 @marshaller.marshallable()
@@ -224,10 +238,24 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
     title: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None, default=None)
     """The title of the embed."""
 
+    @title.validator
+    def _title_check(self, attribute, value):  # pylint:disable=unused-argument
+        if value is not None:
+            assertions.assert_that(
+                len(value) <= _MAX_EMBED_TITLE, f"title must not exceed {_MAX_EMBED_TITLE} characters"
+            )
+
     description: typing.Optional[str] = marshaller.attrib(
         deserializer=str, serializer=str, if_undefined=None, default=None
     )
     """The description of the embed."""
+
+    @description.validator
+    def _description_check(self, attribute, value):  # pylint:disable=unused-argument
+        if value is not None:
+            assertions.assert_that(
+                len(value) <= _MAX_EMBED_DESCRIPTION, f"description must not exceed {_MAX_EMBED_DESCRIPTION} characters"
+            )
 
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None, default=None)
     """The URL of the embed."""
@@ -241,7 +269,11 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
     """The timestamp of the embed."""
 
     color: typing.Optional[colors.Color] = marshaller.attrib(
-        deserializer=colors.Color, serializer=int, if_undefined=None, default=None
+        deserializer=colors.Color,
+        serializer=int,
+        converter=attr.converters.optional(colors.Color.of),
+        if_undefined=None,
+        default=None,
     )
     """The colour of this embed's sidebar."""
 
@@ -292,3 +324,256 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
         factory=list,
     )
     """The fields of the embed."""
+
+    _assets_to_upload = marshaller.attrib(if_undefined=list, factory=list, transient=True)
+
+    @property
+    def assets_to_upload(self):
+        """File assets that need to be uploaded when sending the embed."""
+        return self._assets_to_upload
+
+    def _extract_url(self, url) -> typing.Tuple[typing.Optional[str], typing.Optional[files.File]]:
+        if url is None:
+            return None, None
+        if isinstance(url, files.File):
+            return f"attachment://{url.name}", url
+        return url, None
+
+    def _maybe_ref_file_obj(self, file_obj) -> None:
+        if file_obj is not None:
+            self._assets_to_upload.append(file_obj)
+
+    def set_footer(self, *, text: str, icon: typing.Optional[str, files.File] = None) -> Embed:
+        """Set the embed footer.
+
+        Parameters
+        ----------
+        text: str
+            The optional text to set for the footer.
+        icon: typing.Union[str, hikari.files.File], optional
+            The optional `hikari.files.File` or URL to the image to set.
+
+        Returns
+        -------
+        Embed
+            This embed to allow method chaining.
+
+        Raises
+        ------
+        ValueError
+            If `text` exceeds 2048 characters or consists purely of whitespaces.
+        """
+        assertions.assert_that(len(text.strip()) > 0, "footer.text must not be empty or purely of whitespaces")
+        assertions.assert_that(
+            len(text) <= _MAX_FOOTER_TEXT, f"footer.text must not exceed {_MAX_FOOTER_TEXT} characters"
+        )
+        icon, file = self._extract_url(icon)
+        self.footer = EmbedFooter(text=text, icon_url=icon)
+        self._maybe_ref_file_obj(file)
+        return self
+
+    def set_image(self, image: typing.Optional[str, files.File] = None) -> Embed:
+        """Set the embed image.
+
+        Parameters
+        ----------
+        image: typing.Union[str, hikari.files.File], optional
+            The optional `hikari.files.File` or URL to the image to set.
+
+        Returns
+        -------
+        Embed
+            This embed to allow method chaining.
+        """
+        image, file = self._extract_url(image)
+        self.image = EmbedImage(url=image)
+        self._maybe_ref_file_obj(file)
+        return self
+
+    def set_thumbnail(self, image: typing.Optional[str, files.File] = None) -> Embed:
+        """Set the thumbnail image.
+
+        Parameters
+        ----------
+        image: typing.Union[str, hikari.files.File], optional
+            The optional `hikari.files.File` or URL to the image to set.
+
+        Returns
+        -------
+        Embed
+            This embed to allow method chaining.
+        """
+        image, file = self._extract_url(image)
+        self.thumbnail = EmbedThumbnail(url=image)
+        self._maybe_ref_file_obj(file)
+        return self
+
+    def set_author(
+        self,
+        *,
+        name: typing.Optional[str] = None,
+        url: typing.Optional[str] = None,
+        icon: typing.Optional[str, files.File] = None,
+    ) -> Embed:
+        """Set the author of this embed.
+
+        Parameters
+        ----------
+        name: str, optional
+            The optional authors name.
+        url: str, optional
+            The optional URL to make the author text link to.
+        icon: typing.Union[str, hikari.files.File], optional
+            The optional `hikari.files.File` or URL to the icon to set.
+
+        Returns
+        -------
+        Embed
+            This embed to allow method chaining.
+
+        Raises
+        ------
+        ValueError
+            If `name` exceeds 256 characters or consists purely of whitespaces.
+        """
+        assertions.assert_that(
+            name is None or len(name.strip()) > 0, "author.name must not be empty or purely of whitespaces"
+        )
+        assertions.assert_that(
+            name is None or len(name) <= _MAX_AUTHOR_NAME, f"author.name must not exceed {_MAX_AUTHOR_NAME} characters"
+        )
+        icon, icon_file = self._extract_url(icon)
+        self.author = EmbedAuthor(name=name, url=url, icon_url=icon)
+        self._maybe_ref_file_obj(icon_file)
+        return self
+
+    def add_field(self, *, name: str, value: str, inline: bool = False, index: typing.Optional[int] = None) -> Embed:
+        """Add a field to this embed.
+
+        Parameters
+        ----------
+        name: str
+            The fields name (title).
+        value: str
+            The fields value.
+        inline: bool
+            Whether to set the field to behave as if it were inline or not. Defaults to `False`.
+        index: int, optional
+            The optional index to insert the field at. If `None`, it will append to the end.
+
+        Returns
+        -------
+        Embed
+            This embed to allow method chaining.
+
+        Raises
+        ------
+        ValueError
+            If `title` exceeds 256 characters or `value` exceeds 2048 characters; if
+            the `name` or `value` consist purely of whitespace, or be zero characters in size;
+            25 fields are present in the embed.
+        """
+        index = index if index is not None else len(self.fields)
+        assertions.assert_that(
+            len(self.fields) <= _MAX_EMBED_FIELDS and index < _MAX_EMBED_FIELDS,
+            f"no more than {_MAX_EMBED_FIELDS} fields can be stored",
+        )
+        assertions.assert_that(len(name.strip()) > 0, "field.name must not be empty or purely of whitespaces")
+        assertions.assert_that(len(value.strip()) > 0, "field.value must not be empty or purely of whitespaces")
+        assertions.assert_that(
+            len(name.strip()) <= _MAX_FIELD_NAME, f"field.name must not exceed {_MAX_FIELD_NAME} characters"
+        )
+        assertions.assert_that(
+            len(value) <= _MAX_FIELD_VALUE, f"field.value must not exceed {_MAX_FIELD_VALUE} characters"
+        )
+
+        self.fields.insert(index, EmbedField(name=name, value=value, is_inline=inline))
+        return self
+
+    def edit_field(self, index: int, *, name: str = ..., value: str = ..., inline: bool = ...) -> Embed:
+        """Edit a field in this embed at the given index.
+
+        Parameters
+        ----------
+        index: int
+            The index to edit the field at.
+        name: str
+            If specified, the new fields name (title).
+        value: str
+            If specified, the new fields value.
+        inline: bool
+            If specified, the whether to set the field to behave as if it were
+            inline or not.
+
+        Returns
+        -------
+        Embed
+            This embed to allow method chaining.
+
+        Raises
+        ------
+        IndexError
+            If you referred to an index that doesn't exist.
+        ValueError
+            If `title` exceeds 256 characters or `value` exceeds 2048 characters; if
+            the `name` or `value` consist purely of whitespace, or be zero characters in size.
+        """
+        if name is not ...:
+            assertions.assert_that(len(name.strip()) > 0, "field.name must not be empty or purely of whitespaces")
+            assertions.assert_that(
+                len(name.strip()) <= _MAX_FIELD_NAME, f"field.name must not exceed {_MAX_FIELD_NAME} characters"
+            )
+        if value is not ...:
+            assertions.assert_that(len(value.strip()) > 0, "field.value must not be empty or purely of whitespaces")
+            assertions.assert_that(
+                len(value) <= _MAX_FIELD_VALUE, f"field.value must not exceed {_MAX_FIELD_VALUE} characters"
+            )
+
+        field = self.fields[index]
+
+        field.name = name if name is not ... else field.name
+        field.value = value if value is not ... else field.value
+        field.is_inline = inline if value is not ... else field.is_inline
+        return self
+
+    def remove_field(self, index: int) -> Embed:
+        """Remove a field from this embed at the given index.
+
+        Parameters
+        ----------
+        index: int
+            The index of the field to remove.
+
+        Returns
+        -------
+        Embed
+            This embed to allow method chaining.
+
+        Raises
+        ------
+        IndexError
+            If you referred to an index that doesn't exist.
+        """
+        del self.fields[index]
+        return self
+
+    def _safe_len(self, item) -> bool:
+        return len(item) if item is not None else 0
+
+    def _check_total_length(self) -> None:
+        total_size = self._safe_len(self.title)
+        total_size += self._safe_len(self.description)
+        total_size += self._safe_len(self.author.name) if self.author is not None else 0
+        total_size += len(self.footer.text) if self.footer is not None else 0
+
+        for field in self.fields:
+            total_size += len(field.name)
+            total_size += len(field.value)
+
+        assertions.assert_that(
+            total_size <= _MAX_EMBED_SIZE, f"Total characters in an embed can not exceed {_MAX_EMBED_SIZE}"
+        )
+
+    def serialize(self) -> more_typing.JSONObject:
+        self._check_total_length()
+        return super().serialize()

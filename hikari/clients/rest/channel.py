@@ -509,12 +509,18 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
         """
+        file_resources = []
+        if embed is not ...:
+            file_resources += embed.assets_to_upload
+        if files is not ...:
+            file_resources += files
+
         payload = await self._session.create_message(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             content=content,
             nonce=nonce,
             tts=tts,
-            files=files,
+            files=file_resources if file_resources else ...,
             embed=embed.serialize() if embed is not ... else ...,
             allowed_mentions=helpers.generate_allowed_mentions(
                 mentions_everyone=mentions_everyone, user_mentions=user_mentions, role_mentions=role_mentions
