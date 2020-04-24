@@ -2177,6 +2177,8 @@ class TestLowLevelRestfulClient:
         rest_impl._request.return_value = mock_response
         mock_file = mock.MagicMock(files.File)
         mock_file.name = "file.txt"
+        mock_file2 = mock.MagicMock(files.File)
+        mock_file2.name = "file2.txt"
         mock_json = '{"content": "A messages", "username": "agent 42"}'
         dumps.return_value = mock_json
         response = await rest_impl.execute_webhook(
@@ -2187,7 +2189,7 @@ class TestLowLevelRestfulClient:
             avatar_url="https://localhost.bump",
             tts=True,
             wait=True,
-            file=mock_file,
+            files=[mock_file, mock_file2],
             embeds=[{"type": "rich", "description": "A DESCRIPTION"}],
             allowed_mentions={"users": ["123"], "roles": ["456"]},
         )
@@ -2206,11 +2208,12 @@ class TestLowLevelRestfulClient:
             }
         )
 
-        assert mock_form.add_field.call_count == 2
+        assert mock_form.add_field.call_count == 3
         mock_form.add_field.assert_has_calls(
             (
                 mock.call("payload_json", mock_json, content_type="application/json"),
-                mock.call("file", mock_file, filename="file.txt", content_type="application/octet-stream"),
+                mock.call("file0", mock_file, filename="file.txt", content_type="application/octet-stream"),
+                mock.call("file1", mock_file2, filename="file2.txt", content_type="application/octet-stream"),
             ),
             any_order=True,
         )

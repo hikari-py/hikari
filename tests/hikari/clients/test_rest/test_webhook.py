@@ -154,7 +154,7 @@ class TestRESTUserLogic:
             avatar_url=...,
             tts=...,
             wait=False,
-            file=...,
+            files=...,
             embeds=...,
             allowed_mentions=mock_allowed_mentions_payload,
         )
@@ -165,9 +165,11 @@ class TestRESTUserLogic:
         rest_webhook_logic_impl._session.execute_webhook.return_value = ...
         mock_allowed_mentions_payload = {"parse": ["everyone", "users", "roles"]}
         mock_embed_payload = {"description": "424242"}
-        mock_embed_obj = mock.MagicMock(embeds.Embed)
-        mock_embed_obj.serialize = mock.MagicMock(return_value=mock_embed_payload)
         mock_file_obj = mock.MagicMock(files.File)
+        mock_embed_obj = mock.MagicMock(embeds.Embed)
+        mock_embed_obj.assets_to_upload = [mock_file_obj]
+        mock_embed_obj.serialize = mock.MagicMock(return_value=mock_embed_payload)
+        mock_file_obj2 = mock.MagicMock(files.File)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(messages.Message, "deserialize"))
         stack.enter_context(
@@ -182,7 +184,7 @@ class TestRESTUserLogic:
                 avatar_url="httttttt/L//",
                 tts=True,
                 wait=True,
-                file=mock_file_obj,
+                file=mock_file_obj2,
                 embeds=[mock_embed_obj],
                 mentions_everyone=False,
                 role_mentions=False,
@@ -199,7 +201,7 @@ class TestRESTUserLogic:
             avatar_url="httttttt/L//",
             tts=True,
             wait=True,
-            file=mock_file_obj,
+            files=[mock_file_obj, mock_file_obj2],
             embeds=[mock_embed_payload],
             allowed_mentions=mock_allowed_mentions_payload,
         )

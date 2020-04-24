@@ -3091,7 +3091,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             route = routes.WEBHOOK_WITH_TOKEN.compile(self.DELETE, webhook_id=webhook_id, webhook_token=webhook_token)
         await self._request(route, suppress_authorization_header=webhook_token is not ...)
 
-    async def execute_webhook(
+    async def execute_webhook(  # pylint:disable=too-many-locals
         self,
         webhook_id: str,
         webhook_token: str,
@@ -3101,7 +3101,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         avatar_url: str = ...,
         tts: bool = ...,
         wait: bool = ...,
-        file: _files.File = ...,
+        files: typing.Sequence[_files.File] = ...,
         embeds: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
         allowed_mentions: typing.Dict[str, typing.Any] = ...,
     ) -> typing.Optional[typing.Dict[str, typing.Any]]:
@@ -3126,9 +3126,9 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         wait : bool
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
-        file : hikari.files.File
-            An optional file object to upload.
-        embeds : typing.Sequence [typing.Dict[str, typing.Any]]
+        files : typing.Sequence[hikari.files.File]
+            If specified, the optional file objects to upload.
+        embeds : typing.Sequence[typing.Dict[str, typing.Any]]
             If specified, the sequence of embed objects that will be sent
             with this message.
         allowed_mentions : typing.Dict[str, typing.Any]
@@ -3170,8 +3170,11 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
 
-        if file is not ...:
-            form.add_field("file", file, filename=file.name, content_type="application/octet-stream")
+        if files is ...:
+            files = more_collections.EMPTY_SEQUENCE
+
+        for i, file in enumerate(files):
+            form.add_field(f"file{i}", file, filename=file.name, content_type="application/octet-stream")
 
         query = {}
         conversions.put_if_specified(query, "wait", wait, str)

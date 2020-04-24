@@ -150,8 +150,8 @@ class TestColor:
             ([1.0, 0.0196078431372549, 0.10196078431372549], colors.Color(0xFF051A)),
         ],
     )
-    def test_Color__cls_getattr___happy_path(self, input, expected_result):
-        result = colors.Color[input]
+    def test_Color_of_happy_path(self, input, expected_result):
+        result = colors.Color.of(input)
         assert result == expected_result, f"{input}"
         result.__repr__()
 
@@ -174,13 +174,17 @@ class TestColor:
             b"1ff1ff",
         ],
     )
-    def test_Color__cls_getattr___sad_path(self, input):
+    def test_Color_of_sad_path(self, input):
         try:
-            result = colors.Color[input]
+            result = colors.Color.of(input)
             assert False, f"Expected ValueError, got {result} returned safely instead"
         except ValueError:
             pass
 
+    def test_Color_of_with_multiple_args(self):
+        result = colors.Color.of(0xFF, 0x5, 0x1A)
+        assert result == colors.Color(0xFF051A)
+
     @pytest.mark.model
     def test_Color___repr__(self):
-        assert repr(colors.Color["#1a2b3c"]) == "Color(r=0x1a, g=0x2b, b=0x3c)"
+        assert repr(colors.Color.of("#1a2b3c")) == "Color(r=0x1a, g=0x2b, b=0x3c)"
