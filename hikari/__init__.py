@@ -43,6 +43,7 @@ from hikari import webhooks
 
 from hikari._about import __author__
 from hikari._about import __copyright__
+from hikari._about import __docs__
 from hikari._about import __email__
 from hikari._about import __license__
 from hikari._about import __url__
