@@ -6,7 +6,7 @@ level may be! :-)
 
 --- 
 
-# hikari.py 
+# hikari
 
 An opinionated Discord API for Python 3 and asyncio. Built on good intentions 
 and the hope that it will be extendable and reusable, rather than an obstacle.
@@ -14,10 +14,13 @@ and the hope that it will be extendable and reusable, rather than an obstacle.
 ```py
 import hikari
 
-bot = hikari.StatelessBot(config=hikari.BotConfig(token="..."))
+bot = hikari.StatelessBot(token="...")
 
-@bot.on()
-async def ping(event: hikari.MessageCreateEvent) -> None:
+
+@bot.on(hikari.MessageCreateEvent)
+async def ping(event):
+    # If a non-bot user sends a message "hk.ping", respond with "Pong!"
+
     if not event.author.is_bot and event.content.startswith("hk.ping"):
         await bot.rest.create_message(event.channel_id, content="Pong!")
 
