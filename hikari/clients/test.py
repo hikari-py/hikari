@@ -82,29 +82,27 @@ def run_gateway(compression, color, debug, intents, logger, shards, token, verif
     logging.basicConfig(level=logger, format=_COLOR_FORMAT if color else _REGULAR_FORMAT, stream=sys.stdout)
 
     client = hikari.StatelessBot(
-        hikari.BotConfig(
-            token=token,
-            gateway_version=version,
-            debug=debug,
-            gateway_use_compression=compression,
-            intents=intents,
-            verify_ssl=verify_ssl,
-            shard_count=shards,
-            initial_activity=hikari.Activity(name="people mention me", type=hikari.ActivityType.LISTENING,),
-        )
+        token=token,
+        gateway_version=version,
+        debug=debug,
+        gateway_use_compression=compression,
+        intents=intents,
+        verify_ssl=verify_ssl,
+        shard_count=shards,
+        initial_activity=hikari.Activity(name="people mention me", type=hikari.ActivityType.LISTENING,),
     )
 
     bot_id = 0
     bot_avatar_url = "about:blank"
     startup_time = 0
 
-    @client.on()
-    async def on_start(_: hikari.StartingEvent):
+    @client.on(hikari.StartingEvent)
+    async def on_start(_):
         nonlocal startup_time
         startup_time = time.perf_counter()
 
-    @client.on()
-    async def on_ready(event: hikari.ReadyEvent) -> None:
+    @client.on(hikari.ReadyEvent)
+    async def on_ready(event):
         nonlocal bot_id, bot_avatar_url
         bot_id = event.my_user.id
         bot_avatar_url = event.my_user.avatar_url
@@ -114,8 +112,8 @@ def run_gateway(compression, color, debug, intents, logger, shards, token, verif
             return "never"
         return datetime.timedelta(seconds=time.perf_counter() - epoch)
 
-    @client.on()
-    async def on_message(event: hikari.MessageCreateEvent) -> None:
+    @client.on(hikari.MessageCreateEvent)
+    async def on_message(event):
         if not event.author.is_bot and re.match(f"^<@!?{bot_id}>$", event.content):
             start = time.perf_counter()
             message = await client.rest.create_message(event.channel_id, content="Pong!")
@@ -179,7 +177,15 @@ def run_gateway(compression, color, debug, intents, logger, shards, token, verif
                 color=hikari.Color["#F660AB"],
             )
 
-            await client.rest.update_message(message, message.channel_id, content="Pong!", embed=embed)
+            content = (
+                "Pong!\n"
+                "\n"
+                f"Documentation: <{hikari.__docs__}>\n"
+                f"Repository: <{hikari.__url__}>\n"
+                f"PyPI: <https://pypi.org/project/hikari>\n"
+            )
+
+            await client.rest.update_message(message, message.channel_id, content=content, embed=embed)
 
     client.run()
 

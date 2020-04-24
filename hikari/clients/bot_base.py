@@ -35,6 +35,7 @@ from hikari.clients import configs
 from hikari.clients import rest
 from hikari.clients import runnable
 from hikari.clients import shards
+from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.internal import more_typing
@@ -78,6 +79,21 @@ class BotBase(
     ----------
     config : hikari.clients.configs.BotConfig
         The config object to use.
+    **kwargs
+        Parameters to use to create a hikari.clients.configs.BotConfig from,
+        instead of passing a raw config object.
+
+    Examples
+    --------
+    .. code-block:: python
+
+        config = hikari.BotConfig(token="...", ...)
+        bot = hikari.StatelessBot(config=config)
+
+    .. code-block:: python
+
+        bot = hikari.StatelessBot(token="...", ...)
+
     """
 
     _config: BotConfigT
@@ -101,8 +117,14 @@ class BotBase(
     These will be created once the bot has started execution.
     """
 
-    def __init__(self, config: configs.BotConfig) -> None:
+    def __init__(self, *, config: typing.Optional[configs.BotConfig] = None, **kwargs: typing.Any) -> None:
+        assertions.assert_that(
+            bool(config) ^ bool(kwargs), "You must specify a config object or kwargs; not both.", TypeError,
+        )
+        config = configs.BotConfig(**kwargs) if config is None else config
+
         super().__init__(logging.getLogger(f"hikari.{type(self).__qualname__}"))
+
         self._config = config
         self.event_dispatcher = self._create_event_dispatcher(config)
         self.event_manager = self._create_event_manager(config, self.event_dispatcher)
