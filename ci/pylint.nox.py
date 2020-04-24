@@ -23,10 +23,7 @@ from ci import config
 from ci import nox
 
 
-FLAGS = [
-    "pylint", config.MAIN_PACKAGE,
-    "--rcfile", config.PYLINT_INI
-]
+FLAGS = ["pylint", config.MAIN_PACKAGE, "--rcfile", config.PYLINT_INI]
 
 SUCCESS_CODES = list(range(0, 256))
 
@@ -35,10 +32,7 @@ SUCCESS_CODES = list(range(0, 256))
 def pylint(session: nox.Session) -> None:
     """Run pylint against the code base and report any code smells or issues."""
     session.install(
-        "-r", config.REQUIREMENTS,
-        "-r", config.DEV_REQUIREMENTS,
-        "pylint",
-        "pylint-junit==0.2.0",
+        "-r", config.REQUIREMENTS, "-r", config.DEV_REQUIREMENTS, "pylint", "pylint-junit==0.2.0",
     )
 
     # Mapping concurrently halves the execution time (unless you have less than
@@ -48,17 +42,9 @@ def pylint(session: nox.Session) -> None:
 
 
 def pylint_text(session: nox.Session) -> None:
-    session.run(
-        *FLAGS,
-        success_codes=SUCCESS_CODES
-    )
+    session.run(*FLAGS, success_codes=SUCCESS_CODES)
 
 
 def pylint_junit(session: nox.Session) -> None:
     with open(config.PYLINT_JUNIT_OUTPUT_PATH, "w") as fp:
-        session.run(
-            *FLAGS,
-            "--output-format", "pylint_junit/JUnitReporter",
-            stdout=fp,
-            success_codes=SUCCESS_CODES
-        )
+        session.run(*FLAGS, "--output-format", "pylint_junit.JUnitReporter", stdout=fp, success_codes=SUCCESS_CODES)
