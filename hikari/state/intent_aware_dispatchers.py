@@ -23,8 +23,9 @@ import logging
 import typing
 
 from hikari import errors
-from hikari import events
 from hikari import intents
+from hikari.events import bases
+from hikari.events import other
 from hikari.internal import assertions
 from hikari.internal import helpers
 from hikari.internal import more_asyncio
@@ -77,7 +78,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         self._waiters.clear()
 
     def add_listener(
-        self, event_type: typing.Type[events.HikariEvent], callback: dispatchers.EventCallbackT, **kwargs
+        self, event_type: typing.Type[bases.HikariEvent], callback: dispatchers.EventCallbackT, **kwargs
     ) -> None:
         """Register a new event callback to a given event name.
 
@@ -104,10 +105,10 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         )
 
         assertions.assert_that(
-            issubclass(event_type, events.HikariEvent), "Events must subclass hikari.events.HikariEvent", TypeError
+            issubclass(event_type, bases.HikariEvent), "Events must subclass hikari.events.HikariEvent", TypeError
         )
 
-        required_intents = events.get_required_intents_for(event_type)
+        required_intents = bases.get_required_intents_for(event_type)
         enabled_intents = self._enabled_intents if self._enabled_intents is not None else 0
 
         any_intent_match = any(enabled_intents & i == i for i in required_intents)
@@ -156,7 +157,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
     # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
     # confusing telepathy comments to the user.
     # Additionally, this MUST NOT BE A COROUTINE ITSELF. THIS IS NOT TYPESAFE!
-    def dispatch_event(self, event: events.HikariEvent):
+    def dispatch_event(self, event: bases.HikariEvent):
         """Dispatch a given event to all listeners and waiters that are applicable.
 
         Parameters
@@ -180,9 +181,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
 
         for base_event_type in this_event_type.mro():
             for callback in self._listeners.get(base_event_type, more_collections.EMPTY_COLLECTION):
-                task = asyncio.create_task(callback(event))
-                task.add_done_callback(self._handle_task_error(event, callback))
-                callback_futures.append(task)
+                callback_futures.append(asyncio.create_task(self._failsafe_invoke(event, callback)))
 
             if base_event_type not in self._waiters:
                 continue
@@ -194,15 +193,25 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
             subtype_waiters = self._waiters.get(base_event_type, more_collections.EMPTY_DICT)
 
             for future, predicate in subtype_waiters.items():
+                # We execute async predicates differently to sync, because we hope most of the time
+                # these checks will be synchronous only, as these will perform significantly faster.
+                # I preferred execution speed over terseness here.
                 if asyncio.iscoroutinefunction(predicate):
                     # Reawaken it later once the predicate is complete. We can await this with the
                     # other dispatchers.
-                    callback_futures.append(asyncio.create_task(self._async_waiter_reawaken(future, predicate, event)))
-                elif predicate(event):
-                    future.set_result(event)
-                    # We have to append this to a list, we can't mutate the dict while we iterate over it...
-                    futures_to_remove.append(future)
+                    check_task = asyncio.create_task(self._async_check(future, predicate, event, base_event_type))
+                    callback_futures.append(check_task)
+                else:
+                    try:
+                        if predicate(event):
+                            # We have to append this to a list, we can't mutate the dict while we iterate over it...
+                            future.set_result(event)
+                            futures_to_remove.append(future)
+                    except Exception as ex:  # pylint:disable=broad-except
+                        future.set_exception(ex)
+                        futures_to_remove.append(future)
 
+            # We do this after to prevent changes to the dict while iterating causing exceptions.
             for future in futures_to_remove:
                 # Off to the garbage collector you go.
                 subtype_waiters.pop(future)
@@ -216,25 +225,29 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         # Stop intellij shenanigans with broken type hints that ruin my day.
         return typing.cast(typing.Any, result)
 
-    async def _async_waiter_reawaken(self, future, predicate, event):
+    async def _async_check(self, future, predicate, event, event_type):
         # If the predicate returns true, complete the future and pop it from the waiters.
         # By this point we shouldn't be iterating over it anymore, so this is concurrent-modification
         # safe on a single event loop.
-        result = await predicate(event)
-        if result:
-            future.set_result(event)
-            self._waiters.pop(future)
+        try:
+            if await predicate(event):
+                future.set_result(event)
+                self._waiters[event_type].pop(future)
+        except Exception as ex:  # pylint:disable=broad-except
+            future.set_exception(ex)
+            self._waiters[event_type].pop(future)
 
-    def _handle_task_error(self, event, callback):
-        # If an error was raised, handle it elegantly.
-        def handler(result):
-            if result.exception():
-                self.handle_exception(result.exception(), event, callback)
-
-        return handler
+    async def _failsafe_invoke(self, event, callback):
+        try:
+            await callback(event)
+        except Exception as ex:  # pylint:disable=broad-except
+            self.handle_exception(ex, event, callback)
 
     def handle_exception(
-        self, exception: Exception, event: events.HikariEvent, callback: typing.Callable[..., typing.Awaitable[None]]
+        self,
+        exception: Exception,
+        event: bases.HikariEvent,
+        callback: typing.Callable[..., typing.Union[typing.Awaitable[None]]],
     ) -> None:
         """Handle raised exception.
 
@@ -254,14 +267,15 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         event: :obj:`~hikari.events.HikariEvent`
             The event that was being dispatched.
         callback
-            The callback that threw the exception.
+            The callback that threw the exception. This may be an event
+            callback, or a `wait_for` predicate that threw an exception.
         """
         # Do not recurse if a dodgy exception handler is added.
-        if not isinstance(event, events.ExceptionEvent):
+        if not bases.is_no_catch_event(event):
             self.logger.exception(
                 'Exception occurred in handler for event "%s"', type(event).__name__, exc_info=exception
             )
-            self.dispatch_event(events.ExceptionEvent(exception=exception, event=event, callback=callback))
+            self.dispatch_event(other.ExceptionEvent(exception=exception, event=event, callback=callback))
         else:
             self.logger.exception(
                 'Exception occurred in handler for event "%s", and the exception has been dropped',

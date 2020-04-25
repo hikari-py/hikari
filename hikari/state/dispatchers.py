@@ -26,7 +26,7 @@ import abc
 import inspect
 import typing
 
-from hikari import events
+from hikari.events import bases
 from hikari.internal import conversions
 
 # Prevents a circular reference that prevents importing correctly.
@@ -121,7 +121,9 @@ class EventDispatcher(abc.ABC):
             lookup, but can be implemented this way optionally if documented.
         """
 
-    def on(self, event_type: typing.Optional[typing.Type[EventT]] = None) -> typing.Callable[[EventCallbackT], EventCallbackT]:
+    def on(
+        self, event_type: typing.Optional[typing.Type[EventT]] = None  # pylint:disable=unused-argument
+    ) -> typing.Callable[[EventCallbackT], EventCallbackT]:
         """Return a decorator equivalent to invoking `EventDispatcher.add_listener`.
 
         Parameters
@@ -157,15 +159,15 @@ class EventDispatcher(abc.ABC):
                 signature = inspect.signature(callback)
                 parameters = list(signature.parameters.values())
 
-                if len(parameters) == 2 and parameters[0].annotation is inspect.Parameter.empty:
-                    event_param = parameters[1]
-                elif len(parameters) == 1:
+                # Seems that the `self` gets unbound for methods automatically by
+                # inspect.signature. That makes my life two lines easier.
+                if len(parameters) == 1:
                     event_param = parameters[0]
-
-                    if event_param.annotation is inspect.Parameter.empty:
-                        raise TypeError(f"No type hint given for parameter: async def {callback}({signature}): ...")
                 else:
                     raise TypeError(f"Invalid signature for event: async def {callback.__name__}({signature}): ...")
+
+                if event_param.annotation is inspect.Parameter.empty:
+                    raise AttributeError(f"No param type hint given for: async def {callback}({signature}): ...")
 
                 frame, *_, = inspect.stack(2)[0]
 
@@ -173,9 +175,6 @@ class EventDispatcher(abc.ABC):
                     event_type = conversions.snoop_typehint_from_scope(frame, event_param.annotation)
                 finally:
                     del frame, _
-
-            if not issubclass(event_type, events.HikariEvent):
-                raise TypeError(f"Event type should subclass hikari.events.HikariEvent (received {event_type.mro()})")
 
             return self.add_listener(event_type, callback, _stack_level=3)
 

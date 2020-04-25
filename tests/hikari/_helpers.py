@@ -481,3 +481,11 @@ def patch_marshal_attr(target_entity, field_name, *args, deserializer=None, seri
     else:
         raise LookupError(f"Failed to find a `{field_name}` field on `{target_entity.__name__}`.")
     return mock.patch.object(target, target_type, *args, **kwargs)
+
+
+def min_python_version(*mmm):
+    return pytest.mark.skipif(f"__import__('sys').version_info < {mmm!r}", reason="Unsupported for your Python version")
+
+
+def max_python_version(*mmm):
+    return pytest.mark.skipif(f"__import__('sys').version_info > {mmm!r}", reason="Unsupported for your Python version")

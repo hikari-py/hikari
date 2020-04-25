@@ -43,7 +43,7 @@
 ###
 ### Coverage is exported as an artifact with a name matching the job name.
 ###
-"test 3.8.0":
+"test:3.8.0":
   extends:
     - .cpython380
     - .nox-test
@@ -53,7 +53,7 @@
 ###
 ### Coverage is exported as an artifact with a name matching the job name.
 ###
-"test 3.8.1":
+"test:3.8.1":
   extends:
     - .cpython381
     - .nox-test
@@ -63,7 +63,7 @@
 ###
 ### Coverage is exported as an artifact with a name matching the job name.
 ###
-"test 3.8.2":
+"test:3.8.2":
   extends:
     - .cpython382
     - .nox-test
@@ -73,7 +73,7 @@
 ###
 ### Coverage is exported as an artifact with a name matching the job name.
 ###
-"test 3.9.0":
+"test:3.9.0":
   extends:
     - .cpython390
     - .nox-test

@@ -66,13 +66,20 @@
         && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" \
         && exit 0
       mkdir public || true
+  dependencies:
+    - test:3.8.0
+    - test:3.8.1
+    - test:3.8.2
+    - test:3.9.0
+    - pylint
+    - coverage:results
   extends: .cpython-stable
   stage: report
 
 ###
 ### Generate pages for master branch and export them.
 ###
-"master pages":
+"pages:master":
   allow_failure: true       # FIXME: remove once in master.
   extends: .generate-pages
   variables:
@@ -81,7 +88,7 @@
 ###
 ### Generate pages for staging branch and export them.
 ###
-"staging pages":
+"pages:staging":
   extends: .generate-pages
   variables:
     TARGET_BRANCH: staging
@@ -89,7 +96,7 @@
 ###
 ### Generate pages for the current branch as a test.
 ###
-"dry-run pages":
+"pages:test":
   extends:
     - .pages
     - .reactive-job
@@ -107,7 +114,7 @@
   only:
     - branches
 
-"dry-run pages with visual feedback":
+"pages:test:feedback":
   extends:
     # DO NOT EXTEND ANYTHING WITH AN only/except BLOCK!
     - .pages
