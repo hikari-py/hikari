@@ -39,10 +39,10 @@ import typing
 import aiohttp
 
 from hikari import errors
-from hikari import events
 from hikari import gateway_entities
 from hikari import guilds
 from hikari import intents as _intents
+from hikari.events import other
 from hikari.clients import configs
 from hikari.clients import runnable
 from hikari.net import codes
@@ -418,7 +418,7 @@ class ShardClientImpl(ShardClient):
             self.logger.debug("stopping shard")
 
             if self._dispatcher is not None:
-                await self._dispatcher.dispatch_event(events.StoppingEvent())
+                await self._dispatcher.dispatch_event(other.StoppingEvent())
 
             await self._connection.close()
 
@@ -426,7 +426,7 @@ class ShardClientImpl(ShardClient):
                 await self._task
 
             if self._dispatcher is not None:
-                await self._dispatcher.dispatch_event(events.StoppedEvent())
+                await self._dispatcher.dispatch_event(other.StoppedEvent())
 
     async def _keep_alive(self):  # pylint: disable=too-many-branches
         back_off = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
@@ -434,7 +434,7 @@ class ShardClientImpl(ShardClient):
         do_not_back_off = True
 
         if self._dispatcher is not None:
-            await self._dispatcher.dispatch_event(events.StartingEvent())
+            await self._dispatcher.dispatch_event(other.StartingEvent())
 
         while True:
             try:
@@ -454,7 +454,7 @@ class ShardClientImpl(ShardClient):
 
                 if self._dispatcher is not None and self.reconnect_count == 0:
                     # Only dispatch this on initial connect, not on reconnect.
-                    await self._dispatcher.dispatch_event(events.StartedEvent())
+                    await self._dispatcher.dispatch_event(other.StartedEvent())
 
                 await connect_task
                 self.logger.critical("shut down silently! this shouldn't happen!")

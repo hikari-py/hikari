@@ -21,20 +21,21 @@ import asyncio
 import mock
 import pytest
 
-from hikari import events
+from hikari.events import bases
+from hikari.events import other
 from hikari.state import dispatchers
 from tests.hikari import _helpers
 
 
-class StubEvent1(events.HikariEvent):
+class StubEvent1(bases.HikariEvent):
     ...
 
 
-class StubEvent2(events.HikariEvent):
+class StubEvent2(bases.HikariEvent):
     ...
 
 
-class StubEvent3(events.HikariEvent):
+class StubEvent3(bases.HikariEvent):
     ...
 
 
@@ -333,12 +334,12 @@ class TestEventDispatcherImpl:
 
         dispatcher_inst.handle_exception(ex, event, callback)
 
-        expected_ctx = events.ExceptionEvent(ex, event, callback)
+        expected_ctx = other.ExceptionEvent(ex, event, callback)
         dispatcher_inst.dispatch_event.assert_called_once_with(expected_ctx)
 
     def test_handle_exception_will_not_recursively_invoke_exception_handler_event(self, dispatcher_inst):
         dispatcher_inst.dispatch_event = mock.MagicMock()
-        dispatcher_inst.handle_exception(RuntimeError(), events.ExceptionEvent(..., ..., ...), mock.AsyncMock())
+        dispatcher_inst.handle_exception(RuntimeError(), other.ExceptionEvent(..., ..., ...), mock.AsyncMock())
         dispatcher_inst.dispatch_event.assert_not_called()
 
     # TODO: test add, on, remove, etc
