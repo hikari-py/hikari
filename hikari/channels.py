@@ -203,8 +203,14 @@ class GroupDMChannel(DMChannel):
 class GuildChannel(Channel):
     """The base for anything that is a guild channel."""
 
-    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
-    """The ID of the guild the channel belongs to."""
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+    )
+    """The ID of the guild the channel belongs to.
+    
+    This will be `None` when received over the gateway in certain events (e.g.
+    Guild Create).
+    """
 
     position: int = marshaller.attrib(deserializer=int)
     """The sorting position of the channel."""
@@ -217,10 +223,18 @@ class GuildChannel(Channel):
     name: str = marshaller.attrib(deserializer=str)
     """The name of the channel."""
 
-    is_nsfw: bool = marshaller.attrib(raw_name="nsfw", deserializer=bool)
-    """Whether the channel is marked as NSFW."""
+    is_nsfw: typing.Optional[bool] = marshaller.attrib(
+        raw_name="nsfw", deserializer=bool, if_undefined=None, default=None
+    )
+    """Whether the channel is marked as NSFW.
 
-    parent_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize, if_none=None)
+    This will be `None` when received over the gateway in certain events (e.g
+    Guild Create).
+    """
+
+    parent_id: bases.Snowflake = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_none=None, if_undefined=None
+    )
     """The ID of the parent category the channel belongs to."""
 
 
