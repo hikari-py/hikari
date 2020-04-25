@@ -642,13 +642,26 @@ class GuildMemberPresence(bases.HikariEntity, marshaller.Deserializable):
         changed in an event.
     """
 
-    role_ids: typing.Sequence[bases.Snowflake] = marshaller.attrib(
-        raw_name="roles", deserializer=lambda roles: [bases.Snowflake.deserialize(rid) for rid in roles],
+    role_ids: typing.Optional[typing.Sequence[bases.Snowflake]] = marshaller.attrib(
+        raw_name="roles",
+        deserializer=lambda roles: [bases.Snowflake.deserialize(rid) for rid in roles],
+        if_undefined=None,
+        default=None,
     )
-    """The ids of the user's current roles in the guild this presence belongs to."""
+    """The ids of the user's current roles in the guild this presence belongs to.
 
-    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
-    """The ID of the guild this presence belongs to."""
+    !!! info
+        If this is `None` then this information wasn't provided and is unknown.
+    """
+
+    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+    )
+    """The ID of the guild this presence belongs to.
+
+    This will be `None` when received in an array of members attached to a guild
+    object (e.g on Guild Create).
+    """
 
     visible_status: PresenceStatus = marshaller.attrib(raw_name="status", deserializer=PresenceStatus)
     """This user's current status being displayed by the client."""
@@ -1234,7 +1247,7 @@ class Guild(PartialGuild):
     """The premium tier for this guild."""
 
     premium_subscription_count: typing.Optional[int] = marshaller.attrib(
-        deserializer=int, if_undefined=None, default=None
+        deserializer=int, if_undefined=None, if_none=None, default=None
     )
     """The number of nitro boosts that the server currently has.
 

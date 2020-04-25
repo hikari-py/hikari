@@ -55,7 +55,7 @@ from hikari.events import bases
 @bases.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildCreateEvent(bases.HikariEvent, marshaller.Deserializable):
+class GuildCreateEvent(bases.HikariEvent, guilds.Guild):
     """Used to represent Guild Create gateway events.
 
     Will be received when the bot joins a guild, and when a guild becomes
@@ -66,7 +66,7 @@ class GuildCreateEvent(bases.HikariEvent, marshaller.Deserializable):
 @bases.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildUpdateEvent(bases.HikariEvent, marshaller.Deserializable):
+class GuildUpdateEvent(bases.HikariEvent, guilds.Guild):
     """Used to represent Guild Update gateway events."""
 
 
