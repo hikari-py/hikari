@@ -45,7 +45,7 @@ def warning(message: str, category: typing.Type[Warning], stack_level: int = 1) 
         How many stack frames to go back to find the user's invocation.
 
     """
-    warnings.warn("\n" + textwrap.indent(message, " " * 6), category, stacklevel=stack_level + 1)
+    warnings.warn("\n\n" + textwrap.indent(message, " " * 2), category, stacklevel=stack_level + 1)
 
 
 def generate_allowed_mentions(

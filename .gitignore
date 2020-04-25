@@ -47,3 +47,6 @@ poetry.lock
 
 # Docker secrets
 credentials.env
+
+# We don't use this usually, but regardless...
+.mypy_cache/

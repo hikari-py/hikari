@@ -27,7 +27,7 @@ include:
 ### format so that GitLab can display it on the badge, on the pipeline stats,
 ### and on any active merge requests.
 ###
-"coverage results":
+"coverage:results":
   coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
   extends:
     - .cpython-stable
@@ -38,7 +38,7 @@ include:
       set -x
       pip install nox
       nox -s coalesce-coverage
-  stage: report
+  stage: lint
 
 ###
 ### GitLab's dependency scanning template.
@@ -94,8 +94,8 @@ pages:
     paths:
       - public/
   dependencies:
-    - master pages
-    - staging pages
+    - pages:master
+    - pages:staging
   extends: .busybox-musl
   only:
     - master

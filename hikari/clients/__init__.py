@@ -18,12 +18,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The models API for interacting with Discord directly."""
 
-from hikari.clients import bot_base
-from hikari.clients import configs
-from hikari.clients import rest
-from hikari.clients import runnable
-from hikari.clients import stateless
-from hikari.clients import shards
 from hikari.clients.bot_base import *
 from hikari.clients.configs import *
 from hikari.clients.rest import *

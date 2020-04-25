@@ -51,9 +51,9 @@ BotConfigT = typing.TypeVar("BotConfigT", bound=configs.BotConfig)
 
 
 class BotBase(
-    typing.Generic[ShardClientT, RESTClientT, EventDispatcherT, EventManagerT, BotConfigT],
     runnable.RunnableClient,
     dispatchers.EventDispatcher,
+    typing.Generic[ShardClientT, RESTClientT, EventDispatcherT, EventManagerT, BotConfigT],
     abc.ABC,
 ):
     """An abstract base class for a bot implementation.
@@ -182,6 +182,18 @@ class BotBase(
         return self._config.gateway_version
 
     async def start(self):
+        """Start the bot.
+
+        This will query Discord for the optimal number of shards to use if
+        you did not provide an explicit sharding configuration.
+
+        Each required shard is then started up incrementally at a rate that
+        reduces the chance of `INVALID_SESSION` spam occurring. After each
+        shard websocket has fired the `READY` event, this coroutine will return.
+
+        After invoking this coroutine, you should keep the application alive
+        by awaiting the `join` coroutine in this class.
+        """
         if self.shards:
             raise RuntimeError("Bot is already running.")
 
@@ -226,6 +238,10 @@ class BotBase(
         if self.event_manager is not None:
             await self.dispatch_event(other.StartedEvent())
 
+    async def join(self) -> None:
+        """Wait for each shard to terminate, then return."""
+        await asyncio.gather(*(shard_obj.join() for shard_obj in self.shards.values()))
+
     async def close(self) -> None:
         try:
             if self.shards:
@@ -240,9 +256,6 @@ class BotBase(
                     await self.dispatch_event(other.StoppedEvent())
         finally:
             await self.rest.close()
-
-    async def join(self) -> None:
-        await asyncio.gather(*(shard_obj.join() for shard_obj in self.shards.values()))
 
     def add_listener(
         self, event_type: typing.Type[dispatchers.EventT], callback: dispatchers.EventCallbackT, **kwargs
