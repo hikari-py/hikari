@@ -207,7 +207,7 @@ class GuildChannel(Channel):
         deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
     )
     """The ID of the guild the channel belongs to.
-    
+
     This will be `None` when received over the gateway in certain events (e.g.
     Guild Create).
     """
