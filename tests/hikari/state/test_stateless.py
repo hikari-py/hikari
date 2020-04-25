@@ -19,7 +19,10 @@
 import mock
 import pytest
 
-from hikari import events
+from hikari.events import channels
+from hikari.events import guilds
+from hikari.events import messages
+from hikari.events import other
 from hikari.clients import shards
 from hikari.state import stateless
 
@@ -41,9 +44,9 @@ class TestStatelessEventManagerImpl:
         return mock.MagicMock(shards.ShardClient)
 
     def test_on_connect(self, event_manager_impl, mock_shard):
-        mock_event = mock.MagicMock(events.ConnectedEvent)
+        mock_event = mock.MagicMock(other.ConnectedEvent)
 
-        with mock.patch("hikari.events.ConnectedEvent", return_value=mock_event) as event:
+        with mock.patch("hikari.events.other.ConnectedEvent", return_value=mock_event) as event:
             event_manager_impl.on_connect(mock_shard, {})
 
             assert event_manager_impl.on_connect.___event_name___ == {"CONNECTED"}
@@ -51,9 +54,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_disconnect(self, event_manager_impl, mock_shard):
-        mock_event = mock.MagicMock(events.DisconnectedEvent)
+        mock_event = mock.MagicMock(other.DisconnectedEvent)
 
-        with mock.patch("hikari.events.DisconnectedEvent", return_value=mock_event) as event:
+        with mock.patch("hikari.events.other.DisconnectedEvent", return_value=mock_event) as event:
             event_manager_impl.on_disconnect(mock_shard, {})
 
             assert event_manager_impl.on_disconnect.___event_name___ == {"DISCONNECTED"}
@@ -61,9 +64,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_resume(self, event_manager_impl, mock_shard):
-        mock_event = mock.MagicMock(events.ResumedEvent)
+        mock_event = mock.MagicMock(other.ResumedEvent)
 
-        with mock.patch("hikari.events.ResumedEvent", return_value=mock_event) as event:
+        with mock.patch("hikari.events.other.ResumedEvent", return_value=mock_event) as event:
             event_manager_impl.on_resume(mock_shard, {})
 
             assert event_manager_impl.on_resume.___event_name___ == {"RESUME"}
@@ -71,9 +74,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_ready(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.ReadyEvent)
+        mock_event = mock.MagicMock(other.ReadyEvent)
 
-        with mock.patch("hikari.events.ReadyEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.other.ReadyEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_ready(None, mock_payload)
 
             assert event_manager_impl.on_ready.___event_name___ == {"READY"}
@@ -81,9 +84,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_channel_create(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.ChannelCreateEvent)
+        mock_event = mock.MagicMock(channels.ChannelCreateEvent)
 
-        with mock.patch("hikari.events.ChannelCreateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.channels.ChannelCreateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_channel_create(None, mock_payload)
 
             assert event_manager_impl.on_channel_create.___event_name___ == {"CHANNEL_CREATE"}
@@ -91,9 +94,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_channel_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.ChannelUpdateEvent)
+        mock_event = mock.MagicMock(channels.ChannelUpdateEvent)
 
-        with mock.patch("hikari.events.ChannelUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.channels.ChannelUpdateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_channel_update(None, mock_payload)
 
             assert event_manager_impl.on_channel_update.___event_name___ == {"CHANNEL_UPDATE"}
@@ -101,9 +104,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_channel_delete(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.ChannelDeleteEvent)
+        mock_event = mock.MagicMock(channels.ChannelDeleteEvent)
 
-        with mock.patch("hikari.events.ChannelDeleteEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.channels.ChannelDeleteEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_channel_delete(None, mock_payload)
 
             assert event_manager_impl.on_channel_delete.___event_name___ == {"CHANNEL_DELETE"}
@@ -111,9 +114,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_channel_pin_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.ChannelPinUpdateEvent)
+        mock_event = mock.MagicMock(channels.ChannelPinUpdateEvent)
 
-        with mock.patch("hikari.events.ChannelPinUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.channels.ChannelPinUpdateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_channel_pin_update(None, mock_payload)
 
             assert event_manager_impl.on_channel_pin_update.___event_name___ == {"CHANNEL_PIN_UPDATE"}
@@ -121,9 +124,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_create(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildCreateEvent)
+        mock_event = mock.MagicMock(guilds.GuildCreateEvent)
 
-        with mock.patch("hikari.events.GuildCreateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.GuildCreateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_guild_create(None, mock_payload)
 
             assert event_manager_impl.on_guild_create.___event_name___ == {"GUILD_CREATE"}
@@ -131,9 +134,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildUpdateEvent)
+        mock_event = mock.MagicMock(guilds.GuildUpdateEvent)
 
-        with mock.patch("hikari.events.GuildUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.GuildUpdateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_guild_update(None, mock_payload)
 
             assert event_manager_impl.on_guild_update.___event_name___ == {"GUILD_UPDATE"}
@@ -141,9 +144,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_leave(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildLeaveEvent)
+        mock_event = mock.MagicMock(guilds.GuildLeaveEvent)
 
-        with mock.patch("hikari.events.GuildLeaveEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.GuildLeaveEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_guild_leave(None, mock_payload)
 
             assert event_manager_impl.on_guild_leave.___event_name___ == {"GUILD_LEAVE"}
@@ -151,9 +154,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_unavailable(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildUnavailableEvent)
+        mock_event = mock.MagicMock(guilds.GuildUnavailableEvent)
 
-        with mock.patch("hikari.events.GuildUnavailableEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.GuildUnavailableEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_guild_unavailable(None, mock_payload)
 
             assert event_manager_impl.on_guild_unavailable.___event_name___ == {"GUILD_UNAVAILABLE"}
@@ -161,9 +164,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_ban_add(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildBanAddEvent)
+        mock_event = mock.MagicMock(guilds.GuildBanAddEvent)
 
-        with mock.patch("hikari.events.GuildBanAddEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.GuildBanAddEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_guild_ban_add(None, mock_payload)
 
             assert event_manager_impl.on_guild_ban_add.___event_name___ == {"GUILD_BAN_ADD"}
@@ -171,9 +174,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_ban_remove(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildBanRemoveEvent)
+        mock_event = mock.MagicMock(guilds.GuildBanRemoveEvent)
 
-        with mock.patch("hikari.events.GuildBanRemoveEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.GuildBanRemoveEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_guild_ban_remove(None, mock_payload)
 
             assert event_manager_impl.on_guild_ban_remove.___event_name___ == {"GUILD_BAN_REMOVE"}
@@ -181,9 +184,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_emojis_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildEmojisUpdateEvent)
+        mock_event = mock.MagicMock(guilds.GuildEmojisUpdateEvent)
 
-        with mock.patch("hikari.events.GuildEmojisUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.GuildEmojisUpdateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_guild_emojis_update(None, mock_payload)
 
             assert event_manager_impl.on_guild_emojis_update.___event_name___ == {"GUILD_EMOJIS_UPDATE"}
@@ -191,9 +194,11 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_integrations_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildIntegrationsUpdateEvent)
+        mock_event = mock.MagicMock(guilds.GuildIntegrationsUpdateEvent)
 
-        with mock.patch("hikari.events.GuildIntegrationsUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch(
+            "hikari.events.guilds.GuildIntegrationsUpdateEvent.deserialize", return_value=mock_event
+        ) as event:
             event_manager_impl.on_guild_integrations_update(None, mock_payload)
 
             assert event_manager_impl.on_guild_integrations_update.___event_name___ == {"GUILD_INTEGRATIONS_UPDATE"}
@@ -201,9 +206,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_member_add(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildMemberAddEvent)
+        mock_event = mock.MagicMock(guilds.GuildMemberAddEvent)
 
-        with mock.patch("hikari.events.GuildMemberAddEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.GuildMemberAddEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_guild_member_add(None, mock_payload)
 
             assert event_manager_impl.on_guild_member_add.___event_name___ == {"GUILD_MEMBER_ADD"}
@@ -211,9 +216,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_member_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildMemberUpdateEvent)
+        mock_event = mock.MagicMock(guilds.GuildMemberUpdateEvent)
 
-        with mock.patch("hikari.events.GuildMemberUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.GuildMemberUpdateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_guild_member_update(None, mock_payload)
 
             assert event_manager_impl.on_guild_member_update.___event_name___ == {"GUILD_MEMBER_UPDATE"}
@@ -221,9 +226,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_member_remove(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildMemberRemoveEvent)
+        mock_event = mock.MagicMock(guilds.GuildMemberRemoveEvent)
 
-        with mock.patch("hikari.events.GuildMemberRemoveEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.GuildMemberRemoveEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_guild_member_remove(None, mock_payload)
 
             assert event_manager_impl.on_guild_member_remove.___event_name___ == {"GUILD_MEMBER_REMOVE"}
@@ -231,9 +236,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_role_create(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildRoleCreateEvent)
+        mock_event = mock.MagicMock(guilds.GuildRoleCreateEvent)
 
-        with mock.patch("hikari.events.GuildRoleCreateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.GuildRoleCreateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_guild_role_create(None, mock_payload)
 
             assert event_manager_impl.on_guild_role_create.___event_name___ == {"GUILD_ROLE_CREATE"}
@@ -241,9 +246,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_role_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildRoleUpdateEvent)
+        mock_event = mock.MagicMock(guilds.GuildRoleUpdateEvent)
 
-        with mock.patch("hikari.events.GuildRoleUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.GuildRoleUpdateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_guild_role_update(None, mock_payload)
 
             assert event_manager_impl.on_guild_role_update.___event_name___ == {"GUILD_ROLE_UPDATE"}
@@ -251,9 +256,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_role_delete(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.GuildRoleDeleteEvent)
+        mock_event = mock.MagicMock(guilds.GuildRoleDeleteEvent)
 
-        with mock.patch("hikari.events.GuildRoleDeleteEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.GuildRoleDeleteEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_guild_role_delete(None, mock_payload)
 
             assert event_manager_impl.on_guild_role_delete.___event_name___ == {"GUILD_ROLE_DELETE"}
@@ -261,9 +266,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_invite_create(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.InviteCreateEvent)
+        mock_event = mock.MagicMock(channels.InviteCreateEvent)
 
-        with mock.patch("hikari.events.InviteCreateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.channels.InviteCreateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_invite_create(None, mock_payload)
 
             assert event_manager_impl.on_invite_create.___event_name___ == {"INVITE_CREATE"}
@@ -271,9 +276,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_invite_delete(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.InviteDeleteEvent)
+        mock_event = mock.MagicMock(channels.InviteDeleteEvent)
 
-        with mock.patch("hikari.events.InviteDeleteEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.channels.InviteDeleteEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_invite_delete(None, mock_payload)
 
             assert event_manager_impl.on_invite_delete.___event_name___ == {"INVITE_DELETE"}
@@ -281,9 +286,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_create(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.MessageCreateEvent)
+        mock_event = mock.MagicMock(messages.MessageCreateEvent)
 
-        with mock.patch("hikari.events.MessageCreateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.messages.MessageCreateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_message_create(None, mock_payload)
 
             assert event_manager_impl.on_message_create.___event_name___ == {"MESSAGE_CREATE"}
@@ -291,9 +296,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.MessageUpdateEvent)
+        mock_event = mock.MagicMock(messages.MessageUpdateEvent)
 
-        with mock.patch("hikari.events.MessageUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.messages.MessageUpdateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_message_update(None, mock_payload)
 
             assert event_manager_impl.on_message_update.___event_name___ == {"MESSAGE_UPDATE"}
@@ -301,9 +306,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_delete(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.MessageDeleteEvent)
+        mock_event = mock.MagicMock(messages.MessageDeleteEvent)
 
-        with mock.patch("hikari.events.MessageDeleteEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.messages.MessageDeleteEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_message_delete(None, mock_payload)
 
             assert event_manager_impl.on_message_delete.___event_name___ == {"MESSAGE_DELETE"}
@@ -311,9 +316,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_delete_bulk(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.MessageDeleteBulkEvent)
+        mock_event = mock.MagicMock(messages.MessageDeleteBulkEvent)
 
-        with mock.patch("hikari.events.MessageDeleteBulkEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.messages.MessageDeleteBulkEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_message_delete_bulk(None, mock_payload)
 
             assert event_manager_impl.on_message_delete_bulk.___event_name___ == {"MESSAGE_DELETE_BULK"}
@@ -321,9 +326,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_reaction_add(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.MessageReactionAddEvent)
+        mock_event = mock.MagicMock(messages.MessageReactionAddEvent)
 
-        with mock.patch("hikari.events.MessageReactionAddEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.messages.MessageReactionAddEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_message_reaction_add(None, mock_payload)
 
             assert event_manager_impl.on_message_reaction_add.___event_name___ == {"MESSAGE_REACTION_ADD"}
@@ -332,9 +337,11 @@ class TestStatelessEventManagerImpl:
 
     def test_on_message_reaction_remove(self, event_manager_impl, mock_payload):
         mock_payload["emoji"] = {}
-        mock_event = mock.MagicMock(events.MessageReactionRemoveEvent)
+        mock_event = mock.MagicMock(messages.MessageReactionRemoveEvent)
 
-        with mock.patch("hikari.events.MessageReactionRemoveEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch(
+            "hikari.events.messages.MessageReactionRemoveEvent.deserialize", return_value=mock_event
+        ) as event:
             event_manager_impl.on_message_reaction_remove(None, mock_payload)
 
             assert event_manager_impl.on_message_reaction_remove.___event_name___ == {"MESSAGE_REACTION_REMOVE"}
@@ -343,9 +350,11 @@ class TestStatelessEventManagerImpl:
 
     def test_on_message_reaction_remove_emoji(self, event_manager_impl, mock_payload):
         mock_payload["emoji"] = {}
-        mock_event = mock.MagicMock(events.MessageReactionRemoveEmojiEvent)
+        mock_event = mock.MagicMock(messages.MessageReactionRemoveEmojiEvent)
 
-        with mock.patch("hikari.events.MessageReactionRemoveEmojiEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch(
+            "hikari.events.messages.MessageReactionRemoveEmojiEvent.deserialize", return_value=mock_event
+        ) as event:
             event_manager_impl.on_message_reaction_remove_emoji(None, mock_payload)
 
             assert event_manager_impl.on_message_reaction_remove_emoji.___event_name___ == {
@@ -355,9 +364,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_presence_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.PresenceUpdateEvent)
+        mock_event = mock.MagicMock(guilds.PresenceUpdateEvent)
 
-        with mock.patch("hikari.events.PresenceUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.guilds.PresenceUpdateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_presence_update(None, mock_payload)
 
             assert event_manager_impl.on_presence_update.___event_name___ == {"PRESENCE_UPDATE"}
@@ -365,9 +374,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_typing_start(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.TypingStartEvent)
+        mock_event = mock.MagicMock(channels.TypingStartEvent)
 
-        with mock.patch("hikari.events.TypingStartEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.channels.TypingStartEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_typing_start(None, mock_payload)
 
             assert event_manager_impl.on_typing_start.___event_name___ == {"TYPING_START"}
@@ -375,9 +384,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_user_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.UserUpdateEvent)
+        mock_event = mock.MagicMock(other.UserUpdateEvent)
 
-        with mock.patch("hikari.events.UserUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.other.UserUpdateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_user_update(None, mock_payload)
 
             assert event_manager_impl.on_user_update.___event_name___ == {"USER_UPDATE"}
@@ -385,9 +394,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_voice_state_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.VoiceStateUpdateEvent)
+        mock_event = mock.MagicMock(channels.VoiceStateUpdateEvent)
 
-        with mock.patch("hikari.events.VoiceStateUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.channels.VoiceStateUpdateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_voice_state_update(None, mock_payload)
 
             assert event_manager_impl.on_voice_state_update.___event_name___ == {"VOICE_STATE_UPDATE"}
@@ -395,9 +404,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_voice_server_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.VoiceStateUpdateEvent)
+        mock_event = mock.MagicMock(channels.VoiceStateUpdateEvent)
 
-        with mock.patch("hikari.events.VoiceStateUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.channels.VoiceStateUpdateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_voice_server_update(None, mock_payload)
 
             assert event_manager_impl.on_voice_server_update.___event_name___ == {"VOICE_SERVER_UPDATE"}
@@ -405,9 +414,9 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_webhook_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(events.WebhookUpdateEvent)
+        mock_event = mock.MagicMock(channels.WebhookUpdateEvent)
 
-        with mock.patch("hikari.events.WebhookUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.channels.WebhookUpdateEvent.deserialize", return_value=mock_event) as event:
             event_manager_impl.on_webhook_update(None, mock_payload)
 
             assert event_manager_impl.on_webhook_update.___event_name___ == {"WEBHOOK_UPDATE"}

@@ -29,8 +29,9 @@ import logging
 import typing
 
 from hikari import errors
-from hikari import events
 from hikari import intents
+from hikari.events import bases
+from hikari.events import other
 from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import helpers
@@ -41,7 +42,7 @@ from hikari.internal import more_collections
 from hikari.internal import more_typing
 
 if typing.TYPE_CHECKING:
-    EventT = typing.TypeVar("EventT", bound=events.HikariEvent)
+    EventT = typing.TypeVar("EventT", bound=bases.HikariEvent)
     PredicateT = typing.Callable[[EventT], typing.Union[bool, more_typing.Coroutine[bool]]]
     EventCallbackT = typing.Callable[[EventT], more_typing.Coroutine[typing.Any]]
     WaiterMapT = typing.Dict[
@@ -77,7 +78,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.HikariEvent]
+        event_type : typing.Type[hikari.events.bases.HikariEvent]
             The event to register to.
         callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to invoke when this event is fired.
@@ -96,7 +97,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.HikariEvent]
+        event_type : typing.Type[hikari.events.bases.HikariEvent]
             The type of event to remove the callback from.
         callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to invoke when this event is fired.
@@ -110,7 +111,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.HikariEvent]
+        event_type : typing.Type[hikari.events.bases.HikariEvent]
             The name of the event to wait for.
         timeout : float, optional
             The timeout to wait for before cancelling and raising an
@@ -170,7 +171,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.HikariEvent], optional
+        event_type : typing.Type[hikari.events.bases.HikariEvent], optional
             The event type to register the produced decorator to. If this is not
             specified, then the given function is used instead and the type hint
             of the first argument is considered. If no type hint is present
@@ -214,11 +215,11 @@ class EventDispatcher(abc.ABC):
                 try:
                     resolved_type = conversions.snoop_typehint_from_scope(frame, event_param.annotation)
 
-                    if not issubclass(resolved_type, events.HikariEvent):
-                        raise TypeError("Event typehints should subclass hikari.events.HikariEvent to be valid")
+                    if not issubclass(resolved_type, bases.HikariEvent):
+                        raise TypeError("Event typehints should subclass hikari.events.bases.HikariEvent to be valid")
 
                     return self.add_listener(
-                        typing.cast(typing.Type[events.HikariEvent], resolved_type), callback, _stack_level=3
+                        typing.cast(typing.Type[bases.HikariEvent], resolved_type), callback, _stack_level=3
                     )
                 finally:
                     del frame, _
@@ -230,12 +231,12 @@ class EventDispatcher(abc.ABC):
     # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
     # confusing telepathy comments to the user.
     @abc.abstractmethod
-    def dispatch_event(self, event: events.HikariEvent) -> more_typing.Future[typing.Any]:
+    def dispatch_event(self, event: bases.HikariEvent) -> more_typing.Future[typing.Any]:
         """Dispatch a given event to any listeners and waiters.
 
         Parameters
         ----------
-        event : hikari.events.HikariEvent
+        event : hikari.events.bases.HikariEvent
             The event to dispatch.
 
         Returns
@@ -290,12 +291,12 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
                 future.cancel()
         self._waiters.clear()
 
-    def add_listener(self, event_type: typing.Type[events.HikariEvent], callback: EventCallbackT, **kwargs) -> None:
+    def add_listener(self, event_type: typing.Type[bases.HikariEvent], callback: EventCallbackT, **kwargs) -> None:
         """Register a new event callback to a given event name.
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.HikariEvent]
+        event_type : typing.Type[hikari.events.bases.HikariEvent]
             The event to register to.
         callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to invoke when this event is fired.
@@ -314,7 +315,7 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
             asyncio.iscoroutinefunction(callback), "You must subscribe a coroutine function only", TypeError
         )
 
-        required_intents = events.get_required_intents_for(event_type)
+        required_intents = bases.get_required_intents_for(event_type)
         enabled_intents = self._enabled_intents if self._enabled_intents is not None else 0
 
         any_intent_match = any(enabled_intents & i == i for i in required_intents)
@@ -347,7 +348,7 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.HikariEvent]
+        event_type : typing.Type[hikari.events.bases.HikariEvent]
             The type of event to remove the callback from.
         callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to remove.
@@ -360,12 +361,12 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
 
     # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
     # confusing telepathy comments to the user.
-    def dispatch_event(self, event: events.HikariEvent):
+    def dispatch_event(self, event: bases.HikariEvent):
         """Dispatch a given event to all listeners and waiters that are applicable.
 
         Parameters
         ----------
-        event : hikari.events.HikariEvent
+        event : hikari.events.bases.HikariEvent
             The event to dispatch.
 
         Returns
@@ -436,33 +437,33 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
             self.handle_exception(ex, event, callback)
 
     def handle_exception(
-        self, exception: Exception, event: events.HikariEvent, callback: typing.Callable[..., typing.Awaitable[None]]
+        self, exception: Exception, event: bases.HikariEvent, callback: typing.Callable[..., typing.Awaitable[None]]
     ) -> None:
         """Handle raised exception.
 
         This allows users to override this with a custom implementation if desired.
 
         This implementation will check to see if the event that triggered the
-        exception is an `hikari.events.ExceptionEvent`. If this exception was
-        caused by the `hikari.events.ExceptionEvent`, then nothing is dispatched
+        exception is an `hikari.events.other.ExceptionEvent`. If this exception was
+        caused by the `hikari.events.other.ExceptionEvent`, then nothing is dispatched
         (thus preventing an exception handler recursively re-triggering itself).
-        Otherwise, an `hikari.events.ExceptionEvent` is dispatched.
+        Otherwise, an `hikari.events.other.ExceptionEvent` is dispatched.
 
         Parameters
         ----------
         exception : Exception
             The exception that triggered this call.
-        event : hikari.events.HikariEvent
+        event : hikari.events.bases.HikariEvent
             The event that was being dispatched.
         callback
             The callback that threw the exception.
         """
         # Do not recurse if a dodgy exception handler is added.
-        if not isinstance(event, events.ExceptionEvent):
+        if not isinstance(event, other.ExceptionEvent):
             self.logger.exception(
                 'Exception occurred in handler for event "%s"', type(event).__name__, exc_info=exception
             )
-            self.dispatch_event(events.ExceptionEvent(exception=exception, event=event, callback=callback))
+            self.dispatch_event(other.ExceptionEvent(exception=exception, event=event, callback=callback))
         else:
             self.logger.exception(
                 'Exception occurred in handler for event "%s", and the exception has been dropped',
@@ -485,7 +486,7 @@ class IntentAwareEventDispatcherImpl(EventDispatcher):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.HikariEvent]
+        event_type : typing.Type[hikari.events.bases.HikariEvent]
             The name of the event to wait for.
         timeout : float, optional
             The timeout to wait for before cancelling and raising an
