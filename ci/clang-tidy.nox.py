@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -14,22 +16,24 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Clang-tidy."""
+import subprocess
 
-stages:
-  - test
-  - lint
-  - report
-  - deploy
-  - verify
+from ci import config
+from ci import nox
 
-variables:
-  DOCKER_DRIVER: "overlay2"
- 
-include:
-  - local: "/ci/bases.gitlab-ci.yml"
-  - local: "/ci/installations.gitlab-ci.yml"
-  - local: "/ci/integrations.gitlab-ci.yml"
-  - local: "/ci/linting.gitlab-ci.yml"
-  - local: "/ci/pages.gitlab-ci.yml"
-  - local: "/ci/releases.gitlab-ci.yml"
-  - local: "/ci/tests.gitlab-ci.yml"
+
+def _clang_tidy(*args):
+    invocation = f"clang-tidy $(find {config.MAIN_PACKAGE} -name '*.c' -o -name '*.h') "
+    invocation += " ".join(args)
+    print(subprocess.check_output(invocation, shell=True))
+
+
+@nox.session(reuse_venv=True)
+def clang_tidy_check(session: nox.Session) -> None:
+    _clang_tidy()
+
+
+@nox.session(reuse_venv=True)
+def clang_tidy_fix(session: nox.Session) -> None:
+    _clang_tidy("--fix")

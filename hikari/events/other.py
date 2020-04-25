@@ -41,7 +41,9 @@ from hikari.events import bases
 from hikari.clients import shards
 from hikari.internal import marshaller
 
+
 # Synthetic event, is not deserialized, and is produced by the dispatcher.
+@bases.no_catch()
 @attr.s(slots=True, auto_attribs=True)
 class ExceptionEvent(bases.HikariEvent):
     """Descriptor for an exception thrown while processing an event."""
