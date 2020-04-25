@@ -143,23 +143,25 @@ class TestStatelessEventManagerImpl:
             event.assert_called_once_with(mock_payload)
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
-    def test_on_guild_leave(self, event_manager_impl, mock_payload):
+    def test_on_guild_delete_handles_guild_leave(self, event_manager_impl, mock_payload):
+        mock_payload.pop("unavailable", None)
         mock_event = mock.MagicMock(guilds.GuildLeaveEvent)
 
         with mock.patch("hikari.events.guilds.GuildLeaveEvent.deserialize", return_value=mock_event) as event:
-            event_manager_impl.on_guild_leave(None, mock_payload)
+            event_manager_impl.on_guild_delete(None, mock_payload)
 
-            assert event_manager_impl.on_guild_leave.___event_name___ == {"GUILD_LEAVE"}
+            assert event_manager_impl.on_guild_delete.___event_name___ == {"GUILD_DELETE"}
             event.assert_called_once_with(mock_payload)
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
-    def test_on_guild_unavailable(self, event_manager_impl, mock_payload):
+    def test_on_guild_delete_handles_guild_unavailable(self, event_manager_impl, mock_payload):
+        mock_payload["unavailable"] = True
         mock_event = mock.MagicMock(guilds.GuildUnavailableEvent)
 
         with mock.patch("hikari.events.guilds.GuildUnavailableEvent.deserialize", return_value=mock_event) as event:
-            event_manager_impl.on_guild_unavailable(None, mock_payload)
+            event_manager_impl.on_guild_delete(None, mock_payload)
 
-            assert event_manager_impl.on_guild_unavailable.___event_name___ == {"GUILD_UNAVAILABLE"}
+            assert event_manager_impl.on_guild_delete.___event_name___ == {"GUILD_DELETE"}
             event.assert_called_once_with(mock_payload)
             event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
