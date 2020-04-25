@@ -27,13 +27,13 @@
       apt install git -y
       pip install nox
       nox --sessions pip-sdist pip-bdist-wheel pip-git
-  stage: install
+  stage: test
 ###
 ### Setup script tests for CPython 3.8.0
 ###
 ### Test locally installing the library via pip in several formats
 ###
-"install 3.8.0":
+"install:3.8.0":
   extends:
     - .cpython380
     - .nox-pip-install
@@ -43,7 +43,7 @@
 ###
 ### Test locally installing the library via pip in several formats
 ###
-"install 3.8.1":
+"install:3.8.1":
   extends:
     - .cpython381
     - .nox-pip-install
@@ -53,7 +53,7 @@
 ###
 ### Test locally installing the library via pip in several formats
 ###
-"install 3.8.2":
+"install:3.8.2":
   extends:
     - .cpython382
     - .nox-pip-install
@@ -63,7 +63,7 @@
 ###
 ### Test locally installing the library via pip in several formats
 ###
-"install 3.9.0":
+"install:3.9.0":
   extends:
     - .cpython390
     - .nox-pip-install

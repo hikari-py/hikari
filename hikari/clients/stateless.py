@@ -65,7 +65,7 @@ class StatelessBot(
 
     @classmethod
     def _create_event_manager(
-        cls, config: configs.BotConfig, dispatcher: intent_aware_dispatchers.IntentAwareEventDispatcherImpl
+        cls, _: configs.BotConfig, dispatcher: intent_aware_dispatchers.IntentAwareEventDispatcherImpl
     ) -> stateless.StatelessEventManagerImpl:
         return stateless.StatelessEventManagerImpl(dispatcher)
 
