@@ -27,10 +27,11 @@ import math
 import time
 import typing
 
-from hikari import events
 from hikari import gateway_entities
 from hikari import guilds
 from hikari import intents
+from hikari.events import bases
+from hikari.events import other
 from hikari.clients import configs
 from hikari.clients import rest
 from hikari.clients import runnable
@@ -223,7 +224,7 @@ class BotBase(
         self.logger.info("started %s shard(s) in approx %.2fs", len(self.shards), finish_time - start_time)
 
         if self.event_manager is not None:
-            await self.dispatch_event(events.StartedEvent())
+            await self.dispatch_event(other.StartedEvent())
 
     async def close(self) -> None:
         try:
@@ -231,12 +232,12 @@ class BotBase(
                 self.logger.info("stopping %s shard(s)", len(self.shards))
                 start_time = time.perf_counter()
                 try:
-                    await self.dispatch_event(events.StoppingEvent())
+                    await self.dispatch_event(other.StoppingEvent())
                     await asyncio.gather(*(shard_obj.close() for shard_obj in self.shards.values()))
                 finally:
                     finish_time = time.perf_counter()
                     self.logger.info("stopped %s shard(s) in approx %.2fs", len(self.shards), finish_time - start_time)
-                    await self.dispatch_event(events.StoppedEvent())
+                    await self.dispatch_event(other.StoppedEvent())
         finally:
             await self.rest.close()
 
@@ -262,7 +263,7 @@ class BotBase(
     ) -> more_typing.Future:
         return self.event_manager.event_dispatcher.wait_for(event_type, timeout=timeout, predicate=predicate)
 
-    def dispatch_event(self, event: events.HikariEvent) -> more_typing.Future[typing.Any]:
+    def dispatch_event(self, event: bases.HikariEvent) -> more_typing.Future[typing.Any]:
         return self.event_manager.event_dispatcher.dispatch_event(event)
 
     async def update_presence(

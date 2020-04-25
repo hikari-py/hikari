@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,26 +16,3 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""The models API for interacting with Discord directly."""
-
-from hikari.clients import bot_base
-from hikari.clients import configs
-from hikari.clients import rest
-from hikari.clients import runnable
-from hikari.clients import stateless
-from hikari.clients import shards
-from hikari.clients.bot_base import *
-from hikari.clients.configs import *
-from hikari.clients.rest import *
-from hikari.clients.runnable import *
-from hikari.clients.shards import *
-from hikari.clients.stateless import *
-
-__all__ = [
-    *bot_base.__all__,
-    *configs.__all__,
-    *rest.__all__,
-    *shards.__all__,
-    *runnable.__all__,
-    *stateless.__all__,
-]
