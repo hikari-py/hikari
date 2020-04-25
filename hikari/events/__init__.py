@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,26 +16,23 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""The models API for interacting with Discord directly."""
+"""Components and entities that are used to describe Discord gateway events."""
 
-from hikari.clients import bot_base
-from hikari.clients import configs
-from hikari.clients import rest
-from hikari.clients import runnable
-from hikari.clients import stateless
-from hikari.clients import shards
-from hikari.clients.bot_base import *
-from hikari.clients.configs import *
-from hikari.clients.rest import *
-from hikari.clients.runnable import *
-from hikari.clients.shards import *
-from hikari.clients.stateless import *
+from hikari.events import bases
+from hikari.events import channels
+from hikari.events import guilds
+from hikari.events import messages
+from hikari.events import other
+from hikari.events.bases import *
+from hikari.events.channels import *
+from hikari.events.guilds import *
+from hikari.events.messages import *
+from hikari.events.other import *
 
 __all__ = [
-    *bot_base.__all__,
-    *configs.__all__,
-    *rest.__all__,
-    *shards.__all__,
-    *runnable.__all__,
-    *stateless.__all__,
+    *bases.__all__,
+    *channels.__all__,
+    *guilds.__all__,
+    *messages.__all__,
+    *other.__all__,
 ]
