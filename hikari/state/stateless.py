@@ -97,16 +97,13 @@ class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDis
         event = guilds.GuildUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
-    @event_managers.raw_event_mapper("GUILD_LEAVE")
-    def on_guild_leave(self, _, payload) -> None:
-        """Handle GUILD_LEAVE events."""
-        event = guilds.GuildLeaveEvent.deserialize(payload)
-        self.event_dispatcher.dispatch_event(event)
-
-    @event_managers.raw_event_mapper("GUILD_UNAVAILABLE")
-    def on_guild_unavailable(self, _, payload) -> None:
-        """Handle GUILD_UNAVAILABLE events."""
-        event = guilds.GuildUnavailableEvent.deserialize(payload)
+    @event_managers.raw_event_mapper("GUILD_DELETE")
+    def on_guild_delete(self, _, payload) -> None:
+        """Handle GUILD_DELETE events."""
+        if payload.get("unavailable", False):
+            event = guilds.GuildUnavailableEvent.deserialize(payload)
+        else:
+            event = guilds.GuildLeaveEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_BAN_ADD")
