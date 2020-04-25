@@ -132,7 +132,7 @@ class Permission(enum.IntFlag):
     READ_MESSAGE_HISTORY = 1 << 16
     """Allows for reading of message history."""
 
-    MENTION_EVERYONE = 1 << 17
+    MENTION_ROLES = 1 << 17
     """Allows for using the `@everyone` tag to notify all users in a channel,
     and the `@here` tag to notify all online users in a channel, and the
     `@role` tag (even if the role is not mentionable) to notify all users with
