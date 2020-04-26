@@ -2,6 +2,8 @@
 
 # Put this in .git/hooks to make sure 'black' runs every time you commit.
 
+trap "exit" SIGINT SIGTERM SIGKILL
+
 if [[ -z ${SKIP_HOOK} ]]; then
     command -v nox || pip install nox
     echo -e '\e[1;32mRUNNING HOOKS - prepend your invocation of git commit with SKIP_HOOK=1 to skip this.\e[0m'
@@ -14,3 +16,5 @@ if [[ -z ${SKIP_HOOK} ]]; then
 else
     echo -e '\e[1;31mSKIPPING COMMIT HOOKS. THIS IS HERESY!\e[0m'
 fi
+
+trap - SIGINT SIGTERM SIGKILL
