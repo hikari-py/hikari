@@ -30,7 +30,6 @@ from hikari import audit_logs
 from hikari import bases
 from hikari import channels as _channels
 from hikari import emojis
-from hikari import files
 from hikari import guilds
 from hikari import invites
 from hikari import voices
@@ -40,6 +39,7 @@ from hikari.internal import helpers
 
 if typing.TYPE_CHECKING:
     from hikari import colors
+    from hikari import files
     from hikari import permissions as _permissions
     from hikari import users
 
@@ -1143,7 +1143,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         )
         return guilds.GuildMemberBan.deserialize(payload)
 
-    async def fetch_bans(self, guild: bases.Hashable[guilds.Guild], ) -> typing.Sequence[guilds.GuildMemberBan]:
+    async def fetch_bans(self, guild: bases.Hashable[guilds.Guild]) -> typing.Sequence[guilds.GuildMemberBan]:
         """Get the bans for a given guild.
 
         Parameters
@@ -1445,7 +1445,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         )
         return guilds.GuildRole.deserialize(payload)
 
-    async def delete_role(self, guild: bases.Hashable[guilds.Guild], role: bases.Hashable[guilds.GuildRole], ) -> None:
+    async def delete_role(self, guild: bases.Hashable[guilds.Guild], role: bases.Hashable[guilds.GuildRole]) -> None:
         """Delete a role from a given guild.
 
         Parameters
@@ -1751,7 +1751,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             integration_id=str(integration.id if isinstance(integration, bases.UniqueEntity) else int(integration)),
         )
 
-    async def fetch_guild_embed(self, guild: bases.Hashable[guilds.Guild], ) -> guilds.GuildEmbed:
+    async def fetch_guild_embed(self, guild: bases.Hashable[guilds.Guild]) -> guilds.GuildEmbed:
         """Get the embed for a given guild.
 
         Parameters
@@ -1832,7 +1832,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         )
         return guilds.GuildEmbed.deserialize(payload)
 
-    async def fetch_guild_vanity_url(self, guild: bases.Hashable[guilds.Guild], ) -> invites.VanityUrl:
+    async def fetch_guild_vanity_url(self, guild: bases.Hashable[guilds.Guild]) -> invites.VanityUrl:
         """
         Get the vanity URL for a given guild.
 

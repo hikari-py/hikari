@@ -30,6 +30,9 @@ References
 * [Gateway documentation](https://discordapp.com/developers/docs/topics/gateway)
 * [Opcode documentation](https://discordapp.com/developers/docs/topics/opcodes-and-status-codes)
 """
+
+from __future__ import annotations
+
 __all__ = ["Shard"]
 
 import asyncio
@@ -38,7 +41,6 @@ import datetime
 import json
 import logging
 import math
-import ssl
 import time
 import typing
 import urllib.parse
@@ -47,11 +49,16 @@ import zlib
 import aiohttp.typedefs
 
 from hikari import errors
-from hikari import intents as _intents
 from hikari.internal import more_asyncio
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import user_agents
+
+if typing.TYPE_CHECKING:
+    import ssl
+
+    from hikari import intents as _intents
+
 
 DispatchT = typing.Callable[["Shard", str, typing.Dict], None]
 """The signature for an event dispatch callback."""

@@ -21,6 +21,7 @@
 This is only for use by developers of this library, regular users do not need
 to use this.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -91,7 +92,7 @@ def run_gateway(compression, color, debug, intents, logger, shards, token, verif
         intents=intents,
         verify_ssl=verify_ssl,
         shard_count=shards,
-        initial_activity=hikari.Activity(name="people mention me", type=hikari.ActivityType.LISTENING,),
+        initial_activity=hikari.Activity(name="people mention me", type=hikari.ActivityType.LISTENING),
     )
 
     bot_id = 0

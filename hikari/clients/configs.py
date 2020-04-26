@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Configuration data classes."""
+
 from __future__ import annotations
 
 __all__ = [
@@ -31,7 +32,6 @@ __all__ = [
 
 import datetime
 import re
-import ssl
 import typing
 
 import aiohttp
@@ -42,6 +42,9 @@ from hikari import guilds
 from hikari import intents as _intents
 from hikari.internal import conversions
 from hikari.internal import marshaller
+
+if typing.TYPE_CHECKING:
+    import ssl
 
 
 @marshaller.marshallable()

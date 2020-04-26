@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The models API for interacting with Discord directly."""
 
+from __future__ import annotations
+
 from hikari.clients.bot_base import *
 from hikari.clients.configs import *
 from hikari.clients.rest import *

@@ -23,12 +23,13 @@ from __future__ import annotations
 __all__ = ["BaseRESTComponent"]
 
 import abc
-import types
 import typing
 
 from hikari.internal import meta
 
 if typing.TYPE_CHECKING:
+    import types
+
     from hikari.net import rest
 
 

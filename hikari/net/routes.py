@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Provides the valid routes that can be used on the API, as well as mechanisms to aid with rate limit bucketing."""
+
+from __future__ import annotations
+
 __all__ = ["CompiledRoute", "RouteTemplate"]
 
 import typing
@@ -168,7 +171,7 @@ class RouteTemplate:
 
     def __repr__(self) -> str:
         this_type = type(self).__name__
-        major_params = ", ".join((f"path_template={self.path_template!r}", f"major_params={self.major_params!r}",))
+        major_params = ", ".join((f"path_template={self.path_template!r}", f"major_params={self.major_params!r}"))
         return f"{this_type}({major_params})"
 
     def __str__(self) -> str:

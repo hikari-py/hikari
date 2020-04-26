@@ -20,6 +20,7 @@
 
 State object handle decoding events and managing application state.
 """
+
 from __future__ import annotations
 
 __all__ = ["RawEventConsumer"]
@@ -27,7 +28,8 @@ __all__ = ["RawEventConsumer"]
 import abc
 import typing
 
-from hikari.clients import shards
+if typing.TYPE_CHECKING:
+    from hikari.clients import shards
 
 
 class RawEventConsumer(abc.ABC):

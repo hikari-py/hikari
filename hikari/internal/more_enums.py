@@ -17,7 +17,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Mixin utilities for defining enums."""
-__all__ = ["Enum", "Flag", "must_be_unique", "generated_value"]
+
+from __future__ import annotations
+
+__all__ = ["Enum", "IntFlag", "must_be_unique", "generated_value"]
 
 import enum
 import typing

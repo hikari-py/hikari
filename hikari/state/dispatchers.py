@@ -70,7 +70,7 @@ class EventDispatcher(abc.ABC):
         """
 
     @abc.abstractmethod
-    def remove_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT,) -> EventCallbackT:
+    def remove_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT) -> EventCallbackT:
         """Remove the given coroutine function from the handlers for the given event.
 
         The name is mandatory to enable supporting registering the same event callback for multiple event types.

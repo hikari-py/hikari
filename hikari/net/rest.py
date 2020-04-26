@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Implementation of a basic HTTP client that uses aiohttp to interact with the Discord API."""
+
+from __future__ import annotations
+
 __all__ = ["REST"]
 
 import asyncio
@@ -25,24 +28,27 @@ import datetime
 import email.utils
 import json
 import logging
-import ssl
-import types
 import typing
 import uuid
 
 import aiohttp.typedefs
 
 from hikari import errors
-from hikari import files as _files
 from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import more_collections
-from hikari.internal import more_typing
 from hikari.internal import urls
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import routes
 from hikari.net import user_agents
+
+if typing.TYPE_CHECKING:
+    import ssl
+    import types
+
+    from hikari import files as _files
+    from hikari.internal import more_typing
 
 VERSION_6: typing.Final[int] = 6
 VERSION_7: typing.Final[int] = 7
@@ -1952,7 +1958,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_MEMBER.compile(self.PATCH, guild_id=guild_id, user_id=user_id)
         await self._request(route, json_body=payload, reason=reason)
 
-    async def modify_current_user_nick(self, guild_id: str, nick: typing.Optional[str], *, reason: str = ...,) -> None:
+    async def modify_current_user_nick(self, guild_id: str, nick: typing.Optional[str], *, reason: str = ...) -> None:
         """Edit the current user's nickname for a given guild.
 
         Parameters
@@ -1978,7 +1984,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.OWN_GUILD_NICKNAME.compile(self.PATCH, guild_id=guild_id)
         await self._request(route, json_body=payload, reason=reason)
 
-    async def add_guild_member_role(self, guild_id: str, user_id: str, role_id: str, *, reason: str = ...,) -> None:
+    async def add_guild_member_role(self, guild_id: str, user_id: str, role_id: str, *, reason: str = ...) -> None:
         """Add a role to a given member.
 
         Parameters
@@ -2003,7 +2009,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_MEMBER_ROLE.compile(self.PUT, guild_id=guild_id, user_id=user_id, role_id=role_id)
         await self._request(route, reason=reason)
 
-    async def remove_guild_member_role(self, guild_id: str, user_id: str, role_id: str, *, reason: str = ...,) -> None:
+    async def remove_guild_member_role(self, guild_id: str, user_id: str, role_id: str, *, reason: str = ...) -> None:
         """Remove a role from a given member.
 
         Parameters
@@ -2028,7 +2034,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_MEMBER_ROLE.compile(self.DELETE, guild_id=guild_id, user_id=user_id, role_id=role_id)
         await self._request(route, reason=reason)
 
-    async def remove_guild_member(self, guild_id: str, user_id: str, *, reason: str = ...,) -> None:
+    async def remove_guild_member(self, guild_id: str, user_id: str, *, reason: str = ...) -> None:
         """Kick a user from a given guild.
 
         Parameters
@@ -2130,7 +2136,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_BAN.compile(self.PUT, guild_id=guild_id, user_id=user_id)
         await self._request(route, query=query)
 
-    async def remove_guild_ban(self, guild_id: str, user_id: str, *, reason: str = ...,) -> None:
+    async def remove_guild_ban(self, guild_id: str, user_id: str, *, reason: str = ...) -> None:
         """Un-bans a user from a given guild.
 
         Parameters
@@ -2652,7 +2658,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_VANITY_URL.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    def get_guild_widget_image_url(self, guild_id: str, *, style: str = ...,) -> str:
+    def get_guild_widget_image_url(self, guild_id: str, *, style: str = ...) -> str:
         """Get the URL for a guild widget.
 
         Parameters
