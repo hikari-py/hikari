@@ -16,13 +16,38 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+from distutils import log
+from distutils import errors
 import os
 import re
 import types
 
 import setuptools
+from setuptools.command import build_ext
 
 name = "hikari"
+
+
+class Accelerator(setuptools.Extension):
+    def __init__(self, name, sources, **kwargs):
+        super().__init__(name, sources, **kwargs)
+
+
+class BuildCommand(build_ext.build_ext):
+    def build_extensions(self):
+        for ext in self.extensions:
+            if isinstance(ext, Accelerator):
+                self.build_accelerator(ext)
+            else:
+                self.build_extension(ext)
+
+    def build_accelerator(self, ext):
+        try:
+            self.build_extension(ext)
+        except errors.CompileError as ex:
+            log.warn("Compilation of %s failed, so this module will not be accelerated: %s", ext, ex)
+        except errors.LinkError as ex:
+            log.warn("Linking of %s failed, so this module will not be accelerated: %s", ext, ex)
 
 
 def long_description():
@@ -52,6 +77,8 @@ def parse_requirements():
 
 
 metadata = parse_meta()
+
+extensions = [Accelerator("hikari.internal.marshaller", ["hikari/internal/marshaller.cpp"])]
 
 setuptools.setup(
     name=name,
@@ -83,4 +110,9 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Typing :: Typed",
     ],
+    # Uncomment this to enable compilation of accelerated modules.
+    # ext_modules=extensions,
+    # cmdclass={
+    #    "build_ext": BuildCommand,
+    # }
 )
