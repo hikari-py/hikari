@@ -184,7 +184,7 @@ class TestRESTUserLogic:
                 avatar_url="httttttt/L//",
                 tts=True,
                 wait=True,
-                file=mock_file_obj2,
+                files=[mock_file_obj2],
                 embeds=[mock_embed_obj],
                 mentions_everyone=False,
                 role_mentions=False,
