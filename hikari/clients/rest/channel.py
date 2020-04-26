@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The logic for handling requests to channel endpoints."""
 
+from __future__ import annotations
+
 __all__ = ["RESTChannelComponent"]
 
 import abc
@@ -26,18 +28,21 @@ import typing
 
 from hikari import bases
 from hikari import channels as _channels
-from hikari import embeds as _embeds
-from hikari import files as _files
-from hikari import guilds
 from hikari import invites
 from hikari import messages as _messages
-from hikari import permissions as _permissions
-from hikari import users
 from hikari import webhooks
 from hikari.clients.rest import base
 from hikari.internal import assertions
 from hikari.internal import helpers
-from hikari.internal import more_typing
+
+if typing.TYPE_CHECKING:
+    from hikari import embeds as _embeds
+    from hikari import files as _files
+    from hikari import guilds
+    from hikari import permissions as _permissions
+    from hikari import users
+
+    from hikari.internal import more_typing
 
 
 class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method, too-many-public-methods

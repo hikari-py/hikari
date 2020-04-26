@@ -20,7 +20,6 @@
 __all__ = ["TargetUserType", "VanityUrl", "InviteGuild", "Invite", "InviteWithMetadata"]
 
 import datetime
-import enum
 import typing
 
 import attr
@@ -32,10 +31,11 @@ from hikari import users
 from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import urls
+from hikari.internal import more_enums
 
 
-@enum.unique
-class TargetUserType(enum.IntEnum):
+@more_enums.must_be_unique
+class TargetUserType(int, more_enums.Enum):
     """The reason a invite targets a user."""
 
     STREAM = 1

@@ -19,7 +19,6 @@
 """Components and entities that are used to describe webhooks on Discord."""
 __all__ = ["WebhookType", "Webhook"]
 
-import enum
 import typing
 
 import attr
@@ -27,10 +26,11 @@ import attr
 from hikari import bases
 from hikari import users
 from hikari.internal import marshaller
+from hikari.internal import more_enums
 
 
-@enum.unique
-class WebhookType(enum.IntEnum):
+@more_enums.must_be_unique
+class WebhookType(int, more_enums.Enum):
     """Types of webhook."""
 
     INCOMING = 1

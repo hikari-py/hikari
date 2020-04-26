@@ -17,25 +17,23 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Stateless bot implementation."""
+from __future__ import annotations
+
 __all__ = ["StatelessBot"]
 
+import typing
+
 from hikari.clients import bot_base
-from hikari.clients import configs
 from hikari.clients import rest
 from hikari.clients import shards
 from hikari.state import intent_aware_dispatchers
 from hikari.state import stateless
 
+if typing.TYPE_CHECKING:
+    from hikari.clients import configs
 
-class StatelessBot(
-    bot_base.BotBase[
-        shards.ShardClientImpl,
-        rest.RESTClient,
-        intent_aware_dispatchers.IntentAwareEventDispatcherImpl,
-        stateless.StatelessEventManagerImpl,
-        configs.BotConfig,
-    ]
-):
+
+class StatelessBot(bot_base.BotBase):
     """Bot client without any state internals.
 
     This is the most basic type of bot you can create.

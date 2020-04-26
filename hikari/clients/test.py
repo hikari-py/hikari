@@ -21,6 +21,8 @@
 This is only for use by developers of this library, regular users do not need
 to use this.
 """
+from __future__ import annotations
+
 import datetime
 import logging
 import math

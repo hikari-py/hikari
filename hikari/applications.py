@@ -28,7 +28,6 @@ __all__ = [
     "TeamMembershipState",
 ]
 
-import enum
 import typing
 
 import attr
@@ -38,11 +37,12 @@ from hikari import guilds
 from hikari import permissions
 from hikari import users
 from hikari.internal import marshaller
+from hikari.internal import more_enums
 from hikari.internal import urls
 
 
-@enum.unique
-class ConnectionVisibility(enum.IntEnum):
+@more_enums.must_be_unique
+class ConnectionVisibility(int, more_enums.Enum):
     """Describes who can see a connection with a third party account."""
 
     NONE = 0
@@ -112,8 +112,8 @@ class OwnGuild(guilds.PartialGuild):
     """The guild level permissions that apply to the current user or bot."""
 
 
-@enum.unique
-class TeamMembershipState(enum.IntEnum):
+@more_enums.must_be_unique
+class TeamMembershipState(int, more_enums.Enum):
     """Represents the state of a user's team membership."""
 
     INVITED = 1
