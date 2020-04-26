@@ -17,16 +17,21 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Basic single-application weaving manager."""
+
+from __future__ import annotations
+
 __all__ = ["raw_event_mapper", "EventManager"]
 
 import inspect
 import logging
 import typing
 
-from hikari.clients import shards
 from hikari.internal import assertions
 from hikari.state import consumers
 from hikari.state import dispatchers
+
+if typing.TYPE_CHECKING:
+    from hikari.clients import shards
 
 EVENT_MARKER_ATTR: typing.Final[str] = "___event_name___"
 

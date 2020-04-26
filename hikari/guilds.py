@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe guilds on Discord."""
+
+from __future__ import annotations
+
 __all__ = [
     "ActivityAssets",
     "ActivityFlag",
@@ -52,7 +55,6 @@ __all__ = [
 ]
 
 import datetime
-import enum
 import typing
 
 import attr
@@ -67,10 +69,11 @@ from hikari import users
 from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import urls
+from hikari.internal import more_enums
 
 
-@enum.unique
-class GuildExplicitContentFilterLevel(enum.IntEnum):
+@more_enums.must_be_unique
+class GuildExplicitContentFilterLevel(int, more_enums.Enum):
     """Represents the explicit content filter setting for a guild."""
 
     DISABLED = 0
@@ -83,8 +86,8 @@ class GuildExplicitContentFilterLevel(enum.IntEnum):
     """Filter all posts."""
 
 
-@enum.unique
-class GuildFeature(str, enum.Enum):
+@more_enums.must_be_unique
+class GuildFeature(str, more_enums.Enum):
     """Features that a guild can provide."""
 
     ANIMATED_ICON = "ANIMATED_ICON"
@@ -136,8 +139,8 @@ class GuildFeature(str, enum.Enum):
     """
 
 
-@enum.unique
-class GuildMessageNotificationsLevel(enum.IntEnum):
+@more_enums.must_be_unique
+class GuildMessageNotificationsLevel(int, more_enums.Enum):
     """Represents the default notification level for new messages in a guild."""
 
     ALL_MESSAGES = 0
@@ -147,8 +150,8 @@ class GuildMessageNotificationsLevel(enum.IntEnum):
     """Only notify users when they are @mentioned."""
 
 
-@enum.unique
-class GuildMFALevel(enum.IntEnum):
+@more_enums.must_be_unique
+class GuildMFALevel(int, more_enums.Enum):
     """Represents the multi-factor authorization requirement for a guild."""
 
     NONE = 0
@@ -158,8 +161,8 @@ class GuildMFALevel(enum.IntEnum):
     """MFA requirement."""
 
 
-@enum.unique
-class GuildPremiumTier(enum.IntEnum):
+@more_enums.must_be_unique
+class GuildPremiumTier(int, more_enums.Enum):
     """Tier for Discord Nitro boosting in a guild."""
 
     NONE = 0
@@ -175,8 +178,8 @@ class GuildPremiumTier(enum.IntEnum):
     """Level 3 Nitro boost."""
 
 
-@enum.unique
-class GuildSystemChannelFlag(enum.IntFlag):
+@more_enums.must_be_unique
+class GuildSystemChannelFlag(more_enums.IntFlag):
     """Defines which features are suppressed in the system channel."""
 
     SUPPRESS_USER_JOIN = 1 << 0
@@ -186,8 +189,8 @@ class GuildSystemChannelFlag(enum.IntFlag):
     """Display a message when the guild is Nitro boosted."""
 
 
-@enum.unique
-class GuildVerificationLevel(enum.IntEnum):
+@more_enums.must_be_unique
+class GuildVerificationLevel(int, more_enums.Enum):
     """Represents the level of verification of a guild."""
 
     NONE = 0
@@ -303,8 +306,8 @@ class GuildRole(PartialGuildRole, marshaller.Serializable):
     """Whether this role can be mentioned by all regardless of permissions."""
 
 
-@enum.unique
-class ActivityType(enum.IntEnum):
+@more_enums.must_be_unique
+class ActivityType(int, more_enums.Enum):
     """The activity type."""
 
     PLAYING = 0
@@ -405,8 +408,8 @@ class ActivitySecret(bases.HikariEntity, marshaller.Deserializable):
     """The secret used for joining a party, if applicable."""
 
 
-@enum.unique
-class ActivityFlag(enum.IntFlag):
+@more_enums.must_be_unique
+class ActivityFlag(more_enums.IntFlag):
     """Flags that describe what an activity includes.
 
     This can be more than one using bitwise-combinations.
@@ -495,7 +498,7 @@ class PresenceActivity(bases.HikariEntity, marshaller.Deserializable):
     """Flags that describe what the activity includes."""
 
 
-class PresenceStatus(str, enum.Enum):
+class PresenceStatus(str, more_enums.Enum):
     """The status of a member."""
 
     ONLINE = "online"
@@ -690,8 +693,8 @@ class GuildMemberPresence(bases.HikariEntity, marshaller.Deserializable):
     """This member's nickname, if set."""
 
 
-@enum.unique
-class IntegrationExpireBehaviour(enum.IntEnum):
+@more_enums.must_be_unique
+class IntegrationExpireBehaviour(int, more_enums.Enum):
     """Behavior for expiring integration subscribers."""
 
     REMOVE_ROLE = 0

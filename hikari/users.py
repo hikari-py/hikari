@@ -17,9 +17,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe Users on Discord."""
+
+from __future__ import annotations
+
 __all__ = ["User", "MyUser", "UserFlag", "PremiumType"]
 
-import enum
 import typing
 
 import attr
@@ -27,10 +29,11 @@ import attr
 from hikari import bases
 from hikari.internal import marshaller
 from hikari.internal import urls
+from hikari.internal import more_enums
 
 
-@enum.unique
-class UserFlag(enum.IntFlag):
+@more_enums.must_be_unique
+class UserFlag(more_enums.IntFlag):
     """The known user flags that represent account badges."""
 
     NONE = 0
@@ -76,8 +79,8 @@ class UserFlag(enum.IntFlag):
     """Verified Bot Developer"""
 
 
-@enum.unique
-class PremiumType(enum.IntEnum):
+@more_enums.must_be_unique
+class PremiumType(int, more_enums.Enum):
     """The types of Nitro."""
 
     NONE = 0

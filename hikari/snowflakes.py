@@ -22,9 +22,10 @@ Each Snowflake integer used to uniquely identify entities
 on the server.
 """
 
+from __future__ import annotations
+
 __all__ = ["Snowflake", "UniqueEntity", "HashableT"]
 
-import datetime
 import functools
 import typing
 
@@ -33,6 +34,9 @@ import attr
 from hikari import bases
 from hikari.internal import conversions
 from hikari.internal import marshaller
+
+if typing.TYPE_CHECKING:
+    import datetime
 
 
 @functools.total_ordering

@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Package metadata."""
+
+from __future__ import annotations
+
 __all__ = ["__author__", "__copyright__", "__docs__", "__email__", "__license__", "__url__", "__version__"]
 
 __author__ = "Nekokatt"

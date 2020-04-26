@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe both DMs and guild channels on Discord."""
 
+from __future__ import annotations
+
 __all__ = [
     "Channel",
     "ChannelType",
@@ -36,7 +38,6 @@ __all__ = [
 ]
 
 import datetime
-import enum
 import typing
 
 import attr
@@ -46,10 +47,14 @@ from hikari import permissions
 from hikari import users
 from hikari.internal import marshaller
 from hikari.internal import more_collections
+from hikari.internal import more_enums
+
+if typing.TYPE_CHECKING:
+    from hikari.internal import more_typing
 
 
-@enum.unique
-class ChannelType(enum.IntEnum):
+@more_enums.must_be_unique
+class ChannelType(int, more_enums.Enum):
     """The known channel types that are exposed to us by the API."""
 
     GUILD_TEXT = 0
@@ -74,8 +79,8 @@ class ChannelType(enum.IntEnum):
     """A channel that show's a game's store page."""
 
 
-@enum.unique
-class PermissionOverwriteType(str, enum.Enum):
+@more_enums.must_be_unique
+class PermissionOverwriteType(str, more_enums.Enum):
     """The type of entity a Permission Overwrite targets."""
 
     ROLE = "role"
@@ -443,7 +448,7 @@ class GuildChannelBuilder(marshaller.Serializable):
         return self
 
 
-def deserialize_channel(payload: typing.Dict[str, typing.Any]) -> typing.Union[GuildChannel, DMChannel]:
+def deserialize_channel(payload: more_typing.JSONObject) -> typing.Union[GuildChannel, DMChannel]:
     """Deserialize a channel object into the corresponding class.
 
     !!! warning

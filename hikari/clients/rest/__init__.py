@@ -22,6 +22,8 @@ This provides an object-oriented interface for interacting with discord's REST
 API.
 """
 
+from __future__ import annotations
+
 __all__ = ["RESTClient"]
 
 from hikari.clients import configs

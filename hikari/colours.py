@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Alias for the `hikari.colors` module."""
+
+from __future__ import annotations
+
 __all__ = ["Colour", "ColourCompatibleT"]
 
 from hikari.colors import Color as Colour

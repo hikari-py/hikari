@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """General helper functions and classes that are not categorised elsewhere."""
 
+from __future__ import annotations
+
 __all__ = ["warning"]
 
 import textwrap
@@ -25,11 +27,13 @@ import typing
 import warnings
 
 from hikari import bases
-from hikari import guilds
-from hikari import users
 from hikari.internal import assertions
 from hikari.internal import more_collections
-from hikari.internal import more_typing
+
+if typing.TYPE_CHECKING:
+    from hikari import guilds
+    from hikari import users
+    from hikari.internal import more_typing
 
 
 def warning(message: str, category: typing.Type[Warning], stack_level: int = 1) -> None:

@@ -17,10 +17,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe invites on Discord."""
+
+from __future__ import annotations
+
 __all__ = ["TargetUserType", "VanityUrl", "InviteGuild", "Invite", "InviteWithMetadata"]
 
 import datetime
-import enum
 import typing
 
 import attr
@@ -32,10 +34,11 @@ from hikari import users
 from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import urls
+from hikari.internal import more_enums
 
 
-@enum.unique
-class TargetUserType(enum.IntEnum):
+@more_enums.must_be_unique
+class TargetUserType(int, more_enums.Enum):
     """The reason a invite targets a user."""
 
     STREAM = 1

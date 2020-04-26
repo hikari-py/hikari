@@ -17,17 +17,18 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Enumerations for opcodes and status codes."""
-__all__ = ["HTTPStatusCode", "GatewayCloseCode", "GatewayOpcode", "JSONErrorCode"]
 
-import enum
+from __future__ import annotations
+
+__all__ = ["HTTPStatusCode", "GatewayCloseCode", "GatewayOpcode", "JSONErrorCode"]
 
 # Doesnt work correctly with enums, so since this file is all enums, ignore
 # pylint: disable=no-member
 from hikari.internal import more_enums
 
 
-@enum.unique
-class HTTPStatusCode(more_enums.EnumMixin, enum.IntEnum):
+@more_enums.must_be_unique
+class HTTPStatusCode(int, more_enums.Enum):
     """HTTP response codes expected from RESTful components."""
 
     CONTINUE = 100
@@ -107,8 +108,8 @@ class HTTPStatusCode(more_enums.EnumMixin, enum.IntEnum):
         return f"{self.value} {name}"
 
 
-@enum.unique
-class GatewayCloseCode(more_enums.EnumMixin, enum.IntEnum):
+@more_enums.must_be_unique
+class GatewayCloseCode(int, more_enums.Enum):
     """Reasons for closing a gateway connection.
 
     !!! note
@@ -182,8 +183,8 @@ class GatewayCloseCode(more_enums.EnumMixin, enum.IntEnum):
         return f"{self.value} {name}"
 
 
-@enum.unique
-class GatewayOpcode(more_enums.EnumMixin, enum.IntEnum):
+@more_enums.must_be_unique
+class GatewayOpcode(int, more_enums.Enum):
     """Opcodes that the gateway uses internally."""
 
     DISPATCH = 0
@@ -230,8 +231,8 @@ class GatewayOpcode(more_enums.EnumMixin, enum.IntEnum):
         return f"{self.value} {name}"
 
 
-@enum.unique
-class JSONErrorCode(more_enums.EnumMixin, enum.IntEnum):
+@more_enums.must_be_unique
+class JSONErrorCode(int, more_enums.Enum):
     """Error codes that can be returned by the REST API."""
 
     GENERAL_ERROR = 0

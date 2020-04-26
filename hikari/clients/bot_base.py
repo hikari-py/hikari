@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """A bot client might go here... eventually..."""
+
+from __future__ import annotations
+
 __all__ = ["BotBase"]
 
 import abc
@@ -27,54 +30,30 @@ import math
 import time
 import typing
 
-from hikari import gateway_entities
-from hikari import guilds
-from hikari import intents
-from hikari.events import bases
 from hikari.events import other
 from hikari.clients import configs
-from hikari.clients import rest
 from hikari.clients import runnable
-from hikari.clients import shards
+from hikari.clients import shard_states
 from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import more_collections
-from hikari.internal import more_typing
 from hikari.state import dispatchers
-from hikari.state import event_managers
 
-ShardClientT = typing.TypeVar("ShardClientT", bound=shards.ShardClient)
-EventManagerT = typing.TypeVar("EventManagerT", bound=event_managers.EventManager)
-EventDispatcherT = typing.TypeVar("EventDispatcherT", bound=dispatchers.EventDispatcher)
-RESTClientT = typing.TypeVar("RESTClientT", bound=rest.RESTClient)
-BotConfigT = typing.TypeVar("BotConfigT", bound=configs.BotConfig)
+if typing.TYPE_CHECKING:
+    from hikari import gateway_entities
+    from hikari import guilds
+    from hikari import intents
+    from hikari.clients import rest as _rest
+    from hikari.clients import shards as _shards
+    from hikari.events import bases
+    from hikari.internal import more_typing
+    from hikari.state import event_managers
 
 
 class BotBase(
-    runnable.RunnableClient,
-    dispatchers.EventDispatcher,
-    typing.Generic[ShardClientT, RESTClientT, EventDispatcherT, EventManagerT, BotConfigT],
-    abc.ABC,
+    runnable.RunnableClient, dispatchers.EventDispatcher, abc.ABC,
 ):
     """An abstract base class for a bot implementation.
-
-    This takes several generic parameter types in the following order:
-
-    * `ShardClientT` - the implementation of
-        `hikari.clients.shards.ShardClient` to use for shards.
-    * `RESTClientT` - the implementation of
-        `hikari.clients.rest.RESTClient` to use for API calls.
-    * `EventDispatcherT` - the implementation of
-        `hikari.state.dispatchers.EventDispatcher` to use for
-        dispatching events. This class will then delegate any calls inherited
-        from `hikari.state.dispatchers.EventDispatcher` to that
-        implementation when provided.
-    * `EventManagerT` - the implementation of
-        `hikari.state.event_managers.EventManager` to use for
-        event management, translation, and dispatching.
-    * `BotConfigT` - the implementation of
-        `hikari.clients.configs.BotConfig` to read component-specific
-        details from.
 
     Parameters
     ----------
@@ -97,22 +76,22 @@ class BotBase(
 
     """
 
-    _config: BotConfigT
+    _config: configs.BotConfig
     """The config for this bot."""
 
-    event_dispatcher: EventDispatcherT
+    event_dispatcher: dispatchers.EventDispatcher
     """The event dispatcher for this bot."""
 
-    event_manager: EventManagerT
+    event_manager: event_managers.EventManager
     """The event manager for this bot."""
 
     logger: logging.Logger
     """The logger to use for this bot."""
 
-    rest: RESTClientT
+    rest: rest.RESTClient
     """The REST HTTP client to use for this bot."""
 
-    shards: typing.Mapping[int, ShardClientT]
+    shards: typing.Mapping[int, shards.ShardClient]
     """Shards registered to this bot.
 
     These will be created once the bot has started execution.
@@ -318,15 +297,20 @@ class BotBase(
             *(
                 s.update_presence(status=status, activity=activity, idle_since=idle_since, is_afk=is_afk)
                 for s in self.shards.values()
-                if s.connection_state in (shards.ShardState.WAITING_FOR_READY, shards.ShardState.READY)
+                if s.connection_state in (shard_states.ShardState.WAITING_FOR_READY, shard_states.ShardState.READY)
             )
         )
 
     @classmethod
     @abc.abstractmethod
     def _create_shard(
-        cls, shard_id: int, shard_count: int, url: str, config: BotConfigT, event_manager: EventManagerT,
-    ) -> ShardClientT:
+        cls,
+        shard_id: int,
+        shard_count: int,
+        url: str,
+        config: configs.BotConfig,
+        event_manager: event_managers.EventManager,
+    ) -> _shards.ShardClient:
         """Return a new shard for the given parameters.
 
         Parameters
@@ -357,7 +341,7 @@ class BotBase(
 
     @classmethod
     @abc.abstractmethod
-    def _create_rest(cls, config: BotConfigT) -> RESTClientT:
+    def _create_rest(cls, config: configs.BotConfig) -> _rest:
         """Return a new REST client from the given configuration.
 
         Parameters
@@ -374,7 +358,9 @@ class BotBase(
 
     @classmethod
     @abc.abstractmethod
-    def _create_event_manager(cls, config: BotConfigT, dispatcher: EventDispatcherT) -> EventManagerT:
+    def _create_event_manager(
+        cls, config: configs.BotConfig, dispatcher: dispatchers.EventDispatcher
+    ) -> event_managers.EventManager:
         """Return a new instance of an event manager implementation.
 
         Parameters
@@ -391,7 +377,7 @@ class BotBase(
 
     @classmethod
     @abc.abstractmethod
-    def _create_event_dispatcher(cls, config: BotConfigT) -> EventDispatcherT:
+    def _create_event_dispatcher(cls, config: configs.BotConfig) -> dispatchers.EventDispatcher:
         """Return a new instance of an event dispatcher implementation.
 
         Parameters
