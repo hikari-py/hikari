@@ -471,8 +471,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         tts : bool
             If specified, whether the message will be sent as a TTS message.
         files : typing.Sequence[hikari.files.File]
-            A sequence of files to upload, if desired. If specified, should be
-            between 1 and 5 objects in size (inclusive).
+            If specified, a sequence of files to upload, if desired. Should be
+            between 1 and 10 objects in size (inclusive), also including embed
+            attachments. 
         embed : hikari.embeds.Embed
             If specified, the embed object to send with the message.
         mentions_everyone : bool
@@ -503,6 +504,8 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             or embed are specified.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
+            If you are trying to upload more than 10 files in total (including
+            embed attachments).
         hikari.errors.ForbiddenHTTPError
             If you lack permissions to send to this channel.
         ValueError

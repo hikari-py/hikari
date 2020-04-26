@@ -177,7 +177,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         avatar_url: str = ...,
         tts: bool = ...,
         wait: bool = False,
-        file: files.File = ...,
+        files: typing.Sequence[files.File] = ...,
         embeds: typing.Sequence[_embeds.Embed] = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
@@ -204,8 +204,8 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         wait : bool
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
-        file : hikari.files.File
-            If specified, this is a file object to send along with the webhook.
+        files : typing.Sequence[hikari.files.File]
+            If specified, a sequence of files to upload.
         embeds : typing.Sequence[hikari.embeds.Embed]
             If specified, a sequence of between `1` to `10` embed objects
             (inclusive) to send with the embed.
@@ -249,8 +249,8 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         if embeds is not ...:
             for embed in embeds:
                 file_resources += embed.assets_to_upload
-        if file is not ...:
-            file_resources.append(file)
+        if files is not ...:
+            file_resources += files
 
         payload = await self._session.execute_webhook(
             webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
