@@ -17,10 +17,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Datastructure bases."""
+
+from __future__ import annotations
+
 __all__ = ["HikariEntity", "Snowflake", "UniqueEntity"]
 
 import abc
-import datetime
 import functools
 import typing
 
@@ -28,6 +30,9 @@ import attr
 
 from hikari.internal import conversions
 from hikari.internal import marshaller
+
+if typing.TYPE_CHECKING:
+    import datetime
 
 
 @marshaller.marshallable()

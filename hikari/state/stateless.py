@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Event management for stateless bots."""
 
+from __future__ import annotations
+
 __all__ = ["StatelessEventManagerImpl"]
 
 from hikari.events import channels

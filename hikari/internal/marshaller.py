@@ -22,6 +22,9 @@
     You should not change anything in this file, if you do, you will likely get
     unexpected behaviour elsewhere.
 """
+
+from __future__ import annotations
+
 __all__ = [
     "RAISE",
     "dereference_handle",
@@ -40,7 +43,9 @@ import weakref
 import attr
 
 from hikari.internal import assertions
-from hikari.internal import more_typing
+
+if typing.TYPE_CHECKING:
+    from hikari.internal import more_typing
 
 _RAW_NAME_ATTR: typing.Final[str] = __name__ + "_RAW_NAME"
 _SERIALIZER_ATTR: typing.Final[str] = __name__ + "_SERIALIZER"

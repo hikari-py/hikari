@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Asyncio extensions and utilities."""
+
 from __future__ import annotations
 
 __all__ = ["completed_future", "wait"]
@@ -24,7 +25,8 @@ __all__ = ["completed_future", "wait"]
 import asyncio
 import typing
 
-from hikari.internal import more_typing
+if typing.TYPE_CHECKING:
+    from hikari.internal import more_typing
 
 
 @typing.overload

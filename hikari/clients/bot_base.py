@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """A bot client might go here... eventually..."""
+
 from __future__ import annotations
 
 __all__ = ["BotBase"]
@@ -29,30 +30,28 @@ import math
 import time
 import typing
 
-from hikari import gateway_entities
-from hikari.events import bases
 from hikari.events import other
 from hikari.clients import configs
 from hikari.clients import runnable
 from hikari.clients import shard_states
-from hikari.clients import shards as _shards
 from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.state import dispatchers
 
 if typing.TYPE_CHECKING:
+    from hikari import gateway_entities
     from hikari import guilds
     from hikari import intents
     from hikari.clients import rest as _rest
+    from hikari.clients import shards as _shards
+    from hikari.events import bases
     from hikari.internal import more_typing
     from hikari.state import event_managers
 
 
 class BotBase(
-    runnable.RunnableClient,
-    dispatchers.EventDispatcher,
-    abc.ABC,
+    runnable.RunnableClient, dispatchers.EventDispatcher, abc.ABC,
 ):
     """An abstract base class for a bot implementation.
 
@@ -298,8 +297,7 @@ class BotBase(
             *(
                 s.update_presence(status=status, activity=activity, idle_since=idle_since, is_afk=is_afk)
                 for s in self.shards.values()
-                if s.connection_state in (
-                shard_states.ShardState.WAITING_FOR_READY, shard_states.ShardState.READY)
+                if s.connection_state in (shard_states.ShardState.WAITING_FOR_READY, shard_states.ShardState.READY)
             )
         )
 
@@ -361,9 +359,7 @@ class BotBase(
     @classmethod
     @abc.abstractmethod
     def _create_event_manager(
-        cls,
-        config: configs.BotConfig,
-        dispatcher: dispatchers.EventDispatcher
+        cls, config: configs.BotConfig, dispatcher: dispatchers.EventDispatcher
     ) -> event_managers.EventManager:
         """Return a new instance of an event manager implementation.
 

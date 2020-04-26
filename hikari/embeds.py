@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe message embeds on Discord."""
+
 from __future__ import annotations
 
 __all__ = [
@@ -41,7 +42,9 @@ from hikari import files
 from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import assertions
-from hikari.internal import more_typing
+
+if typing.TYPE_CHECKING:
+    from hikari.internal import more_typing
 
 _MAX_FOOTER_TEXT: typing.Final[int] = 2048
 _MAX_AUTHOR_NAME: typing.Final[int] = 256

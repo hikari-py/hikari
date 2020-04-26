@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe audit logs on Discord."""
+
+from __future__ import annotations
+
 __all__ = [
     "AuditLog",
     "AuditLogChange",
@@ -54,7 +57,9 @@ from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import more_collections
 from hikari.internal import more_enums
-from hikari.internal import more_typing
+
+if typing.TYPE_CHECKING:
+    from hikari.internal import more_typing
 
 
 class AuditLogChangeKey(str, more_enums.Enum):

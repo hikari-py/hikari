@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Logic for handling all requests to reaction endpoints."""
 
+from __future__ import annotations
+
 __all__ = ["RESTReactionComponent"]
 
 import abc
@@ -25,12 +27,14 @@ import datetime
 import typing
 
 from hikari import bases
-from hikari import channels as _channels
-from hikari import emojis
-from hikari import messages as _messages
 from hikari import users
 from hikari.clients.rest import base
 from hikari.internal import helpers
+
+if typing.TYPE_CHECKING:
+    from hikari import channels as _channels
+    from hikari import emojis
+    from hikari import messages as _messages
 
 
 class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
