@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Basic transformation utilities."""
+
+from __future__ import annotations
+
 __all__ = [
     "nullable_cast",
     "try_cast",
@@ -35,25 +38,27 @@ import base64
 import contextlib
 import datetime
 import email.utils
-import enum
 import functools
 import operator
 import re
-import types
 import typing
 
-IntFlagT = typing.TypeVar("IntFlagT", bound=enum.IntFlag)
-RawIntFlagValueT = typing.Union[typing.AnyStr, typing.SupportsInt, int]
+if typing.TYPE_CHECKING:
+    import enum
+    import types
+
+    IntFlagT = typing.TypeVar("IntFlagT", bound=enum.IntFlag)
+    RawIntFlagValueT = typing.Union[typing.AnyStr, typing.SupportsInt, int]
+    CastInputT = typing.TypeVar("CastInputT")
+    CastOutputT = typing.TypeVar("CastOutputT")
+    DefaultT = typing.TypeVar("DefaultT")
+    TypeCastT = typing.Callable[[CastInputT], CastOutputT]
+    ResultT = typing.Union[CastOutputT, DefaultT]
+
 DISCORD_EPOCH: typing.Final[int] = 1_420_070_400
 ISO_8601_DATE_PART: typing.Final[typing.Pattern] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
 ISO_8601_TIME_PART: typing.Final[typing.Pattern] = re.compile(r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I)
 ISO_8601_TZ_PART: typing.Final[typing.Pattern] = re.compile(r"([+-])(\d{2}):(\d{2})$")
-
-CastInputT = typing.TypeVar("CastInputT")
-CastOutputT = typing.TypeVar("CastOutputT")
-DefaultT = typing.TypeVar("DefaultT")
-TypeCastT = typing.Callable[[CastInputT], CastOutputT]
-ResultT = typing.Union[CastOutputT, DefaultT]
 
 
 def nullable_cast(value: CastInputT, cast: TypeCastT, /) -> ResultT:

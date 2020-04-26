@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe audit logs on Discord."""
+
+from __future__ import annotations
+
 __all__ = [
     "AuditLog",
     "AuditLogChange",
@@ -39,7 +42,6 @@ __all__ = [
 import abc
 import copy
 import datetime
-import enum
 import typing
 
 import attr
@@ -54,10 +56,13 @@ from hikari import webhooks as _webhooks
 from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import more_collections
-from hikari.internal import more_typing
+from hikari.internal import more_enums
+
+if typing.TYPE_CHECKING:
+    from hikari.internal import more_typing
 
 
-class AuditLogChangeKey(str, enum.Enum):
+class AuditLogChangeKey(str, more_enums.Enum):
     """Commonly known and documented keys for audit log change objects.
 
     Others may exist. These should be expected to default to the raw string
@@ -190,8 +195,8 @@ class AuditLogChange(bases.HikariEntity, marshaller.Deserializable):
         return cls(key=key, new_value=new_value, old_value=old_value)
 
 
-@enum.unique
-class AuditLogEventType(enum.IntEnum):
+@more_enums.must_be_unique
+class AuditLogEventType(int, more_enums.Enum):
     """The type of event that occurred."""
 
     GUILD_UPDATE = 1
@@ -378,7 +383,10 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
         return cls(payload)
 
 
-def get_entry_info_entity(type_: int) -> typing.Type[BaseAuditLogEntryInfo]:
+_EntryInfoEntityT = typing.TypeVar("_EntryInfoEntityT", bound=BaseAuditLogEntryInfo)
+
+
+def get_entry_info_entity(type_: int) -> typing.Type[_EntryInfoEntityT]:
     """Get the entity that's registered for an entry's options.
 
     Parameters
@@ -419,7 +427,7 @@ class AuditLogEntry(bases.UniqueEntity, marshaller.Deserializable):
     """The reason for this change, if set (between 0-512 characters)."""
 
     @classmethod
-    def deserialize(cls, payload: typing.Mapping[str, str]) -> "AuditLogEntry":
+    def deserialize(cls, payload: more_typing.JSONObject) -> "AuditLogEntry":
         """Deserialize this model from a raw payload."""
         action_type = conversions.try_cast(payload["action_type"], AuditLogEventType, payload["action_type"])
         if target_id := payload.get("target_id"):

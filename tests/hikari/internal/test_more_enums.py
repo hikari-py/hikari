@@ -16,14 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import enum
 
 from hikari.internal import more_enums
 
 
 class TestEnumMixin:
     def test_str(self):
-        class TestType(more_enums.FlagMixin, enum.IntEnum):
+        class TestType(more_enums.IntFlag):
             a = 1
             b = 2
             c = 4
@@ -36,7 +35,7 @@ class TestEnumMixin:
 
 class TestFlagMixin:
     def test_str(self):
-        class TestType(more_enums.FlagMixin, enum.IntFlag):
+        class TestType(more_enums.IntFlag):
             a = 1
             b = 2
             c = 4

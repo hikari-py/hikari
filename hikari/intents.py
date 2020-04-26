@@ -17,15 +17,16 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Shard intents for controlling which events the application receives."""
-__all__ = ["Intent"]
 
-import enum
+from __future__ import annotations
+
+__all__ = ["Intent"]
 
 from hikari.internal import more_enums
 
 
-@enum.unique
-class Intent(more_enums.FlagMixin, enum.IntFlag):
+@more_enums.must_be_unique
+class Intent(more_enums.IntFlag):
     """Represents an intent on the gateway.
 
     This is a bitfield representation of all the categories of event

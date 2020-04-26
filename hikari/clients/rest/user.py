@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The logic for handling all requests to user endpoints."""
 
+from __future__ import annotations
+
 __all__ = ["RESTUserComponent"]
 
 import abc

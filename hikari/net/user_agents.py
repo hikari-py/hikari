@@ -24,6 +24,9 @@ the version of this library, the OS you are making requests from, etc.
 This information is provided to enable Discord to detect that you are using a
 valid bot and not attempting to abuse the API.
 """
+
+from __future__ import annotations
+
 __all__ = ["UserAgent"]
 
 import typing

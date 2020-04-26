@@ -18,21 +18,25 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The logic for handling all requests to webhook endpoints."""
 
+from __future__ import annotations
+
 __all__ = ["RESTWebhookComponent"]
 
 import abc
 import typing
 
 from hikari import bases
-from hikari import channels as _channels
-from hikari import embeds as _embeds
-from hikari import guilds
 from hikari import messages as _messages
-from hikari import users
 from hikari import webhooks
-from hikari import files
 from hikari.clients.rest import base
 from hikari.internal import helpers
+
+if typing.TYPE_CHECKING:
+    from hikari import channels as _channels
+    from hikari import embeds as _embeds
+    from hikari import files
+    from hikari import guilds
+    from hikari import users
 
 
 class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method

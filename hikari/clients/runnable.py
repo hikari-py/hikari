@@ -18,14 +18,18 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Provides a base for any type of websocket client."""
 
+from __future__ import annotations
+
 __all__ = ["RunnableClient"]
 
 import abc
 import asyncio
 import contextlib
-import logging
 import signal
 import typing
+
+if typing.TYPE_CHECKING:
+    import logging
 
 
 class RunnableClient(abc.ABC):

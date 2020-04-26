@@ -21,6 +21,9 @@
 These components describe the low level parts of Hikari. No model classes exist
 for these; the majority of communication is done via JSON arrays and objects.
 """
+
+from __future__ import annotations
+
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import rest

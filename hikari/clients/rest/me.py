@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The logic for handling requests to `@me` endpoints."""
 
+from __future__ import annotations
+
 __all__ = ["RESTCurrentUserComponent"]
 
 import abc
@@ -27,11 +29,13 @@ import typing
 from hikari import applications
 from hikari import bases
 from hikari import channels as _channels
-from hikari import guilds
 from hikari import users
-from hikari import files
 from hikari.clients.rest import base
 from hikari.internal import helpers
+
+if typing.TYPE_CHECKING:
+    from hikari import guilds
+    from hikari import files
 
 
 class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
@@ -48,7 +52,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         payload = await self._session.get_current_user()
         return users.MyUser.deserialize(payload)
 
-    async def update_me(self, *, username: str = ..., avatar: typing.Optional[files.File] = ...,) -> users.MyUser:
+    async def update_me(self, *, username: str = ..., avatar: typing.Optional[files.File] = ...) -> users.MyUser:
         """Edit the current user.
 
         Parameters
@@ -179,6 +183,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         if isinstance(before, datetime.datetime):
             before = str(bases.Snowflake.from_datetime(before))
         elif before is not None:
+            # noinspection PyTypeChecker
             before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
         return helpers.pagination_handler(
             deserializer=applications.OwnGuild.deserialize,

@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Core errors that may be raised by this API implementation."""
+
+from __future__ import annotations
+
 __all__ = [
     "HikariError",
     "HikariWarning",
@@ -42,7 +45,9 @@ __all__ = [
 import typing
 
 from hikari.net import codes
-from hikari.net import routes
+
+if typing.TYPE_CHECKING:
+    from hikari.net import routes
 
 
 class HikariError(RuntimeError):

@@ -18,6 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Various reusable type-hints for this library."""
 # pylint:disable=unused-variable
+
 from __future__ import annotations
 
 __all__ = [
@@ -33,24 +34,28 @@ __all__ = [
     "Task",
 ]
 
-import asyncio
-import contextvars
-
 # Hide any imports; this encourages any uses of this to use the typing module
 # for regular stuff rather than relying on it being in here as well.
-from types import FrameType as _FrameType
+# pylint: disable=ungrouped-imports
 from typing import Any as _Any
 from typing import AnyStr as _AnyStr
-from typing import Callable as _Callable
 from typing import Coroutine as _Coroutine
-from typing import IO as _IO
 from typing import Mapping as _Mapping
 from typing import Optional as _Optional
 from typing import Protocol as _Protocol
 from typing import runtime_checkable as _runtime_checkable
 from typing import Sequence as _Sequence
 from typing import TypeVar as _TypeVar
+from typing import TYPE_CHECKING as _TYPE_CHECKING
 from typing import Union as _Union
+
+if _TYPE_CHECKING:
+    from types import FrameType as _FrameType
+    from typing import Callable as _Callable
+    from typing import IO as _IO
+    import asyncio
+    import contextvars
+# pylint: enable=ungrouped-imports
 
 T_contra = _TypeVar("T_contra", contravariant=True)
 # noinspection PyShadowingBuiltins

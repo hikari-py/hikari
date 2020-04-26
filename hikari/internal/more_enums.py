@@ -17,17 +17,20 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Mixin utilities for defining enums."""
-__all__ = ["EnumMixin", "FlagMixin"]
 
+from __future__ import annotations
+
+__all__ = ["Enum", "IntFlag", "must_be_unique", "generated_value"]
+
+import enum
 import typing
 
 
-class EnumMixin:
-    """Mixin for a non-flag enum type.
+class Enum(enum.Enum):
+    """A non-flag enum type.
 
-    This gives a more meaningful `__str__` implementation.
-
-    The class should inherit this mixin before any type defined in `enum`.
+    This gives a more meaningful `__str__` implementation than what is defined
+    in the `enum` module by default.
     """
 
     __slots__ = ()
@@ -39,12 +42,11 @@ class EnumMixin:
         return self.name
 
 
-class FlagMixin:
-    """Mixin for a flag enum type.
+class IntFlag(enum.IntFlag):
+    """Base for an integer flag enum type.
 
-    This gives a more meaningful `__str__` implementation.
-
-    The class should inherit this mixin before any type defined in `enum`.
+    This gives a more meaningful `__str__` implementation than what is defined
+    in the `enum` module by default.
     """
 
     __slots__ = ()
@@ -54,3 +56,7 @@ class FlagMixin:
 
     def __str__(self) -> str:
         return ", ".join(flag.name for flag in typing.cast(typing.Iterable, type(self)) if flag & self)
+
+
+must_be_unique = enum.unique
+generated_value = enum.auto

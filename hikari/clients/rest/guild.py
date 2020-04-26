@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The logic for handling requests to guild endpoints."""
 
+from __future__ import annotations
+
 __all__ = ["RESTGuildComponent"]
 
 import abc
@@ -27,17 +29,19 @@ import typing
 from hikari import audit_logs
 from hikari import bases
 from hikari import channels as _channels
-from hikari import colors
 from hikari import emojis
 from hikari import guilds
 from hikari import invites
-from hikari import permissions as _permissions
-from hikari import users
 from hikari import voices
 from hikari import webhooks
-from hikari.internal import helpers
-from hikari import files
 from hikari.clients.rest import base
+from hikari.internal import helpers
+
+if typing.TYPE_CHECKING:
+    from hikari import colors
+    from hikari import files
+    from hikari import permissions as _permissions
+    from hikari import users
 
 
 def _get_member_id(member: guilds.GuildMember) -> str:
@@ -92,6 +96,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         if isinstance(before, datetime.datetime):
             before = str(bases.Snowflake.from_datetime(before))
         elif before is not ...:
+            # noinspection PyTypeChecker
             before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
         payload = await self._session.get_guild_audit_log(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
@@ -159,6 +164,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         if isinstance(before, datetime.datetime):
             before = str(bases.Snowflake.from_datetime(before))
         elif before is not None:
+            # noinspection PyTypeChecker
             before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
         return audit_logs.AuditLogIterator(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
@@ -1137,7 +1143,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         )
         return guilds.GuildMemberBan.deserialize(payload)
 
-    async def fetch_bans(self, guild: bases.Hashable[guilds.Guild],) -> typing.Sequence[guilds.GuildMemberBan]:
+    async def fetch_bans(self, guild: bases.Hashable[guilds.Guild]) -> typing.Sequence[guilds.GuildMemberBan]:
         """Get the bans for a given guild.
 
         Parameters
@@ -1439,7 +1445,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         )
         return guilds.GuildRole.deserialize(payload)
 
-    async def delete_role(self, guild: bases.Hashable[guilds.Guild], role: bases.Hashable[guilds.GuildRole],) -> None:
+    async def delete_role(self, guild: bases.Hashable[guilds.Guild], role: bases.Hashable[guilds.GuildRole]) -> None:
         """Delete a role from a given guild.
 
         Parameters
@@ -1745,7 +1751,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             integration_id=str(integration.id if isinstance(integration, bases.UniqueEntity) else int(integration)),
         )
 
-    async def fetch_guild_embed(self, guild: bases.Hashable[guilds.Guild],) -> guilds.GuildEmbed:
+    async def fetch_guild_embed(self, guild: bases.Hashable[guilds.Guild]) -> guilds.GuildEmbed:
         """Get the embed for a given guild.
 
         Parameters
@@ -1826,7 +1832,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         )
         return guilds.GuildEmbed.deserialize(payload)
 
-    async def fetch_guild_vanity_url(self, guild: bases.Hashable[guilds.Guild],) -> invites.VanityUrl:
+    async def fetch_guild_vanity_url(self, guild: bases.Hashable[guilds.Guild]) -> invites.VanityUrl:
         """
         Get the vanity URL for a given guild.
 
@@ -1880,6 +1886,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             The guild must have the widget enabled in the guild settings for
             this to be valid.
         """
+        # noinspection PyTypeChecker
         return self._session.get_guild_widget_image_url(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)), style=style
         )

@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The logic for handling requests to gateway endpoints."""
 
+from __future__ import annotations
+
 __all__ = ["RESTGatewayComponent"]
 
 import abc
@@ -40,6 +42,7 @@ class RESTGatewayComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         !!! note
             Users are expected to attempt to cache this result.
         """
+        # noinspection PyTypeChecker
         return await self._session.get_gateway()
 
     async def fetch_gateway_bot(self) -> gateway_entities.GatewayBot:

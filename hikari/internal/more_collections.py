@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Special data structures and utilities."""
 
+from __future__ import annotations
+
 __all__ = [
     "EMPTY_SEQUENCE",
     "EMPTY_SET",

@@ -22,6 +22,9 @@
     You should not change anything in this file, if you do, you will likely get
     unexpected behaviour elsewhere.
 """
+
+from __future__ import annotations
+
 __all__ = [
     "RAISE",
     "dereference_handle",
@@ -40,7 +43,9 @@ import weakref
 import attr
 
 from hikari.internal import assertions
-from hikari.internal import more_typing
+
+if typing.TYPE_CHECKING:
+    from hikari.internal import more_typing
 
 _RAW_NAME_ATTR: typing.Final[str] = __name__ + "_RAW_NAME"
 _SERIALIZER_ATTR: typing.Final[str] = __name__ + "_SERIALIZER"
@@ -51,6 +56,7 @@ _IF_NONE: typing.Final[str] = __name__ + "_IF_NONE"
 _PASSED_THROUGH_SINGLETONS: typing.Final[typing.Sequence[bool]] = [False, True, None]
 RAISE: typing.Final[typing.Any] = object()
 EntityT = typing.TypeVar("EntityT", contravariant=True)
+ClsT = typing.Type[EntityT]
 
 
 def dereference_handle(handle_string: str) -> typing.Any:
@@ -415,7 +421,7 @@ class HikariEntityMarshaller:
 HIKARI_ENTITY_MARSHALLER = HikariEntityMarshaller()
 
 
-def marshallable(*, marshaller: HikariEntityMarshaller = HIKARI_ENTITY_MARSHALLER):
+def marshallable(*, marshaller: HikariEntityMarshaller = HIKARI_ENTITY_MARSHALLER) -> typing.Callable[[ClsT], ClsT]:
     """Create a decorator for a class to make it into an `attr.s` class.
 
     Parameters
@@ -444,8 +450,9 @@ def marshallable(*, marshaller: HikariEntityMarshaller = HIKARI_ENTITY_MARSHALLE
             ...
     """
 
-    def decorator(cls):
-        return marshaller.register(cls)
+    def decorator(cls: ClsT) -> ClsT:
+        marshaller.register(cls)
+        return cls
 
     return decorator
 
