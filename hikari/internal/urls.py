@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Discord-specific URIs that have to be hard-coded."""
 
+from __future__ import annotations
+
 __all__ = [
     "generate_cdn_url",
 ]

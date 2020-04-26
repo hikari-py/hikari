@@ -155,6 +155,9 @@ task is stopped, and will also ensure any remaining futures in any bucket queues
 have an `asyncio.CancelledError` set on them to prevent deadlocking ratelimited
 calls that may be waiting to be unlocked.
 """
+
+from __future__ import annotations
+
 __all__ = [
     "BaseRateLimiter",
     "BurstRateLimiter",
@@ -167,17 +170,21 @@ __all__ = [
 
 import abc
 import asyncio
-import datetime
 import logging
 import random
 import time
-import types
 import typing
 import weakref
 
 from hikari.internal import more_asyncio
-from hikari.internal import more_typing
-from hikari.net import routes
+
+if typing.TYPE_CHECKING:
+    import datetime
+    import types
+
+    from hikari.internal import more_typing
+    from hikari.net import routes
+
 
 UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""

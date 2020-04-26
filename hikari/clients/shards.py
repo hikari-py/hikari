@@ -24,13 +24,13 @@ well as restarting it if it disconnects.
 Additional functions and coroutines are provided to update the presence on the
 shard using models defined in `hikari`.
 """
+
 from __future__ import annotations
 
 __all__ = ["ShardClient", "ShardClientImpl"]
 
 import abc
 import asyncio
-import datetime
 import logging
 import time
 import typing
@@ -38,18 +38,22 @@ import typing
 import aiohttp
 
 from hikari import errors
-from hikari import gateway_entities
-from hikari import guilds
-from hikari import intents as _intents
 from hikari.clients import shard_states
 from hikari.events import other
-from hikari.clients import configs
 from hikari.clients import runnable
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import shards
-from hikari.state import consumers
-from hikari.state import dispatchers
+
+if typing.TYPE_CHECKING:
+    import datetime
+
+    from hikari import gateway_entities
+    from hikari import guilds
+    from hikari import intents as _intents
+    from hikari.clients import configs
+    from hikari.state import consumers  # pylint: disable=cyclic-import
+    from hikari.state import dispatchers
 
 
 class ShardClient(runnable.RunnableClient, abc.ABC):

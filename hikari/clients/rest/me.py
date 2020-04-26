@@ -52,7 +52,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         payload = await self._session.get_current_user()
         return users.MyUser.deserialize(payload)
 
-    async def update_me(self, *, username: str = ..., avatar: typing.Optional[files.File] = ..., ) -> users.MyUser:
+    async def update_me(self, *, username: str = ..., avatar: typing.Optional[files.File] = ...) -> users.MyUser:
         """Edit the current user.
 
         Parameters

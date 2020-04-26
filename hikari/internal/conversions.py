@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Basic transformation utilities."""
+
 from __future__ import annotations
 
 __all__ = [
@@ -40,11 +41,11 @@ import email.utils
 import functools
 import operator
 import re
-import types
 import typing
 
 if typing.TYPE_CHECKING:
     import enum
+    import types
 
     IntFlagT = typing.TypeVar("IntFlagT", bound=enum.IntFlag)
     RawIntFlagValueT = typing.Union[typing.AnyStr, typing.SupportsInt, int]
