@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Bases for components and entities that are used to describe Discord gateway events."""
+from __future__ import annotations
+
 __all__ = ["HikariEvent", "get_required_intents_for", "requires_intents", "no_catch", "is_no_catch_event"]
 
 import abc
@@ -25,9 +27,11 @@ import typing
 import attr
 
 from hikari import bases
-from hikari import intents
 from hikari.internal import marshaller
 from hikari.internal import more_collections
+
+if typing.TYPE_CHECKING:
+    from hikari import intents
 
 
 # Base event, is not deserialized
@@ -38,7 +42,6 @@ class HikariEvent(bases.HikariEntity, abc.ABC):
 
 
 _HikariEventT = typing.TypeVar("_HikariEventT", contravariant=True)
-
 _REQUIRED_INTENTS_ATTR: typing.Final[str] = "___required_intents___"
 _NO_THROW_ATTR: typing.Final[str] = "___no_throw___"
 

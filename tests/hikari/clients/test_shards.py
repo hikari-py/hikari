@@ -23,6 +23,7 @@ import aiohttp
 import mock
 import pytest
 
+import hikari.clients.shard_states
 from hikari import errors
 from hikari import guilds
 from hikari.clients import configs
@@ -239,7 +240,7 @@ class TestShardClientImplStart:
     @_helpers.assert_raises(type_=RuntimeError)
     @pytest.mark.asyncio
     async def test_start_when_already_started(self, shard_client_obj):
-        shard_client_obj._shard_state = high_level_shards.ShardState.READY
+        shard_client_obj._shard_state = hikari.clients.shard_states.ShardState.READY
 
         await shard_client_obj.start()
 
@@ -269,7 +270,7 @@ class TestShardClientImplStart:
 
     @pytest.mark.asyncio
     async def test_close_when_already_stopping(self, shard_client_obj):
-        shard_client_obj._shard_state = high_level_shards.ShardState.STOPPING
+        shard_client_obj._shard_state = hikari.clients.shard_states.ShardState.STOPPING
 
         await shard_client_obj.close()
 

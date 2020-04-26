@@ -29,7 +29,6 @@ __all__ = [
 ]
 
 import datetime
-import enum
 import typing
 
 import attr
@@ -42,10 +41,11 @@ from hikari import guilds
 from hikari import users
 from hikari.internal import conversions
 from hikari.internal import marshaller
+from hikari.internal import more_enums
 
 
-@enum.unique
-class MessageType(enum.IntEnum):
+@more_enums.must_be_unique
+class MessageType(int, more_enums.Enum):
     """The type of a message."""
 
     DEFAULT = 0
@@ -88,8 +88,8 @@ class MessageType(enum.IntEnum):
     """Channel follow add."""
 
 
-@enum.unique
-class MessageFlag(enum.IntFlag):
+@more_enums.must_be_unique
+class MessageFlag(more_enums.IntFlag):
     """Additional flags for message options."""
 
     NONE = 0
@@ -111,8 +111,8 @@ class MessageFlag(enum.IntFlag):
     """This message came from the urgent message system."""
 
 
-@enum.unique
-class MessageActivityType(enum.IntEnum):
+@more_enums.must_be_unique
+class MessageActivityType(int, more_enums.Enum):
     """The type of a rich presence message activity."""
 
     NONE = 0

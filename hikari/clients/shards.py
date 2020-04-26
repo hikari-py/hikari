@@ -26,12 +26,11 @@ shard using models defined in `hikari`.
 """
 from __future__ import annotations
 
-__all__ = ["ShardState", "ShardClient", "ShardClientImpl"]
+__all__ = ["ShardClient", "ShardClientImpl"]
 
 import abc
 import asyncio
 import datetime
-import enum
 import logging
 import time
 import typing
@@ -42,6 +41,7 @@ from hikari import errors
 from hikari import gateway_entities
 from hikari import guilds
 from hikari import intents as _intents
+from hikari.clients import shard_states
 from hikari.events import other
 from hikari.clients import configs
 from hikari.clients import runnable
@@ -50,38 +50,6 @@ from hikari.net import ratelimits
 from hikari.net import shards
 from hikari.state import consumers
 from hikari.state import dispatchers
-
-
-@enum.unique
-class ShardState(enum.IntEnum):
-    """Describes the state of a shard."""
-
-    NOT_RUNNING = 0
-    """The shard is not running."""
-
-    CONNECTING = enum.auto()
-    """The shard is undergoing the initial connection handshake."""
-
-    WAITING_FOR_READY = enum.auto()
-    """The initialization handshake has completed.
-
-    We are waiting for the shard to receive the `READY` event.
-    """
-
-    READY = enum.auto()
-    """The shard is `READY`."""
-
-    RESUMING = enum.auto()
-    """The shard has sent a request to `RESUME` and is waiting for a response."""
-
-    STOPPING = enum.auto()
-    """The shard is currently shutting down permanently."""
-
-    STOPPED = enum.auto()
-    """The shard has shut down and is no longer connected."""
-
-    def __str__(self) -> str:
-        return self.name
 
 
 class ShardClient(runnable.RunnableClient, abc.ABC):
@@ -157,7 +125,7 @@ class ShardClient(runnable.RunnableClient, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def connection_state(self) -> ShardState:
+    def connection_state(self) -> shard_states.ShardState:
         """State of this shard's connection."""
 
     @property
@@ -290,7 +258,7 @@ class ShardClientImpl(ShardClient):
         self._idle_since = config.initial_idle_since
         self._is_afk = config.initial_is_afk
         self._status = config.initial_status
-        self._shard_state = ShardState.NOT_RUNNING
+        self._shard_state = shard_states.ShardState.NOT_RUNNING
         self._task = None
         self._dispatcher = dispatcher
         self._connection = shards.Shard(
@@ -361,7 +329,7 @@ class ShardClientImpl(ShardClient):
         return self._connection.reconnect_count
 
     @property
-    def connection_state(self) -> ShardState:
+    def connection_state(self) -> shard_states.ShardState:
         return self._shard_state
 
     @property
@@ -390,7 +358,7 @@ class ShardClientImpl(ShardClient):
         This will wait for the shard to dispatch a `READY` event, and
         then return.
         """
-        if self._shard_state not in (ShardState.NOT_RUNNING, ShardState.STOPPED):
+        if self._shard_state not in (shard_states.ShardState.NOT_RUNNING, shard_states.ShardState.STOPPED):
             raise RuntimeError("Cannot start a shard twice")
 
         self._task = asyncio.create_task(self._keep_alive(), name="ShardClient#keep_alive")
@@ -413,8 +381,8 @@ class ShardClientImpl(ShardClient):
 
         This will wait for the client to shut down before returning.
         """
-        if self._shard_state != ShardState.STOPPING:
-            self._shard_state = ShardState.STOPPING
+        if self._shard_state != shard_states.ShardState.STOPPING:
+            self._shard_state = shard_states.ShardState.STOPPING
             self.logger.debug("stopping shard")
 
             if self._dispatcher is not None:
@@ -510,7 +478,7 @@ class ShardClientImpl(ShardClient):
 
     async def _spin_up(self) -> asyncio.Task:
         self.logger.debug("initializing shard")
-        self._shard_state = ShardState.CONNECTING
+        self._shard_state = shard_states.ShardState.CONNECTING
 
         is_resume = self._connection.seq is not None and self._connection.session_id is not None
 
@@ -536,7 +504,7 @@ class ShardClientImpl(ShardClient):
 
         if is_resume:
             self.logger.info("sent RESUME, waiting for RESUMED event")
-            self._shard_state = ShardState.RESUMING
+            self._shard_state = shard_states.ShardState.RESUMING
 
             completed, _ = await asyncio.wait(
                 [connect_task, self._connection.resumed_event.wait()], return_when=asyncio.FIRST_COMPLETED
@@ -551,7 +519,7 @@ class ShardClientImpl(ShardClient):
         else:
             self.logger.info("sent IDENTIFY, waiting for READY event")
 
-            self._shard_state = ShardState.WAITING_FOR_READY
+            self._shard_state = shard_states.ShardState.WAITING_FOR_READY
 
             completed, _ = await asyncio.wait(
                 [connect_task, self._connection.ready_event.wait()], return_when=asyncio.FIRST_COMPLETED
@@ -563,7 +531,7 @@ class ShardClientImpl(ShardClient):
 
             self.logger.info("now READY")
 
-        self._shard_state = ShardState.READY
+        self._shard_state = shard_states.ShardState.READY
 
         return connect_task
 

@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Event dispatcher implementations that are intent-aware."""
+from __future__ import annotations
+
+__all__ = ["IntentAwareEventDispatcherImpl"]
 
 import asyncio
 import logging
@@ -30,8 +33,10 @@ from hikari.internal import assertions
 from hikari.internal import helpers
 from hikari.internal import more_asyncio
 from hikari.internal import more_collections
-from hikari.internal import more_typing
 from hikari.state import dispatchers
+
+if typing.TYPE_CHECKING:
+    from hikari.internal import more_typing
 
 
 class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):

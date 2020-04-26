@@ -19,11 +19,11 @@
 """Bitfield of permissions."""
 __all__ = ["Permission"]
 
-import enum
+from hikari.internal import more_enums
 
 
-@enum.unique
-class Permission(enum.IntFlag):
+@more_enums.must_be_unique
+class Permission(more_enums.IntFlag):
     """Represents the permissions available in a given channel or guild.
 
     This is an int-flag enum. This means that you can **combine multiple

@@ -26,16 +26,15 @@ import abc
 import inspect
 import typing
 
-from hikari.events import bases
 from hikari.internal import conversions
 
-# Prevents a circular reference that prevents importing correctly.
-from hikari.internal import more_typing
+if typing.TYPE_CHECKING:
+    from hikari.events import bases
+    from hikari.internal import more_typing
 
-
-EventT = typing.TypeVar("EventT", bound="events.HikariEvent")
-PredicateT = typing.Callable[[EventT], typing.Union[more_typing.Coroutine[bool], bool]]
-EventCallbackT = typing.Callable[[EventT], more_typing.Coroutine[typing.Any]]
+    EventT = typing.TypeVar("EventT", bound=bases.HikariEvent)
+    PredicateT = typing.Callable[[EventT], typing.Union[more_typing.Coroutine[bool], bool]]
+    EventCallbackT = typing.Callable[[EventT], more_typing.Coroutine[typing.Any]]
 
 
 class EventDispatcher(abc.ABC):

@@ -37,6 +37,7 @@ from hikari import files as _files
 from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import more_collections
+from hikari.internal import more_typing
 from hikari.internal import urls
 from hikari.net import codes
 from hikari.net import ratelimits
@@ -272,13 +273,13 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         compiled_route: routes.CompiledRoute,
         *,
         headers: typing.Optional[typing.Dict[str, str]] = None,
-        query: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        query: typing.Optional[more_typing.JSONObject] = None,
         form_body: typing.Optional[aiohttp.FormData] = None,
-        json_body: typing.Optional[typing.Union[typing.Dict[str, typing.Any], typing.Sequence[typing.Any]]] = None,
+        json_body: typing.Optional[typing.Union[more_typing.JSONObject, typing.Sequence[typing.Any]]] = None,
         reason: str = ...,
         suppress_authorization_header: bool = False,
         **kwargs,
-    ) -> typing.Union[typing.Dict[str, typing.Any], typing.Sequence[typing.Any], None]:
+    ) -> typing.Union[more_typing.JSONObject, typing.Sequence[typing.Any], None]:
         if self.client_session is None:
             self.client_session = aiohttp.ClientSession(
                 connector=self.connector,
@@ -400,7 +401,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
     async def _handle_bad_response(
         self,
         backoff: ratelimits.ExponentialBackOff,
-        body: typing.Dict[str, typing.Any],
+        body: more_typing.JSONObject,
         raw_body: bytes,
         status: typing.Union[codes.HTTPStatusCode, int, None],
         compiled_route: routes.CompiledRoute,
@@ -458,12 +459,12 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         result = await self._request(routes.GATEWAY.compile(self.GET))
         return result["url"]
 
-    async def get_gateway_bot(self) -> typing.Dict[str, typing.Any]:
+    async def get_gateway_bot(self) -> more_typing.JSONObject:
         """Get the gateway info for the bot.
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             An object containing a `url` to connect to, an `int` number of
             shards recommended to use for connecting, and a
             `session_start_limit` object.
@@ -475,7 +476,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
     async def get_guild_audit_log(
         self, guild_id: str, *, user_id: str = ..., action_type: int = ..., limit: int = ..., before: str = ...
-    ) -> typing.Dict:
+    ) -> more_typing.JSONObject:
         """Get an audit log object for the given guild.
 
         Parameters
@@ -495,7 +496,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             An audit log object.
 
         Raises
@@ -513,7 +514,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_AUDIT_LOGS.compile(self.GET, guild_id=guild_id)
         return await self._request(route, query=query)
 
-    async def get_channel(self, channel_id: str) -> typing.Dict[str, typing.Any]:
+    async def get_channel(self, channel_id: str) -> more_typing.JSONObject:
         """Get a channel object from a given channel ID.
 
         Parameters
@@ -523,7 +524,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The channel object that has been found.
 
         Raises
@@ -547,10 +548,10 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         rate_limit_per_user: int = ...,
         bitrate: int = ...,
         user_limit: int = ...,
-        permission_overwrites: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
+        permission_overwrites: typing.Sequence[more_typing.JSONObject] = ...,
         parent_id: str = ...,
         reason: str = ...,
-    ) -> typing.Dict[str, typing.Any]:
+    ) -> more_typing.JSONObject:
         """Update one or more aspects of a given channel ID.
 
         Parameters
@@ -583,7 +584,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If specified, the new max number of users to allow in a voice channel.
             This must be between `0` and `99` inclusive, where
             `0` implies no limit.
-        permission_overwrites : typing.Sequence[typing.Dict[str, typing.Any]]
+        permission_overwrites : typing.Sequence[more_typing.JSONObject]
             If specified, the new list of permission overwrites that are category
             specific to replace the existing overwrites with.
         parent_id : str, optional
@@ -595,7 +596,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The channel object that has been modified.
 
         Raises
@@ -651,7 +652,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
     async def get_channel_messages(
         self, channel_id: str, *, limit: int = ..., after: str = ..., before: str = ..., around: str = ...,
-    ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    ) -> typing.Sequence[more_typing.JSONObject]:
         """Retrieve message history for a given channel.
 
         Parameters
@@ -672,7 +673,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of message objects.
 
         Raises
@@ -705,7 +706,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.CHANNEL_MESSAGES.compile(self.GET, channel_id=channel_id)
         return await self._request(route, query=query)
 
-    async def get_channel_message(self, channel_id: str, message_id: str) -> typing.Dict[str, typing.Any]:
+    async def get_channel_message(self, channel_id: str, message_id: str) -> more_typing.JSONObject:
         """Get the message with the given message ID from the channel with the given channel ID.
 
         Parameters
@@ -717,7 +718,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             A message object.
 
         !!! note
@@ -741,9 +742,9 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         nonce: str = ...,
         tts: bool = ...,
         files: typing.Sequence[_files.File] = ...,
-        embed: typing.Dict[str, typing.Any] = ...,
-        allowed_mentions: typing.Dict[str, typing.Any] = ...,
-    ) -> typing.Dict[str, typing.Any]:
+        embed: more_typing.JSONObject = ...,
+        allowed_mentions: more_typing.JSONObject = ...,
+    ) -> more_typing.JSONObject:
         """Create a message in the given channel or DM.
 
         Parameters
@@ -761,15 +762,15 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         files : typing.Sequence[hikari.files.File]
             If specified, this should be a list of between `1` and `5` file
             objects to upload. Each should have a unique name.
-        embed : typing.Dict[str, typing.Any]
+        embed : more_typing.JSONObject
             If specified, the embed to send with the message.
-        allowed_mentions : typing.Dict[str, typing.Any]
+        allowed_mentions : more_typing.JSONObject
             If specified, the mentions to parse from the `content`.
             If not specified, will parse all mentions from the `content`.
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The created message object.
 
         Raises
@@ -914,7 +915,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
     async def get_reactions(
         self, channel_id: str, message_id: str, emoji: str, *, after: str = ..., limit: int = ...,
-    ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    ) -> typing.Sequence[more_typing.JSONObject]:
         """Get a list of users who reacted with the given emoji on the given message.
 
         Parameters
@@ -937,7 +938,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of user objects.
 
         Raises
@@ -979,10 +980,10 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         message_id: str,
         *,
         content: typing.Optional[str] = ...,
-        embed: typing.Optional[typing.Dict[str, typing.Any]] = ...,
+        embed: typing.Optional[more_typing.JSONObject] = ...,
         flags: int = ...,
-        allowed_mentions: typing.Dict[str, typing.Any] = ...,
-    ) -> typing.Dict[str, typing.Any]:
+        allowed_mentions: more_typing.JSONObject = ...,
+    ) -> more_typing.JSONObject:
         """Update the given message.
 
         Parameters
@@ -994,18 +995,18 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         content : str, optional
             If specified, the string content to replace with in the message.
             If `None`, the content will be removed from the message.
-        embed : typing.Dict[str, typing.Any], optional
+        embed : more_typing.JSONObject, optional
             If specified, the embed to replace with in the message.
             If `None`, the embed will be removed from the message.
         flags : int
             If specified, the integer to replace the message's current flags.
-        allowed_mentions : typing.Dict[str, typing.Any]
+        allowed_mentions : more_typing.JSONObject
             If specified, the mentions to parse from the `content`.
             If not specified, will parse all mentions from the `content`.
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The edited message object.
 
         Raises
@@ -1119,7 +1120,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.CHANNEL_PERMISSIONS.compile(self.PATCH, channel_id=channel_id, overwrite_id=overwrite_id)
         await self._request(route, json_body=payload, reason=reason)
 
-    async def get_channel_invites(self, channel_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    async def get_channel_invites(self, channel_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get invites for a given channel.
 
         Parameters
@@ -1129,7 +1130,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of invite objects.
 
         Raises
@@ -1153,7 +1154,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         target_user: str = ...,
         target_user_type: int = ...,
         reason: str = ...,
-    ) -> typing.Dict[str, typing.Any]:
+    ) -> more_typing.JSONObject:
         """Create a new invite for the given channel.
 
         Parameters
@@ -1182,7 +1183,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             An invite object.
 
         Raises
@@ -1242,7 +1243,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.CHANNEL_TYPING.compile(self.POST, channel_id=channel_id)
         await self._request(route)
 
-    async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get pinned messages for a given channel.
 
         Parameters
@@ -1252,7 +1253,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of messages.
 
         Raises
@@ -1312,7 +1313,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.CHANNEL_PIN.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
         await self._request(route)
 
-    async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get a list of the emojis for a given guild ID.
 
         Parameters
@@ -1322,7 +1323,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of emoji objects.
 
         Raises
@@ -1335,7 +1336,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_EMOJIS.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> typing.Dict[str, typing.Any]:
+    async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> more_typing.JSONObject:
         """Get an emoji from a given guild and emoji IDs.
 
         Parameters
@@ -1347,7 +1348,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             An emoji object.
 
         Raises
@@ -1362,7 +1363,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
     async def create_guild_emoji(
         self, guild_id: str, name: str, image: bytes, *, roles: typing.Sequence[str] = ..., reason: str = ...,
-    ) -> typing.Dict[str, typing.Any]:
+    ) -> more_typing.JSONObject:
         """Create a new emoji for a given guild.
 
         Parameters
@@ -1382,7 +1383,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The newly created emoji object.
 
         Raises
@@ -1407,7 +1408,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
     async def modify_guild_emoji(
         self, guild_id: str, emoji_id: str, *, name: str = ..., roles: typing.Sequence[str] = ..., reason: str = ...,
-    ) -> typing.Dict[str, typing.Any]:
+    ) -> more_typing.JSONObject:
         """Edit an emoji of a given guild.
 
         Parameters
@@ -1428,7 +1429,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The updated emoji object.
 
         Raises
@@ -1473,9 +1474,9 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         verification_level: int = ...,
         default_message_notifications: int = ...,
         explicit_content_filter: int = ...,
-        roles: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
-        channels: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
-    ) -> typing.Dict[str, typing.Any]:
+        roles: typing.Sequence[more_typing.JSONObject] = ...,
+        channels: typing.Sequence[more_typing.JSONObject] = ...,
+    ) -> more_typing.JSONObject:
         """Create a new guild.
 
         !!! warning
@@ -1496,15 +1497,15 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If specified, the default notification level integer (`0-1`).
         explicit_content_filter : int
             If specified, the explicit content filter integer (`0-2`).
-        roles : typing.Sequence[typing.Dict[str, typing.Any]]
+        roles : typing.Sequence[more_typing.JSONObject]
             If specified, an array of role objects to be created alongside the
             guild. First element changes the `@everyone` role.
-        channels : typing.Sequence[typing.Dict[str, typing.Any]]
+        channels : typing.Sequence[more_typing.JSONObject]
             If specified, an array of channel objects to be created alongside the guild.
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The newly created guild object.
 
         Raises
@@ -1525,7 +1526,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILDS.compile(self.POST)
         return await self._request(route, json_body=payload)
 
-    async def get_guild(self, guild_id: str, *, with_counts: bool = True) -> typing.Dict[str, typing.Any]:
+    async def get_guild(self, guild_id: str, *, with_counts: bool = True) -> more_typing.JSONObject:
         """Get the information for the guild with the given ID.
 
         Parameters
@@ -1538,7 +1539,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The requested guild object.
 
         Raises
@@ -1551,7 +1552,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD.compile(self.GET, guild_id=guild_id)
         return await self._request(route, query={"with_counts": with_counts})
 
-    async def get_guild_preview(self, guild_id: str) -> typing.Dict[str, typing.Any]:
+    async def get_guild_preview(self, guild_id: str) -> more_typing.JSONObject:
         """Get a public guild's preview object.
 
         Parameters
@@ -1561,7 +1562,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The requested guild preview object.
 
         !!! note
@@ -1593,7 +1594,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         splash: bytes = ...,
         system_channel_id: str = ...,
         reason: str = ...,
-    ) -> typing.Dict[str, typing.Any]:
+    ) -> more_typing.JSONObject:
         """Edit a given guild.
 
         Parameters
@@ -1629,7 +1630,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The edited guild object.
 
         Raises
@@ -1676,7 +1677,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD.compile(self.DELETE, guild_id=guild_id)
         await self._request(route)
 
-    async def list_guild_channels(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    async def list_guild_channels(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get all the channels for a given guild.
 
         Parameters
@@ -1686,7 +1687,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of channel objects.
 
         Raises
@@ -1711,10 +1712,10 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         rate_limit_per_user: int = ...,
         bitrate: int = ...,
         user_limit: int = ...,
-        permission_overwrites: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
+        permission_overwrites: typing.Sequence[more_typing.JSONObject] = ...,
         parent_id: str = ...,
         reason: str = ...,
-    ) -> typing.Dict[str, typing.Any]:
+    ) -> more_typing.JSONObject:
         """Create a channel in a given guild.
 
         Parameters
@@ -1749,7 +1750,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If specified, the max number of users to allow in a voice channel.
             This must be between `0` and `99` inclusive, where
             `0` implies no limit.
-        permission_overwrites : typing.Sequence[typing.Dict[str, typing.Any]]
+        permission_overwrites : typing.Sequence[more_typing.JSONObject]
             If specified, the list of permission overwrites that are category
             specific to replace the existing overwrites with.
         parent_id : str
@@ -1760,7 +1761,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The newly created channel object.
 
         Raises
@@ -1816,7 +1817,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_CHANNELS.compile(self.PATCH, guild_id=guild_id)
         await self._request(route, json_body=payload)
 
-    async def get_guild_member(self, guild_id: str, user_id: str) -> typing.Dict[str, typing.Any]:
+    async def get_guild_member(self, guild_id: str, user_id: str) -> more_typing.JSONObject:
         """Get a given guild member.
 
         Parameters
@@ -1828,7 +1829,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The requested member object.
 
         Raises
@@ -1843,7 +1844,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
     async def list_guild_members(
         self, guild_id: str, *, limit: int = ..., after: str = ...,
-    ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    ) -> typing.Sequence[more_typing.JSONObject]:
         """List all members of a given guild.
 
         Parameters
@@ -1873,7 +1874,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             A list of member objects.
 
         Raises
@@ -2050,7 +2051,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_MEMBER.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
         await self._request(route, reason=reason)
 
-    async def get_guild_bans(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    async def get_guild_bans(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get the bans for a given guild.
 
         Parameters
@@ -2060,7 +2061,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of ban objects.
 
         Raises
@@ -2073,7 +2074,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_BANS.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_guild_ban(self, guild_id: str, user_id: str) -> typing.Dict[str, typing.Any]:
+    async def get_guild_ban(self, guild_id: str, user_id: str) -> more_typing.JSONObject:
         """Get a ban from a given guild.
 
         Parameters
@@ -2085,7 +2086,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             A ban object for the requested user.
 
         Raises
@@ -2152,7 +2153,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_BAN.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
         await self._request(route, reason=reason)
 
-    async def get_guild_roles(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    async def get_guild_roles(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get the roles for a given guild.
 
         Parameters
@@ -2162,7 +2163,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of role objects.
 
         Raises
@@ -2185,7 +2186,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         hoist: bool = ...,
         mentionable: bool = ...,
         reason: str = ...,
-    ) -> typing.Dict[str, typing.Any]:
+    ) -> more_typing.JSONObject:
         """Create a new role for a given guild.
 
         Parameters
@@ -2208,7 +2209,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The newly created role object.
 
         Raises
@@ -2231,7 +2232,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
     async def modify_guild_role_positions(
         self, guild_id: str, role: typing.Tuple[str, int], *roles: typing.Tuple[str, int]
-    ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    ) -> typing.Sequence[more_typing.JSONObject]:
         """Edit the position of two or more roles in a given guild.
 
         Parameters
@@ -2247,7 +2248,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of all the guild roles.
 
         Raises
@@ -2274,7 +2275,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         hoist: bool = ...,
         mentionable: bool = ...,
         reason: str = ...,
-    ) -> typing.Dict[str, typing.Any]:
+    ) -> more_typing.JSONObject:
         """Edits a role in a given guild.
 
         Parameters
@@ -2299,7 +2300,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The edited role object.
 
         Raises
@@ -2412,7 +2413,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         except (TypeError, KeyError):
             return None
 
-    async def get_guild_voice_regions(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    async def get_guild_voice_regions(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get the voice regions for a given guild.
 
         Parameters
@@ -2422,7 +2423,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of voice region objects.
 
         Raises
@@ -2435,7 +2436,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_VOICE_REGIONS.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_guild_invites(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    async def get_guild_invites(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get the invites for a given guild.
 
         Parameters
@@ -2445,7 +2446,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of invite objects (with metadata).
 
         Raises
@@ -2458,7 +2459,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_INVITES.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get the integrations for a given guild.
 
         Parameters
@@ -2468,7 +2469,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of integration objects.
 
         Raises
@@ -2569,7 +2570,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_INTEGRATION_SYNC.compile(self.POST, guild_id=guild_id, integration_id=integration_id)
         await self._request(route)
 
-    async def get_guild_embed(self, guild_id: str) -> typing.Dict[str, typing.Any]:
+    async def get_guild_embed(self, guild_id: str) -> more_typing.JSONObject:
         """Get the embed for a given guild.
 
         Parameters
@@ -2579,7 +2580,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             A guild embed object.
 
         Raises
@@ -2594,7 +2595,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
     async def modify_guild_embed(
         self, guild_id: str, *, channel_id: typing.Optional[str] = ..., enabled: bool = ..., reason: str = ...,
-    ) -> typing.Dict[str, typing.Any]:
+    ) -> more_typing.JSONObject:
         """Edit the embed for a given guild.
 
         Parameters
@@ -2612,7 +2613,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The updated embed object.
 
         Raises
@@ -2628,7 +2629,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_EMBED.compile(self.PATCH, guild_id=guild_id)
         return await self._request(route, json_body=payload, reason=reason)
 
-    async def get_guild_vanity_url(self, guild_id: str) -> typing.Dict[str, typing.Any]:
+    async def get_guild_vanity_url(self, guild_id: str) -> more_typing.JSONObject:
         """Get the vanity URL for a given guild.
 
         Parameters
@@ -2638,7 +2639,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             A partial invite object containing the vanity URL in the `code` field.
 
         Raises
@@ -2677,7 +2678,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         query = "" if style is ... else f"?style={style}"
         return f"{self.base_url}/guilds/{guild_id}/widget.png" + query
 
-    async def get_invite(self, invite_code: str, *, with_counts: bool = ...) -> typing.Dict[str, typing.Any]:
+    async def get_invite(self, invite_code: str, *, with_counts: bool = ...) -> more_typing.JSONObject:
         """Getsthe given invite.
 
         Parameters
@@ -2690,7 +2691,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The requested invite object.
 
         Raises
@@ -2728,18 +2729,18 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.INVITE.compile(self.DELETE, invite_code=invite_code)
         return await self._request(route)
 
-    async def get_current_user(self) -> typing.Dict[str, typing.Any]:
+    async def get_current_user(self) -> more_typing.JSONObject:
         """Get the current user that is represented by token given to the client.
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The current user object.
         """
         route = routes.OWN_USER.compile(self.GET)
         return await self._request(route)
 
-    async def get_user(self, user_id: str) -> typing.Dict[str, typing.Any]:
+    async def get_user(self, user_id: str) -> more_typing.JSONObject:
         """Get a given user.
 
         Parameters
@@ -2749,7 +2750,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The requested user object.
 
         Raises
@@ -2762,7 +2763,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
     async def modify_current_user(
         self, *, username: str = ..., avatar: typing.Optional[bytes] = ...,
-    ) -> typing.Dict[str, typing.Any]:
+    ) -> more_typing.JSONObject:
         """Edit the current user.
 
         Parameters
@@ -2775,7 +2776,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The updated user object.
 
         Raises
@@ -2789,7 +2790,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.OWN_USER.compile(self.PATCH)
         return await self._request(route, json_body=payload)
 
-    async def get_current_user_connections(self) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    async def get_current_user_connections(self) -> typing.Sequence[more_typing.JSONObject]:
         """Get the current user's connections.
 
         This endpoint can be used with both `Bearer` and `Bot` tokens but
@@ -2798,7 +2799,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of connection objects.
         """
         route = routes.OWN_CONNECTIONS.compile(self.GET)
@@ -2806,7 +2807,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
     async def get_current_user_guilds(
         self, *, before: str = ..., after: str = ..., limit: int = ...,
-    ) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    ) -> typing.Sequence[more_typing.JSONObject]:
         """Get the guilds the current user is in.
 
         Parameters
@@ -2823,7 +2824,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of partial guild objects.
 
         Raises
@@ -2855,7 +2856,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.LEAVE_GUILD.compile(self.DELETE, guild_id=guild_id)
         await self._request(route)
 
-    async def create_dm(self, recipient_id: str) -> typing.Dict[str, typing.Any]:
+    async def create_dm(self, recipient_id: str) -> more_typing.JSONObject:
         """Create a new DM channel with a given user.
 
         Parameters
@@ -2865,7 +2866,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The newly created DM channel object.
 
         Raises
@@ -2877,12 +2878,12 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.OWN_DMS.compile(self.POST)
         return await self._request(route, json_body=payload)
 
-    async def list_voice_regions(self) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    async def list_voice_regions(self) -> typing.Sequence[more_typing.JSONObject]:
         """Get the voice regions that are available.
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of voice regions available
 
         !!! note
@@ -2893,7 +2894,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
     async def create_webhook(
         self, channel_id: str, name: str, *, avatar: bytes = ..., reason: str = ...,
-    ) -> typing.Dict[str, typing.Any]:
+    ) -> more_typing.JSONObject:
         """Create a webhook for a given channel.
 
         Parameters
@@ -2910,7 +2911,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The newly created webhook object.
 
         Raises
@@ -2928,7 +2929,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.CHANNEL_WEBHOOKS.compile(self.POST, channel_id=channel_id)
         return await self._request(route, json_body=payload, reason=reason)
 
-    async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get all webhooks from a given channel.
 
         Parameters
@@ -2938,7 +2939,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of webhook objects for the give channel.
 
         Raises
@@ -2952,7 +2953,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.CHANNEL_WEBHOOKS.compile(self.GET, channel_id=channel_id)
         return await self._request(route)
 
-    async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[typing.Dict[str, typing.Any]]:
+    async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get all webhooks for a given guild.
 
         Parameters
@@ -2962,7 +2963,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Sequence[typing.Dict[str, typing.Any]]
+        typing.Sequence[more_typing.JSONObject]
             A list of webhook objects for the given guild.
 
         Raises
@@ -2976,7 +2977,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.GUILD_WEBHOOKS.compile(self.GET, guild_id=guild_id)
         return await self._request(route)
 
-    async def get_webhook(self, webhook_id: str, *, webhook_token: str = ...) -> typing.Dict[str, typing.Any]:
+    async def get_webhook(self, webhook_id: str, *, webhook_token: str = ...) -> more_typing.JSONObject:
         """Get a given webhook.
 
         Parameters
@@ -2988,7 +2989,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The requested webhook object.
 
         Raises
@@ -3016,7 +3017,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         avatar: typing.Optional[bytes] = ...,
         channel_id: str = ...,
         reason: str = ...,
-    ) -> typing.Dict[str, typing.Any]:
+    ) -> more_typing.JSONObject:
         """Edit a given webhook.
 
         Parameters
@@ -3039,7 +3040,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             The updated webhook object.
 
         Raises
@@ -3102,9 +3103,9 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         tts: bool = ...,
         wait: bool = ...,
         files: typing.Sequence[_files.File] = ...,
-        embeds: typing.Sequence[typing.Dict[str, typing.Any]] = ...,
-        allowed_mentions: typing.Dict[str, typing.Any] = ...,
-    ) -> typing.Optional[typing.Dict[str, typing.Any]]:
+        embeds: typing.Sequence[more_typing.JSONObject] = ...,
+        allowed_mentions: more_typing.JSONObject = ...,
+    ) -> typing.Optional[more_typing.JSONObject]:
         """Execute a webhook to create a message in its channel.
 
         Parameters
@@ -3128,16 +3129,16 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             to be executed and return the resultant message object.
         files : typing.Sequence[hikari.files.File]
             If specified, the optional file objects to upload.
-        embeds : typing.Sequence[typing.Dict[str, typing.Any]]
+        embeds : typing.Sequence[more_typing.JSONObject]
             If specified, the sequence of embed objects that will be sent
             with this message.
-        allowed_mentions : typing.Dict[str, typing.Any]
+        allowed_mentions : more_typing.JSONObject
             If specified, the mentions to parse from the `content`.
             If not specified, will parse all mentions from the `content`.
 
         Returns
         -------
-        typing.Dict[str, typing.Any], optional
+        more_typing.JSONObject, optional
             The created message object if `wait` is `True`, else
             `None`.
 
@@ -3186,12 +3187,12 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
     # OAUTH2 #
     ##########
 
-    async def get_current_application_info(self) -> typing.Dict[str, typing.Any]:
+    async def get_current_application_info(self) -> more_typing.JSONObject:
         """Get the current application information.
 
         Returns
         -------
-        typing.Dict[str, typing.Any]
+        more_typing.JSONObject
             An application info object.
         """
         route = routes.OAUTH2_APPLICATIONS_ME.compile(self.GET)

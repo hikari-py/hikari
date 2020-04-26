@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The abstract class that all REST client logic classes should inherit from."""
 
+from __future__ import annotations
+
 __all__ = ["BaseRESTComponent"]
 
 import abc
@@ -25,7 +27,9 @@ import types
 import typing
 
 from hikari.internal import meta
-from hikari.net import rest
+
+if typing.TYPE_CHECKING:
+    from hikari.net import rest
 
 
 class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
@@ -40,7 +44,7 @@ class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
     def __init__(self, session: rest.REST) -> None:
         self._session: rest.REST = session
 
-    async def __aenter__(self) -> "BaseRESTComponent":
+    async def __aenter__(self) -> BaseRESTComponent:
         return self
 
     async def __aexit__(

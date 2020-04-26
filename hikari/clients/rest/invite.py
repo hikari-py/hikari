@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """The logic for handling requests to invite endpoints."""
 
+from __future__ import annotations
+
 __all__ = ["RESTInviteComponent"]
 
 import abc

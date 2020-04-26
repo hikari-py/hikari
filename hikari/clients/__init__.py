@@ -22,6 +22,7 @@ from hikari.clients.bot_base import *
 from hikari.clients.configs import *
 from hikari.clients.rest import *
 from hikari.clients.runnable import *
+from hikari.clients.shard_states import *
 from hikari.clients.shards import *
 from hikari.clients.stateless import *
 
@@ -29,6 +30,7 @@ __all__ = [
     *bot_base.__all__,
     *configs.__all__,
     *rest.__all__,
+    *shard_states.__all__,
     *shards.__all__,
     *runnable.__all__,
     *stateless.__all__,
