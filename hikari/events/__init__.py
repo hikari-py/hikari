@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe Discord gateway events."""
 
+from __future__ import annotations
+
 from hikari.events import bases
 from hikari.events import channels
 from hikari.events import guilds

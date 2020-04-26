@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe Discord gateway guild events."""
+
 from __future__ import annotations
 
 __all__ = [
@@ -37,21 +38,24 @@ __all__ = [
     "GuildRoleDeleteEvent",
     "PresenceUpdateEvent",
 ]
+
 import abc
-import datetime
 import typing
 
 import attr
 
+from hikari import bases as _bases
+from hikari import emojis as _emojis
 from hikari import guilds
-from hikari import users
 from hikari import intents
 from hikari import unset
-from hikari import emojis as _emojis
-from hikari import bases as _bases
+from hikari import users
 from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.events import bases
+
+if typing.TYPE_CHECKING:
+    import datetime
 
 
 @bases.requires_intents(intents.Intent.GUILDS)

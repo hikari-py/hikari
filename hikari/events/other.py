@@ -37,12 +37,14 @@ import typing
 
 import attr
 
-from hikari import users
 from hikari import guilds
-from hikari import bases as _bases
+from hikari import users
 from hikari.events import bases
-from hikari.clients import shards
 from hikari.internal import marshaller
+
+if typing.TYPE_CHECKING:
+    from hikari import bases as _bases
+    from hikari.clients import shards  # pylint: disable=cyclic-import
 
 
 # Synthetic event, is not deserialized, and is produced by the dispatcher.

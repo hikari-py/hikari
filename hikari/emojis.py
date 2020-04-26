@@ -17,6 +17,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Components and entities that are used to describe both custom and Unicode emojis on Discord."""
+
+from __future__ import annotations
+
+__all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji"]
+
 import typing
 
 import attr
@@ -24,8 +29,6 @@ import attr
 from hikari import bases
 from hikari import users
 from hikari.internal import marshaller
-
-__all__ = ["Emoji", "UnicodeEmoji", "UnknownEmoji", "GuildEmoji"]
 
 
 @marshaller.marshallable()

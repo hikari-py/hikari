@@ -24,4 +24,7 @@ several key components to be implemented separately, in case you have a
 specific use case you want to provide (such as placing stuff on a message
 queue if you distribute your bot).
 """
+
+from __future__ import annotations
+
 __all__ = []

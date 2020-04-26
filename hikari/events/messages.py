@@ -32,22 +32,24 @@ __all__ = [
 ]
 
 import typing
-import datetime
 
 import attr
 
 from hikari import applications
-from hikari import guilds
-from hikari import users
-from hikari import messages
-from hikari import emojis
-from hikari import intents
-from hikari import unset
-from hikari import embeds as _embeds
 from hikari import bases as _bases
+from hikari import embeds as _embeds
+from hikari import emojis
+from hikari import guilds
+from hikari import intents
+from hikari import messages
+from hikari import unset
+from hikari import users
 from hikari.events import bases
 from hikari.internal import conversions
 from hikari.internal import marshaller
+
+if typing.TYPE_CHECKING:
+    import datetime
 
 
 @bases.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)

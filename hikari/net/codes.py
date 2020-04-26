@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Enumerations for opcodes and status codes."""
+
+from __future__ import annotations
+
 __all__ = ["HTTPStatusCode", "GatewayCloseCode", "GatewayOpcode", "JSONErrorCode"]
 
 # Doesnt work correctly with enums, so since this file is all enums, ignore

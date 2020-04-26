@@ -39,13 +39,13 @@ import typing
 
 import attr
 
-from hikari import voices
+from hikari import bases as _bases
 from hikari import channels
-from hikari import users
 from hikari import guilds
 from hikari import invites
 from hikari import intents
-from hikari import bases as _bases
+from hikari import users
+from hikari import voices
 from hikari.events import bases
 from hikari.internal import conversions
 from hikari.internal import marshaller
