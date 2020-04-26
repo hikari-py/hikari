@@ -39,56 +39,56 @@ import attr
 
 from hikari import guilds
 from hikari import users
-from hikari.events import bases
+from hikari.events import bases as base_events
 from hikari.internal import marshaller
 
 if typing.TYPE_CHECKING:
-    from hikari import bases as _bases
+    from hikari import bases as base_entities
     from hikari.clients import shards  # pylint: disable=cyclic-import
 
 
 # Synthetic event, is not deserialized, and is produced by the dispatcher.
-@bases.no_catch()
+@base_events.no_catch()
 @attr.s(slots=True, auto_attribs=True)
-class ExceptionEvent(bases.HikariEvent):
+class ExceptionEvent(base_events.HikariEvent):
     """Descriptor for an exception thrown while processing an event."""
 
     exception: Exception
     """The exception that was raised."""
 
-    event: bases.HikariEvent
+    event: base_events.HikariEvent
     """The event that was being invoked when the exception occurred."""
 
-    callback: typing.Callable[[bases.HikariEvent], typing.Awaitable[None]]
+    callback: typing.Callable[[base_events.HikariEvent], typing.Awaitable[None]]
     """The event that was being invoked when the exception occurred."""
 
 
 # Synthetic event, is not deserialized
 @attr.s(slots=True, auto_attribs=True)
-class StartingEvent(bases.HikariEvent):
+class StartingEvent(base_events.HikariEvent):
     """Event that is fired before the gateway client starts all shards."""
 
 
 # Synthetic event, is not deserialized
 @attr.s(slots=True, auto_attribs=True)
-class StartedEvent(bases.HikariEvent):
+class StartedEvent(base_events.HikariEvent):
     """Event that is fired when the gateway client starts all shards."""
 
 
 # Synthetic event, is not deserialized
 @attr.s(slots=True, auto_attribs=True)
-class StoppingEvent(bases.HikariEvent):
+class StoppingEvent(base_events.HikariEvent):
     """Event that is fired when the gateway client is instructed to disconnect all shards."""
 
 
 # Synthetic event, is not deserialized
 @attr.s(slots=True, auto_attribs=True)
-class StoppedEvent(bases.HikariEvent):
+class StoppedEvent(base_events.HikariEvent):
     """Event that is fired when the gateway client has finished disconnecting all shards."""
 
 
 @attr.s(slots=True, kw_only=True, auto_attribs=True)
-class ConnectedEvent(bases.HikariEvent, marshaller.Deserializable):
+class ConnectedEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Event invoked each time a shard connects."""
 
     shard: shards.ShardClient
@@ -96,7 +96,7 @@ class ConnectedEvent(bases.HikariEvent, marshaller.Deserializable):
 
 
 @attr.s(slots=True, kw_only=True, auto_attribs=True)
-class DisconnectedEvent(bases.HikariEvent, marshaller.Deserializable):
+class DisconnectedEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Event invoked each time a shard disconnects."""
 
     shard: shards.ShardClient
@@ -104,7 +104,7 @@ class DisconnectedEvent(bases.HikariEvent, marshaller.Deserializable):
 
 
 @attr.s(slots=True, kw_only=True, auto_attribs=True)
-class ResumedEvent(bases.HikariEvent):
+class ResumedEvent(base_events.HikariEvent):
     """Represents a gateway Resume event."""
 
     shard: shards.ShardClient
@@ -113,7 +113,7 @@ class ResumedEvent(bases.HikariEvent):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ReadyEvent(bases.HikariEvent, marshaller.Deserializable):
+class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Represents the gateway Ready event.
 
     This is received only when IDENTIFYing with the gateway.
@@ -125,7 +125,7 @@ class ReadyEvent(bases.HikariEvent, marshaller.Deserializable):
     my_user: users.MyUser = marshaller.attrib(raw_name="user", deserializer=users.MyUser.deserialize)
     """The object of the current bot account this connection is for."""
 
-    unavailable_guilds: typing.Mapping[_bases.Snowflake, guilds.UnavailableGuild] = marshaller.attrib(
+    unavailable_guilds: typing.Mapping[base_entities.Snowflake, guilds.UnavailableGuild] = marshaller.attrib(
         raw_name="guilds",
         deserializer=lambda guilds_objs: {g.id: g for g in map(guilds.UnavailableGuild.deserialize, guilds_objs)},
     )
@@ -161,7 +161,7 @@ class ReadyEvent(bases.HikariEvent, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class UserUpdateEvent(bases.HikariEvent, users.MyUser):
+class UserUpdateEvent(base_events.HikariEvent, users.MyUser):
     """Used to represent User Update gateway events.
 
     Sent when the current user is updated.
