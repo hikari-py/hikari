@@ -518,10 +518,10 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             `role_mentions` or `user_mentions`.
         """
         file_resources = []
-        if embed is not ...:
-            file_resources += embed.assets_to_upload
         if files is not ...:
             file_resources += files
+        if embed is not ...:
+            file_resources += embed.assets_to_upload
 
         payload = await self._session.create_message(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
@@ -556,12 +556,18 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         that `mentions_everyone`, `user_mentions` and `role_mentions` default to
         `False`.
         """
+        file_resources = []
+        if files is not ...:
+            file_resources += files
+        if embed is not ...:
+            file_resources += embed.assets_to_upload
+
         return self.create_message(
             channel=channel,
             content=content,
             nonce=nonce,
             tts=tts,
-            files=files,
+            files=file_resources if file_resources else ...,
             embed=embed,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
