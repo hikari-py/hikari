@@ -478,7 +478,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         files : typing.Sequence[hikari.files.File]
             If specified, a sequence of files to upload, if desired. Should be
             between 1 and 10 objects in size (inclusive), also including embed
-            attachments. 
+            attachments.
         embed : hikari.embeds.Embed
             If specified, the embed object to send with the message.
         mentions_everyone : bool
