@@ -24,14 +24,9 @@ from ci import nox
 
 
 @nox.session(reuse_venv=True, default=True)
+@nox.inherit_environment_vars
 def pdoc(session: nox.Session) -> None:
     """Generate documentation with pdoc."""
-
-    # Inherit environment GitLab CI vars, where appropriate.
-    for n, v in os.environ.items():
-        if n.startswith(("GITLAB_", "CI")) or n == "CI":
-            session.env[n] = v
-
     session.install("-r", config.REQUIREMENTS, "pdoc3==0.8.1")
 
     session.run(

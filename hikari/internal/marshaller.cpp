@@ -26,11 +26,14 @@
 #include <Python.h>
 
 
+#define UNUSED(x) ((void)(x))
 #define RETURN_IF_NULL(var) if((var) == nullptr) { return nullptr; }
 
 
 namespace hikari::internal::marshaller {
-    static PyObject * dereference_handle(PyObject *_, PyObject *params) {
+    static PyObject * dereference_handle(PyObject *py_module, PyObject *params) {
+        UNUSED(py_module);
+
         const char *handle_cstr;
         PyArg_ParseTuple(params, "s:handle_string", &handle_cstr);
 
@@ -70,6 +73,10 @@ namespace hikari::internal::marshaller {
         "",                            // docstring
         -1,                            // heap-size
         methods,                       // method table
+        nullptr,                       // slots (multiphase init only)
+        nullptr,                       // call during GC traversal of module
+        nullptr,                       // call during GC clearing of module
+        nullptr,                       // call during deallocation of module
     };
 
     PyMODINIT_FUNC PyInit_marshaller() {

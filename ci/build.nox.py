@@ -24,12 +24,14 @@ from ci import nox
 
 
 @nox.session(reuse_venv=True)
+@nox.inherit_environment_vars
 def build_ext(session: nox.Session) -> None:
     """Compile C++ extensions in-place."""
     session.run("python", "setup.py", "build_ext", "--inplace")
 
 
 @nox.session(reuse_venv=True)
+@nox.inherit_environment_vars
 def clean_ext(session: nox.Session) -> None:
     """Clean any compiled C++ extensions."""
     print("rm", "build", "-r")
