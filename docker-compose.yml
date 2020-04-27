@@ -3,7 +3,7 @@ version: "3"
 services:
   test-client:
     build: .
-    entrypoint: python -m hikari.clients.test --shards=2
+    entrypoint: pip install --pre hikari && python -m hikari.clients.test --shards=2
     env_file:
       - credentials.env
     restart: always
