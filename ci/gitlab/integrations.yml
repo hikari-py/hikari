@@ -27,10 +27,10 @@ include:
 ### format so that GitLab can display it on the badge, on the pipeline stats,
 ### and on any active merge requests.
 ###
-"coverage:results":
+coverage:results:
   coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
   extends:
-    - .cpython-stable
+    - .cpython
     - .reactive-job
   script:
     - |+
@@ -96,7 +96,7 @@ pages:
   dependencies:
     - pages:master
     - pages:staging
-  extends: .busybox-musl
+  extends: .busybox:musl
   only:
     - master
     - staging

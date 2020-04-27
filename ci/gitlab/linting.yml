@@ -23,7 +23,7 @@
   before_script:
     - pip install nox
   extends:
-    - .cpython-stable
+    - .cpython
     - .reactive-job
   interruptible: true
   retry: 2
@@ -35,9 +35,11 @@
 ### Looks for code style problems, code smells, and general bad things.
 ### Failures are added as warnings to the pipeline.
 ###
-"pylint":
+pylint:
   allow_failure: true
   artifacts:
+    paths:
+      - public/pylint.html
     reports:
       junit: public/pylint.xml
   extends: .lint
@@ -50,7 +52,7 @@
 ### If the documentation is clear and formatted correctly. Any failures
 ### become warnings on the pipeline.
 ###
-"pydocstyle":
+pydocstyle:
   allow_failure: true
   extends: .lint
   script:
@@ -61,7 +63,7 @@
 ###
 ### If the code style is not the Black code style, fail the pipeline.
 ###
-"black":
+black:
   extends: .lint
   script:
    - nox -s check-formatting -- --check --diff
@@ -72,7 +74,7 @@
 ### This runs static application security tests in addition to those that
 ### GitLab provides. Any issues are reported and the pipeline is aborted.
 ###
-"safety":
+safety:
   extends: .lint
   script:
    - nox -s safety
@@ -83,7 +85,7 @@
 ### This runs static application security tests in addition to those that
 ### GitLab provides. Any issues are reported and the pipeline is aborted.
 ###
-"bandit":
+bandit:
   extends: .lint
   script:
    - nox -s bandit
