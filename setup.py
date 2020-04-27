@@ -31,9 +31,35 @@ name = "hikari"
 
 should_accelerate = "ACCELERATE_HIKARI" in os.environ
 
+
+class Accelerator(setuptools.Extension):
+    def __init__(self, name, sources, **kwargs):
+        super().__init__(name, sources, **kwargs)
+
+
+class BuildCommand(build_ext.build_ext):
+    def build_extensions(self):
+        if should_accelerate:
+            for ext in self.extensions:
+                if isinstance(ext, Accelerator):
+                    self.build_accelerator(ext)
+                else:
+                    self.build_extension(ext)
+
+    def build_accelerator(self, ext):
+        try:
+            self.build_extension(ext)
+        except errors.CompileError as ex:
+            log.warn("Compilation of %s failed, so this module will not be accelerated: %s", ext, ex)
+        except errors.LinkError as ex:
+            log.warn("Linking of %s failed, so this module will not be accelerated: %s", ext, ex)
+
+
 if should_accelerate:
     log.warn("!!!!!!!!!!!!!!!!!!!!EXPERIMENTAL!!!!!!!!!!!!!!!!!!!!")
     log.warn("HIKARI ACCELERATION SUPPORT IS ENABLED: YOUR MILEAGE MAY VARY :^)")
+
+    extensions = [Accelerator("hikari.internal.marshaller", ["hikari/internal/marshaller.cpp"], **cxx_compile_kwargs)]
 
     cxx_spec = "c++17"
     compiler_type = ccompiler.get_default_compiler()
@@ -70,32 +96,6 @@ if should_accelerate:
 else:
     log.warn("skipping building of accelerators for %s", name)
     cxx_compile_kwargs = {}
-
-
-class Accelerator(setuptools.Extension):
-    def __init__(self, name, sources, **kwargs):
-        super().__init__(name, sources, **kwargs)
-
-
-class BuildCommand(build_ext.build_ext):
-    def build_extensions(self):
-        if should_accelerate:
-            for ext in self.extensions:
-                if isinstance(ext, Accelerator):
-                    self.build_accelerator(ext)
-                else:
-                    self.build_extension(ext)
-
-    def build_accelerator(self, ext):
-        try:
-            self.build_extension(ext)
-        except errors.CompileError as ex:
-            log.warn("Compilation of %s failed, so this module will not be accelerated: %s", ext, ex)
-        except errors.LinkError as ex:
-            log.warn("Linking of %s failed, so this module will not be accelerated: %s", ext, ex)
-
-
-extensions = [Accelerator("hikari.internal.marshaller", ["hikari/internal/marshaller.cpp"], **cxx_compile_kwargs,)]
 
 
 def long_description():
