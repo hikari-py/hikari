@@ -18,23 +18,20 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
 import datetime
-import io
 
 import mock
 import pytest
 
-from hikari.internal import helpers
+from hikari import bases
 from hikari import channels
 from hikari import embeds
 from hikari import guilds
 from hikari import invites
 from hikari import files
 from hikari import messages
-from hikari import snowflakes
 from hikari import users
 from hikari import webhooks
 from hikari.clients.rest import channel
-from hikari.internal import conversions
 from hikari.internal import helpers
 from hikari.net import rest
 from tests.hikari import _helpers
@@ -629,8 +626,8 @@ class TestRESTChannelLogging:
     @pytest.mark.parametrize(
         "target",
         [
-            mock.MagicMock(guilds.GuildRole, id=snowflakes.Snowflake(9999), __int__=guilds.GuildRole.__int__),
-            mock.MagicMock(users.User, id=snowflakes.Snowflake(9999), __int__=users.User.__int__),
+            mock.MagicMock(guilds.GuildRole, id=bases.Snowflake(9999), __int__=guilds.GuildRole.__int__),
+            mock.MagicMock(users.User, id=bases.Snowflake(9999), __int__=users.User.__int__),
         ],
     )
     async def test_update_channel_overwrite_with_alternative_target_object(self, rest_channel_logic_impl, target):
@@ -720,8 +717,8 @@ class TestRESTChannelLogging:
     @pytest.mark.parametrize(
         "target",
         [
-            mock.MagicMock(guilds.GuildRole, id=snowflakes.Snowflake(123123123), __int__=guilds.GuildRole.__int__),
-            mock.MagicMock(users.User, id=snowflakes.Snowflake(123123123), __int__=users.User.__int__),
+            mock.MagicMock(guilds.GuildRole, id=bases.Snowflake(123123123), __int__=guilds.GuildRole.__int__),
+            mock.MagicMock(users.User, id=bases.Snowflake(123123123), __int__=users.User.__int__),
         ],
     )
     async def test_delete_channel_overwrite_with_alternative_target_objects(self, rest_channel_logic_impl, target):
