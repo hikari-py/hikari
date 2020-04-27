@@ -26,10 +26,10 @@ variables:
   DOCKER_DRIVER: "overlay2"
  
 include:
-  - local: "/ci/bases.gitlab-ci.yml"
-  - local: "/ci/installations.gitlab-ci.yml"
-  - local: "/ci/integrations.gitlab-ci.yml"
-  - local: "/ci/linting.gitlab-ci.yml"
-  - local: "/ci/pages.gitlab-ci.yml"
-  - local: "/ci/releases.gitlab-ci.yml"
-  - local: "/ci/tests.gitlab-ci.yml"
+  - local: "/ci/gitlab/bases.yml"
+  - local: "/ci/gitlab/installations.yml"
+  - local: "/ci/gitlab/integrations.yml"
+  - local: "/ci/gitlab/linting.yml"
+  - local: "/ci/gitlab/pages.yml"
+  - local: "/ci/gitlab/releases.yml"
+  - local: "/ci/gitlab/tests.yml"
