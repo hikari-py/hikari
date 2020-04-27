@@ -21,9 +21,9 @@ import datetime
 import mock
 import pytest
 
+from hikari import bases
 from hikari import channels
 from hikari import permissions
-from hikari import snowflakes
 from hikari import users
 
 
@@ -166,7 +166,7 @@ class TestPermissionOverwrite:
 
     def test_serialize_full_overwrite(self):
         permission_overwrite_obj = channels.PermissionOverwrite(
-            id=snowflakes.Snowflake(11111111),
+            id=bases.Snowflake(11111111),
             type=channels.PermissionOverwriteType.ROLE,
             allow=permissions.Permission(1321),
             deny=permissions.Permission(39939),
@@ -175,7 +175,7 @@ class TestPermissionOverwrite:
 
     def test_serialize_partial_overwrite(self):
         permission_overwrite_obj = channels.PermissionOverwrite(
-            id=snowflakes.Snowflake(11111111), type=channels.PermissionOverwriteType.ROLE,
+            id=bases.Snowflake(11111111), type=channels.PermissionOverwriteType.ROLE,
         )
         assert permission_overwrite_obj.serialize() == {"id": "11111111", "type": "role", "allow": 0, "deny": 0}
 
@@ -355,7 +355,7 @@ class TestGuildChannelBuilder:
         assert channel_builder_obj._payload == {"type": 0, "name": "A channel", "rate_limit_per_user": 3232}
 
     @pytest.mark.parametrize(
-        "category", [54321, snowflakes.Snowflake(54321)],
+        "category", [54321, bases.Snowflake(54321)],
     )
     def test_with_parent_category(self, category):
         channel_builder_obj = channels.GuildChannelBuilder(
@@ -363,7 +363,7 @@ class TestGuildChannelBuilder:
         ).with_parent_category(category)
         assert channel_builder_obj._payload == {"type": 0, "name": "A channel", "parent_id": "54321"}
 
-    @pytest.mark.parametrize("placeholder_id", [444444, snowflakes.Snowflake(444444)])
+    @pytest.mark.parametrize("placeholder_id", [444444, bases.Snowflake(444444)])
     def test_with_user_limit(self, placeholder_id):
         channel_builder_obj = channels.GuildChannelBuilder("A channel", channels.ChannelType.GUILD_TEXT).with_id(
             placeholder_id
