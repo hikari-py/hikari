@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Deployment scripts for CI only."""
-import contextlib
 import json
 import os
 import re
@@ -31,14 +30,14 @@ from ci import nox
 
 
 def shell(arg, *args):
-    command = ' '.join((arg, *args))
+    command = " ".join((arg, *args))
     print("\033[35mnox > shell >\033[0m", command)
     return subprocess.check_call(command, shell=True)
 
 
 def update_version_string(version):
     print("Updating version in version file to", version)
-    shell("sed", shlex.quote(f"s|^__version__.*|__version__ = \"{version}\"|g"), "-i", config.VERSION_FILE)
+    shell("sed", shlex.quote(f's|^__version__.*|__version__ = "{version}"|g'), "-i", config.VERSION_FILE)
 
 
 def increment_prod_to_next_dev(version):
@@ -100,55 +99,30 @@ def get_next_dev_version(version):
             return ".".join(bits)
 
 
-def build(session: nox.Session) -> None:
-    print("Building code")
-    session.install("-e", ".")
-
-
-def deploy_to_pypi(session: nox.Session) -> None:
+def deploy_to_pypi() -> None:
     print("Performing PyPI deployment of current code")
-    session.run("python", "setup.py", *config.DISTS)
-    session.install("twine")
-    session.env["TWINE_USERNAME"] = os.environ["PYPI_USER"]
-    session.env["TWINE_PASSWORD"] = os.environ["PYPI_PASS"]
-    session.env["REPOSITORY_URL"] = config.PYPI_REPO
+    shell("pip install -r requirements.txt twine")
+    shell("python", "setup.py", *config.DISTS)
+    os.putenv("TWINE_USERNAME", os.environ["PYPI_USER"])
+    os.putenv("TWINE_PASSWORD", os.environ["PYPI_PASS"])
+    os.putenv("TWINE_REPOSITORY_URL", config.PYPI_REPO)
     dists = [os.path.join("dist", n) for n in os.listdir("dist")]
-    session.run("twine", "upload", "--disable-progress-bar", "--skip-existing", *dists)
-    session.env.pop("TWINE_USERNAME")
-    session.env.pop("TWINE_PASSWORD")
-    session.env.pop("REPOSITORY_URL")
+    shell("twine", "upload", "--disable-progress-bar", "--skip-existing", *dists)
 
 
 def deploy_to_git(next_version: str) -> None:
-    print("Registering SSH private key into container")
-    shell("eval $(ssh-agent -s)")
-    with contextlib.suppress(subprocess.CalledProcessError):
-        shell("mkdir", config.SSH_DIR)
-    shell("echo ${GIT_SSH_PRIVATE_KEY} >", config.SSH_PRIVATE_KEY_PATH)
-    shell("chmod 600", config.SSH_PRIVATE_KEY_PATH)
-    shell("ssh-keyscan -t rsa", config.GIT_SVC_HOST, ">>", config.SSH_KNOWN_HOSTS)
-    shell("ssh-add", config.SSH_PRIVATE_KEY_PATH)
-
-    print("Fetching all branches")
-    shell("git fetch --all")
-
     print("Setting up the git repository ready to make automated changes")
     shell("git config user.name", shlex.quote(config.CI_ROBOT_NAME))
     shell("git config user.email", shlex.quote(config.CI_ROBOT_EMAIL))
     shell(
         "git remote set-url",
         config.REMOTE_NAME,
-        '$(echo "$CI_REPOSITORY_URL" | perl -pe \'s#.*@(.+?(\\:\\d+)?)/#git@\\1:#\')'
+        "$(echo \"$CI_REPOSITORY_URL\" | perl -pe 's#.*@(.+?(\\:\\d+)?)/#git@\\1:#')",
     )
-
-    print("Testing that I can contact the SVC host by SSH")
-    shell("ssh", config.GIT_TEST_SSH_PATH)
 
     print("Making deployment commit")
     shell(
-        "git commit -am",
-        shlex.quote(f"(ci) Deployed {next_version} to PyPI {config.SKIP_DEPLOY_PHRASE}"),
-        "--allow-empty",
+        "git commit -am", shlex.quote(f"(ci) Deployed {next_version} to PyPI {config.SKIP_CI_PHRASE}"), "--allow-empty",
     )
 
     print("Tagging release")
@@ -159,14 +133,16 @@ def deploy_to_git(next_version: str) -> None:
     shell(f"git reset --hard {config.REMOTE_NAME}/{config.PREPROD_BRANCH}")
 
     shell(
-        f"git merge {config.REMOTE_NAME}/{config.PROD_BRANCH}",
+        f"git merge {config.PROD_BRANCH}",
         "--no-ff --strategy-option theirs --allow-unrelated-histories -m",
-        shlex.quote(f"(ci) Merged {config.PROD_BRANCH} {next_version} into {config.PREPROD_BRANCH}")
+        shlex.quote(f"(ci) Merged {config.PROD_BRANCH} {next_version} into {config.PREPROD_BRANCH}"),
     )
     update_version_string(increment_prod_to_next_dev(next_version))
 
     print("Making next dev commit on preprod")
-    shell("git commit -am", shlex.quote(f"(ci) Updated version for next development release {config.SKIP_DEPLOY_PHRASE}"))
+    shell(
+        "git commit -am", shlex.quote(f"(ci) Updated version for next development release {config.SKIP_DEPLOY_PHRASE}")
+    )
     shell("git push --atomic", config.REMOTE_NAME, config.PREPROD_BRANCH, config.PROD_BRANCH, next_version)
 
 
@@ -175,19 +151,25 @@ def send_notification(version: str, title: str, description: str, color: str) ->
     shell(
         "curl",
         "-X POST",
-        "-H", shlex.quote("Content-Type: application/json"),
-        "-d", shlex.quote(json.dumps({
-            "embeds": [
+        "-H",
+        shlex.quote("Content-Type: application/json"),
+        "-d",
+        shlex.quote(
+            json.dumps(
                 {
-                    "title": title,
-                    "description": description,
-                    "author": {"name": config.AUTHOR},
-                    "footer": {"text": f"v{version}"},
-                    "url": f"{config.PYPI}project/{config.API_NAME}/{version}",
-                    "color": int(color, 16)
+                    "embeds": [
+                        {
+                            "title": title,
+                            "description": description,
+                            "author": {"name": config.AUTHOR},
+                            "footer": {"text": f"v{version}"},
+                            "url": f"{config.PYPI}project/{config.API_NAME}/{version}",
+                            "color": int(color, 16),
+                        }
+                    ]
                 }
-            ]
-        })),
+            )
+        ),
         os.environ["RELEASE_WEBHOOK"],
     )
 
@@ -202,10 +184,9 @@ def deploy(session: nox.Session) -> None:
 
     if commit_ref == config.PREPROD_BRANCH:
         print("preprod release!")
-        build(session)
         next_version = get_next_dev_version(current_version)
         update_version_string(next_version)
-        deploy_to_pypi(session)
+        deploy_to_pypi()
         send_notification(
             next_version,
             f"{config.API_NAME} v{next_version} has been released",
@@ -213,14 +194,13 @@ def deploy(session: nox.Session) -> None:
             "```bash\n"
             f"pip install -U {config.API_NAME}=={next_version}\n"
             "```",
-            "2C2F33"
+            "2C2F33",
         )
     elif commit_ref == config.PROD_BRANCH:
         print("prod release!")
-        build(session)
         next_version = get_next_prod_version_from_dev(current_version)
         update_version_string(next_version)
-        deploy_to_pypi(session)
+        deploy_to_pypi()
         deploy_to_git(next_version)
         send_notification(
             next_version,
@@ -229,7 +209,7 @@ def deploy(session: nox.Session) -> None:
             "```bash\n"
             f"pip install -U {config.API_NAME}=={next_version}\n"
             "```",
-            "7289DA"
+            "7289DA",
         )
     else:
         print("not preprod or prod branch, nothing will be performed.")
