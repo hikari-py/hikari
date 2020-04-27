@@ -19,11 +19,12 @@
 ### Base for running Pytest jobs with Nox, exporting coverage to be coalesced
 ### by the "coverage" job later.
 ###
-.nox-test:
+.test:
   artifacts:
     paths:
       - public/coverage
       - public/*.coverage
+      - public/pytest.html
     reports:
       junit: public/tests.xml
   extends: .reactive-job
@@ -43,37 +44,37 @@
 ###
 ### Coverage is exported as an artifact with a name matching the job name.
 ###
-"test:3.8.0":
+test:3.8.0:
   extends:
-    - .cpython380
-    - .nox-test
+    - .cpython:3.8.0
+    - .test
 
 ###
 ### Run CPython 3.8.1 unit tests and collect test coverage stats.
 ###
 ### Coverage is exported as an artifact with a name matching the job name.
 ###
-"test:3.8.1":
+test:3.8.1:
   extends:
-    - .cpython381
-    - .nox-test
+    - .cpython:3.8.1
+    - .test
 
 ###
 ### Run CPython 3.8.2 unit tests and collect test coverage stats.
 ###
 ### Coverage is exported as an artifact with a name matching the job name.
 ###
-"test:3.8.2":
+test:3.8.2:
   extends:
-    - .cpython382
-    - .nox-test
+    - .cpython:3.8.2
+    - .test
 
 ###
 ### Run CPython 3.9.0 unit tests and collect test coverage stats.
 ###
 ### Coverage is exported as an artifact with a name matching the job name.
 ###
-"test:3.9.0":
+test:3.9.0:
   extends:
-    - .cpython390
-    - .nox-test
+    - .cpython:3.9.0
+    - .test

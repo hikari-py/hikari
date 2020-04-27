@@ -18,7 +18,7 @@
 ###
 ### Base for making a release to PyPI.
 ###
-.deploy:
+.release:
   allow_failure: false
   before_script:
     - |+
@@ -31,7 +31,7 @@
       apt-get update
       apt-get install curl openssh-client -qy
       pip install twine wheel nox
-  extends: .cpython-stable
+  extends: .cpython
   interruptible: false
   resource_group: deploy
   retry: 1
@@ -43,7 +43,7 @@
 ### Upload the current code to PyPI as a .dev release.
 ### This will only work on the staging branch.
 ###
-"release:staging":
+release:staging:
   environment:
     name: staging
     url: https://nekokatt.ci.io/hikari/staging
@@ -51,7 +51,7 @@
     - tags
     - merge_requests
     - schedules
-  extends: .deploy
+  extends: .release
   only:
     - staging
   script:
@@ -66,7 +66,7 @@
 ### Upload the current code to PyPI as a production release. This will only
 ### work on the master branch.
 ###
-"release:master":
+release:master:
   environment:
     name: prod
     url: https://nekokatt.ci.io/hikari
@@ -74,7 +74,7 @@
     - tags
     - merge_requests
     - schedules
-  extends: .deploy
+  extends: .release
   only:
     - master
   script:
