@@ -95,7 +95,7 @@ if should_accelerate:
     log.warn("!!!!!!!!!!!!!!!!!!!!EXPERIMENTAL!!!!!!!!!!!!!!!!!!!!")
 else:
     log.warn("skipping building of accelerators for %s", name)
-    cxx_compile_kwargs = {}
+    extensions = []
 
 
 def long_description():
