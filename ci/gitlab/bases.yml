@@ -33,36 +33,35 @@
 ### Used by some stages to move files produced by other stages into
 ### the correct directory structure.
 ###
-.busybox-musl:
+.busybox:musl:
   image: busybox:1.31.1-musl
 
 ###
 ### CPython 3.8.0 configuration.
 ###
-.cpython380:
+.cpython:3.8.0:
   image: python:3.8.0
 
 ###
 ### CPython 3.8.1 configuration.
 ###
-.cpython381:
+.cpython:3.8.1:
   image: python:3.8.1
 
 ###
 ### CPython 3.8.2 configuration.
 ###
-.cpython382:
+.cpython:3.8.2:
   image: python:3.8.2
 
 ###
 ### CPython 3.9.0 configuration.
 ###
-.cpython390:
+.cpython:3.9.0:
   image: python:3.9-rc
 
 ###
 ### Most recent stable CPython release.
 ###
-.cpython-stable:
-  extends: .cpython382
-
+.cpython:
+  extends: .cpython:3.8.2
