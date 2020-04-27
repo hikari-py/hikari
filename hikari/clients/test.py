@@ -177,7 +177,7 @@ def run_gateway(compression, color, debug, intents, logger, shards, token, verif
                     *shard_infos[:3],
                 ],
                 thumbnail=hikari.EmbedThumbnail(url=bot_avatar_url),
-                color=hikari.Color["#F660AB"],
+                color=hikari.Color.of("#F660AB"),
             )
 
             content = (
