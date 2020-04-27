@@ -251,9 +251,7 @@ class TestRESTUserLogic:
     async def test_safe_execute_webhook_with_optionals(self, rest_webhook_logic_impl):
         webhook = mock.MagicMock(webhooks.Webhook)
         mock_file_obj = mock.MagicMock(files.File)
-        mock_file_obj2 = mock.MagicMock(files.File)
         mock_embed_obj = mock.MagicMock(embeds.Embed)
-        mock_embed_obj.assets_to_upload = [mock_file_obj2]
         mock_message_obj = mock.MagicMock(messages.Message)
         rest_webhook_logic_impl.execute_webhook = mock.AsyncMock(return_value=mock_message_obj)
         result = await rest_webhook_logic_impl.safe_webhook_execute(
@@ -279,7 +277,7 @@ class TestRESTUserLogic:
             avatar_url="httttttt/L//",
             tts=True,
             wait=True,
-            files=[mock_file_obj, mock_file_obj2],
+            files=[mock_file_obj],
             embeds=[mock_embed_obj],
             mentions_everyone=False,
             role_mentions=False,

@@ -297,13 +297,6 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         that `mentions_everyone`, `user_mentions` and `role_mentions` default to
         `False`.
         """
-        file_resources = []
-        if files is not ...:
-            file_resources += files
-        if embeds is not ...:
-            for embed in embeds:
-                file_resources += embed.assets_to_upload
-
         return self.execute_webhook(
             webhook=webhook,
             webhook_token=webhook_token,
@@ -312,7 +305,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             avatar_url=avatar_url,
             tts=tts,
             wait=wait,
-            files=file_resources if file_resources else ...,
+            files=files,
             embeds=embeds,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
