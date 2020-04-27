@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["HikariEntity", "Snowflake", "UniqueEntity"]
+__all__ = ["HikariEntity", "LARGEST_SNOWFLAKE", "Snowflake", "UniqueEntity"]
 
 import abc
 import functools
@@ -34,11 +34,18 @@ from hikari.internal import marshaller
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.clients import components
+
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True, init=False)
 class HikariEntity(abc.ABC):
     """The base for any entity used in this API."""
+
+    _components: typing.Optional[components.Components] = marshaller.attrib(
+        default=None, repr=True, eq=False, hash=False, skip_unmarshalling=True, transient=True
+    )
+    """The client components that models may use for procedures."""
 
 
 @functools.total_ordering
@@ -101,19 +108,22 @@ class Snowflake(HikariEntity, typing.SupportsInt):
         return str(self._value)
 
     @classmethod
-    def deserialize(cls, value: str) -> "Snowflake":
+    def deserialize(cls, value: str) -> Snowflake:
         """Take a `str` ID and convert it into a Snowflake object."""
         return cls(value)
 
     @classmethod
-    def from_datetime(cls, date: datetime.datetime) -> "Snowflake":
+    def from_datetime(cls, date: datetime.datetime) -> Snowflake:
         """Get a snowflake object from a datetime object."""
         return cls.from_timestamp(date.timestamp())
 
     @classmethod
-    def from_timestamp(cls, timestamp: float) -> "Snowflake":
+    def from_timestamp(cls, timestamp: float) -> Snowflake:
         """Get a snowflake object from a seconds timestamp."""
         return cls(int(timestamp - conversions.DISCORD_EPOCH) * 1000 << 22)
+
+
+LARGEST_SNOWFLAKE: typing.Final[Snowflake] = Snowflake((1 << 63) - 1)
 
 
 @marshaller.marshallable()

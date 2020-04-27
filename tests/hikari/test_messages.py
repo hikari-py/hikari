@@ -24,10 +24,12 @@ import pytest
 
 from hikari import embeds
 from hikari import emojis
+from hikari import files
 from hikari import guilds
 from hikari import messages
 from hikari import applications
 from hikari import users
+from hikari.clients import components
 from hikari.internal import conversions
 from tests.hikari import _helpers
 
@@ -260,3 +262,66 @@ class TestMessage:
         assert message_obj.message_reference == messages.MessageCrosspost.deserialize(test_message_crosspost_payload)
         assert message_obj.flags == messages.MessageFlag.IS_CROSSPOST
         assert message_obj.nonce == "171000788183678976"
+
+    @pytest.fixture()
+    def components_impl(self) -> components.Components:
+        return mock.MagicMock(components.Components, rest=mock.AsyncMock())
+
+    @pytest.fixture()
+    def message_obj(self, components_impl):
+        return messages.Message(
+            components=components_impl,
+            id=123,
+            channel_id=44444,
+            guild_id=44334,
+            author=None,
+            member=None,
+            content=None,
+            timestamp=None,
+            edited_timestamp=None,
+            is_tts=None,
+            is_mentioning_everyone=None,
+            user_mentions=[],
+            role_mentions=[],
+            attachments=[],
+            embeds=[],
+            is_pinned=None,
+            webhook_id=None,
+            type=None,
+            activity=None,
+            application=None,
+            message_reference=None,
+            flags=None,
+            nonce=None,
+        )
+
+    @pytest.mark.asyncio
+    async def test_fetch_channel(self, message_obj, components_impl):
+        await message_obj.fetch_channel()
+        components_impl.rest.fetch_channel.assert_called_once_with(channel=44444)
+
+    @pytest.mark.asyncio
+    async def test_reply(self, message_obj, components_impl):
+        mock_file = mock.MagicMock(files.File)
+        mock_embed = mock.MagicMock(embeds.Embed)
+        await message_obj.reply(
+            content="blah",
+            nonce="blah2",
+            tts=True,
+            files=[mock_file],
+            embed=mock_embed,
+            mentions_everyone=True,
+            user_mentions=[123],
+            role_mentions=[444],
+        )
+        components_impl.rest.create_message.assert_called_once_with(
+            channel=44444,
+            content="blah",
+            nonce="blah2",
+            tts=True,
+            files=[mock_file],
+            embed=mock_embed,
+            mentions_everyone=True,
+            user_mentions=[123],
+            role_mentions=[444],
+        )

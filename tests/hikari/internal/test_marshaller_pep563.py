@@ -46,6 +46,7 @@ class TestAttribPep563:
                 if_none=mock_default_factory_1,
                 if_undefined=mock_default_factory_2,
                 transient=False,
+                skip_unmarshalling=True,
                 serializer=serializer,
                 foo=12,
                 bar="hello, world",
@@ -59,6 +60,7 @@ class TestAttribPep563:
                     marshaller._SERIALIZER_ATTR: serializer,
                     marshaller._DESERIALIZER_ATTR: deserializer,
                     marshaller._TRANSIENT_ATTR: False,
+                    marshaller._SKIP_UNMARSHALLING: True,
                     marshaller._IF_UNDEFINED: mock_default_factory_2,
                     marshaller._IF_NONE: mock_default_factory_1,
                 },
@@ -252,6 +254,27 @@ class TestMarshallerPep563:
         assert marshaller_impl.serialize(u) == {
             "id": "12",
         }
+
+    def test_deserialize_skip_unmarshalling(self, marshaller_impl):
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s
+        class User:
+            username: str = marshaller.attrib(deserializer=str)
+            _component: object = marshaller.attrib(skip_unmarshalling=True, default=None)
+
+        u = marshaller_impl.deserialize({"_component": "OK", "component": "Nay", "username": "Nay"}, User)
+        assert u._component is None
+        assert u.username == "Nay"
+
+    def test_deserialize_kwarg_gets_set_for_skip_unmarshalling_attr(self, marshaller_impl):
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s
+        class User:
+            _component: object = marshaller.attrib(skip_unmarshalling=True, default=None)
+
+        mock_component = mock.MagicMock()
+        u = marshaller_impl.deserialize({"_component": "OK", "component": "Nay"}, User, component=mock_component)
+        assert u._component is mock_component
 
     @_helpers.assert_raises(type_=LookupError)
     def test_deserialize_on_unregistered_class_raises_LookupError(self, marshaller_impl):

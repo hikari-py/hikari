@@ -26,6 +26,7 @@ import pytest
 import hikari.clients.shard_states
 from hikari import errors
 from hikari import guilds
+from hikari.clients import components
 from hikari.clients import configs
 from hikari.clients import shards as high_level_shards
 from hikari.net import codes
@@ -60,7 +61,8 @@ def shard_client_obj():
         session_id=None,
     )
     with mock.patch("hikari.net.shards.Shard", return_value=mock_shard_connection):
-        return _helpers.unslot_class(high_level_shards.ShardClientImpl)(0, 1, configs.GatewayConfig(), None, "some_url")
+        mock_components = mock.MagicMock(components.Components, event_manager=None, config=configs.GatewayConfig())
+        return _helpers.unslot_class(high_level_shards.ShardClientImpl)(0, 1, mock_components, "some_url")
 
 
 class TestShardClientImpl:
@@ -69,7 +71,12 @@ class TestShardClientImpl:
             def process_raw_event(self, _client, name, payload):
                 return "ASSERT TRUE"
 
-        shard_client_obj = high_level_shards.ShardClientImpl(0, 1, configs.GatewayConfig(), DummyConsumer(), "some_url")
+        shard_client_obj = high_level_shards.ShardClientImpl(
+            0,
+            1,
+            mock.MagicMock(components.Components, config=configs.GatewayConfig(), event_manager=DummyConsumer()),
+            "some_url",
+        )
 
         assert shard_client_obj._connection.dispatch(shard_client_obj, "TEST", {}) == "ASSERT TRUE"
 
@@ -77,7 +84,12 @@ class TestShardClientImpl:
         mock_shard_connection = mock.MagicMock(low_level_shards.Shard)
 
         with mock.patch("hikari.net.shards.Shard", return_value=mock_shard_connection):
-            shard_client_obj = high_level_shards.ShardClientImpl(0, 1, configs.GatewayConfig(), None, "some_url")
+            shard_client_obj = high_level_shards.ShardClientImpl(
+                0,
+                1,
+                mock.MagicMock(components.Components, event_manager=None, config=configs.GatewayConfig()),
+                "some_url",
+            )
 
         assert shard_client_obj._connection is mock_shard_connection
 

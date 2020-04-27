@@ -19,6 +19,7 @@
 import mock
 import pytest
 
+from hikari.clients import components
 from hikari.clients.rest import base
 from hikari.net import rest
 
@@ -32,7 +33,7 @@ class TestBaseRESTComponent:
     def rest_clients_impl(self, low_level_rest_impl) -> base.BaseRESTComponent:
         class RestClientImpl(base.BaseRESTComponent):
             def __init__(self):
-                super().__init__(low_level_rest_impl)
+                super().__init__(mock.MagicMock(components.Components), low_level_rest_impl)
 
         return RestClientImpl()
 

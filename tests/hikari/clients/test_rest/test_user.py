@@ -20,6 +20,7 @@ import mock
 import pytest
 
 from hikari import users
+from hikari.clients import components
 from hikari.clients.rest import user
 from hikari.net import rest
 from tests.hikari import _helpers
@@ -28,11 +29,12 @@ from tests.hikari import _helpers
 class TestRESTUserLogic:
     @pytest.fixture()
     def rest_user_logic_impl(self):
+        mock_components = mock.MagicMock(components.Components)
         mock_low_level_restful_client = mock.MagicMock(rest.REST)
 
         class RESTUserLogicImpl(user.RESTUserComponent):
             def __init__(self):
-                super().__init__(mock_low_level_restful_client)
+                super().__init__(mock_components, mock_low_level_restful_client)
 
         return RESTUserLogicImpl()
 

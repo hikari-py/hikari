@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
-import io
 
 import mock
 import pytest
@@ -26,6 +25,7 @@ from hikari import embeds
 from hikari import files
 from hikari import messages
 from hikari import webhooks
+from hikari.clients import components
 from hikari.clients.rest import webhook
 from hikari.internal import helpers
 from hikari.net import rest
@@ -35,11 +35,12 @@ from tests.hikari import _helpers
 class TestRESTUserLogic:
     @pytest.fixture()
     def rest_webhook_logic_impl(self):
+        mock_components = mock.MagicMock(components.Components)
         mock_low_level_restful_client = mock.MagicMock(rest.REST)
 
         class RESTWebhookLogicImpl(webhook.RESTWebhookComponent):
             def __init__(self):
-                super().__init__(mock_low_level_restful_client)
+                super().__init__(mock_components, mock_low_level_restful_client)
 
         return RESTWebhookLogicImpl()
 
@@ -223,7 +224,9 @@ class TestRESTUserLogic:
             assert (
                 await rest_webhook_logic_impl.execute_webhook(webhook, "a.webhook.token", wait=True) is mock_message_obj
             )
-            messages.Message.deserialize.assert_called_once_with(mock_message_payload)
+            messages.Message.deserialize.assert_called_once_with(
+                mock_message_payload, components=rest_webhook_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     async def test_safe_execute_webhook_without_optionals(self, rest_webhook_logic_impl):

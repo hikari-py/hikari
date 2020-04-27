@@ -27,8 +27,8 @@ from hikari import files
 from hikari import guilds
 from hikari import applications
 from hikari import users
+from hikari.clients import components
 from hikari.clients.rest import me
-from hikari.internal import helpers
 from hikari.net import rest
 from tests.hikari import _helpers
 
@@ -36,11 +36,12 @@ from tests.hikari import _helpers
 class TestRESTInviteLogic:
     @pytest.fixture()
     def rest_clients_impl(self):
+        mock_components = mock.MagicMock(components.Components)
         mock_low_level_restful_client = mock.MagicMock(rest.REST)
 
         class RESTCurrentUserLogicImpl(me.RESTCurrentUserComponent):
             def __init__(self):
-                super().__init__(mock_low_level_restful_client)
+                super().__init__(mock_components, mock_low_level_restful_client)
 
         return RESTCurrentUserLogicImpl()
 
@@ -92,87 +93,81 @@ class TestRESTInviteLogic:
             rest_clients_impl._session.get_current_user_connections.assert_called_once()
             applications.OwnConnection.deserialize.assert_called_once_with(mock_connection_payload)
 
+    @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
-    def test_fetch_my_guilds_after_with_optionals(self, rest_clients_impl, guild):
-        mock_generator = mock.AsyncMock()
-        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
-            assert rest_clients_impl.fetch_my_guilds_after(after=guild, limit=50) is mock_generator
-            helpers.pagination_handler.assert_called_once_with(
-                deserializer=applications.OwnGuild.deserialize,
-                direction="after",
-                request=rest_clients_impl._session.get_current_user_guilds,
-                reversing=False,
-                start="574921006817476608",
-                limit=50,
-            )
+    async def test_fetch_my_guilds_after_with_optionals(self, rest_clients_impl, guild):
+        mock_guild_obj = mock.AsyncMock(applications.OwnGuild)
+        mock_payload = {"id": "123123", "permissions": "292929"}
+        mock_request = mock.AsyncMock(return_value=[mock_payload])
+        rest_clients_impl._session.get_current_user_guilds = mock_request
+        with mock.patch.object(applications.OwnGuild, "deserialize", return_value=mock_guild_obj):
+            async for guild in rest_clients_impl.fetch_my_guilds_after(after=guild, limit=50):
+                assert guild is mock_guild_obj
+                break
+            mock_request.assert_called_once_with(after="574921006817476608", limit=50)
 
-    def test_fetch_my_guilds_after_without_optionals(self, rest_clients_impl):
-        mock_generator = mock.AsyncMock()
-        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
-            assert rest_clients_impl.fetch_my_guilds_after() is mock_generator
-            helpers.pagination_handler.assert_called_once_with(
-                deserializer=applications.OwnGuild.deserialize,
-                direction="after",
-                request=rest_clients_impl._session.get_current_user_guilds,
-                reversing=False,
-                start="0",
-                limit=None,
-            )
+    @pytest.mark.asyncio
+    async def test_fetch_my_guilds_after_without_optionals(self, rest_clients_impl):
+        mock_guild_obj = mock.AsyncMock(applications.OwnGuild)
+        mock_payload = {"id": "123123", "permissions": "292929"}
+        mock_request = mock.AsyncMock(return_value=[mock_payload])
+        rest_clients_impl._session.get_current_user_guilds = mock_request
+        with mock.patch.object(applications.OwnGuild, "deserialize", return_value=mock_guild_obj):
+            async for guild in rest_clients_impl.fetch_my_guilds_after():
+                assert guild is mock_guild_obj
+                break
+            mock_request.assert_called_once_with(after="0", limit=100)
 
-    def test_fetch_my_guilds_after_with_datetime_object(self, rest_clients_impl):
-        mock_generator = mock.AsyncMock()
+    @pytest.mark.asyncio
+    async def test_fetch_my_guilds_after_with_datetime_object(self, rest_clients_impl):
         date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
-            assert rest_clients_impl.fetch_my_guilds_after(after=date) is mock_generator
-            helpers.pagination_handler.assert_called_once_with(
-                deserializer=applications.OwnGuild.deserialize,
-                direction="after",
-                request=rest_clients_impl._session.get_current_user_guilds,
-                reversing=False,
-                start="537340988620800000",
-                limit=None,
-            )
+        mock_guild_obj = mock.AsyncMock(applications.OwnGuild)
+        mock_payload = {"id": "123123", "permissions": "292929"}
+        mock_request = mock.AsyncMock(return_value=[mock_payload])
+        rest_clients_impl._session.get_current_user_guilds = mock_request
+        with mock.patch.object(applications.OwnGuild, "deserialize", return_value=mock_guild_obj):
+            async for guild in rest_clients_impl.fetch_my_guilds_after(after=date):
+                assert guild is mock_guild_obj
+                break
+            mock_request.assert_called_once_with(after="537340988620800000", limit=100)
 
+    @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
-    def test_fetch_my_guilds_before_with_optionals(self, rest_clients_impl, guild):
-        mock_generator = mock.AsyncMock()
-        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
-            assert rest_clients_impl.fetch_my_guilds_before(before=guild, limit=50) is mock_generator
-            helpers.pagination_handler.assert_called_once_with(
-                deserializer=applications.OwnGuild.deserialize,
-                direction="before",
-                request=rest_clients_impl._session.get_current_user_guilds,
-                reversing=False,
-                start="574921006817476608",
-                limit=50,
-            )
+    async def test_fetch_my_guilds_before_with_optionals(self, rest_clients_impl, guild):
+        mock_guild_obj = mock.AsyncMock(applications.OwnGuild)
+        mock_payload = {"id": "123123", "permissions": "292929"}
+        mock_request = mock.AsyncMock(return_value=[mock_payload])
+        rest_clients_impl._session.get_current_user_guilds = mock_request
+        with mock.patch.object(applications.OwnGuild, "deserialize", return_value=mock_guild_obj):
+            async for guild in rest_clients_impl.fetch_my_guilds_before(before=guild, limit=50):
+                assert guild is mock_guild_obj
+                break
+            mock_request.assert_called_once_with(before="574921006817476608", limit=50)
 
-    def test_fetch_my_guilds_before_without_optionals(self, rest_clients_impl):
-        mock_generator = mock.AsyncMock()
-        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
-            assert rest_clients_impl.fetch_my_guilds_before() is mock_generator
-            helpers.pagination_handler.assert_called_once_with(
-                deserializer=applications.OwnGuild.deserialize,
-                direction="before",
-                request=rest_clients_impl._session.get_current_user_guilds,
-                reversing=False,
-                start=None,
-                limit=None,
-            )
+    @pytest.mark.asyncio
+    async def test_fetch_my_guilds_before_without_optionals(self, rest_clients_impl):
+        mock_guild_obj = mock.AsyncMock(applications.OwnGuild)
+        mock_payload = {"id": "123123", "permissions": "292929"}
+        mock_request = mock.AsyncMock(return_value=[mock_payload])
+        rest_clients_impl._session.get_current_user_guilds = mock_request
+        with mock.patch.object(applications.OwnGuild, "deserialize", return_value=mock_guild_obj):
+            async for guild in rest_clients_impl.fetch_my_guilds_before():
+                assert guild is mock_guild_obj
+                break
+            mock_request.assert_called_once_with(before="9223372036854775807", limit=100)
 
-    def test_fetch_my_guilds_before_with_datetime_object(self, rest_clients_impl):
-        mock_generator = mock.AsyncMock()
+    @pytest.mark.asyncio
+    async def test_fetch_my_guilds_before_with_datetime_object(self, rest_clients_impl):
         date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
-            assert rest_clients_impl.fetch_my_guilds_before(before=date) is mock_generator
-            helpers.pagination_handler.assert_called_once_with(
-                deserializer=applications.OwnGuild.deserialize,
-                direction="before",
-                request=rest_clients_impl._session.get_current_user_guilds,
-                reversing=False,
-                start="537340988620800000",
-                limit=None,
-            )
+        mock_guild_obj = mock.AsyncMock(applications.OwnGuild)
+        mock_payload = {"id": "123123", "permissions": "292929"}
+        mock_request = mock.AsyncMock(return_value=[mock_payload])
+        rest_clients_impl._session.get_current_user_guilds = mock_request
+        with mock.patch.object(applications.OwnGuild, "deserialize", return_value=mock_guild_obj):
+            async for guild in rest_clients_impl.fetch_my_guilds_before(before=date):
+                assert guild is mock_guild_obj
+                break
+            mock_request.assert_called_once_with(before="537340988620800000", limit=100)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)

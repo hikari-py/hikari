@@ -30,6 +30,7 @@ from hikari.internal import meta
 if typing.TYPE_CHECKING:
     import types
 
+    from hikari.clients import components as _components
     from hikari.net import rest
 
 
@@ -42,7 +43,8 @@ class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
     """
 
     @abc.abstractmethod
-    def __init__(self, session: rest.REST) -> None:
+    def __init__(self, components: _components.Components, session: rest.REST) -> None:
+        self._components = components
         self._session: rest.REST = session
 
     async def __aenter__(self) -> BaseRESTComponent:

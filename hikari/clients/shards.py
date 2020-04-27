@@ -51,8 +51,7 @@ if typing.TYPE_CHECKING:
     from hikari import gateway_entities
     from hikari import guilds
     from hikari import intents as _intents
-    from hikari.clients import configs
-    from hikari.state import consumers  # pylint: disable=cyclic-import
+    from hikari.clients import components as _components
     from hikari.state import dispatchers
 
 
@@ -212,10 +211,10 @@ class ShardClientImpl(ShardClient):
         The ID of this specific shard.
     shard_id : int
         The number of shards that make up this distributed application.
-    config : hikari.clients.configs.GatewayConfig
-        The gateway configuration to use to initialize this shard.
-    raw_event_consumer_impl : hikari.state.consumers.RawEventConsumer
-        The consumer of a raw event.
+    components : hikari.clients.components.Components
+        The client components that this shard client should be bound by.
+        Includes the the gateway configuration to use to initialize this shard
+        and the consumer of a raw event.
     url : str
         The URL to connect the gateway to.
     dispatcher : hikari.state.dispatchers.EventDispatcher, optional
@@ -236,6 +235,7 @@ class ShardClientImpl(ShardClient):
 
     __slots__ = (
         "logger",
+        "_components",
         "_raw_event_consumer",
         "_connection",
         "_status",
@@ -251,45 +251,45 @@ class ShardClientImpl(ShardClient):
         self,
         shard_id: int,
         shard_count: int,
-        config: configs.GatewayConfig,
-        raw_event_consumer_impl: consumers.RawEventConsumer,
+        components: _components.Components,
         url: str,
         dispatcher: typing.Optional[dispatchers.EventDispatcher] = None,
     ) -> None:
         super().__init__(logging.getLogger(f"hikari.{type(self).__qualname__}.{shard_id}"))
-        self._raw_event_consumer = raw_event_consumer_impl
-        self._activity = config.initial_activity
-        self._idle_since = config.initial_idle_since
-        self._is_afk = config.initial_is_afk
-        self._status = config.initial_status
+        self._components = components
+        self._raw_event_consumer = components.event_manager
+        self._activity = components.config.initial_activity
+        self._idle_since = components.config.initial_idle_since
+        self._is_afk = components.config.initial_is_afk
+        self._status = components.config.initial_status
         self._shard_state = shard_states.ShardState.NOT_RUNNING
         self._task = None
         self._dispatcher = dispatcher
         self._connection = shards.Shard(
-            compression=config.gateway_use_compression,
-            connector=config.tcp_connector,
-            debug=config.debug,
-            dispatch=lambda c, n, pl: raw_event_consumer_impl.process_raw_event(self, n, pl),
+            compression=components.config.gateway_use_compression,
+            connector=components.config.tcp_connector,
+            debug=components.config.debug,
+            dispatch=lambda c, n, pl: components.event_manager.process_raw_event(self, n, pl),
             initial_presence=self._create_presence_pl(
-                status=config.initial_status,
-                activity=config.initial_activity,
-                idle_since=config.initial_idle_since,
-                is_afk=config.initial_is_afk,
+                status=components.config.initial_status,
+                activity=components.config.initial_activity,
+                idle_since=components.config.initial_idle_since,
+                is_afk=components.config.initial_is_afk,
             ),
-            intents=config.intents,
-            large_threshold=config.large_threshold,
-            proxy_auth=config.proxy_auth,
-            proxy_headers=config.proxy_headers,
-            proxy_url=config.proxy_url,
+            intents=components.config.intents,
+            large_threshold=components.config.large_threshold,
+            proxy_auth=components.config.proxy_auth,
+            proxy_headers=components.config.proxy_headers,
+            proxy_url=components.config.proxy_url,
             session_id=None,
             seq=None,
             shard_id=shard_id,
             shard_count=shard_count,
-            ssl_context=config.ssl_context,
-            token=config.token,
+            ssl_context=components.config.ssl_context,
+            token=components.config.token,
             url=url,
-            verify_ssl=config.verify_ssl,
-            version=config.gateway_version,
+            verify_ssl=components.config.verify_ssl,
+            version=components.config.gateway_version,
         )
 
     @property

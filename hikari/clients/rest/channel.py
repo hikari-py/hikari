@@ -24,6 +24,7 @@ __all__ = ["RESTChannelComponent"]
 
 import abc
 import datetime
+import functools
 import typing
 
 from hikari import bases
@@ -269,13 +270,18 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             after = str(bases.Snowflake.from_datetime(after))
         else:
             after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
-        return helpers.pagination_handler(
+        request = functools.partial(
+            self._session.get_channel_messages,
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            deserializer=_messages.Message.deserialize,
+        )
+        deserializer = functools.partial(_messages.Message.deserialize, components=self._components)
+        return helpers.pagination_handler(
+            deserializer=deserializer,
             direction="after",
             start=after,
-            request=self._session.get_channel_messages,
-            reversing=True,  # This is the only known endpoint where reversing is needed.
+            request=request,
+            reversing=True,  # This is the only regular paginated endpoint where reversing is needed.
+            maximum_limit=100,
             limit=limit,
         )
 
@@ -283,7 +289,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         self,
         channel: bases.Hashable[_channels.Channel],
         *,
-        before: typing.Union[datetime.datetime, bases.Hashable[_messages.Message], None] = None,
+        before: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]] = bases.LARGEST_SNOWFLAKE,
         limit: typing.Optional[int] = None,
     ) -> typing.AsyncIterator[_messages.Message]:
         """Return an async iterator that retrieves a channel's message history.
@@ -334,16 +340,20 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         """
         if isinstance(before, datetime.datetime):
             before = str(bases.Snowflake.from_datetime(before))
-        elif before is not None:
-            # noinspection PyTypeChecker
+        else:
             before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
-        return helpers.pagination_handler(
+        request = functools.partial(
+            self._session.get_channel_messages,
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            deserializer=_messages.Message.deserialize,
+        )
+        deserializer = functools.partial(_messages.Message.deserialize, components=self._components)
+        return helpers.pagination_handler(
+            deserializer=deserializer,
             direction="before",
             start=before,
-            request=self._session.get_channel_messages,
+            request=request,
             reversing=False,
+            maximum_limit=100,
             limit=limit,
         )
 
@@ -410,7 +420,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             limit=limit,
             around=around,
         ):
-            yield _messages.Message.deserialize(payload)
+            yield _messages.Message.deserialize(payload, components=self._components)
 
     async def fetch_message(
         self, channel: bases.Hashable[_channels.Channel], message: bases.Hashable[_messages.Message],
@@ -446,7 +456,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
         )
-        return _messages.Message.deserialize(payload)
+        return _messages.Message.deserialize(payload, components=self._components)
 
     async def create_message(
         self,
@@ -534,7 +544,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
                 mentions_everyone=mentions_everyone, user_mentions=user_mentions, role_mentions=role_mentions
             ),
         )
-        return _messages.Message.deserialize(payload)
+        return _messages.Message.deserialize(payload, components=self._components)
 
     def safe_create_message(
         self,
@@ -645,7 +655,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
                 mentions_everyone=mentions_everyone, user_mentions=user_mentions, role_mentions=role_mentions,
             ),
         )
-        return _messages.Message.deserialize(payload)
+        return _messages.Message.deserialize(payload, components=self._components)
 
     def safe_update_message(
         self,
@@ -980,7 +990,10 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         payload = await self._session.get_pinned_messages(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
         )
-        return {message.id: message for message in map(_messages.Message.deserialize, payload)}
+        return {
+            bases.Snowflake(message["id"]): _messages.Message.deserialize(message, components=self._components)
+            for message in payload
+        }
 
     async def pin_message(
         self, channel: bases.Hashable[_channels.Channel], message: bases.Hashable[_messages.Message],

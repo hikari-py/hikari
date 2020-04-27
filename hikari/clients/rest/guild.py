@@ -24,6 +24,7 @@ __all__ = ["RESTGuildComponent"]
 
 import abc
 import datetime
+import functools
 import typing
 
 from hikari import audit_logs
@@ -111,7 +112,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         self,
         guild: bases.Hashable[guilds.Guild],
         *,
-        before: typing.Union[datetime.datetime, bases.Hashable[audit_logs.AuditLogEntry], None] = None,
+        before: typing.Union[datetime.datetime, bases.Hashable[audit_logs.AuditLogEntry]] = bases.LARGEST_SNOWFLAKE,
         user: bases.Hashable[users.User] = ...,
         action_type: typing.Union[audit_logs.AuditLogEventType, int] = ...,
         limit: typing.Optional[int] = None,
@@ -163,17 +164,15 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         """
         if isinstance(before, datetime.datetime):
             before = str(bases.Snowflake.from_datetime(before))
-        elif before is not None:
-            # noinspection PyTypeChecker
+        else:
             before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
-        return audit_logs.AuditLogIterator(
+        request = functools.partial(
+            self._session.get_guild_audit_log,
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            request=self._session.get_guild_audit_log,
-            before=before,
             user_id=(str(user.id if isinstance(user, bases.UniqueEntity) else int(user)) if user is not ... else ...),
             action_type=action_type,
-            limit=limit,
         )
+        return audit_logs.AuditLogIterator(components=self._components, request=request, before=before, limit=limit)
 
     async def fetch_guild_emoji(
         self, guild: bases.Hashable[guilds.Guild], emoji: bases.Hashable[emojis.GuildEmoji],
@@ -883,13 +882,17 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             after = str(bases.Snowflake.from_datetime(after))
         else:
             after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
-        return helpers.pagination_handler(
+        request = functools.partial(
+            self._session.list_guild_members,
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+        )
+        return helpers.pagination_handler(
             deserializer=guilds.GuildMember.deserialize,
             direction="after",
-            request=self._session.list_guild_members,
+            request=request,
             reversing=False,
             start=after,
+            maximum_limit=1000,
             limit=limit,
             id_getter=_get_member_id,
         )

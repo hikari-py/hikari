@@ -760,8 +760,7 @@ class TestHeartbeatKeepAlive:
     @_helpers.timeout_after(1.0)
     @_helpers.assert_raises(type_=asyncio.TimeoutError)
     async def test_last_heartbeat_ack_received_less_than_last_heartbeat_sent_raises_TimeoutError(self, client):
-        client.last_heartbeat_sent = 220
-        client.last_message_received = 20
+        client.last_message_received = time.perf_counter() - 1
 
         await client._heartbeat_keep_alive(0.25)
 
