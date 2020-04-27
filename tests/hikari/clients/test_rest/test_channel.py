@@ -402,9 +402,7 @@ class TestRESTChannelLogging:
         mock_embed_obj = mock.MagicMock(embeds.Embed)
         mock_message_obj = mock.MagicMock(messages.Message)
         mock_file_obj = mock.MagicMock(files.File)
-        mock_file_obj2 = mock.MagicMock(files.File)
         mock_embed_obj = mock.MagicMock(embeds.Embed)
-        mock_embed_obj.assets_to_upload = [mock_file_obj2]
         rest_channel_logic_impl.create_message = mock.AsyncMock(return_value=mock_message_obj)
         result = await rest_channel_logic_impl.safe_create_message(
             channel=channel,
@@ -423,7 +421,7 @@ class TestRESTChannelLogging:
             content="A CONTENT",
             nonce="69696969696969",
             tts=True,
-            files=[mock_file_obj, mock_file_obj2],
+            files=[mock_file_obj],
             embed=mock_embed_obj,
             mentions_everyone=True,
             user_mentions=True,
