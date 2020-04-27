@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Wrapper around nox to give default job kwargs."""
+import functools
+import os
 from typing import Callable
 
 from nox.sessions import Session
@@ -35,3 +37,12 @@ def session(*, only_if=lambda: True, default: bool = False, reuse_venv: bool = F
 
         return _session(reuse_venv=reuse_venv, **kwargs)(func) if only_if() else func
     return decorator
+
+
+def inherit_environment_vars(func):
+    @functools.wraps(func)
+    def logic(session):
+        for n, v in os.environ.items():
+            session.env[n] = v
+        return func(session)
+    return logic
