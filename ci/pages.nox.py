@@ -42,4 +42,6 @@ def pages(session: nox.Session) -> None:
         if n.startswith(("GITLAB_", "CI")) or n == "CI":
             session.env[n] = v
 
+    if not os.path.exists(config.ARTIFACT_DIRECTORY):
+        os.mkdir(config.ARTIFACT_DIRECTORY)
     copy_from_in(config.PAGES_DIRECTORY, config.ARTIFACT_DIRECTORY)

@@ -117,7 +117,7 @@ class PermissionOverwrite(bases.UniqueEntity, marshaller.Deserializable, marshal
         return typing.cast(permissions.Permission, (self.allow | self.deny))
 
 
-def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type["Channel"]], typing.Type["Channel"]]:
+def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type[Channel]], typing.Type[Channel]]:
     """Generate a decorator for channel classes defined in this library.
 
     This allows them to associate themselves with a given channel type.
@@ -344,16 +344,16 @@ class GuildChannelBuilder(marshaller.Serializable):
             "name": channel_name,
         }
 
-    def serialize(self: "GuildChannelBuilder") -> typing.Mapping[str, typing.Any]:
+    def serialize(self: GuildChannelBuilder) -> typing.Mapping[str, typing.Any]:
         """Serialize this instance into a payload to send to Discord."""
         return self._payload
 
-    def is_nsfw(self) -> "GuildChannelBuilder":
+    def is_nsfw(self) -> GuildChannelBuilder:
         """Mark this channel as NSFW."""
         self._payload["nsfw"] = True
         return self
 
-    def with_permission_overwrites(self, overwrites: typing.Sequence[PermissionOverwrite]) -> "GuildChannelBuilder":
+    def with_permission_overwrites(self, overwrites: typing.Sequence[PermissionOverwrite]) -> GuildChannelBuilder:
         """Set the permission overwrites for this channel.
 
         Parameters
@@ -369,7 +369,7 @@ class GuildChannelBuilder(marshaller.Serializable):
         self._payload["permission_overwrites"] = [o.serialize() for o in overwrites]
         return self
 
-    def with_topic(self, topic: str) -> "GuildChannelBuilder":
+    def with_topic(self, topic: str) -> GuildChannelBuilder:
         """Set the topic for this channel.
 
         Parameters
@@ -380,7 +380,7 @@ class GuildChannelBuilder(marshaller.Serializable):
         self._payload["topic"] = topic
         return self
 
-    def with_bitrate(self, bitrate: int) -> "GuildChannelBuilder":
+    def with_bitrate(self, bitrate: int) -> GuildChannelBuilder:
         """Set the bitrate for this channel.
 
         Parameters
@@ -391,7 +391,7 @@ class GuildChannelBuilder(marshaller.Serializable):
         self._payload["bitrate"] = int(bitrate)
         return self
 
-    def with_user_limit(self, user_limit: int) -> "GuildChannelBuilder":
+    def with_user_limit(self, user_limit: int) -> GuildChannelBuilder:
         """Set the limit for how many users can be in this channel at once.
 
         Parameters
@@ -404,7 +404,7 @@ class GuildChannelBuilder(marshaller.Serializable):
 
     def with_rate_limit_per_user(
         self, rate_limit_per_user: typing.Union[datetime.timedelta, int]
-    ) -> "GuildChannelBuilder":
+    ) -> GuildChannelBuilder:
         """Set the rate limit for users sending messages in this channel.
 
         Parameters
@@ -420,7 +420,7 @@ class GuildChannelBuilder(marshaller.Serializable):
         )
         return self
 
-    def with_parent_category(self, category: typing.Union[bases.Snowflake, int]) -> "GuildChannelBuilder":
+    def with_parent_category(self, category: typing.Union[bases.Snowflake, int]) -> GuildChannelBuilder:
         """Set the parent category for this channel.
 
         Parameters
@@ -432,7 +432,7 @@ class GuildChannelBuilder(marshaller.Serializable):
         self._payload["parent_id"] = str(int(category))
         return self
 
-    def with_id(self, channel_id: typing.Union[bases.Snowflake, int]) -> "GuildChannelBuilder":
+    def with_id(self, channel_id: typing.Union[bases.Snowflake, int]) -> GuildChannelBuilder:
         """Set the placeholder ID for this channel.
 
         Parameters
@@ -448,7 +448,7 @@ class GuildChannelBuilder(marshaller.Serializable):
         return self
 
 
-def deserialize_channel(payload: more_typing.JSONObject) -> typing.Union[GuildChannel, DMChannel]:
+def deserialize_channel(payload: more_typing.JSONObject, **kwargs: typing.Any) -> typing.Union[GuildChannel, DMChannel]:
     """Deserialize a channel object into the corresponding class.
 
     !!! warning
@@ -458,4 +458,4 @@ def deserialize_channel(payload: more_typing.JSONObject) -> typing.Union[GuildCh
     type_id = payload["type"]
     types = getattr(register_channel_type, "types", more_collections.EMPTY_DICT)
     channel_type = types[type_id]
-    return channel_type.deserialize(payload)
+    return channel_type.deserialize(payload, **kwargs)

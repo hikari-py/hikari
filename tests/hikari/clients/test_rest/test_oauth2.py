@@ -21,6 +21,7 @@ import mock
 import pytest
 
 from hikari import applications
+from hikari.clients import components
 from hikari.clients.rest import oauth2
 from hikari.net import rest
 
@@ -28,11 +29,12 @@ from hikari.net import rest
 class TestRESTReactionLogic:
     @pytest.fixture()
     def rest_oauth2_logic_impl(self):
+        mock_components = mock.MagicMock(components.Components)
         mock_low_level_restful_client = mock.MagicMock(rest.REST)
 
         class RESTOauth2LogicImpl(oauth2.RESTOAuth2Component):
             def __init__(self):
-                super().__init__(mock_low_level_restful_client)
+                super().__init__(mock_components, mock_low_level_restful_client)
 
         return RESTOauth2LogicImpl()
 

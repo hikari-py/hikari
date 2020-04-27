@@ -20,7 +20,17 @@
 
 from __future__ import annotations
 
+from hikari.clients import bot_base
+from hikari.clients import components
+from hikari.clients import configs
+from hikari.clients import rest
+from hikari.clients import runnable
+from hikari.clients import shard_states
+from hikari.clients import shards
+from hikari.clients import stateless
+
 from hikari.clients.bot_base import *
+from hikari.clients.components import *
 from hikari.clients.configs import *
 from hikari.clients.rest import *
 from hikari.clients.runnable import *
@@ -30,6 +40,7 @@ from hikari.clients.stateless import *
 
 __all__ = [
     *bot_base.__all__,
+    *components.__all__,
     *configs.__all__,
     *rest.__all__,
     *shard_states.__all__,

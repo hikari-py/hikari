@@ -25,8 +25,8 @@ from hikari import channels
 from hikari import emojis
 from hikari import messages
 from hikari import users
+from hikari.clients import components
 from hikari.clients.rest import react
-from hikari.internal import helpers
 from hikari.net import rest
 from tests.hikari import _helpers
 
@@ -34,11 +34,12 @@ from tests.hikari import _helpers
 class TestRESTReactionLogic:
     @pytest.fixture()
     def rest_reaction_logic_impl(self):
+        mock_components = mock.MagicMock(components.Components)
         mock_low_level_restful_client = mock.MagicMock(rest.REST)
 
         class RESTReactionLogicImpl(react.RESTReactionComponent):
             def __init__(self):
-                super().__init__(mock_low_level_restful_client)
+                super().__init__(mock_components, mock_low_level_restful_client)
 
         return RESTReactionLogicImpl()
 
@@ -88,64 +89,63 @@ class TestRESTReactionLogic:
             channel_id="213123", message_id="987654321", emoji="blah:123",
         )
 
+    @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("message", 432, messages.Message)
     @_helpers.parametrize_valid_id_formats_for_models("channel", 123, channels.Channel)
     @pytest.mark.parametrize(
         "emoji", ["tutu1:456371206225002499", mock.MagicMock(emojis.GuildEmoji, url_name="tutu1:456371206225002499")]
     )
     @_helpers.parametrize_valid_id_formats_for_models("user", 140502780547694592, users.User)
-    def test_fetch_reactors_after_with_optionals(self, rest_reaction_logic_impl, message, channel, emoji, user):
-        mock_generator = mock.AsyncMock()
-        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
-            result = rest_reaction_logic_impl.fetch_reactors_after(channel, message, emoji, after=user, limit=47)
-            assert result is mock_generator
-            helpers.pagination_handler.assert_called_once_with(
-                channel_id="123",
-                message_id="432",
-                emoji="tutu1:456371206225002499",
-                deserializer=users.User.deserialize,
-                direction="after",
-                request=rest_reaction_logic_impl._session.get_reactions,
-                reversing=False,
-                start="140502780547694592",
-                limit=47,
-            )
+    async def test_fetch_reactors_after_with_optionals(self, rest_reaction_logic_impl, message, channel, emoji, user):
+        mock_user_payload = {"id": "123123", "username": "blahBlah"}
+        mock_request = mock.AsyncMock(return_value=[mock_user_payload])
+        rest_reaction_logic_impl._session.get_reactions = mock_request
+        mock_user_obj = mock.MagicMock(users.User)
+        with mock.patch.object(users.User, "deserialize", return_value=mock_user_obj):
+            async for reactor_obj in rest_reaction_logic_impl.fetch_reactors_after(
+                channel, message, emoji, after=user, limit=47
+            ):
+                assert reactor_obj is mock_user_obj
+                break
+            users.User.deserialize.assert_called_once_with(mock_user_payload)
+        mock_request.assert_called_once_with(
+            channel_id="123", message_id="432", emoji="tutu1:456371206225002499", after="140502780547694592", limit=47
+        )
 
+    @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("message", 432, messages.Message)
     @_helpers.parametrize_valid_id_formats_for_models("channel", 123, channels.Channel)
     @pytest.mark.parametrize(
         "emoji", ["tutu1:456371206225002499", mock.MagicMock(emojis.GuildEmoji, url_name="tutu1:456371206225002499")]
     )
-    def test_fetch_reactors_after_without_optionals(self, rest_reaction_logic_impl, message, channel, emoji):
-        mock_generator = mock.AsyncMock()
-        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
-            assert rest_reaction_logic_impl.fetch_reactors_after(channel, message, emoji) is mock_generator
-            helpers.pagination_handler.assert_called_once_with(
-                channel_id="123",
-                message_id="432",
-                emoji="tutu1:456371206225002499",
-                deserializer=users.User.deserialize,
-                direction="after",
-                request=rest_reaction_logic_impl._session.get_reactions,
-                reversing=False,
-                start="0",
-                limit=None,
-            )
+    async def test_fetch_reactors_after_without_optionals(self, rest_reaction_logic_impl, message, channel, emoji):
+        mock_user_payload = {"id": "123123", "username": "blahBlah"}
+        mock_request = mock.AsyncMock(return_value=[mock_user_payload])
+        rest_reaction_logic_impl._session.get_reactions = mock_request
+        mock_user_obj = mock.MagicMock(users.User)
+        with mock.patch.object(users.User, "deserialize", return_value=mock_user_obj):
+            async for reactor_obj in rest_reaction_logic_impl.fetch_reactors_after(channel, message, emoji):
+                assert reactor_obj is mock_user_obj
+                break
+            users.User.deserialize.assert_called_once_with(mock_user_payload)
+        mock_request.assert_called_once_with(
+            channel_id="123", message_id="432", emoji="tutu1:456371206225002499", after="0", limit=100
+        )
 
-    def test_fetch_reactors_after_with_datetime_object(self, rest_reaction_logic_impl):
-        mock_generator = mock.AsyncMock()
+    @pytest.mark.asyncio
+    async def test_fetch_reactors_after_with_datetime_object(self, rest_reaction_logic_impl):
         date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
-            result = rest_reaction_logic_impl.fetch_reactors_after(123, 432, "tutu1:456371206225002499", after=date)
-            assert result is mock_generator
-            helpers.pagination_handler.assert_called_once_with(
-                channel_id="123",
-                message_id="432",
-                emoji="tutu1:456371206225002499",
-                deserializer=users.User.deserialize,
-                direction="after",
-                request=rest_reaction_logic_impl._session.get_reactions,
-                reversing=False,
-                start="537340988620800000",
-                limit=None,
-            )
+        mock_user_payload = {"id": "123123", "username": "blahBlah"}
+        mock_request = mock.AsyncMock(return_value=[mock_user_payload])
+        rest_reaction_logic_impl._session.get_reactions = mock_request
+        mock_user_obj = mock.MagicMock(users.User)
+        with mock.patch.object(users.User, "deserialize", return_value=mock_user_obj):
+            async for reactor_obj in rest_reaction_logic_impl.fetch_reactors_after(
+                123, 432, "tutu1:456371206225002499", after=date
+            ):
+                assert reactor_obj is mock_user_obj
+                break
+            users.User.deserialize.assert_called_once_with(mock_user_payload)
+        mock_request.assert_called_once_with(
+            channel_id="123", message_id="432", emoji="tutu1:456371206225002499", after="537340988620800000", limit=100
+        )

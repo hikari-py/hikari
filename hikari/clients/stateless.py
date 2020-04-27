@@ -31,6 +31,7 @@ from hikari.state import intent_aware_dispatchers
 from hikari.state import stateless
 
 if typing.TYPE_CHECKING:
+    from hikari.clients import components as _components
     from hikari.clients import configs
 
 
@@ -42,25 +43,13 @@ class StatelessBot(bot_base.BotBase):
 
     @classmethod
     def _create_shard(
-        cls,
-        shard_id: int,
-        shard_count: int,
-        url: str,
-        config: configs.BotConfig,
-        event_manager: stateless.StatelessEventManagerImpl,
+        cls, shard_id: int, shard_count: int, url: str, components: _components.Components,
     ) -> shards.ShardClientImpl:
-        return shards.ShardClientImpl(
-            shard_id=shard_id,
-            shard_count=shard_count,
-            config=config,
-            raw_event_consumer_impl=event_manager,
-            url=url,
-            dispatcher=event_manager.event_dispatcher,
-        )
+        return shards.ShardClientImpl(shard_id=shard_id, shard_count=shard_count, components=components, url=url)
 
     @classmethod
-    def _create_rest(cls, config: configs.BotConfig) -> rest.RESTClient:
-        return rest.RESTClient(config)
+    def _create_rest(cls, components: _components.Components) -> rest.RESTClient:
+        return rest.RESTClient(components)
 
     @classmethod
     def _create_event_manager(

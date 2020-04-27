@@ -144,13 +144,14 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             request=self._session.get_current_user_guilds,
             reversing=False,
             start=after,
+            maximum_limit=100,
             limit=limit,
         )
 
     def fetch_my_guilds_before(
         self,
         *,
-        before: typing.Union[datetime.datetime, bases.Hashable[guilds.Guild], None] = None,
+        before: typing.Union[datetime.datetime, bases.Hashable[guilds.Guild]] = bases.LARGEST_SNOWFLAKE,
         limit: typing.Optional[int] = None,
     ) -> typing.AsyncIterator[applications.OwnGuild]:
         """Get an async iterator of the guilds the current user is in.
@@ -182,8 +183,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         """
         if isinstance(before, datetime.datetime):
             before = str(bases.Snowflake.from_datetime(before))
-        elif before is not None:
-            # noinspection PyTypeChecker
+        else:
             before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
         return helpers.pagination_handler(
             deserializer=applications.OwnGuild.deserialize,
@@ -191,6 +191,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             request=self._session.get_current_user_guilds,
             reversing=False,
             start=before,
+            maximum_limit=100,
             limit=limit,
         )
 

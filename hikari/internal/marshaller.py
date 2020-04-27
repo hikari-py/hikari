@@ -51,6 +51,7 @@ _RAW_NAME_ATTR: typing.Final[str] = __name__ + "_RAW_NAME"
 _SERIALIZER_ATTR: typing.Final[str] = __name__ + "_SERIALIZER"
 _DESERIALIZER_ATTR: typing.Final[str] = __name__ + "_DESERIALIZER"
 _TRANSIENT_ATTR: typing.Final[str] = __name__ + "_TRANSIENT"
+_SKIP_UNMARSHALLING: typing.Final[str] = __name__ + "_SKIP_UNMARSHALLING"
 _IF_UNDEFINED: typing.Final[str] = __name__ + "IF_UNDEFINED"
 _IF_NONE: typing.Final[str] = __name__ + "_IF_NONE"
 _PASSED_THROUGH_SINGLETONS: typing.Final[typing.Sequence[bool]] = [False, True, None]
@@ -119,6 +120,7 @@ def attrib(
     if_undefined: typing.Union[typing.Callable[[], typing.Any], None, type(RAISE)] = RAISE,
     raw_name: typing.Optional[str] = None,
     transient: bool = False,
+    skip_unmarshalling: bool = False,
     serializer: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
     **kwargs,
 ) -> attr.Attribute:
@@ -134,6 +136,11 @@ def attrib(
     transient : bool
         If `True`, the field is marked as transient, meaning it will not be
         serialized. Defaults to `False`.
+    skip_unmarshalling : bool
+        If `True`, the field will never be deserialized from a payload and will
+        have to be attached to the object after generation or passed through
+        to `deserialize` as a kwarg, with `if_undefined` and `if_none` not
+        applying to these fields.
     if_none
         Either a default factory function called to get the default for when
         this field is `None` or one of `None`, `False` or `True` to specify that
@@ -170,6 +177,7 @@ def attrib(
     metadata[_IF_NONE] = if_none
     metadata[_IF_UNDEFINED] = if_undefined
     metadata[_TRANSIENT_ATTR] = transient
+    metadata[_SKIP_UNMARSHALLING] = skip_unmarshalling
 
     attribute = attr.ib(**kwargs, metadata=metadata)
     # Fool pylint into thinking this is any type.
@@ -202,6 +210,7 @@ class _AttributeDescriptor:
         "if_none",
         "if_undefined",
         "is_transient",
+        "is_skipping_unmarshalling",
         "deserializer",
         "serializer",
     )
@@ -214,6 +223,7 @@ class _AttributeDescriptor:
         if_none: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)],
         if_undefined: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)],
         is_transient: bool,
+        IS_SKIPPING_UNMARSHALLING: bool,
         deserializer: typing.Callable[[typing.Any], typing.Any],
         serializer: typing.Callable[[typing.Any], typing.Any],
     ) -> None:
@@ -225,6 +235,7 @@ class _AttributeDescriptor:
         self.if_none = if_none
         self.if_undefined = if_undefined
         self.is_transient = is_transient  # Do not serialize
+        self.is_skipping_unmarshalling = IS_SKIPPING_UNMARSHALLING  # Do not deserialize
         self.deserializer = deserializer
         self.serializer = serializer
 
@@ -254,6 +265,7 @@ def _construct_attribute_descriptor(field: attr.Attribute) -> _AttributeDescript
         if_none=field.metadata[_IF_NONE],
         if_undefined=field.metadata[_IF_UNDEFINED],
         is_transient=field.metadata[_TRANSIENT_ATTR],
+        IS_SKIPPING_UNMARSHALLING=field.metadata[_SKIP_UNMARSHALLING],
         deserializer=field.metadata[_DESERIALIZER_ATTR] or _not_implemented("deserialize", field_name),
         serializer=field.metadata[_SERIALIZER_ATTR] or _not_implemented("serialize", field_name),
     )
@@ -305,7 +317,7 @@ class HikariEntityMarshaller:
         self._registered_entities[cls] = entity_descriptor
         return cls
 
-    def deserialize(self, raw_data: more_typing.JSONObject, target_type: typing.Type[EntityT]) -> EntityT:
+    def deserialize(self, raw_data: more_typing.JSONObject, target_type: typing.Type[EntityT], **kwargs) -> EntityT:
         """Deserialize a given raw data item into the target type.
 
         Parameters
@@ -314,6 +326,10 @@ class HikariEntityMarshaller:
             The raw data to deserialize.
         target_type : typing.Type[typing.Any]
             The type to deserialize to.
+        **kwargs :
+            Attributes to inject into the entity. These still need to be
+            included in the model's slots and should normally be fields where
+            both `skip_unmarshalling` and `transient` were passed as `True`.
 
         Returns
         -------
@@ -335,9 +351,9 @@ class HikariEntityMarshaller:
         except KeyError:
             raise LookupError(f"No registered entity {target_type.__module__}.{target_type.__qualname__}")
 
-        kwargs = {}
-
         for a in descriptor.attribs:
+            if a.is_skipping_unmarshalling:
+                continue
             kwarg_name = a.constructor_name
 
             if a.raw_name not in raw_data:
@@ -463,7 +479,9 @@ class Deserializable:
     __slots__ = ()
 
     @classmethod
-    def deserialize(cls: typing.Type[more_typing.T_contra], payload: more_typing.JSONType) -> more_typing.T_contra:
+    def deserialize(
+        cls: typing.Type[more_typing.T_contra], payload: more_typing.JSONType, **kwargs
+    ) -> more_typing.T_contra:
         """Deserialize the given payload into the object.
 
         Parameters
@@ -471,7 +489,7 @@ class Deserializable:
         payload
             The payload to deserialize into the object.
         """
-        return HIKARI_ENTITY_MARSHALLER.deserialize(payload, cls)
+        return HIKARI_ENTITY_MARSHALLER.deserialize(payload, cls, **kwargs)
 
 
 class Serializable:
