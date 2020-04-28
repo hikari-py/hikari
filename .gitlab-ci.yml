@@ -17,7 +17,7 @@
 
 stages:
   - test
-  - lint
+  - pre-report
   - report
   - deploy
   - verify
