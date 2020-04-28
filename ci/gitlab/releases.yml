@@ -28,8 +28,42 @@
           | grep -iqE "\[\s*(skip|no|don'?t|do\s+not)\s+deploy(ments?)?\s*\]" \
         && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" \
         && exit 0
+      
+      # We don't start on the branch, but a ref of it, which isn't useful
+      echo "Changing from ref to actual branch"
+      git fetch -ap
+      git checkout ${TARGET_BRANCH}
+      git reset --hard origin/${TARGET_BRANCH}
+        
       apt-get update
       apt-get install curl openssh-client -qy
+
+      # Don't dox our keys, or spam echos
+      set +x
+
+      echo
+      echo "========================= hikari/_about.py ========================="
+      echo
+      cat -n hikari/_about.py
+      echo
+      echo "===================================================================="
+      echo
+
+      # Init the SSH agent and add our gitlab private key to it.
+      echo ">>>> Starting SSH agent <<<<"
+      eval "$(ssh-agent -s)"
+      echo ">>>> Making ~/.ssh <<<<"
+      mkdir ~/.ssh || true
+      echo ">>>> Writing SSH private key to ~/.ssh/id_rsa <<<<"
+      echo "${GIT_SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
+      echo ">>>> SSH IS READY <<<<"
+
+      # Be verbose again.
+      set -x
+
+      chmod 600 ~/.ssh/id_rsa
+      ssh-keyscan -t rsa gitlab.com >> ~/.ssh/known_hosts
+      ssh-add ~/.ssh/id_rsa
       pip install twine wheel nox
   extends: .cpython
   interruptible: false
@@ -59,6 +93,8 @@ release:staging:
       set -e
       set -x
       nox -s deploy
+  variables:
+    TARGET_BRANCH: staging
 
 ###
 ### Make a production release.
@@ -82,3 +118,5 @@ release:master:
       set -e
       set -x
       nox -s deploy
+  variables:
+    TARGET_BRANCH: master
