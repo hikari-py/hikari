@@ -16,6 +16,12 @@
 ## along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 <%!
+    from distutils import version as _version
+
+    import hikari as _hikari
+
+    _staging_version = "dev" in _version.LooseVersion(_hikari.__version__).version
+
     # Template configuration. Copy over in your template directory
     # (used with `--template-dir`) and adapt as necessary.
     # Note, defaults are loaded from this distribution file, so your
@@ -51,7 +57,10 @@
     # The whitespace-separated tokens represent arbitrary extra queries (at least one
     # must match) passed to regular Google search. Example:
     #search_query = 'inurl:github.com/USER/PROJECT  site:PROJECT.github.io  site:PROJECT.website'
-    search_query = "inurl:github.com/nekokatt/hikari  site:nekokatt.gitlab.io/hikari"
+    if _staging_version:
+        search_query = "inurl:github.com/nekokatt/hikari  site:nekokatt.gitlab.io/hikari/hikari"
+    else:  # TODO: "hikari/staging/hikari" temporarily changed to "hikari/hikari" for staging site search link.
+        search_query = "inurl:github.com/nekokatt/hikari  site:nekokatt.gitlab.io/hikari/hikari"
     # If set, render LaTeX math syntax within \(...\) (inline equations),
     # or within \[...\] or $$...$$ or `.. math::` (block equations)
     # as nicely-formatted math formulas using MathJax.
