@@ -34,12 +34,6 @@
       git fetch -ap
       git checkout ${TARGET_BRANCH}
       git reset --hard origin/${TARGET_BRANCH}
-        
-      apt-get update
-      apt-get install curl openssh-client -qy
-
-      # Don't dox our keys, or spam echos
-      set +x
 
       echo
       echo "========================= hikari/_about.py ========================="
@@ -49,21 +43,6 @@
       echo "===================================================================="
       echo
 
-      # Init the SSH agent and add our gitlab private key to it.
-      echo ">>>> Starting SSH agent <<<<"
-      eval "$(ssh-agent -s)"
-      echo ">>>> Making ~/.ssh <<<<"
-      mkdir ~/.ssh || true
-      echo ">>>> Writing SSH private key to ~/.ssh/id_rsa <<<<"
-      echo "${GIT_SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
-      echo ">>>> SSH IS READY <<<<"
-
-      # Be verbose again.
-      set -x
-
-      chmod 600 ~/.ssh/id_rsa
-      ssh-keyscan -t rsa gitlab.com >> ~/.ssh/known_hosts
-      ssh-add ~/.ssh/id_rsa
       pip install twine wheel nox
   extends: .cpython
   interruptible: false
@@ -117,6 +96,29 @@ release:master:
     - |+
       set -e
       set -x
+        
+      apt-get update
+      apt-get install curl openssh-client -qy
+
+      # Don't dox our keys, or spam echos
+      set +x
+
+      # Init the SSH agent and add our gitlab private key to it.
+      echo ">>>> Starting SSH agent <<<<"
+      eval "$(ssh-agent -s)"
+      echo ">>>> Making ~/.ssh <<<<"
+      mkdir ~/.ssh || true
+      echo ">>>> Writing SSH private key to ~/.ssh/id_rsa <<<<"
+      echo "${GIT_SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
+      echo ">>>> SSH IS READY <<<<"
+
+      # Be verbose again.
+      set -x
+
+      chmod 600 ~/.ssh/id_rsa
+      ssh-keyscan -t rsa gitlab.com >> ~/.ssh/known_hosts
+      ssh-add ~/.ssh/id_rsa
+
       nox -s deploy
   variables:
     TARGET_BRANCH: master
