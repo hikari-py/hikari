@@ -19,23 +19,20 @@
 import inspect
 
 import mock
-import pytest
 
+from hikari.clients import components
 from hikari.clients import configs
 from hikari.clients import rest as high_level_rest
 from hikari.net import rest as low_level_rest
 
 
 class TestRESTClient:
-    @pytest.fixture()
-    def mock_config(self):
-        # Mocking the Configs leads to attribute errors regardless of spec set.
-        return configs.RESTConfig(token="blah.blah.blah")
-
-    def test_init(self, mock_config):
+    def test_init(self):
+        mock_config = configs.RESTConfig(token="blah.blah.blah")
+        mock_components = mock.MagicMock(components.Components, config=mock_config)
         mock_low_level_rest_clients = mock.MagicMock(low_level_rest.REST)
         with mock.patch.object(low_level_rest, "REST", return_value=mock_low_level_rest_clients) as patched_init:
-            cli = high_level_rest.RESTClient(mock_config)
+            cli = high_level_rest.RESTClient(mock_components)
             patched_init.assert_called_once_with(
                 allow_redirects=mock_config.allow_redirects,
                 connector=mock_config.tcp_connector,
@@ -48,6 +45,7 @@ class TestRESTClient:
                 version=mock_config.rest_version,
             )
             assert cli._session is mock_low_level_rest_clients
+            assert cli._components is mock_components
 
     def test_inheritance(self):
         for attr, routine in (

@@ -59,6 +59,7 @@ from hikari.internal import more_collections
 from hikari.internal import more_enums
 
 if typing.TYPE_CHECKING:
+    from hikari.clients import components as _components
     from hikari.internal import more_typing
 
 
@@ -182,7 +183,7 @@ class AuditLogChange(bases.HikariEntity, marshaller.Deserializable):
     """The name of the audit log change's key."""
 
     @classmethod
-    def deserialize(cls, payload: typing.Mapping[str, str]) -> "AuditLogChange":
+    def deserialize(cls, payload: typing.Mapping[str, str], **_) -> AuditLogChange:
         """Deserialize this model from a raw payload."""
         key = conversions.try_cast(payload["key"], AuditLogChangeKey, payload["key"])
         new_value = payload.get("new_value")
@@ -239,7 +240,7 @@ class AuditLogEventType(int, more_enums.Enum):
 # Ignore docstring not starting in an imperative mood
 def register_audit_log_entry_info(
     type_: AuditLogEventType, *additional_types: AuditLogEventType
-) -> typing.Callable[[typing.Type["BaseAuditLogEntryInfo"]], typing.Type["BaseAuditLogEntryInfo"]]:  # noqa: D401
+) -> typing.Callable[[typing.Type[BaseAuditLogEntryInfo]], typing.Type[BaseAuditLogEntryInfo]]:  # noqa: D401
     """Generates a decorator for defined audit log entry info entities.
 
     Allows them to be associated with given entry type(s).
@@ -379,7 +380,7 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
         self.__dict__.update(payload)
 
     @classmethod
-    def deserialize(cls, payload: typing.Mapping[str, str]) -> "UnrecognisedAuditLogEntryInfo":
+    def deserialize(cls, payload: typing.Mapping[str, str], **_) -> UnrecognisedAuditLogEntryInfo:
         return cls(payload)
 
 
@@ -427,7 +428,7 @@ class AuditLogEntry(bases.UniqueEntity, marshaller.Deserializable):
     """The reason for this change, if set (between 0-512 characters)."""
 
     @classmethod
-    def deserialize(cls, payload: more_typing.JSONObject) -> "AuditLogEntry":
+    def deserialize(cls, payload: more_typing.JSONObject, **_) -> AuditLogEntry:
         """Deserialize this model from a raw payload."""
         action_type = conversions.try_cast(payload["action_type"], AuditLogEventType, payload["action_type"])
         if target_id := payload.get("target_id"):
@@ -489,15 +490,12 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
 
     Parameters
     ----------
-    guild_id : str
-        The guild ID to look up.
+    components : hikari.clients.components.Components
+        The `hikari.clients.components.Components` that this should pass through
+        to the generated entities.
     request : typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, typing.Any]]
-        The session bound function that this iterator should use for making
-        Get Guild Audit Log requests.
-    user_id : str
-        If specified, the user ID to filter by.
-    action_type : int
-        If specified, the action type to look up.
+        The prepared session bound partial function that this iterator should
+        use for making Get Guild Audit Log requests.
     limit : int
         If specified, the limit to how many entries this iterator should return
         else unlimited.
@@ -519,8 +517,8 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
 
     __slots__ = (
         "_buffer",
+        "_components",
         "_front",
-        "_kwargs",
         "_limit",
         "_request",
         "integrations",
@@ -539,14 +537,12 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
 
     def __init__(
         self,
-        guild_id: str,
+        components: _components.Components,
         request: typing.Callable[..., more_typing.Coroutine[typing.Any]],
-        before: typing.Optional[str] = None,
-        user_id: str = ...,
-        action_type: int = ...,
+        before: typing.Optional[str] = str(bases.LARGEST_SNOWFLAKE),
         limit: typing.Optional[int] = None,
     ) -> None:
-        self._kwargs = {"guild_id": guild_id, "user_id": user_id, "action_type": action_type}
+        self._components = components
         self._limit = limit
         self._buffer = []
         self._request = request
@@ -555,14 +551,14 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
         self.webhooks = {}
         self.integrations = {}
 
-    def __aiter__(self) -> "AuditLogIterator":
+    def __aiter__(self) -> AuditLogIterator:
         return self
 
     async def __anext__(self) -> AuditLogEntry:
         if not self._buffer and self._limit != 0:
             await self._fill()
         try:
-            entry = AuditLogEntry.deserialize(self._buffer.pop())
+            entry = AuditLogEntry.deserialize(self._buffer.pop(), components=self._components)
             self._front = str(entry.id)
             return entry
         except IndexError:
@@ -571,9 +567,7 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
     async def _fill(self) -> None:
         """Retrieve entries before `_front` and add to `_buffer`."""
         payload = await self._request(
-            **self._kwargs,
-            before=self._front if self._front is not None else ...,
-            limit=100 if self._limit is None or self._limit > 100 else self._limit,
+            before=self._front, limit=100 if self._limit is None or self._limit > 100 else self._limit,
         )
         if self._limit is not None:
             self._limit -= len(payload["audit_log_entries"])
@@ -583,10 +577,22 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
         self._buffer.extend(payload["audit_log_entries"])
         if users := payload.get("users"):
             self.users = copy.copy(self.users)
-            self.users.update({u.id: u for u in map(_users.User.deserialize, users)})
+            self.users.update(
+                {bases.Snowflake(u["id"]): _users.User.deserialize(u, components=self._components) for u in users}
+            )
         if webhooks := payload.get("webhooks"):
             self.webhooks = copy.copy(self.webhooks)
-            self.webhooks.update({w.id: w for w in map(_webhooks.Webhook.deserialize, webhooks)})
+            self.webhooks.update(
+                {
+                    bases.Snowflake(w["id"]): _webhooks.Webhook.deserialize(w, components=self._components)
+                    for w in webhooks
+                }
+            )
         if integrations := payload.get("integrations"):
             self.integrations = copy.copy(self.integrations)
-            self.integrations.update({i.id: i for i in map(guilds.PartialGuildIntegration.deserialize, integrations)})
+            self.integrations.update(
+                {
+                    bases.Snowflake(i["id"]): guilds.PartialGuildIntegration.deserialize(i, components=self._components)
+                    for i in integrations
+                }
+            )

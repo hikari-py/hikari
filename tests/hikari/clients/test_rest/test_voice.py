@@ -20,6 +20,7 @@ import mock
 import pytest
 
 from hikari import voices
+from hikari.clients import components
 from hikari.clients.rest import voice
 from hikari.net import rest
 
@@ -27,11 +28,12 @@ from hikari.net import rest
 class TestRESTUserLogic:
     @pytest.fixture()
     def rest_voice_logic_impl(self):
+        mock_components = mock.MagicMock(components.Components)
         mock_low_level_restful_client = mock.MagicMock(rest.REST)
 
         class RESTVoiceLogicImpl(voice.RESTVoiceComponent):
             def __init__(self):
-                super().__init__(mock_low_level_restful_client)
+                super().__init__(mock_components, mock_low_level_restful_client)
 
         return RESTVoiceLogicImpl()
 

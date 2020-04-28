@@ -48,6 +48,9 @@ from hikari.internal import more_enums
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import channels
+    from hikari import files as _files
+
 
 @more_enums.must_be_unique
 class MessageType(int, more_enums.Enum):
@@ -327,3 +330,102 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
 
     nonce: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
     """The message nonce. This is a string used for validating a message was sent."""
+
+    def fetch_channel(self) -> typing.Coroutine[channels.Channel]:
+        """Fetch the channel this message was created in.
+
+        Returns
+        -------
+        typing.Coroutine[hikari.channels.Channel]
+            The object of the channel this message belongs to.
+
+        Raises
+        ------
+        hikari.errors.BadRequestHTTPError
+            If any invalid snowflake IDs are passed; a snowflake may be invalid
+            due to it being outside of the range of a 64 bit integer.
+        hikari.errors.ForbiddenHTTPError
+            If you don't have access to the channel this message belongs to.
+        hikari.errors.NotFoundHTTPError
+            If the channel this message was created in does not exist.
+        """
+        return self._components.rest.fetch_channel(channel=self.channel_id)
+
+    def reply(
+        self,
+        *,
+        content: str = ...,
+        nonce: str = ...,
+        tts: bool = ...,
+        files: typing.Sequence[_files.File] = ...,
+        embed: _embeds.Embed = ...,
+        mentions_everyone: bool = True,
+        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
+        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+    ) -> typing.Coroutine[Message]:
+        """Create a message in the channel this message belongs to.
+
+        Parameters
+        ----------
+        content : str
+            If specified, the message content to send with the message.
+        nonce : str
+            If specified, an optional ID to send for opportunistic message
+            creation. This doesn't serve any real purpose for general use,
+            and can usually be ignored.
+        tts : bool
+            If specified, whether the message will be sent as a TTS message.
+        files : typing.Sequence[hikari.files.File]
+            If specified, a sequence of files to upload, if desired. Should be
+            between 1 and 10 objects in size (inclusive), also including embed
+            attachments.
+        embed : hikari.embeds.Embed
+            If specified, the embed object to send with the message.
+        mentions_everyone : bool
+            Whether `@everyone` and `@here` mentions should be resolved by
+            discord and lead to actual pings, defaults to `True`.
+        user_mentions : typing.Collection[typing.Union[hikari.users.User, hikari.bases.Snowflake, int]] OR bool
+            Either an array of user objects/IDs to allow mentions for,
+            `True` to allow all user mentions or `False` to block all
+            user mentions from resolving, defaults to `True`.
+        role_mentions: typing.Collection[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]] OR bool
+            Either an array of guild role objects/IDs to allow mentions for,
+            `True` to allow all role mentions or `False` to block all
+            role mentions from resolving, defaults to `True`.
+
+        Returns
+        -------
+        typing.Coroutine[hikari.messages.Message]
+            The created message object.
+
+        Raises
+        ------
+        hikari.errors.NotFoundHTTPError
+            If the channel this message was created in is not found.
+        hikari.errors.BadRequestHTTPError
+            This can be raised if the file is too large; if the embed exceeds
+            the defined limits; if the message content is specified only and
+            empty or greater than `2000` characters; if neither content, files
+            or embed are specified.
+            If any invalid snowflake IDs are passed; a snowflake may be invalid
+            due to it being outside of the range of a 64 bit integer.
+            If you are trying to upload more than 10 files in total (including
+            embed attachments).
+        hikari.errors.ForbiddenHTTPError
+            If you lack permissions to send to the channel this message belongs
+            to.
+        ValueError
+            If more than 100 unique objects/entities are passed for
+            `role_mentions` or `user_mentions`.
+        """
+        return self._components.rest.create_message(
+            channel=self.channel_id,
+            content=content,
+            nonce=nonce,
+            tts=tts,
+            files=files,
+            embed=embed,
+            mentions_everyone=mentions_everyone,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
+        )

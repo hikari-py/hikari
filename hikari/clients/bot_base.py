@@ -31,12 +31,12 @@ import time
 import typing
 
 from hikari.events import other
+from hikari.clients import components as _components
 from hikari.clients import configs
 from hikari.clients import runnable
 from hikari.clients import shard_states
 from hikari.internal import assertions
 from hikari.internal import conversions
-from hikari.internal import more_collections
 from hikari.state import dispatchers
 
 if typing.TYPE_CHECKING:
@@ -51,7 +51,7 @@ if typing.TYPE_CHECKING:
 
 
 class BotBase(
-    runnable.RunnableClient, dispatchers.EventDispatcher, abc.ABC,
+    _components.Components, runnable.RunnableClient, dispatchers.EventDispatcher, abc.ABC,
 ):
     """An abstract base class for a bot implementation.
 
@@ -76,26 +76,8 @@ class BotBase(
 
     """
 
-    _config: configs.BotConfig
-    """The config for this bot."""
-
-    event_dispatcher: dispatchers.EventDispatcher
-    """The event dispatcher for this bot."""
-
-    event_manager: event_managers.EventManager
-    """The event manager for this bot."""
-
     logger: logging.Logger
     """The logger to use for this bot."""
-
-    rest: rest.RESTClient
-    """The REST HTTP client to use for this bot."""
-
-    shards: typing.Mapping[int, shards.ShardClient]
-    """Shards registered to this bot.
-
-    These will be created once the bot has started execution.
-    """
 
     def __init__(self, *, config: typing.Optional[configs.BotConfig] = None, **kwargs: typing.Any) -> None:
         assertions.assert_that(
@@ -103,13 +85,18 @@ class BotBase(
         )
         config = configs.BotConfig(**kwargs) if config is None else config
 
-        super().__init__(logging.getLogger(f"hikari.{type(self).__qualname__}"))
+        runnable.RunnableClient.__init__(self, logging.getLogger(f"hikari.{type(self).__qualname__}"))
 
-        self._config = config
-        self.event_dispatcher = self._create_event_dispatcher(config)
-        self.event_manager = self._create_event_manager(config, self.event_dispatcher)
-        self.rest = self._create_rest(config)
-        self.shards = more_collections.EMPTY_DICT
+        event_dispatcher = self._create_event_dispatcher(config)
+        _components.Components.__init__(
+            self,
+            config=config,
+            event_dispatcher=event_dispatcher,
+            event_manager=self._create_event_manager(config, event_dispatcher),
+            rest=None,
+            shards={},
+        )
+        self.rest = self._create_rest(self)
 
     @property
     def heartbeat_latency(self) -> float:
@@ -117,7 +104,7 @@ class BotBase(
 
         This will return a mean of all the heartbeat intervals for all shards
         with a valid heartbeat latency that are in the
-        `hikari.clients.shards.ShardState.READY` state.
+        `hikari.clients.shard_states.ShardState.READY` state.
 
         If no shards are in this state, this will return `float("nan")`
         instead.
@@ -153,12 +140,12 @@ class BotBase(
 
         If intents are not being used at all, then this will be `None` instead.
         """
-        return self._config.intents
+        return self.config.intents
 
     @property
     def version(self) -> float:
         """Version being used for the gateway API."""
-        return self._config.gateway_version
+        return self.config.gateway_version
 
     async def start(self):
         """Start the bot.
@@ -173,7 +160,7 @@ class BotBase(
         After invoking this coroutine, you should keep the application alive
         by awaiting the `join` coroutine in this class.
         """
-        if self.shards:
+        if self.shards:  # pylint: disable=access-member-before-definition
             raise RuntimeError("Bot is already running.")
 
         gateway_bot = await self.rest.fetch_gateway_bot()
@@ -185,18 +172,18 @@ class BotBase(
             datetime.datetime.now() + gateway_bot.session_start_limit.reset_after,
         )
 
-        shard_count = self._config.shard_count if self._config.shard_count else gateway_bot.shard_count
-        shard_ids = self._config.shard_ids if self._config.shard_ids else range(shard_count)
+        shard_count = self.config.shard_count if self.config.shard_count else gateway_bot.shard_count
+        shard_ids = self.config.shard_ids if self.config.shard_ids else range(shard_count)
         url = gateway_bot.url
 
         self.logger.info("will connect shards to %s", url)
 
         shard_clients = {}
         for shard_id in shard_ids:
-            shard = self._create_shard(shard_id, shard_count, url, self._config, self.event_manager)
+            shard = self._create_shard(shard_id, shard_count, url, self)
             shard_clients[shard_id] = shard
 
-        self.shards = shard_clients
+        self.shards = shard_clients  # pylint: disable=attribute-defined-outside-init
 
         self.logger.info("starting %s", conversions.pluralize(len(self.shards), "shard"))
 
@@ -304,12 +291,7 @@ class BotBase(
     @classmethod
     @abc.abstractmethod
     def _create_shard(
-        cls,
-        shard_id: int,
-        shard_count: int,
-        url: str,
-        config: configs.BotConfig,
-        event_manager: event_managers.EventManager,
+        cls, shard_id: int, shard_count: int, url: str, components: _components.Components,
     ) -> _shards.ShardClient:
         """Return a new shard for the given parameters.
 
@@ -321,8 +303,8 @@ class BotBase(
             The shard count to use.
         url : str
             The gateway URL to connect to.
-        config : hikari.clients.configs.BotConfig
-            The bot config to use.
+        components : hikari.clients.components.Components
+            The client components that this shard should be bound by.
         event_manager hikari.state.event_managers.EventManager
             The event manager to use.
 
@@ -341,13 +323,13 @@ class BotBase(
 
     @classmethod
     @abc.abstractmethod
-    def _create_rest(cls, config: configs.BotConfig) -> _rest:
+    def _create_rest(cls, components: _components.Components) -> _rest.RESTClient:
         """Return a new REST client from the given configuration.
 
         Parameters
         ----------
-        config : hikari.clients.configs.BotConfig
-            The bot config to use.
+        components : hikari.clients.components.Components
+            The client components that this rest client should be bound by.
 
         Returns
         -------

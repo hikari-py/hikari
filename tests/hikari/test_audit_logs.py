@@ -27,6 +27,7 @@ from hikari import channels
 from hikari import guilds
 from hikari import users
 from hikari import webhooks
+from hikari.clients import components
 
 
 class TestAuditLogChangeKey:
@@ -424,7 +425,8 @@ class TestAuditLog:
 class TestAuditLogIterator:
     @pytest.mark.asyncio
     async def test__fill_when_entities_returned(self):
-        mock_webhook_payload = {"id": "43242", "channel_id": "292393993"}
+        mock_component = mock.MagicMock(components.Components)
+        mock_webhook_payload = {"id": "292393993", "channel_id": "43242"}
         mock_webhook_obj = mock.MagicMock(webhooks.Webhook, id=292393993)
         mock_user_payload = {"id": "929292", "public_flags": "22222"}
         mock_user_obj = mock.MagicMock(users.User, id=929292)
@@ -440,7 +442,7 @@ class TestAuditLogIterator:
             }
         )
         audit_log_iterator = audit_logs.AuditLogIterator(
-            guild_id="123123", request=mock_request, before=None, user_id="11111", action_type=..., limit=None,
+            components=mock_component, request=mock_request, before="123", limit=None,
         )
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(users.User, "deserialize", return_value=mock_user_obj))
@@ -451,24 +453,28 @@ class TestAuditLogIterator:
 
         with stack:
             assert await audit_log_iterator._fill() is None
-            users.User.deserialize.assert_called_once_with(mock_user_payload)
-            webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
-            guilds.PartialGuildIntegration.deserialize.assert_called_once_with(mock_integration_payload)
+            users.User.deserialize.assert_called_once_with(mock_user_payload, components=mock_component)
+            webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload, components=mock_component)
+            guilds.PartialGuildIntegration.deserialize.assert_called_once_with(
+                mock_integration_payload, components=mock_component
+            )
         assert audit_log_iterator.webhooks == {292393993: mock_webhook_obj}
         assert audit_log_iterator.users == {929292: mock_user_obj}
         assert audit_log_iterator.integrations == {123123123: mock_integration_obj}
         assert audit_log_iterator._buffer == [mock_audit_log_entry_payload]
+        assert audit_log_iterator._components is mock_component
         mock_request.assert_called_once_with(
-            guild_id="123123", user_id="11111", action_type=..., before=..., limit=100,
+            before="123", limit=100,
         )
 
     @pytest.mark.asyncio
     async def test__fill_when_resource_exhausted(self):
+        mock_component = mock.MagicMock(components.Components)
         mock_request = mock.AsyncMock(
             return_value={"webhooks": [], "users": [], "audit_log_entries": [], "integrations": []}
         )
         audit_log_iterator = audit_logs.AuditLogIterator(
-            guild_id="123123", request=mock_request, before="222222222", user_id="11111", action_type=..., limit=None,
+            components=mock_component, request=mock_request, before="222222222", limit=None,
         )
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(users.User, "deserialize", return_value=...))
@@ -485,11 +491,12 @@ class TestAuditLogIterator:
         assert audit_log_iterator.integrations == {}
         assert audit_log_iterator._buffer == []
         mock_request.assert_called_once_with(
-            guild_id="123123", user_id="11111", action_type=..., before="222222222", limit=100,
+            before="222222222", limit=100,
         )
 
     @pytest.mark.asyncio
     async def test__fill_when_before_and_limit_not_set(self):
+        mock_component = mock.MagicMock(components.Components)
         mock_request = mock.AsyncMock(
             return_value={
                 "webhooks": [],
@@ -499,7 +506,7 @@ class TestAuditLogIterator:
             }
         )
         audit_log_iterator = audit_logs.AuditLogIterator(
-            guild_id="123123", request=mock_request, before=None, user_id="11111", action_type=..., limit=None,
+            components=mock_component, request=mock_request, before="123", limit=None,
         )
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(users.User, "deserialize", return_value=...))
@@ -509,12 +516,13 @@ class TestAuditLogIterator:
         with stack:
             assert await audit_log_iterator._fill() is None
         mock_request.assert_called_once_with(
-            guild_id="123123", user_id="11111", action_type=..., before=..., limit=100,
+            before="123", limit=100,
         )
         assert audit_log_iterator._limit is None
 
     @pytest.mark.asyncio
     async def test__fill_when_before_and_limit_set(self):
+        mock_component = mock.MagicMock(components.Components)
         mock_request = mock.AsyncMock(
             return_value={
                 "webhooks": [],
@@ -524,12 +532,7 @@ class TestAuditLogIterator:
             }
         )
         audit_log_iterator = audit_logs.AuditLogIterator(
-            guild_id="123123",
-            request=mock_request,
-            before="222222222",
-            user_id="11111",
-            action_type=audit_logs.AuditLogEventType.MEMBER_MOVE,
-            limit=44,
+            components=mock_component, request=mock_request, before="222222222", limit=44,
         )
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(users.User, "deserialize", return_value=...))
@@ -539,73 +542,75 @@ class TestAuditLogIterator:
         with stack:
             assert await audit_log_iterator._fill() is None
         mock_request.assert_called_once_with(
-            guild_id="123123", user_id="11111", action_type=26, before="222222222", limit=44,
+            before="222222222", limit=44,
         )
         assert audit_log_iterator._limit == 42
 
     @pytest.mark.asyncio
     async def test___anext___when_not_filled_and_resource_is_exhausted(self):
+        mock_component = mock.MagicMock(components.Components)
         mock_request = mock.AsyncMock(
             return_value={"webhooks": [], "users": [], "audit_log_entries": [], "integrations": []}
         )
         iterator = audit_logs.AuditLogIterator(
-            guild_id="123123", request=mock_request, before=None, user_id=..., action_type=..., limit=None
+            components=mock_component, request=mock_request, before="123", limit=None
         )
         with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", return_value=...):
             async for _ in iterator:
                 assert False, "Iterator shouldn't have yielded anything."
             audit_logs.AuditLogEntry.deserialize.assert_not_called()
-        assert iterator._front is None
+        assert iterator._front == "123"
 
     @pytest.mark.asyncio
     async def test___anext___when_not_filled(self):
+        mock_component = mock.MagicMock(components.Components)
         mock_request = mock.AsyncMock(
             side_effect=[{"webhooks": [], "users": [], "audit_log_entries": [{"id": "666666"}], "integrations": []}]
         )
         mock_audit_log_entry = mock.MagicMock(audit_logs.AuditLogEntry, id=666666)
         iterator = audit_logs.AuditLogIterator(
-            guild_id="123123", request=mock_request, before=None, user_id=..., action_type=..., limit=None
+            components=mock_component, request=mock_request, before="123", limit=None
         )
         with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", side_effect=[mock_audit_log_entry]):
             async for result in iterator:
                 assert result is mock_audit_log_entry
                 break
-            audit_logs.AuditLogEntry.deserialize.assert_called_once_with({"id": "666666"})
+            audit_logs.AuditLogEntry.deserialize.assert_called_once_with({"id": "666666"}, components=mock_component)
         mock_request.assert_called_once_with(
-            guild_id="123123", user_id=..., action_type=..., before=..., limit=100,
+            before="123", limit=100,
         )
         assert iterator._front == "666666"
 
     @pytest.mark.asyncio
     async def test___anext___when_not_filled_and_limit_exhausted(self):
+        mock_component = mock.MagicMock(components.Components)
         mock_request = mock.AsyncMock(
             side_effect=[{"webhooks": [], "users": [], "audit_log_entries": [], "integrations": []}]
         )
         mock_audit_log_entry = mock.MagicMock(audit_logs.AuditLogEntry, id=666666)
         iterator = audit_logs.AuditLogIterator(
-            guild_id="123123", request=mock_request, before=None, user_id=..., action_type=..., limit=None
+            components=mock_component, request=mock_request, before="123", limit=None
         )
         with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", side_effect=[mock_audit_log_entry]):
             async for _ in iterator:
                 assert False, "Iterator shouldn't have yielded anything."
             audit_logs.AuditLogEntry.deserialize.assert_not_called()
         mock_request.assert_called_once_with(
-            guild_id="123123", user_id=..., action_type=..., before=..., limit=100,
+            before="123", limit=100,
         )
-        assert iterator._front is None
+        assert iterator._front == "123"
 
     @pytest.mark.asyncio
     async def test___anext___when_filled(self):
+        mock_component = mock.MagicMock(components.Components)
         mock_request = mock.AsyncMock(side_effect=[])
         mock_audit_log_entry = mock.MagicMock(audit_logs.AuditLogEntry, id=4242)
-        iterator = audit_logs.AuditLogIterator(
-            guild_id="123123", request=mock_request, before=None, user_id=..., action_type=..., limit=None
-        )
+        iterator = audit_logs.AuditLogIterator(components=mock_component, request=mock_request, before="123",)
         iterator._buffer = [{"id": "123123"}]
         with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", side_effect=[mock_audit_log_entry]):
             async for result in iterator:
                 assert result is mock_audit_log_entry
                 break
-            audit_logs.AuditLogEntry.deserialize.assert_called_once_with({"id": "123123"})
+            audit_logs.AuditLogEntry.deserialize.assert_called_once_with({"id": "123123"}, components=mock_component)
         mock_request.assert_not_called()
         assert iterator._front == "4242"

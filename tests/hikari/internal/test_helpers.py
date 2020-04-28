@@ -113,77 +113,107 @@ def test_generate_allowed_mentions_raises_error_on_too_many_users():
 
 
 @pytest.mark.asyncio
-async def test__pagination_handler_ends_handles_empty_resource():
+async def test_pagination_handler_handles_empty_resource():
     mock_deserialize = mock.MagicMock()
     mock_request = mock.AsyncMock(side_effect=[[]])
     async for _ in helpers.pagination_handler(
-        random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
         request=mock_request,
         reversing=True,
         start="123123123",
+        maximum_limit=100,
         limit=42,
     ):
         assert False, "Async generator shouldn't have yielded anything."
     mock_request.assert_called_once_with(
-        limit=42, before="123123123", random_kwarg="test",
+        limit=42, before="123123123",
     )
     mock_deserialize.assert_not_called()
 
 
 @pytest.mark.asyncio
-async def test__pagination_handler_ends_without_limit_with_start():
+async def test_pagination_handler_ends_without_limit_with_start():
     mock_payloads = [{"id": "312312312"}, {"id": "31231231"}, {"id": "20202020"}]
     mock_models = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock(id=20202020)]
     mock_deserialize = mock.MagicMock(side_effect=mock_models)
     mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
     results = []
     async for result in helpers.pagination_handler(
-        random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
         request=mock_request,
         reversing=True,
         start="123123123",
+        maximum_limit=100,
         limit=None,
     ):
         results.append(result)
     assert results == mock_models
-    mock_request.assert_has_calls(
-        [
-            mock.call(limit=100, before="123123123", random_kwarg="test"),
-            mock.call(limit=100, before="20202020", random_kwarg="test"),
-        ],
-    )
+    mock_request.assert_has_calls([mock.call(limit=100, before="123123123"), mock.call(limit=100, before="20202020"),],)
     mock_deserialize.assert_has_calls(
         [mock.call({"id": "20202020"}), mock.call({"id": "31231231"}), mock.call({"id": "312312312"})]
     )
 
 
 @pytest.mark.asyncio
-async def test__pagination_handler_ends_without_limit_without_start():
+async def test_pagination_handler_before_pagination():
+    mock_payloads = [{"id": "312312312"}, {"id": "31231231"}, {"id": "20202020"}]
+    mock_models = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock(id=20202020)]
+    mock_deserialize = mock.MagicMock(side_effect=mock_models)
+    mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
+    async for _ in helpers.pagination_handler(
+        deserializer=mock_deserialize,
+        direction="before",
+        request=mock_request,
+        reversing=False,
+        start="9223372036854775807",
+        maximum_limit=100,
+        limit=None,
+    ):
+        break
+    mock_request.assert_called_once_with(limit=100, before="9223372036854775807")
+
+
+@pytest.mark.asyncio
+async def test_pagination_handler_after_pagination():
+    mock_payloads = [{"id": "312312312"}, {"id": "31231231"}, {"id": "20202020"}]
+    mock_models = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock(id=20202020)]
+    mock_deserialize = mock.MagicMock(side_effect=mock_models)
+    mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
+    async for _ in helpers.pagination_handler(
+        deserializer=mock_deserialize,
+        direction="after",
+        request=mock_request,
+        reversing=False,
+        start="0",
+        limit=None,
+        maximum_limit=1000,
+    ):
+        break
+    mock_request.assert_called_once_with(limit=1000, after="0")
+
+
+@pytest.mark.asyncio
+async def test_pagination_handler_ends_without_limit_without_start():
     mock_payloads = [{"id": "312312312"}, {"id": "31231231"}, {"id": "20202020"}]
     mock_models = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock(id=20202020)]
     mock_deserialize = mock.MagicMock(side_effect=mock_models)
     mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
     results = []
     async for result in helpers.pagination_handler(
-        random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
         request=mock_request,
         reversing=True,
-        start=None,
+        start="9223372036854775807",
+        maximum_limit=100,
         limit=None,
     ):
         results.append(result)
     assert results == mock_models
     mock_request.assert_has_calls(
-        [
-            mock.call(limit=100, before=..., random_kwarg="test"),
-            mock.call(limit=100, before="20202020", random_kwarg="test"),
-        ],
+        [mock.call(limit=100, before="9223372036854775807"), mock.call(limit=100, before="20202020")],
     )
     mock_deserialize.assert_has_calls(
         [mock.call({"id": "20202020"}), mock.call({"id": "31231231"}), mock.call({"id": "312312312"})]
@@ -191,50 +221,47 @@ async def test__pagination_handler_ends_without_limit_without_start():
 
 
 @pytest.mark.asyncio
-async def test__pagination_handler_tracks_ends_when_hits_limit():
+async def test_pagination_handler_tracks_ends_when_hits_limit():
     mock_payloads = [{"id": "312312312"}, {"id": "31231231"}]
     mock_models = [mock.MagicMock(), mock.MagicMock(id=20202020)]
     mock_deserialize = mock.MagicMock(side_effect=mock_models)
     mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
     results = []
     async for result in helpers.pagination_handler(
-        random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
         request=mock_request,
         reversing=False,
-        start=None,
+        start="9223372036854775807",
+        maximum_limit=100,
         limit=2,
     ):
         results.append(result)
     assert results == mock_models
-    mock_request.assert_called_once_with(limit=2, before=..., random_kwarg="test")
+    mock_request.assert_called_once_with(limit=2, before="9223372036854775807")
     mock_deserialize.assert_has_calls([mock.call({"id": "312312312"}), mock.call({"id": "31231231"})])
 
 
 @pytest.mark.asyncio
-async def test__pagination_handler_tracks_ends_when_limit_set_but_exhausts_requested_data():
+async def test_pagination_handler_tracks_ends_when_limit_set_but_exhausts_requested_data():
     mock_payloads = [{"id": "312312312"}, {"id": "31231231"}, {"id": "20202020"}]
     mock_models = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock(id=20202020)]
     mock_deserialize = mock.MagicMock(side_effect=mock_models)
     mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
     results = []
     async for result in helpers.pagination_handler(
-        random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
         request=mock_request,
         reversing=False,
-        start=None,
+        start="9223372036854775807",
+        maximum_limit=100,
         limit=42,
     ):
         results.append(result)
     assert results == mock_models
     mock_request.assert_has_calls(
-        [
-            mock.call(limit=42, before=..., random_kwarg="test"),
-            mock.call(limit=39, before="20202020", random_kwarg="test"),
-        ],
+        [mock.call(limit=42, before="9223372036854775807"), mock.call(limit=39, before="20202020"),],
     )
     mock_deserialize.assert_has_calls(
         [mock.call({"id": "312312312"}), mock.call({"id": "31231231"}), mock.call({"id": "20202020"})]
@@ -242,28 +269,25 @@ async def test__pagination_handler_tracks_ends_when_limit_set_but_exhausts_reque
 
 
 @pytest.mark.asyncio
-async def test__pagination_handler_reverses_data_when_reverse_is_true():
+async def test_pagination_handler_reverses_data_when_reverse_is_true():
     mock_payloads = [{"id": "312312312"}, {"id": "31231231"}, {"id": "20202020"}]
     mock_models = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock(id=20202020)]
     mock_deserialize = mock.MagicMock(side_effect=mock_models)
     mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
     results = []
     async for result in helpers.pagination_handler(
-        random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
         request=mock_request,
         reversing=True,
-        start=None,
+        start="9223372036854775807",
+        maximum_limit=100,
         limit=None,
     ):
         results.append(result)
     assert results == mock_models
     mock_request.assert_has_calls(
-        [
-            mock.call(limit=100, before=..., random_kwarg="test"),
-            mock.call(limit=100, before="20202020", random_kwarg="test"),
-        ],
+        [mock.call(limit=100, before="9223372036854775807"), mock.call(limit=100, before="20202020"),],
     )
     mock_deserialize.assert_has_calls(
         [mock.call({"id": "20202020"}), mock.call({"id": "31231231"}), mock.call({"id": "312312312"})]
@@ -271,48 +295,25 @@ async def test__pagination_handler_reverses_data_when_reverse_is_true():
 
 
 @pytest.mark.asyncio
-async def test__pagination_handler_id_getter():
+async def test_pagination_handler_id_getter():
     mock_payloads = [{"id": "312312312"}, {"id": "20202020"}]
     mock_models = [mock.MagicMock(), mock.MagicMock(user=mock.MagicMock(__int__=lambda x: 20202020))]
     mock_deserialize = mock.MagicMock(side_effect=mock_models)
     mock_request = mock.AsyncMock(side_effect=[mock_payloads, []])
     results = []
     async for result in helpers.pagination_handler(
-        random_kwarg="test",
         deserializer=mock_deserialize,
         direction="before",
         request=mock_request,
         reversing=False,
-        start=None,
+        start="9223372036854775807",
         id_getter=lambda entity: str(int(entity.user)),
+        maximum_limit=100,
         limit=None,
     ):
         results.append(result)
     assert results == mock_models
     mock_request.assert_has_calls(
-        [
-            mock.call(limit=100, before=..., random_kwarg="test"),
-            mock.call(limit=100, before="20202020", random_kwarg="test"),
-        ],
+        [mock.call(limit=100, before="9223372036854775807"), mock.call(limit=100, before="20202020"),],
     )
     mock_deserialize.assert_has_calls([mock.call({"id": "312312312"}), mock.call({"id": "20202020"})])
-
-
-@pytest.mark.asyncio
-async def test__pagination_handler_handles_no_initial_data():
-    mock_deserialize = mock.MagicMock()
-    mock_request = mock.AsyncMock(side_effect=[[]])
-    async for _ in helpers.pagination_handler(
-        random_kwarg="test",
-        deserializer=mock_deserialize,
-        direction="before",
-        request=mock_request,
-        reversing=True,
-        start=None,
-        limit=None,
-    ):
-        assert False, "Async generator shouldn't have yielded anything."
-    mock_request.assert_called_once_with(
-        limit=100, before=..., random_kwarg="test",
-    )
-    mock_deserialize.assert_not_called()

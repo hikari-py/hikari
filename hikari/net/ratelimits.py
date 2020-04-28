@@ -687,7 +687,7 @@ class RESTBucketManager:
         self.gc_task: typing.Optional[asyncio.Task] = None
         self.logger = logging.getLogger(f"hikari.net.ratelimits.{type(self).__qualname__}")
 
-    def __enter__(self) -> "RESTBucketManager":
+    def __enter__(self) -> RESTBucketManager:
         return self
 
     def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
@@ -936,7 +936,7 @@ class ExponentialBackOff:
         value += random.random() * self.jitter_multiplier  # nosec
         return value
 
-    def __iter__(self) -> "ExponentialBackOff":
+    def __iter__(self) -> ExponentialBackOff:
         """Return this object, as it is an iterator."""
         return self
 

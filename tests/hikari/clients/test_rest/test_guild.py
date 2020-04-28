@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
 import datetime
-import io
+import functools
 
 import mock
 import pytest
@@ -34,8 +34,8 @@ from hikari import permissions
 from hikari import users
 from hikari import voices
 from hikari import webhooks
+from hikari.clients import components
 from hikari.clients.rest import guild as _guild
-from hikari.internal import helpers
 from hikari.net import rest
 from tests.hikari import _helpers
 
@@ -50,61 +50,152 @@ def test__get_member_id():
 class TestRESTGuildLogic:
     @pytest.fixture()
     def rest_guild_logic_impl(self):
+        mock_components = mock.MagicMock(components.Components)
         mock_low_level_restful_client = mock.MagicMock(rest.REST)
 
         class RESTGuildLogicImpl(_guild.RESTGuildComponent):
             def __init__(self):
-                super().__init__(mock_low_level_restful_client)
+                super().__init__(mock_components, mock_low_level_restful_client)
 
         return RESTGuildLogicImpl()
 
+    @pytest.mark.skip("patching partial is currently bugged in 3.8 and 3.9")
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("user", 22222222, users.User)
     @_helpers.parametrize_valid_id_formats_for_models("before", 123123123123, audit_logs.AuditLogEntry)
     def test_fetch_audit_log_entries_before_with_optionals(self, rest_guild_logic_impl, guild, before, user):
         mock_audit_log_iterator = mock.MagicMock(audit_logs.AuditLogIterator)
-        with mock.patch.object(audit_logs, "AuditLogIterator", return_value=mock_audit_log_iterator):
+        mock_partial = mock.MagicMock(functools, "partial")
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(audit_logs, "AuditLogIterator", return_value=mock_audit_log_iterator))
+        stack.enter_context(mock.patch.object(functools, "partial", return_value=mock_partial))
+        with stack:
             result = rest_guild_logic_impl.fetch_audit_log_entries_before(
                 guild, before=before, user=user, action_type=audit_logs.AuditLogEventType.MEMBER_MOVE, limit=42,
             )
             assert result is mock_audit_log_iterator
-            audit_logs.AuditLogIterator.assert_called_once_with(
-                guild_id="379953393319542784",
-                request=rest_guild_logic_impl._session.get_guild_audit_log,
-                before="123123123123",
+            functools.partial.assert_called_once_with(
+                rest_guild_logic_impl._components,
+                rest_guild_logic_impl._session.get_guild_audit_log,
                 user_id="22222222",
                 action_type=26,
-                limit=42,
+            )
+            audit_logs.AuditLogIterator.assert_called_once_with(
+                request=mock_partial, before="123123123123", limit=42,
             )
 
+    @pytest.mark.skip("patching partial is currently bugged in 3.8 and 3.9")
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     def test_fetch_audit_log_entries_before_without_optionals(self, rest_guild_logic_impl, guild):
         mock_audit_log_iterator = mock.MagicMock(audit_logs.AuditLogIterator)
-        with mock.patch.object(audit_logs, "AuditLogIterator", return_value=mock_audit_log_iterator):
+        mock_partial = mock.MagicMock(functools, "partial")
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(audit_logs, "AuditLogIterator", return_value=mock_audit_log_iterator))
+        stack.enter_context(mock.patch.object(functools, "partial", return_value=mock_partial))
+        with stack:
             assert rest_guild_logic_impl.fetch_audit_log_entries_before(guild) is mock_audit_log_iterator
-            audit_logs.AuditLogIterator.assert_called_once_with(
+            functools.partial.assert_called_once_with(
+                rest_guild_logic_impl._session.get_guild_audit_log,
                 guild_id="379953393319542784",
-                request=rest_guild_logic_impl._session.get_guild_audit_log,
-                before=None,
                 user_id=...,
                 action_type=...,
-                limit=None,
+            )
+            audit_logs.AuditLogIterator.assert_called_once_with(
+                rest_guild_logic_impl._components, request=mock_partial, before=None, limit=None,
             )
 
+    @pytest.mark.skip("patching partial is currently bugged in 3.8 and 3.9")
     def test_fetch_audit_log_entries_before_with_datetime_object(self, rest_guild_logic_impl):
         mock_audit_log_iterator = mock.MagicMock(audit_logs.AuditLogIterator)
-        with mock.patch.object(audit_logs, "AuditLogIterator", return_value=mock_audit_log_iterator):
+        mock_partial = mock.MagicMock(functools, "partial")
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(audit_logs, "AuditLogIterator", return_value=mock_audit_log_iterator))
+        stack.enter_context(mock.patch.object(functools, "partial", return_value=mock_partial))
+        with stack:
             date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
             result = rest_guild_logic_impl.fetch_audit_log_entries_before(123123123, before=date)
             assert result is mock_audit_log_iterator
-            audit_logs.AuditLogIterator.assert_called_once_with(
-                guild_id="123123123",
-                request=rest_guild_logic_impl._session.get_guild_audit_log,
-                before="537340988620800000",
-                user_id=...,
-                action_type=...,
-                limit=None,
+            functools.partial.assert_called_once_with(
+                rest_guild_logic_impl._session.get_guild_audit_log, guild_id="123123123", user_id=..., action_type=...,
             )
+            audit_logs.AuditLogIterator.assert_called_once_with(
+                rest_guild_logic_impl._components, request=mock_partial, before="537340988620800000", limit=None,
+            )
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
+    @_helpers.parametrize_valid_id_formats_for_models("user", 22222222, users.User)
+    @_helpers.parametrize_valid_id_formats_for_models("before", 123123123123, audit_logs.AuditLogEntry)
+    async def test_fetch_audit_log_entries_before_with_optionals_integration(
+        self, rest_guild_logic_impl, guild, before, user
+    ):
+        mock_entry_payload = {"id": "123123"}
+        mock_entry = mock.MagicMock(audit_logs.AuditLogEntry)
+        rest_guild_logic_impl._session.get_guild_audit_log.return_value = {
+            "webhooks": [],
+            "audit_log_entries": [mock_entry_payload],
+            "users": [],
+            "integrations": [],
+        }
+        iterator = rest_guild_logic_impl.fetch_audit_log_entries_before(
+            guild, user=user, action_type=audit_logs.AuditLogEventType.MEMBER_MOVE, limit=42
+        )
+        with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", return_value=mock_entry):
+            async for entry in iterator:
+                assert entry is mock_entry
+                break
+            audit_logs.AuditLogEntry.deserialize.assert_called_once_with(
+                mock_entry_payload, components=rest_guild_logic_impl._components
+            )
+        rest_guild_logic_impl._session.get_guild_audit_log.assert_called_once_with(
+            guild_id="379953393319542784", user_id="22222222", action_type=26, before="9223372036854775807", limit=42
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
+    async def test_fetch_audit_log_entries_before_without_optionals_integration(self, rest_guild_logic_impl, guild):
+        mock_entry_payload = {"id": "123123"}
+        mock_entry = mock.MagicMock(audit_logs.AuditLogEntry)
+        rest_guild_logic_impl._session.get_guild_audit_log.return_value = {
+            "webhooks": [],
+            "audit_log_entries": [mock_entry_payload],
+            "users": [],
+            "integrations": [],
+        }
+        iterator = rest_guild_logic_impl.fetch_audit_log_entries_before(guild)
+        with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", return_value=mock_entry):
+            async for entry in iterator:
+                assert entry is mock_entry
+                break
+            audit_logs.AuditLogEntry.deserialize.assert_called_once_with(
+                mock_entry_payload, components=rest_guild_logic_impl._components
+            )
+        rest_guild_logic_impl._session.get_guild_audit_log.assert_called_once_with(
+            guild_id="379953393319542784", user_id=..., action_type=..., before="9223372036854775807", limit=100
+        )
+
+    @pytest.mark.asyncio
+    async def test_fetch_audit_log_entries_before_with_datetime_object_integration(self, rest_guild_logic_impl):
+        date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
+        mock_entry_payload = {"id": "123123"}
+        mock_entry = mock.MagicMock(audit_logs.AuditLogEntry)
+        rest_guild_logic_impl._session.get_guild_audit_log.return_value = {
+            "webhooks": [],
+            "audit_log_entries": [mock_entry_payload],
+            "users": [],
+            "integrations": [],
+        }
+        iterator = rest_guild_logic_impl.fetch_audit_log_entries_before(123123123, before=date)
+        with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", return_value=mock_entry):
+            async for entry in iterator:
+                assert entry is mock_entry
+                break
+            audit_logs.AuditLogEntry.deserialize.assert_called_once_with(
+                mock_entry_payload, components=rest_guild_logic_impl._components
+            )
+        rest_guild_logic_impl._session.get_guild_audit_log.assert_called_once_with(
+            guild_id="123123123", user_id=..., action_type=..., before="537340988620800000", limit=100
+        )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
@@ -547,54 +638,45 @@ class TestRESTGuildLogic:
             )
             guilds.GuildMember.deserialize.assert_called_once_with(mock_member_payload)
 
+    @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("user", 115590097100865541, users.User)
-    def test_fetch_members_after_with_optionals(self, rest_guild_logic_impl, guild, user):
-        mock_generator = mock.AsyncMock()
-        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
-            assert rest_guild_logic_impl.fetch_members_after(guild, after=user, limit=34) is mock_generator
-            helpers.pagination_handler.assert_called_once_with(
-                guild_id="574921006817476608",
-                deserializer=guilds.GuildMember.deserialize,
-                direction="after",
-                request=rest_guild_logic_impl._session.list_guild_members,
-                reversing=False,
-                start="115590097100865541",
-                limit=34,
-                id_getter=_guild._get_member_id,
-            )
+    async def test_fetch_members_after_with_optionals(self, rest_guild_logic_impl, guild, user):
+        mock_member_obj = mock.MagicMock(guilds.GuildMember)
+        mock_payload = {"user": {}, "nick": "Nyaa"}
+        mock_request = mock.AsyncMock(return_value=[mock_payload])
+        rest_guild_logic_impl._session.list_guild_members = mock_request
+        with mock.patch.object(guilds.GuildMember, "deserialize", return_value=mock_member_obj):
+            async for member_obj in rest_guild_logic_impl.fetch_members_after(guild, after=user, limit=34):
+                assert member_obj is mock_member_obj
+                break
+            mock_request.assert_called_once_with(guild_id="574921006817476608", after="115590097100865541", limit=34)
 
+    @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
-    def test_fetch_members_after_without_optionals(self, rest_guild_logic_impl, guild):
-        mock_generator = mock.AsyncMock()
-        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
-            assert rest_guild_logic_impl.fetch_members_after(guild) is mock_generator
-            helpers.pagination_handler.assert_called_once_with(
-                guild_id="574921006817476608",
-                deserializer=guilds.GuildMember.deserialize,
-                direction="after",
-                request=rest_guild_logic_impl._session.list_guild_members,
-                reversing=False,
-                start="0",
-                limit=None,
-                id_getter=_guild._get_member_id,
-            )
+    async def test_fetch_members_after_without_optionals(self, rest_guild_logic_impl, guild):
+        mock_member_obj = mock.MagicMock(guilds.GuildMember)
+        mock_payload = {"user": {}, "nick": "Nyaa"}
+        mock_request = mock.AsyncMock(return_value=[mock_payload])
+        rest_guild_logic_impl._session.list_guild_members = mock_request
+        with mock.patch.object(guilds.GuildMember, "deserialize", return_value=mock_member_obj):
+            async for member_obj in rest_guild_logic_impl.fetch_members_after(guild):
+                assert member_obj is mock_member_obj
+                break
+            mock_request.assert_called_once_with(guild_id="574921006817476608", after="0", limit=1000)
 
-    def test_fetch_members_after_with_datetime_object(self, rest_guild_logic_impl):
-        mock_generator = mock.AsyncMock()
+    @pytest.mark.asyncio
+    async def test_fetch_members_after_with_datetime_object(self, rest_guild_logic_impl):
         date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        with mock.patch.object(helpers, "pagination_handler", return_value=mock_generator):
-            assert rest_guild_logic_impl.fetch_members_after(574921006817476608, after=date) is mock_generator
-            helpers.pagination_handler.assert_called_once_with(
-                guild_id="574921006817476608",
-                deserializer=guilds.GuildMember.deserialize,
-                direction="after",
-                request=rest_guild_logic_impl._session.list_guild_members,
-                reversing=False,
-                start="537340988620800000",
-                limit=None,
-                id_getter=_guild._get_member_id,
-            )
+        mock_member_obj = mock.MagicMock(guilds.GuildMember)
+        mock_payload = {"user": {}, "nick": "Nyaa"}
+        mock_request = mock.AsyncMock(return_value=[mock_payload])
+        rest_guild_logic_impl._session.list_guild_members = mock_request
+        with mock.patch.object(guilds.GuildMember, "deserialize", return_value=mock_member_obj):
+            async for member_obj in rest_guild_logic_impl.fetch_members_after(574921006817476608, after=date):
+                assert member_obj is mock_member_obj
+                break
+            mock_request.assert_called_once_with(guild_id="574921006817476608", after="537340988620800000", limit=1000)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 229292992, guilds.Guild)
