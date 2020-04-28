@@ -70,16 +70,19 @@
         cd public
         find . -maxdepth 1 -exec mv {} ../../public \;
         mv ../../coverage ../../public/coverage
+        cd ..
     else
         mv public "../public/${TARGET_BRANCH}"
         mv ../coverage "../public/${TARGET_BRANCH}/coverage"
     fi
+    cd ..
+    pwd
+    ls public -R
 
 ###
 ### Generate pages for master branch and export them.
 ###
 pages:master:
-  allow_failure: true       # FIXME: remove once in master.
   extends: .pages:generate
   variables:
     TARGET_BRANCH: master
