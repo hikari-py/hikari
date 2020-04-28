@@ -22,12 +22,13 @@
   allow_failure: false
   before_script:
     - pip install nox
+    - mkdir public || true
   extends:
     - .cpython
     - .reactive-job
   interruptible: true
   retry: 2
-  stage: lint
+  stage: test
 
 ###
 ### Code linting.
