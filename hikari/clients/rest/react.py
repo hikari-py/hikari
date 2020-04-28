@@ -24,6 +24,7 @@ __all__ = ["RESTReactionComponent"]
 
 import abc
 import datetime
+import functools
 import typing
 
 from hikari import bases
@@ -240,14 +241,18 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             after = str(bases.Snowflake.from_datetime(after))
         else:
             after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
-        return helpers.pagination_handler(
+        request = functools.partial(
+            self._session.get_reactions,
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
             emoji=getattr(emoji, "url_name", emoji),
+        )
+        return helpers.pagination_handler(
             deserializer=users.User.deserialize,
             direction="after",
-            request=self._session.get_reactions,
+            request=request,
             reversing=False,
             start=after,
+            maximum_limit=100,
             limit=limit,
         )

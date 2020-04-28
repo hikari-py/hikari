@@ -17,12 +17,35 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
+import typing
 
 import attr
+import mock
 import pytest
 
 from hikari import bases
+from hikari.clients import components
 from hikari.internal import marshaller
+
+
+class TestHikariEntity:
+    @pytest.fixture()
+    def stub_entity(self) -> typing.Type["StubEntity"]:
+        @marshaller.marshallable()
+        @attr.s()
+        class StubEntity(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
+            ...
+
+        return StubEntity
+
+    def test_deserialize(self, stub_entity):
+        mock_components = mock.MagicMock(components.Components)
+        entity = stub_entity.deserialize({}, components=mock_components)
+        assert entity._components is mock_components
+
+    def test_serialize(self, stub_entity):
+        mock_components = mock.MagicMock(components.Components)
+        assert stub_entity(components=mock_components).serialize() == {}
 
 
 class TestSnowflake:

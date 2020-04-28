@@ -17,8 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Pdoc documentation generation."""
-import os
-
 from ci import config
 from ci import nox
 

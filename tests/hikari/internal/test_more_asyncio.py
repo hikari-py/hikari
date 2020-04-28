@@ -18,8 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import contextlib
-from unittest import mock
 
+import mock
 import pytest
 
 from hikari.internal import more_asyncio

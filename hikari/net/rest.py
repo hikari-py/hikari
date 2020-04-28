@@ -266,7 +266,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             await self.client_session.close()
             self.client_session = None
 
-    async def __aenter__(self) -> "REST":
+    async def __aenter__(self) -> REST:
         return self
 
     async def __aexit__(

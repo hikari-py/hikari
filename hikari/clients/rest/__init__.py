@@ -26,7 +26,8 @@ from __future__ import annotations
 
 __all__ = ["RESTClient"]
 
-from hikari.clients import configs
+import typing
+
 from hikari.clients.rest import channel
 from hikari.clients.rest import gateway
 from hikari.clients.rest import guild
@@ -38,6 +39,9 @@ from hikari.clients.rest import user
 from hikari.clients.rest import voice
 from hikari.clients.rest import webhook
 from hikari.net import rest as low_level_rest
+
+if typing.TYPE_CHECKING:
+    from hikari.clients import components as _components
 
 
 class RESTClient(
@@ -61,8 +65,9 @@ class RESTClient(
 
     Parameters
     ----------
-    config : hikari.clients.configs.RESTConfig
-        A HTTP configuration object.
+    components : hikari.clients.components.Components
+        The client components that this rest client should be bound by.
+        Includes the rest config.
 
     !!! note
         For all endpoints where a `reason` argument is provided, this may be a
@@ -70,17 +75,21 @@ class RESTClient(
         additional characters being cut off.
     """
 
-    def __init__(self, config: configs.RESTConfig) -> None:
+    def __init__(self, components: _components.Components) -> None:
+        token = None
+        if components.config.token_type is not None:
+            token = f"{components.config.token_type} {components.config.token}"
         super().__init__(
+            components,
             low_level_rest.REST(
-                allow_redirects=config.allow_redirects,
-                connector=config.tcp_connector,
-                proxy_headers=config.proxy_headers,
-                proxy_auth=config.proxy_auth,
-                ssl_context=config.ssl_context,
-                verify_ssl=config.verify_ssl,
-                timeout=config.request_timeout,
-                token=f"{config.token_type} {config.token}" if config.token_type is not None else config.token,
-                version=config.rest_version,
-            )
+                allow_redirects=components.config.allow_redirects,
+                connector=components.config.tcp_connector,
+                proxy_headers=components.config.proxy_headers,
+                proxy_auth=components.config.proxy_auth,
+                ssl_context=components.config.ssl_context,
+                verify_ssl=components.config.verify_ssl,
+                timeout=components.config.request_timeout,
+                token=token,
+                version=components.config.rest_version,
+            ),
         )

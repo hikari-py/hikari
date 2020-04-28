@@ -34,7 +34,7 @@ from hikari.internal import helpers
 if typing.TYPE_CHECKING:
     from hikari import channels as _channels
     from hikari import embeds as _embeds
-    from hikari import files
+    from hikari import files as _files
     from hikari import guilds
     from hikari import users
 
@@ -85,7 +85,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         *,
         webhook_token: str = ...,
         name: str = ...,
-        avatar: typing.Optional[files.File] = ...,
+        avatar: typing.Optional[_files.File] = ...,
         channel: bases.Hashable[_channels.GuildChannel] = ...,
         reason: str = ...,
     ) -> webhooks.Webhook:
@@ -181,7 +181,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         avatar_url: str = ...,
         tts: bool = ...,
         wait: bool = False,
-        files: typing.Sequence[files.File] = ...,
+        files: typing.Sequence[_files.File] = ...,
         embeds: typing.Sequence[_embeds.Embed] = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
@@ -271,7 +271,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             ),
         )
         if wait is True:
-            return _messages.Message.deserialize(payload)
+            return _messages.Message.deserialize(payload, components=self._components)
         return None
 
     def safe_webhook_execute(
@@ -284,7 +284,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         avatar_url: str = ...,
         tts: bool = ...,
         wait: bool = False,
-        files: typing.Sequence[files.File] = ...,
+        files: typing.Sequence[_files.File] = ...,
         embeds: typing.Sequence[_embeds.Embed] = ...,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = False,
