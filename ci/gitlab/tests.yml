@@ -40,6 +40,26 @@
   stage: test
 
 ###
+### Detect overall test coverage across all test jobs.
+###
+### Collect unit test coverage results and coalesce them, outputting the
+### format so that GitLab can display it on the badge, on the pipeline stats,
+### and on any active merge requests.
+###
+coverage:results:
+  coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
+  extends:
+    - .cpython
+    - .reactive-job
+  script:
+    - |+
+      set -e
+      set -x
+      pip install nox
+      nox -s coalesce-coverage
+  stage: pre-report
+
+###
 ### Run CPython 3.8.0 unit tests and collect test coverage stats.
 ###
 ### Coverage is exported as an artifact with a name matching the job name.
