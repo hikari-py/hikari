@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Pylint support."""
+import os
+import traceback
 from concurrent import futures
 
 from ci import config
@@ -40,18 +42,33 @@ def pylint(session: nox.Session) -> None:
 
 
 def pylint_text(session: nox.Session) -> None:
-    session.run(*FLAGS, success_codes=SUCCESS_CODES)
+    try:
+        print("generating plaintext report")
+        session.run(*FLAGS, success_codes=SUCCESS_CODES)
+    except Exception:
+        traceback.print_exc()
 
 
 def pylint_junit(session: nox.Session) -> None:
-    with open(config.PYLINT_JUNIT_OUTPUT_PATH, "w") as fp:
-        session.run(*FLAGS, "--output-format", "pylint_junit.JUnitReporter", stdout=fp, success_codes=SUCCESS_CODES)
+    try:
+        print("generating junit report")
+        with open(config.PYLINT_JUNIT_OUTPUT_PATH, "w") as fp:
+            session.run(*FLAGS, "--output-format", "pylint_junit.JUnitReporter", stdout=fp, success_codes=SUCCESS_CODES)
+    except Exception:
+        traceback.print_exc()
 
 
 def pylint_html(session: nox.Session) -> None:
-    with open(config.PYLINT_JSON_OUTPUT_PATH, "w") as fp:
-        session.run(*FLAGS, "--output-format", "json", stdout=fp, success_codes=SUCCESS_CODES)
-    session.run("pylint-json2html", "-o", config.PYLINT_HTML_OUTPUT_PATH, config.PYLINT_JSON_OUTPUT_PATH)
+    try:
+        print("generating json report")
+        with open(config.PYLINT_JSON_OUTPUT_PATH, "w") as fp:
+            session.run(*FLAGS, "--output-format", "json", stdout=fp, success_codes=SUCCESS_CODES)
+        print("producing html report in", config.PYTEST_HTML_OUTPUT_PATH)
+        session.run("pylint-json2html", "-o", config.PYLINT_HTML_OUTPUT_PATH, config.PYLINT_JSON_OUTPUT_PATH)
+        print("artifacts:")
+        print(os.listdir(config.ARTIFACT_DIRECTORY))
+    except Exception:
+        traceback.print_exc()
 
 
 PYLINT_TASKS = [pylint_text, pylint_junit, pylint_html]

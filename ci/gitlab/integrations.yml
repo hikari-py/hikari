@@ -21,26 +21,6 @@ include:
   - template: "SAST.gitlab-ci.yml"
 
 ###
-### Detect overall test coverage across all test jobs.
-###
-### Collect unit test coverage results and coalesce them, outputting the
-### format so that GitLab can display it on the badge, on the pipeline stats,
-### and on any active merge requests.
-###
-coverage:results:
-  coverage: /^TOTAL[\s\d%]+\s(\d+(?:\.\d+)?\%)$/
-  extends:
-    - .cpython
-    - .reactive-job
-  script:
-    - |+
-      set -e
-      set -x
-      pip install nox
-      nox -s coalesce-coverage
-  stage: lint
-
-###
 ### GitLab's dependency scanning template.
 ###
 ### This gives dependency statistics on any MRs, and beefs out the security
@@ -57,7 +37,7 @@ dependency_scanning:
     - merge_requests
     - schedules
   retry: 1
-  stage: lint
+  stage: test
   variables:
     DS_DEFAULT_ANALYZERS: "gemnasium-python"
 
@@ -79,7 +59,7 @@ license_scanning:
     - merge_requests
     - schedules
   retry: 1
-  stage: lint
+  stage: test
 
 ###
 ### Deploy the pages to GitLab.
@@ -94,11 +74,15 @@ pages:
     paths:
       - public/
   dependencies:
-    - pages:master
+    - test:3.8.0
+    - test:3.8.1
+    - test:3.8.2
+    - test:3.9.0
+    - pylint
+    - coverage:results
     - pages:staging
   extends: .busybox:musl
   only:
-    - master
     - staging
   script:
     - |+
@@ -124,7 +108,7 @@ sast:
     - merge_requests
     - schedules
   retry: 1
-  stage: lint
+  stage: test
   variables:
     SAST_BANDIT_EXCLUDED_PATHS: tests/*,docs/*,ci/*,insomnia/*,public/*,tasks/*,noxfile.old.py
     SAST_EXCLUDED_PATHS: tests/*,docs/*,ci/*,insomnia/*,public/*,tasks/*,noxfile.old.py

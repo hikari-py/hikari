@@ -33,13 +33,6 @@
         && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" \
         && exit 0
       mkdir public || true
-  dependencies:
-    - test:3.8.0
-    - test:3.8.1
-    - test:3.8.2
-    - test:3.9.0
-    - pylint
-    - coverage:results
   extends: .cpython
   stage: report
 
@@ -51,7 +44,6 @@
     - tags
   extends: .pages
   only:
-    - master
     - staging
   retry:
     max: 2
@@ -60,32 +52,7 @@
     apt-get update
     apt-get install -qy graphviz git # FIXME: Remove once in master.
     pip install nox
-    git clone ${CI_REPOSITORY_URL} -b ${TARGET_BRANCH} hikari_docs_${TARGET_BRANCH} --depth=1
-    cd "hikari_docs_${TARGET_BRANCH}"
-    mkdir public || true
-    nox --sessions pages pdoc || nox -s documentation  # FIXME: remove once in master.
-    mv ../public/coverage/html ../coverage
-    rm ../public -rf && mkdir ../public
-    if [[ "$TARGET_BRANCH" = master ]]; then
-        cd public
-        find . -maxdepth 1 -exec mv {} ../../public \;
-        mv ../../coverage ../../public/coverage
-        cd ..
-    else
-        mv public "../public/${TARGET_BRANCH}"
-        mv ../coverage "../public/${TARGET_BRANCH}/coverage"
-    fi
-    cd ..
-    pwd
-    ls public -R
-
-###
-### Generate pages for master branch and export them.
-###
-pages:master:
-  extends: .pages:generate
-  variables:
-    TARGET_BRANCH: master
+    nox --sessions pages pdoc
 
 ###
 ### Generate pages for staging branch and export them.
