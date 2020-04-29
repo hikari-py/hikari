@@ -78,19 +78,12 @@ class AIOHTTPConfig(BaseConfig):
         If `True`, allow following redirects from `3xx` HTTP responses.
         Generally you do not want to enable this unless you have a good reason to.
         Defaults to `False` if unspecified during deserialization.
-    tcp_connector : aiohttp.TCPConnector, optional
-        This may otherwise be `None` to use the default settings provided by
-        `aiohttp`.
-        This is deserialized as an object reference in the format
-        `package.module#object.attribute` that is expected to point to the
-        desired value.
-        Defaults to `None` if unspecified during deserialization.
-    proxy_headers : typing.Mapping[str, str], optional
-        Optional proxy headers to provide in any HTTP requests.
-        Defaults to `None` if unspecified during deserialization.
     proxy_auth : aiohttp.BasicAuth, optional
         Optional proxy authorization to provide in any HTTP requests.
         This is deserialized using the format `"basic {{base 64 string here}}"`.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_headers : typing.Mapping[str, str], optional
+        Optional proxy headers to provide in any HTTP requests.
         Defaults to `None` if unspecified during deserialization.
     proxy_url : str, optional
         The optional URL of the proxy to send requests via.
@@ -107,6 +100,20 @@ class AIOHTTPConfig(BaseConfig):
         `package.module#object.attribute` that is expected to point to the
         desired value.
         Defaults to `None` if unspecified during deserialization.
+    tcp_connector : aiohttp.TCPConnector, optional
+        This may otherwise be `None` to use the default settings provided by
+        `aiohttp`.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    trust_env: bool
+        If `True`, and no proxy info is given, then `HTTP_PROXY` and
+        `HTTPS_PROXY` will be used from the environment variables if present.
+        Any proxy credentials will be read from the user's `netrc` file
+        (https://www.gnu.org/software/inetutils/manual/html_node/The-_002enetrc-file.html)
+        If `False`, then this information is instead ignored.
+        Defaults to `False` if unspecified.
     verify_ssl : bool
         If `True`, then responses with invalid SSL certificates will be
         rejected. Generally you want to keep this enabled unless you have a
@@ -122,12 +129,12 @@ class AIOHTTPConfig(BaseConfig):
         deserializer=marshaller.dereference_handle, if_none=None, if_undefined=None, default=None
     )
 
-    proxy_headers: typing.Optional[typing.Mapping[str, str]] = marshaller.attrib(
-        deserializer=dict, if_none=None, if_undefined=None, default=None
-    )
-
     proxy_auth: typing.Optional[aiohttp.BasicAuth] = marshaller.attrib(
         deserializer=aiohttp.BasicAuth.decode, if_none=None, if_undefined=None, default=None
+    )
+
+    proxy_headers: typing.Optional[typing.Mapping[str, str]] = marshaller.attrib(
+        deserializer=dict, if_none=None, if_undefined=None, default=None
     )
 
     proxy_url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None, default=None)
@@ -139,6 +146,8 @@ class AIOHTTPConfig(BaseConfig):
     ssl_context: typing.Optional[ssl.SSLContext] = marshaller.attrib(
         deserializer=marshaller.dereference_handle, if_none=None, if_undefined=None, default=None
     )
+
+    trust_env: bool = marshaller.attrib(deserializer=bool, if_undefined=True, default=False)
 
     verify_ssl: bool = marshaller.attrib(deserializer=bool, if_undefined=True, default=True)
 
@@ -196,7 +205,7 @@ def _large_threshold_default() -> int:
 
 @marshaller.marshallable()
 @attr.s(kw_only=True)
-class GatewayConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
+class GatewayConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
     """Single-websocket specific configuration options.
 
     Attributes
@@ -351,7 +360,7 @@ def _rest_version_default() -> int:
 
 @marshaller.marshallable()
 @attr.s(kw_only=True)
-class RESTConfig(AIOHTTPConfig, TokenConfig):
+class RESTConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
     """Single-websocket specific configuration options.
 
     Attributes

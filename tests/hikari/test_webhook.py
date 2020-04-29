@@ -58,4 +58,4 @@ class TestWebhook:
         assert webhook_obj.user == mock_user
         assert webhook_obj.name == "hikari webhook"
         assert webhook_obj.avatar_hash == "bb71f469c158984e265093a81b3397fb"
-        assert webhook_obj.token == "ueoqrialsdfaKJLKfajslkdf"
+        assert webhook_obj._token == "ueoqrialsdfaKJLKfajslkdf"

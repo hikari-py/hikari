@@ -126,12 +126,12 @@ class TestTokenConfig:
     def test_deserialize(self, test_token_config):
         token_config_obj = configs.TokenConfig.deserialize(test_token_config)
 
-        assert token_config_obj.token == "token"
+        assert token_config_obj._token == "token"
 
     def test_empty_deserialize(self):
         token_config_obj = configs.TokenConfig.deserialize({})
 
-        assert token_config_obj.token is None
+        assert token_config_obj._token is None
 
 
 class TestWebsocketConfig:
@@ -160,7 +160,7 @@ class TestWebsocketConfig:
         assert websocket_config_obj.request_timeout == 100
         assert websocket_config_obj.ssl_context == ssl.SSLContext
         assert websocket_config_obj.verify_ssl is False
-        assert websocket_config_obj.token == "token"
+        assert websocket_config_obj._token == "token"
         assert websocket_config_obj.shard_ids == [5, 6, 7, 8, 9, 10]
         assert websocket_config_obj.shard_count == 17
 
@@ -183,7 +183,7 @@ class TestWebsocketConfig:
         assert websocket_config_obj.request_timeout is None
         assert websocket_config_obj.ssl_context is None
         assert websocket_config_obj.verify_ssl is True
-        assert websocket_config_obj.token is None
+        assert websocket_config_obj._token is None
         assert websocket_config_obj.shard_ids is None
         assert websocket_config_obj.shard_count is None
 
@@ -221,7 +221,7 @@ class TestRESTConfig:
         assert rest_config_obj.request_timeout == 100
         assert rest_config_obj.ssl_context == ssl.SSLContext
         assert rest_config_obj.verify_ssl is False
-        assert rest_config_obj.token == "token"
+        assert rest_config_obj._token == "token"
 
     def test_empty_deserialize(self):
         rest_config_obj = configs.RESTConfig.deserialize({})
@@ -235,7 +235,7 @@ class TestRESTConfig:
         assert rest_config_obj.request_timeout is None
         assert rest_config_obj.ssl_context is None
         assert rest_config_obj.verify_ssl is True
-        assert rest_config_obj.token is None
+        assert rest_config_obj._token is None
 
 
 class TestBotConfig:
@@ -255,7 +255,7 @@ class TestBotConfig:
         assert bot_config_obj.request_timeout == 100
         assert bot_config_obj.ssl_context == ssl.SSLContext
         assert bot_config_obj.verify_ssl is False
-        assert bot_config_obj.token == "token"
+        assert bot_config_obj._token == "token"
         assert bot_config_obj.shard_ids == [5, 6, 7, 8, 9, 10]
         assert bot_config_obj.shard_count == 17
         assert bot_config_obj.gateway_use_compression is False
@@ -281,7 +281,7 @@ class TestBotConfig:
         assert bot_config_obj.request_timeout is None
         assert bot_config_obj.ssl_context is None
         assert bot_config_obj.verify_ssl is True
-        assert bot_config_obj.token is None
+        assert bot_config_obj._token is None
         assert bot_config_obj.shard_ids is None
         assert bot_config_obj.shard_count is None
         assert bot_config_obj.gateway_use_compression is True
