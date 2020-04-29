@@ -41,24 +41,22 @@ class StatelessBot(bot_base.BotBase):
     This is the most basic type of bot you can create.
     """
 
-    @classmethod
+    @staticmethod
     def _create_shard(
-        cls, shard_id: int, shard_count: int, url: str, components: _components.Components,
+        components: _components.Components, shard_id: int, shard_count: int, url: str
     ) -> shards.ShardClientImpl:
-        return shards.ShardClientImpl(shard_id=shard_id, shard_count=shard_count, components=components, url=url)
+        return shards.ShardClientImpl(components=components, shard_id=shard_id, shard_count=shard_count, url=url)
 
-    @classmethod
-    def _create_rest(cls, components: _components.Components) -> rest.RESTClient:
+    @staticmethod
+    def _create_rest(components: _components.Components) -> rest.RESTClient:
         return rest.RESTClient(components)
 
-    @classmethod
+    @staticmethod
     def _create_event_manager(
-        cls, _: configs.BotConfig, dispatcher: intent_aware_dispatchers.IntentAwareEventDispatcherImpl
+        _: configs.BotConfig, dispatcher: intent_aware_dispatchers.IntentAwareEventDispatcherImpl
     ) -> stateless.StatelessEventManagerImpl:
         return stateless.StatelessEventManagerImpl(dispatcher)
 
-    @classmethod
-    def _create_event_dispatcher(
-        cls, config: configs.BotConfig
-    ) -> intent_aware_dispatchers.IntentAwareEventDispatcherImpl:
+    @staticmethod
+    def _create_event_dispatcher(config: configs.BotConfig) -> intent_aware_dispatchers.IntentAwareEventDispatcherImpl:
         return intent_aware_dispatchers.IntentAwareEventDispatcherImpl(config.intents)

@@ -28,6 +28,7 @@ __all__ = ["RESTClient"]
 
 import typing
 
+from hikari.clients import configs
 from hikari.clients.rest import channel
 from hikari.clients.rest import gateway
 from hikari.clients.rest import guild
