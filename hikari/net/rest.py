@@ -179,7 +179,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
     """The HTTP request timeout to abort requests after."""
 
     token: typing.Optional[str]
-    """The bot token.
+    """The application's token, if known.
 
     This will be prefixed with either `"Bearer"` or `"Bot"` depending on the
     format of the token passed to the constructor.

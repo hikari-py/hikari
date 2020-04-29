@@ -40,6 +40,7 @@ from hikari.internal import conversions
 from hikari.state import dispatchers
 
 if typing.TYPE_CHECKING:
+    from hikari import bases
     from hikari import gateway_entities
     from hikari import guilds
     from hikari import intents

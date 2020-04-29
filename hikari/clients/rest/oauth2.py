@@ -41,3 +41,8 @@ class RESTOAuth2Component(base.BaseRESTComponent, abc.ABC):  # pylint: disable=a
         """
         payload = await self._session.get_current_application_info()
         return applications.Application.deserialize(payload)
+
+    async def add_guild_member(self, *_, **__):
+        # TODO: implement and document this.
+        # https://discordapp.com/developers/docs/resources/guild#add-guild-member
+        raise NotImplementedError()
