@@ -40,13 +40,12 @@ from hikari.internal import conversions
 from hikari.state import dispatchers
 
 if typing.TYPE_CHECKING:
-    from hikari import bases
     from hikari import gateway_entities
     from hikari import guilds
     from hikari import intents
     from hikari.clients import rest as _rest
     from hikari.clients import shards as _shards
-    from hikari.events import bases
+    from hikari.events import base as event_base
     from hikari.internal import more_typing
     from hikari.state import event_managers
 
@@ -82,21 +81,19 @@ class BotBase(
 
     def __init__(self, *, config: typing.Optional[configs.BotConfig] = None, **kwargs: typing.Any) -> None:
         assertions.assert_that(
-            bool(config) ^ bool(kwargs), "You must specify a config object or kwargs; not both.", TypeError,
+            bool(config) ^ bool(kwargs), "You must only specify a config object OR kwargs;", TypeError,
         )
-        config = configs.BotConfig(**kwargs) if config is None else config
 
         runnable.RunnableClient.__init__(self, logging.getLogger(f"hikari.{type(self).__qualname__}"))
 
-        event_dispatcher = self._create_event_dispatcher(config)
+        # noinspection PyArgumentList
         _components.Components.__init__(
-            self,
-            config=config,
-            event_dispatcher=event_dispatcher,
-            event_manager=self._create_event_manager(config, event_dispatcher),
-            rest=None,
-            shards={},
+            self, config=None, event_dispatcher=None, event_manager=None, rest=None, shards={},
         )
+
+        self.config = configs.BotConfig(**kwargs) if config is None else config
+        self.event_dispatcher = self._create_event_dispatcher(self.config)
+        self.event_manager = self._create_event_manager(self.config, self.event_dispatcher)
         self.rest = self._create_rest(self)
 
     @property
@@ -148,6 +145,7 @@ class BotBase(
         """Version being used for the gateway API."""
         return self.config.gateway_version
 
+    # noinspection PyTypeChecker,PyUnresolvedReferences
     async def start(self):
         """Start the bot.
 
@@ -181,7 +179,7 @@ class BotBase(
 
         shard_clients = {}
         for shard_id in shard_ids:
-            shard = self._create_shard(shard_id, shard_count, url, self)
+            shard = self._create_shard(self, shard_id, shard_count, url)
             shard_clients[shard_id] = shard
 
         self.shards = shard_clients  # pylint: disable=attribute-defined-outside-init
@@ -243,7 +241,7 @@ class BotBase(
     ) -> more_typing.Future:
         return self.event_manager.event_dispatcher.wait_for(event_type, timeout=timeout, predicate=predicate)
 
-    def dispatch_event(self, event: bases.HikariEvent) -> more_typing.Future[typing.Any]:
+    def dispatch_event(self, event: event_base.HikariEvent) -> more_typing.Future[typing.Any]:
         return self.event_manager.event_dispatcher.dispatch_event(event)
 
     async def update_presence(
@@ -289,25 +287,23 @@ class BotBase(
             )
         )
 
-    @classmethod
+    @staticmethod
     @abc.abstractmethod
     def _create_shard(
-        cls, shard_id: int, shard_count: int, url: str, components: _components.Components,
+        components: _components.Components, shard_id: int, shard_count: int, url: str
     ) -> _shards.ShardClient:
         """Return a new shard for the given parameters.
 
         Parameters
         ----------
+        components : hikari.clients.components.Components
+            The components to register.
         shard_id : int
             The shard ID to use.
         shard_count : int
             The shard count to use.
         url : str
             The gateway URL to connect to.
-        components : hikari.clients.components.Components
-            The client components that this shard should be bound by.
-        event_manager hikari.state.event_managers.EventManager
-            The event manager to use.
 
         Returns
         -------
@@ -322,27 +318,26 @@ class BotBase(
             configuration being used.
         """
 
-    @classmethod
+    @staticmethod
     @abc.abstractmethod
-    def _create_rest(cls, components: _components.Components) -> _rest.RESTClient:
+    def _create_rest(components: _components.Components) -> _rest.RESTClient:
         """Return a new REST client from the given configuration.
 
         Parameters
         ----------
         components : hikari.clients.components.Components
-            The client components that this rest client should be bound by.
+            The components to register.
 
         Returns
         -------
         hikari.clients.rest.RESTClient
             The REST client to use.
-
         """
 
-    @classmethod
+    @staticmethod
     @abc.abstractmethod
     def _create_event_manager(
-        cls, config: configs.BotConfig, dispatcher: dispatchers.EventDispatcher
+        config: configs.BotConfig, dispatcher: dispatchers.EventDispatcher
     ) -> event_managers.EventManager:
         """Return a new instance of an event manager implementation.
 
@@ -350,22 +345,23 @@ class BotBase(
         ----------
         config : hikari.clients.configs.BotConfig
             The bot config to use.
+        dispatcher : hikari.state.dispatchers.EventDispatcher
+            The event dispatcher to use.
 
         Returns
         -------
         hikari.state.event_managers.EventManager
             The event manager to use internally.
-
         """
 
-    @classmethod
+    @staticmethod
     @abc.abstractmethod
-    def _create_event_dispatcher(cls, config: configs.BotConfig) -> dispatchers.EventDispatcher:
+    def _create_event_dispatcher(config: configs.BotConfig) -> dispatchers.EventDispatcher:
         """Return a new instance of an event dispatcher implementation.
 
         Parameters
         ----------
-        config : hikari.clients.configs.BotConfig`
+        config : hikari.clients.configs.BotConfig
             The bot config to use.
 
         Returns
