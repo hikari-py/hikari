@@ -24,6 +24,7 @@ __all__ = [
     "Application",
     "ApplicationOwner",
     "ConnectionVisibility",
+    "OAuth2Scope",
     "OwnConnection",
     "OwnGuild",
     "Team",
@@ -42,6 +43,130 @@ from hikari import users
 from hikari.internal import marshaller
 from hikari.internal import more_enums
 from hikari.internal import urls
+
+
+@more_enums.must_be_unique
+class OAuth2Scope(str, more_enums.Enum):
+    """OAuth2 Scopes that Discord allows.
+
+    These are categories of permissions for applications using the OAuth2 API
+    directly. Most users will only ever need the `BOT` scope when developing
+    bots.
+    """
+
+    ACTIVITIES_READ = "activities.read"
+    """Enable the app to fetch a user's "Now Playing/Recently Played" list.
+
+    !!! note:
+        You must be whitelisted to use this scope.
+    """
+
+    ACTIVITIES_WRITE = "activities.write"
+    """Enable the app to update a user's activity.
+
+    !!! note:
+        You must be whitelisted to use this scope.
+
+    !!! note:
+        This is not required to use the GameSDK activity manager.
+    """
+
+    APPLICATIONS_BUILDS_READ = "applications.builds.read"
+    """Enable the app to read build data for a user's applications.
+
+    !!! note:
+        You must be whitelisted to use this scope.
+    """
+
+    APPLICATIONS_BUILDS_UPLOAD = "applications.builds.upload"
+    """Enable the app to upload/update builds for a user's applications.
+
+    !!! note:
+        You must be whitelisted to use this scope.
+    """
+
+    APPLICATIONS_ENTITLEMENTS = "applications.entitlements"
+    """Enable the app to read entitlements for a user's applications."""
+
+    APPLICATIONS_STORE_UPDATE = "applications.store.update"
+    """Enable the app to read and update store data for the user's applications.
+
+    This includes store listings, achievements, SKU's, etc.
+
+    !!! note:
+        The store API is deprecated and may be removed in the future.
+    """
+
+    BOT = "bot"
+    """Used to add OAuth2 bots to a guild.
+
+    !!! note:
+        This requires you to have set up a bot account for your application.
+    """
+
+    CONNECTIONS = "connections"
+    """Enable the app to view third-party linked accounts such as Twitch."""
+
+    EMAIL = "email"
+    """Enable the app to view the user's email and application info."""
+
+    GROUP_DM_JOIN = "gdm.join"
+    """Enable the application to join users into a group DM."""
+
+    GUILDS = "guilds"
+    """Enable the app to view the guilds the user is in."""
+
+    GUILDS_JOIN = "guilds.join"
+    """Enable the app to add the user to a specific guild.
+
+    !!! note:
+        This requires you to have set up a bot account for your application.
+    """
+
+    IDENTIFY = "identify"
+    """Enable the app to view info about itself.
+
+    !!! note:
+        This does not include email address info. Use the `EMAIL` scope instead
+        to retrieve this information.
+    """
+
+    RELATIONSHIPS_READ = "relationships.read"
+    """Enable the app to view a user's friend list.
+
+    !!! note:
+        You must be whitelisted to use this scope.
+    """
+
+    RPC = "rpc"
+    """Enable the RPC app to control the local user's Discord client.
+
+    !!! note:
+        You must be whitelisted to use this scope.
+    """
+
+    RPC_API = "rpc.api"
+    """Enable the RPC app to access the RPC API as the local user.
+
+    !!! note:
+        You must be whitelisted to use this scope.
+    """
+
+    RPC_MESSAGES_READ = "messages.read"
+    """Enable the RPC app to read messages from all channels the user is in."""
+
+    RPC_NOTIFICATIONS_READ = "rpc.notifications.read"
+    """Enable the RPC app to read  from all channels the user is in.
+
+    !!! note:
+        You must be whitelisted to use this scope.
+    """
+
+    WEBHOOK_INCOMING = "webhook.incoming"
+    """Used to generate a webhook that is returned in the OAuth2 token response.
+
+    This is used during authorization code grants.
+    """
 
 
 @more_enums.must_be_unique
