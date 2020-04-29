@@ -62,7 +62,7 @@ def shard_client_obj():
     )
     with mock.patch("hikari.net.shards.Shard", return_value=mock_shard_connection):
         mock_components = mock.MagicMock(components.Components, event_manager=None, config=configs.GatewayConfig())
-        return _helpers.unslot_class(high_level_shards.ShardClientImpl)(0, 1, mock_components, "some_url")
+        return _helpers.unslot_class(high_level_shards.ShardClientImpl)(0, 1, mock_components, "some_url",)
 
 
 class TestShardClientImpl:
