@@ -24,7 +24,6 @@
     paths:
       - public/coverage
       - public/*.coverage
-      - public/pytest.html
     reports:
       junit: public/tests.xml
   extends: .reactive-job

@@ -74,10 +74,6 @@ pages:
     paths:
       - public/
   dependencies:
-    - test:3.8.0
-    - test:3.8.1
-    - test:3.8.2
-    - test:3.9.0
     - pylint
     - coverage:results
     - pages:staging
