@@ -44,7 +44,7 @@ import typing
 
 import attr
 
-from hikari import bases as base_entities
+from hikari import bases
 from hikari import emojis as _emojis
 from hikari import guilds
 from hikari import intents
@@ -52,16 +52,16 @@ from hikari import unset
 from hikari import users
 from hikari.internal import conversions
 from hikari.internal import marshaller
-from hikari.events import bases as base_events
+from hikari.events import base
 
 if typing.TYPE_CHECKING:
     import datetime
 
 
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildCreateEvent(base_events.HikariEvent, guilds.Guild):
+class GuildCreateEvent(base.HikariEvent, guilds.Guild):
     """Used to represent Guild Create gateway events.
 
     Will be received when the bot joins a guild, and when a guild becomes
@@ -69,17 +69,17 @@ class GuildCreateEvent(base_events.HikariEvent, guilds.Guild):
     """
 
 
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildUpdateEvent(base_events.HikariEvent, guilds.Guild):
+class GuildUpdateEvent(base.HikariEvent, guilds.Guild):
     """Used to represent Guild Update gateway events."""
 
 
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildLeaveEvent(base_events.HikariEvent, base_entities.UniqueEntity, marshaller.Deserializable):
+class GuildLeaveEvent(base.HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
     """Fired when the current user leaves the guild or is kicked/banned from it.
 
     !!! note
@@ -87,10 +87,10 @@ class GuildLeaveEvent(base_events.HikariEvent, base_entities.UniqueEntity, marsh
     """
 
 
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildUnavailableEvent(base_events.HikariEvent, base_entities.UniqueEntity, marshaller.Deserializable):
+class GuildUnavailableEvent(base.HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
     """Fired when a guild becomes temporarily unavailable due to an outage.
 
     !!! note
@@ -98,82 +98,82 @@ class GuildUnavailableEvent(base_events.HikariEvent, base_entities.UniqueEntity,
     """
 
 
-@base_events.requires_intents(intents.Intent.GUILD_BANS)
+@base.requires_intents(intents.Intent.GUILD_BANS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class BaseGuildBanEvent(base_events.HikariEvent, marshaller.Deserializable, abc.ABC):
+class BaseGuildBanEvent(base.HikariEvent, marshaller.Deserializable, abc.ABC):
     """A base object that guild ban events will inherit from."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
     """The ID of the guild this ban is in."""
 
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
     """The object of the user this ban targets."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_BANS)
+@base.requires_intents(intents.Intent.GUILD_BANS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildBanAddEvent(BaseGuildBanEvent):
     """Used to represent a Guild Ban Add gateway event."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_BANS)
+@base.requires_intents(intents.Intent.GUILD_BANS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildBanRemoveEvent(BaseGuildBanEvent):
     """Used to represent a Guild Ban Remove gateway event."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
+@base.requires_intents(intents.Intent.GUILD_EMOJIS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildEmojisUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
+class GuildEmojisUpdateEvent(base.HikariEvent, marshaller.Deserializable):
     """Represents a Guild Emoji Update gateway event."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
     """The ID of the guild this emoji was updated in."""
 
-    emojis: typing.Mapping[base_entities.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
+    emojis: typing.Mapping[bases.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
         deserializer=lambda ems: {emoji.id: emoji for emoji in map(_emojis.GuildEmoji.deserialize, ems)}
     )
     """The updated mapping of emojis by their ID."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_INTEGRATIONS)
+@base.requires_intents(intents.Intent.GUILD_INTEGRATIONS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildIntegrationsUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
+class GuildIntegrationsUpdateEvent(base.HikariEvent, marshaller.Deserializable):
     """Used to represent Guild Integration Update gateway events."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
     """The ID of the guild the integration was updated in."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
+@base.requires_intents(intents.Intent.GUILD_MEMBERS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberAddEvent(base_events.HikariEvent, guilds.GuildMember):
+class GuildMemberAddEvent(base.HikariEvent, guilds.GuildMember):
     """Used to represent a Guild Member Add gateway event."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
     """The ID of the guild where this member was added."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
+@base.requires_intents(intents.Intent.GUILD_MEMBERS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
+class GuildMemberUpdateEvent(base.HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Member Update gateway event.
 
     Sent when a guild member or their inner user object is updated.
     """
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
     """The ID of the guild this member was updated in."""
 
-    role_ids: typing.Sequence[base_entities.Snowflake] = marshaller.attrib(
-        raw_name="roles", deserializer=lambda role_ids: [base_entities.Snowflake.deserialize(rid) for rid in role_ids],
+    role_ids: typing.Sequence[bases.Snowflake] = marshaller.attrib(
+        raw_name="roles", deserializer=lambda role_ids: [bases.Snowflake.deserialize(rid) for rid in role_ids],
     )
     """A sequence of the IDs of the member's current roles."""
 
@@ -198,65 +198,65 @@ class GuildMemberUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
     """
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
+@base.requires_intents(intents.Intent.GUILD_MEMBERS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberRemoveEvent(base_events.HikariEvent, marshaller.Deserializable):
+class GuildMemberRemoveEvent(base.HikariEvent, marshaller.Deserializable):
     """Used to represent Guild Member Remove gateway events.
 
     Sent when a member is kicked, banned or leaves a guild.
     """
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
     """The ID of the guild this user was removed from."""
 
     user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
     """The object of the user who was removed from this guild."""
 
 
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildRoleCreateEvent(base_events.HikariEvent, marshaller.Deserializable):
+class GuildRoleCreateEvent(base.HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
     """The ID of the guild where this role was created."""
 
     role: guilds.GuildRole = marshaller.attrib(deserializer=guilds.GuildRole.deserialize)
     """The object of the role that was created."""
 
 
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildRoleUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
+class GuildRoleUpdateEvent(base.HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
     """The ID of the guild where this role was updated."""
 
     role: guilds.GuildRole = marshaller.attrib(deserializer=guilds.GuildRole.deserialize)
     """The updated role object."""
 
 
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildRoleDeleteEvent(base_events.HikariEvent, marshaller.Deserializable):
+class GuildRoleDeleteEvent(base.HikariEvent, marshaller.Deserializable):
     """Represents a gateway Guild Role Delete Event."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
     """The ID of the guild where this role is being deleted."""
 
-    role_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    role_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
     """The ID of the role being deleted."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_PRESENCES)
+@base.requires_intents(intents.Intent.GUILD_PRESENCES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PresenceUpdateEvent(base_events.HikariEvent, guilds.GuildMemberPresence):
+class PresenceUpdateEvent(base.HikariEvent, guilds.GuildMemberPresence):
     """Used to represent Presence Update gateway events.
 
     Sent when a guild member changes their presence.
