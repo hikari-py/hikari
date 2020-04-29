@@ -50,12 +50,12 @@ def _supports_color():
 
 
 _COLOR_FORMAT: typing.Final[str] = (
-    "\033[1;35m%(levelname)1.1s \033[0;37m%(name)25.25s \033[0;31m%(asctime)23.23s \033[1;34m%(module)-15.15s "
+    "\033[1;35m%(levelname)1.1s \033[0;37m%(name)45.45s \033[0;31m%(asctime)23.23s \033[1;34m%(module)-15.15s "
     "\033[1;32m#%(lineno)-4d \033[0m:: \033[0;33m%(message)s\033[0m"
 )
 
 _REGULAR_FORMAT: typing.Final[str] = (
-    "%(levelname)1.1s %(name)25.25s %(asctime)23.23s %(module)-15.15s #%(lineno)-4d :: %(message)s"
+    "%(levelname)1.1s %(name)45.45s %(asctime)23.23s %(module)-15.15s #%(lineno)-4d :: %(message)s"
 )
 
 
@@ -68,8 +68,9 @@ _REGULAR_FORMAT: typing.Final[str] = (
 @click.option("--shards", default=1, type=click.IntRange(min=1), help="The number of shards to explicitly use.")
 @click.option("--token", required=True, envvar="TOKEN", help="The token to use to authenticate with Discord.")
 @click.option("--verify-ssl", default=True, type=click.BOOL, help="Enable or disable SSL verification.")
-@click.option("--version", default=6, type=click.IntRange(min=6), help="Version of the gateway to use.")
-def run(compression, color, debug, intents, logger, shards, token, verify_ssl, version) -> None:
+@click.option("--gateway-version", default=6, type=click.IntRange(min=6), help="Version of the gateway to use.")
+@click.option("--rest-version", default=6, type=click.IntRange(min=6), help="Version of the gateway to use.")
+def run(compression, color, debug, intents, logger, shards, token, verify_ssl, gateway_version, rest_version):
     """`click` command line client for running a test gateway connection.
 
     This is provided for internal testing purposes for benchmarking API
@@ -85,7 +86,8 @@ def run(compression, color, debug, intents, logger, shards, token, verify_ssl, v
 
     client = hikari.StatelessBot(
         token=token,
-        gateway_version=version,
+        gateway_version=gateway_version,
+        rest_version=rest_version,
         debug=debug,
         gateway_use_compression=compression,
         intents=intents,
@@ -156,7 +158,7 @@ def run(compression, color, debug, intents, logger, shards, token, verify_ssl, v
             )
 
             rest_info = (
-                f"message edit time: {rest_time * 1_000:.0f} ms\n"
+                f"message send time: {rest_time * 1_000:.0f} ms\n"
                 f"global ratelimiter backlog: {len(client.rest._session.global_ratelimiter.queue)}\n"
                 f"cached limiter routes: {len(client.rest._session.bucket_ratelimiters.routes_to_hashes)}\n"
                 f"cached limiter buckets: {len(client.rest._session.bucket_ratelimiters.real_hashes_to_buckets)}\n"

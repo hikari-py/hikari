@@ -58,8 +58,13 @@ def completed_future(result=None, /):
 
 
 def wait(
-    aws: typing.Union[more_typing.Coroutine, typing.Awaitable], *, timeout=None, return_when=asyncio.ALL_COMPLETED
-) -> more_typing.Coroutine[typing.Tuple[typing.Set[more_typing.Future], typing.Set[more_typing.Future]]]:
+    aws: typing.Union[more_typing.Coroutine[more_typing.T_co], typing.Awaitable],
+    *,
+    timeout=None,
+    return_when=asyncio.ALL_COMPLETED,
+) -> more_typing.Coroutine[
+    typing.Tuple[typing.Set[more_typing.Future[more_typing.T_co]], typing.Set[more_typing.Future[more_typing.T_co]]]
+]:
     """Run awaitable objects in the aws set concurrently.
 
     This blocks until the condition specified by `return_value`.

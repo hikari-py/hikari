@@ -290,6 +290,6 @@ class TestVoiceServerUpdateEvent:
 
     def test_deserialize(self, test_voice_server_update_payload):
         voice_server_update_obj = channel.VoiceServerUpdateEvent.deserialize(test_voice_server_update_payload)
-        assert voice_server_update_obj.token == "a_token"
+        assert voice_server_update_obj._token == "a_token"
         assert voice_server_update_obj.guild_id == 303030300303
         assert voice_server_update_obj.endpoint == "smart.loyal.discord.gg"

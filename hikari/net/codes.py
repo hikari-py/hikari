@@ -20,92 +20,9 @@
 
 from __future__ import annotations
 
-__all__ = ["HTTPStatusCode", "GatewayCloseCode", "GatewayOpcode", "JSONErrorCode"]
+__all__ = ["GatewayCloseCode", "GatewayOpcode", "JSONErrorCode"]
 
-# Doesnt work correctly with enums, so since this file is all enums, ignore
-# pylint: disable=no-member
 from hikari.internal import more_enums
-
-
-@more_enums.must_be_unique
-class HTTPStatusCode(int, more_enums.Enum):
-    """HTTP response codes expected from RESTful components."""
-
-    CONTINUE = 100
-    """Continue"""
-
-    OK = 200
-    """OK"""
-
-    CREATED = 201
-    """Created"""
-
-    ACCEPTED = 202
-    """Accepted"""
-
-    NO_CONTENT = 204
-    """No content"""
-
-    MOVED_PERMANENTLY = 301
-    """Moved permanently"""
-
-    BAD_REQUEST = 400
-    """Bad request"""
-
-    UNAUTHORIZED = 401
-    """Unauthorized"""
-
-    FORBIDDEN = 403
-    """Forbidden"""
-
-    NOT_FOUND = 404
-    """Not found"""
-
-    METHOD_NOT_ALLOWED = 405
-    """Method not allowed"""
-
-    NOT_ACCEPTABLE = 406
-    """Not acceptable"""
-
-    PROXY_AUTHENTICATION_REQUIRED = 407
-    """Proxy authentication required"""
-
-    REQUEST_ENTITY_TOO_LARGE = 413
-    """Request entity too large"""
-
-    REQUEST_URI_TOO_LONG = 414
-    """Request URI too long"""
-
-    UNSUPPORTED_MEDIA_TYPE = 415
-    """Unsupported media type"""
-
-    IM_A_TEAPOT = 418
-    """The server refused the attempt to brew coffee with a teapot."""
-
-    TOO_MANY_REQUESTS = 429
-    """Too many requests"""
-
-    INTERNAL_SERVER_ERROR = 500
-    """Internal server error"""
-
-    NOT_IMPLEMENTED = 501
-    """Not implemented"""
-
-    BAD_GATEWAY = 502
-    """Bad gateway"""
-
-    SERVICE_UNAVAILABLE = 503
-    """Service unavailable"""
-
-    GATEWAY_TIMEOUT = 504
-    """Gateway timeout"""
-
-    HTTP_VERSION_NOT_SUPPORTED = 505
-    """HTTP Version not supported"""
-
-    def __str__(self) -> str:
-        name = self.name.replace("_", " ").title() if self is not HTTPStatusCode.IM_A_TEAPOT else "I'm a teapot"
-        return f"{self.value} {name}"
 
 
 @more_enums.must_be_unique

@@ -1,12 +1,13 @@
-async-timeout==3.0.1
-coverage==5.1
+async-timeout~=3.0.1
+coverage~=5.1
+# Don't vaguely version nox, it uses calver rather than semver.
 nox==2019.11.9
 # 2.5.0 breaks stuff currently.
-pylint<2.5.0
-pylint-json2html-v2==0.2.2
-pylint-junit==0.2.0
-pytest==5.4.1
-pytest-asyncio==0.11.0
-pytest-cov==2.8.1
-pytest-xdist==1.31.0
-mock==4.0.2
+pylint~=2.4.4
+pylint-json2html-v2~=0.2.2
+pylint-junit~=0.2.0
+pytest~=5.4.1
+pytest-asyncio~=0.11.0
+pytest-cov~=2.8.1
+pytest-xdist~=1.31.0
+mock~=4.0.2

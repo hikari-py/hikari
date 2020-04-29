@@ -133,7 +133,7 @@ class TestShardUptimeProperty:
         with mock.patch("time.perf_counter", return_value=now):
             client = shards.Shard(token="xxx", url="yyy")
             client._connected_at = connected_at
-            assert client.uptime == expected_uptime
+            assert client.up_time == expected_uptime
 
 
 @pytest.mark.asyncio
@@ -181,74 +181,25 @@ class TestGatewayCurrentPresenceProperty:
 
 
 @pytest.mark.asyncio
-class TestShardAiohttpClientSessionKwargsProperty:
-    async def test_right_stuff_is_included(self):
-        connector = mock.MagicMock()
-
-        client = shards.Shard(url="...", token="...", connector=connector,)
-
-        assert client._cs_init_kwargs() == dict(connector=connector)
-
-
-@pytest.mark.asyncio
-class TestShardWebSocketKwargsProperty:
-    async def test_right_stuff_is_included(self):
-        url = "http://localhost.lan/discord"
-        proxy_url = "http://localhost.lan/some_proxy"
-        proxy_auth = mock.MagicMock()
-        proxy_headers = mock.MagicMock()
-        verify_ssl = True
-        ssl_context = mock.MagicMock()
-
-        client = shards.Shard(
-            url=url,
-            token="...",
-            proxy_url=proxy_url,
-            proxy_auth=proxy_auth,
-            proxy_headers=proxy_headers,
-            verify_ssl=verify_ssl,
-            ssl_context=ssl_context,
-            version=6,
-        )
-
-        scheme, netloc, url, params, query, fragment = urllib.parse.urlparse(client._url)
-        query = urllib.parse.parse_qs(query)
-        assert query["v"] == ["6"]
-
-        client._url = url
-
-        assert client._ws_connect_kwargs() == dict(
-            url=url,
-            compress=0,
-            autoping=True,
-            max_msg_size=0,
-            proxy=proxy_url,
-            proxy_auth=proxy_auth,
-            proxy_headers=proxy_headers,
-            verify_ssl=verify_ssl,
-            ssl_context=ssl_context,
-        )
-
-
-@pytest.mark.asyncio
 class TestConnect:
-    @pytest.fixture
-    def client_session_t(self):
-        return MockClientSession()
-
     @property
     def hello_payload(self):
-        return {"op": 10, "d": {"heartbeat_interval": 30_000,}}
+        return {"op": 10, "d": {"heartbeat_interval": 30_000}}
 
     @property
     def non_hello_payload(self):
         return {"op": 69, "d": "yeet"}
 
     @pytest.fixture
-    def client(self, event_loop):
+    def mock_session(self):
+        return MockClientSession()
+
+    @pytest.fixture
+    def client(self, event_loop, mock_session):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(shards.Shard)(url="ws://localhost", token="xxx")
-        client = _helpers.mock_methods_on(client, except_=("connect", "_cs_init_kwargs", "_ws_connect_kwargs"))
+        client = _helpers.mock_methods_on(client, except_=("connect",))
+        client._acquire_client_session = mock.MagicMock(return_value=mock_session)
         client._receive = mock.AsyncMock(return_value=self.hello_payload)
         return client
 
@@ -275,10 +226,10 @@ class TestConnect:
         "event_attr", ["closed_event", "handshake_event", "ready_event", "requesting_close_event", "resumed_event"]
     )
     @_helpers.timeout_after(10.0)
-    async def test_events_unset_on_open(self, client, client_session_t, event_attr):
+    async def test_events_unset_on_open(self, client, event_attr):
         getattr(client, event_attr).set()
         with self.suppress_closure():
-            task = asyncio.create_task(client.connect(client_session_t))
+            task = asyncio.create_task(client.connect())
             # Wait until the first main event object is set. By then we expect
             # the event we are testing to have been unset again if it is
             # working properly.
@@ -286,19 +237,19 @@ class TestConnect:
             assert not getattr(client, event_attr).is_set()
             await task
 
-    async def test_hello_event_unset_on_open(self, client, client_session_t):
+    async def test_hello_event_unset_on_open(self, client):
         client.hello_event = mock.MagicMock()
 
         with self.suppress_closure():
-            await client.connect(client_session_t)
+            await client.connect()
 
         client.hello_event.clear.assert_called_once()
         client.hello_event.set.assert_called_once()
 
     @_helpers.timeout_after(10.0)
-    async def test_closed_event_set_on_connect_terminate(self, client, client_session_t):
+    async def test_closed_event_set_on_connect_terminate(self, client):
         with self.suppress_closure():
-            await asyncio.create_task(client.connect(client_session_t))
+            await asyncio.create_task(client.connect())
 
         assert client.closed_event.is_set()
 
@@ -706,7 +657,7 @@ class TestResume:
     async def test_resume_payload(self, client, seq):
         client.session_id = 69420
         client.seq = seq
-        client.token = "reee"
+        client._token = "reee"
 
         await client._resume()
 
