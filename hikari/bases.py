@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["HikariEntity", "LARGEST_SNOWFLAKE", "Snowflake", "UniqueEntity"]
+__all__ = ["HikariEntity", "LARGEST_SNOWFLAKE", "Snowflake", "UniqueEntity", "ID"]
 
 import abc
 import functools
@@ -143,4 +143,5 @@ class UniqueEntity(HikariEntity, typing.SupportsInt, abc.ABC):
 
 
 T = typing.TypeVar("T", bound=UniqueEntity)
-Hashable = typing.Union[Snowflake, int, T]
+ID = typing.Union[Snowflake, int]
+Hashable = typing.Union[ID, T]
