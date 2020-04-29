@@ -51,7 +51,22 @@ def _generate_mock_task(exception=None):
 
 
 @pytest.fixture
-def shard_client_obj():
+def mock_components():
+    class ComponentsImpl(components.Components):
+        def __init__(self):
+            super().__init__(
+                config=mock.MagicMock(),
+                event_dispatcher=mock.MagicMock(dispatch_event=mock.MagicMock(return_value=_helpers.AwaitableMock())),
+                event_manager=mock.MagicMock(),
+                rest=mock.MagicMock(),
+                shards=mock.MagicMock(),
+            )
+
+    return ComponentsImpl()
+
+
+@pytest.fixture
+def shard_client_obj(mock_components):
     mock_shard_connection = mock.MagicMock(
         low_level_shards.Shard,
         heartbeat_latency=float("nan"),
@@ -61,8 +76,7 @@ def shard_client_obj():
         session_id=None,
     )
     with mock.patch("hikari.net.shards.Shard", return_value=mock_shard_connection):
-        mock_components = mock.MagicMock(components.Components, event_manager=None, config=configs.GatewayConfig())
-        return _helpers.unslot_class(high_level_shards.ShardClientImpl)(0, 1, mock_components, "some_url",)
+        return _helpers.unslot_class(high_level_shards.ShardClientImpl)(0, 1, mock_components, "some_url")
 
 
 class TestShardClientImpl:
@@ -521,17 +535,9 @@ class TestShardClientImplSpinUp:
 
 class TestShardClientImplUpdatePresence:
     @pytest.mark.asyncio
-    async def test_update_presence(self, shard_client_obj):
+    @_helpers.assert_raises(type_=ValueError)
+    async def test_update_presence_with_no_arguments(self, shard_client_obj):
         await shard_client_obj.update_presence()
-
-        shard_client_obj._connection.update_presence.assert_called_once_with(
-            {"status": "online", "game": None, "idle_since": None, "afk": False}
-        )
-
-        assert shard_client_obj._status == guilds.PresenceStatus.ONLINE
-        assert shard_client_obj._activity is None
-        assert shard_client_obj._idle_since is None
-        assert shard_client_obj._is_afk is False
 
     @pytest.mark.asyncio
     async def test_update_presence_with_optionals(self, shard_client_obj):
