@@ -25,8 +25,8 @@ import pytest
 from hikari import users
 from hikari import emojis
 from hikari import unset
-from hikari import guilds as _guilds
-from hikari.events import guilds
+from hikari import guilds
+from hikari.events import guild
 from hikari.internal import conversions
 from tests.hikari import _helpers
 
@@ -82,9 +82,9 @@ class TestBaseGuildBanEvent:
     def test_deserialize(self, test_guild_ban_payload, test_user_payload):
         mock_user = mock.MagicMock(users.User)
         with _helpers.patch_marshal_attr(
-            guilds.BaseGuildBanEvent, "user", deserializer=users.User.deserialize, return_value=mock_user
+            guild.BaseGuildBanEvent, "user", deserializer=users.User.deserialize, return_value=mock_user
         ) as patched_user_deserializer:
-            base_guild_ban_object = guilds.BaseGuildBanEvent.deserialize(test_guild_ban_payload)
+            base_guild_ban_object = guild.BaseGuildBanEvent.deserialize(test_guild_ban_payload)
             patched_user_deserializer.assert_called_once_with(test_user_payload)
         assert base_guild_ban_object.user is mock_user
         assert base_guild_ban_object.guild_id == 5959
@@ -112,7 +112,7 @@ class TestGuildEmojisUpdateEvent:
     def test_deserialize(self, test_guild_emojis_update_payload, test_emoji_payload):
         mock_emoji = _helpers.mock_model(emojis.GuildEmoji, id=240)
         with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji):
-            guild_emojis_update_obj = guilds.GuildEmojisUpdateEvent.deserialize(test_guild_emojis_update_payload)
+            guild_emojis_update_obj = guild.GuildEmojisUpdateEvent.deserialize(test_guild_emojis_update_payload)
             emojis.GuildEmoji.deserialize.assert_called_once_with(test_emoji_payload)
         assert guild_emojis_update_obj.emojis == {mock_emoji.id: mock_emoji}
         assert guild_emojis_update_obj.guild_id == 696969
@@ -120,7 +120,7 @@ class TestGuildEmojisUpdateEvent:
 
 class TestGuildIntegrationsUpdateEvent:
     def test_deserialize(self):
-        assert guilds.GuildIntegrationsUpdateEvent.deserialize({"guild_id": "1234"}).guild_id == 1234
+        assert guild.GuildIntegrationsUpdateEvent.deserialize({"guild_id": "1234"}).guild_id == 1234
 
 
 class TestGuildMemberAddEvent:
@@ -129,7 +129,7 @@ class TestGuildMemberAddEvent:
         return {**test_member_payload, "guild_id": "292929"}
 
     def test_deserialize(self, test_guild_member_add_payload):
-        guild_member_add_obj = guilds.GuildMemberAddEvent.deserialize(test_guild_member_add_payload)
+        guild_member_add_obj = guild.GuildMemberAddEvent.deserialize(test_guild_member_add_payload)
         assert guild_member_add_obj.guild_id == 292929
 
 
@@ -141,9 +141,9 @@ class TestGuildMemberRemoveEvent:
     def test_deserialize(self, test_guild_member_remove_payload, test_user_payload):
         mock_user = mock.MagicMock(users.User)
         with _helpers.patch_marshal_attr(
-            guilds.GuildMemberRemoveEvent, "user", deserializer=users.User.deserialize, return_value=mock_user
+            guild.GuildMemberRemoveEvent, "user", deserializer=users.User.deserialize, return_value=mock_user
         ) as patched_user_deseializer:
-            guild_member_remove_payload = guilds.GuildMemberRemoveEvent.deserialize(test_guild_member_remove_payload)
+            guild_member_remove_payload = guild.GuildMemberRemoveEvent.deserialize(test_guild_member_remove_payload)
             patched_user_deseializer.assert_called_once_with(test_user_payload)
         assert guild_member_remove_payload.guild_id == 9494949
         assert guild_member_remove_payload.user is mock_user
@@ -166,19 +166,19 @@ class TestGuildMemberUpdateEvent:
         stack = contextlib.ExitStack()
         patched_user_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
-                guilds.GuildMemberUpdateEvent, "user", deserializer=users.User.deserialize, return_value=mock_user
+                guild.GuildMemberUpdateEvent, "user", deserializer=users.User.deserialize, return_value=mock_user
             )
         )
         patched_premium_since_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
-                guilds.GuildMemberUpdateEvent,
+                guild.GuildMemberUpdateEvent,
                 "premium_since",
                 deserializer=conversions.parse_iso_8601_ts,
                 return_value=mock_premium_since,
             )
         )
         with stack:
-            guild_member_update_obj = guilds.GuildMemberUpdateEvent.deserialize(guild_member_update_payload)
+            guild_member_update_obj = guild.GuildMemberUpdateEvent.deserialize(guild_member_update_payload)
             patched_premium_since_deserializer.assert_called_once_with("2019-05-17T06:26:56.936000+00:00")
             patched_user_deserializer.assert_called_once_with(test_user_payload)
         assert guild_member_update_obj.guild_id == 292929
@@ -190,8 +190,8 @@ class TestGuildMemberUpdateEvent:
     def test_partial_deserializer(self, guild_member_update_payload):
         del guild_member_update_payload["nick"]
         del guild_member_update_payload["premium_since"]
-        with _helpers.patch_marshal_attr(guilds.GuildMemberUpdateEvent, "user", deserializer=users.User.deserialize):
-            guild_member_update_obj = guilds.GuildMemberUpdateEvent.deserialize(guild_member_update_payload)
+        with _helpers.patch_marshal_attr(guild.GuildMemberUpdateEvent, "user", deserializer=users.User.deserialize):
+            guild_member_update_obj = guild.GuildMemberUpdateEvent.deserialize(guild_member_update_payload)
         assert guild_member_update_obj.nickname is unset.UNSET
         assert guild_member_update_obj.premium_since is unset.UNSET
 
@@ -203,11 +203,11 @@ def test_guild_role_create_update_payload(test_guild_payload):
 
 class TestGuildRoleCreateEvent:
     def test_deserialize(self, test_guild_role_create_update_payload, test_guild_payload):
-        mock_role = mock.MagicMock(_guilds.GuildRole)
+        mock_role = mock.MagicMock(guilds.GuildRole)
         with _helpers.patch_marshal_attr(
-            guilds.GuildRoleCreateEvent, "role", deserializer=_guilds.GuildRole.deserialize, return_value=mock_role
+            guild.GuildRoleCreateEvent, "role", deserializer=guilds.GuildRole.deserialize, return_value=mock_role
         ) as patched_role_deserializer:
-            guild_role_create_obj = guilds.GuildRoleCreateEvent.deserialize(test_guild_role_create_update_payload)
+            guild_role_create_obj = guild.GuildRoleCreateEvent.deserialize(test_guild_role_create_update_payload)
             patched_role_deserializer.assert_called_once_with(test_guild_payload)
         assert guild_role_create_obj.role is mock_role
         assert guild_role_create_obj.guild_id == 69240
@@ -219,11 +219,11 @@ class TestGuildRoleUpdateEvent:
         return {"guild_id": "69240", "role": test_guild_payload}
 
     def test_deserialize(self, test_guild_role_create_update_payload, test_guild_payload):
-        mock_role = mock.MagicMock(_guilds.GuildRole)
+        mock_role = mock.MagicMock(guilds.GuildRole)
         with _helpers.patch_marshal_attr(
-            guilds.GuildRoleUpdateEvent, "role", deserializer=_guilds.GuildRole.deserialize, return_value=mock_role
+            guild.GuildRoleUpdateEvent, "role", deserializer=guilds.GuildRole.deserialize, return_value=mock_role
         ) as patched_role_deserializer:
-            guild_role_create_obj = guilds.GuildRoleUpdateEvent.deserialize(test_guild_role_create_update_payload)
+            guild_role_create_obj = guild.GuildRoleUpdateEvent.deserialize(test_guild_role_create_update_payload)
             patched_role_deserializer.assert_called_once_with(test_guild_payload)
         assert guild_role_create_obj.role is mock_role
         assert guild_role_create_obj.guild_id == 69240
@@ -235,7 +235,7 @@ class TestGuildRoleDeleteEvent:
         return {"guild_id": "424242", "role_id": "94595959"}
 
     def test_deserialize(self, test_guild_role_delete_payload):
-        guild_role_delete_payload = guilds.GuildRoleDeleteEvent.deserialize(test_guild_role_delete_payload)
+        guild_role_delete_payload = guild.GuildRoleDeleteEvent.deserialize(test_guild_role_delete_payload)
         assert guild_role_delete_payload.guild_id == 424242
         assert guild_role_delete_payload.role_id == 94595959
 

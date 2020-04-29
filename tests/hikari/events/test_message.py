@@ -28,8 +28,8 @@ from hikari import guilds
 from hikari import embeds
 from hikari import emojis
 from hikari import unset
-from hikari import messages as _messages
-from hikari.events import messages
+from hikari import messages
+from hikari.events import message
 from hikari.internal import conversions
 from tests.hikari import _helpers
 
@@ -156,21 +156,21 @@ class TestMessageUpdateEvent:
         mock_member = mock.MagicMock(guilds.GuildMember)
         mock_timestamp = mock.MagicMock(datetime.datetime)
         mock_edited_timestamp = mock.MagicMock(datetime.datetime)
-        mock_attachment = mock.MagicMock(_messages.Attachment)
+        mock_attachment = mock.MagicMock(messages.Attachment)
         mock_embed = mock.MagicMock(embeds.Embed)
-        mock_reaction = mock.MagicMock(_messages.Reaction)
-        mock_activity = mock.MagicMock(_messages.MessageActivity)
+        mock_reaction = mock.MagicMock(messages.Reaction)
+        mock_activity = mock.MagicMock(messages.MessageActivity)
         mock_application = mock.MagicMock(applications.Application)
-        mock_reference = mock.MagicMock(_messages.MessageCrosspost)
+        mock_reference = mock.MagicMock(messages.MessageCrosspost)
         stack = contextlib.ExitStack()
         patched_author_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
-                messages.MessageUpdateEvent, "author", deserializer=users.User.deserialize, return_value=mock_author
+                message.MessageUpdateEvent, "author", deserializer=users.User.deserialize, return_value=mock_author
             )
         )
         patched_member_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
-                messages.MessageUpdateEvent,
+                message.MessageUpdateEvent,
                 "member",
                 deserializer=guilds.GuildMember.deserialize,
                 return_value=mock_member,
@@ -178,7 +178,7 @@ class TestMessageUpdateEvent:
         )
         patched_timestamp_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
-                messages.MessageUpdateEvent,
+                message.MessageUpdateEvent,
                 "timestamp",
                 deserializer=conversions.parse_iso_8601_ts,
                 return_value=mock_timestamp,
@@ -186,7 +186,7 @@ class TestMessageUpdateEvent:
         )
         patched_edit_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
-                messages.MessageUpdateEvent,
+                message.MessageUpdateEvent,
                 "edited_timestamp",
                 deserializer=conversions.parse_iso_8601_ts,
                 return_value=mock_edited_timestamp,
@@ -194,15 +194,15 @@ class TestMessageUpdateEvent:
         )
         patched_activity_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
-                messages.MessageUpdateEvent,
+                message.MessageUpdateEvent,
                 "activity",
-                deserializer=_messages.MessageActivity.deserialize,
+                deserializer=messages.MessageActivity.deserialize,
                 return_value=mock_activity,
             )
         )
         patched_application_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
-                messages.MessageUpdateEvent,
+                message.MessageUpdateEvent,
                 "application",
                 deserializer=applications.Application.deserialize,
                 return_value=mock_application,
@@ -210,20 +210,20 @@ class TestMessageUpdateEvent:
         )
         patched_reference_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
-                messages.MessageUpdateEvent,
+                message.MessageUpdateEvent,
                 "message_reference",
-                deserializer=_messages.MessageCrosspost.deserialize,
+                deserializer=messages.MessageCrosspost.deserialize,
                 return_value=mock_reference,
             )
         )
-        stack.enter_context(mock.patch.object(_messages.Attachment, "deserialize", return_value=mock_attachment))
+        stack.enter_context(mock.patch.object(messages.Attachment, "deserialize", return_value=mock_attachment))
         stack.enter_context(mock.patch.object(embeds.Embed, "deserialize", return_value=mock_embed))
-        stack.enter_context(mock.patch.object(_messages.Reaction, "deserialize", return_value=mock_reaction))
+        stack.enter_context(mock.patch.object(messages.Reaction, "deserialize", return_value=mock_reaction))
         with stack:
-            message_update_payload = messages.MessageUpdateEvent.deserialize(test_message_update_payload)
-            _messages.Reaction.deserialize.assert_called_once_with(test_reaction_payload)
+            message_update_payload = message.MessageUpdateEvent.deserialize(test_message_update_payload)
+            messages.Reaction.deserialize.assert_called_once_with(test_reaction_payload)
             embeds.Embed.deserialize.assert_called_once_with(test_embed_payload)
-            _messages.Attachment.deserialize.assert_called_once_with(test_attachment_payload)
+            messages.Attachment.deserialize.assert_called_once_with(test_attachment_payload)
             patched_reference_deserializer.assert_called_once_with(test_reference_payload)
             patched_application_deserializer.assert_called_once_with(test_application_payload)
             patched_activity_deserializer.assert_called_once_with(test_activity_payload)
@@ -248,15 +248,15 @@ class TestMessageUpdateEvent:
         assert message_update_payload.reactions == [mock_reaction]
         assert message_update_payload.is_pinned is True
         assert message_update_payload.webhook_id == 212231231232123
-        assert message_update_payload.type is _messages.MessageType.RECIPIENT_REMOVE
+        assert message_update_payload.type is messages.MessageType.RECIPIENT_REMOVE
         assert message_update_payload.activity is mock_activity
         assert message_update_payload.application is mock_application
         assert message_update_payload.message_reference is mock_reference
-        assert message_update_payload.flags == _messages.MessageFlag.CROSSPOSTED | _messages.MessageFlag.IS_CROSSPOST
+        assert message_update_payload.flags == messages.MessageFlag.CROSSPOSTED | messages.MessageFlag.IS_CROSSPOST
         assert message_update_payload.nonce == "6454345345345345"
 
     def test_partial_message_update(self):
-        message_update_obj = messages.MessageUpdateEvent.deserialize({"id": "393939", "channel_id": "434949"})
+        message_update_obj = message.MessageUpdateEvent.deserialize({"id": "393939", "channel_id": "434949"})
         for key in message_update_obj.__slots__:
             if key in ("id", "channel_id"):
                 continue
@@ -271,7 +271,7 @@ class TestMessageDeleteEvent:
         return {"channel_id": "20202020", "id": "2929", "guild_id": "1010101"}
 
     def test_deserialize(self, test_message_delete_payload):
-        message_delete_obj = messages.MessageDeleteEvent.deserialize(test_message_delete_payload)
+        message_delete_obj = message.MessageDeleteEvent.deserialize(test_message_delete_payload)
         assert message_delete_obj.channel_id == 20202020
         assert message_delete_obj.message_id == 2929
         assert message_delete_obj.guild_id == 1010101
@@ -283,7 +283,7 @@ class TestMessageDeleteBulkEvent:
         return {"channel_id": "20202020", "ids": ["2929", "4394"], "guild_id": "1010101"}
 
     def test_deserialize(self, test_message_delete_bulk_payload):
-        message_delete_bulk_obj = messages.MessageDeleteBulkEvent.deserialize(test_message_delete_bulk_payload)
+        message_delete_bulk_obj = message.MessageDeleteBulkEvent.deserialize(test_message_delete_bulk_payload)
         assert message_delete_bulk_obj.channel_id == 20202020
         assert message_delete_bulk_obj.guild_id == 1010101
         assert message_delete_bulk_obj.message_ids == {2929, 4394}
@@ -307,7 +307,7 @@ class TestMessageReactionAddEvent:
         stack = contextlib.ExitStack()
         patched_member_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
-                messages.MessageReactionAddEvent,
+                message.MessageReactionAddEvent,
                 "member",
                 deserializer=guilds.GuildMember.deserialize,
                 return_value=mock_member,
@@ -315,14 +315,14 @@ class TestMessageReactionAddEvent:
         )
         patched_emoji_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
-                messages.MessageReactionAddEvent,
+                message.MessageReactionAddEvent,
                 "emoji",
                 deserializer=emojis.deserialize_reaction_emoji,
                 return_value=mock_emoji,
             )
         )
         with stack:
-            message_reaction_add_obj = messages.MessageReactionAddEvent.deserialize(test_message_reaction_add_payload)
+            message_reaction_add_obj = message.MessageReactionAddEvent.deserialize(test_message_reaction_add_payload)
             patched_emoji_deserializer.assert_called_once_with(test_emoji_payload)
             patched_member_deserializer.assert_called_once_with(test_member_payload)
         assert message_reaction_add_obj.user_id == 9494949
@@ -347,12 +347,12 @@ class TestMessageReactionRemoveEvent:
     def test_deserialize(self, test_message_reaction_remove_payload, test_emoji_payload):
         mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
         with _helpers.patch_marshal_attr(
-            messages.MessageReactionRemoveEvent,
+            message.MessageReactionRemoveEvent,
             "emoji",
             deserializer=emojis.deserialize_reaction_emoji,
             return_value=mock_emoji,
         ) as patched_emoji_deserializer:
-            message_reaction_remove_obj = messages.MessageReactionRemoveEvent.deserialize(
+            message_reaction_remove_obj = message.MessageReactionRemoveEvent.deserialize(
                 test_message_reaction_remove_payload
             )
             patched_emoji_deserializer.assert_called_once_with(test_emoji_payload)
@@ -369,7 +369,7 @@ class TestMessageReactionRemoveAllEvent:
         return {"channel_id": "3493939", "message_id": "944949", "guild_id": "49494949"}
 
     def test_deserialize(self, test_reaction_remove_all_payload):
-        message_reaction_remove_all_obj = messages.MessageReactionRemoveAllEvent.deserialize(
+        message_reaction_remove_all_obj = message.MessageReactionRemoveAllEvent.deserialize(
             test_reaction_remove_all_payload
         )
         assert message_reaction_remove_all_obj.channel_id == 3493939
@@ -385,12 +385,12 @@ class TestMessageReactionRemoveEmojiEvent:
     def test_deserialize(self, test_message_reaction_remove_emoji_payload, test_emoji_payload):
         mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
         with _helpers.patch_marshal_attr(
-            messages.MessageReactionRemoveEmojiEvent,
+            message.MessageReactionRemoveEmojiEvent,
             "emoji",
             deserializer=emojis.deserialize_reaction_emoji,
             return_value=mock_emoji,
         ) as patched_emoji_deserializer:
-            message_reaction_remove_emoji_obj = messages.MessageReactionRemoveEmojiEvent.deserialize(
+            message_reaction_remove_emoji_obj = message.MessageReactionRemoveEmojiEvent.deserialize(
                 test_message_reaction_remove_emoji_payload
             )
             patched_emoji_deserializer.assert_called_once_with(test_emoji_payload)
