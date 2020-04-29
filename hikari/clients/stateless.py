@@ -45,7 +45,13 @@ class StatelessBot(bot_base.BotBase):
     def _create_shard(
         cls, shard_id: int, shard_count: int, url: str, components: _components.Components,
     ) -> shards.ShardClientImpl:
-        return shards.ShardClientImpl(shard_id=shard_id, shard_count=shard_count, components=components, url=url)
+        return shards.ShardClientImpl(
+            components=components,
+            dispatcher=components.event_dispatcher,
+            shard_id=shard_id,
+            shard_count=shard_count,
+            url=url,
+        )
 
     @classmethod
     def _create_rest(cls, components: _components.Components) -> rest.RESTClient:

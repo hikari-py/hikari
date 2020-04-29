@@ -253,7 +253,7 @@ class ShardClientImpl(ShardClient):
         shard_count: int,
         components: _components.Components,
         url: str,
-        dispatcher: typing.Optional[dispatchers.EventDispatcher] = None,
+        dispatcher: typing.Optional[dispatchers.EventDispatcher],
     ) -> None:
         super().__init__(logging.getLogger(f"hikari.{type(self).__qualname__}.{shard_id}"))
         self._components = components
