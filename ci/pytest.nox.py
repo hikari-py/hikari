@@ -29,7 +29,6 @@ FLAGS = [
     "--pastebin=all" if config.IS_CI else "",
     "--full-trace",
     "-n", "auto",
-    "--html", config.PYTEST_HTML_OUTPUT_PATH, "--self-contained-html",
     "--cov", config.MAIN_PACKAGE,
     "--cov-config", config.COVERAGE_INI,
     "--cov-report", "term",
