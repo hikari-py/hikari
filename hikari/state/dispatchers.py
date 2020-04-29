@@ -58,7 +58,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.bases.HikariEvent]
+        event_type : typing.Type[hikari.events.base.HikariEvent]
             The event to register to.
         callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to invoke when this event is fired.
@@ -77,7 +77,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.bases.HikariEvent]
+        event_type : typing.Type[hikari.events.base.HikariEvent]
             The type of event to remove the callback from.
         callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to invoke when this event is fired.
@@ -91,7 +91,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.bases.HikariEvent]
+        event_type : typing.Type[hikari.events.base.HikariEvent]
             The name of the event to wait for.
         timeout : float, optional
             The timeout to wait for before cancelling and raising an
@@ -127,7 +127,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.bases.HikariEvent], optional
+        event_type : typing.Type[hikari.events.base.HikariEvent], optional
             The event type to register the produced decorator to. If this is not
             specified, then the given function is used instead and the type hint
             of the first argument is considered. If no type hint is present
@@ -187,7 +187,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event : hikari.events.bases.HikariEvent
+        event : hikari.events.base.HikariEvent
             The event to dispatch.
 
         Returns

@@ -27,7 +27,7 @@ import typing
 
 from hikari import errors
 from hikari import intents
-from hikari.events import bases
+from hikari.events import base
 from hikari.events import other
 from hikari.internal import assertions
 from hikari.internal import helpers
@@ -83,7 +83,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         self._waiters.clear()
 
     def add_listener(
-        self, event_type: typing.Type[bases.HikariEvent], callback: dispatchers.EventCallbackT, **kwargs
+        self, event_type: typing.Type[base.HikariEvent], callback: dispatchers.EventCallbackT, **kwargs
     ) -> None:
         """Register a new event callback to a given event name.
 
@@ -110,10 +110,10 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         )
 
         assertions.assert_that(
-            issubclass(event_type, bases.HikariEvent), "Events must subclass hikari.events.HikariEvent", TypeError
+            issubclass(event_type, base.HikariEvent), "Events must subclass hikari.events.HikariEvent", TypeError
         )
 
-        required_intents = bases.get_required_intents_for(event_type)
+        required_intents = base.get_required_intents_for(event_type)
         enabled_intents = self._enabled_intents if self._enabled_intents is not None else 0
 
         any_intent_match = any(enabled_intents & i == i for i in required_intents)
@@ -162,7 +162,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
     # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
     # confusing telepathy comments to the user.
     # Additionally, this MUST NOT BE A COROUTINE ITSELF. THIS IS NOT TYPESAFE!
-    def dispatch_event(self, event: bases.HikariEvent):
+    def dispatch_event(self, event: base.HikariEvent):
         """Dispatch a given event to all listeners and waiters that are applicable.
 
         Parameters
@@ -251,7 +251,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
     def handle_exception(
         self,
         exception: Exception,
-        event: bases.HikariEvent,
+        event: base.HikariEvent,
         callback: typing.Callable[..., typing.Union[typing.Awaitable[None]]],
     ) -> None:
         """Handle raised exception.
@@ -276,7 +276,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
             callback, or a `wait_for` predicate that threw an exception.
         """
         # Do not recurse if a dodgy exception handler is added.
-        if not bases.is_no_catch_event(event):
+        if not base.is_no_catch_event(event):
             self.logger.exception(
                 'Exception occurred in handler for event "%s"', type(event).__name__, exc_info=exception
             )

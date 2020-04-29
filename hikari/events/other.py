@@ -39,7 +39,7 @@ import attr
 
 from hikari import guilds
 from hikari import users
-from hikari.events import bases as base_events
+from hikari.events import base as base_events
 from hikari.internal import marshaller
 
 if typing.TYPE_CHECKING:

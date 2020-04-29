@@ -22,9 +22,9 @@ from __future__ import annotations
 
 __all__ = ["StatelessEventManagerImpl"]
 
-from hikari.events import channels
-from hikari.events import guilds
-from hikari.events import messages
+from hikari.events import channel
+from hikari.events import guild
+from hikari.events import message
 from hikari.events import other
 from hikari.state import dispatchers
 from hikari.state import event_managers
@@ -66,148 +66,148 @@ class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDis
     @event_managers.raw_event_mapper("CHANNEL_CREATE")
     def on_channel_create(self, _, payload) -> None:
         """Handle CHANNEL_CREATE events."""
-        event = channels.ChannelCreateEvent.deserialize(payload)
+        event = channel.ChannelCreateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("CHANNEL_UPDATE")
     def on_channel_update(self, _, payload) -> None:
         """Handle CHANNEL_UPDATE events."""
-        event = channels.ChannelUpdateEvent.deserialize(payload)
+        event = channel.ChannelUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("CHANNEL_DELETE")
     def on_channel_delete(self, _, payload) -> None:
         """Handle CHANNEL_DELETE events."""
-        event = channels.ChannelDeleteEvent.deserialize(payload)
+        event = channel.ChannelDeleteEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("CHANNEL_PIN_UPDATE")
     def on_channel_pin_update(self, _, payload) -> None:
         """Handle CHANNEL_PIN_UPDATE events."""
-        event = channels.ChannelPinUpdateEvent.deserialize(payload)
+        event = channel.ChannelPinUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_CREATE")
     def on_guild_create(self, _, payload) -> None:
         """Handle GUILD_CREATE events."""
-        event = guilds.GuildCreateEvent.deserialize(payload)
+        event = guild.GuildCreateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_UPDATE")
     def on_guild_update(self, _, payload) -> None:
         """Handle GUILD_UPDATE events."""
-        event = guilds.GuildUpdateEvent.deserialize(payload)
+        event = guild.GuildUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_DELETE")
     def on_guild_delete(self, _, payload) -> None:
         """Handle GUILD_DELETE events."""
         if payload.get("unavailable", False):
-            event = guilds.GuildUnavailableEvent.deserialize(payload)
+            event = guild.GuildUnavailableEvent.deserialize(payload)
         else:
-            event = guilds.GuildLeaveEvent.deserialize(payload)
+            event = guild.GuildLeaveEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_BAN_ADD")
     def on_guild_ban_add(self, _, payload) -> None:
         """Handle GUILD_BAN_ADD events."""
-        event = guilds.GuildBanAddEvent.deserialize(payload)
+        event = guild.GuildBanAddEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_BAN_REMOVE")
     def on_guild_ban_remove(self, _, payload) -> None:
         """Handle GUILD_BAN_REMOVE events."""
-        event = guilds.GuildBanRemoveEvent.deserialize(payload)
+        event = guild.GuildBanRemoveEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_EMOJIS_UPDATE")
     def on_guild_emojis_update(self, _, payload) -> None:
         """Handle GUILD_EMOJIS_UPDATE events."""
-        event = guilds.GuildEmojisUpdateEvent.deserialize(payload)
+        event = guild.GuildEmojisUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_INTEGRATIONS_UPDATE")
     def on_guild_integrations_update(self, _, payload) -> None:
         """Handle GUILD_INTEGRATIONS_UPDATE events."""
-        event = guilds.GuildIntegrationsUpdateEvent.deserialize(payload)
+        event = guild.GuildIntegrationsUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_MEMBER_ADD")
     def on_guild_member_add(self, _, payload) -> None:
         """Handle GUILD_MEMBER_ADD events."""
-        event = guilds.GuildMemberAddEvent.deserialize(payload)
+        event = guild.GuildMemberAddEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_MEMBER_UPDATE")
     def on_guild_member_update(self, _, payload) -> None:
         """Handle GUILD_MEMBER_UPDATE events."""
-        event = guilds.GuildMemberUpdateEvent.deserialize(payload)
+        event = guild.GuildMemberUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_MEMBER_REMOVE")
     def on_guild_member_remove(self, _, payload) -> None:
         """Handle GUILD_MEMBER_REMOVE events."""
-        event = guilds.GuildMemberRemoveEvent.deserialize(payload)
+        event = guild.GuildMemberRemoveEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_ROLE_CREATE")
     def on_guild_role_create(self, _, payload) -> None:
         """Handle GUILD_ROLE_CREATE events."""
-        event = guilds.GuildRoleCreateEvent.deserialize(payload)
+        event = guild.GuildRoleCreateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_ROLE_UPDATE")
     def on_guild_role_update(self, _, payload) -> None:
         """Handle GUILD_ROLE_UPDATE events."""
-        event = guilds.GuildRoleUpdateEvent.deserialize(payload)
+        event = guild.GuildRoleUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_ROLE_DELETE")
     def on_guild_role_delete(self, _, payload) -> None:
         """Handle GUILD_ROLE_DELETE events."""
-        event = guilds.GuildRoleDeleteEvent.deserialize(payload)
+        event = guild.GuildRoleDeleteEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("INVITE_CREATE")
     def on_invite_create(self, _, payload) -> None:
         """Handle INVITE_CREATE events."""
-        event = channels.InviteCreateEvent.deserialize(payload)
+        event = channel.InviteCreateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("INVITE_DELETE")
     def on_invite_delete(self, _, payload) -> None:
         """Handle INVITE_DELETE events."""
-        event = channels.InviteDeleteEvent.deserialize(payload)
+        event = channel.InviteDeleteEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("MESSAGE_CREATE")
     def on_message_create(self, _, payload) -> None:
         """Handle MESSAGE_CREATE events."""
-        event = messages.MessageCreateEvent.deserialize(payload)
+        event = message.MessageCreateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("MESSAGE_UPDATE")
     def on_message_update(self, _, payload) -> None:
         """Handle MESSAGE_UPDATE events."""
-        event = messages.MessageUpdateEvent.deserialize(payload)
+        event = message.MessageUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("MESSAGE_DELETE")
     def on_message_delete(self, _, payload) -> None:
         """Handle MESSAGE_DELETE events."""
-        event = messages.MessageDeleteEvent.deserialize(payload)
+        event = message.MessageDeleteEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("MESSAGE_DELETE_BULK")
     def on_message_delete_bulk(self, _, payload) -> None:
         """Handle MESSAGE_DELETE_BULK events."""
-        event = messages.MessageDeleteBulkEvent.deserialize(payload)
+        event = message.MessageDeleteBulkEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("MESSAGE_REACTION_ADD")
     def on_message_reaction_add(self, _, payload) -> None:
         """Handle MESSAGE_REACTION_ADD events."""
-        event = messages.MessageReactionAddEvent.deserialize(payload)
+        event = message.MessageReactionAddEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("MESSAGE_REACTION_REMOVE")
@@ -215,7 +215,7 @@ class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDis
         """Handle MESSAGE_REACTION_REMOVE events."""
         payload["emoji"].setdefault("animated", None)
 
-        event = messages.MessageReactionRemoveEvent.deserialize(payload)
+        event = message.MessageReactionRemoveEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("MESSAGE_REACTION_REMOVE_EMOJI")
@@ -223,19 +223,19 @@ class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDis
         """Handle MESSAGE_REACTION_REMOVE_EMOJI events."""
         payload["emoji"].setdefault("animated", None)
 
-        event = messages.MessageReactionRemoveEmojiEvent.deserialize(payload)
+        event = message.MessageReactionRemoveEmojiEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("PRESENCE_UPDATE")
     def on_presence_update(self, _, payload) -> None:
         """Handle PRESENCE_UPDATE events."""
-        event = guilds.PresenceUpdateEvent.deserialize(payload)
+        event = guild.PresenceUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("TYPING_START")
     def on_typing_start(self, _, payload) -> None:
         """Handle TYPING_START events."""
-        event = channels.TypingStartEvent.deserialize(payload)
+        event = channel.TypingStartEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("USER_UPDATE")
@@ -247,19 +247,19 @@ class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDis
     @event_managers.raw_event_mapper("VOICE_STATE_UPDATE")
     def on_voice_state_update(self, _, payload) -> None:
         """Handle VOICE_STATE_UPDATE events."""
-        event = channels.VoiceStateUpdateEvent.deserialize(payload)
+        event = channel.VoiceStateUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("VOICE_SERVER_UPDATE")
     def on_voice_server_update(self, _, payload) -> None:
         """Handle VOICE_SERVER_UPDATE events."""
-        event = channels.VoiceStateUpdateEvent.deserialize(payload)
+        event = channel.VoiceStateUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("WEBHOOK_UPDATE")
     def on_webhook_update(self, _, payload) -> None:
         """Handle WEBHOOK_UPDATE events."""
-        event = channels.WebhookUpdateEvent.deserialize(payload)
+        event = channel.WebhookUpdateEvent.deserialize(payload)
         self.event_dispatcher.dispatch_event(event)
 
 
