@@ -41,6 +41,7 @@ from hikari import errors
 from hikari.clients import shard_states
 from hikari.events import other
 from hikari.clients import runnable
+from hikari.internal import assertions
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import shards
@@ -52,7 +53,6 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import intents as _intents
     from hikari.clients import components as _components
-    from hikari.state import dispatchers
 
 
 class ShardClient(runnable.RunnableClient, abc.ABC):
@@ -217,12 +217,6 @@ class ShardClientImpl(ShardClient):
         and the consumer of a raw event.
     url : str
         The URL to connect the gateway to.
-    dispatcher : hikari.state.dispatchers.EventDispatcher, optional
-        The high level event dispatcher to use for dispatching start and stop
-        events. Set this to `None` to disable that functionality (useful if
-        you use a gateway manager to orchestrate multiple shards instead and
-        provide this functionality there). Defaults to `None` if
-        unspecified.
 
     !!! note
         Generally, you want to use
@@ -234,27 +228,19 @@ class ShardClientImpl(ShardClient):
     """
 
     __slots__ = (
-        "logger",
-        "_components",
-        "_raw_event_consumer",
-        "_connection",
-        "_status",
         "_activity",
+        "_components",
+        "_connection",
         "_idle_since",
         "_is_afk",
-        "_task",
+        "_raw_event_consumer",
         "_shard_state",
-        "_dispatcher",
+        "_status",
+        "_task",
+        "logger",
     )
 
-    def __init__(
-        self,
-        shard_id: int,
-        shard_count: int,
-        components: _components.Components,
-        url: str,
-        dispatcher: typing.Optional[dispatchers.EventDispatcher],
-    ) -> None:
+    def __init__(self, shard_id: int, shard_count: int, components: _components.Components, url: str,) -> None:
         super().__init__(logging.getLogger(f"hikari.{type(self).__qualname__}.{shard_id}"))
         self._components = components
         self._raw_event_consumer = components.event_manager
@@ -264,7 +250,6 @@ class ShardClientImpl(ShardClient):
         self._status = components.config.initial_status
         self._shard_state = shard_states.ShardState.NOT_RUNNING
         self._task = None
-        self._dispatcher = dispatcher
         self._connection = shards.Shard(
             compression=components.config.gateway_use_compression,
             connector=components.config.tcp_connector,
@@ -389,33 +374,30 @@ class ShardClientImpl(ShardClient):
             self._shard_state = shard_states.ShardState.STOPPING
             self.logger.debug("stopping shard")
 
-            if self._dispatcher is not None:
-                await self._dispatcher.dispatch_event(other.StoppingEvent())
+            await self._components.event_dispatcher.dispatch_event(other.StoppingEvent())
 
             await self._connection.close()
 
             if self._task is not None:
                 await self._task
 
-            if self._dispatcher is not None:
-                await self._dispatcher.dispatch_event(other.StoppedEvent())
+            await self._components.event_dispatcher.dispatch_event(other.StoppedEvent())
 
     async def _keep_alive(self):  # pylint: disable=too-many-branches
         back_off = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         last_start = time.perf_counter()
         do_not_back_off = True
 
-        if self._dispatcher is not None:
-            await self._dispatcher.dispatch_event(other.StartingEvent())
+        await self._components.event_dispatcher.dispatch_event(other.StartingEvent())
 
         while True:
             try:
                 if not do_not_back_off and time.perf_counter() - last_start < 30:
-                    next_backoff = next(back_off)
+                    next_back_off = next(back_off)
                     self.logger.info(
-                        "restarted within 30 seconds, will backoff for %.2fs", next_backoff,
+                        "restarted within 30 seconds, will backoff for %.2fs", next_back_off,
                     )
-                    await asyncio.sleep(next_backoff)
+                    await asyncio.sleep(next_back_off)
                 else:
                     back_off.reset()
 
@@ -424,9 +406,9 @@ class ShardClientImpl(ShardClient):
 
                 connect_task = await self._spin_up()
 
-                if self._dispatcher is not None and self.reconnect_count == 0:
+                if self._components.event_dispatcher is not None and self.reconnect_count == 0:
                     # Only dispatch this on initial connect, not on reconnect.
-                    await self._dispatcher.dispatch_event(other.StartedEvent())
+                    await self._components.event_dispatcher.dispatch_event(other.StartedEvent())
 
                 await connect_task
                 self.logger.critical("shut down silently! this shouldn't happen!")
@@ -547,6 +529,12 @@ class ShardClientImpl(ShardClient):
         idle_since: typing.Optional[datetime.datetime] = ...,
         is_afk: bool = ...,
     ) -> None:
+        # We wouldn't ever want to do this, so throw an error if it happens.
+        assertions.assert_that(
+            status is not ... or activity is not ... or idle_since is not ... or is_afk is not ...,
+            "update_presence requires at least one argument to be passed",
+        )
+
         status = self._status if status is ... else status
         activity = self._activity if activity is ... else activity
         idle_since = self._idle_since if idle_since is ... else idle_since

@@ -32,7 +32,7 @@ class TestRESTClient:
         mock_components = mock.MagicMock(components.Components, config=mock_config)
         mock_low_level_rest_clients = mock.MagicMock(low_level_rest.REST)
         with mock.patch.object(low_level_rest, "REST", return_value=mock_low_level_rest_clients) as patched_init:
-            cli = high_level_rest.RESTClient(mock_components)
+            client = high_level_rest.RESTClient(mock_components)
             patched_init.assert_called_once_with(
                 allow_redirects=mock_config.allow_redirects,
                 connector=mock_config.tcp_connector,
@@ -44,8 +44,8 @@ class TestRESTClient:
                 token=f"{mock_config.token_type} {mock_config.token}",
                 version=mock_config.rest_version,
             )
-            assert cli._session is mock_low_level_rest_clients
-            assert cli._components is mock_components
+            assert client._session is mock_low_level_rest_clients
+            assert client._components is mock_components
 
     def test_inheritance(self):
         for attr, routine in (

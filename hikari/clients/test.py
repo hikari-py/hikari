@@ -35,8 +35,7 @@ import typing
 
 import click
 
-import hikari  # lgtm [py/import-and-import-from]
-from hikari import intents as _intents
+import hikari
 from hikari.internal import conversions
 
 _LOGGER_LEVELS: typing.Final[typing.Sequence[str]] = ["DEBUG", "INFO", "WARNING", "ERROR", "NOTSET"]
@@ -70,7 +69,7 @@ _REGULAR_FORMAT: typing.Final[str] = (
 @click.option("--token", required=True, envvar="TOKEN", help="The token to use to authenticate with Discord.")
 @click.option("--verify-ssl", default=True, type=click.BOOL, help="Enable or disable SSL verification.")
 @click.option("--version", default=6, type=click.IntRange(min=6), help="Version of the gateway to use.")
-def run_gateway(compression, color, debug, intents, logger, shards, token, verify_ssl, version) -> None:
+def run(compression, color, debug, intents, logger, shards, token, verify_ssl, version) -> None:
     """`click` command line client for running a test gateway connection.
 
     This is provided for internal testing purposes for benchmarking API
@@ -78,7 +77,7 @@ def run_gateway(compression, color, debug, intents, logger, shards, token, verif
     """
     if intents is not None:
         intents = intents.split(",")
-        intents = conversions.dereference_int_flag(_intents.Intent, intents)
+        intents = conversions.dereference_int_flag(intents.Intent, intents)
 
     logging.captureWarnings(True)
 
@@ -194,4 +193,4 @@ def run_gateway(compression, color, debug, intents, logger, shards, token, verif
 
 
 if __name__ == "__main__":
-    run_gateway()  # pylint:disable=no-value-for-parameter
+    run()  # pylint:disable=no-value-for-parameter
