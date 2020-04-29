@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 from hikari import intents
-from hikari.events import bases
+from hikari.events import base
 from hikari.internal import more_collections
 
 # Base event, is not deserialized
@@ -29,18 +29,18 @@ def test_get_required_intents_for():
     class StubEvent:
         ___required_intents___ = [intents.Intent.DIRECT_MESSAGES]
 
-    bases.get_required_intents_for(StubEvent()) == [intents.Intent.DIRECT_MESSAGES]
+    base.get_required_intents_for(StubEvent()) == [intents.Intent.DIRECT_MESSAGES]
 
 
 def test_get_required_intents_for_when_none_required():
     class StubEvent:
         ...
 
-    bases.get_required_intents_for(StubEvent()) == more_collections.EMPTY_COLLECTION
+    base.get_required_intents_for(StubEvent()) == more_collections.EMPTY_COLLECTION
 
 
 def test_requires_intents():
-    @bases.requires_intents(intents.Intent.DIRECT_MESSAGES, intents.Intent.DIRECT_MESSAGE_REACTIONS)
+    @base.requires_intents(intents.Intent.DIRECT_MESSAGES, intents.Intent.DIRECT_MESSAGE_REACTIONS)
     class StubEvent:
         ...
 
