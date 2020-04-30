@@ -52,10 +52,8 @@ class StatelessBot(bot_base.BotBase):
         return rest.RESTClient(components)
 
     @staticmethod
-    def _create_event_manager(
-        _: configs.BotConfig, dispatcher: intent_aware_dispatchers.IntentAwareEventDispatcherImpl
-    ) -> stateless.StatelessEventManagerImpl:
-        return stateless.StatelessEventManagerImpl(dispatcher)
+    def _create_event_manager(components: _components.Components) -> stateless.StatelessEventManagerImpl:
+        return stateless.StatelessEventManagerImpl(components)
 
     @staticmethod
     def _create_event_dispatcher(config: configs.BotConfig) -> intent_aware_dispatchers.IntentAwareEventDispatcherImpl:

@@ -58,4 +58,4 @@ class RESTGatewayComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             valid token to work.
         """
         payload = await self._session.get_gateway_bot()
-        return gateway_entities.GatewayBot.deserialize(payload)
+        return gateway_entities.GatewayBot.deserialize(payload, components=self._components)

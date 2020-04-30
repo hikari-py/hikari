@@ -42,9 +42,7 @@ if typing.TYPE_CHECKING:
 class HikariEntity(abc.ABC):
     """The base for any entity used in this API."""
 
-    _components: typing.Optional[components.Components] = marshaller.attrib(
-        default=None, repr=True, eq=False, hash=False, skip_unmarshalling=True, transient=True
-    )
+    _components: typing.Optional[components.Components] = attr.attrib(default=None, repr=False, eq=False, hash=False)
     """The client components that models may use for procedures."""
 
 

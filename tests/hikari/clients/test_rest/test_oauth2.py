@@ -46,4 +46,6 @@ class TestRESTReactionLogic:
         with mock.patch.object(applications.Application, "deserialize", return_value=mock_application_obj):
             assert await rest_oauth2_logic_impl.fetch_my_application_info() is mock_application_obj
             rest_oauth2_logic_impl._session.get_current_application_info.assert_called_once_with()
-            applications.Application.deserialize.assert_called_once_with(mock_application_payload)
+            applications.Application.deserialize.assert_called_once_with(
+                mock_application_payload, components=rest_oauth2_logic_impl._components
+            )

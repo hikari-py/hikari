@@ -77,7 +77,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
             webhook_token=webhook_token,
         )
-        return webhooks.Webhook.deserialize(payload)
+        return webhooks.Webhook.deserialize(payload, components=self._components)
 
     async def update_webhook(
         self,
@@ -140,7 +140,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             ),
             reason=reason,
         )
-        return webhooks.Webhook.deserialize(payload)
+        return webhooks.Webhook.deserialize(payload, components=self._components)
 
     async def delete_webhook(self, webhook: bases.Hashable[webhooks.Webhook], *, webhook_token: str = ...) -> None:
         """Delete a given webhook.

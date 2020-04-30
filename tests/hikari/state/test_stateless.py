@@ -23,6 +23,7 @@ from hikari.events import channel
 from hikari.events import guild
 from hikari.events import message
 from hikari.events import other
+from hikari.clients import components
 from hikari.clients import shards
 from hikari.state import stateless
 
@@ -37,7 +38,9 @@ class TestStatelessEventManagerImpl:
         class MockDispatcher:
             dispatch_event = mock.MagicMock()
 
-        return stateless.StatelessEventManagerImpl(event_dispatcher_impl=MockDispatcher())
+        return stateless.StatelessEventManagerImpl(
+            components=mock.MagicMock(components.Components, event_dispatcher=MockDispatcher())
+        )
 
     @pytest.fixture
     def mock_shard(self):
@@ -51,7 +54,7 @@ class TestStatelessEventManagerImpl:
 
             assert event_manager_impl.on_connect.___event_name___ == {"CONNECTED"}
             event.assert_called_once_with(shard=mock_shard)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_disconnect(self, event_manager_impl, mock_shard):
         mock_event = mock.MagicMock(other.DisconnectedEvent)
@@ -61,7 +64,7 @@ class TestStatelessEventManagerImpl:
 
             assert event_manager_impl.on_disconnect.___event_name___ == {"DISCONNECTED"}
             event.assert_called_once_with(shard=mock_shard)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_resume(self, event_manager_impl, mock_shard):
         mock_event = mock.MagicMock(other.ResumedEvent)
@@ -71,7 +74,7 @@ class TestStatelessEventManagerImpl:
 
             assert event_manager_impl.on_resume.___event_name___ == {"RESUME"}
             event.assert_called_once_with(shard=mock_shard)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_ready(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(other.ReadyEvent)
@@ -80,8 +83,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_ready(None, mock_payload)
 
             assert event_manager_impl.on_ready.___event_name___ == {"READY"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_channel_create(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(channel.ChannelCreateEvent)
@@ -90,8 +93,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_channel_create(None, mock_payload)
 
             assert event_manager_impl.on_channel_create.___event_name___ == {"CHANNEL_CREATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_channel_update(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(channel.ChannelUpdateEvent)
@@ -100,8 +103,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_channel_update(None, mock_payload)
 
             assert event_manager_impl.on_channel_update.___event_name___ == {"CHANNEL_UPDATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_channel_delete(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(channel.ChannelDeleteEvent)
@@ -110,8 +113,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_channel_delete(None, mock_payload)
 
             assert event_manager_impl.on_channel_delete.___event_name___ == {"CHANNEL_DELETE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_channel_pin_update(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(channel.ChannelPinUpdateEvent)
@@ -120,8 +123,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_channel_pin_update(None, mock_payload)
 
             assert event_manager_impl.on_channel_pin_update.___event_name___ == {"CHANNEL_PIN_UPDATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_create(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(guild.GuildCreateEvent)
@@ -130,8 +133,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_create(None, mock_payload)
 
             assert event_manager_impl.on_guild_create.___event_name___ == {"GUILD_CREATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_update(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(guild.GuildUpdateEvent)
@@ -140,8 +143,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_update(None, mock_payload)
 
             assert event_manager_impl.on_guild_update.___event_name___ == {"GUILD_UPDATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_delete_handles_guild_leave(self, event_manager_impl, mock_payload):
         mock_payload.pop("unavailable", None)
@@ -151,8 +154,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_delete(None, mock_payload)
 
             assert event_manager_impl.on_guild_delete.___event_name___ == {"GUILD_DELETE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_delete_handles_guild_unavailable(self, event_manager_impl, mock_payload):
         mock_payload["unavailable"] = True
@@ -162,8 +165,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_delete(None, mock_payload)
 
             assert event_manager_impl.on_guild_delete.___event_name___ == {"GUILD_DELETE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_ban_add(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(guild.GuildBanAddEvent)
@@ -172,8 +175,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_ban_add(None, mock_payload)
 
             assert event_manager_impl.on_guild_ban_add.___event_name___ == {"GUILD_BAN_ADD"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_ban_remove(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(guild.GuildBanRemoveEvent)
@@ -182,8 +185,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_ban_remove(None, mock_payload)
 
             assert event_manager_impl.on_guild_ban_remove.___event_name___ == {"GUILD_BAN_REMOVE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_emojis_update(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(guild.GuildEmojisUpdateEvent)
@@ -192,8 +195,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_emojis_update(None, mock_payload)
 
             assert event_manager_impl.on_guild_emojis_update.___event_name___ == {"GUILD_EMOJIS_UPDATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_integrations_update(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(guild.GuildIntegrationsUpdateEvent)
@@ -204,8 +207,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_integrations_update(None, mock_payload)
 
             assert event_manager_impl.on_guild_integrations_update.___event_name___ == {"GUILD_INTEGRATIONS_UPDATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_member_add(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(guild.GuildMemberAddEvent)
@@ -214,8 +217,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_member_add(None, mock_payload)
 
             assert event_manager_impl.on_guild_member_add.___event_name___ == {"GUILD_MEMBER_ADD"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_member_update(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(guild.GuildMemberUpdateEvent)
@@ -224,8 +227,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_member_update(None, mock_payload)
 
             assert event_manager_impl.on_guild_member_update.___event_name___ == {"GUILD_MEMBER_UPDATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_member_remove(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(guild.GuildMemberRemoveEvent)
@@ -234,8 +237,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_member_remove(None, mock_payload)
 
             assert event_manager_impl.on_guild_member_remove.___event_name___ == {"GUILD_MEMBER_REMOVE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_role_create(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(guild.GuildRoleCreateEvent)
@@ -244,8 +247,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_role_create(None, mock_payload)
 
             assert event_manager_impl.on_guild_role_create.___event_name___ == {"GUILD_ROLE_CREATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_role_update(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(guild.GuildRoleUpdateEvent)
@@ -254,8 +257,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_role_update(None, mock_payload)
 
             assert event_manager_impl.on_guild_role_update.___event_name___ == {"GUILD_ROLE_UPDATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_guild_role_delete(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(guild.GuildRoleDeleteEvent)
@@ -264,8 +267,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_guild_role_delete(None, mock_payload)
 
             assert event_manager_impl.on_guild_role_delete.___event_name___ == {"GUILD_ROLE_DELETE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_invite_create(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(channel.InviteCreateEvent)
@@ -274,8 +277,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_invite_create(None, mock_payload)
 
             assert event_manager_impl.on_invite_create.___event_name___ == {"INVITE_CREATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_invite_delete(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(channel.InviteDeleteEvent)
@@ -284,8 +287,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_invite_delete(None, mock_payload)
 
             assert event_manager_impl.on_invite_delete.___event_name___ == {"INVITE_DELETE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_create(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(message.MessageCreateEvent)
@@ -294,8 +297,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_message_create(None, mock_payload)
 
             assert event_manager_impl.on_message_create.___event_name___ == {"MESSAGE_CREATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_update(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(message.MessageUpdateEvent)
@@ -304,8 +307,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_message_update(None, mock_payload)
 
             assert event_manager_impl.on_message_update.___event_name___ == {"MESSAGE_UPDATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_delete(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(message.MessageDeleteEvent)
@@ -314,8 +317,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_message_delete(None, mock_payload)
 
             assert event_manager_impl.on_message_delete.___event_name___ == {"MESSAGE_DELETE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_delete_bulk(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(message.MessageDeleteBulkEvent)
@@ -324,8 +327,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_message_delete_bulk(None, mock_payload)
 
             assert event_manager_impl.on_message_delete_bulk.___event_name___ == {"MESSAGE_DELETE_BULK"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_reaction_add(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(message.MessageReactionAddEvent)
@@ -334,8 +337,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_message_reaction_add(None, mock_payload)
 
             assert event_manager_impl.on_message_reaction_add.___event_name___ == {"MESSAGE_REACTION_ADD"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_reaction_remove(self, event_manager_impl, mock_payload):
         mock_payload["emoji"] = {}
@@ -347,8 +350,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_message_reaction_remove(None, mock_payload)
 
             assert event_manager_impl.on_message_reaction_remove.___event_name___ == {"MESSAGE_REACTION_REMOVE"}
-            event.assert_called_once_with({"emoji": {"animated": None}})
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with({"emoji": {"animated": None}}, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_message_reaction_remove_emoji(self, event_manager_impl, mock_payload):
         mock_payload["emoji"] = {}
@@ -362,8 +365,8 @@ class TestStatelessEventManagerImpl:
             assert event_manager_impl.on_message_reaction_remove_emoji.___event_name___ == {
                 "MESSAGE_REACTION_REMOVE_EMOJI"
             }
-            event.assert_called_once_with({"emoji": {"animated": None}})
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with({"emoji": {"animated": None}}, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_presence_update(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(guild.PresenceUpdateEvent)
@@ -372,8 +375,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_presence_update(None, mock_payload)
 
             assert event_manager_impl.on_presence_update.___event_name___ == {"PRESENCE_UPDATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_typing_start(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(channel.TypingStartEvent)
@@ -382,8 +385,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_typing_start(None, mock_payload)
 
             assert event_manager_impl.on_typing_start.___event_name___ == {"TYPING_START"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_user_update(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(other.UserUpdateEvent)
@@ -392,8 +395,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_user_update(None, mock_payload)
 
             assert event_manager_impl.on_user_update.___event_name___ == {"USER_UPDATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_voice_state_update(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(channel.VoiceStateUpdateEvent)
@@ -402,8 +405,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_voice_state_update(None, mock_payload)
 
             assert event_manager_impl.on_voice_state_update.___event_name___ == {"VOICE_STATE_UPDATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_voice_server_update(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(channel.VoiceStateUpdateEvent)
@@ -412,8 +415,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_voice_server_update(None, mock_payload)
 
             assert event_manager_impl.on_voice_server_update.___event_name___ == {"VOICE_SERVER_UPDATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     def test_on_webhook_update(self, event_manager_impl, mock_payload):
         mock_event = mock.MagicMock(channel.WebhookUpdateEvent)
@@ -422,5 +425,5 @@ class TestStatelessEventManagerImpl:
             event_manager_impl.on_webhook_update(None, mock_payload)
 
             assert event_manager_impl.on_webhook_update.___event_name___ == {"WEBHOOK_UPDATE"}
-            event.assert_called_once_with(mock_payload)
-            event_manager_impl.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+            event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)

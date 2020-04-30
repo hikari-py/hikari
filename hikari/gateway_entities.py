@@ -32,6 +32,10 @@ from hikari import guilds
 from hikari.internal import marshaller
 
 
+def _rest_after_deserializer(after: int) -> datetime.timedelta:
+    return datetime.timedelta(milliseconds=after)
+
+
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class SessionStartLimit(bases.HikariEntity, marshaller.Deserializable):
@@ -43,9 +47,7 @@ class SessionStartLimit(bases.HikariEntity, marshaller.Deserializable):
     remaining: int = marshaller.attrib(deserializer=int)
     """The remaining number of session starts this bot has."""
 
-    reset_after: datetime.timedelta = marshaller.attrib(
-        deserializer=lambda after: datetime.timedelta(milliseconds=after),
-    )
+    reset_after: datetime.timedelta = marshaller.attrib(deserializer=_rest_after_deserializer,)
     """When `SessionStartLimit.remaining` will reset for the current bot.
 
     After it resets it will be set to `SessionStartLimit.total`.
@@ -63,8 +65,14 @@ class GatewayBot(bases.HikariEntity, marshaller.Deserializable):
     shard_count: int = marshaller.attrib(raw_name="shards", deserializer=int)
     """The recommended number of shards to use when connecting to the gateway."""
 
-    session_start_limit: SessionStartLimit = marshaller.attrib(deserializer=SessionStartLimit.deserialize)
+    session_start_limit: SessionStartLimit = marshaller.attrib(
+        deserializer=SessionStartLimit.deserialize, inherit_kwargs=True
+    )
     """Information about the bot's current session start limit."""
+
+
+def _undefined_type_default() -> typing.Literal[guilds.ActivityType.PLAYING]:
+    return guilds.ActivityType.PLAYING
 
 
 @marshaller.marshallable()
@@ -86,7 +94,7 @@ class Activity(marshaller.Deserializable, marshaller.Serializable):
     type: guilds.ActivityType = marshaller.attrib(
         deserializer=guilds.ActivityType,
         serializer=int,
-        if_undefined=lambda: guilds.ActivityType.PLAYING,
+        if_undefined=_undefined_type_default,
         default=guilds.ActivityType.PLAYING,
     )
     """The activity type."""

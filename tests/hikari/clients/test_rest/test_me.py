@@ -53,7 +53,9 @@ class TestRESTInviteLogic:
         with mock.patch.object(users.MyUser, "deserialize", return_value=mock_user_obj):
             assert await rest_clients_impl.fetch_me() is mock_user_obj
             rest_clients_impl._session.get_current_user.assert_called_once()
-            users.MyUser.deserialize.assert_called_once_with(mock_user_payload)
+            users.MyUser.deserialize.assert_called_once_with(
+                mock_user_payload, components=rest_clients_impl._components
+            )
 
     @pytest.mark.asyncio
     async def test_update_me_with_optionals(self, rest_clients_impl):
@@ -71,7 +73,9 @@ class TestRESTInviteLogic:
                 username="aNewName", avatar=mock_avatar_data
             )
             mock_avatar_obj.read_all.assert_awaited_once()
-            users.MyUser.deserialize.assert_called_once_with(mock_user_payload)
+            users.MyUser.deserialize.assert_called_once_with(
+                mock_user_payload, components=rest_clients_impl._components
+            )
 
     @pytest.mark.asyncio
     async def test_update_me_without_optionals(self, rest_clients_impl):
@@ -81,7 +85,9 @@ class TestRESTInviteLogic:
         with mock.patch.object(users.MyUser, "deserialize", return_value=mock_user_obj):
             assert await rest_clients_impl.update_me() is mock_user_obj
             rest_clients_impl._session.modify_current_user.assert_called_once_with(username=..., avatar=...)
-            users.MyUser.deserialize.assert_called_once_with(mock_user_payload)
+            users.MyUser.deserialize.assert_called_once_with(
+                mock_user_payload, components=rest_clients_impl._components
+            )
 
     @pytest.mark.asyncio
     async def test_fetch_my_connections(self, rest_clients_impl):
@@ -91,7 +97,9 @@ class TestRESTInviteLogic:
         with mock.patch.object(applications.OwnConnection, "deserialize", return_value=mock_connection_obj):
             assert await rest_clients_impl.fetch_my_connections() == [mock_connection_obj]
             rest_clients_impl._session.get_current_user_connections.assert_called_once()
-            applications.OwnConnection.deserialize.assert_called_once_with(mock_connection_payload)
+            applications.OwnConnection.deserialize.assert_called_once_with(
+                mock_connection_payload, components=rest_clients_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -105,6 +113,9 @@ class TestRESTInviteLogic:
                 assert guild is mock_guild_obj
                 break
             mock_request.assert_called_once_with(after="574921006817476608", limit=50)
+            applications.OwnGuild.deserialize.assert_called_once_with(
+                mock_payload, components=rest_clients_impl._components
+            )
 
     @pytest.mark.asyncio
     async def test_fetch_my_guilds_after_without_optionals(self, rest_clients_impl):
@@ -117,6 +128,9 @@ class TestRESTInviteLogic:
                 assert guild is mock_guild_obj
                 break
             mock_request.assert_called_once_with(after="0", limit=100)
+            applications.OwnGuild.deserialize.assert_called_once_with(
+                mock_payload, components=rest_clients_impl._components
+            )
 
     @pytest.mark.asyncio
     async def test_fetch_my_guilds_after_with_datetime_object(self, rest_clients_impl):
@@ -130,6 +144,9 @@ class TestRESTInviteLogic:
                 assert guild is mock_guild_obj
                 break
             mock_request.assert_called_once_with(after="537340988620800000", limit=100)
+            applications.OwnGuild.deserialize.assert_called_once_with(
+                mock_payload, components=rest_clients_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -143,6 +160,9 @@ class TestRESTInviteLogic:
                 assert guild is mock_guild_obj
                 break
             mock_request.assert_called_once_with(before="574921006817476608", limit=50)
+            applications.OwnGuild.deserialize.assert_called_once_with(
+                mock_payload, components=rest_clients_impl._components
+            )
 
     @pytest.mark.asyncio
     async def test_fetch_my_guilds_before_without_optionals(self, rest_clients_impl):
@@ -155,6 +175,9 @@ class TestRESTInviteLogic:
                 assert guild is mock_guild_obj
                 break
             mock_request.assert_called_once_with(before="9223372036854775807", limit=100)
+            applications.OwnGuild.deserialize.assert_called_once_with(
+                mock_payload, components=rest_clients_impl._components
+            )
 
     @pytest.mark.asyncio
     async def test_fetch_my_guilds_before_with_datetime_object(self, rest_clients_impl):
@@ -168,6 +191,9 @@ class TestRESTInviteLogic:
                 assert guild is mock_guild_obj
                 break
             mock_request.assert_called_once_with(before="537340988620800000", limit=100)
+            applications.OwnGuild.deserialize.assert_called_once_with(
+                mock_payload, components=rest_clients_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -185,4 +211,6 @@ class TestRESTInviteLogic:
         with mock.patch.object(channels.DMChannel, "deserialize", return_value=mock_dm_obj):
             assert await rest_clients_impl.create_dm_channel(recipient) is mock_dm_obj
             rest_clients_impl._session.create_dm.assert_called_once_with(recipient_id="115590097100865541")
-            channels.DMChannel.deserialize.assert_called_once_with(mock_dm_payload)
+            channels.DMChannel.deserialize.assert_called_once_with(
+                mock_dm_payload, components=rest_clients_impl._components
+            )

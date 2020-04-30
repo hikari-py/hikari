@@ -178,6 +178,22 @@ def _parse_shard_info(payload):
     return [*range(minimum, maximum)]
 
 
+def _gateway_version_default() -> int:
+    return 6
+
+
+def _initial_status_default() -> typing.Literal[guilds.PresenceStatus.ONLINE]:
+    return guilds.PresenceStatus.ONLINE
+
+
+def _deserialize_intents(value) -> _intents.Intent:
+    return conversions.dereference_int_flag(_intents.Intent, value)
+
+
+def _large_threshold_default() -> int:
+    return 250
+
+
 @marshaller.marshallable()
 @attr.s(kw_only=True)
 class GatewayConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
@@ -294,16 +310,14 @@ class GatewayConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
 
     gateway_use_compression: bool = marshaller.attrib(deserializer=bool, if_undefined=True, default=True)
 
-    gateway_version: int = marshaller.attrib(deserializer=int, if_undefined=lambda: 6, default=6)
+    gateway_version: int = marshaller.attrib(deserializer=int, if_undefined=_gateway_version_default, default=6)
 
     initial_activity: typing.Optional[gateway_entities.Activity] = marshaller.attrib(
         deserializer=gateway_entities.Activity.deserialize, if_none=None, if_undefined=None, default=None
     )
 
     initial_status: guilds.PresenceStatus = marshaller.attrib(
-        deserializer=guilds.PresenceStatus,
-        if_undefined=lambda: guilds.PresenceStatus.ONLINE,
-        default=guilds.PresenceStatus.ONLINE,
+        deserializer=guilds.PresenceStatus, if_undefined=_initial_status_default, default=guilds.PresenceStatus.ONLINE,
     )
 
     initial_is_afk: bool = marshaller.attrib(deserializer=bool, if_undefined=False, default=False)
@@ -313,12 +327,10 @@ class GatewayConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     )
 
     intents: typing.Optional[_intents.Intent] = marshaller.attrib(
-        deserializer=lambda value: conversions.dereference_int_flag(_intents.Intent, value),
-        if_undefined=None,
-        default=None,
+        deserializer=_deserialize_intents, if_undefined=None, default=None,
     )
 
-    large_threshold: int = marshaller.attrib(deserializer=int, if_undefined=lambda: 250, default=250)
+    large_threshold: int = marshaller.attrib(deserializer=int, if_undefined=_large_threshold_default, default=250)
 
     """Definition of shard management configuration settings."""
 
@@ -327,6 +339,14 @@ class GatewayConfig(AIOHTTPConfig, TokenConfig, DebugConfig):
     )
 
     shard_count: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
+
+
+def _token_type_default() -> str:
+    return "Bot"
+
+
+def _rest_version_default() -> int:
+    return 7
 
 
 @marshaller.marshallable()
@@ -388,10 +408,10 @@ class RESTConfig(AIOHTTPConfig, TokenConfig):
     """
 
     token_type: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, if_undefined=lambda: "Bot", if_none=None, default="Bot"
+        deserializer=str, if_undefined=_token_type_default, if_none=None, default="Bot"
     )
 
-    rest_version: int = marshaller.attrib(deserializer=int, if_undefined=lambda: 7, default=7)
+    rest_version: int = marshaller.attrib(deserializer=int, if_undefined=_rest_version_default, default=7)
 
 
 @marshaller.marshallable()

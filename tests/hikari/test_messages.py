@@ -47,9 +47,14 @@ def test_attachment_payload():
     }
 
 
+@pytest.fixture()
+def test_emoji_payload():
+    return {"id": "691225175349395456", "name": "test"}
+
+
 @pytest.fixture
-def test_reaction_payload():
-    return {"emoji": {"id": "691225175349395456", "name": "test"}, "count": 100, "me": True}
+def test_reaction_payload(test_emoji_payload):
+    return {"emoji": test_emoji_payload, "count": 100, "me": True}
 
 
 @pytest.fixture
@@ -129,9 +134,14 @@ def test_message_payload(
     }
 
 
+@pytest.fixture()
+def mock_components():
+    return mock.MagicMock(components.Components)
+
+
 class TestAttachment:
-    def test_deserialize(self, test_attachment_payload):
-        attachment_obj = messages.Attachment.deserialize(test_attachment_payload)
+    def test_deserialize(self, test_attachment_payload, mock_components):
+        attachment_obj = messages.Attachment.deserialize(test_attachment_payload, components=mock_components)
 
         assert attachment_obj.id == 690922406474154014
         assert attachment_obj.filename == "IMG.jpg"
@@ -143,13 +153,14 @@ class TestAttachment:
 
 
 class TestReaction:
-    def test_deserialize(self, test_reaction_payload):
+    def test_deserialize(self, test_reaction_payload, mock_components, test_emoji_payload):
         mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
 
         with _helpers.patch_marshal_attr(
             messages.Reaction, "emoji", return_value=mock_emoji, deserializer=emojis.deserialize_reaction_emoji
-        ):
-            reaction_obj = messages.Reaction.deserialize(test_reaction_payload)
+        ) as patched_emoji_deserializer:
+            reaction_obj = messages.Reaction.deserialize(test_reaction_payload, components=mock_components)
+            patched_emoji_deserializer.assert_called_once_with(test_emoji_payload, components=mock_components)
 
         assert reaction_obj.count == 100
         assert reaction_obj.emoji == mock_emoji
@@ -157,16 +168,20 @@ class TestReaction:
 
 
 class TestMessageActivity:
-    def test_deserialize(self, test_message_activity_payload):
-        message_activity_obj = messages.MessageActivity.deserialize(test_message_activity_payload)
+    def test_deserialize(self, test_message_activity_payload, mock_components):
+        message_activity_obj = messages.MessageActivity.deserialize(
+            test_message_activity_payload, components=mock_components
+        )
 
         assert message_activity_obj.type == messages.MessageActivityType.JOIN_REQUEST
         assert message_activity_obj.party_id == "ae488379-351d-4a4f-ad32-2b9b01c91657"
 
 
 class TestMessageCrosspost:
-    def test_deserialize(self, test_message_crosspost_payload):
-        message_crosspost_obj = messages.MessageCrosspost.deserialize(test_message_crosspost_payload)
+    def test_deserialize(self, test_message_crosspost_payload, mock_components):
+        message_crosspost_obj = messages.MessageCrosspost.deserialize(
+            test_message_crosspost_payload, components=mock_components
+        )
 
         assert message_crosspost_obj.message_id == 306588351130107906
         assert message_crosspost_obj.channel_id == 278325129692446722
@@ -184,6 +199,7 @@ class TestMessage:
         test_member_payload,
         test_message_activity_payload,
         test_message_crosspost_payload,
+        mock_components,
     ):
         mock_user = mock.MagicMock(users.User)
         mock_member = mock.MagicMock(guilds.GuildMember)
@@ -230,14 +246,19 @@ class TestMessage:
             )
         )
         with stack:
-            message_obj = messages.Message.deserialize(test_message_payload)
-            patched_emoji_deserializer.assert_called_once_with(test_reaction_payload["emoji"])
+            message_obj = messages.Message.deserialize(test_message_payload, components=mock_components)
+            patched_emoji_deserializer.assert_called_once_with(
+                test_reaction_payload["emoji"], components=mock_components
+            )
             assert message_obj.reactions == [messages.Reaction.deserialize(test_reaction_payload)]
-            patched_application_deserializer.assert_called_once_with(test_application_payload)
+            assert message_obj.reactions[0]._components is mock_components
+            patched_application_deserializer.assert_called_once_with(
+                test_application_payload, components=mock_components
+            )
             patched_edited_timestamp_deserializer.assert_called_once_with("2020-04-21T21:20:16.510000+00:00")
             patched_timestamp_deserializer.assert_called_once_with("2020-03-21T21:20:16.510000+00:00")
-            patched_member_deserializer.assert_called_once_with(test_member_payload)
-            patched_author_deserializer.assert_called_once_with(test_user_payload)
+            patched_member_deserializer.assert_called_once_with(test_member_payload, components=mock_components)
+            patched_author_deserializer.assert_called_once_with(test_user_payload, components=mock_components)
 
         assert message_obj.id == 123
         assert message_obj.channel_id == 456
@@ -253,13 +274,17 @@ class TestMessage:
         assert message_obj.role_mentions == {987}
         assert message_obj.channel_mentions == {456}
         assert message_obj.attachments == [messages.Attachment.deserialize(test_attachment_payload)]
+        assert message_obj.attachments[0]._components is mock_components
         assert message_obj.embeds == [embeds.Embed.deserialize({})]
+        assert message_obj.embeds[0]._components is mock_components
         assert message_obj.is_pinned is True
         assert message_obj.webhook_id == 1234
         assert message_obj.type == messages.MessageType.DEFAULT
         assert message_obj.activity == messages.MessageActivity.deserialize(test_message_activity_payload)
+        assert message_obj.activity._components is mock_components
         assert message_obj.application == mock_app
         assert message_obj.message_reference == messages.MessageCrosspost.deserialize(test_message_crosspost_payload)
+        assert message_obj.message_reference._components is mock_components
         assert message_obj.flags == messages.MessageFlag.IS_CROSSPOST
         assert message_obj.nonce == "171000788183678976"
 

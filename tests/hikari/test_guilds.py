@@ -29,6 +29,7 @@ from hikari import guilds
 from hikari import permissions
 from hikari import unset
 from hikari import users
+from hikari.clients import components
 from hikari.internal import conversions
 from hikari.internal import urls
 from tests.hikari import _helpers
@@ -53,29 +54,17 @@ def test_emoji_payload():
 
 
 @pytest.fixture
-def test_roles_payloads():
-    return [
-        {
-            "id": "41771983423143936",
-            "name": "WE DEM BOYZZ!!!!!!",
-            "color": 3_447_003,
-            "hoist": True,
-            "position": 0,
-            "permissions": 66_321_471,
-            "managed": False,
-            "mentionable": False,
-        },
-        {
-            "id": "1111223",
-            "name": "some unfunny pun here",
-            "color": 0xFF00FF,
-            "hoist": False,
-            "position": 1,
-            "permissions": 1,
-            "managed": False,
-            "mentionable": True,
-        },
-    ]
+def test_roles_payload():
+    return {
+        "id": "41771983423143936",
+        "name": "WE DEM BOYZZ!!!!!!",
+        "color": 3_447_003,
+        "hoist": True,
+        "position": 0,
+        "permissions": 66_321_471,
+        "managed": False,
+        "mentionable": False,
+    }
 
 
 @pytest.fixture
@@ -224,7 +213,7 @@ def test_guild_preview_payload(test_emoji_payload):
 @pytest.fixture
 def test_guild_payload(
     test_emoji_payload,
-    test_roles_payloads,
+    test_roles_payload,
     test_channel_payload,
     test_member_payload,
     test_voice_state_payload,
@@ -265,7 +254,7 @@ def test_guild_payload(
         "presences": [test_guild_member_presence],
         "public_updates_channel_id": "33333333",
         "region": "eu-central",
-        "roles": test_roles_payloads,
+        "roles": [test_roles_payload],
         "rules_channel_id": "42042069",
         "splash": "0ff0ff0ff",
         "system_channel_flags": 3,
@@ -279,19 +268,24 @@ def test_guild_payload(
     }
 
 
+@pytest.fixture()
+def mock_components():
+    return mock.MagicMock(components.Components)
+
+
 class TestGuildEmbed:
     @pytest.fixture()
     def test_guild_embed_payload(self):
         return {"channel_id": "123123123", "enabled": True}
 
-    def test_deserialize(self, test_guild_embed_payload):
-        guild_embed_obj = guilds.GuildEmbed.deserialize(test_guild_embed_payload)
+    def test_deserialize(self, test_guild_embed_payload, mock_components):
+        guild_embed_obj = guilds.GuildEmbed.deserialize(test_guild_embed_payload, components=mock_components)
         assert guild_embed_obj.channel_id == 123123123
         assert guild_embed_obj.is_enabled is True
 
 
 class TestGuildMember:
-    def test_deserialize(self, test_member_payload, test_user_payload):
+    def test_deserialize(self, test_member_payload, test_user_payload, mock_components):
         mock_user = mock.MagicMock(users.User)
         mock_datetime_1 = mock.MagicMock(datetime.datetime)
         mock_datetime_2 = mock.MagicMock(datetime.datetime)
@@ -318,10 +312,10 @@ class TestGuildMember:
             )
         )
         with stack:
-            guild_member_obj = guilds.GuildMember.deserialize(test_member_payload)
+            guild_member_obj = guilds.GuildMember.deserialize(test_member_payload, components=mock_components)
             patched_premium_since_deserializer.assert_called_once_with("2019-05-17T06:26:56.936000+00:00")
             patched_joined_at_deserializer.assert_called_once_with("2015-04-26T06:26:56.936000+00:00")
-            patched_user_deserializer.assert_called_once_with(test_user_payload)
+            patched_user_deserializer.assert_called_once_with(test_user_payload, components=mock_components)
         assert guild_member_obj.user is mock_user
         assert guild_member_obj.nickname == "foobarbaz"
         assert guild_member_obj.role_ids == [11111, 22222, 33333, 44444]
@@ -339,8 +333,10 @@ class TestPartialGuildRole:
             "name": "WE DEM BOYZZ!!!!!!",
         }
 
-    def test_deserialize(self, test_partial_guild_role_payload):
-        partial_guild_role_obj = guilds.PartialGuildRole.deserialize(test_partial_guild_role_payload)
+    def test_deserialize(self, test_partial_guild_role_payload, mock_components):
+        partial_guild_role_obj = guilds.PartialGuildRole.deserialize(
+            test_partial_guild_role_payload, components=mock_components
+        )
         assert partial_guild_role_obj.name == "WE DEM BOYZZ!!!!!!"
 
 
@@ -358,8 +354,8 @@ class TestGuildRole:
             "mentionable": False,
         }
 
-    def test_deserialize(self, test_guild_role_payload):
-        guild_role_obj = guilds.GuildRole.deserialize(test_guild_role_payload)
+    def test_deserialize(self, test_guild_role_payload, mock_components):
+        guild_role_obj = guilds.GuildRole.deserialize(test_guild_role_payload, components=mock_components)
         assert guild_role_obj.color == 3_447_003
         assert guild_role_obj.is_hoisted is True
         assert guild_role_obj.position == 0
@@ -400,7 +396,7 @@ class TestGuildRole:
 
 
 class TestActivityTimestamps:
-    def test_deserialize(self, test_activity_timestamps_payload):
+    def test_deserialize(self, test_activity_timestamps_payload, mock_components):
         mock_start_date = mock.MagicMock(datetime.datetime)
         mock_end_date = mock.MagicMock(datetime.datetime)
         stack = contextlib.ExitStack()
@@ -421,7 +417,9 @@ class TestActivityTimestamps:
             )
         )
         with stack:
-            activity_timestamps_obj = guilds.ActivityTimestamps.deserialize(test_activity_timestamps_payload)
+            activity_timestamps_obj = guilds.ActivityTimestamps.deserialize(
+                test_activity_timestamps_payload, components=mock_components
+            )
             patched_end_deserializer.assert_called_once_with(1999999792798)
             patched_start_deserializer.assert_called_once_with(1584996792798)
         assert activity_timestamps_obj.start is mock_start_date
@@ -453,8 +451,10 @@ class TestActivityParty:
 
 
 class TestActivityAssets:
-    def test_deserialize(self, test_activity_assets_payload):
-        activity_assets_obj = guilds.ActivityAssets.deserialize(test_activity_assets_payload)
+    def test_deserialize(self, test_activity_assets_payload, mock_components):
+        activity_assets_obj = guilds.ActivityAssets.deserialize(
+            test_activity_assets_payload, components=mock_components
+        )
         assert activity_assets_obj.large_image == "34234234234243"
         assert activity_assets_obj.large_text == "LARGE TEXT"
         assert activity_assets_obj.small_image == "3939393"
@@ -462,8 +462,10 @@ class TestActivityAssets:
 
 
 class TestActivitySecret:
-    def test_deserialize(self, test_activity_secrets_payload):
-        activity_secret_obj = guilds.ActivitySecret.deserialize(test_activity_secrets_payload)
+    def test_deserialize(self, test_activity_secrets_payload, mock_components):
+        activity_secret_obj = guilds.ActivitySecret.deserialize(
+            test_activity_secrets_payload, components=mock_components
+        )
         assert activity_secret_obj.join == "who's a good secret?"
         assert activity_secret_obj.spectate == "I'm a good secret"
         assert activity_secret_obj.match == "No."
@@ -478,6 +480,7 @@ class TestPresenceActivity:
         test_activity_party_payload,
         test_emoji_payload,
         test_activity_timestamps_payload,
+        mock_components,
     ):
         mock_created_at = mock.MagicMock(datetime.datetime)
         mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
@@ -499,8 +502,10 @@ class TestPresenceActivity:
             )
         )
         with stack:
-            presence_activity_obj = guilds.PresenceActivity.deserialize(test_presence_activity_payload)
-            patched_emoji_deserializer.assert_called_once_with(test_emoji_payload)
+            presence_activity_obj = guilds.PresenceActivity.deserialize(
+                test_presence_activity_payload, components=mock_components
+            )
+            patched_emoji_deserializer.assert_called_once_with(test_emoji_payload, components=mock_components)
             patched_created_at_deserializer.assert_called_once_with(1584996792798)
         assert presence_activity_obj.name == "an activity"
         assert presence_activity_obj.type is guilds.ActivityType.STREAMING
@@ -509,13 +514,17 @@ class TestPresenceActivity:
         assert presence_activity_obj.timestamps == guilds.ActivityTimestamps.deserialize(
             test_activity_timestamps_payload
         )
+        assert presence_activity_obj.timestamps._components is mock_components
         assert presence_activity_obj.application_id == 40404040404040
         assert presence_activity_obj.details == "They are doing stuff"
         assert presence_activity_obj.state == "STATED"
         assert presence_activity_obj.emoji is mock_emoji
         assert presence_activity_obj.party == guilds.ActivityParty.deserialize(test_activity_party_payload)
+        assert presence_activity_obj.party._components is mock_components
         assert presence_activity_obj.assets == guilds.ActivityAssets.deserialize(test_activity_assets_payload)
+        assert presence_activity_obj.assets._components is mock_components
         assert presence_activity_obj.secrets == guilds.ActivitySecret.deserialize(test_activity_secrets_payload)
+        assert presence_activity_obj.secrets._components is mock_components
         assert presence_activity_obj.is_instance is True
         assert presence_activity_obj.flags == guilds.ActivityFlag.INSTANCE | guilds.ActivityFlag.JOIN
 
@@ -526,16 +535,16 @@ def test_client_status_payload():
 
 
 class TestClientStatus:
-    def test_deserialize(self, test_client_status_payload):
-        client_status_obj = guilds.ClientStatus.deserialize(test_client_status_payload)
+    def test_deserialize(self, test_client_status_payload, mock_components):
+        client_status_obj = guilds.ClientStatus.deserialize(test_client_status_payload, components=mock_components)
         assert client_status_obj.desktop is guilds.PresenceStatus.ONLINE
         assert client_status_obj.mobile is guilds.PresenceStatus.IDLE
         assert client_status_obj.web is guilds.PresenceStatus.OFFLINE
 
 
 class TestPresenceUser:
-    def test_deserialize_filled_presence_user(self, test_user_payload):
-        presence_user_obj = guilds.PresenceUser.deserialize(test_user_payload)
+    def test_deserialize_filled_presence_user(self, test_user_payload, mock_components):
+        presence_user_obj = guilds.PresenceUser.deserialize(test_user_payload, components=mock_components)
         assert presence_user_obj.username == "Boris Johnson"
         assert presence_user_obj.discriminator == "6969"
         assert presence_user_obj.avatar_hash == "1a2b3c4d"
@@ -543,11 +552,11 @@ class TestPresenceUser:
         assert presence_user_obj.is_bot is True
         assert presence_user_obj.flags == users.UserFlag(0b0001101)
 
-    def test_deserialize_partial_presence_user(self):
-        presence_user_obj = guilds.PresenceUser.deserialize({"id": "115590097100865541"})
+    def test_deserialize_partial_presence_user(self, mock_components):
+        presence_user_obj = guilds.PresenceUser.deserialize({"id": "115590097100865541"}, components=mock_components)
         assert presence_user_obj.id == 115590097100865541
         for attr in presence_user_obj.__slots__:
-            if attr != "id":
+            if attr not in ("id", "_components"):
                 assert getattr(presence_user_obj, attr) is unset.UNSET
 
     @pytest.fixture()
@@ -624,7 +633,12 @@ def test_guild_member_presence(test_user_payload, test_presence_activity_payload
 
 class TestGuildMemberPresence:
     def test_deserialize(
-        self, test_guild_member_presence, test_user_payload, test_presence_activity_payload, test_client_status_payload
+        self,
+        test_guild_member_presence,
+        test_user_payload,
+        test_presence_activity_payload,
+        test_client_status_payload,
+        mock_components,
     ):
         mock_since = mock.MagicMock(datetime.datetime)
         with _helpers.patch_marshal_attr(
@@ -633,16 +647,21 @@ class TestGuildMemberPresence:
             deserializer=conversions.parse_iso_8601_ts,
             return_value=mock_since,
         ) as patched_since_deserializer:
-            guild_member_presence_obj = guilds.GuildMemberPresence.deserialize(test_guild_member_presence)
+            guild_member_presence_obj = guilds.GuildMemberPresence.deserialize(
+                test_guild_member_presence, components=mock_components
+            )
             patched_since_deserializer.assert_called_once_with("2015-04-26T06:26:56.936000+00:00")
         assert guild_member_presence_obj.user == guilds.PresenceUser.deserialize(test_user_payload)
+        assert guild_member_presence_obj.user._components is mock_components
         assert guild_member_presence_obj.role_ids == [49494949]
         assert guild_member_presence_obj.guild_id == 44004040
         assert guild_member_presence_obj.visible_status is guilds.PresenceStatus.DND
         assert guild_member_presence_obj.activities == [
             guilds.PresenceActivity.deserialize(test_presence_activity_payload)
         ]
+        assert guild_member_presence_obj.activities[0]._components is mock_components
         assert guild_member_presence_obj.client_status == guilds.ClientStatus.deserialize(test_client_status_payload)
+        assert guild_member_presence_obj.client_status._components is mock_components
         assert guild_member_presence_obj.premium_since is mock_since
         assert guild_member_presence_obj.nick == "Nick"
 
@@ -652,13 +671,15 @@ class TestGuildMemberBan:
     def test_guild_member_ban_payload(self, test_user_payload):
         return {"reason": "Get Nyaa'ed", "user": test_user_payload}
 
-    def test_deserializer(self, test_guild_member_ban_payload, test_user_payload):
+    def test_deserializer(self, test_guild_member_ban_payload, test_user_payload, mock_components):
         mock_user = mock.MagicMock(users.User)
         with _helpers.patch_marshal_attr(
             guilds.GuildMemberBan, "user", deserializer=users.User.deserialize, return_value=mock_user
         ) as patched_user_deserializer:
-            guild_member_ban_obj = guilds.GuildMemberBan.deserialize(test_guild_member_ban_payload)
-            patched_user_deserializer.assert_called_once_with(test_user_payload)
+            guild_member_ban_obj = guilds.GuildMemberBan.deserialize(
+                test_guild_member_ban_payload, components=mock_components
+            )
+            patched_user_deserializer.assert_called_once_with(test_user_payload, components=mock_components)
         assert guild_member_ban_obj.reason == "Get Nyaa'ed"
         assert guild_member_ban_obj.user is mock_user
 
@@ -669,8 +690,10 @@ def test_integration_account_payload():
 
 
 class TestIntegrationAccount:
-    def test_deserializer(self, test_integration_account_payload):
-        integration_account_obj = guilds.IntegrationAccount.deserialize(test_integration_account_payload)
+    def test_deserializer(self, test_integration_account_payload, mock_components):
+        integration_account_obj = guilds.IntegrationAccount.deserialize(
+            test_integration_account_payload, components=mock_components
+        )
         assert integration_account_obj.id == "543453"
         assert integration_account_obj.name == "Blah Blah"
 
@@ -686,15 +709,18 @@ def test_partial_guild_integration_payload(test_integration_account_payload):
 
 
 class TestPartialGuildIntegration:
-    def test_deserialise(self, test_partial_guild_integration_payload, test_integration_account_payload):
+    def test_deserialise(
+        self, test_partial_guild_integration_payload, test_integration_account_payload, mock_components
+    ):
         partial_guild_integration_obj = guilds.PartialGuildIntegration.deserialize(
-            test_partial_guild_integration_payload
+            test_partial_guild_integration_payload, components=mock_components
         )
         assert partial_guild_integration_obj.name == "Blah blah"
         assert partial_guild_integration_obj.type == "twitch"
         assert partial_guild_integration_obj.account == guilds.IntegrationAccount.deserialize(
             test_integration_account_payload
         )
+        assert partial_guild_integration_obj.account._components is mock_components
 
 
 class TestGuildIntegration:
@@ -712,7 +738,9 @@ class TestGuildIntegration:
             "synced_at": "2015-04-26T06:26:56.936000+00:00",
         }
 
-    def test_deserialize(self, test_guild_integration_payload, test_user_payload, test_integration_account_payload):
+    def test_deserialize(
+        self, test_guild_integration_payload, test_user_payload, test_integration_account_payload, mock_components
+    ):
         mock_user = mock.MagicMock(users.User)
         mock_sync_date = mock.MagicMock(datetime.datetime)
         stack = contextlib.ExitStack()
@@ -730,8 +758,10 @@ class TestGuildIntegration:
             )
         )
         with stack:
-            guild_integration_obj = guilds.GuildIntegration.deserialize(test_guild_integration_payload)
-            patched_user_deserializer.assert_called_once_with(test_user_payload)
+            guild_integration_obj = guilds.GuildIntegration.deserialize(
+                test_guild_integration_payload, components=mock_components
+            )
+            patched_user_deserializer.assert_called_once_with(test_user_payload, components=mock_components)
             patched_sync_at_deserializer.assert_called_once_with("2015-04-26T06:26:56.936000+00:00")
 
         assert guild_integration_obj.is_enabled is True
@@ -745,18 +775,20 @@ class TestGuildIntegration:
 
 
 class TestUnavailableGuild:
-    def test_deserialize_when_unavailable_is_defined(self):
-        guild_delete_event_obj = guilds.UnavailableGuild.deserialize({"id": "293293939", "unavailable": True})
+    def test_deserialize_when_unavailable_is_defined(self, mock_components):
+        guild_delete_event_obj = guilds.UnavailableGuild.deserialize(
+            {"id": "293293939", "unavailable": True}, components=mock_components
+        )
         assert guild_delete_event_obj.is_unavailable is True
 
-    def test_deserialize_when_unavailable_is_undefined(self):
-        guild_delete_event_obj = guilds.UnavailableGuild.deserialize({"id": "293293939"})
+    def test_deserialize_when_unavailable_is_undefined(self, mock_components):
+        guild_delete_event_obj = guilds.UnavailableGuild.deserialize({"id": "293293939"}, components=mock_components)
         assert guild_delete_event_obj.is_unavailable is True
 
 
 class TestPartialGuild:
-    def test_deserialize(self, test_partial_guild_payload):
-        partial_guild_obj = guilds.PartialGuild.deserialize(test_partial_guild_payload)
+    def test_deserialize(self, test_partial_guild_payload, mock_components):
+        partial_guild_obj = guilds.PartialGuild.deserialize(test_partial_guild_payload, components=mock_components)
         assert partial_guild_obj.id == 152559372126519269
         assert partial_guild_obj.name == "Isopropyl"
         assert partial_guild_obj.icon_hash == "d4a983885dsaa7691ce8bcaaf945a"
@@ -813,14 +845,14 @@ class TestPartialGuild:
 
 
 class TestGuildPreview:
-    def test_deserialize(self, test_guild_preview_payload, test_emoji_payload):
-        mock_emoji = mock.MagicMock(emojis.GuildEmoji, id=76767676)
+    def test_deserialize(self, test_guild_preview_payload, test_emoji_payload, mock_components):
+        mock_emoji = mock.MagicMock(emojis.GuildEmoji, id=41771983429993937)
         with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji):
-            guild_preview_obj = guilds.GuildPreview.deserialize(test_guild_preview_payload)
-            emojis.GuildEmoji.deserialize.assert_called_once_with(test_emoji_payload)
+            guild_preview_obj = guilds.GuildPreview.deserialize(test_guild_preview_payload, components=mock_components)
+            emojis.GuildEmoji.deserialize.assert_called_once_with(test_emoji_payload, components=mock_components)
         assert guild_preview_obj.splash_hash == "dsa345tfcdg54b"
         assert guild_preview_obj.discovery_splash_hash == "lkodwaidi09239uid"
-        assert guild_preview_obj.emojis == {76767676: mock_emoji}
+        assert guild_preview_obj.emojis == {41771983429993937: mock_emoji}
         assert guild_preview_obj.approximate_presence_count == 42
         assert guild_preview_obj.approximate_member_count == 69
         assert guild_preview_obj.description == "A DESCRIPTION."
@@ -890,37 +922,32 @@ class TestGuildPreview:
 class TestGuild:
     def test_deserialize(
         self,
+        mock_components,
         test_guild_payload,
-        test_roles_payloads,
+        test_roles_payload,
         test_emoji_payload,
         test_member_payload,
         test_channel_payload,
         test_guild_member_presence,
     ):
-        mock_emoji = mock.MagicMock(emojis.GuildEmoji, id=42)
-        mock_user = mock.MagicMock(users.User, id=84)
-        mock_guild_channel = mock.MagicMock(channels.GuildChannel, id=6969)
+        mock_emoji = mock.MagicMock(emojis.GuildEmoji, id=41771983429993937)
+        mock_guild_channel = mock.MagicMock(channels.GuildChannel, id=1234567)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji))
-        patched_user_deserializer = stack.enter_context(
-            _helpers.patch_marshal_attr(
-                guilds.GuildMemberPresence, "user", deserializer=guilds.PresenceUser.deserialize, return_value=mock_user
-            )
-        )
-        patched_member_user_deserializer = stack.enter_context(
-            _helpers.patch_marshal_attr(
-                guilds.GuildMember, "user", deserializer=users.User.deserialize, return_value=mock_user
-            )
-        )
         stack.enter_context(mock.patch.object(channels, "deserialize_channel", return_value=mock_guild_channel))
+        stack.enter_context(
+            _helpers.patch_marshal_attr(
+                guilds.GuildMember, "user", deserializer=users.User.deserialize, return_value=mock.MagicMock(users.User)
+            )
+        )
         with stack:
-            guild_obj = guilds.Guild.deserialize(test_guild_payload)
-            channels.deserialize_channel.assert_called_once_with(test_channel_payload)
-            patched_member_user_deserializer.assert_called_once_with(test_member_payload["user"])
-            assert guild_obj.members == {84: guilds.GuildMember.deserialize(test_member_payload)}
-            patched_user_deserializer.assert_called_once_with(test_member_payload["user"])
-            assert guild_obj.presences == {84: guilds.GuildMemberPresence.deserialize(test_guild_member_presence)}
-            emojis.GuildEmoji.deserialize.assert_called_once_with(test_emoji_payload)
+            guild_obj = guilds.Guild.deserialize(test_guild_payload, components=mock_components)
+            channels.deserialize_channel.assert_called_once_with(test_channel_payload, components=mock_components)
+            emojis.GuildEmoji.deserialize.assert_called_once_with(test_emoji_payload, components=mock_components)
+            assert guild_obj.members == {123456: guilds.GuildMember.deserialize(test_member_payload)}
+            assert guild_obj.members[123456]._components is mock_components
+        assert guild_obj.presences == {123456: guilds.GuildMemberPresence.deserialize(test_guild_member_presence)}
+        assert guild_obj.presences[123456]._components is mock_components
         assert guild_obj.splash_hash == "0ff0ff0ff"
         assert guild_obj.discovery_splash_hash == "famfamFAMFAMfam"
         assert guild_obj.owner_id == 6969696
@@ -935,8 +962,9 @@ class TestGuild:
         assert guild_obj.verification_level is guilds.GuildVerificationLevel.VERY_HIGH
         assert guild_obj.default_message_notifications is guilds.GuildMessageNotificationsLevel.ONLY_MENTIONS
         assert guild_obj.explicit_content_filter is guilds.GuildExplicitContentFilterLevel.ALL_MEMBERS
-        assert guild_obj.roles == {r.id: r for r in map(guilds.GuildRole.deserialize, test_roles_payloads)}
-        assert guild_obj.emojis == {42: mock_emoji}
+        assert guild_obj.roles == {41771983423143936: guilds.GuildRole.deserialize(test_roles_payload)}
+        assert guild_obj.roles[41771983423143936]._components is mock_components
+        assert guild_obj.emojis == {41771983429993937: mock_emoji}
         assert guild_obj.mfa_level is guilds.GuildMFALevel.ELEVATED
         assert guild_obj.application_id == 39494949
         assert guild_obj.is_unavailable is False
@@ -950,7 +978,7 @@ class TestGuild:
         assert guild_obj.joined_at == conversions.parse_iso_8601_ts("2019-05-17T06:26:56.936000+00:00")
         assert guild_obj.is_large is False
         assert guild_obj.member_count == 14
-        assert guild_obj.channels == {6969: mock_guild_channel}
+        assert guild_obj.channels == {1234567: mock_guild_channel}
         assert guild_obj.max_presences == 250
         assert guild_obj.max_members == 25000
         assert guild_obj.vanity_url_code == "loool"

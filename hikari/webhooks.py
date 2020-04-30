@@ -65,7 +65,7 @@ class Webhook(bases.UniqueEntity, marshaller.Deserializable):
     """The channel ID this webhook is for."""
 
     user: typing.Optional[users.User] = marshaller.attrib(
-        deserializer=users.User.deserialize, if_undefined=None, default=None
+        deserializer=users.User.deserialize, if_undefined=None, default=None, inherit_kwargs=True
     )
     """The user that created the webhook
 

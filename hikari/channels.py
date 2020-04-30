@@ -163,6 +163,10 @@ class PartialChannel(Channel):
     """The channel's name."""
 
 
+def _deserialize_recipients(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[users.User]:
+    return {bases.Snowflake(user["id"]): users.User.deserialize(user, **kwargs) for user in payload}
+
+
 @register_channel_type(ChannelType.DM)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
@@ -177,7 +181,7 @@ class DMChannel(Channel):
     """
 
     recipients: typing.Mapping[bases.Snowflake, users.User] = marshaller.attrib(
-        deserializer=lambda recipients: {user.id: user for user in map(users.User.deserialize, recipients)}
+        deserializer=_deserialize_recipients, inherit_kwargs=True
     )
     """The recipients of the DM."""
 
@@ -203,6 +207,14 @@ class GroupDMChannel(DMChannel):
     """The ID of the application that created the group DM, if it's a bot based group DM."""
 
 
+def _deserialize_overwrites(
+    payload: more_typing.JSONArray, **kwargs: typing.Any
+) -> typing.Mapping[bases.Snowflake, PermissionOverwrite]:
+    return {
+        bases.Snowflake(overwrite["id"]): PermissionOverwrite.deserialize(overwrite, **kwargs) for overwrite in payload
+    }
+
+
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildChannel(Channel):
@@ -221,7 +233,7 @@ class GuildChannel(Channel):
     """The sorting position of the channel."""
 
     permission_overwrites: PermissionOverwrite = marshaller.attrib(
-        deserializer=lambda overwrites: {o.id: o for o in map(PermissionOverwrite.deserialize, overwrites)}
+        deserializer=_deserialize_overwrites, inherit_kwargs=True
     )
     """The permission overwrites for the channel."""
 
@@ -250,6 +262,10 @@ class GuildCategory(GuildChannel):
     """Represents a guild category."""
 
 
+def _deserialize_rate_limit_per_user(payload: int) -> datetime.timedelta:
+    return datetime.timedelta(seconds=payload)
+
+
 @register_channel_type(ChannelType.GUILD_TEXT)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
@@ -266,9 +282,7 @@ class GuildTextChannel(GuildChannel):
         This might point to an invalid or deleted message.
     """
 
-    rate_limit_per_user: datetime.timedelta = marshaller.attrib(
-        deserializer=lambda payload: datetime.timedelta(seconds=payload)
-    )
+    rate_limit_per_user: datetime.timedelta = marshaller.attrib(deserializer=_deserialize_rate_limit_per_user)
     """The delay (in seconds) between a user can send a message to this channel.
 
     !!! note

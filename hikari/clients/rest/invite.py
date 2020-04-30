@@ -59,7 +59,7 @@ class RESTInviteComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=a
             If the invite is not found.
         """
         payload = await self._session.get_invite(invite_code=getattr(invite, "code", invite), with_counts=with_counts)
-        return invites.Invite.deserialize(payload)
+        return invites.Invite.deserialize(payload, components=self._components)
 
     async def delete_invite(self, invite: typing.Union[invites.Invite, str]) -> None:
         """Delete a given invite.

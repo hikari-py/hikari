@@ -25,6 +25,7 @@ from hikari import bases
 from hikari import channels
 from hikari import permissions
 from hikari import users
+from hikari.clients import components
 
 
 @pytest.fixture()
@@ -138,13 +139,20 @@ def test_guild_voice_channel_payload(test_permission_overwrite_payload):
     }
 
 
+@pytest.fixture()
+def mock_components():
+    return mock.MagicMock(components.Components)
+
+
 class TestPartialChannel:
     @pytest.fixture()
     def test_partial_channel_payload(self):
         return {"id": "561884984214814750", "name": "general", "type": 0}
 
-    def test_deserialize(self, test_partial_channel_payload):
-        partial_channel_obj = channels.PartialChannel.deserialize(test_partial_channel_payload)
+    def test_deserialize(self, test_partial_channel_payload, mock_components):
+        partial_channel_obj = channels.PartialChannel.deserialize(
+            test_partial_channel_payload, components=mock_components
+        )
         assert partial_channel_obj.id == 561884984214814750
         assert partial_channel_obj.name == "general"
         assert partial_channel_obj.type is channels.ChannelType.GUILD_TEXT
@@ -156,8 +164,10 @@ class TestPermissionOverwriteType:
 
 
 class TestPermissionOverwrite:
-    def test_deserialize(self, test_permission_overwrite_payload):
-        permission_overwrite_obj = channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
+    def test_deserialize(self, test_permission_overwrite_payload, mock_components):
+        permission_overwrite_obj = channels.PermissionOverwrite.deserialize(
+            test_permission_overwrite_payload, components=mock_components
+        )
         assert (
             permission_overwrite_obj.allow
             == permissions.Permission.CREATE_INSTANT_INVITE | permissions.Permission.ADD_REACTIONS
@@ -188,12 +198,12 @@ class TestPermissionOverwrite:
 
 
 class TestDMChannel:
-    def test_deserialize(self, test_dm_channel_payload, test_recipient_payload):
+    def test_deserialize(self, test_dm_channel_payload, test_recipient_payload, mock_components):
         mock_user = mock.MagicMock(users.User, id=987)
 
         with mock.patch.object(users.User, "deserialize", return_value=mock_user) as patched_user_deserialize:
-            channel_obj = channels.DMChannel.deserialize(test_dm_channel_payload)
-            patched_user_deserialize.assert_called_once_with(test_recipient_payload)
+            channel_obj = channels.DMChannel.deserialize(test_dm_channel_payload, components=mock_components)
+            patched_user_deserialize.assert_called_once_with(test_recipient_payload, components=mock_components)
 
         assert channel_obj.id == 123
         assert channel_obj.last_message_id == 456
@@ -202,12 +212,12 @@ class TestDMChannel:
 
 
 class TestGroupDMChannel:
-    def test_deserialize(self, test_group_dm_channel_payload, test_recipient_payload):
+    def test_deserialize(self, test_group_dm_channel_payload, test_recipient_payload, mock_components):
         mock_user = mock.MagicMock(users.User, id=987)
 
         with mock.patch.object(users.User, "deserialize", return_value=mock_user) as patched_user_deserialize:
-            channel_obj = channels.GroupDMChannel.deserialize(test_group_dm_channel_payload)
-            patched_user_deserialize.assert_called_once_with(test_recipient_payload)
+            channel_obj = channels.GroupDMChannel.deserialize(test_group_dm_channel_payload, components=mock_components)
+            patched_user_deserialize.assert_called_once_with(test_recipient_payload, components=mock_components)
 
         assert channel_obj.id == 123
         assert channel_obj.last_message_id == 456
@@ -220,13 +230,14 @@ class TestGroupDMChannel:
 
 
 class TestGuildCategory:
-    def test_deserialize(self, test_guild_category_payload, test_permission_overwrite_payload):
-        channel_obj = channels.GuildCategory.deserialize(test_guild_category_payload)
+    def test_deserialize(self, test_guild_category_payload, test_permission_overwrite_payload, mock_components):
+        channel_obj = channels.GuildCategory.deserialize(test_guild_category_payload, components=mock_components)
 
         assert channel_obj.id == 123
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
+        assert channel_obj.permission_overwrites[4242]._components is mock_components
         assert channel_obj.guild_id == 9876
         assert channel_obj.position == 3
         assert channel_obj.name == "Test"
@@ -236,13 +247,14 @@ class TestGuildCategory:
 
 
 class TestGuildTextChannel:
-    def test_deserialize(self, test_guild_text_channel_payload, test_permission_overwrite_payload):
-        channel_obj = channels.GuildTextChannel.deserialize(test_guild_text_channel_payload)
+    def test_deserialize(self, test_guild_text_channel_payload, test_permission_overwrite_payload, mock_components):
+        channel_obj = channels.GuildTextChannel.deserialize(test_guild_text_channel_payload, components=mock_components)
 
         assert channel_obj.id == 123
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
+        assert channel_obj.permission_overwrites[4242]._components is mock_components
         assert channel_obj.guild_id == 567
         assert channel_obj.position == 6
         assert channel_obj.name == "general"
@@ -255,13 +267,14 @@ class TestGuildTextChannel:
 
 
 class TestGuildNewsChannel:
-    def test_deserialize(self, test_guild_news_channel_payload, test_permission_overwrite_payload):
-        channel_obj = channels.GuildNewsChannel.deserialize(test_guild_news_channel_payload)
+    def test_deserialize(self, test_guild_news_channel_payload, test_permission_overwrite_payload, mock_components):
+        channel_obj = channels.GuildNewsChannel.deserialize(test_guild_news_channel_payload, components=mock_components)
 
         assert channel_obj.id == 567
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
+        assert channel_obj.permission_overwrites[4242]._components is mock_components
         assert channel_obj.guild_id == 123
         assert channel_obj.position == 0
         assert channel_obj.name == "Important Announcements"
@@ -273,13 +286,16 @@ class TestGuildNewsChannel:
 
 
 class TestGuildStoreChannel:
-    def test_deserialize(self, test_guild_store_channel_payload, test_permission_overwrite_payload):
-        channel_obj = channels.GuildStoreChannel.deserialize(test_guild_store_channel_payload)
+    def test_deserialize(self, test_guild_store_channel_payload, test_permission_overwrite_payload, mock_components):
+        channel_obj = channels.GuildStoreChannel.deserialize(
+            test_guild_store_channel_payload, components=mock_components
+        )
 
         assert channel_obj.id == 123
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
+        assert channel_obj.permission_overwrites[4242]._components is mock_components
         assert channel_obj.guild_id == 1234
         assert channel_obj.position == 2
         assert channel_obj.name == "Half Life 3"
@@ -289,13 +305,16 @@ class TestGuildStoreChannel:
 
 
 class TestGuildVoiceChannell:
-    def test_deserialize(self, test_guild_voice_channel_payload, test_permission_overwrite_payload):
-        channel_obj = channels.GuildVoiceChannel.deserialize(test_guild_voice_channel_payload)
+    def test_deserialize(self, test_guild_voice_channel_payload, test_permission_overwrite_payload, mock_components):
+        channel_obj = channels.GuildVoiceChannel.deserialize(
+            test_guild_voice_channel_payload, components=mock_components
+        )
 
         assert channel_obj.id == 123
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
+        assert channel_obj.permission_overwrites[4242]._components is mock_components
         assert channel_obj.guild_id == 789
         assert channel_obj.position == 4
         assert channel_obj.name == "Secret Developer Discussions"
@@ -393,3 +412,8 @@ def test_deserialize_channel_returns_correct_type(
     assert isinstance(channels.deserialize_channel(test_guild_news_channel_payload), channels.GuildNewsChannel)
     assert isinstance(channels.deserialize_channel(test_guild_store_channel_payload), channels.GuildStoreChannel)
     assert isinstance(channels.deserialize_channel(test_guild_voice_channel_payload), channels.GuildVoiceChannel)
+
+
+def test_deserialize_channel_type_passes_kwargs(test_dm_channel_payload, mock_components):
+    channel_obj = channels.deserialize_channel(test_dm_channel_payload, components=mock_components)
+    assert channel_obj._components is mock_components

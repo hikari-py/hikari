@@ -45,4 +45,6 @@ class TestRESTUserLogic:
         with mock.patch.object(voices.VoiceRegion, "deserialize", return_value=mock_voice_obj):
             assert await rest_voice_logic_impl.fetch_voice_regions() == [mock_voice_obj]
             rest_voice_logic_impl._session.list_voice_regions.assert_called_once()
-            voices.VoiceRegion.deserialize.assert_called_once_with(mock_voice_payload)
+            voices.VoiceRegion.deserialize.assert_called_once_with(
+                mock_voice_payload, components=rest_voice_logic_impl._components
+            )

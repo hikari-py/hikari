@@ -66,8 +66,8 @@ class TestBaseChannelEvent:
 
     def test_deserialize(self, test_base_channel_payload, test_overwrite_payload, test_user_payload):
         mock_timestamp = mock.MagicMock(datetime.datetime)
-        mock_user = mock.MagicMock(users.User, id=42)
-        mock_overwrite = mock.MagicMock(channels.PermissionOverwrite, id=64)
+        mock_user = mock.MagicMock(users.User, id=2929292)
+        mock_overwrite = mock.MagicMock(channels.PermissionOverwrite, id=292929)
         stack = contextlib.ExitStack()
         patched_timestamp_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
@@ -87,7 +87,7 @@ class TestBaseChannelEvent:
         assert base_channel_payload.type is channels.ChannelType.GUILD_VOICE
         assert base_channel_payload.guild_id == 69240
         assert base_channel_payload.position == 7
-        assert base_channel_payload.permission_overwrites == {64: mock_overwrite}
+        assert base_channel_payload.permission_overwrites == {292929: mock_overwrite}
         assert base_channel_payload.name == "Name"
         assert base_channel_payload.topic == "Topically drunk"
         assert base_channel_payload.is_nsfw is True
@@ -95,7 +95,7 @@ class TestBaseChannelEvent:
         assert base_channel_payload.bitrate == 96000
         assert base_channel_payload.user_limit == 42
         assert base_channel_payload.rate_limit_per_user == datetime.timedelta(seconds=2333)
-        assert base_channel_payload.recipients == {42: mock_user}
+        assert base_channel_payload.recipients == {2929292: mock_user}
         assert base_channel_payload.icon_hash == "sdodsooioio2oi"
         assert base_channel_payload.owner_id == 32939393
         assert base_channel_payload.application_id == 202020202
