@@ -22,8 +22,14 @@ import pytest
 from hikari import guilds
 from hikari import applications
 from hikari import users
+from hikari.clients import components
 from hikari.internal import urls
 from tests.hikari import _helpers
+
+
+@pytest.fixture()
+def mock_components():
+    return mock.MagicMock(components.Components)
 
 
 @pytest.fixture()
@@ -105,11 +111,13 @@ def application_information_payload(owner_payload, team_payload):
 
 
 class TestOwnConnection:
-    def test_deserialize(self, own_connection_payload, test_partial_integration):
+    def test_deserialize(self, own_connection_payload, test_partial_integration, mock_components):
         mock_integration_obj = mock.MagicMock(guilds.PartialGuildIntegration)
         with mock.patch.object(guilds.PartialGuildIntegration, "deserialize", return_value=mock_integration_obj):
-            connection_obj = applications.OwnConnection.deserialize(own_connection_payload)
-            guilds.PartialGuildIntegration.deserialize.assert_called_once_with(test_partial_integration)
+            connection_obj = applications.OwnConnection.deserialize(own_connection_payload, components=mock_components)
+            guilds.PartialGuildIntegration.deserialize.assert_called_once_with(
+                test_partial_integration, components=mock_components
+            )
         assert connection_obj.id == "2513849648"
         assert connection_obj.name == "FS"
         assert connection_obj.type == "twitter"
@@ -122,23 +130,24 @@ class TestOwnConnection:
 
 
 class TestOwnGuild:
-    def test_deserialize(self, own_guild_payload):
-        own_guild_obj = applications.OwnGuild.deserialize(own_guild_payload)
+    def test_deserialize(self, own_guild_payload, mock_components):
+        own_guild_obj = applications.OwnGuild.deserialize(own_guild_payload, components=mock_components)
         assert own_guild_obj.is_owner is False
         assert own_guild_obj.my_permissions == 2147483647
 
 
 class TestApplicationOwner:
-    @pytest.fixture()
-    def owner_obj(self, owner_payload):
-        return applications.ApplicationOwner.deserialize(owner_payload)
-
-    def test_deserialize(self, owner_obj):
+    def test_deserialize(self, owner_payload, mock_components):
+        owner_obj = applications.ApplicationOwner.deserialize(owner_payload, components=mock_components)
         assert owner_obj.username == "agent 47"
         assert owner_obj.discriminator == "4747"
         assert owner_obj.id == 474747474
         assert owner_obj.flags == users.UserFlag.TEAM_USER
         assert owner_obj.avatar_hash == "hashed"
+
+    @pytest.fixture()
+    def owner_obj(self, owner_payload, mock_components):
+        return applications.ApplicationOwner(username=None, discriminator=None, id=None, flags=None, avatar_hash=None)
 
     def test_is_team_user(self, owner_obj):
         owner_obj.flags = users.UserFlag.TEAM_USER | users.UserFlag.SYSTEM
@@ -148,13 +157,13 @@ class TestApplicationOwner:
 
 
 class TestTeamMember:
-    def test_deserialize(self, member_payload, team_user_payload):
+    def test_deserialize(self, member_payload, team_user_payload, mock_components):
         mock_team_user = mock.MagicMock(users.User)
         with _helpers.patch_marshal_attr(
             applications.TeamMember, "user", deserializer=users.User.deserialize, return_value=mock_team_user
         ) as patched_deserializer:
-            member_obj = applications.TeamMember.deserialize(member_payload)
-            patched_deserializer.assert_called_once_with(team_user_payload)
+            member_obj = applications.TeamMember.deserialize(member_payload, components=mock_components)
+            patched_deserializer.assert_called_once_with(team_user_payload, components=mock_components)
         assert member_obj.user is mock_team_user
         assert member_obj.membership_state is applications.TeamMembershipState.INVITED
         assert member_obj.permissions == {"*"}
@@ -162,12 +171,12 @@ class TestTeamMember:
 
 
 class TestTeam:
-    def test_deserialize(self, team_payload, member_payload):
-        mock_member = mock.MagicMock(applications.Team, user=mock.MagicMock(id=123))
+    def test_deserialize(self, team_payload, member_payload, mock_components):
+        mock_member = mock.MagicMock(applications.Team, user=mock.MagicMock(id=202292292))
         with mock.patch.object(applications.TeamMember, "deserialize", return_value=mock_member):
-            team_obj = applications.Team.deserialize(team_payload)
-            applications.TeamMember.deserialize.assert_called_once_with(member_payload)
-        assert team_obj.members == {123: mock_member}
+            team_obj = applications.Team.deserialize(team_payload, components=mock_components)
+            applications.TeamMember.deserialize.assert_called_once_with(member_payload, components=mock_components)
+        assert team_obj.members == {202292292: mock_member}
         assert team_obj.icon_hash == "hashtag"
         assert team_obj.id == 202020202
         assert team_obj.owner_user_id == 393030292
@@ -200,10 +209,14 @@ class TestTeam:
 
 
 class TestApplication:
-    def test_deserialize(self, application_information_payload, team_payload, owner_payload):
-        application_obj = applications.Application.deserialize(application_information_payload)
+    def test_deserialize(self, application_information_payload, team_payload, owner_payload, mock_components):
+        application_obj = applications.Application.deserialize(
+            application_information_payload, components=mock_components
+        )
         assert application_obj.team == applications.Team.deserialize(team_payload)
+        assert application_obj.team._components is mock_components
         assert application_obj.owner == applications.ApplicationOwner.deserialize(owner_payload)
+        assert application_obj.owner._components is mock_components
         assert application_obj.id == 209333111222
         assert application_obj.name == "Dream Sweet in Sea Major"
         assert application_obj.icon_hash == "iwiwiwiwiw"

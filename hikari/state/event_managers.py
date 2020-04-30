@@ -31,6 +31,7 @@ from hikari.state import consumers
 from hikari.state import dispatchers
 
 if typing.TYPE_CHECKING:
+    from hikari.clients import components as _components
     from hikari.clients import shards
 
 EVENT_MARKER_ATTR: typing.Final[str] = "___event_name___"
@@ -89,9 +90,10 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
 
     Parameters
     ----------
-    event_dispatcher_impl: hikari.state.dispatchers.EventDispatcher
-        An implementation of event dispatcher that will store individual events
-        and manage dispatching them after this object creates them.
+    components: hikari.state.components.Components
+        The client components that this event manager should be bound to.
+        Includes the event dispatcher that will store individual events and
+        manage dispatching them after this object creates them.
 
     !!! note
         This object will detect internal event mapper functions by looking for
@@ -139,9 +141,9 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
         or create your own as needed.
     """
 
-    def __init__(self, event_dispatcher_impl: EventDispatcherT) -> None:
+    def __init__(self, components: _components.Components) -> None:
         self.logger = logging.getLogger(type(self).__qualname__)
-        self.event_dispatcher = event_dispatcher_impl
+        self._components = components
         self.raw_event_mappers = {}
 
         # Look for events and register them.

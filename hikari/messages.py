@@ -50,6 +50,7 @@ if typing.TYPE_CHECKING:
 
     from hikari import channels
     from hikari import files as _files
+    from hikari.internal import more_typing
 
 
 @more_enums.must_be_unique
@@ -172,7 +173,7 @@ class Reaction(bases.HikariEntity, marshaller.Deserializable):
     """The amount of times the emoji has been used to react."""
 
     emoji: typing.Union[_emojis.UnicodeEmoji, _emojis.UnknownEmoji] = marshaller.attrib(
-        deserializer=_emojis.deserialize_reaction_emoji
+        deserializer=_emojis.deserialize_reaction_emoji, inherit_kwargs=True
     )
     """The emoji used to react."""
 
@@ -223,6 +224,26 @@ class MessageCrosspost(bases.HikariEntity, marshaller.Deserializable):
     """
 
 
+def _deserialize_object_mentions(payload: more_typing.JSONArray) -> typing.Set[bases.Snowflake]:
+    return {bases.Snowflake(mention["id"]) for mention in payload}
+
+
+def _deserialize_mentions(payload: more_typing.JSONArray) -> typing.Set[bases.Snowflake]:
+    return {bases.Snowflake(mention) for mention in payload}
+
+
+def _deserialize_attachments(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[Attachment]:
+    return [Attachment.deserialize(attachment, **kwargs) for attachment in payload]
+
+
+def _deserialize_embeds(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[_embeds.Embed]:
+    return [_embeds.Embed.deserialize(embed, **kwargs) for embed in payload]
+
+
+def _deserialize_reactions(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[Reaction]:
+    return [Reaction.deserialize(reaction, **kwargs) for reaction in payload]
+
+
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class Message(bases.UniqueEntity, marshaller.Deserializable):
@@ -236,11 +257,11 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
     )
     """The ID of the guild that the message was sent in."""
 
-    author: users.User = marshaller.attrib(deserializer=users.User.deserialize)
+    author: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True)
     """The author of this message."""
 
     member: typing.Optional[guilds.GuildMember] = marshaller.attrib(
-        deserializer=guilds.GuildMember.deserialize, if_undefined=None, default=None
+        deserializer=guilds.GuildMember.deserialize, if_undefined=None, default=None, inherit_kwargs=True
     )
     """The member properties for the message's author."""
 
@@ -265,37 +286,30 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
     """Whether the message mentions `@everyone` or `@here`."""
 
     user_mentions: typing.Set[bases.Snowflake] = marshaller.attrib(
-        raw_name="mentions",
-        deserializer=lambda user_mentions: {bases.Snowflake.deserialize(u["id"]) for u in user_mentions},
+        raw_name="mentions", deserializer=_deserialize_object_mentions,
     )
     """The users the message mentions."""
 
     role_mentions: typing.Set[bases.Snowflake] = marshaller.attrib(
-        raw_name="mention_roles",
-        deserializer=lambda role_mentions: {bases.Snowflake.deserialize(mention) for mention in role_mentions},
+        raw_name="mention_roles", deserializer=_deserialize_mentions,
     )
     """The roles the message mentions."""
 
     channel_mentions: typing.Set[bases.Snowflake] = marshaller.attrib(
-        raw_name="mention_channels",
-        deserializer=lambda channel_mentions: {bases.Snowflake.deserialize(c["id"]) for c in channel_mentions},
-        if_undefined=set,
-        factory=set,
+        raw_name="mention_channels", deserializer=_deserialize_object_mentions, if_undefined=set, factory=set,
     )
     """The channels the message mentions."""
 
     attachments: typing.Sequence[Attachment] = marshaller.attrib(
-        deserializer=lambda attachments: [Attachment.deserialize(a) for a in attachments]
+        deserializer=_deserialize_attachments, inherit_kwargs=True
     )
     """The message attachments."""
 
-    embeds: typing.Sequence[_embeds.Embed] = marshaller.attrib(
-        deserializer=lambda embeds: [_embeds.Embed.deserialize(e) for e in embeds]
-    )
+    embeds: typing.Sequence[_embeds.Embed] = marshaller.attrib(deserializer=_deserialize_embeds, inherit_kwargs=True)
     """The message embeds."""
 
     reactions: typing.Sequence[Reaction] = marshaller.attrib(
-        deserializer=lambda reactions: [Reaction.deserialize(r) for r in reactions], if_undefined=list, factory=list
+        deserializer=_deserialize_reactions, if_undefined=list, factory=list, inherit_kwargs=True,
     )
     """The message reactions."""
 
@@ -311,17 +325,17 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
     """The message type."""
 
     activity: typing.Optional[MessageActivity] = marshaller.attrib(
-        deserializer=MessageActivity.deserialize, if_undefined=None, default=None
+        deserializer=MessageActivity.deserialize, if_undefined=None, default=None, inherit_kwargs=True,
     )
     """The message activity."""
 
     application: typing.Optional[applications.Application] = marshaller.attrib(
-        deserializer=applications.Application.deserialize, if_undefined=None, default=None
+        deserializer=applications.Application.deserialize, if_undefined=None, default=None, inherit_kwargs=True,
     )
     """The message application."""
 
     message_reference: typing.Optional[MessageCrosspost] = marshaller.attrib(
-        deserializer=MessageCrosspost.deserialize, if_undefined=None, default=None
+        deserializer=MessageCrosspost.deserialize, if_undefined=None, default=None, inherit_kwargs=True,
     )
     """The message crossposted reference data."""
 

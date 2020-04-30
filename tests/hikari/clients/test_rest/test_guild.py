@@ -59,69 +59,6 @@ class TestRESTGuildLogic:
 
         return RESTGuildLogicImpl()
 
-    @pytest.mark.skip("patching partial is currently bugged in 3.8 and 3.9")
-    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
-    @_helpers.parametrize_valid_id_formats_for_models("user", 22222222, users.User)
-    @_helpers.parametrize_valid_id_formats_for_models("before", 123123123123, audit_logs.AuditLogEntry)
-    def test_fetch_audit_log_entries_before_with_optionals(self, rest_guild_logic_impl, guild, before, user):
-        mock_audit_log_iterator = mock.MagicMock(audit_logs.AuditLogIterator)
-        mock_partial = mock.MagicMock(functools, "partial")
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(audit_logs, "AuditLogIterator", return_value=mock_audit_log_iterator))
-        stack.enter_context(mock.patch.object(functools, "partial", return_value=mock_partial))
-        with stack:
-            result = rest_guild_logic_impl.fetch_audit_log_entries_before(
-                guild, before=before, user=user, action_type=audit_logs.AuditLogEventType.MEMBER_MOVE, limit=42,
-            )
-            assert result is mock_audit_log_iterator
-            functools.partial.assert_called_once_with(
-                rest_guild_logic_impl._components,
-                rest_guild_logic_impl._session.get_guild_audit_log,
-                user_id="22222222",
-                action_type=26,
-            )
-            audit_logs.AuditLogIterator.assert_called_once_with(
-                request=mock_partial, before="123123123123", limit=42,
-            )
-
-    @pytest.mark.skip("patching partial is currently bugged in 3.8 and 3.9")
-    @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
-    def test_fetch_audit_log_entries_before_without_optionals(self, rest_guild_logic_impl, guild):
-        mock_audit_log_iterator = mock.MagicMock(audit_logs.AuditLogIterator)
-        mock_partial = mock.MagicMock(functools, "partial")
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(audit_logs, "AuditLogIterator", return_value=mock_audit_log_iterator))
-        stack.enter_context(mock.patch.object(functools, "partial", return_value=mock_partial))
-        with stack:
-            assert rest_guild_logic_impl.fetch_audit_log_entries_before(guild) is mock_audit_log_iterator
-            functools.partial.assert_called_once_with(
-                rest_guild_logic_impl._session.get_guild_audit_log,
-                guild_id="379953393319542784",
-                user_id=...,
-                action_type=...,
-            )
-            audit_logs.AuditLogIterator.assert_called_once_with(
-                rest_guild_logic_impl._components, request=mock_partial, before=None, limit=None,
-            )
-
-    @pytest.mark.skip("patching partial is currently bugged in 3.8 and 3.9")
-    def test_fetch_audit_log_entries_before_with_datetime_object(self, rest_guild_logic_impl):
-        mock_audit_log_iterator = mock.MagicMock(audit_logs.AuditLogIterator)
-        mock_partial = mock.MagicMock(functools, "partial")
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(audit_logs, "AuditLogIterator", return_value=mock_audit_log_iterator))
-        stack.enter_context(mock.patch.object(functools, "partial", return_value=mock_partial))
-        with stack:
-            date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-            result = rest_guild_logic_impl.fetch_audit_log_entries_before(123123123, before=date)
-            assert result is mock_audit_log_iterator
-            functools.partial.assert_called_once_with(
-                rest_guild_logic_impl._session.get_guild_audit_log, guild_id="123123123", user_id=..., action_type=...,
-            )
-            audit_logs.AuditLogIterator.assert_called_once_with(
-                rest_guild_logic_impl._components, request=mock_partial, before="537340988620800000", limit=None,
-            )
-
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("user", 22222222, users.User)
@@ -217,6 +154,9 @@ class TestRESTGuildLogic:
                 limit=100,
                 before="1231231123",
             )
+            audit_logs.AuditLog.deserialize.assert_called_once_with(
+                mock_audit_log_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
@@ -228,6 +168,9 @@ class TestRESTGuildLogic:
             assert await rest_guild_logic_impl.fetch_audit_log(guild) is mock_audit_log_obj
             rest_guild_logic_impl._session.get_guild_audit_log.assert_called_once_with(
                 guild_id="379953393319542784", user_id=..., action_type=..., limit=..., before=...
+            )
+            audit_logs.AuditLog.deserialize.assert_called_once_with(
+                mock_audit_log_payload, components=rest_guild_logic_impl._components
             )
 
     @pytest.mark.asyncio
@@ -242,6 +185,9 @@ class TestRESTGuildLogic:
             rest_guild_logic_impl._session.get_guild_audit_log.assert_called_once_with(
                 guild_id="379953393319542784", user_id=..., action_type=..., limit=..., before="537340988620800000"
             )
+            audit_logs.AuditLog.deserialize.assert_called_once_with(
+                mock_audit_log_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 93443949, guilds.Guild)
@@ -255,7 +201,9 @@ class TestRESTGuildLogic:
             rest_guild_logic_impl._session.get_guild_emoji.assert_called_once_with(
                 guild_id="93443949", emoji_id="40404040404",
             )
-            emojis.GuildEmoji.deserialize.assert_called_once_with(mock_emoji_payload)
+            emojis.GuildEmoji.deserialize.assert_called_once_with(
+                mock_emoji_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 93443949, guilds.Guild)
@@ -266,7 +214,9 @@ class TestRESTGuildLogic:
         with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj):
             assert await rest_guild_logic_impl.fetch_guild_emojis(guild=guild) == [mock_emoji_obj]
             rest_guild_logic_impl._session.list_guild_emojis.assert_called_once_with(guild_id="93443949",)
-            emojis.GuildEmoji.deserialize.assert_called_once_with(mock_emoji_payload)
+            emojis.GuildEmoji.deserialize.assert_called_once_with(
+                mock_emoji_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 93443949, guilds.Guild)
@@ -285,7 +235,9 @@ class TestRESTGuildLogic:
                 guild=guild, name="fairEmoji", image=mock_image_obj, roles=[role], reason="hello",
             )
             assert result is mock_emoji_obj
-            emojis.GuildEmoji.deserialize.assert_called_once_with(mock_emoji_payload)
+            emojis.GuildEmoji.deserialize.assert_called_once_with(
+                mock_emoji_payload, components=rest_guild_logic_impl._components
+            )
             mock_image_obj.read_all.assert_awaited_once()
         rest_guild_logic_impl._session.create_guild_emoji.assert_called_once_with(
             guild_id="93443949", name="fairEmoji", image=mock_image_data, roles=["537340989808050216"], reason="hello",
@@ -308,7 +260,9 @@ class TestRESTGuildLogic:
                 guild=guild, name="fairEmoji", image=mock_image_obj,
             )
             assert result is mock_emoji_obj
-            emojis.GuildEmoji.deserialize.assert_called_once_with(mock_emoji_payload)
+            emojis.GuildEmoji.deserialize.assert_called_once_with(
+                mock_emoji_payload, components=rest_guild_logic_impl._components
+            )
             mock_image_obj.read_all.assert_awaited_once()
         rest_guild_logic_impl._session.create_guild_emoji.assert_called_once_with(
             guild_id="93443949", name="fairEmoji", image=mock_image_data, roles=..., reason=...,
@@ -326,7 +280,9 @@ class TestRESTGuildLogic:
             rest_guild_logic_impl._session.modify_guild_emoji.assert_called_once_with(
                 guild_id="93443949", emoji_id="4123321", name=..., roles=..., reason=...,
             )
-            emojis.GuildEmoji.deserialize.assert_called_once_with(mock_emoji_payload)
+            emojis.GuildEmoji.deserialize.assert_called_once_with(
+                mock_emoji_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 93443949, guilds.Guild)
@@ -344,7 +300,9 @@ class TestRESTGuildLogic:
             rest_guild_logic_impl._session.modify_guild_emoji.assert_called_once_with(
                 guild_id="93443949", emoji_id="4123321", name="Nyaa", roles=["123123123"], reason="Agent 42",
             )
-            emojis.GuildEmoji.deserialize.assert_called_once_with(mock_emoji_payload)
+            emojis.GuildEmoji.deserialize.assert_called_once_with(
+                mock_emoji_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 93443949, guilds.Guild)
@@ -386,7 +344,9 @@ class TestRESTGuildLogic:
             )
             assert result is mock_guild_obj
             mock_image_obj.read_all.assert_awaited_once()
-            guilds.Guild.deserialize.assert_called_once_with(mock_guild_payload)
+            guilds.Guild.deserialize.assert_called_once_with(
+                mock_guild_payload, components=rest_guild_logic_impl._components
+            )
         mock_channel_obj.serialize.assert_called_once()
         mock_role_obj.serialize.assert_called_once()
         rest_guild_logic_impl._session.create_guild.assert_called_once_with(
@@ -407,7 +367,9 @@ class TestRESTGuildLogic:
         rest_guild_logic_impl._session.create_guild.return_value = mock_guild_payload
         with mock.patch.object(guilds.Guild, "deserialize", return_value=mock_guild_obj):
             assert await rest_guild_logic_impl.create_guild(name="OK") is mock_guild_obj
-            guilds.Guild.deserialize.assert_called_once_with(mock_guild_payload)
+            guilds.Guild.deserialize.assert_called_once_with(
+                mock_guild_payload, components=rest_guild_logic_impl._components
+            )
         rest_guild_logic_impl._session.create_guild.assert_called_once_with(
             name="OK",
             region=...,
@@ -430,7 +392,9 @@ class TestRESTGuildLogic:
             rest_guild_logic_impl._session.get_guild.assert_called_once_with(
                 guild_id="379953393319542784", with_counts=True
             )
-            guilds.Guild.deserialize.assert_called_once_with(mock_guild_payload)
+            guilds.Guild.deserialize.assert_called_once_with(
+                mock_guild_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
@@ -441,7 +405,9 @@ class TestRESTGuildLogic:
         with mock.patch.object(guilds.GuildPreview, "deserialize", return_value=mock_guild_preview_obj):
             assert await rest_guild_logic_impl.fetch_guild_preview(guild) is mock_guild_preview_obj
             rest_guild_logic_impl._session.get_guild_preview.assert_called_once_with(guild_id="379953393319542784")
-            guilds.GuildPreview.deserialize.assert_called_once_with(mock_guild_preview_payload)
+            guilds.GuildPreview.deserialize.assert_called_once_with(
+                mock_guild_preview_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
@@ -481,7 +447,9 @@ class TestRESTGuildLogic:
                 reason="A good reason",
             )
             assert result is mock_guild_obj
-            guilds.Guild.deserialize.assert_called_once_with(mock_guild_payload)
+            guilds.Guild.deserialize.assert_called_once_with(
+                mock_guild_payload, components=rest_guild_logic_impl._components
+            )
             mock_icon_obj.read_all.assert_awaited_once()
             mock_splash_obj.read_all.assert_awaited_once()
         rest_guild_logic_impl._session.modify_guild.assert_called_once_with(
@@ -523,6 +491,9 @@ class TestRESTGuildLogic:
                 system_channel_id=...,
                 reason=...,
             )
+            guilds.Guild.deserialize.assert_called_once_with(
+                mock_guild_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 379953393319542784, guilds.Guild)
@@ -540,7 +511,9 @@ class TestRESTGuildLogic:
         with mock.patch.object(channels, "deserialize_channel", return_value=mock_channel_obj):
             assert await rest_guild_logic_impl.fetch_guild_channels(guild) == [mock_channel_obj]
             rest_guild_logic_impl._session.list_guild_channels.assert_called_once_with(guild_id="379953393319542784")
-            channels.deserialize_channel.assert_called_once_with(mock_channel_payload)
+            channels.deserialize_channel.assert_called_once_with(
+                mock_channel_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 123123123, guilds.Guild)
@@ -587,7 +560,9 @@ class TestRESTGuildLogic:
                 parent_id="5555",
                 reason="A GOOD REASON!",
             )
-            channels.deserialize_channel.assert_called_once_with(mock_channel_payload)
+            channels.deserialize_channel.assert_called_once_with(
+                mock_channel_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 123123123, guilds.Guild)
@@ -611,7 +586,9 @@ class TestRESTGuildLogic:
                 parent_id=...,
                 reason=...,
             )
-            channels.deserialize_channel.assert_called_once_with(mock_channel_payload)
+            channels.deserialize_channel.assert_called_once_with(
+                mock_channel_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 123123123, guilds.Guild)
@@ -636,7 +613,9 @@ class TestRESTGuildLogic:
             rest_guild_logic_impl._session.get_guild_member.assert_called_once_with(
                 guild_id="444444", user_id="123123123123"
             )
-            guilds.GuildMember.deserialize.assert_called_once_with(mock_member_payload)
+            guilds.GuildMember.deserialize.assert_called_once_with(
+                mock_member_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -651,6 +630,9 @@ class TestRESTGuildLogic:
                 assert member_obj is mock_member_obj
                 break
             mock_request.assert_called_once_with(guild_id="574921006817476608", after="115590097100865541", limit=34)
+            guilds.GuildMember.deserialize.assert_called_once_with(
+                mock_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -664,6 +646,9 @@ class TestRESTGuildLogic:
                 assert member_obj is mock_member_obj
                 break
             mock_request.assert_called_once_with(guild_id="574921006817476608", after="0", limit=1000)
+            guilds.GuildMember.deserialize.assert_called_once_with(
+                mock_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     async def test_fetch_members_after_with_datetime_object(self, rest_guild_logic_impl):
@@ -677,6 +662,9 @@ class TestRESTGuildLogic:
                 assert member_obj is mock_member_obj
                 break
             mock_request.assert_called_once_with(guild_id="574921006817476608", after="537340988620800000", limit=1000)
+            guilds.GuildMember.deserialize.assert_called_once_with(
+                mock_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 229292992, guilds.Guild)
@@ -821,7 +809,9 @@ class TestRESTGuildLogic:
             rest_guild_logic_impl._session.get_guild_ban.assert_called_once_with(
                 guild_id="123123123", user_id="4444444"
             )
-            guilds.GuildMemberBan.deserialize.assert_called_once_with(mock_ban_payload)
+            guilds.GuildMemberBan.deserialize.assert_called_once_with(
+                mock_ban_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 123123123, guilds.Guild)
@@ -832,7 +822,9 @@ class TestRESTGuildLogic:
         with mock.patch.object(guilds.GuildMemberBan, "deserialize", return_value=mock_ban_obj):
             assert await rest_guild_logic_impl.fetch_bans(guild) == [mock_ban_obj]
             rest_guild_logic_impl._session.get_guild_bans.assert_called_once_with(guild_id="123123123")
-            guilds.GuildMemberBan.deserialize.assert_called_once_with(mock_ban_payload)
+            guilds.GuildMemberBan.deserialize.assert_called_once_with(
+                mock_ban_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 123123123, guilds.Guild)
@@ -888,7 +880,9 @@ class TestRESTGuildLogic:
         with mock.patch.object(guilds.GuildRole, "deserialize", return_value=mock_role_obj):
             assert await rest_guild_logic_impl.fetch_roles(guild) == {33030: mock_role_obj}
             rest_guild_logic_impl._session.get_guild_roles.assert_called_once_with(guild_id="574921006817476608")
-            guilds.GuildRole.deserialize.assert_called_once_with(mock_role_payload)
+            guilds.GuildRole.deserialize.assert_called_once_with(
+                mock_role_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -916,7 +910,9 @@ class TestRESTGuildLogic:
                 mentionable=False,
                 reason="And then there was a role.",
             )
-            guilds.GuildRole.deserialize.assert_called_once_with(mock_role_payload)
+            guilds.GuildRole.deserialize.assert_called_once_with(
+                mock_role_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -936,7 +932,9 @@ class TestRESTGuildLogic:
                 mentionable=...,
                 reason=...,
             )
-            guilds.GuildRole.deserialize.assert_called_once_with(mock_role_payload)
+            guilds.GuildRole.deserialize.assert_called_once_with(
+                mock_role_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -952,7 +950,9 @@ class TestRESTGuildLogic:
             rest_guild_logic_impl._session.modify_guild_role_positions.assert_called_once_with(
                 "574921006817476608", ("123123", 1), ("123456", 2)
             )
-            guilds.GuildRole.deserialize.assert_called_once_with(mock_role_payload)
+            guilds.GuildRole.deserialize.assert_called_once_with(
+                mock_role_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -983,7 +983,9 @@ class TestRESTGuildLogic:
                 mentionable=False,
                 reason="Why not?",
             )
-            guilds.GuildRole.deserialize.assert_called_once_with(mock_role_payload)
+            guilds.GuildRole.deserialize.assert_called_once_with(
+                mock_role_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -1004,7 +1006,9 @@ class TestRESTGuildLogic:
                 mentionable=...,
                 reason=...,
             )
-            guilds.GuildRole.deserialize.assert_called_once_with(mock_role_payload)
+            guilds.GuildRole.deserialize.assert_called_once_with(
+                mock_role_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -1060,7 +1064,9 @@ class TestRESTGuildLogic:
             rest_guild_logic_impl._session.get_guild_voice_regions.assert_called_once_with(
                 guild_id="574921006817476608"
             )
-            voices.VoiceRegion.deserialize.assert_called_once_with(mock_voice_payload)
+            voices.VoiceRegion.deserialize.assert_called_once_with(
+                mock_voice_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -1070,7 +1076,9 @@ class TestRESTGuildLogic:
         rest_guild_logic_impl._session.get_guild_invites.return_value = [mock_invite_payload]
         with mock.patch.object(invites.InviteWithMetadata, "deserialize", return_value=mock_invite_obj):
             assert await rest_guild_logic_impl.fetch_guild_invites(guild) == [mock_invite_obj]
-            invites.InviteWithMetadata.deserialize.assert_called_once_with(mock_invite_payload)
+            invites.InviteWithMetadata.deserialize.assert_called_once_with(
+                mock_invite_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -1081,7 +1089,9 @@ class TestRESTGuildLogic:
         with mock.patch.object(guilds.GuildIntegration, "deserialize", return_value=mock_integration_obj):
             assert await rest_guild_logic_impl.fetch_integrations(guild) == [mock_integration_obj]
             rest_guild_logic_impl._session.get_guild_integrations.assert_called_once_with(guild_id="574921006817476608")
-            guilds.GuildIntegration.deserialize.assert_called_once_with(mock_integration_payload)
+            guilds.GuildIntegration.deserialize.assert_called_once_with(
+                mock_integration_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -1161,6 +1171,9 @@ class TestRESTGuildLogic:
         with mock.patch.object(guilds.GuildEmbed, "deserialize", return_value=mock_embed_obj):
             assert await rest_guild_logic_impl.fetch_guild_embed(guild) is mock_embed_obj
             rest_guild_logic_impl._session.get_guild_embed.assert_called_once_with(guild_id="574921006817476608")
+            guilds.GuildEmbed.deserialize.assert_called_once_with(
+                mock_embed_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -1177,6 +1190,9 @@ class TestRESTGuildLogic:
             rest_guild_logic_impl._session.modify_guild_embed.assert_called_once_with(
                 guild_id="574921006817476608", channel_id="123123", enabled=True, reason="Nyaa!!!"
             )
+            guilds.GuildEmbed.deserialize.assert_called_once_with(
+                mock_embed_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -1189,6 +1205,9 @@ class TestRESTGuildLogic:
             rest_guild_logic_impl._session.modify_guild_embed.assert_called_once_with(
                 guild_id="574921006817476608", channel_id=..., enabled=..., reason=...
             )
+            guilds.GuildEmbed.deserialize.assert_called_once_with(
+                mock_embed_payload, components=rest_guild_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
@@ -1199,7 +1218,9 @@ class TestRESTGuildLogic:
         with mock.patch.object(invites.VanityUrl, "deserialize", return_value=mock_vanity_obj):
             assert await rest_guild_logic_impl.fetch_guild_vanity_url(guild) is mock_vanity_obj
             rest_guild_logic_impl._session.get_guild_vanity_url.assert_called_once_with(guild_id="574921006817476608")
-            invites.VanityUrl.deserialize.assert_called_once_with(mock_vanity_payload)
+            invites.VanityUrl.deserialize.assert_called_once_with(
+                mock_vanity_payload, components=rest_guild_logic_impl._components
+            )
 
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
     def test_fetch_guild_widget_image_with_style(self, rest_guild_logic_impl, guild):
@@ -1228,4 +1249,6 @@ class TestRESTGuildLogic:
         with mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj):
             assert await rest_guild_logic_impl.fetch_guild_webhooks(channel) == [mock_webhook_obj]
             rest_guild_logic_impl._session.get_guild_webhooks.assert_called_once_with(guild_id="115590097100865541")
-            webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
+            webhooks.Webhook.deserialize.assert_called_once_with(
+                mock_webhook_payload, components=rest_guild_logic_impl._components
+            )

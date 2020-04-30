@@ -24,8 +24,14 @@ import pytest
 from hikari import colors
 from hikari import embeds
 from hikari import files
+from hikari.clients import components
 from hikari.internal import conversions
 from tests.hikari import _helpers
+
+
+@pytest.fixture()
+def mock_components():
+    return mock.MagicMock(components.Components)
 
 
 @pytest.fixture
@@ -114,8 +120,8 @@ def test_embed_payload(
 
 
 class TestEmbedFooter:
-    def test_deserialize(self, test_footer_payload):
-        footer_obj = embeds.EmbedFooter.deserialize(test_footer_payload)
+    def test_deserialize(self, test_footer_payload, mock_components):
+        footer_obj = embeds.EmbedFooter.deserialize(test_footer_payload, components=mock_components)
 
         assert footer_obj.text == "footer text"
         assert footer_obj.icon_url == "https://somewhere.com/footer.png"
@@ -133,8 +139,8 @@ class TestEmbedFooter:
 
 
 class TestEmbedImage:
-    def test_deserialize(self, test_image_payload):
-        image_obj = embeds.EmbedImage.deserialize(test_image_payload)
+    def test_deserialize(self, test_image_payload, mock_components):
+        image_obj = embeds.EmbedImage.deserialize(test_image_payload, components=mock_components)
 
         assert image_obj.url == "https://somewhere.com/image.png"
         assert image_obj.proxy_url == "https://media.somewhere.com/image.png"
@@ -151,8 +157,8 @@ class TestEmbedImage:
 
 
 class TestEmbedThumbnail:
-    def test_deserialize(self, test_thumbnail_payload):
-        thumbnail_obj = embeds.EmbedThumbnail.deserialize(test_thumbnail_payload)
+    def test_deserialize(self, test_thumbnail_payload, mock_components):
+        thumbnail_obj = embeds.EmbedThumbnail.deserialize(test_thumbnail_payload, components=mock_components)
 
         assert thumbnail_obj.url == "https://somewhere.com/thumbnail.png"
         assert thumbnail_obj.proxy_url == "https://media.somewhere.com/thumbnail.png"
@@ -169,8 +175,8 @@ class TestEmbedThumbnail:
 
 
 class TestEmbedVideo:
-    def test_deserialize(self, test_video_payload):
-        video_obj = embeds.EmbedVideo.deserialize(test_video_payload)
+    def test_deserialize(self, test_video_payload, mock_components):
+        video_obj = embeds.EmbedVideo.deserialize(test_video_payload, components=mock_components)
 
         assert video_obj.url == "https://somewhere.com/video.mp4"
         assert video_obj.height == 1234
@@ -178,16 +184,16 @@ class TestEmbedVideo:
 
 
 class TestEmbedProvider:
-    def test_deserialize(self, test_provider_payload):
-        provider_obj = embeds.EmbedProvider.deserialize(test_provider_payload)
+    def test_deserialize(self, test_provider_payload, mock_components):
+        provider_obj = embeds.EmbedProvider.deserialize(test_provider_payload, components=mock_components)
 
         assert provider_obj.name == "some name"
         assert provider_obj.url == "https://somewhere.com/provider"
 
 
 class TestEmbedAuthor:
-    def test_deserialize(self, test_author_payload):
-        author_obj = embeds.EmbedAuthor.deserialize(test_author_payload)
+    def test_deserialize(self, test_author_payload, mock_components):
+        author_obj = embeds.EmbedAuthor.deserialize(test_author_payload, components=mock_components)
 
         assert author_obj.name == "some name"
         assert author_obj.url == "https://somewhere.com/author"
@@ -210,8 +216,8 @@ class TestEmbedAuthor:
 
 
 class TestEmbedField:
-    def test_deserialize(self):
-        field_obj = embeds.EmbedField.deserialize({"name": "title", "value": "some value"})
+    def test_deserialize(self, mock_components):
+        field_obj = embeds.EmbedField.deserialize({"name": "title", "value": "some value"}, components=mock_components)
 
         assert field_obj.name == "title"
         assert field_obj.value == "some value"
@@ -234,13 +240,14 @@ class TestEmbed:
         test_provider_payload,
         test_author_payload,
         test_field_payload,
+        mock_components,
     ):
         mock_datetime = mock.MagicMock(datetime.datetime)
 
         with _helpers.patch_marshal_attr(
             embeds.Embed, "timestamp", deserializer=conversions.parse_iso_8601_ts, return_value=mock_datetime,
         ) as patched_timestamp_deserializer:
-            embed_obj = embeds.Embed.deserialize(test_embed_payload)
+            embed_obj = embeds.Embed.deserialize(test_embed_payload, components=mock_components)
             patched_timestamp_deserializer.assert_called_once_with("2020-03-22T16:40:39.218000+00:00")
 
         assert embed_obj.title == "embed title"
@@ -249,12 +256,19 @@ class TestEmbed:
         assert embed_obj.timestamp == mock_datetime
         assert embed_obj.color == colors.Color(14014915)
         assert embed_obj.footer == embeds.EmbedFooter.deserialize(test_footer_payload)
+        assert embed_obj.footer._components is mock_components
         assert embed_obj.image == embeds.EmbedImage.deserialize(test_image_payload)
+        assert embed_obj.image._components is mock_components
         assert embed_obj.thumbnail == embeds.EmbedThumbnail.deserialize(test_thumbnail_payload)
+        assert embed_obj.thumbnail._components is mock_components
         assert embed_obj.video == embeds.EmbedVideo.deserialize(test_video_payload)
+        assert embed_obj.video._components is mock_components
         assert embed_obj.provider == embeds.EmbedProvider.deserialize(test_provider_payload)
+        assert embed_obj.provider._components is mock_components
         assert embed_obj.author == embeds.EmbedAuthor.deserialize(test_author_payload)
+        assert embed_obj.author._components is mock_components
         assert embed_obj.fields == [embeds.EmbedField.deserialize(test_field_payload)]
+        assert embed_obj.fields[0]._components is mock_components
 
     def test_serialize_full_embed(self):
         embed_obj = embeds.Embed(

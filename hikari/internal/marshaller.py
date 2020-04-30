@@ -43,6 +43,7 @@ import weakref
 import attr
 
 from hikari.internal import assertions
+from hikari.internal import more_collections
 
 if typing.TYPE_CHECKING:
     from hikari.internal import more_typing
@@ -50,10 +51,10 @@ if typing.TYPE_CHECKING:
 _RAW_NAME_ATTR: typing.Final[str] = __name__ + "_RAW_NAME"
 _SERIALIZER_ATTR: typing.Final[str] = __name__ + "_SERIALIZER"
 _DESERIALIZER_ATTR: typing.Final[str] = __name__ + "_DESERIALIZER"
-_TRANSIENT_ATTR: typing.Final[str] = __name__ + "_TRANSIENT"
-_SKIP_UNMARSHALLING: typing.Final[str] = __name__ + "_SKIP_UNMARSHALLING"
+_INHERIT_KWARGS: typing.Final[str] = __name__ + "_INHERIT_KWARGS"
 _IF_UNDEFINED: typing.Final[str] = __name__ + "IF_UNDEFINED"
 _IF_NONE: typing.Final[str] = __name__ + "_IF_NONE"
+_MARSHALLER_ATTRIB: typing.Final[str] = __name__ + "_MARSHALLER_ATTRIB"
 _PASSED_THROUGH_SINGLETONS: typing.Final[typing.Sequence[bool]] = [False, True, None]
 RAISE: typing.Final[typing.Any] = object()
 EntityT = typing.TypeVar("EntityT", contravariant=True)
@@ -115,45 +116,44 @@ def attrib(
     # as an attr.ib() kwargs AND use type hints at the same time, and without
     # type hints, the library loses the ability to be type checked properly
     # anymore, so we have to pass this explicitly regardless.
-    deserializer: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
+    deserializer: typing.Optional[typing.Callable[[...], typing.Any], type(RAISE)] = RAISE,
     if_none: typing.Union[typing.Callable[[], typing.Any], None, type(RAISE)] = RAISE,
     if_undefined: typing.Union[typing.Callable[[], typing.Any], None, type(RAISE)] = RAISE,
     raw_name: typing.Optional[str] = None,
-    transient: bool = False,
-    skip_unmarshalling: bool = False,
-    serializer: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
+    inherit_kwargs: bool = False,
+    serializer: typing.Optional[typing.Callable[[typing.Any], typing.Any], type(RAISE)] = RAISE,
     **kwargs,
 ) -> attr.Attribute:
     """Create an `attr.ib` with marshaller metadata attached.
 
     Parameters
     ----------
-    deserializer : typing.Callable[[ typing.Any], typing.Any], optional
+    deserializer : typing.Callable[[...], typing.Any], optional
         The deserializer to use to deserialize raw elements.
+        If `None` then this field will never be deserialized from a payload
+        and will have to be attached to the object after generation or passed
+        through to `deserialize` as a kwarg.
     raw_name : str, optional
         The raw name of the element in its raw serialized form. If not provided,
         then this will use the field's default name later.
-    transient : bool
-        If `True`, the field is marked as transient, meaning it will not be
-        serialized. Defaults to `False`.
-    skip_unmarshalling : bool
-        If `True`, the field will never be deserialized from a payload and will
-        have to be attached to the object after generation or passed through
-        to `deserialize` as a kwarg, with `if_undefined` and `if_none` not
-        applying to these fields.
-    if_none
+    inherit_kwargs : bool
+        If `True` then any fields passed to deserialize for the entity this
+        attribute is attached to as kwargs will also be passed through to this
+        entity's deserializer as kwargs. Defaults to `False`.
+    if_none : typing.Union[typing.Callable[[], typing.Any], None]
         Either a default factory function called to get the default for when
         this field is `None` or one of `None`, `False` or `True` to specify that
         this should default to the given singleton. Will raise an exception when
         `None` is received for this field later if this isn't specified.
-    if_undefined
+    if_undefined : typing.Union[typing.Callable[[], typing.Any], None]
         Either a default factory function called to get the default for when
         this field isn't defined or one of `None`, `False` or `True` to specify
         that this should default to the given singleton. Will raise an exception
         when this field is undefined later on if this isn't specified.
-    serializer : typing.Callable[[ typing.Any], typing.Any], optional
+    serializer : typing.Callable[[typing.Any], typing.Any], optional
         The serializer to use. If not specified, then serializing the entire
         class that this attribute is in will trigger a `TypeError` later.
+        If `None` then the field will not be serialized.
     **kwargs :
         Any kwargs to pass to `attr.ib`.
 
@@ -176,8 +176,8 @@ def attrib(
     metadata[_DESERIALIZER_ATTR] = deserializer
     metadata[_IF_NONE] = if_none
     metadata[_IF_UNDEFINED] = if_undefined
-    metadata[_TRANSIENT_ATTR] = transient
-    metadata[_SKIP_UNMARSHALLING] = skip_unmarshalling
+    metadata[_INHERIT_KWARGS] = inherit_kwargs
+    metadata[_MARSHALLER_ATTRIB] = True
 
     attribute = attr.ib(**kwargs, metadata=metadata)
     # Fool pylint into thinking this is any type.
@@ -209,8 +209,7 @@ class _AttributeDescriptor:
         "constructor_name",
         "if_none",
         "if_undefined",
-        "is_transient",
-        "is_skipping_unmarshalling",
+        "is_inheriting_kwargs",
         "deserializer",
         "serializer",
     )
@@ -222,9 +221,8 @@ class _AttributeDescriptor:
         constructor_name: str,
         if_none: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)],
         if_undefined: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)],
-        is_transient: bool,
-        IS_SKIPPING_UNMARSHALLING: bool,
-        deserializer: typing.Callable[[typing.Any], typing.Any],
+        is_inheriting_kwargs: bool,
+        deserializer: typing.Callable[[...], typing.Any],
         serializer: typing.Callable[[typing.Any], typing.Any],
     ) -> None:
         _default_validator(if_undefined)
@@ -234,8 +232,7 @@ class _AttributeDescriptor:
         self.constructor_name = constructor_name
         self.if_none = if_none
         self.if_undefined = if_undefined
-        self.is_transient = is_transient  # Do not serialize
-        self.is_skipping_unmarshalling = IS_SKIPPING_UNMARSHALLING  # Do not deserialize
+        self.is_inheriting_kwargs = is_inheriting_kwargs
         self.deserializer = deserializer
         self.serializer = serializer
 
@@ -258,16 +255,18 @@ def _construct_attribute_descriptor(field: attr.Attribute) -> _AttributeDescript
     while constructor_name.startswith("_"):
         constructor_name = constructor_name[1:]
 
+    deserializer = field.metadata[_DESERIALIZER_ATTR]
+    serializer = field.metadata[_SERIALIZER_ATTR]
+
     return _AttributeDescriptor(
         raw_name=raw_name,
         field_name=field_name,
         constructor_name=constructor_name,
         if_none=field.metadata[_IF_NONE],
         if_undefined=field.metadata[_IF_UNDEFINED],
-        is_transient=field.metadata[_TRANSIENT_ATTR],
-        IS_SKIPPING_UNMARSHALLING=field.metadata[_SKIP_UNMARSHALLING],
-        deserializer=field.metadata[_DESERIALIZER_ATTR] or _not_implemented("deserialize", field_name),
-        serializer=field.metadata[_SERIALIZER_ATTR] or _not_implemented("serialize", field_name),
+        is_inheriting_kwargs=field.metadata[_INHERIT_KWARGS],
+        deserializer=deserializer if deserializer is not RAISE else _not_implemented("deserialize", field_name),
+        serializer=serializer if serializer is not RAISE else _not_implemented("serialize", field_name),
     )
 
 
@@ -278,7 +277,14 @@ def _construct_entity_descriptor(entity: typing.Any) -> _EntityDescriptor:
         error_type=TypeError,
     )
 
-    return _EntityDescriptor(entity, [_construct_attribute_descriptor(field) for field in attr.fields(entity)])
+    return _EntityDescriptor(
+        entity,
+        [
+            _construct_attribute_descriptor(field)
+            for field in attr.fields(entity)
+            if field.metadata.get(_MARSHALLER_ATTRIB)
+        ],
+    )
 
 
 class HikariEntityMarshaller:
@@ -317,7 +323,9 @@ class HikariEntityMarshaller:
         self._registered_entities[cls] = entity_descriptor
         return cls
 
-    def deserialize(self, raw_data: more_typing.JSONObject, target_type: typing.Type[EntityT], **kwargs) -> EntityT:
+    def deserialize(
+        self, raw_data: more_typing.JSONObject, target_type: typing.Type[EntityT], **injected_kwargs: typing.Any
+    ) -> EntityT:
         """Deserialize a given raw data item into the target type.
 
         Parameters
@@ -326,10 +334,10 @@ class HikariEntityMarshaller:
             The raw data to deserialize.
         target_type : typing.Type[typing.Any]
             The type to deserialize to.
-        **kwargs :
+        **injected_kwargs :
             Attributes to inject into the entity. These still need to be
             included in the model's slots and should normally be fields where
-            both `skip_unmarshalling` and `transient` were passed as `True`.
+            both `deserializer` and `serializer` are set to `None`.
 
         Returns
         -------
@@ -351,8 +359,10 @@ class HikariEntityMarshaller:
         except KeyError:
             raise LookupError(f"No registered entity {target_type.__module__}.{target_type.__qualname__}")
 
+        kwargs = {}
+
         for a in descriptor.attribs:
-            if a.is_skipping_unmarshalling:
+            if a.deserializer is None:
                 continue
             kwarg_name = a.constructor_name
 
@@ -383,8 +393,9 @@ class HikariEntityMarshaller:
                 continue
 
             try:
-                # Use the deserializer if it is there, otherwise use the constructor of the type of the field.
-                kwargs[kwarg_name] = a.deserializer(data) if a.deserializer else data
+                kwargs[kwarg_name] = a.deserializer(
+                    data, **(injected_kwargs if a.is_inheriting_kwargs else more_collections.EMPTY_DICT)
+                )
             except Exception as exc:
                 raise TypeError(
                     "Failed to deserialize data to instance of "
@@ -392,7 +403,7 @@ class HikariEntityMarshaller:
                     f"attribute {a.field_name} (passed to constructor as {kwarg_name})"
                 ) from exc
 
-        return target_type(**kwargs)
+        return target_type(**kwargs, **injected_kwargs)
 
     def serialize(self, obj: typing.Optional[typing.Any]) -> more_typing.NullableJSONObject:
         """Serialize a given entity into a raw data item.
@@ -425,10 +436,9 @@ class HikariEntityMarshaller:
         raw_data = {}
 
         for a in descriptor.attribs:
-            if a.is_transient:
+            if a.serializer is None:
                 continue
-            value = getattr(obj, a.field_name)
-            if value is not None:
+            if (value := getattr(obj, a.field_name)) is not None:
                 raw_data[a.raw_name] = a.serializer(value)
 
         return raw_data

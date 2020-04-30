@@ -40,7 +40,7 @@ class RESTOAuth2Component(base.BaseRESTComponent, abc.ABC):  # pylint: disable=a
             An application info object.
         """
         payload = await self._session.get_current_application_info()
-        return applications.Application.deserialize(payload)
+        return applications.Application.deserialize(payload, components=self._components)
 
     async def add_guild_member(self, *_, **__):
         # TODO: implement and document this.

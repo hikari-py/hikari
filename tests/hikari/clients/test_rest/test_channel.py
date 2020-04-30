@@ -59,7 +59,9 @@ class TestRESTChannelLogging:
         with mock.patch.object(channels, "deserialize_channel", return_value=mock_channel_obj):
             assert await rest_channel_logic_impl.fetch_channel(channel) is mock_channel_obj
             rest_channel_logic_impl._session.get_channel.assert_called_once_with(channel_id="1234")
-            channels.deserialize_channel.assert_called_once_with(mock_payload)
+            channels.deserialize_channel.assert_called_once_with(
+                mock_payload, components=rest_channel_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.Channel)
@@ -103,7 +105,9 @@ class TestRESTChannelLogging:
                 reason="Get Nyaa'd.",
             )
             mock_overwrite_obj.serialize.assert_called_once()
-            channels.deserialize_channel.assert_called_once_with(mock_payload)
+            channels.deserialize_channel.assert_called_once_with(
+                mock_payload, components=rest_channel_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.Channel)
@@ -129,7 +133,9 @@ class TestRESTChannelLogging:
                 parent_id=...,
                 reason=...,
             )
-            channels.deserialize_channel.assert_called_once_with(mock_payload)
+            channels.deserialize_channel.assert_called_once_with(
+                mock_payload, components=rest_channel_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 55555, channels.Channel)
@@ -676,7 +682,9 @@ class TestRESTChannelLogging:
         with mock.patch.object(invites.InviteWithMetadata, "deserialize", return_value=mock_invite_obj):
             assert await rest_channel_logic_impl.fetch_invites_for_channel(channel=channel) == [mock_invite_obj]
             rest_channel_logic_impl._session.get_channel_invites.assert_called_once_with(channel_id="123123123")
-            invites.InviteWithMetadata.deserialize.assert_called_once_with(mock_invite_payload)
+            invites.InviteWithMetadata.deserialize.assert_called_once_with(
+                mock_invite_payload, components=rest_channel_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 234123, channels.Channel)
@@ -708,7 +716,9 @@ class TestRESTChannelLogging:
                 target_user_type=1,
                 reason="Hello there.",
             )
-            invites.InviteWithMetadata.deserialize.assert_called_once_with(mock_invite_payload)
+            invites.InviteWithMetadata.deserialize.assert_called_once_with(
+                mock_invite_payload, components=rest_channel_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 234123, channels.Channel)
@@ -728,7 +738,9 @@ class TestRESTChannelLogging:
                 target_user_type=...,
                 reason=...,
             )
-            invites.InviteWithMetadata.deserialize.assert_called_once_with(mock_invite_payload)
+            invites.InviteWithMetadata.deserialize.assert_called_once_with(
+                mock_invite_payload, components=rest_channel_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.Channel)
@@ -816,7 +828,9 @@ class TestRESTChannelLogging:
             )
             assert result is mock_webhook_obj
             mock_image_obj.read_all.assert_awaited_once()
-            webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
+            webhooks.Webhook.deserialize.assert_called_once_with(
+                mock_webhook_payload, components=rest_channel_logic_impl._components
+            )
         rest_channel_logic_impl._session.create_webhook.assert_called_once_with(
             channel_id="115590097100865541", name="aWebhook", avatar=mock_image_data, reason="And a webhook is born."
         )
@@ -829,7 +843,9 @@ class TestRESTChannelLogging:
         rest_channel_logic_impl._session.create_webhook.return_value = mock_webhook_payload
         with mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj):
             assert await rest_channel_logic_impl.create_webhook(channel=channel, name="aWebhook") is mock_webhook_obj
-            webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
+            webhooks.Webhook.deserialize.assert_called_once_with(
+                mock_webhook_payload, components=rest_channel_logic_impl._components
+            )
         rest_channel_logic_impl._session.create_webhook.assert_called_once_with(
             channel_id="115590097100865541", name="aWebhook", avatar=..., reason=...
         )
@@ -845,4 +861,6 @@ class TestRESTChannelLogging:
             rest_channel_logic_impl._session.get_channel_webhooks.assert_called_once_with(
                 channel_id="115590097100865541"
             )
-            webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
+            webhooks.Webhook.deserialize.assert_called_once_with(
+                mock_webhook_payload, components=rest_channel_logic_impl._components
+            )

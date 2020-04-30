@@ -26,6 +26,7 @@ from hikari import channels
 from hikari import guilds
 from hikari import invites
 from hikari import users
+from hikari.clients import components
 from hikari.internal import conversions
 from hikari.internal import urls
 from tests.hikari import _helpers
@@ -87,9 +88,14 @@ def test_invite_with_metadata_payload(test_invite_payload):
     }
 
 
+@pytest.fixture()
+def mock_components():
+    return mock.MagicMock(components.Components)
+
+
 class TestInviteGuild:
-    def test_deserialize(self, test_invite_guild_payload):
-        invite_guild_obj = invites.InviteGuild.deserialize(test_invite_guild_payload)
+    def test_deserialize(self, test_invite_guild_payload, mock_components):
+        invite_guild_obj = invites.InviteGuild.deserialize(test_invite_guild_payload, components=mock_components)
         assert invite_guild_obj.splash_hash == "aSplashForSure"
         assert invite_guild_obj.banner_hash == "aBannerForSure"
         assert invite_guild_obj.description == "Describe me cute kitty."
@@ -162,8 +168,8 @@ class TestVanityUrl:
     def vanity_url_payload(self):
         return {"code": "iamacode", "uses": 42}
 
-    def test_deserialize(self, vanity_url_payload):
-        vanity_url_obj = invites.VanityUrl.deserialize(vanity_url_payload)
+    def test_deserialize(self, vanity_url_payload, mock_components):
+        vanity_url_obj = invites.VanityUrl.deserialize(vanity_url_payload, components=mock_components)
         assert vanity_url_obj.code == "iamacode"
         assert vanity_url_obj.uses == 42
 
@@ -176,6 +182,7 @@ class TestInvite:
         test_2nd_user_payload,
         test_partial_channel,
         test_invite_guild_payload,
+        mock_components,
     ):
         mock_guild = mock.MagicMock(invites.InviteGuild)
         mock_channel = mock.MagicMock(channels.PartialChannel)
@@ -203,11 +210,11 @@ class TestInvite:
             )
         )
         with stack:
-            invite_obj = invites.Invite.deserialize(test_invite_payload)
-            mock_target_user_deseralize.assert_called_once_with(test_2nd_user_payload)
-            mock_inviter_deseralize.assert_called_once_with(test_user_payload)
-            mock_channel_deseralize.assert_called_once_with(test_partial_channel)
-            mock_guld_deseralize.assert_called_once_with(test_invite_guild_payload)
+            invite_obj = invites.Invite.deserialize(test_invite_payload, components=mock_components)
+            mock_target_user_deseralize.assert_called_once_with(test_2nd_user_payload, components=mock_components)
+            mock_inviter_deseralize.assert_called_once_with(test_user_payload, components=mock_components)
+            mock_channel_deseralize.assert_called_once_with(test_partial_channel, components=mock_components)
+            mock_guld_deseralize.assert_called_once_with(test_invite_guild_payload, components=mock_components)
         assert invite_obj.code == "aCode"
         assert invite_obj.guild is mock_guild
         assert invite_obj.channel is mock_channel
@@ -219,7 +226,7 @@ class TestInvite:
 
 
 class TestInviteWithMetadata:
-    def test_deserialize(self, test_invite_with_metadata_payload):
+    def test_deserialize(self, test_invite_with_metadata_payload, mock_components):
         mock_datetime = mock.MagicMock(datetime.datetime)
         stack = contextlib.ExitStack()
         stack.enter_context(
@@ -247,7 +254,9 @@ class TestInviteWithMetadata:
             )
         )
         with stack:
-            invite_with_metadata_obj = invites.InviteWithMetadata.deserialize(test_invite_with_metadata_payload)
+            invite_with_metadata_obj = invites.InviteWithMetadata.deserialize(
+                test_invite_with_metadata_payload, components=mock_components
+            )
             mock_created_at_deserializer.assert_called_once_with("2015-04-26T06:26:56.936000+00:00")
         assert invite_with_metadata_obj.uses == 3
         assert invite_with_metadata_obj.max_uses == 8

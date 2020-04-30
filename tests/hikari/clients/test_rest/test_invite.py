@@ -48,7 +48,9 @@ class TestRESTInviteLogic:
             rest_invite_logic_impl._session.get_invite.assert_called_once_with(
                 invite_code="AAAAAAAAAAAAAAAA", with_counts=True,
             )
-            invites.Invite.deserialize.assert_called_once_with(mock_invite_payload)
+            invites.Invite.deserialize.assert_called_once_with(
+                mock_invite_payload, components=rest_invite_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("invite", [mock.MagicMock(invites.Invite, code="AAAAAAAAAAAAAAAA"), "AAAAAAAAAAAAAAAA"])
@@ -61,7 +63,9 @@ class TestRESTInviteLogic:
             rest_invite_logic_impl._session.get_invite.assert_called_once_with(
                 invite_code="AAAAAAAAAAAAAAAA", with_counts=...,
             )
-            invites.Invite.deserialize.assert_called_once_with(mock_invite_payload)
+            invites.Invite.deserialize.assert_called_once_with(
+                mock_invite_payload, components=rest_invite_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("invite", [mock.MagicMock(invites.Invite, code="AAAAAAAAAAAAAAAA"), "AAAAAAAAAAAAAAAA"])

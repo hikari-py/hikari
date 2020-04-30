@@ -21,12 +21,18 @@ import pytest
 
 from hikari import emojis
 from hikari import users
+from hikari.clients import components
 from tests.hikari import _helpers
 
 
+@pytest.fixture()
+def mock_components():
+    return mock.MagicMock(components.Components)
+
+
 class TestUnicodeEmoji:
-    def test_deserialize(self):
-        emoji_obj = emojis.UnicodeEmoji.deserialize({"name": "🤷"})
+    def test_deserialize(self, mock_components):
+        emoji_obj = emojis.UnicodeEmoji.deserialize({"name": "🤷"}, components=mock_components)
 
         assert emoji_obj.name == "🤷"
 
@@ -38,8 +44,10 @@ class TestUnicodeEmoji:
 
 
 class TestUnknownEmoji:
-    def test_deserialize(self):
-        emoji_obj = emojis.UnknownEmoji.deserialize({"id": "1234", "name": "test", "animated": True})
+    def test_deserialize(self, mock_components):
+        emoji_obj = emojis.UnknownEmoji.deserialize(
+            {"id": "1234", "name": "test", "animated": True}, components=mock_components
+        )
 
         assert emoji_obj.id == 1234
         assert emoji_obj.name == "test"
@@ -51,7 +59,7 @@ class TestUnknownEmoji:
 
 
 class TestGuildEmoji:
-    def test_deserialize(self):
+    def test_deserialize(self, mock_components):
         mock_user = mock.MagicMock(users.User)
 
         test_user_payload = {"id": "123456", "username": "hikari", "discriminator": "0000", "avatar": None}
@@ -68,9 +76,10 @@ class TestGuildEmoji:
                     "user": test_user_payload,
                     "require_colons": True,
                     "managed": False,
-                }
+                },
+                components=mock_components,
             )
-            patched_user_deserializer.assert_called_once_with(test_user_payload)
+            patched_user_deserializer.assert_called_once_with(test_user_payload, components=mock_components)
 
         assert emoji_obj.id == 12345
         assert emoji_obj.name == "testing"
@@ -109,3 +118,8 @@ class TestGuildEmoji:
 )
 def test_deserialize_reaction_emoji_returns_expected_type(payload, expected_type):
     assert isinstance(emojis.deserialize_reaction_emoji(payload), expected_type)
+
+
+def test_deserialize_reaction_emoji_passes_kwargs(mock_components):
+    emoji_obj = emojis.deserialize_reaction_emoji({"id": "1234", "name": "test"}, components=mock_components)
+    assert emoji_obj._components is mock_components
