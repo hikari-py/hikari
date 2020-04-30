@@ -24,9 +24,15 @@ from concurrent import futures
 from ci import config
 from ci import nox
 
-FLAGS = ["pylint", config.MAIN_PACKAGE, "--rcfile", config.PYLINT_INI]
+FLAGS = [
+    "pylint",
+    config.MAIN_PACKAGE,
+    "--rcfile",
+    config.PYLINT_INI
+]
 
 SUCCESS_CODES = list(range(0, 256))
+
 
 @nox.session(default=True, reuse_venv=True)
 def pylint(session: nox.Session) -> None:
@@ -44,7 +50,7 @@ def pylint(session: nox.Session) -> None:
 def pylint_text(session: nox.Session) -> None:
     try:
         print("generating plaintext report")
-        session.run(*FLAGS, success_codes=SUCCESS_CODES)
+        session.run(*FLAGS, *session.posargs, success_codes=SUCCESS_CODES)
     except Exception:
         traceback.print_exc()
 
@@ -53,7 +59,14 @@ def pylint_junit(session: nox.Session) -> None:
     try:
         print("generating junit report")
         with open(config.PYLINT_JUNIT_OUTPUT_PATH, "w") as fp:
-            session.run(*FLAGS, "--output-format", "pylint_junit.JUnitReporter", stdout=fp, success_codes=SUCCESS_CODES)
+            session.run(
+                *FLAGS,
+                "--output-format",
+                "pylint_junit.JUnitReporter",
+                *session.posargs,
+                stdout=fp,
+                success_codes=SUCCESS_CODES
+            )
     except Exception:
         traceback.print_exc()
 
@@ -62,7 +75,7 @@ def pylint_html(session: nox.Session) -> None:
     try:
         print("generating json report")
         with open(config.PYLINT_JSON_OUTPUT_PATH, "w") as fp:
-            session.run(*FLAGS, "--output-format", "json", stdout=fp, success_codes=SUCCESS_CODES)
+            session.run(*FLAGS, "--output-format", "json", *session.posargs, stdout=fp, success_codes=SUCCESS_CODES)
         print("producing html report in", config.PYTEST_HTML_OUTPUT_PATH)
         session.run("pylint-json2html", "-o", config.PYLINT_HTML_OUTPUT_PATH, config.PYLINT_JSON_OUTPUT_PATH)
         print("artifacts:")
