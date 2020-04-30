@@ -32,15 +32,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
     <meta charset="utf-8"/>
     <title>Hikari.py</title>
-
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"/>
+    <link rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.1/styles/default.min.css">
     <link rel="stylesheet" href="site.css"/>
 </head>
 
-<body class="text-center">
+<body>
 
-<div class="cover-container d-flex h-100 p-3 mx-auto flex-column" id="main-content">
+<pre class="background-only">
+    <code class="python">
+        #!/usr/bin/env python
+        # -*- coding: utf-8 -*-
+        import asyncio
+        import functools
+        import logging
+        import os
+
+        import hikari
+
+        logging.basicConfig(level="INFO")
+
+        bot = hikari.StatelessBot(token=os.environ["BOT_TOKEN"])
+
+        def command(name):
+            def decorator(fn):
+                @functools.wraps(fn)
+                async def wrapper(event):
+                    if not event.author.is_bot and event.content.startswith(name):
+                        await fn(event)
+                return wrapper
+            return decorator
+
+        @bot.on()
+        @command("hk.ping")
+        async def ping(message: hikari.MessageCreateEvent) -> None:
+            await bot.rest.create_message(message.channel_id, content="Pong!")
+
+        @bot.on()
+        @command("hk.add")
+        async def add_numbers(message: hikari.MessageCreateEvent) -> None:
+            await bot.rest.create_message(
+                message.channel_id,
+                content="Please enter the first number",
+            )
+
+            def is_number_check(event):
+                return event.author == message.author and message.content.isdigit()
+
+            try:
+                m1 = await bot.wait_for(hikari.MessageCreateEvent, predicate=is_number_check, timeout=30)
+                await bot.rest.create_message(message.channel_id, content="Please enter the second number")
+                m2 = await bot.wait_for(hikari.MessageCreateEvent, predicate=is_number_check, timeout=30)
+
+            except asyncio.TimeoutError:
+                await bot.rest.create_message(message.channel_id, content="You took too long...")
+
+            else:
+                val1 = int(m1.content)
+                val2 = int(m2.content)
+
+                embed = hikari.Embed(
+                    title="Result!",
+                    description=f"{val1} + {val2}"
+                    color="#3f3"
+                )
+
+                await bot.rest.create_message(message.channel_id, embed=embed)
+
+        bot.run()
+    </code>
+</pre>
+
+<div class="cover-container d-flex h-100 p-3 mx-auto flex-column text-center" id="main-content">
     <header class="masthead mb-auto">
         <div class="inner">
             <ul class="nav justify-content-center">
@@ -97,14 +162,14 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.1/highlight.min.js"></script>
 <script>
-        $(document).ready(function () {
-            $("header").fadeIn(1500);
-            $("main").fadeIn(1500);
-            $("footer").fadeIn(1500);
-        });
-
+    hljs.initHighlightingOnLoad();
+    $(document).ready(function () {
+        $("header").fadeIn(1500);
+        $("main").fadeIn(1500);
+        $("footer").fadeIn(1500);
+    });
 </script>
 </body>
-
 </html>
