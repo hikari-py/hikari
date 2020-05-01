@@ -96,7 +96,7 @@ class GuildEmoji(UnknownEmoji):
     )
     """The IDs of the roles that are whitelisted to use this emoji.
 
-    If this is empty than any user can use this emoji regardless of their roles.
+    If this is empty then any user can use this emoji regardless of their roles.
     """
 
     user: typing.Optional[users.User] = marshaller.attrib(
