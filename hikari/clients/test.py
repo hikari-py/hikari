@@ -78,7 +78,7 @@ def run(compression, color, debug, intents, logger, shards, token, verify_ssl, g
     """
     if intents is not None:
         intents = intents.split(",")
-        intents = conversions.dereference_int_flag(intents.Intent, intents)
+        intents = conversions.dereference_int_flag(hikari.Intent, intents)
 
     logging.captureWarnings(True)
 
