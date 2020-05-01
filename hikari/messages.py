@@ -590,14 +590,17 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         --------
         .. code-block:: python
 
-            # Using a unicode emoji name.
+            # Using a unicode emoji.
             await message.add_reaction("\N{OK HAND SIGN}")
+            
+            # Using a unicode emoji name.
+            await message.add_reaction("\\N{OK HAND SIGN}")
 
             # Using the `name:id` format.
             await message.add_reaction("rooAYAYA:705837374319493284")
 
             # Using a UnicodeEmoji
-            await message.add_reaction()
+            await message.add_reaction(some_emoji_object)
 
         Raises
         ------
