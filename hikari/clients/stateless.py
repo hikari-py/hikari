@@ -58,4 +58,3 @@ class StatelessBot(bot_base.BotBase):
     @staticmethod
     def _create_event_dispatcher(config: configs.BotConfig) -> intent_aware_dispatchers.IntentAwareEventDispatcherImpl:
         return intent_aware_dispatchers.IntentAwareEventDispatcherImpl(config.intents)
-

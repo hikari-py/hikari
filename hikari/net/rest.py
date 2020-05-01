@@ -252,17 +252,12 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
                 # Wait for any ratelimits to finish
                 await asyncio.gather(
-                    self.bucket_ratelimiters.acquire(compiled_route),
-                    self.global_ratelimiter.acquire()
+                    self.bucket_ratelimiters.acquire(compiled_route), self.global_ratelimiter.acquire()
                 )
 
                 # Make the request.
                 response = await self._perform_request(
-                    method=compiled_route.method,
-                    url=url,
-                    headers=headers,
-                    body=body,
-                    query=query
+                    method=compiled_route.method, url=url, headers=headers, body=body, query=query
                 )
 
                 # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
@@ -332,7 +327,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
                 # I hope we don't though.
                 raise errors.HTTPError(
                     real_url,
-                    f"We were ratelimited but did not understand the response. Perhaps Cloudflare did this? {body!r}"
+                    f"We were ratelimited but did not understand the response. Perhaps Cloudflare did this? {body!r}",
                 )
 
     async def get_gateway(self) -> str:

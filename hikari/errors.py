@@ -230,11 +230,7 @@ class HTTPError(HikariError):
 
 class HTTPErrorResponse(HTTPError):
     def __init__(
-        self,
-        url: str,
-        status: http.HTTPStatus,
-        headers: aiohttp.typedefs.LooseHeaders,
-        raw_body: typing.AnyStr,
+        self, url: str, status: http.HTTPStatus, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr,
     ) -> None:
         super().__init__(url, str(status))
         self.status = status
@@ -247,45 +243,25 @@ class ClientHTTPErrorResponse(HTTPErrorResponse):
 
 
 class BadRequest(ClientHTTPErrorResponse):
-    def __init__(
-        self,
-        url: str,
-        headers: aiohttp.typedefs.LooseHeaders,
-        raw_body: typing.AnyStr,
-    ) -> None:
+    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr,) -> None:
         status = http.HTTPStatus.BAD_REQUEST
         super().__init__(url, status, headers, raw_body)
 
 
 class Unauthorized(ClientHTTPErrorResponse):
-    def __init__(
-        self,
-        url: str,
-        headers: aiohttp.typedefs.LooseHeaders,
-        raw_body: typing.AnyStr,
-    ) -> None:
+    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr,) -> None:
         status = http.HTTPStatus.UNAUTHORIZED
         super().__init__(url, status, headers, raw_body)
 
 
 class Forbidden(ClientHTTPErrorResponse):
-    def __init__(
-        self,
-        url: str,
-        headers: aiohttp.typedefs.LooseHeaders,
-        raw_body: typing.AnyStr,
-    ) -> None:
+    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr,) -> None:
         status = http.HTTPStatus.FORBIDDEN
         super().__init__(url, status, headers, raw_body)
 
 
 class NotFound(ClientHTTPErrorResponse):
-    def __init__(
-        self,
-        url: str,
-        headers: aiohttp.typedefs.LooseHeaders,
-        raw_body: typing.AnyStr,
-    ) -> None:
+    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr,) -> None:
         status = http.HTTPStatus.NOT_FOUND
         super().__init__(url, status, headers, raw_body)
 
