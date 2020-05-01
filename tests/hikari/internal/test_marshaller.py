@@ -38,8 +38,7 @@ class TestAttrib:
                 raw_name="foo",
                 if_none=mock_default_factory_1,
                 if_undefined=mock_default_factory_2,
-                transient=False,
-                skip_unmarshalling=True,
+                inherit_kwargs=True,
                 serializer=serializer,
                 foo=12,
                 bar="hello, world",
@@ -52,10 +51,10 @@ class TestAttrib:
                     marshaller._RAW_NAME_ATTR: "foo",
                     marshaller._SERIALIZER_ATTR: serializer,
                     marshaller._DESERIALIZER_ATTR: deserializer,
-                    marshaller._TRANSIENT_ATTR: False,
-                    marshaller._SKIP_UNMARSHALLING: True,
+                    marshaller._INHERIT_KWARGS: True,
                     marshaller._IF_UNDEFINED: mock_default_factory_2,
                     marshaller._IF_NONE: mock_default_factory_1,
+                    marshaller._MARSHALLER_ATTRIB: True,
                 },
             )
 
@@ -100,6 +99,19 @@ class TestMarshaller:
     @pytest.fixture()
     def marshaller_impl(self):
         return marshaller.HikariEntityMarshaller()
+
+    def test_register_ignores_none_marshaller_attrs(self, marshaller_impl):
+        defaulted_foo = mock.MagicMock()
+
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
+        class User:
+            id: int = marshaller.attrib(deserializer=int)
+            foo: list = attr.attrib(default=defaulted_foo)
+
+        result = marshaller_impl.deserialize({"id": "123", "foo": "blah"}, User)
+        assert result.id == 123
+        assert result.foo is defaulted_foo
 
     def test_deserialize(self, marshaller_impl):
         deserialized_id = mock.MagicMock()
@@ -233,13 +245,13 @@ class TestMarshaller:
 
         assert marshaller_impl.serialize(u) == {"id": "12", "some_list": [9, 18, 27, 36]}
 
-    def test_serialize_transient(self, marshaller_impl):
+    def test_serialize_skips_fields_with_null_serializer(self, marshaller_impl):
         @marshaller.marshallable(marshaller=marshaller_impl)
         @attr.s()
         class User:
             id: int = marshaller.attrib(deserializer=..., serializer=str)
             some_list: list = marshaller.attrib(
-                deserializer=..., transient=True,
+                deserializer=..., serializer=None,
             )
 
         u = User(12, ["9", "18", "27", "36"])
@@ -248,12 +260,12 @@ class TestMarshaller:
             "id": "12",
         }
 
-    def test_deserialize_skip_unmarshalling(self, marshaller_impl):
+    def test_deserialize_skips_fields_with_null_deserializer(self, marshaller_impl):
         @marshaller.marshallable(marshaller=marshaller_impl)
         @attr.s
         class User:
             username: str = marshaller.attrib(deserializer=str)
-            _component: object = marshaller.attrib(skip_unmarshalling=True, default=None)
+            _component: object = marshaller.attrib(deserializer=None, default=None)
 
         u = marshaller_impl.deserialize({"_component": "OK", "component": "Nay", "username": "Nay"}, User)
         assert u._component is None
@@ -263,11 +275,31 @@ class TestMarshaller:
         @marshaller.marshallable(marshaller=marshaller_impl)
         @attr.s
         class User:
-            _component: object = marshaller.attrib(skip_unmarshalling=True, default=None)
+            _component: object = marshaller.attrib(deserializer=None, default=None)
 
         mock_component = mock.MagicMock()
         u = marshaller_impl.deserialize({"_component": "OK", "component": "Nay"}, User, component=mock_component)
         assert u._component is mock_component
+
+    def test_deserialize_injects_kwargs_to_inheriting_child_entity(self, marshaller_impl):
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
+        class Child:
+            _components: object = marshaller.attrib(deserializer=None, serializer=None)
+
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        @attr.s()
+        class User(Child):
+            child: Child = marshaller.attrib(
+                deserializer=lambda *args, **kwargs: marshaller_impl.deserialize(*args, Child, **kwargs),
+                inherit_kwargs=True,
+            )
+
+        components = mock.MagicMock()
+
+        user = marshaller_impl.deserialize({"child": {}}, User, components=components)
+        assert user._components is components
+        assert user.child._components is components
 
     @_helpers.assert_raises(type_=LookupError)
     def test_deserialize_on_unregistered_class_raises_LookupError(self, marshaller_impl):

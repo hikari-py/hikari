@@ -110,7 +110,7 @@ class TestGuildEmojisUpdateEvent:
         return {"emojis": [test_emoji_payload], "guild_id": "696969"}
 
     def test_deserialize(self, test_guild_emojis_update_payload, test_emoji_payload):
-        mock_emoji = _helpers.mock_model(emojis.GuildEmoji, id=240)
+        mock_emoji = _helpers.mock_model(emojis.GuildEmoji, id=4242)
         with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji):
             guild_emojis_update_obj = guild.GuildEmojisUpdateEvent.deserialize(test_guild_emojis_update_payload)
             emojis.GuildEmoji.deserialize.assert_called_once_with(test_emoji_payload)

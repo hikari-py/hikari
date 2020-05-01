@@ -161,23 +161,25 @@ class Invite(bases.HikariEntity, marshaller.Deserializable):
     """The code for this invite."""
 
     guild: typing.Optional[InviteGuild] = marshaller.attrib(
-        deserializer=InviteGuild.deserialize, if_undefined=None, default=None
+        deserializer=InviteGuild.deserialize, if_undefined=None, default=None, inherit_kwargs=True,
     )
     """The partial object of the guild this dm belongs to.
 
     Will be `None` for group dm invites.
     """
 
-    channel: channels.PartialChannel = marshaller.attrib(deserializer=channels.PartialChannel.deserialize)
+    channel: channels.PartialChannel = marshaller.attrib(
+        deserializer=channels.PartialChannel.deserialize, inherit_kwargs=True,
+    )
     """The partial object of the channel this invite targets."""
 
     inviter: typing.Optional[users.User] = marshaller.attrib(
-        deserializer=users.User.deserialize, if_undefined=None, default=None
+        deserializer=users.User.deserialize, if_undefined=None, default=None, inherit_kwargs=True,
     )
     """The object of the user who created this invite."""
 
     target_user: typing.Optional[users.User] = marshaller.attrib(
-        deserializer=users.User.deserialize, if_undefined=None, default=None
+        deserializer=users.User.deserialize, if_undefined=None, default=None, inherit_kwargs=True,
     )
     """The object of the user who this invite targets, if set."""
 
@@ -205,6 +207,10 @@ class Invite(bases.HikariEntity, marshaller.Deserializable):
     """
 
 
+def _max_age_deserializer(age: int) -> datetime.timedelta:
+    return datetime.timedelta(seconds=age) if age > 0 else None
+
+
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class InviteWithMetadata(Invite):
@@ -223,9 +229,7 @@ class InviteWithMetadata(Invite):
     If set to `0` then this is unlimited.
     """
 
-    max_age: typing.Optional[datetime.timedelta] = marshaller.attrib(
-        deserializer=lambda age: datetime.timedelta(seconds=age) if age > 0 else None
-    )
+    max_age: typing.Optional[datetime.timedelta] = marshaller.attrib(deserializer=_max_age_deserializer)
     """The timedelta of how long this invite will be valid for.
 
     If set to `None` then this is unlimited.

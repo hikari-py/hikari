@@ -58,15 +58,13 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
 
     Parameters
     ----------
-    enabled_intents : :obj:`~hikari.intents.Intent`, optional
-        The intents that are enabled for the application. If ``None``, then no
+    enabled_intents : hikari.intents.Intent, optional
+        The intents that are enabled for the application. If `None`, then no
         intent checks are performed when subscribing a new event.
     """
 
-    #: The logger used to write log messages.
-    #:
-    #: :type: :obj:`~logging.Logger`
     logger: logging.Logger
+    """The logger used to write log messages."""
 
     def __init__(self, enabled_intents: typing.Optional[intents.Intent]) -> None:
         self._enabled_intents = enabled_intents
@@ -89,16 +87,16 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
 
         Parameters
         ----------
-        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
+        event_type : typing.Type[hikari.events.HikariEvent]
             The event to register to.
-        callback : ``async def callback(event: HikariEvent) -> ...``
+        callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to invoke when this event is fired.
 
         Raises
         ------
-        :obj:`~TypeError`
-            If ``coroutine_function`` is not a coroutine, or if the passed event
-            type does not subclass :obj:`~hikari.events.HikariEvent`.
+        TypeError
+            If `coroutine_function` is not a coroutine, or if the passed event
+            type does not subclass `hikari.events.HikariEvent`.
 
         Note
         ----
@@ -148,9 +146,9 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
 
         Parameters
         ----------
-        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
+        event_type : typing.Type[hikari.events.HikariEvent]
             The type of event to remove the callback from.
-        callback : ``async def callback(event: HikariEvent) -> ...``
+        callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to remove.
         """
         if event_type in self._listeners and callback in self._listeners[event_type]:
@@ -167,12 +165,12 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
 
         Parameters
         ----------
-        event : :obj:`~hikari.events.HikariEvent`
+        event : hikari.events.HikariEvent
             The event to dispatch.
 
         Returns
         -------
-        :obj:`~asyncio.Future`
+        asyncio.Future
             This may be a gathering future of the callbacks to invoke, or it may
             be a completed future object. Regardless, this result will be
             scheduled on the event loop automatically, and does not need to be
@@ -259,17 +257,17 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         This allows users to override this with a custom implementation if desired.
 
         This implementation will check to see if the event that triggered the
-        exception is an :obj:`~hikari.events.ExceptionEvent`. If this
-        exception was caused by the :obj:`~hikari.events.ExceptionEvent`,
+        exception is an `hikari.events.ExceptionEvent`. If this
+        exception was caused by the `hikari.events.ExceptionEvent`,
         then nothing is dispatched (thus preventing an exception handler recursively
-        re-triggering itself). Otherwise, an :obj:`~hikari.events.ExceptionEvent`
+        re-triggering itself). Otherwise, an `hikari.events.ExceptionEvent`
         is dispatched.
 
         Parameters
         ----------
-        exception: :obj:`~Exception`
+        exception: Exception
             The exception that triggered this call.
-        event: :obj:`~hikari.events.HikariEvent`
+        event: hikari.events.HikariEvent
             The event that was being dispatched.
         callback
             The callback that threw the exception. This may be an event
@@ -307,23 +305,23 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
 
         Parameters
         ----------
-        event_type : :obj:`~typing.Type` [ :obj:`~hikari.events.HikariEvent` ]
+        event_type : typing.Type[hikari.events.HikariEvent]
             The name of the event to wait for.
-        timeout : :obj:`~float`, optional
+        timeout : float, optional
             The timeout to wait for before cancelling and raising an
-            :obj:`~asyncio.TimeoutError` instead. If this is `None`, this will
+            `asyncio.TimeoutError` instead. If this is `None`, this will
             wait forever. Care must be taken if you use `None` as this may
             leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
             using an event listener instead of this function.
-        predicate : ``def predicate(event) -> bool``
+        predicate : `def predicate(event) -> bool`
             A function that takes the arguments for the event and returns True
             if it is a match, or False if it should be ignored. This must be
             a regular function.
 
         Returns
         -------
-        :obj:`~asyncio.Future`
+        asyncio.Future
             A future that when awaited will provide a the arguments passed to
             the first matching event. If no arguments are passed to the event,
             then `None` is the result. If one argument is passed to the event,

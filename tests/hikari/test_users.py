@@ -20,6 +20,7 @@ import mock
 import pytest
 
 from hikari import users
+from hikari.clients import components
 from hikari.internal import urls
 
 
@@ -53,9 +54,14 @@ def test_oauth_user_payload():
     }
 
 
+@pytest.fixture()
+def mock_components():
+    return mock.MagicMock(components.Components)
+
+
 class TestUser:
-    def test_deserialize(self, test_user_payload):
-        user_obj = users.User.deserialize(test_user_payload)
+    def test_deserialize(self, test_user_payload, mock_components):
+        user_obj = users.User.deserialize(test_user_payload, components=mock_components)
         assert user_obj.id == 115590097100865541
         assert user_obj.username == "nyaa"
         assert user_obj.avatar_hash == "b3b24c6d7cbcdec129d5d537067061a8"
@@ -115,8 +121,8 @@ class TestUser:
 
 
 class TestMyUser:
-    def test_deserialize(self, test_oauth_user_payload):
-        my_user_obj = users.MyUser.deserialize(test_oauth_user_payload)
+    def test_deserialize(self, test_oauth_user_payload, mock_components):
+        my_user_obj = users.MyUser.deserialize(test_oauth_user_payload, components=mock_components)
         assert my_user_obj.id == 379953393319542784
         assert my_user_obj.username == "qt pi"
         assert my_user_obj.avatar_hash == "820d0e50543216e812ad94e6ab7"

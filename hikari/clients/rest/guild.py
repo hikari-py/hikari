@@ -106,7 +106,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             limit=limit,
             before=before,
         )
-        return audit_logs.AuditLog.deserialize(payload)
+        return audit_logs.AuditLog.deserialize(payload, components=self._components)
 
     def fetch_audit_log_entries_before(
         self,
@@ -205,7 +205,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             emoji_id=str(emoji.id if isinstance(emoji, bases.UniqueEntity) else int(emoji)),
         )
-        return emojis.GuildEmoji.deserialize(payload)
+        return emojis.GuildEmoji.deserialize(payload, components=self._components)
 
     async def fetch_guild_emojis(self, guild: bases.Hashable[guilds.Guild]) -> typing.Sequence[emojis.GuildEmoji]:
         """Get emojis for a given guild object or ID.
@@ -233,7 +233,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.list_guild_emojis(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
-        return [emojis.GuildEmoji.deserialize(emoji) for emoji in payload]
+        return [emojis.GuildEmoji.deserialize(emoji, components=self._components) for emoji in payload]
 
     async def create_guild_emoji(
         self,
@@ -290,7 +290,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             else ...,
             reason=reason,
         )
-        return emojis.GuildEmoji.deserialize(payload)
+        return emojis.GuildEmoji.deserialize(payload, components=self._components)
 
     async def update_guild_emoji(
         self,
@@ -345,7 +345,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             else ...,
             reason=reason,
         )
-        return emojis.GuildEmoji.deserialize(payload)
+        return emojis.GuildEmoji.deserialize(payload, components=self._components)
 
     async def delete_guild_emoji(
         self, guild: bases.Hashable[guilds.Guild], emoji: bases.Hashable[emojis.GuildEmoji],
@@ -443,7 +443,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             roles=[role.serialize() for role in roles] if roles is not ... else ...,
             channels=[channel.serialize() for channel in channels] if channels is not ... else ...,
         )
-        return guilds.Guild.deserialize(payload)
+        return guilds.Guild.deserialize(payload, components=self._components)
 
     async def fetch_guild(self, guild: bases.Hashable[guilds.Guild]) -> guilds.Guild:
         """Get a given guild's object.
@@ -473,7 +473,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             # Always get counts. There is no reason you would _not_ want this info, right?
             with_counts=True,
         )
-        return guilds.Guild.deserialize(payload)
+        return guilds.Guild.deserialize(payload, components=self._components)
 
     async def fetch_guild_preview(self, guild: bases.Hashable[guilds.Guild]) -> guilds.GuildPreview:
         """Get a given guild's object.
@@ -503,7 +503,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_preview(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
-        return guilds.GuildPreview.deserialize(payload)
+        return guilds.GuildPreview.deserialize(payload, components=self._components)
 
     async def update_guild(
         self,
@@ -599,7 +599,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             ),
             reason=reason,
         )
-        return guilds.Guild.deserialize(payload)
+        return guilds.Guild.deserialize(payload, components=self._components)
 
     async def delete_guild(self, guild: bases.Hashable[guilds.Guild]) -> None:
         """Permanently deletes the given guild.
@@ -653,7 +653,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.list_guild_channels(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
-        return [_channels.deserialize_channel(channel) for channel in payload]
+        return [_channels.deserialize_channel(channel, components=self._components) for channel in payload]
 
     async def create_guild_channel(  # pylint: disable=too-many-arguments
         self,
@@ -757,7 +757,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             ),
             reason=reason,
         )
-        return _channels.deserialize_channel(payload)
+        return _channels.deserialize_channel(payload, components=self._components)
 
     async def reposition_guild_channels(
         self,
@@ -831,7 +831,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
         )
-        return guilds.GuildMember.deserialize(payload)
+        return guilds.GuildMember.deserialize(payload, components=self._components)
 
     def fetch_members_after(
         self,
@@ -886,8 +886,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             self._session.list_guild_members,
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
         )
+        deserializer = functools.partial(guilds.GuildMember.deserialize, components=self._components)
         return helpers.pagination_handler(
-            deserializer=guilds.GuildMember.deserialize,
+            deserializer=deserializer,
             direction="after",
             request=request,
             reversing=False,
@@ -1144,7 +1145,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
         )
-        return guilds.GuildMemberBan.deserialize(payload)
+        return guilds.GuildMemberBan.deserialize(payload, components=self._components)
 
     async def fetch_bans(self, guild: bases.Hashable[guilds.Guild]) -> typing.Sequence[guilds.GuildMemberBan]:
         """Get the bans for a given guild.
@@ -1172,7 +1173,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_bans(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
-        return [guilds.GuildMemberBan.deserialize(ban) for ban in payload]
+        return [guilds.GuildMemberBan.deserialize(ban, components=self._components) for ban in payload]
 
     async def ban_member(
         self,
@@ -1275,7 +1276,10 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_roles(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
-        return {role.id: role for role in map(guilds.GuildRole.deserialize, payload)}
+        return {
+            bases.Snowflake(role["id"]): guilds.GuildRole.deserialize(role, components=self._components)
+            for role in payload
+        }
 
     async def create_role(
         self,
@@ -1336,7 +1340,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             mentionable=mentionable,
             reason=reason,
         )
-        return guilds.GuildRole.deserialize(payload)
+        return guilds.GuildRole.deserialize(payload, components=self._components)
 
     async def reposition_roles(
         self,
@@ -1381,7 +1385,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
                 for position, channel in [role, *additional_roles]
             ],
         )
-        return [guilds.GuildRole.deserialize(role) for role in payload]
+        return [guilds.GuildRole.deserialize(role, components=self._components) for role in payload]
 
     async def update_role(
         self,
@@ -1446,7 +1450,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             mentionable=mentionable,
             reason=reason,
         )
-        return guilds.GuildRole.deserialize(payload)
+        return guilds.GuildRole.deserialize(payload, components=self._components)
 
     async def delete_role(self, guild: bases.Hashable[guilds.Guild], role: bases.Hashable[guilds.GuildRole]) -> None:
         """Delete a role from a given guild.
@@ -1582,7 +1586,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_voice_regions(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
-        return [voices.VoiceRegion.deserialize(region) for region in payload]
+        return [voices.VoiceRegion.deserialize(region, components=self._components) for region in payload]
 
     async def fetch_guild_invites(
         self, guild: bases.Hashable[guilds.Guild],
@@ -1612,7 +1616,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_invites(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
-        return [invites.InviteWithMetadata.deserialize(invite) for invite in payload]
+        return [invites.InviteWithMetadata.deserialize(invite, components=self._components) for invite in payload]
 
     async def fetch_integrations(self, guild: bases.Hashable[guilds.Guild]) -> typing.Sequence[guilds.GuildIntegration]:
         """Get the integrations for a given guild.
@@ -1640,7 +1644,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_integrations(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
-        return [guilds.GuildIntegration.deserialize(integration) for integration in payload]
+        return [
+            guilds.GuildIntegration.deserialize(integration, components=self._components) for integration in payload
+        ]
 
     async def update_integration(
         self,
@@ -1781,7 +1787,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_embed(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
-        return guilds.GuildEmbed.deserialize(payload)
+        return guilds.GuildEmbed.deserialize(payload, components=self._components)
 
     async def update_guild_embed(
         self,
@@ -1833,7 +1839,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             enabled=enabled,
             reason=reason,
         )
-        return guilds.GuildEmbed.deserialize(payload)
+        return guilds.GuildEmbed.deserialize(payload, components=self._components)
 
     async def fetch_guild_vanity_url(self, guild: bases.Hashable[guilds.Guild]) -> invites.VanityUrl:
         """
@@ -1864,7 +1870,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_vanity_url(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
-        return invites.VanityUrl.deserialize(payload)
+        return invites.VanityUrl.deserialize(payload, components=self._components)
 
     def format_guild_widget_image(self, guild: bases.Hashable[guilds.Guild], *, style: str = ...) -> str:
         """Get the URL for a guild widget.
@@ -1921,4 +1927,4 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_webhooks(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
         )
-        return [webhooks.Webhook.deserialize(webhook) for webhook in payload]
+        return [webhooks.Webhook.deserialize(webhook, components=self._components) for webhook in payload]

@@ -56,4 +56,4 @@ class RESTUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abs
         payload = await self._session.get_user(
             user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user))
         )
-        return users.User.deserialize(payload)
+        return users.User.deserialize(payload, components=self._components)

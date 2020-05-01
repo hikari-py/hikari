@@ -70,7 +70,7 @@ class EmbedFooter(bases.HikariEntity, marshaller.Deserializable, marshaller.Seri
     """The URL of the footer icon."""
 
     proxy_icon_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, transient=True, if_undefined=None, default=None
+        deserializer=str, serializer=None, if_undefined=None, default=None
     )
     """The proxied URL of the footer icon.
 
@@ -89,7 +89,7 @@ class EmbedImage(bases.HikariEntity, marshaller.Deserializable, marshaller.Seria
     """The URL of the image."""
 
     proxy_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, transient=True, if_undefined=None, default=None
+        deserializer=str, serializer=None, if_undefined=None, default=None
     )
     """The proxied URL of the image.
 
@@ -98,7 +98,7 @@ class EmbedImage(bases.HikariEntity, marshaller.Deserializable, marshaller.Seria
         will be ignored during serialization.
     """
 
-    height: typing.Optional[int] = marshaller.attrib(deserializer=int, transient=True, if_undefined=None, default=None)
+    height: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=None, if_undefined=None, default=None)
     """The height of the image.
 
     !!! note
@@ -106,7 +106,7 @@ class EmbedImage(bases.HikariEntity, marshaller.Deserializable, marshaller.Seria
         will be ignored during serialization.
     """
 
-    width: typing.Optional[int] = marshaller.attrib(deserializer=int, transient=True, if_undefined=None, default=None)
+    width: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=None, if_undefined=None, default=None)
     """The width of the image.
 
     !!! note
@@ -124,7 +124,7 @@ class EmbedThumbnail(bases.HikariEntity, marshaller.Deserializable, marshaller.S
     """The URL of the thumbnail."""
 
     proxy_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, transient=True, if_undefined=None, default=None
+        deserializer=str, serializer=None, if_undefined=None, default=None
     )
     """The proxied URL of the thumbnail.
 
@@ -133,7 +133,7 @@ class EmbedThumbnail(bases.HikariEntity, marshaller.Deserializable, marshaller.S
         will be ignored during serialization.
     """
 
-    height: typing.Optional[int] = marshaller.attrib(deserializer=int, transient=True, if_undefined=None, default=None)
+    height: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=None, if_undefined=None, default=None)
     """The height of the thumbnail.
 
     !!! note
@@ -141,7 +141,7 @@ class EmbedThumbnail(bases.HikariEntity, marshaller.Deserializable, marshaller.S
         will be ignored during serialization.
     """
 
-    width: typing.Optional[int] = marshaller.attrib(deserializer=int, transient=True, if_undefined=None, default=None)
+    width: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=None, if_undefined=None, default=None)
     """The width of the thumbnail.
 
     !!! note
@@ -206,7 +206,7 @@ class EmbedAuthor(bases.HikariEntity, marshaller.Deserializable, marshaller.Seri
     """The URL of the author icon."""
 
     proxy_icon_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, transient=True, if_undefined=None, default=None
+        deserializer=str, serializer=None, if_undefined=None, default=None
     )
     """The proxied URL of the author icon.
 
@@ -231,6 +231,18 @@ class EmbedField(bases.HikariEntity, marshaller.Deserializable, marshaller.Seria
         raw_name="inline", deserializer=bool, serializer=bool, if_undefined=False, default=False
     )
     """Whether the field should display inline. Defaults to `False`."""
+
+
+def _serialize_timestamp(timestamp: datetime.datetime) -> str:
+    return timestamp.replace(tzinfo=datetime.timezone.utc).isoformat()
+
+
+def _deserialize_fields(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[EmbedField]:
+    return [EmbedField.deserialize(field, **kwargs) for field in payload]
+
+
+def _serialize_fields(fields: typing.Sequence[EmbedField]) -> more_typing.JSONArray:
+    return [field.serialize() for field in fields]
 
 
 @marshaller.marshallable()
@@ -264,10 +276,7 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
     """The URL of the embed."""
 
     timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts,
-        serializer=lambda timestamp: timestamp.replace(tzinfo=datetime.timezone.utc).isoformat(),
-        if_undefined=None,
-        default=None,
+        deserializer=conversions.parse_iso_8601_ts, serializer=_serialize_timestamp, if_undefined=None, default=None,
     )
     """The timestamp of the embed."""
 
@@ -281,22 +290,34 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
     """The colour of this embed's sidebar."""
 
     footer: typing.Optional[EmbedFooter] = marshaller.attrib(
-        deserializer=EmbedFooter.deserialize, serializer=EmbedFooter.serialize, if_undefined=None, default=None
+        deserializer=EmbedFooter.deserialize,
+        serializer=EmbedFooter.serialize,
+        if_undefined=None,
+        default=None,
+        inherit_kwargs=True,
     )
     """The footer of the embed."""
 
     image: typing.Optional[EmbedImage] = marshaller.attrib(
-        deserializer=EmbedImage.deserialize, serializer=EmbedImage.serialize, if_undefined=None, default=None
+        deserializer=EmbedImage.deserialize,
+        serializer=EmbedImage.serialize,
+        if_undefined=None,
+        default=None,
+        inherit_kwargs=True,
     )
     """The image of the embed."""
 
     thumbnail: typing.Optional[EmbedThumbnail] = marshaller.attrib(
-        deserializer=EmbedThumbnail.deserialize, serializer=EmbedThumbnail.serialize, if_undefined=None, default=None
+        deserializer=EmbedThumbnail.deserialize,
+        serializer=EmbedThumbnail.serialize,
+        if_undefined=None,
+        default=None,
+        inherit_kwargs=True,
     )
     """The thumbnail of the embed."""
 
     video: typing.Optional[EmbedVideo] = marshaller.attrib(
-        deserializer=EmbedVideo.deserialize, transient=True, if_undefined=None, default=None,
+        deserializer=EmbedVideo.deserialize, serializer=None, if_undefined=None, default=None, inherit_kwargs=True
     )
     """The video of the embed.
 
@@ -306,7 +327,7 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
     """
 
     provider: typing.Optional[EmbedProvider] = marshaller.attrib(
-        deserializer=EmbedProvider.deserialize, transient=True, if_undefined=None, default=None
+        deserializer=EmbedProvider.deserialize, serializer=None, if_undefined=None, default=None, inherit_kwargs=True,
     )
     """The provider of the embed.
 
@@ -316,19 +337,24 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
     """
 
     author: typing.Optional[EmbedAuthor] = marshaller.attrib(
-        deserializer=EmbedAuthor.deserialize, serializer=EmbedAuthor.serialize, if_undefined=None, default=None
+        deserializer=EmbedAuthor.deserialize,
+        serializer=EmbedAuthor.serialize,
+        if_undefined=None,
+        default=None,
+        inherit_kwargs=True,
     )
     """The author of the embed."""
 
     fields: typing.Sequence[EmbedField] = marshaller.attrib(
-        deserializer=lambda fields: [EmbedField.deserialize(f) for f in fields],
-        serializer=lambda fields: [f.serialize() for f in fields],
+        deserializer=_deserialize_fields,
+        serializer=_serialize_fields,
         if_undefined=list,
         factory=list,
+        inherit_kwargs=True,
     )
     """The fields of the embed."""
 
-    _assets_to_upload = marshaller.attrib(if_undefined=list, factory=list, transient=True)
+    _assets_to_upload = attr.attrib(factory=list)
 
     @property
     def assets_to_upload(self):
@@ -560,7 +586,7 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
         del self.fields[index]
         return self
 
-    def _safe_len(self, item) -> bool:
+    def _safe_len(self, item) -> int:
         return len(item) if item is not None else 0
 
     def _check_total_length(self) -> None:

@@ -247,8 +247,9 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
             emoji=getattr(emoji, "url_name", emoji),
         )
+        deserializer = functools.partial(users.User.deserialize, components=self._components)
         return helpers.pagination_handler(
-            deserializer=users.User.deserialize,
+            deserializer=deserializer,
             direction="after",
             request=request,
             reversing=False,

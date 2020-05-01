@@ -75,7 +75,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         payload = await self._session.get_channel(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
         )
-        return _channels.deserialize_channel(payload)
+        return _channels.deserialize_channel(payload, components=self._components)
 
     async def update_channel(
         self,
@@ -175,7 +175,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             ),
             reason=reason,
         )
-        return _channels.deserialize_channel(payload)
+        return _channels.deserialize_channel(payload, components=self._components)
 
     async def delete_channel(self, channel: bases.Hashable[_channels.Channel]) -> None:
         """Delete the given channel ID, or if it is a DM, close it.
@@ -830,7 +830,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         payload = await self._session.get_channel_invites(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
         )
-        return [invites.InviteWithMetadata.deserialize(invite) for invite in payload]
+        return [invites.InviteWithMetadata.deserialize(invite, components=self._components) for invite in payload]
 
     async def create_invite_for_channel(
         self,
@@ -902,7 +902,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             target_user_type=target_user_type,
             reason=reason,
         )
-        return invites.InviteWithMetadata.deserialize(payload)
+        return invites.InviteWithMetadata.deserialize(payload, components=self._components)
 
     # pylint: disable=line-too-long
     async def delete_channel_overwrite(
@@ -1096,7 +1096,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             avatar=await avatar.read_all() if avatar is not ... else ...,
             reason=reason,
         )
-        return webhooks.Webhook.deserialize(payload)
+        return webhooks.Webhook.deserialize(payload, components=self._components)
 
     async def fetch_channel_webhooks(
         self, channel: bases.Hashable[_channels.GuildChannel]
@@ -1127,4 +1127,4 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         payload = await self._session.get_channel_webhooks(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
         )
-        return [webhooks.Webhook.deserialize(webhook) for webhook in payload]
+        return [webhooks.Webhook.deserialize(webhook, components=self._components) for webhook in payload]

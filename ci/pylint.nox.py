@@ -58,6 +58,8 @@ def pylint_text(session: nox.Session) -> None:
 def pylint_junit(session: nox.Session) -> None:
     try:
         print("generating junit report")
+        if not os.path.exists(config.ARTIFACT_DIRECTORY):
+            os.mkdir(config.ARTIFACT_DIRECTORY)
         with open(config.PYLINT_JUNIT_OUTPUT_PATH, "w") as fp:
             session.run(
                 *FLAGS,
@@ -74,6 +76,8 @@ def pylint_junit(session: nox.Session) -> None:
 def pylint_html(session: nox.Session) -> None:
     try:
         print("generating json report")
+        if not os.path.exists(config.ARTIFACT_DIRECTORY):
+            os.mkdir(config.ARTIFACT_DIRECTORY)
         with open(config.PYLINT_JSON_OUTPUT_PATH, "w") as fp:
             session.run(*FLAGS, "--output-format", "json", *session.posargs, stdout=fp, success_codes=SUCCESS_CODES)
         print("producing html report in", config.PYTEST_HTML_OUTPUT_PATH)

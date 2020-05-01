@@ -58,7 +58,9 @@ class TestRESTUserLogic:
             rest_webhook_logic_impl._session.get_webhook.assert_called_once_with(
                 webhook_id="379953393319542784", webhook_token="dsawqoepql.kmsdao",
             )
-            webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
+            webhooks.Webhook.deserialize.assert_called_once_with(
+                mock_webhook_payload, components=rest_webhook_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("webhook", 379953393319542784, webhooks.Webhook)
@@ -71,7 +73,9 @@ class TestRESTUserLogic:
             rest_webhook_logic_impl._session.get_webhook.assert_called_once_with(
                 webhook_id="379953393319542784", webhook_token=...,
             )
-            webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
+            webhooks.Webhook.deserialize.assert_called_once_with(
+                mock_webhook_payload, components=rest_webhook_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("webhook", 379953393319542784, webhooks.Webhook)
@@ -103,7 +107,9 @@ class TestRESTUserLogic:
                 channel_id="115590097100865541",
                 reason="A reason",
             )
-            webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
+            webhooks.Webhook.deserialize.assert_called_once_with(
+                mock_webhook_payload, components=rest_webhook_logic_impl._components
+            )
             mock_image_obj.read_all.assert_awaited_once()
 
     @pytest.mark.asyncio
@@ -117,7 +123,9 @@ class TestRESTUserLogic:
             rest_webhook_logic_impl._session.modify_webhook.assert_called_once_with(
                 webhook_id="379953393319542784", webhook_token=..., name=..., avatar=..., channel_id=..., reason=...,
             )
-            webhooks.Webhook.deserialize.assert_called_once_with(mock_webhook_payload)
+            webhooks.Webhook.deserialize.assert_called_once_with(
+                mock_webhook_payload, components=rest_webhook_logic_impl._components
+            )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("webhook", 379953393319542784, webhooks.Webhook)

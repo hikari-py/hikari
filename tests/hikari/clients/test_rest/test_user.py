@@ -47,4 +47,6 @@ class TestRESTUserLogic:
         with mock.patch.object(users.User, "deserialize", return_value=mock_user_obj):
             assert await rest_user_logic_impl.fetch_user(user) is mock_user_obj
             rest_user_logic_impl._session.get_user.assert_called_once_with(user_id="123123123")
-            users.User.deserialize.assert_called_once_with(mock_user_payload)
+            users.User.deserialize.assert_called_once_with(
+                mock_user_payload, components=rest_user_logic_impl._components
+            )

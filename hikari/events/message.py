@@ -36,7 +36,7 @@ import typing
 import attr
 
 from hikari import applications
-from hikari import bases
+from hikari import bases as base_entities
 from hikari import embeds as _embeds
 from hikari import emojis
 from hikari import guilds
@@ -44,26 +44,50 @@ from hikari import intents
 from hikari import messages
 from hikari import unset
 from hikari import users
-from hikari.events import base
+from hikari.events import base as base_events
 from hikari.internal import conversions
 from hikari.internal import marshaller
 
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.internal import more_typing
 
-@base.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
+
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageCreateEvent(base.HikariEvent, messages.Message):
+class MessageCreateEvent(base_events.HikariEvent, messages.Message):
     """Used to represent Message Create gateway events."""
 
 
+def _deserialize_object_mentions(payload: more_typing.JSONArray) -> typing.Set[base_entities.Snowflake]:
+    return {base_entities.Snowflake(mention["id"]) for mention in payload}
+
+
+def _deserialize_mentions(payload: more_typing.JSONArray) -> typing.Set[base_entities.Snowflake]:
+    return {base_entities.Snowflake.deserialize(mention) for mention in payload}
+
+
+def _deserialize_attachments(
+    payload: more_typing.JSONArray, **kwargs: typing.Any
+) -> typing.Sequence[messages.Attachment]:
+    return [messages.Attachment.deserialize(attachment, **kwargs) for attachment in payload]
+
+
+def _deserialize_embeds(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[_embeds.Embed]:
+    return [_embeds.Embed.deserialize(embed, **kwargs) for embed in payload]
+
+
+def _deserialize_reaction(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[messages.Reaction]:
+    return [messages.Reaction.deserialize(reaction, **kwargs) for reaction in payload]
+
+
 # This is an arbitrarily partial version of `messages.Message`
-@base.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageUpdateEvent(base.HikariEvent, bases.UniqueEntity, marshaller.Deserializable):
+class MessageUpdateEvent(base_events.HikariEvent, base_entities.UniqueEntity, marshaller.Deserializable):
     """Represents Message Update gateway events.
 
     !!! note
@@ -73,11 +97,11 @@ class MessageUpdateEvent(base.HikariEvent, bases.UniqueEntity, marshaller.Deseri
         alongside field nullability.
     """
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    channel_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
     """The ID of the channel that the message was sent in."""
 
-    guild_id: typing.Union[bases.Snowflake, unset.Unset] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=unset.Unset, default=unset.UNSET
+    guild_id: typing.Union[base_entities.Snowflake, unset.Unset] = marshaller.attrib(
+        deserializer=base_entities.Snowflake.deserialize, if_undefined=unset.Unset, default=unset.UNSET
     )
     """The ID of the guild that the message was sent in."""
 
@@ -119,48 +143,36 @@ class MessageUpdateEvent(base.HikariEvent, bases.UniqueEntity, marshaller.Deseri
     )
     """Whether the message mentions `@everyone` or `@here`."""
 
-    user_mentions: typing.Union[typing.Set[bases.Snowflake], unset.Unset] = marshaller.attrib(
-        raw_name="mentions",
-        deserializer=lambda user_mentions: {bases.Snowflake.deserialize(u["id"]) for u in user_mentions},
-        if_undefined=unset.Unset,
-        default=unset.UNSET,
+    user_mentions: typing.Union[typing.Set[base_entities.Snowflake], unset.Unset] = marshaller.attrib(
+        raw_name="mentions", deserializer=_deserialize_object_mentions, if_undefined=unset.Unset, default=unset.UNSET,
     )
     """The users the message mentions."""
 
-    role_mentions: typing.Union[typing.Set[bases.Snowflake], unset.Unset] = marshaller.attrib(
-        raw_name="mention_roles",
-        deserializer=lambda role_mentions: {bases.Snowflake.deserialize(r) for r in role_mentions},
-        if_undefined=unset.Unset,
-        default=unset.UNSET,
+    role_mentions: typing.Union[typing.Set[base_entities.Snowflake], unset.Unset] = marshaller.attrib(
+        raw_name="mention_roles", deserializer=_deserialize_mentions, if_undefined=unset.Unset, default=unset.UNSET,
     )
     """The roles the message mentions."""
 
-    channel_mentions: typing.Union[typing.Set[bases.Snowflake], unset.Unset] = marshaller.attrib(
+    channel_mentions: typing.Union[typing.Set[base_entities.Snowflake], unset.Unset] = marshaller.attrib(
         raw_name="mention_channels",
-        deserializer=lambda channel_mentions: {bases.Snowflake.deserialize(c["id"]) for c in channel_mentions},
+        deserializer=_deserialize_object_mentions,
         if_undefined=unset.Unset,
         default=unset.UNSET,
     )
     """The channels the message mentions."""
 
     attachments: typing.Union[typing.Sequence[messages.Attachment], unset.Unset] = marshaller.attrib(
-        deserializer=lambda attachments: [messages.Attachment.deserialize(a) for a in attachments],
-        if_undefined=unset.Unset,
-        default=unset.UNSET,
+        deserializer=_deserialize_attachments, if_undefined=unset.Unset, default=unset.UNSET, inherit_kwargs=True,
     )
     """The message attachments."""
 
     embeds: typing.Union[typing.Sequence[_embeds.Embed], unset.Unset] = marshaller.attrib(
-        deserializer=lambda embed_objs: [_embeds.Embed.deserialize(e) for e in embed_objs],
-        if_undefined=unset.Unset,
-        default=unset.UNSET,
+        deserializer=_deserialize_embeds, if_undefined=unset.Unset, default=unset.UNSET, inherit_kwargs=True,
     )
     """The message's embeds."""
 
     reactions: typing.Union[typing.Sequence[messages.Reaction], unset.Unset] = marshaller.attrib(
-        deserializer=lambda reactions: [messages.Reaction.deserialize(r) for r in reactions],
-        if_undefined=unset.Unset,
-        default=unset.UNSET,
+        deserializer=_deserialize_reaction, if_undefined=unset.Unset, default=unset.UNSET, inherit_kwargs=True
     )
     """The message's reactions."""
 
@@ -169,8 +181,8 @@ class MessageUpdateEvent(base.HikariEvent, bases.UniqueEntity, marshaller.Deseri
     )
     """Whether the message is pinned."""
 
-    webhook_id: typing.Union[bases.Snowflake, unset.Unset] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=unset.Unset, default=unset.UNSET
+    webhook_id: typing.Union[base_entities.Snowflake, unset.Unset] = marshaller.attrib(
+        deserializer=base_entities.Snowflake.deserialize, if_undefined=unset.Unset, default=unset.UNSET
     )
     """If the message was generated by a webhook, the webhook's ID."""
 
@@ -180,17 +192,26 @@ class MessageUpdateEvent(base.HikariEvent, bases.UniqueEntity, marshaller.Deseri
     """The message's type."""
 
     activity: typing.Union[messages.MessageActivity, unset.Unset] = marshaller.attrib(
-        deserializer=messages.MessageActivity.deserialize, if_undefined=unset.Unset, default=unset.UNSET
+        deserializer=messages.MessageActivity.deserialize,
+        if_undefined=unset.Unset,
+        default=unset.UNSET,
+        inherit_kwargs=True,
     )
     """The message's activity."""
 
     application: typing.Optional[applications.Application] = marshaller.attrib(
-        deserializer=applications.Application.deserialize, if_undefined=unset.Unset, default=unset.UNSET
+        deserializer=applications.Application.deserialize,
+        if_undefined=unset.Unset,
+        default=unset.UNSET,
+        inherit_kwargs=True,
     )
     """The message's application."""
 
     message_reference: typing.Union[messages.MessageCrosspost, unset.Unset] = marshaller.attrib(
-        deserializer=messages.MessageCrosspost.deserialize, if_undefined=unset.Unset, default=unset.UNSET
+        deserializer=messages.MessageCrosspost.deserialize,
+        if_undefined=unset.Unset,
+        default=unset.UNSET,
+        inherit_kwargs=True,
     )
     """The message's cross-posted reference data."""
 
@@ -208,73 +229,79 @@ class MessageUpdateEvent(base.HikariEvent, bases.UniqueEntity, marshaller.Deseri
     """
 
 
-@base.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageDeleteEvent(base.HikariEvent, marshaller.Deserializable):
+class MessageDeleteEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Message Delete gateway events.
 
     Sent when a message is deleted in a channel we have access to.
     """
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    channel_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
     """The ID of the channel where this message was deleted."""
 
-    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+    guild_id: typing.Optional[base_entities.Snowflake] = marshaller.attrib(
+        deserializer=base_entities.Snowflake.deserialize, if_undefined=None, default=None
     )
     """The ID of the guild where this message was deleted.
 
     This will be `None` if this message was deleted in a DM channel.
     """
 
-    message_id: bases.Snowflake = marshaller.attrib(raw_name="id", deserializer=bases.Snowflake.deserialize)
+    message_id: base_entities.Snowflake = marshaller.attrib(
+        raw_name="id", deserializer=base_entities.Snowflake.deserialize
+    )
     """The ID of the message that was deleted."""
 
 
-@base.requires_intents(intents.Intent.GUILD_MESSAGES)
+def _deserialize_message_ids(payload: more_typing.JSONArray) -> typing.Set[base_entities.Snowflake]:
+    return {base_entities.Snowflake.deserialize(message_id) for message_id in payload}
+
+
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageDeleteBulkEvent(base.HikariEvent, marshaller.Deserializable):
+class MessageDeleteBulkEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Message Bulk Delete gateway events.
 
     Sent when multiple messages are deleted in a channel at once.
     """
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    channel_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
     """The ID of the channel these messages have been deleted in."""
 
-    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_none=None
+    guild_id: typing.Optional[base_entities.Snowflake] = marshaller.attrib(
+        deserializer=base_entities.Snowflake.deserialize, if_none=None
     )
     """The ID of the channel these messages have been deleted in.
 
     This will be `None` if these messages were bulk deleted in a DM channel.
     """
 
-    message_ids: typing.Set[bases.Snowflake] = marshaller.attrib(
-        raw_name="ids", deserializer=lambda msgs: {bases.Snowflake.deserialize(m) for m in msgs}
+    message_ids: typing.Set[base_entities.Snowflake] = marshaller.attrib(
+        raw_name="ids", deserializer=_deserialize_message_ids
     )
     """A collection of the IDs of the messages that were deleted."""
 
 
-@base.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageReactionAddEvent(base.HikariEvent, marshaller.Deserializable):
+class MessageReactionAddEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Message Reaction Add gateway events."""
 
-    user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    user_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
     """The ID of the user adding the reaction."""
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    channel_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
     """The ID of the channel where this reaction is being added."""
 
-    message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    message_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
     """The ID of the message this reaction is being added to."""
 
-    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+    guild_id: typing.Optional[base_entities.Snowflake] = marshaller.attrib(
+        deserializer=base_entities.Snowflake.deserialize, if_undefined=None, default=None
     )
     """The ID of the guild where this reaction is being added.
 
@@ -282,7 +309,7 @@ class MessageReactionAddEvent(base.HikariEvent, marshaller.Deserializable):
     """
 
     member: typing.Optional[guilds.GuildMember] = marshaller.attrib(
-        deserializer=guilds.GuildMember.deserialize, if_undefined=None, default=None
+        deserializer=guilds.GuildMember.deserialize, if_undefined=None, default=None, inherit_kwargs=True
     )
     """The member object of the user who's adding this reaction.
 
@@ -290,28 +317,28 @@ class MessageReactionAddEvent(base.HikariEvent, marshaller.Deserializable):
     """
 
     emoji: typing.Union[emojis.UnknownEmoji, emojis.UnicodeEmoji] = marshaller.attrib(
-        deserializer=emojis.deserialize_reaction_emoji,
+        deserializer=emojis.deserialize_reaction_emoji, inherit_kwargs=True
     )
     """The object of the emoji being added."""
 
 
-@base.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageReactionRemoveEvent(base.HikariEvent, marshaller.Deserializable):
+class MessageReactionRemoveEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Message Reaction Remove gateway events."""
 
-    user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    user_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
     """The ID of the user who is removing their reaction."""
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    channel_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
     """The ID of the channel where this reaction is being removed."""
 
-    message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    message_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
     """The ID of the message this reaction is being removed from."""
 
-    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+    guild_id: typing.Optional[base_entities.Snowflake] = marshaller.attrib(
+        deserializer=base_entities.Snowflake.deserialize, if_undefined=None, default=None
     )
     """The ID of the guild where this reaction is being removed
 
@@ -319,53 +346,53 @@ class MessageReactionRemoveEvent(base.HikariEvent, marshaller.Deserializable):
     """
 
     emoji: typing.Union[emojis.UnicodeEmoji, emojis.UnknownEmoji] = marshaller.attrib(
-        deserializer=emojis.deserialize_reaction_emoji,
+        deserializer=emojis.deserialize_reaction_emoji, inherit_kwargs=True
     )
     """The object of the emoji being removed."""
 
 
-@base.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageReactionRemoveAllEvent(base.HikariEvent, marshaller.Deserializable):
+class MessageReactionRemoveAllEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Message Reaction Remove All gateway events.
 
     Sent when all the reactions are removed from a message, regardless of emoji.
     """
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    channel_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
     """The ID of the channel where the targeted message is."""
 
-    message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    message_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
     """The ID of the message all reactions are being removed from."""
 
-    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+    guild_id: typing.Optional[base_entities.Snowflake] = marshaller.attrib(
+        deserializer=base_entities.Snowflake.deserialize, if_undefined=None, default=None
     )
     """The ID of the guild where the targeted message is, if applicable."""
 
 
-@base.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageReactionRemoveEmojiEvent(base.HikariEvent, marshaller.Deserializable):
+class MessageReactionRemoveEmojiEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Represents Message Reaction Remove Emoji events.
 
     Sent when all the reactions for a single emoji are removed from a message.
     """
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    channel_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
     """The ID of the channel where the targeted message is."""
 
-    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+    guild_id: typing.Optional[base_entities.Snowflake] = marshaller.attrib(
+        deserializer=base_entities.Snowflake.deserialize, if_undefined=None, default=None
     )
     """The ID of the guild where the targeted message is, if applicable."""
 
-    message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    message_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
     """The ID of the message the reactions are being removed from."""
 
     emoji: typing.Union[emojis.UnicodeEmoji, emojis.UnknownEmoji] = marshaller.attrib(
-        deserializer=emojis.deserialize_reaction_emoji,
+        deserializer=emojis.deserialize_reaction_emoji, inherit_kwargs=True
     )
     """The object of the emoji that's being removed."""

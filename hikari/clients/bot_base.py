@@ -93,7 +93,7 @@ class BotBase(
 
         self.config = configs.BotConfig(**kwargs) if config is None else config
         self.event_dispatcher = self._create_event_dispatcher(self.config)
-        self.event_manager = self._create_event_manager(self.config, self.event_dispatcher)
+        self.event_manager = self._create_event_manager(self)
         self.rest = self._create_rest(self)
 
     @property
@@ -225,12 +225,12 @@ class BotBase(
     def add_listener(
         self, event_type: typing.Type[dispatchers.EventT], callback: dispatchers.EventCallbackT, **kwargs
     ) -> dispatchers.EventCallbackT:
-        return self.event_manager.event_dispatcher.add_listener(event_type, callback, _stack_level=4)
+        return self.event_dispatcher.add_listener(event_type, callback, _stack_level=4)
 
     def remove_listener(
         self, event_type: typing.Type[dispatchers.EventT], callback: dispatchers.EventCallbackT
     ) -> dispatchers.EventCallbackT:
-        return self.event_manager.event_dispatcher.remove_listener(event_type, callback)
+        return self.event_dispatcher.remove_listener(event_type, callback)
 
     def wait_for(
         self,
@@ -239,10 +239,10 @@ class BotBase(
         timeout: typing.Optional[float],
         predicate: dispatchers.PredicateT,
     ) -> more_typing.Future:
-        return self.event_manager.event_dispatcher.wait_for(event_type, timeout=timeout, predicate=predicate)
+        return self.event_dispatcher.wait_for(event_type, timeout=timeout, predicate=predicate)
 
     def dispatch_event(self, event: event_base.HikariEvent) -> more_typing.Future[typing.Any]:
-        return self.event_manager.event_dispatcher.dispatch_event(event)
+        return self.event_dispatcher.dispatch_event(event)
 
     async def update_presence(
         self,
@@ -336,17 +336,13 @@ class BotBase(
 
     @staticmethod
     @abc.abstractmethod
-    def _create_event_manager(
-        config: configs.BotConfig, dispatcher: dispatchers.EventDispatcher
-    ) -> event_managers.EventManager:
+    def _create_event_manager(components: _components.Components) -> event_managers.EventManager:
         """Return a new instance of an event manager implementation.
 
         Parameters
         ----------
-        config : hikari.clients.configs.BotConfig
-            The bot config to use.
-        dispatcher : hikari.state.dispatchers.EventDispatcher
-            The event dispatcher to use.
+        components : hikari.clients.components.Components
+            The components to register.
 
         Returns
         -------
