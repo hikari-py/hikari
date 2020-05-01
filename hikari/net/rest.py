@@ -391,9 +391,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the given permissions to view an audit log.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild does not exist.
         """
         query = {}
@@ -419,9 +419,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you don't have access to the channel.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel does not exist.
         """
         route = routes.CHANNEL.compile(self.GET, channel_id=channel_id)
@@ -491,11 +491,11 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel does not exist.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the permission to make the change.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide incorrect options for the corresponding channel type
             (e.g. a `bitrate` for a text channel).
         """
@@ -528,9 +528,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel does not exist.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you do not have permission to delete the channel.
 
         !!! warning
@@ -568,25 +568,25 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permission to read the channel.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If your query is malformed, has an invalid value for `limit`,
             or contains more than one of `after`, `before` and `around`.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found, or the message
             provided for one of the filter arguments is not found.
 
         !!! note
             If you are missing the `VIEW_CHANNEL` permission, you will receive a
-            `hikari.errors.ForbiddenHTTPError`. If you are instead missing
+            `hikari.errors.Forbidden`. If you are instead missing
             the `READ_MESSAGE_HISTORY` permission, you will always receive
             zero results, and thus an empty list will be returned instead.
 
         !!! warning
             You can only specify a maximum of one from `before`, `after`, and
             `around`; specifying more than one will cause a
-            `hikari.errors.BadRequestHTTPError` to be raised.
+            `hikari.errors.BadRequest` to be raised.
         """
         query = {}
         conversions.put_if_specified(query, "limit", limit)
@@ -616,9 +616,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permission to see the message.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message is not found.
         """
         route = routes.CHANNEL_MESSAGE.compile(self.GET, channel_id=channel_id, message_id=message_id)
@@ -665,9 +665,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
             empty or greater than `2000` characters; if neither content, file
@@ -675,7 +675,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             fields in `allowed_mentions`; if you specify to parse all
             users/roles mentions but also specify which users/roles to
             parse only.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permissions to send to this channel.
         """
         form = aiohttp.FormData()
@@ -715,13 +715,13 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If this is the first reaction using this specific emoji on this
             message and you lack the `ADD_REACTIONS` permission. If you lack
             `READ_MESSAGE_HISTORY`, this may also raise this error.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message is not found, or if the emoji is not found.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If the emoji is not valid, unknown, or formatted incorrectly.
         """
         route = routes.OWN_REACTION.compile(self.PUT, channel_id=channel_id, message_id=message_id, emoji=emoji)
@@ -743,9 +743,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permission to do this.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message or emoji is not found.
         """
         route = routes.OWN_REACTION.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
@@ -767,9 +767,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message or emoji or user is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_MESSAGES` permission, or are in DMs.
         """
         route = routes.REACTION_EMOJI.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
@@ -793,9 +793,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message or emoji or user is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_MESSAGES` permission, or are in DMs.
         """
         route = routes.REACTION_EMOJI_USER.compile(
@@ -833,9 +833,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack access to the message.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message is not found.
         """
         query = {}
@@ -856,9 +856,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_MESSAGES` permission.
         """
         route = routes.ALL_REACTIONS.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
@@ -901,15 +901,15 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message is not found.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             This can be raised if the embed exceeds the defined limits;
             if the message content is specified only and empty or greater
             than `2000` characters; if neither content, file or embed
             are specified.
             parse only.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you try to edit `content` or `embed` or `allowed_mentions`
             on a message you did not author or try to edit the flags on a
             message you did not author without the `MANAGE_MESSAGES`
@@ -935,10 +935,10 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you did not author the message and are in a DM, or if you did not author the message and lack the
             `MANAGE_MESSAGES` permission in a guild channel.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message is not found.
         """
         route = routes.CHANNEL_MESSAGE.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
@@ -956,11 +956,11 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_MESSAGES` permission in the channel.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any of the messages passed are older than `2` weeks in age or
             any duplicate message IDs are passed.
 
@@ -999,9 +999,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the target channel or overwrite doesn't exist.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permission to do this.
         """
         payload = {"type": type_}
@@ -1025,9 +1025,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_CHANNELS` permission.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel does not exist.
         """
         route = routes.CHANNEL_INVITES.compile(self.GET, channel_id=channel_id)
@@ -1078,11 +1078,11 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `CREATE_INSTANT_MESSAGES` permission.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel does not exist.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If the arguments provided are not valid (e.g. negative age, etc).
         """
         payload = {}
@@ -1107,9 +1107,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the overwrite or channel do not exist.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission for that channel.
         """
         route = routes.CHANNEL_PERMISSIONS.compile(self.DELETE, channel_id=channel_id, overwrite_id=overwrite_id)
@@ -1125,9 +1125,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are not able to type in the channel.
         """
         route = routes.CHANNEL_TYPING.compile(self.POST, channel_id=channel_id)
@@ -1148,9 +1148,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are not able to see the channel.
 
         !!! note
@@ -1173,9 +1173,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_MESSAGES` permission.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the message or channel do not exist.
         """
         route = routes.CHANNEL_PINS.compile(self.PUT, channel_id=channel_id, message_id=message_id)
@@ -1195,9 +1195,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_MESSAGES` permission.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the message or channel do not exist.
         """
         route = routes.CHANNEL_PIN.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
@@ -1218,9 +1218,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you aren't a member of the guild.
         """
         route = routes.GUILD_EMOJIS.compile(self.GET, guild_id=guild_id)
@@ -1243,9 +1243,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the emoji aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you aren't a member of said guild.
         """
         route = routes.GUILD_EMOJI.compile(self.GET, guild_id=guild_id, emoji_id=emoji_id)
@@ -1280,11 +1280,11 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         ------
         ValueError
             If `image` is `None`.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you attempt to upload an image larger than `256kb`, an empty image or an invalid image format.
         """
         assertions.assert_not_none(image, "image must be a valid image")
@@ -1324,9 +1324,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the emoji aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_EMOJIS` permission or are not a member of the given guild.
         """
         payload = {}
@@ -1347,9 +1347,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the emoji aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
         """
         route = routes.GUILD_EMOJI.compile(self.DELETE, guild_id=guild_id, emoji_id=emoji_id)
@@ -1400,9 +1400,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are on `10` or more guilds.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide unsupported fields like `parent_id` in channel objects.
         """
         payload = {"name": name}
@@ -1434,9 +1434,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you do not have access to the guild.
         """
         route = routes.GUILD.compile(self.GET, guild_id=guild_id)
@@ -1461,7 +1461,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found or it isn't `PUBLIC`.
         """
         route = routes.GUILD_PREVIEW.compile(self.GET, guild_id=guild_id)
@@ -1525,9 +1525,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = {}
@@ -1559,9 +1559,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are not the guild owner.
         """
         route = routes.GUILD.compile(self.DELETE, guild_id=guild_id)
@@ -1582,9 +1582,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are not in the guild.
         """
         route = routes.GUILD_CHANNELS.compile(self.GET, guild_id=guild_id)
@@ -1656,11 +1656,11 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_CHANNEL` permission or are not in the guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide incorrect options for the corresponding channel type
             (e.g. a `bitrate` for a text channel).
         """
@@ -1695,12 +1695,12 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or any of the channels aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_CHANNELS` permission or are not a member of said guild or are not in
             the guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide anything other than the `id` and `position` fields for the channels.
         """
         payload = [{"id": ch[0], "position": ch[1]} for ch in (channel, *channels)]
@@ -1724,9 +1724,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the member aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you don't have access to the target guild.
         """
         route = routes.GUILD_MEMBER.compile(self.GET, guild_id=guild_id, user_id=user_id)
@@ -1769,11 +1769,11 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are not in the guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide invalid values for the `limit` or `after` fields.
         """
         query = {}
@@ -1822,15 +1822,15 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild, user, channel or any of the roles aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack any of the applicable permissions (`MANAGE_NICKNAMES`,
             `MANAGE_ROLES`, `MUTE_MEMBERS`,`DEAFEN_MEMBERS` or `MOVE_MEMBERS`).
             Note that to move a member you must also have permission to connect
             to the end channel. This will also be raised if you're not in the
             guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you pass `mute`, `deaf` or `channel_id` while the member is not connected to a voice channel.
         """
         payload = {}
@@ -1857,11 +1857,11 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `CHANGE_NICKNAME` permission or are not in the guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide a disallowed nickname, one that is too long, or one that is empty.
         """
         payload = {"nick": nick}
@@ -1885,9 +1885,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild, member or role aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER_ROLE.compile(self.PUT, guild_id=guild_id, user_id=user_id, role_id=role_id)
@@ -1910,9 +1910,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild, member or role aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER_ROLE.compile(self.DELETE, guild_id=guild_id, user_id=user_id, role_id=role_id)
@@ -1933,9 +1933,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or member aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `KICK_MEMBERS` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
@@ -1956,9 +1956,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         route = routes.GUILD_BANS.compile(self.GET, guild_id=guild_id)
@@ -1981,9 +1981,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the user aren't found, or if the user is not banned.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         route = routes.GUILD_BAN.compile(self.GET, guild_id=guild_id, user_id=user_id)
@@ -2009,9 +2009,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or member aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         query = {}
@@ -2035,9 +2035,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or member aren't found, or the member is not banned.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `BAN_MEMBERS` permission or are not a in the guild.
         """
         route = routes.GUILD_BAN.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
@@ -2058,9 +2058,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you're not in the guild.
         """
         route = routes.GUILD_ROLES.compile(self.GET, guild_id=guild_id)
@@ -2104,11 +2104,11 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or you're not in the guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide invalid values for the role attributes.
         """
         payload = {}
@@ -2143,11 +2143,11 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or any of the roles aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or you're not in the guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide invalid values for the `position` fields.
         """
         payload = [{"id": r[0], "position": r[1]} for r in (role, *roles)]
@@ -2195,11 +2195,11 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or role aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or you're not in the guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide invalid values for the role attributes.
         """
         payload = {}
@@ -2223,9 +2223,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the role aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         route = routes.GUILD_ROLE.compile(self.DELETE, guild_id=guild_id, role_id=role_id)
@@ -2248,11 +2248,11 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `KICK_MEMBERS` or you are not in the guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you pass an invalid amount of days.
         """
         payload = {"days": days}
@@ -2286,11 +2286,11 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found:
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `KICK_MEMBER` permission or are not in the guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide invalid values for the `days` or `compute_prune_count` fields.
         """
         query = {"days": days}
@@ -2318,9 +2318,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are not in the guild.
         """
         route = routes.GUILD_VOICE_REGIONS.compile(self.GET, guild_id=guild_id)
@@ -2341,9 +2341,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INVITES.compile(self.GET, guild_id=guild_id)
@@ -2364,9 +2364,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATIONS.compile(self.GET, guild_id=guild_id)
@@ -2404,9 +2404,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the integration aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = {}
@@ -2432,9 +2432,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
                 If either the guild or the integration aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATION.compile(self.DELETE, guild_id=guild_id, integration_id=integration_id)
@@ -2452,9 +2452,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the integration aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATION_SYNC.compile(self.POST, guild_id=guild_id, integration_id=integration_id)
@@ -2475,9 +2475,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_EMBED.compile(self.GET, guild_id=guild_id)
@@ -2508,9 +2508,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = {}
@@ -2534,9 +2534,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_VANITY_URL.compile(self.GET, guild_id=guild_id)
@@ -2586,7 +2586,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the invite is not found.
         """
         query = {}
@@ -2610,9 +2610,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the invite is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack either `MANAGE_CHANNELS` on the channel the invite
             belongs to or `MANAGE_GUILD` for guild-global delete.
         """
@@ -2645,7 +2645,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the user is not found.
         """
         route = routes.USER.compile(self.GET, user_id=user_id)
@@ -2671,7 +2671,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you pass username longer than the limit (`2-32`) or an invalid image.
         """
         payload = {}
@@ -2719,7 +2719,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you pass both `before` and `after` or an
             invalid value for `limit`.
         """
@@ -2740,7 +2740,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
         """
         route = routes.LEAVE_GUILD.compile(self.DELETE, guild_id=guild_id)
@@ -2761,7 +2761,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the recipient is not found.
         """
         payload = {"recipient_id": recipient_id}
@@ -2806,12 +2806,12 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_WEBHOOKS` permission or
             can not see the given channel.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If the avatar image is too big or the format is invalid.
         """
         payload = {"name": name}
@@ -2834,9 +2834,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_WEBHOOKS` permission or
             can not see the given channel.
         """
@@ -2858,9 +2858,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_WEBHOOKS` permission or
             aren't a member of the given guild.
         """
@@ -2884,12 +2884,12 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the webhook is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you're not in the guild that owns this webhook or
             lack the `MANAGE_WEBHOOKS` permission.
-        hikari.errors.UnauthorizedHTTPError
+        hikari.errors.Unauthorized
             If you pass a token that's invalid for the target webhook.
         """
         if webhook_token is ...:
@@ -2935,12 +2935,12 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the webhook or the channel aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_WEBHOOKS` permission or
             aren't a member of the guild this webhook belongs to.
-        hikari.errors.UnauthorizedHTTPError
+        hikari.errors.Unauthorized
             If you pass a token that's invalid for the target webhook.
         """
         payload = {}
@@ -2968,12 +2968,12 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the webhook is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_WEBHOOKS` permission or
             aren't a member of the guild this webhook belongs to.
-        hikari.errors.UnauthorizedHTTPError
+        hikari.errors.Unauthorized
             If you pass a token that's invalid for the target webhook.
         """
         if webhook_token is ...:
@@ -3034,9 +3034,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel ID or webhook ID is not found.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
             empty or greater than `2000` characters; if neither content, file
@@ -3044,9 +3044,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             fields in `allowed_mentions`; if you specify to parse all
             users/roles mentions but also specify which users/roles to parse
             only.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permissions to send to this channel.
-        hikari.errors.UnauthorizedHTTPError
+        hikari.errors.Unauthorized
             If you pass a token that's invalid for the target webhook.
         """
         form = aiohttp.FormData()

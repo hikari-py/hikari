@@ -47,10 +47,10 @@ class RESTUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abs
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the user is not found.
         """
         payload = await self._session.get_user(

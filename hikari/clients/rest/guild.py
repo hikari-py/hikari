@@ -86,12 +86,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the given permissions to view an audit log.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild does not exist.
         """
         if isinstance(before, datetime.datetime):
@@ -155,7 +155,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         hikari.audit_logs.AuditLogIterator
@@ -193,12 +193,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the emoji aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you aren't a member of said guild.
         """
         payload = await self._session.get_guild_emoji(
@@ -222,12 +222,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you aren't a member of the guild.
         """
         payload = await self._session.list_guild_emojis(
@@ -270,12 +270,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         ------
         ValueError
             If `image` is `None`.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_EMOJIS` permission or aren't a
             member of said guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you attempt to upload an image larger than `256kb`, an empty
             image or an invalid image format.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -327,12 +327,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the emoji aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_EMOJIS` permission or are not a
             member of the given guild.
         """
@@ -361,12 +361,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the emoji aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_EMOJIS` permission or aren't a
             member of said guild.
         """
@@ -425,9 +425,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are in `10` or more guilds.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide unsupported fields like `parent_id` in channel
             objects.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -460,12 +460,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you don't have access to the guild.
         """
         payload = await self._session.get_guild(
@@ -494,10 +494,10 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of UINT64.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found or it isn't `PUBLIC`.
         """
         payload = await self._session.get_guild_preview(
@@ -566,12 +566,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = await self._session.modify_guild(
@@ -613,12 +613,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are not the guild owner.
         """
         await self._session.delete_guild(
@@ -642,12 +642,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are not in the guild.
         """
         payload = await self._session.list_guild_channels(
@@ -722,12 +722,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_CHANNEL` permission or are not in the
             guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide incorrect options for the corresponding channel type
             (e.g. a `bitrate` for a text channel).
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -781,12 +781,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or any of the channels aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_CHANNELS` permission or are not a
             member of said guild or are not in the guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide anything other than the `id` and `position`
             fields for the channels.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -819,12 +819,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the member aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you don't have access to the target guild.
         """
         payload = await self._session.get_guild_member(
@@ -870,12 +870,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are not in the guild.
         """
         if isinstance(after, datetime.datetime):
@@ -937,15 +937,15 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild, user, channel or any of the roles aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack any of the applicable permissions (`MANAGE_NICKNAMES`,
             `MANAGE_ROLES`, `MUTE_MEMBERS`, `DEAFEN_MEMBERS` or `MOVE_MEMBERS`).
             Note that to move a member you must also have permission to connect
             to the end channel. This will also be raised if you're not in the
             guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you pass `mute`, `deaf` or `channel_id` while the member
             is not connected to a voice channel.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -987,12 +987,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `CHANGE_NICKNAME` permission or are not in the
             guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide a disallowed nickname, one that is too long, or one
             that is empty.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -1028,12 +1028,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild, member or role aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         await self._session.add_guild_member_role(
@@ -1067,12 +1067,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild, member or role aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         await self._session.remove_guild_member_role(
@@ -1099,12 +1099,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or member aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `KICK_MEMBERS` permission or are not in the guild.
         """
         await self._session.remove_guild_member(
@@ -1132,13 +1132,13 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the user aren't found, or if the user is not
             banned.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         payload = await self._session.get_guild_ban(
@@ -1162,12 +1162,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         payload = await self._session.get_guild_bans(
@@ -1200,12 +1200,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or member aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         await self._session.create_guild_ban(
@@ -1232,13 +1232,13 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or member aren't found, or the member is not
             banned.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `BAN_MEMBERS` permission or are not a in the
             guild.
         """
@@ -1265,12 +1265,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you're not in the guild.
         """
         payload = await self._session.get_guild_roles(
@@ -1321,12 +1321,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or you're not in the
             guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide invalid values for the role attributes.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -1368,12 +1368,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or any of the roles aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or you're not in the
             guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide invalid values for the `position` fields.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -1430,12 +1430,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or role aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or you're not in the
             guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide invalid values for the role attributes.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -1464,12 +1464,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the role aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         await self._session.delete_guild_role(
@@ -1496,11 +1496,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `KICK_MEMBERS` or you are not in the guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you pass an invalid amount of days.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -1541,11 +1541,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found:
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `KICK_MEMBER` permission or are not in the guild.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide invalid values for the `days` or
             `compute_prune_count` fields.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -1575,12 +1575,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are not in the guild.
         """
         payload = await self._session.get_guild_voice_regions(
@@ -1605,12 +1605,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = await self._session.get_guild_invites(
@@ -1633,12 +1633,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = await self._session.get_guild_integrations(
@@ -1681,12 +1681,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the integration aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         await self._session.modify_guild_integration(
@@ -1719,12 +1719,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the integration aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         await self._session.delete_guild_integration(
@@ -1747,12 +1747,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the guild or the integration aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         await self._session.sync_guild_integration(
@@ -1775,12 +1775,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_GUILD` permission or are not in
             the guild.
         """
@@ -1820,12 +1820,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_GUILD` permission or are not in
             the guild.
         """
@@ -1858,12 +1858,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_GUILD` permission or are not in
             the guild.
         """
@@ -1915,12 +1915,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_WEBHOOKS` permission or
             aren't a member of the given guild.
         """
