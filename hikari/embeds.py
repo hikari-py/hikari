@@ -39,9 +39,9 @@ import attr
 from hikari import bases
 from hikari import colors
 from hikari import files
+from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import marshaller
-from hikari.internal import assertions
 
 if typing.TYPE_CHECKING:
     from hikari.internal import more_typing

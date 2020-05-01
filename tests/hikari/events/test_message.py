@@ -16,19 +16,19 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
-import datetime
 import contextlib
+import datetime
 
 import mock
 import pytest
 
 from hikari import applications
-from hikari import users
-from hikari import guilds
 from hikari import embeds
 from hikari import emojis
-from hikari import unset
+from hikari import guilds
 from hikari import messages
+from hikari import unset
+from hikari import users
 from hikari.events import message
 from hikari.internal import conversions
 from tests.hikari import _helpers

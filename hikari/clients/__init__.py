@@ -28,7 +28,6 @@ from hikari.clients import runnable
 from hikari.clients import shard_states
 from hikari.clients import shards
 from hikari.clients import stateless
-
 from hikari.clients.bot_base import *
 from hikari.clients.components import *
 from hikari.clients.configs import *

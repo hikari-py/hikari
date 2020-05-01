@@ -22,12 +22,12 @@ import datetime
 import mock
 import pytest
 
+from hikari import applications
 from hikari import embeds
 from hikari import emojis
 from hikari import files
 from hikari import guilds
 from hikari import messages
-from hikari import applications
 from hikari import users
 from hikari.clients import components
 from hikari.internal import conversions

@@ -604,7 +604,6 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
         close_code : int
             The close code to use. Defaults to `1000` (normal closure).
         """
-
         if not self.requesting_close_event.is_set():
             self.logger.debug("closing websocket connection")
             self.requesting_close_event.set()

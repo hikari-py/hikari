@@ -25,7 +25,6 @@ __all__ = ["REST"]
 import asyncio
 import contextlib
 import datetime
-import email.utils
 import http
 import json
 import typing
@@ -52,14 +51,7 @@ VERSION_6: typing.Final[int] = 6
 VERSION_7: typing.Final[int] = 7
 
 
-class _Backoff(RuntimeError):
-    __slots__ = ()
-
-    def __init__(self, cause):
-        self.__cause__ = cause
-
-
-class _Ratelimited(RuntimeError):
+class _RateLimited(RuntimeError):
     __slots__ = ()
 
 
@@ -248,87 +240,100 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
 
         while True:
             try:
-                url = compiled_route.create_url(self.base_url)
-
-                # Wait for any ratelimits to finish
-                await asyncio.gather(
-                    self.bucket_ratelimiters.acquire(compiled_route), self.global_ratelimiter.acquire()
-                )
-
-                # Make the request.
-                response = await self._perform_request(
-                    method=compiled_route.method, url=url, headers=headers, body=body, query=query
-                )
-
-                # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
-                await self._handle_ratelimits_for_response(response.real_url, compiled_route, response)
-
-                # Decode the body.
-                raw_body = None if response.status == http.HTTPStatus.NO_CONTENT else await response.read()
-
-                real_url = str(response.real_url)
-
-                # Handle the response.
-                if 200 <= response.status < 300:
-                    if response.status == http.HTTPStatus.NO_CONTENT:
-                        return None
-                    if response.content_type == self.APPLICATION_JSON:
-                        # Only deserializing here stops Cloudflare shenanigans messing us around.
-                        return self.json_deserialize(raw_body)
-                    else:
-                        raise errors.HTTPError(real_url, f"Expected JSON response but received {response.content_type}")
-
-                if response.status == http.HTTPStatus.BAD_REQUEST:
-                    raise errors.BadRequest(real_url, response.headers, raw_body)
-                if response.status == http.HTTPStatus.UNAUTHORIZED:
-                    raise errors.Unauthorized(real_url, response.headers, raw_body)
-                if response.status == http.HTTPStatus.FORBIDDEN:
-                    raise errors.Forbidden(real_url, response.headers, raw_body)
-
-                status = http.HTTPStatus(response.status)
-
-                if 400 <= status < 500:
-                    cls = errors.ClientHTTPErrorResponse
-                elif 500 <= status < 600:
-                    cls = errors.ServerHTTPErrorResponse
-                else:
-                    cls = errors.HTTPErrorResponse
-
-                raise cls(real_url, status, response.headers, raw_body)
-            except _Ratelimited:
+                # Moved to a separate method to keep branch counts down.
+                return await self.__request_json_response(compiled_route, headers, body, query)
+            except _RateLimited:
                 pass
 
-    async def _handle_ratelimits_for_response(self, real_url, compiled_route, response):
+    async def __request_json_response(self, compiled_route, headers, body, query):
+        url = compiled_route.create_url(self.base_url)
+
+        # Wait for any ratelimits to finish.
+        await asyncio.gather(self.bucket_ratelimiters.acquire(compiled_route), self.global_ratelimiter.acquire())
+
+        # Make the request.
+        response = await self._perform_request(
+            method=compiled_route.method, url=url, headers=headers, body=body, query=query
+        )
+
+        real_url = str(response.real_url)
+
+        # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
+        await self._handle_rate_limits_for_response(compiled_route, response)
+
+        # Don't bother processing any further if we got NO CONTENT. There's not anything
+        # to check.
+        if response.status == http.HTTPStatus.NO_CONTENT:
+            return None
+
+        # Decode the body.
+        raw_body = await response.read()
+
+        # Handle the response.
+        if 200 <= response.status < 300:
+            if response.content_type == self.APPLICATION_JSON:
+                # Only deserializing here stops Cloudflare shenanigans messing us around.
+                return self.json_deserialize(raw_body)
+            raise errors.HTTPError(real_url, f"Expected JSON response but received {response.content_type}")
+
+        if response.status == http.HTTPStatus.BAD_REQUEST:
+            raise errors.BadRequest(real_url, response.headers, raw_body)
+        if response.status == http.HTTPStatus.UNAUTHORIZED:
+            raise errors.Unauthorized(real_url, response.headers, raw_body)
+        if response.status == http.HTTPStatus.FORBIDDEN:
+            raise errors.Forbidden(real_url, response.headers, raw_body)
+        if response.status == http.HTTPStatus.NOT_FOUND:
+            raise errors.NotFound(real_url, response.headers, raw_body)
+
+        status = http.HTTPStatus(response.status)
+
+        if 400 <= status < 500:
+            cls = errors.ClientHTTPErrorResponse
+        elif 500 <= status < 600:
+            cls = errors.ServerHTTPErrorResponse
+        else:
+            cls = errors.HTTPErrorResponse
+
+        raise cls(real_url, status, response.headers, raw_body)
+
+    async def _handle_rate_limits_for_response(self, compiled_route, response):
         # Worth noting there is some bug on V6 that ratelimits me immediately if I have an invalid token.
         # https://github.com/discord/discord-api-docs/issues/1569
 
         # Handle ratelimiting.
         resp_headers = response.headers
-        limit = int(resp_headers.get("X-RateLimit-Limit", "1"))
-        remaining = int(resp_headers.get("X-RateLimit-Remaining", "1"))
-        bucket = resp_headers.get("X-RateLimit-Bucket", "None")
-        reset = float(resp_headers.get("X-RateLimit-Reset", "0"))
+        limit = int(resp_headers.get("x-ratelimit-limit", "1"))
+        remaining = int(resp_headers.get("x-ratelimit-remaining", "1"))
+        bucket = resp_headers.get("x-ratelimit-bucket", "None")
+        reset = float(resp_headers.get("x-ratelimit-reset", "0"))
         reset_date = datetime.datetime.fromtimestamp(reset, tz=datetime.timezone.utc)
-        now_date = email.utils.parsedate_to_datetime(resp_headers["Date"])
-        self.bucket_ratelimiters.update_rate_limits(compiled_route, bucket, remaining, limit, now_date, reset_date)
+        now_date = conversions.parse_http_date(resp_headers["date"])
+        self.bucket_ratelimiters.update_rate_limits(
+            compiled_route=compiled_route,
+            bucket_header=bucket,
+            remaining_header=remaining,
+            limit_header=limit,
+            date_header=now_date,
+            reset_at_header=reset_date,
+        )
 
         if response.status == http.HTTPStatus.TOO_MANY_REQUESTS:
             body = await response.json() if response.content_type == self.APPLICATION_JSON else await response.read()
 
             # We are being rate limited.
             if isinstance(body, dict):
-                if body["global"]:
+                if body.get("global", False):
                     retry_after = float(body["retry_after"]) / 1_000
                     self.global_ratelimiter.throttle(retry_after)
 
-                raise _Ratelimited()
-            else:
-                # We might find out Cloudflare causes this scenario to occur.
-                # I hope we don't though.
-                raise errors.HTTPError(
-                    real_url,
-                    f"We were ratelimited but did not understand the response. Perhaps Cloudflare did this? {body!r}",
-                )
+                raise _RateLimited()
+
+            # We might find out Cloudflare causes this scenario to occur.
+            # I hope we don't though.
+            raise errors.HTTPError(
+                str(response.real_url),
+                f"We were ratelimited but did not understand the response. Perhaps Cloudflare did this? {body!r}",
+            )
 
     async def get_gateway(self) -> str:
         """Get the URL to use to connect to the gateway with.

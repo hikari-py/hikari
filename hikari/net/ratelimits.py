@@ -867,7 +867,7 @@ class RESTBucketManager:
 
     @property
     def is_started(self) -> bool:
-        """`True` if the ratelimiter GC task has started, `False` otherwise."""
+        """Return `True` if the rate limiter GC task is started."""
         return self.gc_task is not None
 
 

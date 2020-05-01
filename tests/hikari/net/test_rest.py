@@ -16,15 +16,18 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import asyncio
 import contextlib
 import datetime
 import email.utils
+import http
 import json
 
 import aiohttp
 import mock
 import pytest
 
+from hikari import errors
 from hikari import files
 from hikari.internal import conversions
 from hikari.net import http_client
@@ -42,7 +45,7 @@ class MockResponse:
         self.content_type = content_type
         headers = {} if headers is None else headers
         headers["content-type"] = content_type
-        headers["Date"] = email.utils.format_datetime(datetime.datetime.utcnow())
+        headers.setdefault("date", email.utils.format_datetime(datetime.datetime.utcnow()))
         self.headers = headers
         self.__dict__.update(kwargs)
 
@@ -120,12 +123,15 @@ class TestRESTRequestJsonResponse:
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=global_ratelimiter))
         with stack:
             client = rest.REST(base_url="http://example.bloop.com", token="Bot blah.blah.blah")
+        client.json_deserialize = json.loads
+        client.serialize = json.dumps
         client._perform_request = mock.AsyncMock(spec_set=client._perform_request, return_value=MockResponse(None))
+        client._handle_rate_limits_for_response = mock.AsyncMock()
         return client
 
     @pytest.fixture
     def compiled_route(self):
-        return routes.CompiledRoute("GET", "/foo/{:bar}/baz", "/foo/bar/baz", "1a2a3b4b5c6d")
+        return routes.CompiledRoute("POST", "/foo/{:bar}/baz", "/foo/bar/baz", "1a2a3b4b5c6d")
 
     async def test_bucket_ratelimiters_are_started_when_not_running(self, rest_impl, compiled_route):
         # given
@@ -154,7 +160,7 @@ class TestRESTRequestJsonResponse:
         await rest_impl._request_json_response(compiled_route)
         # then
         _, kwargs = rest_impl._perform_request.call_args
-        assert kwargs["method"] == "GET"
+        assert kwargs["method"] == "POST"
 
     async def test_passes_url_kwarg(self, rest_impl, compiled_route):
         # when
@@ -213,6 +219,250 @@ class TestRESTRequestJsonResponse:
         await rest_impl._request_json_response(compiled_route, suppress_authorization_header=True)
         # then
         assert "authorization" not in map(str.lower, rest_impl._perform_request.call_args[1]["headers"].keys())
+
+    async def test_auditlog_reason_header_not_injected_if_omitted(self, rest_impl, compiled_route):
+        # when
+        await rest_impl._request_json_response(compiled_route)
+        # then
+        assert "x-audit-log-reason" not in map(str.lower, rest_impl._perform_request.call_args[1]["headers"].keys())
+
+    async def test_auditlog_reason_header_not_injected_if_omitted(self, rest_impl, compiled_route):
+        # when
+        await rest_impl._request_json_response(compiled_route, reason="he was evil")
+        # then
+        headers = rest_impl._perform_request.call_args[1]["headers"]
+        assert headers["x-audit-log-reason"] == "he was evil"
+
+    async def test_waits_for_rate_limits_before_requesting(self, rest_impl, compiled_route):
+        await_ratelimiter = object()
+        await_request = object()
+
+        order = []
+
+        def on_gather(*_, **__):
+            order.append(await_ratelimiter)
+
+        def on_request(*_, **__):
+            order.append(await_request)
+            return MockResponse()
+
+        rest_impl._perform_request = mock.AsyncMock(wraps=on_request)
+
+        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock(wraps=on_gather)) as gather:
+            await rest_impl._request_json_response(compiled_route)
+
+        rest_impl.bucket_ratelimiters.acquire.assert_called_once_with(compiled_route)
+        rest_impl.global_ratelimiter.acquire.assert_called_once_with()
+
+        assert order == [await_ratelimiter, await_request]
+
+        gather.assert_awaited_once_with(
+            rest_impl.bucket_ratelimiters.acquire(compiled_route), rest_impl.global_ratelimiter.acquire(),
+        )
+
+    async def test_response_ratelimits_considered(self, rest_impl, compiled_route):
+        response = MockResponse()
+        rest_impl._perform_request = mock.AsyncMock(return_value=response)
+
+        await rest_impl._request_json_response(compiled_route)
+
+        rest_impl._handle_rate_limits_for_response.assert_awaited_once_with(compiled_route, response)
+
+    async def test_204_returns_None(self, rest_impl, compiled_route):
+        response = MockResponse(status=204, body="this is most certainly not None but it shouldn't be considered")
+        rest_impl._perform_request = mock.AsyncMock(return_value=response)
+
+        assert await rest_impl._request_json_response(compiled_route) is None
+
+    @pytest.mark.parametrize("status", [200, 201, 202, 203])
+    async def test_2xx_returns_json_body_if_json_type(self, rest_impl, compiled_route, status):
+        response = MockResponse(status=status, body='{"foo": "bar"}', content_type="application/json")
+        rest_impl._perform_request = mock.AsyncMock(return_value=response)
+
+        assert await rest_impl._request_json_response(compiled_route) == {"foo": "bar"}
+
+    @pytest.mark.parametrize("status", [200, 201, 202, 203])
+    @_helpers.assert_raises(type_=errors.HTTPError)
+    async def test_2xx_raises_http_error_if_unexpected_content_type(self, rest_impl, compiled_route, status):
+        response = MockResponse(status=status, body='{"foo": "bar"}', content_type="application/foobar")
+        rest_impl._perform_request = mock.AsyncMock(return_value=response)
+
+        await rest_impl._request_json_response(compiled_route)
+
+    @pytest.mark.parametrize(
+        ["status", "expected_exception_type"],
+        [
+            (100, errors.HTTPErrorResponse),
+            (304, errors.HTTPErrorResponse),
+            (400, errors.BadRequest),
+            (401, errors.Unauthorized),
+            (403, errors.Forbidden),
+            (404, errors.NotFound),
+            (406, errors.ClientHTTPErrorResponse),
+            (408, errors.ClientHTTPErrorResponse),
+            (415, errors.ClientHTTPErrorResponse),
+            (500, errors.ServerHTTPErrorResponse),
+            (501, errors.ServerHTTPErrorResponse),
+            (502, errors.ServerHTTPErrorResponse),
+            (503, errors.ServerHTTPErrorResponse),
+            (504, errors.ServerHTTPErrorResponse),
+        ],
+    )
+    async def test_error_responses_raises_error(self, rest_impl, compiled_route, status, expected_exception_type):
+        response = MockResponse(status=status, body="this is most certainly not None but it shouldn't be considered")
+        rest_impl._perform_request = mock.AsyncMock(return_value=response)
+
+        try:
+            await rest_impl._request_json_response(compiled_route)
+            assert False
+        except expected_exception_type as ex:
+            assert ex.headers is response.headers
+            assert ex.status == response.status
+            assert isinstance(ex.status, http.HTTPStatus)
+            assert ex.raw_body is response.body
+
+    async def test_ratelimited_429_retries_request_until_it_works(self, compiled_route, rest_impl):
+        # given
+        response = MockResponse()
+        rest_impl._handle_rate_limits_for_response = mock.AsyncMock(
+            # In reality, the ratelimiting logic will ensure we wait before retrying, but this
+            # is a test for a spammy edge-case scenario.
+            side_effect=[rest._RateLimited, rest._RateLimited, rest._RateLimited, None]
+        )
+        # when
+        await rest_impl._request_json_response(compiled_route)
+        # then
+        assert len(rest_impl._perform_request.call_args_list) == 4, rest_impl._perform_request.call_args_list
+        for args, kwargs in rest_impl._perform_request.call_args_list:
+            assert kwargs == {
+                "method": "POST",
+                "url": "http://example.bloop.com/foo/bar/baz",
+                "headers": mock.ANY,
+                "body": mock.ANY,
+                "query": mock.ANY,
+            }
+
+
+@pytest.mark.asyncio
+class TestHandleRateLimitsForResponse:
+    @pytest.fixture
+    def bucket_ratelimiters(self):
+        limiter = mock.MagicMock(spec_set=ratelimits.RESTBucketManager)
+        limiter.update_rate_limits = mock.MagicMock()
+        return limiter
+
+    @pytest.fixture
+    def global_ratelimiter(self):
+        limiter = mock.MagicMock(spec_set=ratelimits.ManualRateLimiter)
+        limiter.throttle = mock.MagicMock()
+        return limiter
+
+    @pytest.fixture
+    def rest_impl(self, bucket_ratelimiters, global_ratelimiter):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(http_client.HTTPClient, "__init__", new=lambda *_, **__: None))
+        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager", return_value=bucket_ratelimiters))
+        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=global_ratelimiter))
+        with stack:
+            client = rest.REST(base_url="http://example.bloop.com", token="Bot blah.blah.blah")
+        return client
+
+    @pytest.fixture
+    def compiled_route(self):
+        return routes.CompiledRoute("GET", "/foo/{:bar}/baz", "/foo/bar/baz", "1a2a3b4b5c6d")
+
+    @pytest.mark.parametrize("status", [200, 201, 202, 203, 204, 400, 401, 403, 404, 429, 500])
+    @pytest.mark.parametrize("content_type", ["application/json", "text/x-yaml", None])
+    async def test_bucket_ratelimiter_updated(
+        self, bucket_ratelimiters, rest_impl, compiled_route, status, content_type
+    ):
+        response = MockResponse(
+            headers={
+                "x-ratelimit-limit": "15",
+                "x-ratelimit-remaining": "3",
+                "x-ratelimit-bucket": "foobar",
+                "date": "Fri, 01 May 2020 10:23:54 GMT",
+                "x-ratelimit-reset": "1588334400",
+            },
+            status=status,
+            content_type=content_type,
+        )
+
+        # We don't care about the result, as some cases throw exceptions purposely. We just want
+        # to invoke it and check a call is made before it returns. This ensures 429s still take
+        # into account the headers first.
+        with contextlib.suppress(Exception):
+            await rest_impl._handle_rate_limits_for_response(compiled_route, response)
+
+        bucket_ratelimiters.update_rate_limits.assert_called_once_with(
+            compiled_route=compiled_route,
+            bucket_header="foobar",
+            remaining_header=3,
+            limit_header=15,
+            date_header=datetime.datetime(2020, 5, 1, 10, 23, 54, tzinfo=datetime.timezone.utc),
+            reset_at_header=datetime.datetime(2020, 5, 1, 12, tzinfo=datetime.timezone.utc),
+        )
+
+    @pytest.mark.parametrize("body", [b"{}", b'{"global": false}'])
+    @_helpers.assert_raises(type_=rest._RateLimited)
+    async def test_non_global_429_raises_Ratelimited(self, rest_impl, compiled_route, body):
+        response = MockResponse(
+            headers={
+                "x-ratelimit-limit": "15",
+                "x-ratelimit-remaining": "3",
+                "x-ratelimit-bucket": "foobar",
+                "date": "Fri, 01 May 2020 10:23:54 GMT",
+                "x-ratelimit-reset": "1588334400",
+            },
+            status=429,
+            content_type="application/json",
+            body=body,
+        )
+
+        await rest_impl._handle_rate_limits_for_response(compiled_route, response)
+
+    async def test_global_429_throttles_then_raises_Ratelimited(self, global_ratelimiter, rest_impl, compiled_route):
+        response = MockResponse(
+            headers={
+                "x-ratelimit-limit": "15",
+                "x-ratelimit-remaining": "3",
+                "x-ratelimit-bucket": "foobar",
+                "date": "Fri, 01 May 2020 10:23:54 GMT",
+                "x-ratelimit-reset": "1588334400",
+            },
+            status=429,
+            content_type="application/json",
+            body=b'{"global": true, "retry_after": 1024768}',
+        )
+
+        try:
+            await rest_impl._handle_rate_limits_for_response(compiled_route, response)
+            assert False
+        except rest._RateLimited:
+            global_ratelimiter.throttle.assert_called_once_with(1024.768)
+
+    async def test_non_json_429_causes_httperror(self, rest_impl, compiled_route):
+        response = MockResponse(
+            headers={
+                "x-ratelimit-limit": "15",
+                "x-ratelimit-remaining": "3",
+                "x-ratelimit-bucket": "foobar",
+                "date": "Fri, 01 May 2020 10:23:54 GMT",
+                "x-ratelimit-reset": "1588334400",
+            },
+            status=429,
+            content_type="text/x-markdown",
+            body=b'{"global": true, "retry_after": 1024768}',
+            real_url="http://foo-bar.com/api/v169/ree",
+        )
+
+        try:
+            await rest_impl._handle_rate_limits_for_response(compiled_route, response)
+            assert False
+        except errors.HTTPError as ex:
+            # We don't want a subclass, as this is an edge case.
+            assert type(ex) is errors.HTTPError
+            assert ex.url == "http://foo-bar.com/api/v169/ree"
 
 
 class TestRESTEndpoints:

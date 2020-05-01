@@ -178,8 +178,10 @@ def parse_http_date(date_str: str, /) -> datetime.datetime:
     References
     ----------
     [RFC 2822](https://www.ietf.org/rfc/rfc2822.txt)
+    [Mozilla documentation for Date header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Date)
     """
-    return email.utils.parsedate_to_datetime(date_str)
+    # According to Mozilla, these are always going to be GMT (which is UTC).
+    return email.utils.parsedate_to_datetime(date_str).replace(tzinfo=datetime.timezone.utc)
 
 
 def parse_iso_8601_ts(date_string: str, /) -> datetime.datetime:

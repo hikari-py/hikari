@@ -18,7 +18,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
 import datetime
-import functools
 
 import mock
 import pytest

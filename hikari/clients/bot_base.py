@@ -30,11 +30,11 @@ import math
 import time
 import typing
 
-from hikari.events import other
 from hikari.clients import components as _components
 from hikari.clients import configs
 from hikari.clients import runnable
 from hikari.clients import shard_states
+from hikari.events import other
 from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.state import dispatchers

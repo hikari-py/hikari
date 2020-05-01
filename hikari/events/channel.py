@@ -42,8 +42,8 @@ import attr
 from hikari import bases as base_entities
 from hikari import channels
 from hikari import guilds
-from hikari import invites
 from hikari import intents
+from hikari import invites
 from hikari import users
 from hikari import voices
 from hikari.events import base as base_events

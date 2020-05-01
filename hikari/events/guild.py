@@ -50,9 +50,9 @@ from hikari import guilds
 from hikari import intents
 from hikari import unset
 from hikari import users
+from hikari.events import base as base_events
 from hikari.internal import conversions
 from hikari.internal import marshaller
-from hikari.events import base as base_events
 
 if typing.TYPE_CHECKING:
     import datetime

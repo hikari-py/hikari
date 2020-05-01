@@ -28,8 +28,8 @@ import attr
 
 from hikari import bases
 from hikari.internal import marshaller
-from hikari.internal import urls
 from hikari.internal import more_enums
+from hikari.internal import urls
 
 
 @more_enums.must_be_unique

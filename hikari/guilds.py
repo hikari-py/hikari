@@ -68,8 +68,8 @@ from hikari import unset
 from hikari import users
 from hikari.internal import conversions
 from hikari.internal import marshaller
-from hikari.internal import urls
 from hikari.internal import more_enums
+from hikari.internal import urls
 
 if typing.TYPE_CHECKING:
     from hikari.internal import more_typing
