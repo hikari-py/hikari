@@ -17,14 +17,21 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import mock
+import pytest
 
 from hikari import users
 from hikari import webhooks
+from hikari.clients import components
 from tests.hikari import _helpers
 
 
+@pytest.fixture()
+def mock_components():
+    return mock.MagicMock(components.Components)
+
+
 class TestWebhook:
-    def test_deserialize(self):
+    def test_deserialize(self, mock_components):
         test_user_payload = {"id": "123456", "username": "hikari", "discriminator": "0000", "avatar": None}
         payload = {
             "id": "1234",
@@ -41,8 +48,8 @@ class TestWebhook:
         with _helpers.patch_marshal_attr(
             webhooks.Webhook, "user", deserializer=users.User.deserialize, return_value=mock_user
         ) as mock_user_deserializer:
-            webhook_obj = webhooks.Webhook.deserialize(payload)
-            mock_user_deserializer.assert_called_once_with(test_user_payload)
+            webhook_obj = webhooks.Webhook.deserialize(payload, components=mock_components)
+            mock_user_deserializer.assert_called_once_with(test_user_payload, components=mock_components)
 
         assert webhook_obj.id == 1234
         assert webhook_obj.type == webhooks.WebhookType.INCOMING

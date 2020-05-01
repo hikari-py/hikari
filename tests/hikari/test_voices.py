@@ -16,9 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
+import mock
 import pytest
 
 from hikari import voices
+from hikari.clients import components
 
 
 @pytest.fixture()
@@ -41,9 +43,14 @@ def voice_region_payload():
     return {"id": "london", "name": "LONDON", "vip": True, "optimal": False, "deprecated": True, "custom": False}
 
 
+@pytest.fixture()
+def mock_components():
+    return mock.MagicMock(components.Components)
+
+
 class TestVoiceState:
-    def test_deserialize(self, voice_state_payload):
-        voice_state_obj = voices.VoiceState.deserialize(voice_state_payload)
+    def test_deserialize(self, voice_state_payload, mock_components):
+        voice_state_obj = voices.VoiceState.deserialize(voice_state_payload, components=mock_components)
         assert voice_state_obj.guild_id == 929292929292992
         assert voice_state_obj.channel_id == 157733188964188161
         assert voice_state_obj.user_id == 80351110224678912
@@ -56,8 +63,8 @@ class TestVoiceState:
 
 
 class TestVoiceRegion:
-    def test_deserialize(self, voice_region_payload):
-        voice_region_obj = voices.VoiceRegion.deserialize(voice_region_payload)
+    def test_deserialize(self, voice_region_payload, mock_components):
+        voice_region_obj = voices.VoiceRegion.deserialize(voice_region_payload, components=mock_components)
         assert voice_region_obj.id == "london"
         assert voice_region_obj.name == "LONDON"
         assert voice_region_obj.is_vip is True

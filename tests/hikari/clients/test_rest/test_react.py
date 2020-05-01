@@ -107,7 +107,9 @@ class TestRESTReactionLogic:
             ):
                 assert reactor_obj is mock_user_obj
                 break
-            users.User.deserialize.assert_called_once_with(mock_user_payload)
+            users.User.deserialize.assert_called_once_with(
+                mock_user_payload, components=rest_reaction_logic_impl._components
+            )
         mock_request.assert_called_once_with(
             channel_id="123", message_id="432", emoji="tutu1:456371206225002499", after="140502780547694592", limit=47
         )
@@ -127,7 +129,9 @@ class TestRESTReactionLogic:
             async for reactor_obj in rest_reaction_logic_impl.fetch_reactors_after(channel, message, emoji):
                 assert reactor_obj is mock_user_obj
                 break
-            users.User.deserialize.assert_called_once_with(mock_user_payload)
+            users.User.deserialize.assert_called_once_with(
+                mock_user_payload, components=rest_reaction_logic_impl._components
+            )
         mock_request.assert_called_once_with(
             channel_id="123", message_id="432", emoji="tutu1:456371206225002499", after="0", limit=100
         )
@@ -145,7 +149,9 @@ class TestRESTReactionLogic:
             ):
                 assert reactor_obj is mock_user_obj
                 break
-            users.User.deserialize.assert_called_once_with(mock_user_payload)
+            users.User.deserialize.assert_called_once_with(
+                mock_user_payload, components=rest_reaction_logic_impl._components
+            )
         mock_request.assert_called_once_with(
             channel_id="123", message_id="432", emoji="tutu1:456371206225002499", after="537340988620800000", limit=100
         )

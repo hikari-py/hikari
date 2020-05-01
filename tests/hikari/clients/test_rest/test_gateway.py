@@ -53,4 +53,6 @@ class TestRESTReactionLogic:
         with mock.patch.object(gateway_entities.GatewayBot, "deserialize", return_value=mock_gateway_bot_obj):
             assert await rest_gateway_logic_impl.fetch_gateway_bot() is mock_gateway_bot_obj
             rest_gateway_logic_impl._session.get_gateway_bot.assert_called_once()
-            gateway_entities.GatewayBot.deserialize.assert_called_once_with(mock_payload)
+            gateway_entities.GatewayBot.deserialize.assert_called_once_with(
+                mock_payload, components=rest_gateway_logic_impl._components
+            )

@@ -127,27 +127,49 @@ class AuditLogChangeKey(str, more_enums.Enum):
     __repr__ = __str__
 
 
+def _deserialize_seconds_timedelta(seconds: typing.Union[str, int]) -> datetime.timedelta:
+    return datetime.timedelta(seconds=int(seconds))
+
+
+def _deserialize_partial_roles(
+    payload: more_typing.JSONArray, **kwargs: typing.Any
+) -> typing.Mapping[bases.Snowflake, guilds.GuildRole]:
+    return {bases.Snowflake(role["id"]): guilds.PartialGuildRole.deserialize(role, **kwargs) for role in payload}
+
+
+def _deserialize_day_timedelta(days: typing.Union[str, int]) -> datetime.timedelta:
+    return datetime.timedelta(days=int(days))
+
+
+def _deserialize_overwrites(
+    payload: more_typing.JSONArray, **kwargs: typing.Any
+) -> typing.Mapping[bases.Snowflake, channels.PermissionOverwrite]:
+    return {
+        bases.Snowflake(overwrite["id"]): channels.PermissionOverwrite.deserialize(overwrite, **kwargs)
+        for overwrite in payload
+    }
+
+
+def _deserialize_max_uses(age: int) -> typing.Union[int, float]:
+    return age if age > 0 else float("inf")
+
+
+def _deserialize_max_age(seconds: int) -> typing.Optional[datetime.timedelta]:
+    return datetime.timedelta(seconds=seconds) if seconds > 0 else None
+
+
 AUDIT_LOG_ENTRY_CONVERTERS = {
     AuditLogChangeKey.OWNER_ID: bases.Snowflake.deserialize,
     AuditLogChangeKey.AFK_CHANNEL_ID: bases.Snowflake.deserialize,
-    AuditLogChangeKey.AFK_TIMEOUT: lambda payload: datetime.timedelta(seconds=payload),
+    AuditLogChangeKey.AFK_TIMEOUT: _deserialize_seconds_timedelta,
     AuditLogChangeKey.MFA_LEVEL: guilds.GuildMFALevel,
     AuditLogChangeKey.VERIFICATION_LEVEL: guilds.GuildVerificationLevel,
     AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guilds.GuildExplicitContentFilterLevel,
     AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guilds.GuildMessageNotificationsLevel,
-    AuditLogChangeKey.ADD_ROLE_TO_MEMBER: lambda payload: {
-        role.id: role for role in map(guilds.PartialGuildRole.deserialize, payload)
-    },
-    AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: lambda payload: {
-        role.id: role for role in map(guilds.PartialGuildRole.deserialize, payload)
-    },
-    AuditLogChangeKey.PRUNE_DELETE_DAYS: lambda payload: datetime.timedelta(days=int(payload)),
+    AuditLogChangeKey.PRUNE_DELETE_DAYS: _deserialize_day_timedelta,
     AuditLogChangeKey.WIDGET_CHANNEL_ID: bases.Snowflake.deserialize,
     AuditLogChangeKey.POSITION: int,
     AuditLogChangeKey.BITRATE: int,
-    AuditLogChangeKey.PERMISSION_OVERWRITES: lambda payload: {
-        overwrite.id: overwrite for overwrite in map(channels.PermissionOverwrite.deserialize, payload)
-    },
     AuditLogChangeKey.APPLICATION_ID: bases.Snowflake.deserialize,
     AuditLogChangeKey.PERMISSIONS: permissions.Permission,
     AuditLogChangeKey.COLOR: colors.Color,
@@ -155,16 +177,22 @@ AUDIT_LOG_ENTRY_CONVERTERS = {
     AuditLogChangeKey.DENY: permissions.Permission,
     AuditLogChangeKey.CHANNEL_ID: bases.Snowflake.deserialize,
     AuditLogChangeKey.INVITER_ID: bases.Snowflake.deserialize,
-    AuditLogChangeKey.MAX_USES: lambda payload: int(payload) if payload > 0 else float("inf"),
+    AuditLogChangeKey.MAX_USES: _deserialize_max_uses,
     AuditLogChangeKey.USES: int,
-    AuditLogChangeKey.MAX_AGE: lambda payload: datetime.timedelta(seconds=payload) if payload > 0 else None,
+    AuditLogChangeKey.MAX_AGE: _deserialize_max_age,
     AuditLogChangeKey.ID: bases.Snowflake.deserialize,
     AuditLogChangeKey.TYPE: str,
     AuditLogChangeKey.ENABLE_EMOTICONS: bool,
     AuditLogChangeKey.EXPIRE_BEHAVIOR: guilds.IntegrationExpireBehaviour,
-    AuditLogChangeKey.EXPIRE_GRACE_PERIOD: lambda payload: datetime.timedelta(days=payload),
-    AuditLogChangeKey.RATE_LIMIT_PER_USER: lambda payload: datetime.timedelta(seconds=payload),
+    AuditLogChangeKey.EXPIRE_GRACE_PERIOD: _deserialize_day_timedelta,
+    AuditLogChangeKey.RATE_LIMIT_PER_USER: _deserialize_seconds_timedelta,
     AuditLogChangeKey.SYSTEM_CHANNEL_ID: bases.Snowflake.deserialize,
+}
+
+COMPONENT_BOUND_AUDIT_LOG_ENTRY_CONVERTERS = {
+    AuditLogChangeKey.ADD_ROLE_TO_MEMBER: _deserialize_partial_roles,
+    AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: _deserialize_partial_roles,
+    AuditLogChangeKey.PERMISSION_OVERWRITES: _deserialize_overwrites,
 }
 
 
@@ -173,17 +201,17 @@ AUDIT_LOG_ENTRY_CONVERTERS = {
 class AuditLogChange(bases.HikariEntity, marshaller.Deserializable):
     """Represents a change made to an audit log entry's target entity."""
 
-    new_value: typing.Optional[typing.Any] = marshaller.attrib()
+    new_value: typing.Optional[typing.Any] = attr.attrib()
     """The new value of the key, if something was added or changed."""
 
-    old_value: typing.Optional[typing.Any] = marshaller.attrib()
+    old_value: typing.Optional[typing.Any] = attr.attrib()
     """The old value of the key, if something was removed or changed."""
 
-    key: typing.Union[AuditLogChangeKey, str] = marshaller.attrib()
+    key: typing.Union[AuditLogChangeKey, str] = attr.attrib()
     """The name of the audit log change's key."""
 
     @classmethod
-    def deserialize(cls, payload: typing.Mapping[str, str], **_) -> AuditLogChange:
+    def deserialize(cls, payload: typing.Mapping[str, str], **kwargs: typing.Any) -> AuditLogChange:
         """Deserialize this model from a raw payload."""
         key = conversions.try_cast(payload["key"], AuditLogChangeKey, payload["key"])
         new_value = payload.get("new_value")
@@ -191,9 +219,12 @@ class AuditLogChange(bases.HikariEntity, marshaller.Deserializable):
         if value_converter := AUDIT_LOG_ENTRY_CONVERTERS.get(key):
             new_value = value_converter(new_value) if new_value is not None else None
             old_value = value_converter(old_value) if old_value is not None else None
+        elif value_converter := COMPONENT_BOUND_AUDIT_LOG_ENTRY_CONVERTERS.get(key):
+            new_value = value_converter(new_value, **kwargs) if new_value is not None else None
+            old_value = value_converter(old_value, **kwargs) if old_value is not None else None
 
         # noinspection PyArgumentList
-        return cls(key=key, new_value=new_value, old_value=old_value)
+        return cls(key=key, new_value=new_value, old_value=old_value, **kwargs)
 
 
 @more_enums.must_be_unique
@@ -319,9 +350,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
 class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
     """Represents the extra information attached to guild prune log entries."""
 
-    delete_member_days: datetime.timedelta = marshaller.attrib(
-        deserializer=lambda payload: datetime.timedelta(days=int(payload))
-    )
+    delete_member_days: datetime.timedelta = marshaller.attrib(deserializer=_deserialize_day_timedelta)
     """The timedelta of how many days members were pruned for inactivity based on."""
 
     members_removed: int = marshaller.attrib(deserializer=int)
@@ -411,38 +440,40 @@ def get_entry_info_entity(type_: int) -> typing.Type[_EntryInfoEntityT]:
 class AuditLogEntry(bases.UniqueEntity, marshaller.Deserializable):
     """Represents an entry in a guild's audit log."""
 
-    target_id: typing.Optional[bases.Snowflake] = marshaller.attrib()
+    target_id: typing.Optional[bases.Snowflake] = attr.attrib()
     """The ID of the entity affected by this change, if applicable."""
-    changes: typing.Sequence[AuditLogChange] = marshaller.attrib()
+
+    changes: typing.Sequence[AuditLogChange] = attr.attrib()
     """A sequence of the changes made to `AuditLogEntry.target_id`."""
 
-    user_id: bases.Snowflake = marshaller.attrib()
+    user_id: bases.Snowflake = attr.attrib()
     """The ID of the user who made this change."""
-    action_type: typing.Union[AuditLogEventType, str] = marshaller.attrib()
+
+    action_type: typing.Union[AuditLogEventType, str] = attr.attrib()
     """The type of action this entry represents."""
 
-    options: typing.Optional[BaseAuditLogEntryInfo] = marshaller.attrib()
+    options: typing.Optional[BaseAuditLogEntryInfo] = attr.attrib()
     """Extra information about this entry. Only be provided for certain `action_type`."""
 
-    reason: typing.Optional[str] = marshaller.attrib()
+    reason: typing.Optional[str] = attr.attrib()
     """The reason for this change, if set (between 0-512 characters)."""
 
     @classmethod
-    def deserialize(cls, payload: more_typing.JSONObject, **_) -> AuditLogEntry:
+    def deserialize(cls, payload: more_typing.JSONObject, **kwargs: typing.Any) -> AuditLogEntry:
         """Deserialize this model from a raw payload."""
         action_type = conversions.try_cast(payload["action_type"], AuditLogEventType, payload["action_type"])
         if target_id := payload.get("target_id"):
-            target_id = bases.Snowflake.deserialize(target_id)
+            target_id = bases.Snowflake(target_id)
 
         if (options := payload.get("options")) is not None:
             if option_converter := get_entry_info_entity(action_type):
-                options = option_converter.deserialize(options)
+                options = option_converter.deserialize(options, **kwargs)
 
         # noinspection PyArgumentList
         return cls(
             target_id=target_id,
             changes=[
-                AuditLogChange.deserialize(payload)
+                AuditLogChange.deserialize(payload, **kwargs)
                 for payload in payload.get("changes", more_collections.EMPTY_SEQUENCE)
             ],
             user_id=bases.Snowflake.deserialize(payload["user_id"]),
@@ -450,7 +481,35 @@ class AuditLogEntry(bases.UniqueEntity, marshaller.Deserializable):
             action_type=action_type,
             options=options,
             reason=payload.get("reason"),
+            **kwargs,
         )
+
+
+def _deserialize_entries(
+    payload: more_typing.JSONArray, **kwargs: typing.Any
+) -> typing.Mapping[bases.Snowflake, AuditLogEntry]:
+    return {bases.Snowflake(entry["id"]): AuditLogEntry.deserialize(entry, **kwargs) for entry in payload}
+
+
+def _deserialize_integrations(
+    payload: more_typing.JSONArray, **kwargs: typing.Any
+) -> typing.Mapping[bases.Snowflake, guilds.GuildIntegration]:
+    return {
+        bases.Snowflake(integration["id"]): guilds.PartialGuildIntegration.deserialize(integration, **kwargs)
+        for integration in payload
+    }
+
+
+def _deserialize_users(
+    payload: more_typing.JSONArray, **kwargs: typing.Any
+) -> typing.Mapping[bases.Snowflake, _users.User]:
+    return {bases.Snowflake(user["id"]): _users.User.deserialize(user, **kwargs) for user in payload}
+
+
+def _deserialize_webhooks(
+    payload: more_typing.JSONArray, **kwargs: typing.Any
+) -> typing.Mapping[bases.Snowflake, _webhooks.Webhook]:
+    return {bases.Snowflake(webhook["id"]): _webhooks.Webhook.deserialize(webhook, **kwargs) for webhook in payload}
 
 
 @marshaller.marshallable()
@@ -459,25 +518,22 @@ class AuditLog(bases.HikariEntity, marshaller.Deserializable):
     """Represents a guilds audit log."""
 
     entries: typing.Mapping[bases.Snowflake, AuditLogEntry] = marshaller.attrib(
-        raw_name="audit_log_entries",
-        deserializer=lambda payload: {entry.id: entry for entry in map(AuditLogEntry.deserialize, payload)},
+        raw_name="audit_log_entries", deserializer=_deserialize_entries, inherit_kwargs=True,
     )
     """A sequence of the audit log's entries."""
 
     integrations: typing.Mapping[bases.Snowflake, guilds.GuildIntegration] = marshaller.attrib(
-        deserializer=lambda payload: {
-            integration.id: integration for integration in map(guilds.PartialGuildIntegration.deserialize, payload)
-        }
+        deserializer=_deserialize_integrations, inherit_kwargs=True,
     )
     """A mapping of the partial objects of integrations found in this audit log."""
 
     users: typing.Mapping[bases.Snowflake, _users.User] = marshaller.attrib(
-        deserializer=lambda payload: {user.id: user for user in map(_users.User.deserialize, payload)}
+        deserializer=_deserialize_users, inherit_kwargs=True
     )
     """A mapping of the objects of users found in this audit log."""
 
     webhooks: typing.Mapping[bases.Snowflake, _webhooks.Webhook] = marshaller.attrib(
-        deserializer=lambda payload: {webhook.id: webhook for webhook in map(_webhooks.Webhook.deserialize, payload)}
+        deserializer=_deserialize_webhooks, inherit_kwargs=True,
     )
     """A mapping of the objects of webhooks found in this audit log."""
 

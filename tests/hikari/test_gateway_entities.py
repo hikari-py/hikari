@@ -23,7 +23,13 @@ import pytest
 
 from hikari import gateway_entities
 from hikari import guilds
+from hikari.clients import components
 from tests.hikari import _helpers
+
+
+@pytest.fixture()
+def mock_components():
+    return mock.MagicMock(components.Components)
 
 
 @pytest.fixture()
@@ -32,8 +38,10 @@ def test_session_start_limit_payload():
 
 
 class TestSessionStartLimit:
-    def test_deserialize(self, test_session_start_limit_payload):
-        session_start_limit_obj = gateway_entities.SessionStartLimit.deserialize(test_session_start_limit_payload)
+    def test_deserialize(self, test_session_start_limit_payload, mock_components):
+        session_start_limit_obj = gateway_entities.SessionStartLimit.deserialize(
+            test_session_start_limit_payload, components=mock_components
+        )
         assert session_start_limit_obj.total == 1000
         assert session_start_limit_obj.remaining == 991
         assert session_start_limit_obj.reset_after == datetime.timedelta(milliseconds=14170186)
@@ -44,7 +52,7 @@ class TestGatewayBot:
     def test_gateway_bot_payload(self, test_session_start_limit_payload):
         return {"url": "wss://gateway.discord.gg", "shards": 1, "session_start_limit": test_session_start_limit_payload}
 
-    def test_deserialize(self, test_gateway_bot_payload, test_session_start_limit_payload):
+    def test_deserialize(self, test_gateway_bot_payload, test_session_start_limit_payload, mock_components):
         mock_session_start_limit = mock.MagicMock(gateway_entities.SessionStartLimit)
         with _helpers.patch_marshal_attr(
             gateway_entities.GatewayBot,
@@ -52,8 +60,12 @@ class TestGatewayBot:
             deserializer=gateway_entities.SessionStartLimit.deserialize,
             return_value=mock_session_start_limit,
         ) as patched_start_limit_deserializer:
-            gateway_bot_obj = gateway_entities.GatewayBot.deserialize(test_gateway_bot_payload)
-            patched_start_limit_deserializer.assert_called_once_with(test_session_start_limit_payload)
+            gateway_bot_obj = gateway_entities.GatewayBot.deserialize(
+                test_gateway_bot_payload, components=mock_components
+            )
+            patched_start_limit_deserializer.assert_called_once_with(
+                test_session_start_limit_payload, components=mock_components
+            )
         assert gateway_bot_obj.session_start_limit is mock_session_start_limit
         assert gateway_bot_obj.url == "wss://gateway.discord.gg"
         assert gateway_bot_obj.shard_count == 1

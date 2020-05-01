@@ -24,6 +24,7 @@ __all__ = ["RESTCurrentUserComponent"]
 
 import abc
 import datetime
+import functools
 import typing
 
 from hikari import applications
@@ -50,7 +51,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             The current user object.
         """
         payload = await self._session.get_current_user()
-        return users.MyUser.deserialize(payload)
+        return users.MyUser.deserialize(payload, components=self._components)
 
     async def update_me(self, *, username: str = ..., avatar: typing.Optional[files.File] = ...) -> users.MyUser:
         """Edit the current user.
@@ -76,7 +77,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         payload = await self._session.modify_current_user(
             username=username, avatar=await avatar.read_all() if avatar is not ... else ...,
         )
-        return users.MyUser.deserialize(payload)
+        return users.MyUser.deserialize(payload, components=self._components)
 
     async def fetch_my_connections(self) -> typing.Sequence[applications.OwnConnection]:
         """
@@ -94,7 +95,9 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             A list of connection objects.
         """
         payload = await self._session.get_current_user_connections()
-        return [applications.OwnConnection.deserialize(connection) for connection in payload]
+        return [
+            applications.OwnConnection.deserialize(connection, components=self._components) for connection in payload
+        ]
 
     def fetch_my_guilds_after(
         self,
@@ -138,8 +141,9 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             after = str(bases.Snowflake.from_datetime(after))
         else:
             after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
+        deserializer = functools.partial(applications.OwnGuild.deserialize, components=self._components)
         return helpers.pagination_handler(
-            deserializer=applications.OwnGuild.deserialize,
+            deserializer=deserializer,
             direction="after",
             request=self._session.get_current_user_guilds,
             reversing=False,
@@ -185,8 +189,9 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             before = str(bases.Snowflake.from_datetime(before))
         else:
             before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
+        deserializer = functools.partial(applications.OwnGuild.deserialize, components=self._components)
         return helpers.pagination_handler(
-            deserializer=applications.OwnGuild.deserialize,
+            deserializer=deserializer,
             direction="before",
             request=self._session.get_current_user_guilds,
             reversing=False,
@@ -237,4 +242,4 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         payload = await self._session.create_dm(
             recipient_id=str(recipient.id if isinstance(recipient, bases.UniqueEntity) else int(recipient))
         )
-        return _channels.DMChannel.deserialize(payload)
+        return _channels.DMChannel.deserialize(payload, components=self._components)

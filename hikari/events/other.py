@@ -37,14 +37,15 @@ import typing
 
 import attr
 
+from hikari import bases as base_entities
 from hikari import guilds
 from hikari import users
 from hikari.events import base as base_events
 from hikari.internal import marshaller
 
 if typing.TYPE_CHECKING:
-    from hikari import bases as base_entities
     from hikari.clients import shards  # pylint: disable=cyclic-import
+    from hikari.internal import more_typing
 
 
 # Synthetic event, is not deserialized, and is produced by the dispatcher.
@@ -111,6 +112,14 @@ class ResumedEvent(base_events.HikariEvent):
     """The shard that reconnected."""
 
 
+def _deserialize_unavailable_guilds(
+    payload: more_typing.JSONArray, **kwargs: typing.Any
+) -> typing.Mapping[base_entities.Snowflake, guilds.UnavailableGuild]:
+    return {
+        base_entities.Snowflake(guild["id"]): guilds.UnavailableGuild.deserialize(guild, **kwargs) for guild in payload
+    }
+
+
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
@@ -122,12 +131,13 @@ class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
     gateway_version: int = marshaller.attrib(raw_name="v", deserializer=int)
     """The gateway version this is currently connected to."""
 
-    my_user: users.MyUser = marshaller.attrib(raw_name="user", deserializer=users.MyUser.deserialize)
+    my_user: users.MyUser = marshaller.attrib(
+        raw_name="user", deserializer=users.MyUser.deserialize, inherit_kwargs=True
+    )
     """The object of the current bot account this connection is for."""
 
     unavailable_guilds: typing.Mapping[base_entities.Snowflake, guilds.UnavailableGuild] = marshaller.attrib(
-        raw_name="guilds",
-        deserializer=lambda guilds_objs: {g.id: g for g in map(guilds.UnavailableGuild.deserialize, guilds_objs)},
+        raw_name="guilds", deserializer=_deserialize_unavailable_guilds, inherit_kwargs=True
     )
     """A mapping of the guilds this bot is currently in.
 

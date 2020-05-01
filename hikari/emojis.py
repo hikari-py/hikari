@@ -30,6 +30,9 @@ from hikari import bases
 from hikari import users
 from hikari.internal import marshaller
 
+if typing.TYPE_CHECKING:
+    from hikari.internal import more_typing
+
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
@@ -79,16 +82,17 @@ class UnknownEmoji(Emoji, bases.UniqueEntity):
         return f"{self.name}:{self.id}"
 
 
+def _deserialize_role_ids(payload: more_typing.JSONArray) -> typing.Set[bases.Snowflake]:
+    return {bases.Snowflake.deserialize(role_id) for role_id in payload}
+
+
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class GuildEmoji(UnknownEmoji):
     """Represents a guild emoji."""
 
     role_ids: typing.Set[bases.Snowflake] = marshaller.attrib(
-        raw_name="roles",
-        deserializer=lambda roles: {bases.Snowflake.deserialize(r) for r in roles},
-        if_undefined=set,
-        factory=set,
+        raw_name="roles", deserializer=_deserialize_role_ids, if_undefined=set, factory=set,
     )
     """The IDs of the roles that are whitelisted to use this emoji.
 
@@ -96,7 +100,7 @@ class GuildEmoji(UnknownEmoji):
     """
 
     user: typing.Optional[users.User] = marshaller.attrib(
-        deserializer=users.User.deserialize, if_none=None, if_undefined=None, default=None
+        deserializer=users.User.deserialize, if_none=None, if_undefined=None, default=None, inherit_kwargs=True
     )
     """The user that created the emoji.
 
@@ -123,9 +127,9 @@ class GuildEmoji(UnknownEmoji):
         return f"<{'a' if self.is_animated else ''}:{self.url_name}>"
 
 
-def deserialize_reaction_emoji(payload: typing.Dict) -> typing.Union[UnicodeEmoji, UnknownEmoji]:
+def deserialize_reaction_emoji(payload: typing.Dict, **kwargs: typing.Any) -> typing.Union[UnicodeEmoji, UnknownEmoji]:
     """Deserialize a reaction emoji into an emoji."""
     if payload.get("id"):
-        return UnknownEmoji.deserialize(payload)
+        return UnknownEmoji.deserialize(payload, **kwargs)
 
-    return UnicodeEmoji.deserialize(payload)
+    return UnicodeEmoji.deserialize(payload, **kwargs)

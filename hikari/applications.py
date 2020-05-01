@@ -44,6 +44,9 @@ from hikari.internal import marshaller
 from hikari.internal import more_enums
 from hikari.internal import urls
 
+if typing.TYPE_CHECKING:
+    from hikari.internal import more_typing
+
 
 @more_enums.must_be_unique
 class OAuth2Scope(str, more_enums.Enum):
@@ -180,6 +183,12 @@ class ConnectionVisibility(int, more_enums.Enum):
     """Everyone can see the connection."""
 
 
+def _deserialize_integrations(
+    payload: more_typing.JSONArray, **kwargs: typing.Any
+) -> typing.Sequence[guilds.GuildIntegration]:
+    return [guilds.PartialGuildIntegration.deserialize(integration, **kwargs) for integration in payload]
+
+
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class OwnConnection(bases.HikariEntity, marshaller.Deserializable):
@@ -205,11 +214,7 @@ class OwnConnection(bases.HikariEntity, marshaller.Deserializable):
     """Whether the connection has been revoked."""
 
     integrations: typing.Sequence[guilds.PartialGuildIntegration] = marshaller.attrib(
-        deserializer=lambda payload: [
-            guilds.PartialGuildIntegration.deserialize(integration) for integration in payload
-        ],
-        if_undefined=list,
-        factory=list,
+        deserializer=_deserialize_integrations, if_undefined=list, factory=list, inherit_kwargs=True,
     )
     """A sequence of the partial guild integration objects this connection has."""
 
@@ -268,8 +273,14 @@ class TeamMember(bases.HikariEntity, marshaller.Deserializable):
     team_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
     """The ID of the team this member belongs to."""
 
-    user: users.User = marshaller.attrib(deserializer=users.User.deserialize)
+    user: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True)
     """The user object of this team member."""
+
+
+def _deserialize_members(
+    payload: more_typing.JSONArray, **kwargs: typing.Any
+) -> typing.Mapping[bases.Snowflake, TeamMember]:
+    return {bases.Snowflake(member["user"]["id"]): TeamMember.deserialize(member, **kwargs) for member in payload}
 
 
 @marshaller.marshallable()
@@ -281,7 +292,7 @@ class Team(bases.UniqueEntity, marshaller.Deserializable):
     """The hash of this team's icon, if set."""
 
     members: typing.Mapping[bases.Snowflake, TeamMember] = marshaller.attrib(
-        deserializer=lambda members: {m.user.id: m for m in map(TeamMember.deserialize, members)}
+        deserializer=_deserialize_members, inherit_kwargs=True
     )
     """The member's that belong to this team."""
 
@@ -334,6 +345,10 @@ class ApplicationOwner(users.User):
         return bool((self.flags >> 10) & 1)
 
 
+def _deserialize_verify_key(payload: str) -> bytes:
+    return bytes(payload, "utf-8")
+
+
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class Application(bases.UniqueEntity, marshaller.Deserializable):
@@ -362,7 +377,7 @@ class Application(bases.UniqueEntity, marshaller.Deserializable):
     """
 
     owner: typing.Optional[ApplicationOwner] = marshaller.attrib(
-        deserializer=ApplicationOwner.deserialize, if_undefined=None, default=None
+        deserializer=ApplicationOwner.deserialize, if_undefined=None, default=None, inherit_kwargs=True,
     )
     """The object of this application's owner.
 
@@ -380,7 +395,7 @@ class Application(bases.UniqueEntity, marshaller.Deserializable):
     """
 
     verify_key: typing.Optional[bytes] = marshaller.attrib(
-        deserializer=lambda key: bytes(key, "utf-8"), if_undefined=None, default=None
+        deserializer=_deserialize_verify_key, if_undefined=None, default=None
     )
     """The base64 encoded key used for the GameSDK's `GetTicket`."""
 
@@ -390,7 +405,7 @@ class Application(bases.UniqueEntity, marshaller.Deserializable):
     """The hash of this application's icon, if set."""
 
     team: typing.Optional[Team] = marshaller.attrib(
-        deserializer=Team.deserialize, if_undefined=None, if_none=None, default=None
+        deserializer=Team.deserialize, if_undefined=None, if_none=None, default=None, inherit_kwargs=True
     )
     """This application's team if it belongs to one."""
 
