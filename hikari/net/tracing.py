@@ -94,7 +94,7 @@ class DebugTracer(BaseTracer):
     and other pieces of information that can be incredibly useful for debugging
     performance issues and API issues.
 
-    !!! warn:
+    !!! warn
         This may log potentially sensitive information such as authorization
         tokens, so ensure those are removed from debug logs before proceeding
         to send logs to anyone.
