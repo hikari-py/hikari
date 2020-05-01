@@ -18,8 +18,10 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import contextlib
+import datetime
+import email.utils
+import http
 import json
-import ssl
 
 import aiohttp
 import mock
@@ -28,634 +30,488 @@ import pytest
 from hikari import errors
 from hikari import files
 from hikari.internal import conversions
-from hikari.net import codes
+from hikari.net import http_client
 from hikari.net import ratelimits
 from hikari.net import rest
 from hikari.net import routes
 from tests.hikari import _helpers
 
 
-# noinspection PyUnresolvedReferences
-class TestLowLevelRestfulClient:
-    @pytest.fixture
-    def rest_impl(self):
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch("aiohttp.ClientSession"))
-        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
-        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
-        with stack:
-            client = rest.REST(base_url="https://discordapp.com/api/v6", token="Bot blah.blah.blah")
-        client._request = mock.AsyncMock(return_value=...)
-        client.client_session = mock.MagicMock(aiohttp.ClientSession, spec_set=True)
+class MockResponse:
+    def __init__(self, body=None, status=204, real_url="http://example.com", content_type=None, headers=None, **kwargs):
+        self.body = body
+        self.status = status
+        self.real_url = real_url
+        self.content_type = content_type
+        headers = {} if headers is None else headers
+        headers["content-type"] = content_type
+        headers.setdefault("date", email.utils.format_datetime(datetime.datetime.utcnow()))
+        self.headers = headers
+        self.__dict__.update(kwargs)
 
+    async def read(self):
+        return self.body
+
+    async def json(self):
+        return json.loads(await self.read())
+
+
+# noinspection PyUnresolvedReferences
+@pytest.mark.asyncio
+class TestRESTInit:
+    async def test_base_url_is_formatted_correctly(self):
+        async with rest.REST(base_url="http://example.com/api/v{0.version}/test", token=None, version=69) as client:
+            assert client.base_url == "http://example.com/api/v69/test"
+
+    async def test_no_token_sets_field_to_None(self):
+        async with rest.REST(token=None) as client:
+            assert client._token is None
+
+    @_helpers.assert_raises(type_=RuntimeError)
+    async def test_bare_old_token_without_auth_scheme_raises_error(self):
+        async with rest.REST(token="1a2b.3c4d") as client:
+            pass
+
+    @_helpers.assert_raises(type_=RuntimeError)
+    async def test_bare_old_token_without_recognised_auth_scheme_raises_error(self):
+        async with rest.REST(token="Token 1a2b.3c4d") as client:
+            pass
+
+    @pytest.mark.parametrize("auth_type", ["Bot", "Bearer"])
+    async def test_known_auth_type_is_allowed(self, auth_type):
+        token = f"{auth_type} 1a2b.3c4d"
+        async with rest.REST(token=token) as client:
+            assert client._token == token
+
+
+@pytest.mark.asyncio
+class TestRESTClose:
+    @pytest.fixture
+    def rest_impl(self, event_loop):
+        rest_impl = rest.REST(token="Bot token")
+        yield rest_impl
+        event_loop.run_until_complete(super(rest.REST, rest_impl).close())
+        rest_impl.bucket_ratelimiters.close()
+        rest_impl.global_ratelimiter.close()
+
+    @pytest.mark.parametrize("ratelimiter", ["bucket_ratelimiters", "global_ratelimiter"])
+    async def test_close_calls_ratelimiter_close(self, rest_impl, ratelimiter):
+        with mock.patch.object(rest_impl, ratelimiter) as m:
+            await rest_impl.close()
+        m.close.assert_called_once_with()
+
+
+@pytest.mark.asyncio
+class TestRESTRequestJsonResponse:
+    @pytest.fixture
+    def bucket_ratelimiters(self):
+        limiter = mock.MagicMock(spec_set=ratelimits.RESTBucketManager)
+        limiter.acquire = mock.MagicMock(return_value=_helpers.AwaitableMock())
+        return limiter
+
+    @pytest.fixture
+    def global_ratelimiter(self):
+        limiter = mock.MagicMock(spec_set=ratelimits.ManualRateLimiter)
+        limiter.acquire = mock.MagicMock(return_value=_helpers.AwaitableMock())
+        return limiter
+
+    @pytest.fixture
+    def rest_impl(self, bucket_ratelimiters, global_ratelimiter):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(http_client.HTTPClient, "__init__", new=lambda *_, **__: None))
+        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager", return_value=bucket_ratelimiters))
+        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=global_ratelimiter))
+        with stack:
+            client = rest.REST(base_url="http://example.bloop.com", token="Bot blah.blah.blah")
+        client.json_deserialize = json.loads
+        client.serialize = json.dumps
+        client._perform_request = mock.AsyncMock(spec_set=client._perform_request, return_value=MockResponse(None))
+        client._handle_rate_limits_for_response = mock.AsyncMock()
         return client
 
     @pytest.fixture
     def compiled_route(self):
-        class CompiledRoute:
-            method: str = "get"
+        return routes.CompiledRoute("POST", "/foo/{:bar}/baz", "/foo/bar/baz", "1a2a3b4b5c6d")
 
-            def create_url(self, base_url: str):
-                return base_url + "/somewhere"
+    async def test_bucket_ratelimiters_are_started_when_not_running(self, rest_impl, compiled_route):
+        # given
+        rest_impl.bucket_ratelimiters.is_started = False
+        # when
+        await rest_impl._request_json_response(compiled_route)
+        # then
+        rest_impl.bucket_ratelimiters.start.assert_called_once_with()
 
-        return CompiledRoute()
+    async def test_bucket_ratelimiters_are_not_restarted_when_already_running(self, rest_impl, compiled_route):
+        # given
+        rest_impl.bucket_ratelimiters.is_started = True
+        # when
+        await rest_impl._request_json_response(compiled_route)
+        # then
+        rest_impl.bucket_ratelimiters.start.assert_not_called()
 
-    @pytest.fixture
-    def exit_error(self):
-        class ExitError(BaseException):
-            ...
+    async def test_perform_request_awaited(self, rest_impl, compiled_route):
+        # when
+        await rest_impl._request_json_response(compiled_route)
+        # then
+        rest_impl._perform_request.assert_awaited_once()
 
-        return ExitError
+    async def test_passes_method_kwarg(self, rest_impl, compiled_route):
+        # when
+        await rest_impl._request_json_response(compiled_route)
+        # then
+        _, kwargs = rest_impl._perform_request.call_args
+        assert kwargs["method"] == "POST"
 
-    @pytest.fixture
-    def discord_response(self):
-        class Response:
-            headers: dict = {"Date": "Mon, 16 Nov 2009 13:32:02 +0100", "Content-Type": "application/json"}
-            status: int = 0
-            reason: str = "some reason"
-            raw_body: str = '{"message": "some_message", "code": 123}'
+    async def test_passes_url_kwarg(self, rest_impl, compiled_route):
+        # when
+        await rest_impl._request_json_response(compiled_route)
+        # then
+        _, kwargs = rest_impl._perform_request.call_args
+        assert kwargs["url"] == "http://example.bloop.com/foo/bar/baz"
 
-            async def read(self):
-                return self.raw_body
+    async def test_passes_headers(self, rest_impl, compiled_route):
+        # given
+        headers = {
+            "X-Floofy-Floof": "ayaayayayayayaya",
+            "X-Cider-Preference": "Strongbow Rose",
+            "Correlation-ID": "128374ad-23vsvdbdbnd-123-12314145",
+            "Connection": "keepalive",
+        }
+        # when
+        await rest_impl._request_json_response(compiled_route, headers=headers)
+        # then
+        _, kwargs = rest_impl._perform_request.call_args
+        for k, v in headers.items():
+            assert k in kwargs["headers"]
+            assert kwargs["headers"][k] == v
 
-            async def __aenter__(self):
-                return self
+    async def test_accept_header_injected(self, rest_impl, compiled_route):
+        # when
+        await rest_impl._request_json_response(compiled_route)
+        # then
+        _, kwargs = rest_impl._perform_request.call_args
+        assert kwargs["headers"]["accept"] == "application/json"
 
-            async def __aexit__(self, exc_type, exc_val, exc_tb):
-                pass
+    async def test_precision_header_injected(self, rest_impl, compiled_route):
+        # when
+        await rest_impl._request_json_response(compiled_route)
+        # then
+        _, kwargs = rest_impl._perform_request.call_args
+        assert kwargs["headers"]["x-ratelimit-precision"] == "millisecond"
 
-        return Response()
+    async def test_authorization_header_not_injected_if_none(self, rest_impl, compiled_route):
+        # given
+        rest_impl._token = None
+        # when
+        await rest_impl._request_json_response(compiled_route)
+        # then
+        assert "authorization" not in map(str.lower, rest_impl._perform_request.call_args[1]["headers"].keys())
 
-    @pytest.mark.asyncio
-    async def test_rest___aenter___and___aexit__(self, rest_impl):
-        rest_impl.close = mock.AsyncMock()
+    async def test_authorization_header_injected_if_present(self, rest_impl, compiled_route):
+        # when
+        await rest_impl._request_json_response(compiled_route)
+        # then
+        _, kwargs = rest_impl._perform_request.call_args
+        assert kwargs["headers"]["authorization"] == rest_impl._token
 
-        async with rest_impl as client:
-            assert client is rest_impl
+    async def test_authorization_header_not_injected_if_present_but_suppress_arg_true(self, rest_impl, compiled_route):
+        # when
+        await rest_impl._request_json_response(compiled_route, suppress_authorization_header=True)
+        # then
+        assert "authorization" not in map(str.lower, rest_impl._perform_request.call_args[1]["headers"].keys())
 
-        rest_impl.close.assert_called_once_with()
+    async def test_auditlog_reason_header_not_injected_if_omitted(self, rest_impl, compiled_route):
+        # when
+        await rest_impl._request_json_response(compiled_route)
+        # then
+        assert "x-audit-log-reason" not in map(str.lower, rest_impl._perform_request.call_args[1]["headers"].keys())
 
-    @pytest.mark.asyncio
-    async def test__init__with_bot_token_and_without_optionals(self):
-        mock_manual_rate_limiter = mock.MagicMock(close=mock.MagicMock())
-        buckets_mock = mock.MagicMock(close=mock.MagicMock())
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=mock_manual_rate_limiter))
-        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager", return_value=buckets_mock))
+    async def test_auditlog_reason_header_not_injected_if_omitted(self, rest_impl, compiled_route):
+        # when
+        await rest_impl._request_json_response(compiled_route, reason="he was evil")
+        # then
+        headers = rest_impl._perform_request.call_args[1]["headers"]
+        assert headers["x-audit-log-reason"] == "he was evil"
 
-        with stack:
-            client = rest.REST(token="Bot token.otacon.a-token")
+    async def test_waits_for_rate_limits_before_requesting(self, rest_impl, compiled_route):
+        await_ratelimiter = object()
+        await_request = object()
 
-        assert client.base_url == f"https://discordapp.com/api/v{rest.VERSION_6}"
-        assert client.client_session is None
-        assert client.global_ratelimiter is mock_manual_rate_limiter
-        assert client.json_serialize is json.dumps
-        assert client.json_deserialize is json.loads
-        assert client.bucket_ratelimiters is buckets_mock
-        assert client.token == "Bot token.otacon.a-token"
+        order = []
 
-    @pytest.mark.asyncio
-    async def test__init__with_bearer_token_and_without_optionals(self):
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
-        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
-        with stack:
-            client = rest.REST(token="Bearer token.otacon.a-token")
-            assert client.token == "Bearer token.otacon.a-token"
+        def on_gather(*_, **__):
+            order.append(await_ratelimiter)
 
-    @pytest.mark.asyncio
-    async def test__init__with_optionals(self):
-        mock_manual_rate_limiter = mock.MagicMock(ratelimits.ManualRateLimiter)
-        mock_http_bucket_rate_limit_manager = mock.MagicMock(ratelimits.RESTBucketManager)
-        mock_connector = mock.MagicMock(aiohttp.BaseConnector)
-        mock_dumps = mock.MagicMock(json.dumps)
-        mock_loads = mock.MagicMock(json.loads)
-        mock_proxy_auth = mock.MagicMock(aiohttp.BasicAuth)
-        mock_proxy_headers = {"User-Agent": "Agent 42"}
-        mock_ssl_context = mock.MagicMock(ssl.SSLContext)
+        def on_request(*_, **__):
+            order.append(await_request)
+            return MockResponse()
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=mock_manual_rate_limiter))
-        stack.enter_context(
-            mock.patch.object(ratelimits, "RESTBucketManager", return_value=mock_http_bucket_rate_limit_manager)
+        rest_impl._perform_request = mock.AsyncMock(wraps=on_request)
+
+        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock(wraps=on_gather)) as gather:
+            await rest_impl._request_json_response(compiled_route)
+
+        rest_impl.bucket_ratelimiters.acquire.assert_called_once_with(compiled_route)
+        rest_impl.global_ratelimiter.acquire.assert_called_once_with()
+
+        assert order == [await_ratelimiter, await_request]
+
+        gather.assert_awaited_once_with(
+            rest_impl.bucket_ratelimiters.acquire(compiled_route), rest_impl.global_ratelimiter.acquire(),
         )
 
-        with stack:
-            client = rest.REST(
-                token="Bot token.otacon.a-token",
-                base_url="https://discordapp.com/api/v69420",
-                allow_redirects=True,
-                connector=mock_connector,
-                proxy_headers=mock_proxy_headers,
-                proxy_auth=mock_proxy_auth,
-                proxy_url="a.proxy.url.today.nep",
-                ssl_context=mock_ssl_context,
-                verify_ssl=False,
-                timeout=30.53,
-                json_deserialize=mock_loads,
-                json_serialize=mock_dumps,
-            )
-            assert client.base_url == "https://discordapp.com/api/v69420"
-            assert client.global_ratelimiter is mock_manual_rate_limiter
-            assert client.json_serialize is mock_dumps
-            assert client.json_deserialize is mock_loads
-            assert client.bucket_ratelimiters is mock_http_bucket_rate_limit_manager
-            assert client.token == "Bot token.otacon.a-token"
+    async def test_response_ratelimits_considered(self, rest_impl, compiled_route):
+        response = MockResponse()
+        rest_impl._perform_request = mock.AsyncMock(return_value=response)
 
-    @pytest.mark.asyncio
-    @_helpers.assert_raises(type_=RuntimeError)
-    async def test__init__raises_runtime_error_with_invalid_token(self, *_):
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
-        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
-        with stack:
-            async with rest.REST(token="An-invalid-TOKEN"):
-                pass
+        await rest_impl._request_json_response(compiled_route)
 
-    @pytest.mark.asyncio
-    async def test_close_when_session_is_unset(self, rest_impl):
-        rest_impl.bucket_ratelimiters = mock.MagicMock(close=mock.MagicMock())
-        rest_impl.global_ratelimiter = mock.MagicMock(close=mock.MagicMock())
-        rest_impl.client_session = None
-        await rest_impl.close()
-        assert rest_impl.client_session is None
+        rest_impl._handle_rate_limits_for_response.assert_awaited_once_with(compiled_route, response)
 
-    @pytest.mark.asyncio
-    async def test_close_when_session_is_set(self, rest_impl):
-        client_session = mock.MagicMock(aiohttp.ClientSession, close=mock.AsyncMock())
-        rest_impl.bucket_ratelimiters = mock.MagicMock(close=mock.MagicMock())
-        rest_impl.global_ratelimiter = mock.MagicMock(close=mock.MagicMock())
-        rest_impl.client_session = client_session
-        await rest_impl.close()
-        assert rest_impl.client_session is None
-        client_session.close.assert_awaited_once()
+    async def test_204_returns_None(self, rest_impl, compiled_route):
+        response = MockResponse(status=204, body="this is most certainly not None but it shouldn't be considered")
+        rest_impl._perform_request = mock.AsyncMock(return_value=response)
 
-    @pytest.mark.asyncio
-    async def test_close_shuts_down_bucket_rate_limiter(self, rest_impl):
-        rest_impl.bucket_ratelimiters = mock.MagicMock(close=mock.MagicMock())
-        rest_impl.global_ratelimiter = mock.MagicMock(close=mock.MagicMock())
-        await rest_impl.close()
-        rest_impl.bucket_ratelimiters.close.assert_called_once_with()
+        assert await rest_impl._request_json_response(compiled_route) is None
 
-    @pytest.mark.asyncio
-    async def test_close_shuts_down_bucket_rate_limiter(self, rest_impl):
-        rest_impl.bucket_ratelimiters = mock.MagicMock(close=mock.MagicMock())
-        rest_impl.global_ratelimiter = mock.MagicMock(close=mock.MagicMock())
-        await rest_impl.close()
-        rest_impl.global_ratelimiter.close.assert_called_once_with()
+    @pytest.mark.parametrize("status", [200, 201, 202, 203])
+    async def test_2xx_returns_json_body_if_json_type(self, rest_impl, compiled_route, status):
+        response = MockResponse(status=status, body='{"foo": "bar"}', content_type="application/json")
+        rest_impl._perform_request = mock.AsyncMock(return_value=response)
 
-    @pytest.mark.asyncio
-    async def test_first_call_to_request_opens_client_session(self):
-        stack = contextlib.ExitStack()
+        assert await rest_impl._request_json_response(compiled_route) == {"foo": "bar"}
 
-        manual_rate_limiter_mock = mock.MagicMock(ratelimits.ManualRateLimiter)
-        buckets_mock = mock.MagicMock(ratelimits.RESTBucketManager)
-        client_session_mock = mock.MagicMock(aiohttp.ClientSession)
+    @pytest.mark.parametrize("status", [200, 201, 202, 203])
+    @_helpers.assert_raises(type_=errors.HTTPError)
+    async def test_2xx_raises_http_error_if_unexpected_content_type(self, rest_impl, compiled_route, status):
+        response = MockResponse(status=status, body='{"foo": "bar"}', content_type="application/foobar")
+        rest_impl._perform_request = mock.AsyncMock(return_value=response)
 
-        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=manual_rate_limiter_mock))
-        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager", return_value=buckets_mock))
-        stack.enter_context(mock.patch.object(aiohttp, "ClientSession", return_value=client_session_mock))
+        await rest_impl._request_json_response(compiled_route)
 
-        with stack:
-            client = rest.REST(token="Bot token.otacon.a-token")
-            assert client.client_session is None  # lazy init
-            with contextlib.suppress(Exception):
-                await client._request(mock.MagicMock(routes.CompiledRoute, spec_set=True))
-            assert client.client_session is not None
-
-    @pytest.mark.asyncio
-    async def test_more_calls_to_request_use_existing_client_session(self):
-        stack = contextlib.ExitStack()
-
-        manual_rate_limiter_mock = mock.MagicMock(ratelimits.ManualRateLimiter)
-        buckets_mock = mock.MagicMock(ratelimits.RESTBucketManager)
-        client_session_mock = mock.MagicMock(aiohttp.ClientSession)
-
-        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=manual_rate_limiter_mock))
-        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager", return_value=buckets_mock))
-        stack.enter_context(mock.patch.object(aiohttp, "ClientSession", return_value=client_session_mock))
-
-        with stack:
-            client = rest.REST(token="Bot token.otacon.a-token")
-            with contextlib.suppress(Exception):
-                await client._request(mock.MagicMock(routes.CompiledRoute, spec_set=True))
-
-            session = client.client_session
-
-            for i in range(20):
-                with contextlib.suppress(Exception):
-                    await client._request(mock.MagicMock(routes.CompiledRoute, spec_set=True))
-
-            assert client.client_session is session
-
-    @pytest.fixture()
-    @mock.patch.object(ratelimits, "ManualRateLimiter")
-    @mock.patch.object(ratelimits, "RESTBucketManager")
-    @mock.patch.object(aiohttp, "ClientSession")
-    def rest_impl_with__request(self, *args):
-        rest_impl = rest.REST(token="Bot token")
-        rest_impl.logger = mock.MagicMock(debug=mock.MagicMock())
-        rest_impl.bucket_ratelimiters = mock.MagicMock(
-            ratelimits.RESTBucketManager, acquire=mock.MagicMock(), update_rate_limits=mock.MagicMock(),
-        )
-        rest_impl.global_ratelimiter = mock.MagicMock(
-            ratelimits.ManualRateLimiter, acquire=mock.MagicMock(), throttle=mock.MagicMock()
-        )
-        rest_impl.client_session = mock.MagicMock(aiohttp.ClientSession, request=mock.MagicMock())
-
-        return rest_impl
-
-    @pytest.mark.asyncio
-    async def test__request_acquires_ratelimiter(self, compiled_route, exit_error, rest_impl_with__request):
-        rest_impl_with__request.logger.debug.side_effect = exit_error
-
-        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            try:
-                await rest_impl_with__request._request(compiled_route)
-            except exit_error:
-                pass
-
-            rest_impl_with__request.bucket_ratelimiters.acquire.asset_called_once_with(compiled_route)
-
-    @pytest.mark.asyncio
-    async def test__request_sets_Authentication_if_token(self, compiled_route, exit_error, rest_impl_with__request):
-        rest_impl_with__request.logger.debug.side_effect = [None, exit_error]
-
-        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            try:
-                await rest_impl_with__request._request(compiled_route)
-            except exit_error:
-                pass
-
-            rest_impl_with__request.client_session.request.assert_called_with(
-                "get",
-                "https://discordapp.com/api/v6/somewhere",
-                headers={"X-RateLimit-Precision": "millisecond", "Authorization": "Bot token"},
-                json=None,
-                params=None,
-                data=None,
-                allow_redirects=False,
-                proxy=None,
-                proxy_auth=None,
-                proxy_headers=None,
-                verify_ssl=True,
-                ssl_context=None,
-                timeout=None,
-            )
-
-    @pytest.mark.asyncio
-    async def test__request_doesnt_set_Authentication_if_suppress_authorization_header(
-        self, compiled_route, exit_error, rest_impl_with__request
-    ):
-        rest_impl_with__request.logger.debug.side_effect = [None, exit_error]
-
-        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            try:
-                await rest_impl_with__request._request(compiled_route, suppress_authorization_header=True)
-            except exit_error:
-                pass
-
-            rest_impl_with__request.client_session.request.assert_called_with(
-                "get",
-                "https://discordapp.com/api/v6/somewhere",
-                headers={"X-RateLimit-Precision": "millisecond"},
-                json=None,
-                params=None,
-                data=None,
-                allow_redirects=False,
-                proxy=None,
-                proxy_auth=None,
-                proxy_headers=None,
-                verify_ssl=True,
-                ssl_context=None,
-                timeout=None,
-            )
-
-    @pytest.mark.asyncio
-    async def test__request_sets_X_Audit_Log_Reason_if_reason(
-        self, compiled_route, exit_error, rest_impl_with__request
-    ):
-        rest_impl_with__request.logger.debug.side_effect = [None, exit_error]
-
-        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            try:
-                await rest_impl_with__request._request(compiled_route, reason="test reason")
-            except exit_error:
-                pass
-
-            rest_impl_with__request.client_session.request.assert_called_with(
-                "get",
-                "https://discordapp.com/api/v6/somewhere",
-                headers={
-                    "X-RateLimit-Precision": "millisecond",
-                    "Authorization": "Bot token",
-                    "X-Audit-Log-Reason": "test reason",
-                },
-                json=None,
-                params=None,
-                data=None,
-                allow_redirects=False,
-                proxy=None,
-                proxy_auth=None,
-                proxy_headers=None,
-                verify_ssl=True,
-                ssl_context=None,
-                timeout=None,
-            )
-
-    @pytest.mark.asyncio
-    async def test__request_updates_headers_with_provided_headers(
-        self, compiled_route, exit_error, rest_impl_with__request
-    ):
-        rest_impl_with__request.logger.debug.side_effect = [None, exit_error]
-
-        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            try:
-                await rest_impl_with__request._request(
-                    compiled_route, headers={"X-RateLimit-Precision": "nanosecond", "Authorization": "Bearer token"}
-                )
-            except exit_error:
-                pass
-
-            rest_impl_with__request.client_session.request.assert_called_with(
-                "get",
-                "https://discordapp.com/api/v6/somewhere",
-                headers={"X-RateLimit-Precision": "nanosecond", "Authorization": "Bearer token"},
-                json=None,
-                params=None,
-                data=None,
-                allow_redirects=False,
-                proxy=None,
-                proxy_auth=None,
-                proxy_headers=None,
-                verify_ssl=True,
-                ssl_context=None,
-                timeout=None,
-            )
-
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "content_type", ["text/plain", "text/html"],
-    )
-    async def test__request_handles_bad_response_when_content_type_is_plain_or_html(
-        self, content_type, exit_error, compiled_route, discord_response, rest_impl_with__request
-    ):
-        discord_response.headers["Content-Type"] = content_type
-        rest_impl_with__request._backoff_request = mock.AsyncMock(side_effect=[None, exit_error])
-
-        rest_impl_with__request.client_session.request = mock.MagicMock(return_value=discord_response)
-        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            try:
-                await rest_impl_with__request._request(compiled_route)
-            except exit_error:
-                pass
-
-            rest_impl_with__request._backoff_request.assert_called()
-
-    @pytest.mark.asyncio
-    async def test__request_when_invalid_content_type(self, compiled_route, discord_response, rest_impl_with__request):
-        discord_response.headers["Content-Type"] = "something/invalid"
-        rest_impl_with__request.client_session.request.return_value = discord_response
-
-        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            assert await rest_impl_with__request._request(compiled_route, json_body={}) is None
-
-    @pytest.mark.asyncio
-    async def test__request_when_TOO_MANY_REQUESTS_when_global(
-        self, compiled_route, exit_error, discord_response, rest_impl_with__request
-    ):
-        discord_response.status = 429
-        discord_response.raw_body = '{"retry_after": 1, "global": true}'
-        rest_impl_with__request.global_ratelimiter.throttle = mock.MagicMock(side_effect=[None, exit_error])
-        rest_impl_with__request.client_session.request.return_value = discord_response
-
-        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            try:
-                await rest_impl_with__request._request(compiled_route)
-            except exit_error:
-                pass
-
-            rest_impl_with__request.global_ratelimiter.throttle.assert_called_with(0.001)
-
-    @pytest.mark.asyncio
-    async def test__request_when_TOO_MANY_REQUESTS_when_not_global(
-        self, compiled_route, exit_error, discord_response, rest_impl_with__request
-    ):
-        discord_response.status = 429
-        discord_response.raw_body = '{"retry_after": 1, "global": false}'
-        rest_impl_with__request.logger.debug.side_effect = [None, exit_error]
-
-        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            with mock.patch.object(rest.REST, "_request", return_value=discord_response):
-                try:
-                    await rest_impl_with__request._request(compiled_route)
-                except exit_error:
-                    pass
-
-                rest_impl_with__request.global_ratelimiter.throttle.assert_not_called()
-
-    @pytest.mark.asyncio
-    async def test__request_when_NO_CONTENT(self, compiled_route, discord_response, rest_impl_with__request):
-        discord_response.status = 204
-        rest_impl_with__request.client_session.request = mock.MagicMock(return_value=discord_response)
-
-        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            assert await rest_impl_with__request._request(compiled_route, form_body=aiohttp.FormData()) is None
-
-    @pytest.mark.asyncio
-    async def test__request_handles_bad_response_when_error_results_in_retry(
-        self, exit_error, compiled_route, discord_response, rest_impl_with__request
-    ):
-        discord_response.raw_body = "{}"
-        discord_response.status = 1000
-        rest_impl_with__request._handle_bad_response = mock.AsyncMock(side_effect=[None, exit_error])
-        rest_impl_with__request._backoff_request = mock.AsyncMock()
-        rest_impl_with__request.client_session.request.return_value = discord_response
-
-        with mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()):
-            try:
-                await rest_impl_with__request._request(compiled_route)
-            except exit_error:
-                pass
-
-            assert rest_impl_with__request._handle_bad_response.call_count == 2
-
-    @pytest.mark.asyncio
-    async def test__request_calls_handle_bad_response(
-        self, exit_error, compiled_route, discord_response, rest_impl_with__request
-    ):
-        discord_response.raw_body = "{}"
-        discord_response.status = 1000
-        rest_impl_with__request._handle_bad_response = mock.AsyncMock(side_effect=[exit_error])
-        rest_impl_with__request.client_session.request.return_value = discord_response
-        mock_exponential_backoff = mock.MagicMock(ratelimits.ExponentialBackOff)
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch("asyncio.gather", return_value=_helpers.AwaitableMock()))
-        stack.enter_context(mock.patch.object(ratelimits, "ExponentialBackOff", return_value=mock_exponential_backoff))
-        with stack:
-            try:
-                await rest_impl_with__request._request(compiled_route)
-            except exit_error:
-                pass
-
-            rest_impl_with__request._handle_bad_response.assert_called_once_with(
-                mock_exponential_backoff, {}, "{}", 1000, compiled_route
-            )
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ["status_code", "error"],
+        ["status", "expected_exception_type"],
         [
-            (400, errors.BadRequestHTTPError),
-            (401, errors.UnauthorizedHTTPError),
-            (403, errors.ForbiddenHTTPError),
-            (404, errors.NotFoundHTTPError),
+            (100, errors.HTTPErrorResponse),
+            (304, errors.HTTPErrorResponse),
+            (400, errors.BadRequest),
+            (401, errors.Unauthorized),
+            (403, errors.Forbidden),
+            (404, errors.NotFound),
+            (406, errors.ClientHTTPErrorResponse),
+            (408, errors.ClientHTTPErrorResponse),
+            (415, errors.ClientHTTPErrorResponse),
+            (500, errors.ServerHTTPErrorResponse),
+            (501, errors.ServerHTTPErrorResponse),
+            (502, errors.ServerHTTPErrorResponse),
+            (503, errors.ServerHTTPErrorResponse),
+            (504, errors.ServerHTTPErrorResponse),
         ],
     )
-    async def test__handle_bad_response_raises_appropriate_error_for_status_code(
-        self, rest_impl, status_code, error, compiled_route, discord_response
+    async def test_error_responses_raises_error(self, rest_impl, compiled_route, status, expected_exception_type):
+        response = MockResponse(status=status, body="this is most certainly not None but it shouldn't be considered")
+        rest_impl._perform_request = mock.AsyncMock(return_value=response)
+
+        try:
+            await rest_impl._request_json_response(compiled_route)
+            assert False
+        except expected_exception_type as ex:
+            assert ex.headers is response.headers
+            assert ex.status == response.status
+            assert isinstance(ex.status, http.HTTPStatus)
+            assert ex.raw_body is response.body
+
+    async def test_ratelimited_429_retries_request_until_it_works(self, compiled_route, rest_impl):
+        # given
+        response = MockResponse()
+        rest_impl._handle_rate_limits_for_response = mock.AsyncMock(
+            # In reality, the ratelimiting logic will ensure we wait before retrying, but this
+            # is a test for a spammy edge-case scenario.
+            side_effect=[rest._RateLimited, rest._RateLimited, rest._RateLimited, None]
+        )
+        # when
+        await rest_impl._request_json_response(compiled_route)
+        # then
+        assert len(rest_impl._perform_request.call_args_list) == 4, rest_impl._perform_request.call_args_list
+        for args, kwargs in rest_impl._perform_request.call_args_list:
+            assert kwargs == {
+                "method": "POST",
+                "url": "http://example.bloop.com/foo/bar/baz",
+                "headers": mock.ANY,
+                "body": mock.ANY,
+                "query": mock.ANY,
+            }
+
+
+@pytest.mark.asyncio
+class TestHandleRateLimitsForResponse:
+    @pytest.fixture
+    def bucket_ratelimiters(self):
+        limiter = mock.MagicMock(spec_set=ratelimits.RESTBucketManager)
+        limiter.update_rate_limits = mock.MagicMock()
+        return limiter
+
+    @pytest.fixture
+    def global_ratelimiter(self):
+        limiter = mock.MagicMock(spec_set=ratelimits.ManualRateLimiter)
+        limiter.throttle = mock.MagicMock()
+        return limiter
+
+    @pytest.fixture
+    def rest_impl(self, bucket_ratelimiters, global_ratelimiter):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(http_client.HTTPClient, "__init__", new=lambda *_, **__: None))
+        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager", return_value=bucket_ratelimiters))
+        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=global_ratelimiter))
+        with stack:
+            client = rest.REST(base_url="http://example.bloop.com", token="Bot blah.blah.blah")
+        return client
+
+    @pytest.fixture
+    def compiled_route(self):
+        return routes.CompiledRoute("GET", "/foo/{:bar}/baz", "/foo/bar/baz", "1a2a3b4b5c6d")
+
+    @pytest.mark.parametrize("status", [200, 201, 202, 203, 204, 400, 401, 403, 404, 429, 500])
+    @pytest.mark.parametrize("content_type", ["application/json", "text/x-yaml", None])
+    async def test_bucket_ratelimiter_updated(
+        self, bucket_ratelimiters, rest_impl, compiled_route, status, content_type
     ):
-        mock_body = {"message": "test", "code": 10_001}
-        mock_raw_body = mock.MagicMock(bytes)
-        mock_backoff = mock.MagicMock(ratelimits.ExponentialBackOff)
-
-        class StubError(error):
-            def __init__(self):
-                ...
-
-        with mock.patch.object(errors, error.__name__, return_value=StubError()) as patched_error:
-            try:
-                await rest_impl._handle_bad_response(
-                    mock_backoff, mock_body, mock_raw_body, status_code, compiled_route
-                )
-                assert False
-            except error:
-                patched_error.assert_called_once_with(compiled_route, "test", codes.JSONErrorCode.UNKNOWN_ACCOUNT)
-                assert True
-
-    @pytest.mark.asyncio
-    async def test__handle_bad_response_raises_appropriate_error_for_client_http_error(
-        self, rest_impl, compiled_route, discord_response
-    ):
-        mock_body = {"message": "test", "code": 10_001}
-        mock_raw_body = mock.MagicMock(bytes)
-        mock_backoff = mock.MagicMock(ratelimits.ExponentialBackOff)
-        error = errors.ClientHTTPError
-
-        class StubError(error):
-            def __init__(self):
-                ...
-
-        with mock.patch.object(errors, "ClientHTTPError", return_value=StubError()) as patched_error:
-            try:
-                await rest_impl._handle_bad_response(mock_backoff, mock_body, mock_raw_body, 405, compiled_route)
-                assert False
-            except error:
-                patched_error.assert_called_once_with(405, compiled_route, "test", codes.JSONErrorCode.UNKNOWN_ACCOUNT)
-                assert True
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ("api_version", "body", "raw_body", "expected_message", "expected_code"),
-        [
-            (rest.VERSION_7, {"blah": "foo"}, bytes, "blah - foo", None),
-            (rest.VERSION_6, None, bytes, bytes, None),
-            (rest.VERSION_6, {"message": "test", "code": 10_001}, bytes, "test", codes.JSONErrorCode.UNKNOWN_ACCOUNT),
-        ],
-    )
-    async def test__handle_bad_response_handles_different_message_results(
-        self, api_version, body, raw_body, expected_message, expected_code, rest_impl, compiled_route, discord_response
-    ):
-        mock_backoff = mock.MagicMock(ratelimits.ExponentialBackOff)
-        error = errors.UnauthorizedHTTPError
-
-        class StubError(error):
-            def __init__(self):
-                ...
-
-        rest_impl.version = api_version
-        with mock.patch.object(errors, "ClientHTTPError", return_value=StubError()) as patched_error:
-            try:
-                await rest_impl._handle_bad_response(mock_backoff, body, raw_body, 405, compiled_route)
-                assert False
-            except error:
-                patched_error.assert_called_once_with(405, compiled_route, expected_message, expected_code)
-                assert True
-
-    @pytest.mark.asyncio
-    async def test__handle_bad_response_backoffs_on_internal_server_error(
-        self, rest_impl, compiled_route, discord_response
-    ):
-        mock_body = {"message": "test", "code": 10_001}
-        mock_raw_body = mock.MagicMock(bytes)
-        mock_backoff = mock.MagicMock(ratelimits.ExponentialBackOff)
-        rest_impl._backoff_request = mock.AsyncMock()
-        error = errors.ClientHTTPError
-        await rest_impl._handle_bad_response(mock_backoff, mock_body, mock_raw_body, 501, compiled_route)
-        rest_impl._backoff_request.assert_called_once_with(
-            mock_backoff, 501, compiled_route, "test", codes.JSONErrorCode.UNKNOWN_ACCOUNT
+        response = MockResponse(
+            headers={
+                "x-ratelimit-limit": "15",
+                "x-ratelimit-remaining": "3",
+                "x-ratelimit-bucket": "foobar",
+                "date": "Fri, 01 May 2020 10:23:54 GMT",
+                "x-ratelimit-reset": "1588334400",
+            },
+            status=status,
+            content_type=content_type,
         )
 
-    @pytest.mark.asyncio
-    async def test__backoff_request(self, rest_impl):
-        backoff = mock.MagicMock(ratelimits.ExponentialBackOff, __next__=mock.MagicMock(return_value=4))
-        mock_route = mock.MagicMock(routes.CompiledRoute)
-        with mock.patch.object(asyncio, "sleep"):
-            await rest_impl._backoff_request(backoff, "Being spammy", mock_route, "You are being rate limited", 429)
-            asyncio.sleep.assert_called_once_with(4)
+        # We don't care about the result, as some cases throw exceptions purposely. We just want
+        # to invoke it and check a call is made before it returns. This ensures 429s still take
+        # into account the headers first.
+        with contextlib.suppress(Exception):
+            await rest_impl._handle_rate_limits_for_response(compiled_route, response)
 
-    @pytest.mark.asyncio
-    async def test__backoff_request_raises_server_http_error_on_timeout(self, rest_impl):
-        backoff = mock.MagicMock(
-            ratelimits.ExponentialBackOff, __next__=mock.MagicMock(side_effect=asyncio.TimeoutError())
+        bucket_ratelimiters.update_rate_limits.assert_called_once_with(
+            compiled_route=compiled_route,
+            bucket_header="foobar",
+            remaining_header=3,
+            limit_header=15,
+            date_header=datetime.datetime(2020, 5, 1, 10, 23, 54, tzinfo=datetime.timezone.utc),
+            reset_at_header=datetime.datetime(2020, 5, 1, 12, tzinfo=datetime.timezone.utc),
         )
-        mock_route = mock.MagicMock(routes.CompiledRoute)
-        mock_exception = errors.ServerHTTPError("A reason", ..., ..., ...)
-        excepted_exception = errors.ServerHTTPError
-        with mock.patch.object(errors, "ServerHTTPError", side_effect=mock_exception):
-            try:
-                await rest_impl._backoff_request(backoff, "Being spammy", mock_route, "You are being rate limited", 429)
-            except excepted_exception as e:
-                assert e is mock_exception
-                errors.ServerHTTPError.assert_called_once_with(
-                    "Being spammy", mock_route, "You are being rate limited", 429
-                )
-            else:
-                assert False, "Missing `ServerHTTPError`, should be raised on timeout."
+
+    @pytest.mark.parametrize("body", [b"{}", b'{"global": false}'])
+    @_helpers.assert_raises(type_=rest._RateLimited)
+    async def test_non_global_429_raises_Ratelimited(self, rest_impl, compiled_route, body):
+        response = MockResponse(
+            headers={
+                "x-ratelimit-limit": "15",
+                "x-ratelimit-remaining": "3",
+                "x-ratelimit-bucket": "foobar",
+                "date": "Fri, 01 May 2020 10:23:54 GMT",
+                "x-ratelimit-reset": "1588334400",
+            },
+            status=429,
+            content_type="application/json",
+            body=body,
+        )
+
+        await rest_impl._handle_rate_limits_for_response(compiled_route, response)
+
+    async def test_global_429_throttles_then_raises_Ratelimited(self, global_ratelimiter, rest_impl, compiled_route):
+        response = MockResponse(
+            headers={
+                "x-ratelimit-limit": "15",
+                "x-ratelimit-remaining": "3",
+                "x-ratelimit-bucket": "foobar",
+                "date": "Fri, 01 May 2020 10:23:54 GMT",
+                "x-ratelimit-reset": "1588334400",
+            },
+            status=429,
+            content_type="application/json",
+            body=b'{"global": true, "retry_after": 1024768}',
+        )
+
+        try:
+            await rest_impl._handle_rate_limits_for_response(compiled_route, response)
+            assert False
+        except rest._RateLimited:
+            global_ratelimiter.throttle.assert_called_once_with(1024.768)
+
+    async def test_non_json_429_causes_httperror(self, rest_impl, compiled_route):
+        response = MockResponse(
+            headers={
+                "x-ratelimit-limit": "15",
+                "x-ratelimit-remaining": "3",
+                "x-ratelimit-bucket": "foobar",
+                "date": "Fri, 01 May 2020 10:23:54 GMT",
+                "x-ratelimit-reset": "1588334400",
+            },
+            status=429,
+            content_type="text/x-markdown",
+            body=b'{"global": true, "retry_after": 1024768}',
+            real_url="http://foo-bar.com/api/v169/ree",
+        )
+
+        try:
+            await rest_impl._handle_rate_limits_for_response(compiled_route, response)
+            assert False
+        except errors.HTTPError as ex:
+            # We don't want a subclass, as this is an edge case.
+            assert type(ex) is errors.HTTPError
+            assert ex.url == "http://foo-bar.com/api/v169/ree"
+
+
+class TestRESTEndpoints:
+    @pytest.fixture
+    def rest_impl(self):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(http_client.HTTPClient, "__init__", new=lambda *_, **__: None))
+        stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
+        stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
+        with stack:
+            client = rest.REST(base_url="https://discordapp.com/api/v6", token="Bot blah.blah.blah")
+        client._request_json_response = mock.AsyncMock(return_value=...)
+        client.client_session = mock.MagicMock(aiohttp.ClientSession, spec_set=True)
+
+        return client
 
     @pytest.mark.asyncio
     async def test_get_gateway(self, rest_impl):
-        rest_impl._request.return_value = {"url": "discord.discord///"}
+        rest_impl._request_json_response.return_value = {"url": "discord.discord///"}
         mock_route = mock.MagicMock(routes.GATEWAY)
         with mock.patch.object(routes, "GATEWAY", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_gateway() == "discord.discord///"
             routes.GATEWAY.compile.assert_called_once_with(rest_impl.GET)
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_gateway_bot(self, rest_impl):
         mock_response = {"url": "discord.discord///"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GATEWAY_BOT)
         with mock.patch.object(routes, "GATEWAY_BOT", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_gateway_bot() is mock_response
             routes.GATEWAY_BOT.compile.assert_called_once_with(rest_impl.GET)
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_guild_audit_log_without_optionals(self, rest_impl):
         mock_response = {"webhooks": [], "users": []}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_AUDIT_LOGS)
         with mock.patch.object(routes, "GUILD_AUDIT_LOGS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_audit_log("2929292929") is mock_response
             routes.GUILD_AUDIT_LOGS.compile.assert_called_once_with(rest_impl.GET, guild_id="2929292929")
-        rest_impl._request.assert_called_once_with(mock_route, query={})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={})
 
     @pytest.mark.asyncio
     async def test_get_guild_audit_log_with_optionals(self, rest_impl):
         mock_response = {"webhooks": [], "users": []}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_AUDIT_LOGS)
         with mock.patch.object(routes, "GUILD_AUDIT_LOGS", compile=mock.MagicMock(return_value=mock_route)):
             assert (
@@ -665,34 +521,34 @@ class TestLowLevelRestfulClient:
                 is mock_response
             )
             routes.GUILD_AUDIT_LOGS.compile.assert_called_once_with(rest_impl.GET, guild_id="2929292929")
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route, query={"user_id": "115590097100865541", "action_type": 42, "limit": 5, "before": "123123123"}
         )
 
     @pytest.mark.asyncio
     async def test_get_channel(self, rest_impl):
         mock_response = {"id": "20202020200202"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL)
         with mock.patch.object(routes, "CHANNEL", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_channel("20202020020202") is mock_response
             routes.CHANNEL.compile.assert_called_once_with(rest_impl.GET, channel_id="20202020020202")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_modify_channel_without_optionals(self, rest_impl):
         mock_response = {"id": "20393939"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL)
         with mock.patch.object(routes, "CHANNEL", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.modify_channel("6942069420") is mock_response
             routes.CHANNEL.compile.assert_called_once_with(rest_impl.PATCH, channel_id="6942069420")
-        rest_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_channel_with_optionals(self, rest_impl):
         mock_response = {"id": "20393939"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL)
         with mock.patch.object(routes, "CHANNEL", compile=mock.MagicMock(return_value=mock_route)):
             result = await rest_impl.modify_channel(
@@ -709,9 +565,9 @@ class TestLowLevelRestfulClient:
             )
             assert result is mock_response
             routes.CHANNEL.compile.assert_called_once_with(rest_impl.PATCH, channel_id="6942069420")
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route,
-            json_body={
+            body={
                 "position": 22,
                 "topic": "HAHAHAHHAHAHA",
                 "nsfw": True,
@@ -730,22 +586,22 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "CHANNEL", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.delete_close_channel("939392929") is None
             routes.CHANNEL.compile.assert_called_once_with(rest_impl.DELETE, channel_id="939392929")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_channel_messages_without_optionals(self, rest_impl):
         mock_response = [{"id": "29492", "content": "Kon'nichiwa"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_MESSAGES)
         with mock.patch.object(routes, "CHANNEL_MESSAGES", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_channel_messages("9292929292") is mock_response
             routes.CHANNEL_MESSAGES.compile.assert_called_once_with(rest_impl.GET, channel_id="9292929292")
-        rest_impl._request.assert_called_once_with(mock_route, query={})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={})
 
     @pytest.mark.asyncio
     async def test_get_channel_messages_with_optionals(self, rest_impl):
         mock_response = [{"id": "29492", "content": "Kon'nichiwa"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_MESSAGES)
         with mock.patch.object(routes, "CHANNEL_MESSAGES", compile=mock.MagicMock(return_value=mock_route)):
             assert (
@@ -755,26 +611,26 @@ class TestLowLevelRestfulClient:
                 is mock_response
             )
             routes.CHANNEL_MESSAGES.compile.assert_called_once_with(rest_impl.GET, channel_id="9292929292")
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route, query={"limit": 42, "after": "293939393", "before": "4945959595", "around": "44444444",}
         )
 
     @pytest.mark.asyncio
     async def test_get_channel_message(self, rest_impl):
         mock_response = {"content": "I'm really into networking with cute routers and modems."}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_MESSAGE)
         with mock.patch.object(routes, "CHANNEL_MESSAGE", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_channel_message("1111111111", "42424242") is mock_response
             routes.CHANNEL_MESSAGE.compile.assert_called_once_with(
                 rest_impl.GET, channel_id="1111111111", message_id="42424242"
             )
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_create_message_without_optionals(self, rest_impl):
         mock_response = {"content": "nyaa, nyaa, nyaa."}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_MESSAGE)
         mock_form = mock.MagicMock(aiohttp.FormData, add_field=mock.MagicMock())
         with mock.patch.object(routes, "CHANNEL_MESSAGES", compile=mock.MagicMock(return_value=mock_route)):
@@ -784,7 +640,7 @@ class TestLowLevelRestfulClient:
                 mock_form.add_field.assert_called_once_with(
                     "payload_json", json.dumps({}), content_type="application/json"
                 )
-        rest_impl._request.assert_called_once_with(mock_route, form_body=mock_form)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body=mock_form)
 
     @pytest.mark.asyncio
     @mock.patch.object(routes, "CHANNEL_MESSAGES")
@@ -792,7 +648,7 @@ class TestLowLevelRestfulClient:
     @mock.patch.object(json, "dumps")
     async def test_create_message_with_optionals(self, dumps, FormData, CHANNEL_MESSAGES, rest_impl):
         mock_response = {"content": "nyaa, nyaa, nyaa."}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_MESSAGE)
         CHANNEL_MESSAGES.compile.return_value = mock_route
         mock_form = mock.MagicMock(aiohttp.FormData, add_field=mock.MagicMock())
@@ -831,7 +687,7 @@ class TestLowLevelRestfulClient:
             any_order=True,
         )
         assert mock_form.add_field.call_count == 2
-        rest_impl._request.assert_called_once_with(mock_route, form_body=mock_form)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body=mock_form)
 
     @pytest.mark.asyncio
     async def test_create_reaction(self, rest_impl):
@@ -841,7 +697,7 @@ class TestLowLevelRestfulClient:
             routes.OWN_REACTION.compile.assert_called_once_with(
                 rest_impl.PUT, channel_id="20202020", message_id="8484848", emoji="emoji:2929"
             )
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_delete_own_reaction(self, rest_impl):
@@ -851,7 +707,7 @@ class TestLowLevelRestfulClient:
             routes.OWN_REACTION.compile.assert_called_once_with(
                 rest_impl.DELETE, channel_id="20202020", message_id="8484848", emoji="emoji:2929"
             )
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_delete_all_reactions_for_emoji(self, rest_impl):
@@ -870,24 +726,24 @@ class TestLowLevelRestfulClient:
             routes.REACTION_EMOJI_USER.compile.assert_called_once_with(
                 rest_impl.DELETE, channel_id="11111", message_id="4444", emoji="emoji:42", user_id="29292992"
             )
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_reactions_without_optionals(self, rest_impl):
         mock_response = [{"id": "42"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.REACTIONS)
         with mock.patch.object(routes, "REACTIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_reactions("29292929", "48484848", "emoji:42") is mock_response
             routes.REACTIONS.compile.assert_called_once_with(
                 rest_impl.GET, channel_id="29292929", message_id="48484848", emoji="emoji:42"
             )
-        rest_impl._request.assert_called_once_with(mock_route, query={})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={})
 
     @pytest.mark.asyncio
     async def test_get_reactions_with_optionals(self, rest_impl):
         mock_response = [{"id": "42"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.REACTIONS)
         with mock.patch.object(routes, "REACTIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert (
@@ -897,7 +753,7 @@ class TestLowLevelRestfulClient:
             routes.REACTIONS.compile.assert_called_once_with(
                 rest_impl.GET, channel_id="29292929", message_id="48484848", emoji="emoji:42"
             )
-        rest_impl._request.assert_called_once_with(mock_route, query={"after": "3333333", "limit": 40})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={"after": "3333333", "limit": 40})
 
     @pytest.mark.asyncio
     async def test_delete_all_reactions(self, rest_impl):
@@ -907,24 +763,24 @@ class TestLowLevelRestfulClient:
             routes.ALL_REACTIONS.compile.assert_called_once_with(
                 rest_impl.DELETE, channel_id="44444", message_id="999999"
             )
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_edit_message_without_optionals(self, rest_impl):
         mock_response = {"flags": 3, "content": "edited for the win."}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_MESSAGE)
         with mock.patch.object(routes, "CHANNEL_MESSAGE", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.edit_message("9292929", "484848") is mock_response
             routes.CHANNEL_MESSAGE.compile.assert_called_once_with(
                 rest_impl.PATCH, channel_id="9292929", message_id="484848"
             )
-        rest_impl._request.assert_called_once_with(mock_route, json_body={})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={})
 
     @pytest.mark.asyncio
     async def test_edit_message_with_optionals(self, rest_impl):
         mock_response = {"flags": 3, "content": "edited for the win."}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_MESSAGE)
         with mock.patch.object(routes, "CHANNEL_MESSAGE", compile=mock.MagicMock(return_value=mock_route)):
             assert (
@@ -941,9 +797,9 @@ class TestLowLevelRestfulClient:
             routes.CHANNEL_MESSAGE.compile.assert_called_once_with(
                 rest_impl.PATCH, channel_id="9292929", message_id="484848"
             )
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route,
-            json_body={
+            body={
                 "content": "42",
                 "embed": {"content": "I AM AN EMBED"},
                 "flags": 2,
@@ -959,7 +815,7 @@ class TestLowLevelRestfulClient:
             routes.CHANNEL_MESSAGE.compile.assert_called_once_with(
                 rest_impl.DELETE, channel_id="20202", message_id="484848"
             )
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_bulk_delete_messages(self, rest_impl):
@@ -967,7 +823,7 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "CHANNEL_MESSAGES_BULK_DELETE", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.bulk_delete_messages("111", ["222", "333"]) is None
             routes.CHANNEL_MESSAGES_BULK_DELETE.compile.assert_called_once_with(rest_impl.POST, channel_id="111")
-        rest_impl._request.assert_called_once_with(mock_route, json_body={"messages": ["222", "333"]})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={"messages": ["222", "333"]})
 
     @pytest.mark.asyncio
     async def test_edit_channel_permissions_without_optionals(self, rest_impl):
@@ -977,7 +833,7 @@ class TestLowLevelRestfulClient:
             routes.CHANNEL_PERMISSIONS.compile.assert_called_once_with(
                 rest_impl.PATCH, channel_id="101010101010", overwrite_id="100101010"
             )
-        rest_impl._request.assert_called_once_with(mock_route, json_body={"type": "user"}, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={"type": "user"}, reason=...)
 
     @pytest.mark.asyncio
     async def test_edit_channel_permissions_with_optionals(self, rest_impl):
@@ -992,34 +848,34 @@ class TestLowLevelRestfulClient:
             routes.CHANNEL_PERMISSIONS.compile.assert_called_once_with(
                 rest_impl.PATCH, channel_id="101010101010", overwrite_id="100101010"
             )
-        rest_impl._request.assert_called_once_with(
-            mock_route, json_body={"allow": 243, "deny": 333, "type": "user"}, reason="get vectored"
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body={"allow": 243, "deny": 333, "type": "user"}, reason="get vectored"
         )
 
     @pytest.mark.asyncio
     async def test_get_channel_invites(self, rest_impl):
         mock_response = {"code": "dasd32"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_INVITES)
         with mock.patch.object(routes, "CHANNEL_INVITES", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_channel_invites("999999999") is mock_response
             routes.CHANNEL_INVITES.compile.assert_called_once_with(rest_impl.GET, channel_id="999999999")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_create_channel_invite_without_optionals(self, rest_impl):
         mock_response = {"code": "ro934jsd"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_INVITES)
         with mock.patch.object(routes, "CHANNEL_INVITES", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.create_channel_invite("99992929") is mock_response
             routes.CHANNEL_INVITES.compile.assert_called_once_with(rest_impl.POST, channel_id="99992929")
-        rest_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_create_channel_invite_with_optionals(self, rest_impl):
         mock_response = {"code": "ro934jsd"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_INVITES)
         with mock.patch.object(routes, "CHANNEL_INVITES", compile=mock.MagicMock(return_value=mock_route)):
             assert (
@@ -1036,9 +892,9 @@ class TestLowLevelRestfulClient:
                 is mock_response
             )
             routes.CHANNEL_INVITES.compile.assert_called_once_with(rest_impl.POST, channel_id="99992929")
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route,
-            json_body={
+            body={
                 "max_age": 5,
                 "max_uses": 7,
                 "temporary": True,
@@ -1057,7 +913,7 @@ class TestLowLevelRestfulClient:
             routes.CHANNEL_PERMISSIONS.compile.assert_called_once_with(
                 rest_impl.DELETE, channel_id="9292929", overwrite_id="74574747"
             )
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_trigger_typing_indicator(self, rest_impl):
@@ -1065,17 +921,17 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "CHANNEL_TYPING", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.trigger_typing_indicator("11111111111") is None
             routes.CHANNEL_TYPING.compile.assert_called_once_with(rest_impl.POST, channel_id="11111111111")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_pinned_messages(self, rest_impl):
         mock_response = [{"content": "no u", "id": "4212"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_PINS)
         with mock.patch.object(routes, "CHANNEL_PINS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_pinned_messages("393939") is mock_response
             routes.CHANNEL_PINS.compile.assert_called_once_with(rest_impl.GET, channel_id="393939")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_add_pinned_channel_message(self, rest_impl):
@@ -1085,7 +941,7 @@ class TestLowLevelRestfulClient:
             routes.CHANNEL_PINS.compile.assert_called_once_with(
                 rest_impl.PUT, channel_id="292929", message_id="48458484"
             )
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_delete_pinned_channel_message(self, rest_impl):
@@ -1095,32 +951,32 @@ class TestLowLevelRestfulClient:
             routes.CHANNEL_PIN.compile.assert_called_once_with(
                 rest_impl.DELETE, channel_id="929292", message_id="292929"
             )
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_list_guild_emojis(self, rest_impl):
         mock_response = [{"id": "444", "name": "nekonyan"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_EMOJIS)
         with mock.patch.object(routes, "GUILD_EMOJIS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.list_guild_emojis("9929292") is mock_response
             routes.GUILD_EMOJIS.compile.assert_called_once_with(rest_impl.GET, guild_id="9929292")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_guild_emoji(self, rest_impl):
         mock_response = {"id": "444", "name": "nekonyan"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_EMOJI)
         with mock.patch.object(routes, "GUILD_EMOJI", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_emoji("292929", "44848") is mock_response
             routes.GUILD_EMOJI.compile.assert_called_once_with(rest_impl.GET, guild_id="292929", emoji_id="44848")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_create_guild_emoji_without_optionals(self, rest_impl):
         mock_response = {"id": "33", "name": "OwO"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_EMOJI)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "GUILD_EMOJIS", compile=mock.MagicMock(return_value=mock_route)):
@@ -1129,14 +985,14 @@ class TestLowLevelRestfulClient:
                 assert result is mock_response
                 conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
                 routes.GUILD_EMOJIS.compile.assert_called_once_with(rest_impl.POST, guild_id="2222")
-        rest_impl._request.assert_called_once_with(
-            mock_route, json_body={"name": "iEmoji", "roles": [], "image": mock_image_data}, reason=...,
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body={"name": "iEmoji", "roles": [], "image": mock_image_data}, reason=...,
         )
 
     @pytest.mark.asyncio
     async def test_create_guild_emoji_with_optionals(self, rest_impl):
         mock_response = {"id": "33", "name": "OwO"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_EMOJI)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "GUILD_EMOJIS", compile=mock.MagicMock(return_value=mock_route)):
@@ -1147,26 +1003,26 @@ class TestLowLevelRestfulClient:
                 assert result is mock_response
                 conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
                 routes.GUILD_EMOJIS.compile.assert_called_once_with(rest_impl.POST, guild_id="2222")
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route,
-            json_body={"name": "iEmoji", "roles": ["292929", "484884"], "image": mock_image_data},
+            body={"name": "iEmoji", "roles": ["292929", "484884"], "image": mock_image_data},
             reason="uwu owo",
         )
 
     @pytest.mark.asyncio
     async def test_modify_guild_emoji_without_optionals(self, rest_impl):
         mock_response = {"id": "20202", "name": "jeje"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_EMOJI)
         with mock.patch.object(routes, "GUILD_EMOJI", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.modify_guild_emoji("292929", "3484848") is mock_response
             routes.GUILD_EMOJI.compile.assert_called_once_with(rest_impl.PATCH, guild_id="292929", emoji_id="3484848")
-        rest_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_guild_emoji_with_optionals(self, rest_impl):
         mock_response = {"id": "20202", "name": "jeje"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_EMOJI)
         with mock.patch.object(routes, "GUILD_EMOJI", compile=mock.MagicMock(return_value=mock_route)):
             assert (
@@ -1174,8 +1030,8 @@ class TestLowLevelRestfulClient:
                 is mock_response
             )
             routes.GUILD_EMOJI.compile.assert_called_once_with(rest_impl.PATCH, guild_id="292929", emoji_id="3484848")
-        rest_impl._request.assert_called_once_with(
-            mock_route, json_body={"name": "ok", "roles": ["222", "111"]}, reason=...
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body={"name": "ok", "roles": ["222", "111"]}, reason=...
         )
 
     @pytest.mark.asyncio
@@ -1184,22 +1040,22 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "GUILD_EMOJI", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.delete_guild_emoji("202", "4454") is None
             routes.GUILD_EMOJI.compile.assert_called_once_with(rest_impl.DELETE, guild_id="202", emoji_id="4454")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_create_guild_without_optionals(self, rest_impl):
         mock_response = {"id": "99999", "name": "Guildith-Sama"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD)
         with mock.patch.object(routes, "GUILDS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.create_guild("GUILD TIME") is mock_response
             routes.GUILDS.compile.assert_called_once_with(rest_impl.POST)
-        rest_impl._request.assert_called_once_with(mock_route, json_body={"name": "GUILD TIME"})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={"name": "GUILD TIME"})
 
     @pytest.mark.asyncio
     async def test_create_guild_with_optionals(self, rest_impl):
         mock_response = {"id": "99999", "name": "Guildith-Sama"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "GUILDS", compile=mock.MagicMock(return_value=mock_route)):
@@ -1216,9 +1072,9 @@ class TestLowLevelRestfulClient:
                 assert result is mock_response
                 routes.GUILDS.compile.assert_called_once_with(rest_impl.POST)
                 conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route,
-            json_body={
+            body={
                 "name": "GUILD TIME",
                 "region": "london",
                 "icon": mock_image_data,
@@ -1236,37 +1092,37 @@ class TestLowLevelRestfulClient:
     )
     async def test_get_guild(self, rest_impl, kwargs, with_counts):
         mock_response = {"id": "42", "name": "Hikari"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD)
         with mock.patch.object(routes, "GUILD", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild("3939393993939", **kwargs) is mock_response
             routes.GUILD.compile.assert_called_once_with(rest_impl.GET, guild_id="3939393993939")
-        rest_impl._request.assert_called_once_with(mock_route, query={"with_counts": with_counts})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={"with_counts": with_counts})
 
     @pytest.mark.asyncio
     async def test_get_guild_preview(self, rest_impl):
         mock_response = {"id": "42", "name": "Hikari"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD)
         with mock.patch.object(routes, "GUILD_PREVIEW", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_preview("3939393993939") is mock_response
             routes.GUILD_PREVIEW.compile.assert_called_once_with(rest_impl.GET, guild_id="3939393993939")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_modify_guild_without_optionals(self, rest_impl):
         mock_response = {"id": "42", "name": "Hikari"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD)
         with mock.patch.object(routes, "GUILD", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.modify_guild("49949495") is mock_response
             routes.GUILD.compile.assert_called_once_with(rest_impl.PATCH, guild_id="49949495")
-        rest_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_guild_with_optionals(self, rest_impl):
         mock_response = {"id": "42", "name": "Hikari"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD)
         mock_icon_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         mock_splash_data = "data:image/png;base64,iVBORw0KGgpicnVo"
@@ -1301,9 +1157,9 @@ class TestLowLevelRestfulClient:
                         mock.call(b"\211PNG\r\n\032\nbruh"),
                     )
                 )
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route,
-            json_body={
+            body={
                 "name": "Deutschland",
                 "region": "deutschland",
                 "verification_level": 2,
@@ -1325,32 +1181,34 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "GUILD", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.delete_guild("92847478") is None
             routes.GUILD.compile.assert_called_once_with(rest_impl.DELETE, guild_id="92847478")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_guild_channels(self, rest_impl):
         mock_response = [{"type": 2, "id": "21", "name": "Watashi-wa-channel-desu"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_CHANNELS)
         with mock.patch.object(routes, "GUILD_CHANNELS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.list_guild_channels("393939393") is mock_response
             routes.GUILD_CHANNELS.compile.assert_called_once_with(rest_impl.GET, guild_id="393939393")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_create_guild_channel_without_optionals(self, rest_impl):
         mock_response = {"type": 2, "id": "3333"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_CHANNELS)
         with mock.patch.object(routes, "GUILD_CHANNELS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.create_guild_channel("292929", "I am a channel") is mock_response
             routes.GUILD_CHANNELS.compile.assert_called_once_with(rest_impl.POST, guild_id="292929")
-        rest_impl._request.assert_called_once_with(mock_route, json_body={"name": "I am a channel"}, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body={"name": "I am a channel"}, reason=...
+        )
 
     @pytest.mark.asyncio
     async def test_create_guild_channel_with_optionals(self, rest_impl):
         mock_response = {"type": 2, "id": "379953393319542784"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_CHANNELS)
         with mock.patch.object(routes, "GUILD_CHANNELS", compile=mock.MagicMock(return_value=mock_route)):
             result = await rest_impl.create_guild_channel(
@@ -1370,9 +1228,9 @@ class TestLowLevelRestfulClient:
             assert result is mock_response
 
             routes.GUILD_CHANNELS.compile.assert_called_once_with(rest_impl.POST, guild_id="292929")
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route,
-            json_body={
+            body={
                 "name": "I am a channel",
                 "type": 2,
                 "topic": "chatter chatter",
@@ -1395,43 +1253,43 @@ class TestLowLevelRestfulClient:
                 await rest_impl.modify_guild_channel_positions("379953393319542784", ("29292", 0), ("3838", 1)) is None
             )
             routes.GUILD_CHANNELS.compile.assert_called_once_with(rest_impl.PATCH, guild_id="379953393319542784")
-        rest_impl._request.assert_called_once_with(
-            mock_route, json_body=[{"id": "29292", "position": 0}, {"id": "3838", "position": 1}]
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body=[{"id": "29292", "position": 0}, {"id": "3838", "position": 1}]
         )
 
     @pytest.mark.asyncio
     async def test_get_guild_member(self, rest_impl):
         mock_response = {"id": "379953393319542784", "nick": "Big Moh"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_MEMBER)
         with mock.patch.object(routes, "GUILD_MEMBER", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_member("115590097100865541", "379953393319542784") is mock_response
             routes.GUILD_MEMBER.compile.assert_called_once_with(
                 rest_impl.GET, guild_id="115590097100865541", user_id="379953393319542784"
             )
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_list_guild_members_without_optionals(self, rest_impl):
         mock_response = [{"id": "379953393319542784", "nick": "Big Moh"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_MEMBERS)
         with mock.patch.object(routes, "GUILD_MEMBERS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.list_guild_members("115590097100865541") is mock_response
             routes.GUILD_MEMBERS.compile.assert_called_once_with(rest_impl.GET, guild_id="115590097100865541")
-        rest_impl._request.assert_called_once_with(mock_route, query={})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={})
 
     @pytest.mark.asyncio
     async def test_list_guild_members_with_optionals(self, rest_impl):
         mock_response = [{"id": "379953393319542784", "nick": "Big Moh"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_MEMBERS)
         with mock.patch.object(routes, "GUILD_MEMBERS", compile=mock.MagicMock(return_value=mock_route)):
             assert (
                 await rest_impl.list_guild_members("115590097100865541", limit=5, after="4444444444") is mock_response
             )
             routes.GUILD_MEMBERS.compile.assert_called_once_with(rest_impl.GET, guild_id="115590097100865541")
-        rest_impl._request.assert_called_once_with(mock_route, query={"limit": 5, "after": "4444444444"})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={"limit": 5, "after": "4444444444"})
 
     @pytest.mark.asyncio
     async def test_modify_guild_member_without_optionals(self, rest_impl):
@@ -1441,7 +1299,7 @@ class TestLowLevelRestfulClient:
             routes.GUILD_MEMBER.compile.assert_called_once_with(
                 rest_impl.PATCH, guild_id="115590097100865541", user_id="379953393319542784"
             )
-        rest_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_guild_member_with_optionals(self, rest_impl):
@@ -1462,9 +1320,9 @@ class TestLowLevelRestfulClient:
             routes.GUILD_MEMBER.compile.assert_called_once_with(
                 rest_impl.PATCH, guild_id="115590097100865541", user_id="379953393319542784"
             )
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route,
-            json_body={"nick": "QT", "roles": ["222222222"], "mute": True, "deaf": True, "channel_id": "777"},
+            body={"nick": "QT", "roles": ["222222222"], "mute": True, "deaf": True, "channel_id": "777"},
             reason="I will drink your blood.",
         )
 
@@ -1474,7 +1332,7 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "OWN_GUILD_NICKNAME", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.modify_current_user_nick("202020202", "Nickname me") is None
             routes.OWN_GUILD_NICKNAME.compile.assert_called_once_with(rest_impl.PATCH, guild_id="202020202")
-        rest_impl._request.assert_called_once_with(mock_route, json_body={"nick": "Nickname me"}, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={"nick": "Nickname me"}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_current_user_nick_with_reason(self, rest_impl):
@@ -1482,7 +1340,9 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "OWN_GUILD_NICKNAME", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.modify_current_user_nick("202020202", "Nickname me", reason="Look at me") is None
             routes.OWN_GUILD_NICKNAME.compile.assert_called_once_with(rest_impl.PATCH, guild_id="202020202")
-        rest_impl._request.assert_called_once_with(mock_route, json_body={"nick": "Nickname me"}, reason="Look at me")
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body={"nick": "Nickname me"}, reason="Look at me"
+        )
 
     @pytest.mark.asyncio
     async def test_add_guild_member_role_without_reason(self, rest_impl):
@@ -1492,7 +1352,7 @@ class TestLowLevelRestfulClient:
             routes.GUILD_MEMBER_ROLE.compile.assert_called_once_with(
                 rest_impl.PUT, guild_id="3939393", user_id="2838383", role_id="84384848"
             )
-        rest_impl._request.assert_called_once_with(mock_route, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, reason=...)
 
     @pytest.mark.asyncio
     async def test_add_guild_member_role_with_reason(self, rest_impl):
@@ -1507,7 +1367,9 @@ class TestLowLevelRestfulClient:
             routes.GUILD_MEMBER_ROLE.compile.assert_called_once_with(
                 rest_impl.PUT, guild_id="3939393", user_id="2838383", role_id="84384848"
             )
-        rest_impl._request.assert_called_once_with(mock_route, reason="A special role for a special somebody")
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, reason="A special role for a special somebody"
+        )
 
     @pytest.mark.asyncio
     async def test_remove_guild_member_role_without_reason(self, rest_impl):
@@ -1517,7 +1379,7 @@ class TestLowLevelRestfulClient:
             routes.GUILD_MEMBER_ROLE.compile.assert_called_once_with(
                 rest_impl.DELETE, guild_id="22222", user_id="3333", role_id="44444"
             )
-        rest_impl._request.assert_called_once_with(mock_route, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, reason=...)
 
     @pytest.mark.asyncio
     async def test_remove_guild_member_role_with_reason(self, rest_impl):
@@ -1527,7 +1389,7 @@ class TestLowLevelRestfulClient:
             routes.GUILD_MEMBER_ROLE.compile.assert_called_once_with(
                 rest_impl.DELETE, guild_id="22222", user_id="3333", role_id="44444"
             )
-        rest_impl._request.assert_called_once_with(mock_route, reason="bye")
+        rest_impl._request_json_response.assert_called_once_with(mock_route, reason="bye")
 
     @pytest.mark.asyncio
     async def test_remove_guild_member_without_reason(self, rest_impl):
@@ -1535,7 +1397,7 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "GUILD_MEMBER", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.remove_guild_member("393939", "82828") is None
             routes.GUILD_MEMBER.compile.assert_called_once_with(rest_impl.DELETE, guild_id="393939", user_id="82828")
-        rest_impl._request.assert_called_once_with(mock_route, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, reason=...)
 
     @pytest.mark.asyncio
     async def test_remove_guild_member_with_reason(self, rest_impl):
@@ -1543,27 +1405,27 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "GUILD_MEMBER", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.remove_guild_member("393939", "82828", reason="super bye") is None
             routes.GUILD_MEMBER.compile.assert_called_once_with(rest_impl.DELETE, guild_id="393939", user_id="82828")
-        rest_impl._request.assert_called_once_with(mock_route, reason="super bye")
+        rest_impl._request_json_response.assert_called_once_with(mock_route, reason="super bye")
 
     @pytest.mark.asyncio
     async def test_get_guild_bans(self, rest_impl):
         mock_response = [{"id": "3939393"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_BANS)
         with mock.patch.object(routes, "GUILD_BANS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_bans("292929") is mock_response
             routes.GUILD_BANS.compile.assert_called_once_with(rest_impl.GET, guild_id="292929")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_guild_ban(self, rest_impl):
         mock_response = {"id": "3939393"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_BAN)
         with mock.patch.object(routes, "GUILD_BAN", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_ban("92929", "44848") is mock_response
             routes.GUILD_BAN.compile.assert_called_once_with(rest_impl.GET, guild_id="92929", user_id="44848")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_create_guild_ban_without_optionals(self, rest_impl):
@@ -1571,7 +1433,7 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "GUILD_BAN", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.create_guild_ban("222", "444") is None
             routes.GUILD_BAN.compile.assert_called_once_with(rest_impl.PUT, guild_id="222", user_id="444")
-        rest_impl._request.assert_called_once_with(mock_route, query={})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={})
 
     @pytest.mark.asyncio
     async def test_create_guild_ban_with_optionals(self, rest_impl):
@@ -1579,7 +1441,9 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "GUILD_BAN", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.create_guild_ban("222", "444", delete_message_days=5, reason="TRUE") is None
             routes.GUILD_BAN.compile.assert_called_once_with(rest_impl.PUT, guild_id="222", user_id="444")
-        rest_impl._request.assert_called_once_with(mock_route, query={"delete-message-days": 5, "reason": "TRUE"})
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, query={"delete-message-days": 5, "reason": "TRUE"}
+        )
 
     @pytest.mark.asyncio
     async def test_remove_guild_ban_without_reason(self, rest_impl):
@@ -1587,7 +1451,7 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "GUILD_BAN", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.remove_guild_ban("494949", "3737") is None
             routes.GUILD_BAN.compile.assert_called_once_with(rest_impl.DELETE, guild_id="494949", user_id="3737")
-        rest_impl._request.assert_called_once_with(mock_route, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, reason=...)
 
     @pytest.mark.asyncio
     async def test_remove_guild_ban_with_reason(self, rest_impl):
@@ -1595,32 +1459,32 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "GUILD_BAN", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.remove_guild_ban("494949", "3737", reason="LMFAO") is None
             routes.GUILD_BAN.compile.assert_called_once_with(rest_impl.DELETE, guild_id="494949", user_id="3737")
-        rest_impl._request.assert_called_once_with(mock_route, reason="LMFAO")
+        rest_impl._request_json_response.assert_called_once_with(mock_route, reason="LMFAO")
 
     @pytest.mark.asyncio
     async def test_get_guild_roles(self, rest_impl):
         mock_response = [{"name": "role", "id": "4949494994"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_ROLES)
         with mock.patch.object(routes, "GUILD_ROLES", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_roles("909") is mock_response
             routes.GUILD_ROLES.compile.assert_called_once_with(rest_impl.GET, guild_id="909")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_create_guild_role_without_optionals(self, rest_impl):
         mock_response = {"id": "42"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_ROLES)
         with mock.patch.object(routes, "GUILD_ROLES", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.create_guild_role("9494") is mock_response
             routes.GUILD_ROLES.compile.assert_called_once_with(rest_impl.POST, guild_id="9494")
-        rest_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_create_guild_role_with_optionals(self, rest_impl):
         mock_response = {"id": "42"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_ROLES)
         with mock.patch.object(routes, "GUILD_ROLES", compile=mock.MagicMock(return_value=mock_route)):
             assert (
@@ -1630,38 +1494,38 @@ class TestLowLevelRestfulClient:
                 is mock_response
             )
             routes.GUILD_ROLES.compile.assert_called_once_with(rest_impl.POST, guild_id="9494")
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route,
-            json_body={"name": "role sama", "permissions": 22, "color": 12, "hoist": True, "mentionable": True,},
+            body={"name": "role sama", "permissions": 22, "color": 12, "hoist": True, "mentionable": True,},
             reason="eat dirt",
         )
 
     @pytest.mark.asyncio
     async def test_modify_guild_role_positions(self, rest_impl):
         mock_response = [{"id": "444", "position": 0}, {"id": "999", "position": 1}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_ROLES)
         with mock.patch.object(routes, "GUILD_ROLES", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.modify_guild_role_positions("292929", ("444", 0), ("999", 1)) is mock_response
             routes.GUILD_ROLES.compile.assert_called_once_with(rest_impl.PATCH, guild_id="292929")
-        rest_impl._request.assert_called_once_with(
-            mock_route, json_body=[{"id": "444", "position": 0}, {"id": "999", "position": 1}]
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body=[{"id": "444", "position": 0}, {"id": "999", "position": 1}]
         )
 
     @pytest.mark.asyncio
     async def test_modify_guild_role_with_optionals(self, rest_impl):
         mock_response = {"id": "54234", "name": "roleio roleio"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_ROLE)
         with mock.patch.object(routes, "GUILD_ROLE", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.modify_guild_role("999999", "54234") is mock_response
             routes.GUILD_ROLE.compile.assert_called_once_with(rest_impl.PATCH, guild_id="999999", role_id="54234")
-        rest_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_guild_role_without_optionals(self, rest_impl):
         mock_response = {"id": "54234", "name": "roleio roleio"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_ROLE)
         with mock.patch.object(routes, "GUILD_ROLE", compile=mock.MagicMock(return_value=mock_route)):
             result = await rest_impl.modify_guild_role(
@@ -1676,9 +1540,9 @@ class TestLowLevelRestfulClient:
             )
             assert result is mock_response
             routes.GUILD_ROLE.compile.assert_called_once_with(rest_impl.PATCH, guild_id="999999", role_id="54234")
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route,
-            json_body={"name": "HAHA", "permissions": 42, "color": 69, "hoist": True, "mentionable": False,},
+            body={"name": "HAHA", "permissions": 42, "color": 69, "hoist": True, "mentionable": False,},
             reason="You are a pirate.",
         )
 
@@ -1688,66 +1552,66 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "GUILD_ROLE", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.delete_guild_role("29292", "4848") is None
             routes.GUILD_ROLE.compile.assert_called_once_with(rest_impl.DELETE, guild_id="29292", role_id="4848")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_guild_prune_count(self, rest_impl):
         mock_response = {"pruned": 7}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_PRUNE)
         with mock.patch.object(routes, "GUILD_PRUNE", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_prune_count("29292", 14) == 7
             routes.GUILD_PRUNE.compile.assert_called_once_with(rest_impl.GET, guild_id="29292")
-        rest_impl._request.assert_called_once_with(mock_route, query={"days": 14})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={"days": 14})
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("mock_response", ({"pruned": None}, {}))
     async def test_begin_guild_prune_without_optionals_returns_none(self, rest_impl, mock_response):
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_PRUNE)
         with mock.patch.object(routes, "GUILD_PRUNE", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.begin_guild_prune("39393", 14) is None
-        rest_impl._request.assert_called_once_with(mock_route, query={"days": 14}, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={"days": 14}, reason=...)
 
     @pytest.mark.asyncio
     async def test_begin_guild_prune_with_optionals(self, rest_impl):
-        rest_impl._request.return_value = {"pruned": 32}
+        rest_impl._request_json_response.return_value = {"pruned": 32}
         mock_route = mock.MagicMock(routes.GUILD_PRUNE)
         with mock.patch.object(routes, "GUILD_PRUNE", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.begin_guild_prune("39393", 14, compute_prune_count=True, reason="BYEBYE") == 32
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route, query={"days": 14, "compute_prune_count": "True"}, reason="BYEBYE"
         )
 
     @pytest.mark.asyncio
     async def test_get_guild_voice_regions(self, rest_impl):
         mock_response = [{"name": "london", "vip": True}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_VOICE_REGIONS)
         with mock.patch.object(routes, "GUILD_VOICE_REGIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_voice_regions("2393939") is mock_response
             routes.GUILD_VOICE_REGIONS.compile.assert_called_once_with(rest_impl.GET, guild_id="2393939")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_guild_invites(self, rest_impl):
         mock_response = [{"code": "ewkkww"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_INVITES)
         with mock.patch.object(routes, "GUILD_INVITES", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_invites("9292929") is mock_response
             routes.GUILD_INVITES.compile.assert_called_once_with(rest_impl.GET, guild_id="9292929")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_guild_integrations(self, rest_impl):
         mock_response = [{"id": "4242"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_INTEGRATIONS)
         with mock.patch.object(routes, "GUILD_INTEGRATIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_integrations("537340989808050216") is mock_response
             routes.GUILD_INTEGRATIONS.compile.assert_called_once_with(rest_impl.GET, guild_id="537340989808050216")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_modify_guild_integration_without_optionals(self, rest_impl):
@@ -1757,7 +1621,7 @@ class TestLowLevelRestfulClient:
             routes.GUILD_INTEGRATION.compile.assert_called_once_with(
                 rest_impl.PATCH, guild_id="292929", integration_id="747474"
             )
-        rest_impl._request.assert_called_once_with(mock_route, json_body={}, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_guild_integration_with_optionals(self, rest_impl):
@@ -1776,9 +1640,9 @@ class TestLowLevelRestfulClient:
             routes.GUILD_INTEGRATION.compile.assert_called_once_with(
                 rest_impl.PATCH, guild_id="292929", integration_id="747474"
             )
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route,
-            json_body={"expire_behaviour": 2, "expire_grace_period": 1, "enable_emoticons": True},
+            body={"expire_behaviour": 2, "expire_grace_period": 1, "enable_emoticons": True},
             reason="This password is already taken by {redacted}",
         )
 
@@ -1790,7 +1654,7 @@ class TestLowLevelRestfulClient:
             routes.GUILD_INTEGRATION.compile.assert_called_once_with(
                 rest_impl.DELETE, guild_id="23992", integration_id="7474"
             )
-        rest_impl._request.assert_called_once_with(mock_route, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, reason=...)
 
     @pytest.mark.asyncio
     async def test_delete_guild_integration_with_reason(self, rest_impl):
@@ -1800,7 +1664,7 @@ class TestLowLevelRestfulClient:
             routes.GUILD_INTEGRATION.compile.assert_called_once_with(
                 rest_impl.DELETE, guild_id="23992", integration_id="7474"
             )
-        rest_impl._request.assert_called_once_with(mock_route, reason="HOT")
+        rest_impl._request_json_response.assert_called_once_with(mock_route, reason="HOT")
 
     @pytest.mark.asyncio
     async def test_sync_guild_integration(self, rest_impl):
@@ -1810,34 +1674,34 @@ class TestLowLevelRestfulClient:
             routes.GUILD_INTEGRATION_SYNC.compile.assert_called_once_with(
                 rest_impl.POST, guild_id="3939439", integration_id="84884"
             )
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_guild_embed(self, rest_impl):
         mock_response = {"channel_id": "4304040", "enabled": True}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_EMBED)
         with mock.patch.object(routes, "GUILD_EMBED", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_embed("4949") is mock_response
             routes.GUILD_EMBED.compile.assert_called_once_with(rest_impl.GET, guild_id="4949")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_modify_guild_embed_without_reason(self, rest_impl):
         mock_response = {"channel_id": "4444", "enabled": False}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_EMBED)
         with mock.patch.object(routes, "GUILD_EMBED", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.modify_guild_embed("393939", channel_id="222", enabled=True) is mock_response
             routes.GUILD_EMBED.compile.assert_called_once_with(rest_impl.PATCH, guild_id="393939")
-        rest_impl._request.assert_called_once_with(
-            mock_route, json_body={"channel_id": "222", "enabled": True}, reason=...
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body={"channel_id": "222", "enabled": True}, reason=...
         )
 
     @pytest.mark.asyncio
     async def test_modify_guild_embed_with_reason(self, rest_impl):
         mock_response = {"channel_id": "4444", "enabled": False}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_EMBED)
         with mock.patch.object(routes, "GUILD_EMBED", compile=mock.MagicMock(return_value=mock_route)):
             assert (
@@ -1845,19 +1709,19 @@ class TestLowLevelRestfulClient:
                 is mock_response
             )
             routes.GUILD_EMBED.compile.assert_called_once_with(rest_impl.PATCH, guild_id="393939")
-        rest_impl._request.assert_called_once_with(
-            mock_route, json_body={"channel_id": "222", "enabled": True}, reason="OK"
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body={"channel_id": "222", "enabled": True}, reason="OK"
         )
 
     @pytest.mark.asyncio
     async def test_get_guild_vanity_url(self, rest_impl):
         mock_response = {"code": "dsidid"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_VANITY_URL)
         with mock.patch.object(routes, "GUILD_VANITY_URL", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_vanity_url("399393") is mock_response
             routes.GUILD_VANITY_URL.compile.assert_called_once_with(rest_impl.GET, guild_id="399393")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     def test_get_guild_widget_image_url_without_style(self, rest_impl):
         url = rest_impl.get_guild_widget_image_url("54949")
@@ -1870,77 +1734,77 @@ class TestLowLevelRestfulClient:
     @pytest.mark.asyncio
     async def test_get_invite_without_counts(self, rest_impl):
         mock_response = {"code": "fesdfes"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.INVITE)
         with mock.patch.object(routes, "INVITE", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_invite("fesdfes") is mock_response
             routes.INVITE.compile.assert_called_once_with(rest_impl.GET, invite_code="fesdfes")
-        rest_impl._request.assert_called_once_with(mock_route, query={})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={})
 
     @pytest.mark.asyncio
     async def test_get_invite_with_counts(self, rest_impl):
         mock_response = {"code": "fesdfes"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.INVITE)
         with mock.patch.object(routes, "INVITE", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_invite("fesdfes", with_counts=True) is mock_response
             routes.INVITE.compile.assert_called_once_with(rest_impl.GET, invite_code="fesdfes")
-        rest_impl._request.assert_called_once_with(mock_route, query={"with_counts": "True"})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={"with_counts": "True"})
 
     @pytest.mark.asyncio
     async def test_delete_invite(self, rest_impl):
         mock_response = {"code": "diidsk"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.INVITE)
         with mock.patch.object(routes, "INVITE", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.delete_invite("diidsk") is mock_response
             routes.INVITE.compile.assert_called_once_with(rest_impl.DELETE, invite_code="diidsk")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_current_application_info(self, rest_impl):
         mock_response = {"bot_public": True}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.OAUTH2_APPLICATIONS_ME)
         with mock.patch.object(routes, "OAUTH2_APPLICATIONS_ME", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_current_application_info() is mock_response
             routes.OAUTH2_APPLICATIONS_ME.compile.assert_called_once_with(rest_impl.GET)
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_current_user(self, rest_impl):
         mock_response = {"id": "494949", "username": "A name"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.OWN_USER)
         with mock.patch.object(routes, "OWN_USER", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_current_user() is mock_response
             routes.OWN_USER.compile.assert_called_once_with(rest_impl.GET)
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_user(self, rest_impl):
         mock_response = {"id": "54959"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.USER)
         with mock.patch.object(routes, "USER", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_user("54959") is mock_response
             routes.USER.compile.assert_called_once_with(rest_impl.GET, user_id="54959")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_modify_current_user_without_optionals(self, rest_impl):
         mock_response = {"id": "44444", "username": "Watashi"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.OWN_USER)
         with mock.patch.object(routes, "OWN_USER", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.modify_current_user() is mock_response
             routes.OWN_USER.compile.assert_called_once_with(rest_impl.PATCH)
-        rest_impl._request.assert_called_once_with(mock_route, json_body={})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, body={})
 
     @pytest.mark.asyncio
     async def test_modify_current_user_with_optionals(self, rest_impl):
         mock_response = {"id": "44444", "username": "Watashi"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.OWN_USER)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "OWN_USER", compile=mock.MagicMock(return_value=mock_route)):
@@ -1949,39 +1813,41 @@ class TestLowLevelRestfulClient:
                 assert result is mock_response
                 routes.OWN_USER.compile.assert_called_once_with(rest_impl.PATCH)
                 conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
-        rest_impl._request.assert_called_once_with(
-            mock_route, json_body={"username": "Watashi 2", "avatar": mock_image_data}
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body={"username": "Watashi 2", "avatar": mock_image_data}
         )
 
     @pytest.mark.asyncio
     async def test_get_current_user_connections(self, rest_impl):
         mock_response = [{"id": "fspeed", "revoked": False}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.OWN_CONNECTIONS)
         with mock.patch.object(routes, "OWN_CONNECTIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_current_user_connections() is mock_response
             routes.OWN_CONNECTIONS.compile.assert_called_once_with(rest_impl.GET)
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_current_user_guilds_without_optionals(self, rest_impl):
         mock_response = [{"id": "452", "owner_id": "4949"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.OWN_GUILDS)
         with mock.patch.object(routes, "OWN_GUILDS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_current_user_guilds() is mock_response
             routes.OWN_GUILDS.compile.assert_called_once_with(rest_impl.GET)
-        rest_impl._request.assert_called_once_with(mock_route, query={})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={})
 
     @pytest.mark.asyncio
     async def test_get_current_user_guilds_with_optionals(self, rest_impl):
         mock_response = [{"id": "452", "owner_id": "4949"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.OWN_GUILDS)
         with mock.patch.object(routes, "OWN_GUILDS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_current_user_guilds(before="292929", after="22288", limit=5) is mock_response
             routes.OWN_GUILDS.compile.assert_called_once_with(rest_impl.GET)
-        rest_impl._request.assert_called_once_with(mock_route, query={"before": "292929", "after": "22288", "limit": 5})
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, query={"before": "292929", "after": "22288", "limit": 5}
+        )
 
     @pytest.mark.asyncio
     async def test_leave_guild(self, rest_impl):
@@ -1989,42 +1855,46 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "LEAVE_GUILD", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.leave_guild("292929") is None
             routes.LEAVE_GUILD.compile.assert_called_once_with(rest_impl.DELETE, guild_id="292929")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_create_dm(self, rest_impl):
         mock_response = {"id": "404040", "recipients": []}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.OWN_DMS)
         with mock.patch.object(routes, "OWN_DMS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.create_dm("409491291156774923") is mock_response
             routes.OWN_DMS.compile.assert_called_once_with(rest_impl.POST)
-        rest_impl._request.assert_called_once_with(mock_route, json_body={"recipient_id": "409491291156774923"})
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body={"recipient_id": "409491291156774923"}
+        )
 
     @pytest.mark.asyncio
     async def test_list_voice_regions(self, rest_impl):
         mock_response = [{"name": "neko-cafe"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.VOICE_REGIONS)
         with mock.patch.object(routes, "VOICE_REGIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.list_voice_regions() is mock_response
             routes.VOICE_REGIONS.compile.assert_called_once_with(rest_impl.GET)
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_create_webhook_without_optionals(self, rest_impl):
         mock_response = {"channel_id": "39393993", "id": "8383838"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_WEBHOOKS)
         with mock.patch.object(routes, "CHANNEL_WEBHOOKS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.create_webhook("39393939", "I am a webhook") is mock_response
             routes.CHANNEL_WEBHOOKS.compile.assert_called_once_with(rest_impl.POST, channel_id="39393939")
-        rest_impl._request.assert_called_once_with(mock_route, json_body={"name": "I am a webhook"}, reason=...)
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body={"name": "I am a webhook"}, reason=...
+        )
 
     @pytest.mark.asyncio
     async def test_create_webhook_with_optionals(self, rest_impl):
         mock_response = {"channel_id": "39393993", "id": "8383838"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_WEBHOOKS)
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock.patch.object(routes, "CHANNEL_WEBHOOKS", compile=mock.MagicMock(return_value=mock_route)):
@@ -2035,68 +1905,68 @@ class TestLowLevelRestfulClient:
                 assert result is mock_response
                 routes.CHANNEL_WEBHOOKS.compile.assert_called_once_with(rest_impl.POST, channel_id="39393939")
                 conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
-        rest_impl._request.assert_called_once_with(
-            mock_route, json_body={"name": "I am a webhook", "avatar": mock_image_data}, reason="get reasoned",
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body={"name": "I am a webhook", "avatar": mock_image_data}, reason="get reasoned",
         )
 
     @pytest.mark.asyncio
     async def test_get_channel_webhooks(self, rest_impl):
         mock_response = [{"channel_id": "39393993", "id": "8383838"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.CHANNEL_WEBHOOKS)
         with mock.patch.object(routes, "CHANNEL_WEBHOOKS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_channel_webhooks("9393939") is mock_response
             routes.CHANNEL_WEBHOOKS.compile.assert_called_once_with(rest_impl.GET, channel_id="9393939")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_guild_webhooks(self, rest_impl):
         mock_response = [{"channel_id": "39393993", "id": "8383838"}]
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.GUILD_WEBHOOKS)
         with mock.patch.object(routes, "GUILD_WEBHOOKS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_webhooks("9393939") is mock_response
             routes.GUILD_WEBHOOKS.compile.assert_called_once_with(rest_impl.GET, guild_id="9393939")
-        rest_impl._request.assert_called_once_with(mock_route)
+        rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_webhook_without_token(self, rest_impl):
         mock_response = {"channel_id": "39393993", "id": "8383838"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.WEBHOOK)
         with mock.patch.object(routes, "WEBHOOK", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_webhook("9393939") is mock_response
             routes.WEBHOOK.compile.assert_called_once_with(rest_impl.GET, webhook_id="9393939")
-        rest_impl._request.assert_called_once_with(mock_route, suppress_authorization_header=False)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, suppress_authorization_header=False)
 
     @pytest.mark.asyncio
     async def test_get_webhook_with_token(self, rest_impl):
         mock_response = {"channel_id": "39393993", "id": "8383838"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
         with mock.patch.object(routes, "WEBHOOK_WITH_TOKEN", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_webhook("9393939", webhook_token="a_webhook_token") is mock_response
             routes.WEBHOOK_WITH_TOKEN.compile.assert_called_once_with(
                 rest_impl.GET, webhook_id="9393939", webhook_token="a_webhook_token"
             )
-        rest_impl._request.assert_called_once_with(mock_route, suppress_authorization_header=True)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, suppress_authorization_header=True)
 
     @pytest.mark.asyncio
     async def test_modify_webhook_without_optionals_without_token(self, rest_impl):
         mock_response = {"channel_id": "39393993", "id": "8383838"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.WEBHOOK)
         with mock.patch.object(routes, "WEBHOOK", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.modify_webhook("929292") is mock_response
             routes.WEBHOOK.compile.assert_called_once_with(rest_impl.PATCH, webhook_id="929292")
-        rest_impl._request.assert_called_once_with(
-            mock_route, json_body={}, reason=..., suppress_authorization_header=False
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body={}, reason=..., suppress_authorization_header=False
         )
 
     @pytest.mark.asyncio
     async def test_modify_webhook_with_optionals_without_token(self, rest_impl):
         mock_response = {"channel_id": "39393993", "id": "8383838"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.WEBHOOK)
         with mock.patch.object(routes, "WEBHOOK", compile=mock.MagicMock(return_value=mock_route)):
             assert (
@@ -2106,9 +1976,9 @@ class TestLowLevelRestfulClient:
                 is mock_response
             )
             routes.WEBHOOK.compile.assert_called_once_with(rest_impl.PATCH, webhook_id="929292")
-        rest_impl._request.assert_called_once_with(
+        rest_impl._request_json_response.assert_called_once_with(
             mock_route,
-            json_body={"name": "nyaa", "avatar": "data:image/png;base64,iVBORw0KGgpibGFo", "channel_id": "2929292929",},
+            body={"name": "nyaa", "avatar": "data:image/png;base64,iVBORw0KGgpibGFo", "channel_id": "2929292929",},
             reason="nuzzle",
             suppress_authorization_header=False,
         )
@@ -2116,15 +1986,15 @@ class TestLowLevelRestfulClient:
     @pytest.mark.asyncio
     async def test_modify_webhook_without_optionals_with_token(self, rest_impl):
         mock_response = {"channel_id": "39393993", "id": "8383838"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
         with mock.patch.object(routes, "WEBHOOK_WITH_TOKEN", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.modify_webhook("929292", webhook_token="a_webhook_token") is mock_response
             routes.WEBHOOK_WITH_TOKEN.compile.assert_called_once_with(
                 rest_impl.PATCH, webhook_id="929292", webhook_token="a_webhook_token"
             )
-        rest_impl._request.assert_called_once_with(
-            mock_route, json_body={}, reason=..., suppress_authorization_header=True
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body={}, reason=..., suppress_authorization_header=True
         )
 
     @pytest.mark.asyncio
@@ -2133,7 +2003,7 @@ class TestLowLevelRestfulClient:
         with mock.patch.object(routes, "WEBHOOK", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.delete_webhook("9393939") is None
             routes.WEBHOOK.compile.assert_called_once_with(rest_impl.DELETE, webhook_id="9393939")
-        rest_impl._request.assert_called_once_with(mock_route, suppress_authorization_header=False)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, suppress_authorization_header=False)
 
     @pytest.mark.asyncio
     async def test_delete_webhook_with_token(self, rest_impl):
@@ -2143,13 +2013,13 @@ class TestLowLevelRestfulClient:
             routes.WEBHOOK_WITH_TOKEN.compile.assert_called_once_with(
                 rest_impl.DELETE, webhook_id="9393939", webhook_token="a_webhook_token"
             )
-        rest_impl._request.assert_called_once_with(mock_route, suppress_authorization_header=True)
+        rest_impl._request_json_response.assert_called_once_with(mock_route, suppress_authorization_header=True)
 
     @pytest.mark.asyncio
     async def test_execute_webhook_without_optionals(self, rest_impl):
         mock_form = mock.MagicMock(aiohttp.FormData, add_field=mock.MagicMock())
         mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
-        rest_impl._request.return_value = None
+        rest_impl._request_json_response.return_value = None
         mock_json = "{}"
         with mock.patch.object(aiohttp, "FormData", return_value=mock_form):
             with mock.patch.object(routes, "WEBHOOK_WITH_TOKEN", compile=mock.MagicMock(return_value=mock_route)):
@@ -2160,8 +2030,8 @@ class TestLowLevelRestfulClient:
                     )
                     json.dumps.assert_called_once_with({})
         mock_form.add_field.assert_called_once_with("payload_json", mock_json, content_type="application/json")
-        rest_impl._request.assert_called_once_with(
-            mock_route, form_body=mock_form, query={}, suppress_authorization_header=True,
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body=mock_form, query={}, suppress_authorization_header=True,
         )
 
     @pytest.mark.asyncio
@@ -2174,7 +2044,7 @@ class TestLowLevelRestfulClient:
         mock_route = mock.MagicMock(routes.WEBHOOK_WITH_TOKEN)
         WEBHOOK_WITH_TOKEN.compile.return_value = mock_route
         mock_response = {"id": "53", "content": "la"}
-        rest_impl._request.return_value = mock_response
+        rest_impl._request_json_response.return_value = mock_response
         mock_file = mock.MagicMock(files.File)
         mock_file.name = "file.txt"
         mock_file2 = mock.MagicMock(files.File)
@@ -2218,6 +2088,6 @@ class TestLowLevelRestfulClient:
             any_order=True,
         )
 
-        rest_impl._request.assert_called_once_with(
-            mock_route, form_body=mock_form, query={"wait": "True"}, suppress_authorization_header=True,
+        rest_impl._request_json_response.assert_called_once_with(
+            mock_route, body=mock_form, query={"wait": "True"}, suppress_authorization_header=True,
         )

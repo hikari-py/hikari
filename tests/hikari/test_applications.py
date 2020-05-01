@@ -19,8 +19,8 @@
 import mock
 import pytest
 
-from hikari import guilds
 from hikari import applications
+from hikari import guilds
 from hikari import users
 from hikari.clients import components
 from hikari.internal import urls

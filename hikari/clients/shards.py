@@ -38,9 +38,9 @@ import typing
 import aiohttp
 
 from hikari import errors
+from hikari.clients import runnable
 from hikari.clients import shard_states
 from hikari.events import other
-from hikari.clients import runnable
 from hikari.internal import assertions
 from hikari.net import codes
 from hikari.net import ratelimits

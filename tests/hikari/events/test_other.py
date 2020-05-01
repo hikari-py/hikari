@@ -18,11 +18,11 @@
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
 
-import pytest
 import mock
+import pytest
 
-from hikari import users
 from hikari import guilds
+from hikari import users
 from hikari.events import other
 from tests.hikari import _helpers
 

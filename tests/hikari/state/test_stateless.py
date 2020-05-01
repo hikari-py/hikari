@@ -19,12 +19,12 @@
 import mock
 import pytest
 
+from hikari.clients import components
+from hikari.clients import shards
 from hikari.events import channel
 from hikari.events import guild
 from hikari.events import message
 from hikari.events import other
-from hikari.clients import components
-from hikari.clients import shards
 from hikari.state import stateless
 
 

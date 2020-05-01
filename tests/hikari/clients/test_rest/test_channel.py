@@ -25,9 +25,9 @@ import pytest
 from hikari import bases
 from hikari import channels
 from hikari import embeds
+from hikari import files
 from hikari import guilds
 from hikari import invites
-from hikari import files
 from hikari import messages
 from hikari import users
 from hikari import webhooks

@@ -23,14 +23,14 @@ from __future__ import annotations
 __all__ = [
     "HikariError",
     "HikariWarning",
-    "NotFoundHTTPError",
-    "UnauthorizedHTTPError",
-    "ForbiddenHTTPError",
-    "BadRequestHTTPError",
-    "ClientHTTPError",
-    "ServerHTTPError",
-    "CodedHTTPError",
+    "NotFound",
+    "Unauthorized",
+    "Forbidden",
+    "BadRequest",
     "HTTPError",
+    "HTTPErrorResponse",
+    "ClientHTTPErrorResponse",
+    "ServerHTTPErrorResponse",
     "GatewayZombiedError",
     "GatewayNeedsShardingError",
     "GatewayMustReconnectError",
@@ -42,12 +42,12 @@ __all__ = [
     "GatewayError",
 ]
 
+import http
 import typing
 
-from hikari.net import codes
+import aiohttp.typedefs
 
-if typing.TYPE_CHECKING:
-    from hikari.net import routes
+from hikari.net import codes
 
 
 class HikariError(RuntimeError):
@@ -79,9 +79,11 @@ class GatewayError(HikariError):
 
     Parameters
     ----------
-    reason : st
+    reason : str
         A string explaining the issue.
     """
+
+    __slots__ = ("reason",)
 
     reason: str
     """A string to explain the issue."""
@@ -103,6 +105,8 @@ class GatewayClientClosedError(GatewayError):
         A string explaining the issue.
     """
 
+    __slots__ = ()
+
     def __init__(self, reason: str = "The gateway client has been closed") -> None:
         super().__init__(reason)
 
@@ -115,6 +119,8 @@ class GatewayClientDisconnectedError(GatewayError):
     reason : str
         A string explaining the issue.
     """
+
+    __slots__ = ()
 
     def __init__(self, reason: str = "The gateway client has disconnected unexpectedly") -> None:
         super().__init__(reason)
@@ -130,6 +136,8 @@ class GatewayServerClosedConnectionError(GatewayError):
     reason : str, optional
         A string explaining the issue.
     """
+
+    __slots__ = ("close_code",)
 
     close_code: typing.Union[codes.GatewayCloseCode, int, None]
 
@@ -153,6 +161,8 @@ class GatewayServerClosedConnectionError(GatewayError):
 class GatewayInvalidTokenError(GatewayServerClosedConnectionError):
     """An exception that is raised if you failed to authenticate with a valid token to the Gateway."""
 
+    __slots__ = ()
+
     def __init__(self) -> None:
         super().__init__(
             codes.GatewayCloseCode.AUTHENTICATION_FAILED,
@@ -171,6 +181,8 @@ class GatewayInvalidSessionError(GatewayServerClosedConnectionError):
         again instead.
     """
 
+    __slots__ = ("can_resume",)
+
     can_resume: bool
     """`True` if the next reconnection can be RESUMED,
     `False` if it has to be coordinated by re-IDENFITYing.
@@ -188,6 +200,8 @@ class GatewayMustReconnectError(GatewayServerClosedConnectionError):
     This will cause a re-IDENTIFY.
     """
 
+    __slots__ = ()
+
     def __init__(self) -> None:
         super().__init__(reason="The gateway server has requested that the client reconnects with a new session")
 
@@ -198,6 +212,8 @@ class GatewayNeedsShardingError(GatewayServerClosedConnectionError):
     This is a sign you need to increase the number of shards that your bot is
     running with in order to connect to Discord.
     """
+
+    __slots__ = ()
 
     def __init__(self) -> None:
         super().__init__(
@@ -212,200 +228,179 @@ class GatewayZombiedError(GatewayClientClosedError):
     disconnected due to a timeout.
     """
 
+    __slots__ = ()
+
     def __init__(self) -> None:
         super().__init__("No heartbeat was received, the connection has been closed")
 
 
 class HTTPError(HikariError):
-    """Base exception raised if an HTTP error occurs.
+    """Base exception raised if an HTTP error occurs while making a request.
 
     Parameters
     ----------
-    reason : str
-        A meaningful explanation of the problem.
+    message : str
+        The error message.
+    url : str
+        The URL that produced this error.
     """
 
-    reason: str
-    """A meaningful explanation of the problem."""
+    __slots__ = ("message", "url")
 
-    def __init__(self, reason: str) -> None:
+    message: str
+    """The error message."""
+
+    url: str
+    """The URL that produced this error message."""
+
+    def __init__(self, url: str, message: str) -> None:
         super().__init__()
-        self.reason = reason
-
-    def __str__(self) -> str:
-        return self.reason
-
-
-class CodedHTTPError(HTTPError):
-    """An HTTP exception that has contextual response information with it.
-
-    Parameters
-    ----------
-    status : int or hikari.net.codes.HTTPStatusCode
-        The HTTP status code that was returned by the server.
-    route : hikari.net.routes.CompiledRoute
-        The HTTP route that was being invoked when this exception occurred.
-    message : str, optional
-        An optional message if provided in the response payload.
-    json_code : hikari.net.codes.JSONErrorCode, int, optional
-        An optional error code the server provided us.
-    """
-
-    status: typing.Union[int, codes.HTTPStatusCode]
-    """The HTTP status code that was returned by the server."""
-
-    route: routes.CompiledRoute
-    """The HTTP route that was being invoked when this exception occurred."""
-
-    message: typing.Optional[str]
-    """An optional contextual message the server provided us with in the response body."""
-
-    json_code: typing.Union[codes.JSONErrorCode, int, None]
-    """An optional contextual error code the server provided us with in the response body."""
-
-    def __init__(
-        self,
-        status: typing.Union[int, codes.HTTPStatusCode],
-        route: routes.CompiledRoute,
-        message: typing.Optional[str],
-        json_code: typing.Union[codes.JSONErrorCode, int, None],
-    ) -> None:
-        super().__init__(str(status))
-        self.status = status
-        self.route = route
         self.message = message
-        self.json_code = json_code
+        self.url = url
+
+
+class HTTPErrorResponse(HTTPError):
+    """Base exception for an erroneous HTTP response.
+
+    Parameters
+    ----------
+    url : str
+        The URL that produced the error message.
+    status : http.HTTPStatus
+        The HTTP status code of the response that caused this error.
+    headers : aiohttp.typedefs.LooseHeaders
+        Any headers that were given in the response.
+    raw_body : typing.Any
+        The body that was received.
+    """
+
+    __slots__ = ("status", "headers", "raw_body")
+
+    status: http.HTTPStatus
+    """The HTTP status code for the response."""
+
+    headers: aiohttp.typedefs.LooseHeaders
+    """The headers received in the error response."""
+
+    raw_body: typing.Any
+    """The response body."""
+
+    def __init__(
+        self, url: str, status: http.HTTPStatus, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.Any,
+    ) -> None:
+        super().__init__(url, f"{status}: {raw_body}")
+        self.status = status
+        self.headers = headers
+        self.raw_body = raw_body
 
     def __str__(self) -> str:
-        return f"{self.reason}: ({self.json_code}) {self.message}"
+        return f"{self.status.value} {self.status.name}: {self.raw_body}"
 
 
-class ServerHTTPError(CodedHTTPError):
-    """An exception raised if a server-side error occurs when interacting with the REST API.
+class ClientHTTPErrorResponse(HTTPErrorResponse):
+    """Base exception for an erroneous HTTP response that is a client error.
 
-    If you get these, DO NOT PANIC! Your bot is working perfectly fine. Discord
-    have probably broken something again.
+    All exceptions derived from this base should be treated as 4xx client
+    errors when encountered.
     """
 
-
-class ClientHTTPError(CodedHTTPError):
-    """An exception raised if a server-side error occurs when interacting with the REST API.
-
-    If you get one of these, you most likely have a mistake in your code, or
-    have found a bug with this library.
-
-    If you are sure that your code is correct, please register a bug at
-    https://gitlab.com/nekokatt/hikari/issues and we will take a look for you.
-    """
+    __slots__ = ()
 
 
-class BadRequestHTTPError(CodedHTTPError):
-    """A specific case of CodedHTTPError.
-
-    This can occur hat occurs when you send Discord information in an unexpected
-    format, miss required information out, or give bad values for stuff.
-
-    An example might be sending a message without any content, or an embed with
-    more than 6000 characters.
+class BadRequest(ClientHTTPErrorResponse):
+    """Raised when you send an invalid request somehow.
 
     Parameters
     ----------
-    route : hikari.net.routes.CompiledRoute
-        The HTTP route that was being invoked when this exception occurred.
-    message : str, optional
-        An optional message if provided in the response payload.
-    json_code : hikari.net.codes.JSONErrorCode, int, optional
-        An optional error code the server provided us.
+    url : str
+        The URL that produced the error message.
+    headers : aiohttp.typedefs.LooseHeaders
+        Any headers that were given in the response.
+    raw_body : typing.Any
+        The body that was received.
     """
 
-    def __init__(
-        self,
-        route: routes.CompiledRoute,
-        message: typing.Optional[str],
-        json_code: typing.Optional[typing.Union[codes.JSONErrorCode, int]],
-    ) -> None:
-        super().__init__(codes.HTTPStatusCode.BAD_REQUEST, route, message, json_code)
+    __slots__ = ()
+
+    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr) -> None:
+        status = http.HTTPStatus.BAD_REQUEST
+        super().__init__(url, status, headers, raw_body)
 
 
-class UnauthorizedHTTPError(ClientHTTPError):
-    """A specific case of ClientHTTPError.
+class Unauthorized(ClientHTTPErrorResponse):
+    """Raised when you are not authorized to access a specific resource.
 
-    This occurs when you have invalid authorization details to access
-    the given resource.
-
-    This usually means that you have an incorrect token.
+    This generally means you did not provide a token, or the token is invalid.
 
     Parameters
     ----------
-    route : hikari.net.routes.CompiledRoute
-        The HTTP route that was being invoked when this exception occurred.
-    message : str, optional
-        An optional message if provided in the response payload.
-    json_code : hikari.net.codes.JSONErrorCode, int, optional
-        An optional error code the server provided us.
+    url : str
+        The URL that produced the error message.
+    headers : aiohttp.typedefs.LooseHeaders
+        Any headers that were given in the response.
+    raw_body : typing.Any
+        The body that was received.
     """
 
-    def __init__(
-        self,
-        route: routes.CompiledRoute,
-        message: typing.Optional[str],
-        json_code: typing.Optional[typing.Union[codes.JSONErrorCode, int]],
-    ) -> None:
-        super().__init__(codes.HTTPStatusCode.UNAUTHORIZED, route, message, json_code)
+    __slots__ = ()
+
+    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr) -> None:
+        status = http.HTTPStatus.UNAUTHORIZED
+        super().__init__(url, status, headers, raw_body)
 
 
-class ForbiddenHTTPError(ClientHTTPError):
-    """A specific case of ClientHTTPError.
+class Forbidden(ClientHTTPErrorResponse):
+    """Raised when you are not allowed to access a specific resource.
 
-    This occurs when you are missing permissions, or are using an endpoint that
-    your account is not allowed to see without being whitelisted.
-
-    This will not occur if your token is invalid.
+    This means you lack the permissions to do something, either because of
+    permissions set in a guild, or because your application is not whitelisted
+    to use a specific endpoint.
 
     Parameters
     ----------
-    route : hikari.net.routes.CompiledRoute
-        The HTTP route that was being invoked when this exception occurred.
-    message : str, optional
-        An optional message if provided in the response payload.
-    json_code : hikari.net.codes.JSONErrorCode, int, optional
-        An optional error code the server provided us.
+    url : str
+        The URL that produced the error message.
+    headers : aiohttp.typedefs.LooseHeaders
+        Any headers that were given in the response.
+    raw_body : typing.Any
+        The body that was received.
     """
 
-    def __init__(
-        self,
-        route: routes.CompiledRoute,
-        message: typing.Optional[str],
-        json_code: typing.Optional[typing.Union[codes.JSONErrorCode, int]],
-    ) -> None:
-        super().__init__(codes.HTTPStatusCode.FORBIDDEN, route, message, json_code)
+    __slots__ = ()
+
+    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr) -> None:
+        status = http.HTTPStatus.FORBIDDEN
+        super().__init__(url, status, headers, raw_body)
 
 
-class NotFoundHTTPError(ClientHTTPError):
-    """A specific case of ClientHTTPError.
-
-    This occurs when you try to refer to something that doesn't exist on Discord.
-    This might be referring to a user ID, channel ID, guild ID, etc that does
-    not exist, or it might be attempting to use an HTTP endpoint that is not
-    found.
+class NotFound(ClientHTTPErrorResponse):
+    """Raised when something is not found.
 
     Parameters
     ----------
-    route : hikari.net.routes.CompiledRoute
-        The HTTP route that was being invoked when this exception occurred.
-    message : str, optional
-        An optional message if provided in the response payload.
-    json_code : hikari.net.codes.JSONErrorCode, int, optional
-        An optional error code the server provided us.
+    url : str
+        The URL that produced the error message.
+    headers : aiohttp.typedefs.LooseHeaders
+        Any headers that were given in the response.
+    raw_body : typing.Any
+        The body that was received.
     """
 
-    def __init__(
-        self,
-        route: routes.CompiledRoute,
-        message: typing.Optional[str],
-        json_code: typing.Optional[typing.Union[codes.JSONErrorCode, int]],
-    ) -> None:
-        super().__init__(codes.HTTPStatusCode.NOT_FOUND, route, message, json_code)
+    __slots__ = ()
+
+    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr) -> None:
+        status = http.HTTPStatus.NOT_FOUND
+        super().__init__(url, status, headers, raw_body)
+
+
+class ServerHTTPErrorResponse(HTTPErrorResponse):
+    """Base exception for an erroneous HTTP response that is a server error.
+
+    All exceptions derived from this base should be treated as 5xx server
+    errors when encountered. If you get one of these, it isn't your fault!
+    """
+
+    __slots__ = ()
 
 
 class IntentWarning(HikariWarning):
@@ -413,3 +408,5 @@ class IntentWarning(HikariWarning):
 
     This is caused by your application missing certain intents.
     """
+
+    __slots__ = ()

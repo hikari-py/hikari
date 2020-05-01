@@ -28,7 +28,6 @@ __all__ = ["RESTClient"]
 
 import typing
 
-from hikari.clients import configs
 from hikari.clients.rest import channel
 from hikari.clients.rest import gateway
 from hikari.clients.rest import guild
@@ -85,12 +84,14 @@ class RESTClient(
             low_level_rest.REST(
                 allow_redirects=components.config.allow_redirects,
                 connector=components.config.tcp_connector,
+                debug=components.config.debug,
                 proxy_headers=components.config.proxy_headers,
                 proxy_auth=components.config.proxy_auth,
                 ssl_context=components.config.ssl_context,
                 verify_ssl=components.config.verify_ssl,
                 timeout=components.config.request_timeout,
                 token=token,
+                trust_env=components.config.trust_env,
                 version=components.config.rest_version,
             ),
         )

@@ -43,7 +43,6 @@ from hikari import state
 from hikari import users
 from hikari import voices
 from hikari import webhooks
-
 from hikari._about import __author__
 from hikari._about import __copyright__
 from hikari._about import __docs__
@@ -51,7 +50,6 @@ from hikari._about import __email__
 from hikari._about import __license__
 from hikari._about import __url__
 from hikari._about import __version__
-
 from hikari.applications import *
 from hikari.audit_logs import *
 from hikari.bases import *

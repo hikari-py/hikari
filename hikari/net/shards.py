@@ -39,7 +39,6 @@ import asyncio
 import contextlib
 import datetime
 import json
-import logging
 import math
 import time
 import typing
@@ -51,6 +50,7 @@ import aiohttp.typedefs
 from hikari import errors
 from hikari.internal import more_asyncio
 from hikari.net import codes
+from hikari.net import http_client
 from hikari.net import ratelimits
 from hikari.net import user_agents
 
@@ -68,7 +68,7 @@ VERSION_6: typing.Final[int] = 6
 VERSION_7: typing.Final[int] = 7
 
 
-class Shard:  # pylint: disable=too-many-instance-attributes
+class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attributes
     """Implementation of a client for the Discord Gateway.
 
     This is a websocket connection to Discord that is used to inform your
@@ -88,6 +88,8 @@ class Shard:  # pylint: disable=too-many-instance-attributes
 
     Parameters
     ----------
+    allow_redirects : bool
+        Whether to allow redirects or not. Defaults to `False`.
     compression : bool
         If `True`, then payload compression is enabled on the connection.
         If `False`, no payloads are compressed. You usually want to keep this
@@ -147,9 +149,18 @@ class Shard:  # pylint: disable=too-many-instance-attributes
     ssl_context : ssl.SSLContext, optional
         An optional custom `ssl.SSLContext` to provide to customise how
         SSL works.
+    timeout : float, optional
+        The optional timeout for all HTTP requests.
     token : str
         The mandatory bot token for the bot account to use, minus the "Bot"
         authentication prefix used elsewhere.
+    trust_env : bool
+        If `True`, and no proxy info is given, then `HTTP_PROXY` and
+        `HTTPS_PROXY` will be used from the environment variables if present.
+        Any proxy credentials will be read from the user's `netrc` file
+        (https://www.gnu.org/software/inetutils/manual/html_node/The-_002enetrc-file.html)
+        If `False`, then this information is instead ignored.
+        Defaults to `False` if unspecified.
     url : str
         The websocket URL to use.
     verify_ssl : bool
@@ -164,22 +175,12 @@ class Shard:  # pylint: disable=too-many-instance-attributes
     __slots__ = (
         "_compression",
         "_connected_at",
-        "_connector",
-        "_debug",
         "_intents",
-        "_json_deserialize",
-        "_json_serialize",
         "_large_threshold",
         "_presence",
-        "_proxy_auth",
-        "_proxy_headers",
-        "_proxy_url",
         "_ratelimiter",
-        "_session",
-        "_ssl_context",
         "_token",
         "_url",
-        "_verify_ssl",
         "_ws",
         "_zlib",
         "closed_event",
@@ -191,7 +192,6 @@ class Shard:  # pylint: disable=too-many-instance-attributes
         "hello_event",
         "last_heartbeat_sent",
         "last_message_received",
-        "logger",
         "ready_event",
         "requesting_close_event",
         "resumed_event",
@@ -202,27 +202,6 @@ class Shard:  # pylint: disable=too-many-instance-attributes
         "status",
         "version",
     )
-
-    _compression: bool
-    _connected_at: float
-    _connector: typing.Optional[aiohttp.BaseConnector]
-    _debug: bool
-    _intents: typing.Optional[_intents.Intent]
-    _large_threshold: int
-    _json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict]
-    _json_serialize: typing.Callable[[typing.Dict], typing.AnyStr]
-    _presence: typing.Optional[typing.Dict]
-    _proxy_auth: typing.Optional[aiohttp.BasicAuth]
-    _proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders]
-    _proxy_url: typing.Optional[str]
-    _ratelimiter: ratelimits.WindowedBurstRateLimiter
-    _session: typing.Optional[aiohttp.ClientSession]
-    _ssl_context: typing.Optional[ssl.SSLContext]
-    _token: str
-    _url: str
-    _verify_ssl: bool
-    _ws: typing.Optional[aiohttp.ClientWebSocketResponse]
-    _zlib: typing.Optional[zlib.decompressobj]
 
     closed_event: typing.Final[asyncio.Event]
     """An event that is set when the connection closes."""
@@ -280,9 +259,6 @@ class Shard:  # pylint: disable=too-many-instance-attributes
     If no messages have been received yet, this is `nan`.
     """
 
-    logger: typing.Final[logging.Logger]
-    """The logger used for dumping information about what this client is doing."""
-
     ready_event: typing.Final[asyncio.Event]
     """An event that is triggered when a `READY` payload is received for the shard.
 
@@ -325,6 +301,7 @@ class Shard:  # pylint: disable=too-many-instance-attributes
     def __init__(  # pylint: disable=too-many-locals
         self,
         *,
+        allow_redirects: bool = False,
         compression: bool = True,
         connector: typing.Optional[aiohttp.BaseConnector] = None,
         debug: bool = False,
@@ -342,7 +319,9 @@ class Shard:  # pylint: disable=too-many-instance-attributes
         shard_id: int = 0,
         shard_count: int = 1,
         ssl_context: typing.Optional[ssl.SSLContext] = None,
+        timeout: typing.Optional[float] = None,
         token: str,
+        trust_env: bool = False,
         url: str,
         verify_ssl: bool = True,
         version: int = VERSION_6,
@@ -359,24 +338,30 @@ class Shard:  # pylint: disable=too-many-instance-attributes
 
         url = urllib.parse.urlunparse((scheme, netloc, path, params, new_query, ""))
 
+        super().__init__(
+            allow_redirects=allow_redirects,
+            connector=connector,
+            debug=debug,
+            json_deserialize=json_deserialize,
+            json_serialize=json_serialize,
+            logger_name=f"{type(self).__module__}.{type(self).__qualname__}.{shard_id}",
+            proxy_auth=proxy_auth,
+            proxy_headers=proxy_headers,
+            proxy_url=proxy_url,
+            ssl_context=ssl_context,
+            verify_ssl=verify_ssl,
+            timeout=timeout,
+            trust_env=trust_env,
+        )
+
         self._compression = compression
         self._connected_at = float("nan")
-        self._connector = connector
-        self._debug = debug
         self._intents = intents
         self._large_threshold = large_threshold
-        self._json_deserialize = json_deserialize
-        self._json_serialize = json_serialize
         self._presence = initial_presence
-        self._proxy_auth = proxy_auth
-        self._proxy_headers = proxy_headers
-        self._proxy_url = proxy_url
         self._ratelimiter = ratelimits.WindowedBurstRateLimiter(str(shard_id), 60.0, 120)
-        self._session: typing.Optional[aiohttp.ClientSession] = None
-        self._ssl_context: typing.Optional[ssl.SSLContext] = ssl_context
         self._token = token
         self._url = url
-        self._verify_ssl = verify_ssl
         self._ws = None
         self._zlib = None
         self.closed_event = asyncio.Event()
@@ -388,7 +373,6 @@ class Shard:  # pylint: disable=too-many-instance-attributes
         self.handshake_event = asyncio.Event()
         self.last_heartbeat_sent = float("nan")
         self.last_message_received = float("nan")
-        self.logger = logging.getLogger(f"hikari.net.{type(self).__qualname__}.{shard_id}")
         self.requesting_close_event = asyncio.Event()
         self.ready_event = asyncio.Event()
         self.resumed_event = asyncio.Event()
@@ -399,7 +383,7 @@ class Shard:  # pylint: disable=too-many-instance-attributes
         self.version = version
 
     @property
-    def uptime(self) -> datetime.timedelta:
+    def up_time(self) -> datetime.timedelta:
         """Amount of time the connection has been running for.
 
         If this connection isn't running, this will always be `0` seconds.
@@ -522,15 +506,8 @@ class Shard:  # pylint: disable=too-many-instance-attributes
         await self._send({"op": codes.GatewayOpcode.PRESENCE_UPDATE, "d": presence})
         self._presence = presence
 
-    async def connect(self, client_session_type=aiohttp.ClientSession) -> None:
-        """Connect to the gateway and return when it closes.
-
-        Parameters
-        ----------
-        client_session_type : aiohttp.ClientSession
-            The client session implementation to use. You generally do not want
-            to change this from the default, which is `aiohttp.ClientSession`.
-        """
+    async def connect(self) -> None:
+        """Connect to the gateway and return when it closes."""
         if self.is_connected:
             raise RuntimeError("Already connected")
 
@@ -541,14 +518,12 @@ class Shard:  # pylint: disable=too-many-instance-attributes
         self.requesting_close_event.clear()
         self.resumed_event.clear()
 
-        self._session = client_session_type(**self._cs_init_kwargs())
-
         # 1000 and 1001 will invalidate sessions, 1006 (used here before)
         # is a sketchy area as to the intent. 4000 is known to work normally.
         close_code = codes.GatewayCloseCode.UNKNOWN_ERROR
 
         try:
-            self._ws = await self._session.ws_connect(**self._ws_connect_kwargs())
+            self._ws = await self._create_ws(self._url, compress=0, autoping=True, max_msg_size=0)
             self._zlib = zlib.decompressobj()
             self.logger.debug("expecting HELLO")
             pl = await self._receive()
@@ -564,8 +539,9 @@ class Shard:  # pylint: disable=too-many-instance-attributes
             self.hello_event.set()
 
             self.dispatch(self, "CONNECTED", {})
-            self.logger.debug("received HELLO (interval:%ss)", self.heartbeat_interval)
+            self.logger.debug("received HELLO [interval:%ss]", self.heartbeat_interval)
 
+            # noinspection PyTypeChecker
             completed, pending_tasks = await more_asyncio.wait(
                 [self._heartbeat_keep_alive(self.heartbeat_interval), self._run()], return_when=asyncio.FIRST_COMPLETED,
             )
@@ -618,8 +594,7 @@ class Shard:  # pylint: disable=too-many-instance-attributes
             self.heartbeat_latency = float("nan")
             self.last_message_received = float("nan")
 
-            await self._session.close()
-            self._session = None
+            await super().close()
 
     async def close(self, close_code: int = 1000) -> None:
         """Request this gateway connection closes.
@@ -636,31 +611,15 @@ class Shard:  # pylint: disable=too-many-instance-attributes
             with contextlib.suppress(asyncio.TimeoutError, AttributeError):
                 await asyncio.wait_for(self._ws.close(code=close_code), timeout=2.0)
             with contextlib.suppress(asyncio.TimeoutError, AttributeError):
-                await asyncio.wait_for(self._session.close(), timeout=2.0)
+                await asyncio.wait_for(super().close(), timeout=2.0)
             self.closed_event.set()
-        elif self._debug:
+        elif self.debug:
             self.logger.debug("websocket connection already requested to be closed, will not do anything else")
-
-    def _ws_connect_kwargs(self):
-        return dict(
-            url=self._url,
-            compress=0,
-            autoping=True,
-            max_msg_size=0,
-            proxy=self._proxy_url,
-            proxy_auth=self._proxy_auth,
-            proxy_headers=self._proxy_headers,
-            verify_ssl=self._verify_ssl,
-            ssl_context=self._ssl_context,
-        )
-
-    def _cs_init_kwargs(self):
-        return dict(connector=self._connector)
 
     async def _heartbeat_keep_alive(self, heartbeat_interval):
         while not self.requesting_close_event.is_set():
             self._zombie_detector(heartbeat_interval)
-            self.logger.debug("preparing to send HEARTBEAT (s:%s, interval:%ss)", self.seq, self.heartbeat_interval)
+            self.logger.debug("preparing to send HEARTBEAT [s:%s, interval:%ss]", self.seq, self.heartbeat_interval)
             await self._send({"op": codes.GatewayOpcode.HEARTBEAT, "d": self.seq})
             self.last_heartbeat_sent = time.perf_counter()
 
@@ -734,7 +693,7 @@ class Shard:  # pylint: disable=too-many-instance-attributes
                     version = d["v"]
 
                     self.logger.debug(
-                        "connection is READY (session:%s, version:%s)", self.session_id, version,
+                        "connection is READY [session:%s, version:%s]", self.session_id, version,
                     )
 
                     self.ready_event.set()
@@ -742,7 +701,7 @@ class Shard:  # pylint: disable=too-many-instance-attributes
                 elif event_name == "RESUMED":
                     self.resumed_event.set()
 
-                    self.logger.debug("connection has RESUMED (session:%s, s:%s)", self.session_id, self.seq)
+                    self.logger.debug("connection has RESUMED [session:%s, s:%s])", self.session_id, self.seq)
 
                 self.dispatch(self, event_name, d)
 
@@ -764,7 +723,7 @@ class Shard:  # pylint: disable=too-many-instance-attributes
             elif op == codes.GatewayOpcode.HEARTBEAT_ACK:
                 now = time.perf_counter()
                 self.heartbeat_latency = now - self.last_heartbeat_sent
-                self.logger.debug("received HEARTBEAT ACK (latency:%ss)", self.heartbeat_latency)
+                self.logger.debug("received HEARTBEAT ACK [latency:%ss]", self.heartbeat_latency)
 
             else:
                 self.logger.debug("ignoring opcode %s with data %r", op, d)
@@ -774,9 +733,9 @@ class Shard:  # pylint: disable=too-many-instance-attributes
             message = await self._receive_one_packet()
 
             if message.type == aiohttp.WSMsgType.TEXT:
-                obj = self._json_deserialize(message.data)
+                obj = self.json_deserialize(message.data)
 
-                if self._debug:
+                if self.debug:
                     self.logger.debug("receive text payload %r", message.data)
                 else:
                     self.logger.debug(
@@ -799,14 +758,14 @@ class Shard:  # pylint: disable=too-many-instance-attributes
                     buffer.extend(message.data)
 
                 pl = self._zlib.decompress(buffer)
-                obj = self._json_deserialize(pl)
+                obj = self.json_deserialize(pl)
 
-                if self._debug:
-                    self.logger.debug("receive %s zlib-encoded packets containing payload %r", packets, pl)
+                if self.debug:
+                    self.logger.debug("receive %s zlib-encoded packets\n  inbound payload: %r", packets, pl)
 
                 else:
                     self.logger.debug(
-                        "receive zlib payload (op:%s, t:%s, s:%s, size:%s, packets:%s)",
+                        "receive zlib payload [op:%s, t:%s, s:%s, size:%s, packets:%s]",
                         obj.get("op"),
                         obj.get("t"),
                         obj.get("s"),
@@ -855,7 +814,7 @@ class Shard:  # pylint: disable=too-many-instance-attributes
         return packet
 
     async def _send(self, payload):
-        payload_str = self._json_serialize(payload)
+        payload_str = self.json_serialize(payload)
 
         if len(payload_str) > 4096:
             raise errors.GatewayError(
@@ -865,10 +824,10 @@ class Shard:  # pylint: disable=too-many-instance-attributes
         await self._ratelimiter.acquire()
         await self._ws.send_str(payload_str)
 
-        if self._debug:
-            self.logger.debug("sent payload %s", payload_str)
+        if self.debug:
+            self.logger.debug("send payload\n  outbound payload: %s", payload_str)
         else:
-            self.logger.debug("sent payload (op:%s, size:%s)", payload.get("op"), len(payload_str))
+            self.logger.debug("sent payload [op:%s, size:%s]", payload.get("op"), len(payload_str))
 
     def __str__(self):
         state = "Connected" if self.is_connected else "Disconnected"
@@ -885,7 +844,7 @@ class Shard:  # pylint: disable=too-many-instance-attributes
                 f"shard_count={self.shard_count!r}",
                 f"seq={self.seq!r}",
                 f"session_id={self.session_id!r}",
-                f"uptime={self.uptime!r}",
+                f"up_time={self.up_time!r}",
                 f"url={self._url!r}",
             )
         )

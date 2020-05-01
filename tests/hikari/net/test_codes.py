@@ -20,11 +20,6 @@
 from hikari.net import codes
 
 
-def test_str_HTTPStatusCode():
-    assert str(codes.HTTPStatusCode.TOO_MANY_REQUESTS) == "429 Too Many Requests"
-    assert str(codes.HTTPStatusCode.IM_A_TEAPOT) == "418 I'm a teapot"
-
-
 def test_str_GatewayCloseCode():
     assert str(codes.GatewayCloseCode.UNKNOWN_ERROR) == "4000 Unknown Error"
 
