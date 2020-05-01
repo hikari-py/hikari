@@ -25,11 +25,9 @@ __all__ = ["REST"]
 import asyncio
 import contextlib
 import datetime
-import email.utils
+import http
 import json
-import logging
 import typing
-import uuid
 
 import aiohttp.typedefs
 
@@ -38,14 +36,13 @@ from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.internal import urls
-from hikari.net import codes
+from hikari.net import http_client
 from hikari.net import ratelimits
 from hikari.net import routes
 from hikari.net import user_agents
 
 if typing.TYPE_CHECKING:
     import ssl
-    import types
 
     from hikari import files as _files
     from hikari.internal import more_typing
@@ -54,17 +51,29 @@ VERSION_6: typing.Final[int] = 6
 VERSION_7: typing.Final[int] = 7
 
 
-class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attributes
+class _RateLimited(RuntimeError):
+    __slots__ = ()
+
+
+class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, too-many-instance-attributes
     """A low-level RESTful client to allow you to interact with the Discord API.
 
     Parameters
     ----------
+    allow_redirects : bool
+        Whether to allow redirects or not. Defaults to `False`.
     base_url : str
         The base URL and route for the discord API
-    allow_redirects : bool
-        Whether to allow redirects or not.
     connector : aiohttp.BaseConnector, optional
         Optional aiohttp connector info for making an HTTP connection
+    debug : bool
+        Defaults to `False`. If `True`, then a lot of contextual information
+        regarding low-level HTTP communication will be logged to the debug
+        logger on this class.
+    json_deserialize : deserialization function
+        A custom JSON deserializer function to use. Defaults to `json.loads`.
+    json_serialize : serialization function
+        A custom JSON serializer function to use. Defaults to `json.dumps`.
     proxy_headers : typing.Mapping[str, str], optional
         Optional proxy headers to pass to HTTP requests.
     proxy_auth : aiohttp.BasicAuth, optional
@@ -79,10 +88,6 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         SSL certificates.
     timeout : float, optional
         The optional timeout for all HTTP requests.
-    json_deserialize : deserialization function
-        A custom JSON deserializer function to use. Defaults to `json.loads`.
-    json_serialize : serialization function
-        A custom JSON serializer function to use. Defaults to `json.dumps`.
     token : string, optional
         The bot token for the client to use. You may start this with
         a prefix of either `Bot` or `Bearer` to force the token type, or
@@ -90,43 +95,22 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         If this is passed as `None`, then no token is used.
         This will be passed as the `Authorization` header if not `None`
         for each request.
+    trust_env : bool
+        If `True`, and no proxy info is given, then `HTTP_PROXY` and
+        `HTTPS_PROXY` will be used from the environment variables if present.
+        Any proxy credentials will be read from the user's `netrc` file
+        (https://www.gnu.org/software/inetutils/manual/html_node/The-_002enetrc-file.html)
+        If `False`, then this information is instead ignored.
+        Defaults to `False`.
     version : int
         The version of the API to use. Defaults to the most recent stable
         version (v6).
     """
 
-    GET: typing.Final[str] = "get"
-    POST: typing.Final[str] = "post"
-    PATCH: typing.Final[str] = "patch"
-    PUT: typing.Final[str] = "put"
-    HEAD: typing.Final[str] = "head"
-    DELETE: typing.Final[str] = "delete"
-    OPTIONS: typing.Final[str] = "options"
-
     _AUTHENTICATION_SCHEMES: typing.Final[typing.Tuple[str, ...]] = ("Bearer", "Bot")
-
-    allow_redirects: bool
-    """`True` if HTTP redirects are enabled, or `False` otherwise."""
 
     base_url: str
     """The base URL to send requests to."""
-
-    client_session: typing.Optional[aiohttp.ClientSession]
-    """The `aiohttp` client session to make requests with.
-
-    This will be `None` until the first request, due to limitations with how
-    `aiohttp.ClientSession` is able to be initialized outside of a running
-    event loop.
-    """
-
-    connector: typing.Optional[aiohttp.BaseConnector]
-    """The base connector for the `aiohttp.ClientSession`, if provided."""
-
-    in_count: int
-    """The internal correlation ID for the number of requests sent.
-
-    This will increase each time a REST request is sent.
-    """
 
     global_ratelimiter: ratelimits.ManualRateLimiter
     """The global ratelimiter.
@@ -135,30 +119,6 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
     regardless of the endpoint. If this is set, then any HTTP operation using
     this session will be paused.
     """
-
-    logger: logging.Logger
-    """The logger to use for this object."""
-
-    json_deserialize: typing.Callable[[typing.AnyStr], typing.Any]
-    """The JSON deserialization function.
-
-    This consumes a JSON string and produces some object.
-    """
-
-    json_serialize: typing.Callable[[typing.Any], typing.AnyStr]
-    """The JSON deserialization function.
-
-    This consumes an object and produces some JSON string.
-    """
-
-    proxy_auth: typing.Optional[aiohttp.BasicAuth]
-    """Proxy authorization to use."""
-
-    proxy_headers: typing.Optional[typing.Mapping[str, str]]
-    """A set of headers to provide to a proxy server."""
-
-    proxy_url: typing.Optional[str]
-    """An optional proxy URL to send requests to."""
 
     bucket_ratelimiters: ratelimits.RESTBucketManager
     """The per-route ratelimit manager.
@@ -170,25 +130,6 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
     this client gets, and thus reducing your chances of an API ban by Discord.
 
     You should not ever need to touch this implementation.
-    """
-
-    ssl_context: typing.Optional[ssl.SSLContext]
-    """The custom SSL context to use."""
-
-    timeout: typing.Optional[float]
-    """The HTTP request timeout to abort requests after."""
-
-    token: typing.Optional[str]
-    """The application's token, if known.
-
-    This will be prefixed with either `"Bearer"` or `"Bot"` depending on the
-    format of the token passed to the constructor.
-
-    This value will be used for the `Authorization` HTTP header on each
-    API request.
-
-    If no token is set, then the value will be `None`. In this case,
-    no `Authorization` header will be sent.
     """
 
     user_agent: str
@@ -218,34 +159,36 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         base_url: str = urls.REST_API_URL,
         allow_redirects: bool = False,
         connector: typing.Optional[aiohttp.BaseConnector] = None,
-        proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = None,
+        debug: bool = False,
+        json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict] = json.loads,
+        json_serialize: typing.Callable[[typing.Dict], typing.AnyStr] = json.dumps,
         proxy_auth: typing.Optional[aiohttp.BasicAuth] = None,
+        proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = None,
         proxy_url: typing.Optional[str] = None,
         ssl_context: typing.Optional[ssl.SSLContext] = None,
         verify_ssl: bool = True,
         timeout: typing.Optional[float] = None,
-        json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict] = json.loads,
-        json_serialize: typing.Callable[[typing.Dict], typing.AnyStr] = json.dumps,
+        trust_env: bool = False,
         token: typing.Optional[str],
         version: int = VERSION_6,
     ) -> None:
-        self.client_session = None
-        self.connector = connector
-        self.allow_redirects = allow_redirects
-        self.logger = logging.getLogger(f"hikari.net.{type(self).__qualname__}")
+        super().__init__(
+            allow_redirects=allow_redirects,
+            connector=connector,
+            debug=debug,
+            json_deserialize=json_deserialize,
+            json_serialize=json_serialize,
+            proxy_auth=proxy_auth,
+            proxy_headers=proxy_headers,
+            proxy_url=proxy_url,
+            ssl_context=ssl_context,
+            verify_ssl=verify_ssl,
+            timeout=timeout,
+            trust_env=trust_env,
+        )
         self.user_agent = user_agents.UserAgent().user_agent
-        self.verify_ssl = verify_ssl
-        self.proxy_url = proxy_url
-        self.proxy_auth = proxy_auth
-        self.proxy_headers = proxy_headers
-        self.ssl_context: ssl.SSLContext = ssl_context
-        self.timeout = timeout
-        self.in_count = 0
         self.version = version
-        self.base_url = base_url.format(self)
         self.global_ratelimiter = ratelimits.ManualRateLimiter()
-        self.json_serialize = json_serialize
-        self.json_deserialize = json_deserialize
         self.bucket_ratelimiters = ratelimits.RESTBucketManager()
 
         if token is not None and not token.startswith(self._AUTHENTICATION_SCHEMES):
@@ -253,7 +196,8 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             auth_schemes = " or ".join(self._AUTHENTICATION_SCHEMES)
             raise RuntimeError(f"Any token passed to {this_type} should begin with {auth_schemes}")
 
-        self.token = token
+        self._token = token
+        self.base_url = base_url.format(self)
 
     async def close(self) -> None:
         """Shut down the REST client safely, and terminate any rate limiters executing in the background."""
@@ -261,195 +205,135 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             self.bucket_ratelimiters.close()
         with contextlib.suppress(Exception):
             self.global_ratelimiter.close()
-        with contextlib.suppress(Exception):
-            self.logger.debug("Closing %s", type(self).__qualname__)
-            await self.client_session.close()
-            self.client_session = None
+        await super().close()
 
-    async def __aenter__(self) -> REST:
-        return self
-
-    async def __aexit__(
-        self, exc_type: typing.Type[BaseException], exc_val: BaseException, exc_tb: types.TracebackType
-    ) -> None:
-        await self.close()
-
-    async def _request(  # pylint: disable=too-many-locals
+    async def _request_json_response(
         self,
         compiled_route: routes.CompiledRoute,
         *,
         headers: typing.Optional[typing.Dict[str, str]] = None,
         query: typing.Optional[more_typing.JSONObject] = None,
-        form_body: typing.Optional[aiohttp.FormData] = None,
-        json_body: typing.Optional[typing.Union[more_typing.JSONObject, typing.Sequence[typing.Any]]] = None,
+        body: typing.Optional[aiohttp.FormData] = None,
         reason: str = ...,
         suppress_authorization_header: bool = False,
-        **kwargs,
-    ) -> typing.Union[more_typing.JSONObject, typing.Sequence[typing.Any], None]:
-        if self.client_session is None:
-            self.client_session = aiohttp.ClientSession(
-                connector=self.connector,
-                version=aiohttp.HttpVersion11,
-                json_serialize=self.json_serialize or json.dumps,
-            )
+    ) -> typing.Optional[more_typing.JSONObject, more_typing.JSONArray, bytes]:
+        # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
+        # of JSON response. If an error occurs, the response body is returned in the
+        # raised exception as a bytes object. This is done since the differences between
+        # the V6 and V7 API error messages are not documented properly, and there are
+        # edge cases such as Cloudflare issues where we may receive arbitrary data in
+        # the response instead of a JSON object.
+
+        if not self.bucket_ratelimiters.is_started:
             self.bucket_ratelimiters.start()
 
-        bucket_ratelimit_future = self.bucket_ratelimiters.acquire(compiled_route)
-        request_headers = {"X-RateLimit-Precision": "millisecond"}
+        headers = {} if headers is None else headers
 
-        if self.token is not None and not suppress_authorization_header:
-            request_headers["Authorization"] = self.token
+        headers["x-ratelimit-precision"] = "millisecond"
+        headers["accept"] = self.APPLICATION_JSON
+
+        if self._token is not None and not suppress_authorization_header:
+            headers["authorization"] = self._token
 
         if reason and reason is not ...:
-            request_headers["X-Audit-Log-Reason"] = reason
-
-        if headers is not None:
-            request_headers.update(headers)
-
-        backoff = ratelimits.ExponentialBackOff()
+            headers["x-audit-log-reason"] = reason
 
         while True:
-            # Aids logging when lots of entries are being logged at once by matching a unique UUID
-            # between the request and response
-            request_uuid = uuid.uuid4()
+            try:
+                # Moved to a separate method to keep branch counts down.
+                return await self.__request_json_response(compiled_route, headers, body, query)
+            except _RateLimited:
+                pass
 
-            await asyncio.gather(bucket_ratelimit_future, self.global_ratelimiter.acquire())
+    async def __request_json_response(self, compiled_route, headers, body, query):
+        url = compiled_route.create_url(self.base_url)
 
-            self.logger.debug(
-                "%s send to %s headers=%s query=%s json_body=%s, form_body=%s",
-                request_uuid,
-                compiled_route,
-                request_headers,
-                query,
-                json_body,
-                form_body,
-            )
+        # Wait for any ratelimits to finish.
+        await asyncio.gather(self.bucket_ratelimiters.acquire(compiled_route), self.global_ratelimiter.acquire())
 
-            async with self.client_session.request(
-                compiled_route.method,
-                compiled_route.create_url(self.base_url),
-                headers=request_headers,
-                json=json_body,
-                params=query,
-                data=form_body,
-                allow_redirects=self.allow_redirects,
-                proxy=self.proxy_url,
-                proxy_auth=self.proxy_auth,
-                proxy_headers=self.proxy_headers,
-                verify_ssl=self.verify_ssl,
-                ssl_context=self.ssl_context,
-                timeout=self.timeout,
-                **kwargs,
-            ) as resp:
-                raw_body = await resp.read()
-                headers = resp.headers
+        # Make the request.
+        response = await self._perform_request(
+            method=compiled_route.method, url=url, headers=headers, body=body, query=query
+        )
 
-                self.logger.debug(
-                    "%s recv from %s status=%s reason=%s headers=%s body=%s",
-                    request_uuid,
-                    compiled_route,
-                    resp.status,
-                    resp.reason,
-                    headers,
-                    raw_body,
-                )
+        real_url = str(response.real_url)
 
-                limit = int(headers.get("X-RateLimit-Limit", "1"))
-                remaining = int(headers.get("X-RateLimit-Remaining", "1"))
-                bucket = headers.get("X-RateLimit-Bucket", "None")
-                reset = float(headers.get("X-RateLimit-Reset", "0"))
-                reset_date = datetime.datetime.fromtimestamp(reset, tz=datetime.timezone.utc)
-                now_date = email.utils.parsedate_to_datetime(headers["Date"])
-                content_type = headers.get("Content-Type")
+        # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
+        await self._handle_rate_limits_for_response(compiled_route, response)
 
-                status = resp.status
+        # Don't bother processing any further if we got NO CONTENT. There's not anything
+        # to check.
+        if response.status == http.HTTPStatus.NO_CONTENT:
+            return None
 
-                with contextlib.suppress(ValueError):
-                    status = codes.HTTPStatusCode(status)
+        # Decode the body.
+        raw_body = await response.read()
 
-                if status == codes.HTTPStatusCode.NO_CONTENT:
-                    body = None
-                elif content_type == "application/json":
-                    body = self.json_deserialize(raw_body)
-                elif content_type in ("text/plain", "text/html"):
-                    await self._backoff_request(
-                        backoff,
-                        status,
-                        compiled_route,
-                        f"Received unexpected response of type {content_type} with body: {raw_body!r}",
-                        None,
-                    )
-                    continue
-                else:
-                    self.logger.warning(
-                        "received unexpected response shape. Status: %s, Content-Type: %s, Body: %s",
-                        status,
-                        content_type,
-                        raw_body,
-                    )
-                    body = None
+        # Handle the response.
+        if 200 <= response.status < 300:
+            if response.content_type == self.APPLICATION_JSON:
+                # Only deserializing here stops Cloudflare shenanigans messing us around.
+                return self.json_deserialize(raw_body)
+            raise errors.HTTPError(real_url, f"Expected JSON response but received {response.content_type}")
 
-            self.bucket_ratelimiters.update_rate_limits(compiled_route, bucket, remaining, limit, now_date, reset_date)
+        if response.status == http.HTTPStatus.BAD_REQUEST:
+            raise errors.BadRequest(real_url, response.headers, raw_body)
+        if response.status == http.HTTPStatus.UNAUTHORIZED:
+            raise errors.Unauthorized(real_url, response.headers, raw_body)
+        if response.status == http.HTTPStatus.FORBIDDEN:
+            raise errors.Forbidden(real_url, response.headers, raw_body)
+        if response.status == http.HTTPStatus.NOT_FOUND:
+            raise errors.NotFound(real_url, response.headers, raw_body)
 
-            if status == codes.HTTPStatusCode.TOO_MANY_REQUESTS:
-                # We are being rate limited.
-                if body["global"]:
+        status = http.HTTPStatus(response.status)
+
+        if 400 <= status < 500:
+            cls = errors.ClientHTTPErrorResponse
+        elif 500 <= status < 600:
+            cls = errors.ServerHTTPErrorResponse
+        else:
+            cls = errors.HTTPErrorResponse
+
+        raise cls(real_url, status, response.headers, raw_body)
+
+    async def _handle_rate_limits_for_response(self, compiled_route, response):
+        # Worth noting there is some bug on V6 that ratelimits me immediately if I have an invalid token.
+        # https://github.com/discord/discord-api-docs/issues/1569
+
+        # Handle ratelimiting.
+        resp_headers = response.headers
+        limit = int(resp_headers.get("x-ratelimit-limit", "1"))
+        remaining = int(resp_headers.get("x-ratelimit-remaining", "1"))
+        bucket = resp_headers.get("x-ratelimit-bucket", "None")
+        reset = float(resp_headers.get("x-ratelimit-reset", "0"))
+        reset_date = datetime.datetime.fromtimestamp(reset, tz=datetime.timezone.utc)
+        now_date = conversions.parse_http_date(resp_headers["date"])
+        self.bucket_ratelimiters.update_rate_limits(
+            compiled_route=compiled_route,
+            bucket_header=bucket,
+            remaining_header=remaining,
+            limit_header=limit,
+            date_header=now_date,
+            reset_at_header=reset_date,
+        )
+
+        if response.status == http.HTTPStatus.TOO_MANY_REQUESTS:
+            body = await response.json() if response.content_type == self.APPLICATION_JSON else await response.read()
+
+            # We are being rate limited.
+            if isinstance(body, dict):
+                if body.get("global", False):
                     retry_after = float(body["retry_after"]) / 1_000
                     self.global_ratelimiter.throttle(retry_after)
-                continue
 
-            if status >= codes.HTTPStatusCode.BAD_REQUEST:
-                await self._handle_bad_response(backoff, body, raw_body, status, compiled_route)
-                continue
+                raise _RateLimited()
 
-            return body
-
-    async def _handle_bad_response(
-        self,
-        backoff: ratelimits.ExponentialBackOff,
-        body: more_typing.JSONObject,
-        raw_body: bytes,
-        status: typing.Union[codes.HTTPStatusCode, int, None],
-        compiled_route: routes.CompiledRoute,
-    ) -> None:
-        code = None
-
-        if body is None:
-            message = raw_body
-        elif self.version == VERSION_7:
-            message = ", ".join(f"{k} - {v}" for k, v in body.items())
-        else:
-            message = body.get("message")
-            with contextlib.suppress(ValueError):
-                code = codes.JSONErrorCode(body.get("code"))
-
-        if status == codes.HTTPStatusCode.BAD_REQUEST:
-            raise errors.BadRequestHTTPError(compiled_route, message, code)
-        if status == codes.HTTPStatusCode.UNAUTHORIZED:
-            raise errors.UnauthorizedHTTPError(compiled_route, message, code)
-        if status == codes.HTTPStatusCode.FORBIDDEN:
-            raise errors.ForbiddenHTTPError(compiled_route, message, code)
-        if status == codes.HTTPStatusCode.NOT_FOUND:
-            raise errors.NotFoundHTTPError(compiled_route, message, code)
-        if status < codes.HTTPStatusCode.INTERNAL_SERVER_ERROR:
-            raise errors.ClientHTTPError(status, compiled_route, message, code)
-
-        await self._backoff_request(backoff, status, compiled_route, message, code)
-
-    async def _backoff_request(
-        self,
-        backoff: ratelimits.ExponentialBackOff,
-        status: typing.Union[codes.HTTPStatusCode, int, None],
-        route: routes.CompiledRoute,
-        message: typing.Optional[str],
-        code: typing.Union[codes.JSONErrorCode, int, None],
-    ) -> None:
-        try:
-            next_sleep = next(backoff)
-            self.logger.warning("received a server error response, backing off for %ss and trying again", next_sleep)
-            await asyncio.sleep(next_sleep)
-        except asyncio.TimeoutError:
-            raise errors.ServerHTTPError(status, route, message, code)
+            # We might find out Cloudflare causes this scenario to occur.
+            # I hope we don't though.
+            raise errors.HTTPError(
+                str(response.real_url),
+                f"We were ratelimited but did not understand the response. Perhaps Cloudflare did this? {body!r}",
+            )
 
     async def get_gateway(self) -> str:
         """Get the URL to use to connect to the gateway with.
@@ -462,7 +346,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         !!! note
             Users are expected to attempt to cache this result.
         """
-        result = await self._request(routes.GATEWAY.compile(self.GET))
+        result = await self._request_json_response(routes.GATEWAY.compile(self.GET))
         return result["url"]
 
     async def get_gateway_bot(self) -> more_typing.JSONObject:
@@ -478,7 +362,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         !!! note
             Unlike `REST.get_gateway`, this requires a valid token to work.
         """
-        return await self._request(routes.GATEWAY_BOT.compile(self.GET))
+        return await self._request_json_response(routes.GATEWAY_BOT.compile(self.GET))
 
     async def get_guild_audit_log(
         self, guild_id: str, *, user_id: str = ..., action_type: int = ..., limit: int = ..., before: str = ...
@@ -518,7 +402,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(query, "limit", limit)
         conversions.put_if_specified(query, "before", before)
         route = routes.GUILD_AUDIT_LOGS.compile(self.GET, guild_id=guild_id)
-        return await self._request(route, query=query)
+        return await self._request_json_response(route, query=query)
 
     async def get_channel(self, channel_id: str) -> more_typing.JSONObject:
         """Get a channel object from a given channel ID.
@@ -541,7 +425,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If the channel does not exist.
         """
         route = routes.CHANNEL.compile(self.GET, channel_id=channel_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def modify_channel(  # lgtm [py/similar-function]
         self,
@@ -626,7 +510,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(payload, "permission_overwrites", permission_overwrites)
         conversions.put_if_specified(payload, "parent_id", parent_id)
         route = routes.CHANNEL.compile(self.PATCH, channel_id=channel_id)
-        return await self._request(route, json_body=payload, reason=reason)
+        return await self._request_json_response(route, body=payload, reason=reason)
 
     async def delete_close_channel(self, channel_id: str) -> None:
         """Delete the given channel ID, or if it is a DM, close it.
@@ -654,7 +538,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             undone by reopening the DM.
         """
         route = routes.CHANNEL.compile(self.DELETE, channel_id=channel_id)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def get_channel_messages(
         self, channel_id: str, *, limit: int = ..., after: str = ..., before: str = ..., around: str = ...,
@@ -710,7 +594,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(query, "after", after)
         conversions.put_if_specified(query, "around", around)
         route = routes.CHANNEL_MESSAGES.compile(self.GET, channel_id=channel_id)
-        return await self._request(route, query=query)
+        return await self._request_json_response(route, query=query)
 
     async def get_channel_message(self, channel_id: str, message_id: str) -> more_typing.JSONObject:
         """Get the message with the given message ID from the channel with the given channel ID.
@@ -738,7 +622,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If the channel or message is not found.
         """
         route = routes.CHANNEL_MESSAGE.compile(self.GET, channel_id=channel_id, message_id=message_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def create_message(
         self,
@@ -813,7 +697,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
 
         route = routes.CHANNEL_MESSAGES.compile(self.POST, channel_id=channel_id)
 
-        return await self._request(route, form_body=form)
+        return await self._request_json_response(route, body=form)
 
     async def create_reaction(self, channel_id: str, message_id: str, emoji: str) -> None:
         """Add a reaction to the given message in the given channel.
@@ -841,7 +725,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If the emoji is not valid, unknown, or formatted incorrectly.
         """
         route = routes.OWN_REACTION.compile(self.PUT, channel_id=channel_id, message_id=message_id, emoji=emoji)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def delete_own_reaction(self, channel_id: str, message_id: str, emoji: str) -> None:
         """Remove your own reaction from the given message in the given channel.
@@ -865,7 +749,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If the channel or message or emoji is not found.
         """
         route = routes.OWN_REACTION.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def delete_all_reactions_for_emoji(self, channel_id: str, message_id: str, emoji: str) -> None:
         """Remove all reactions for a single given emoji on a given message in a given channel.
@@ -889,7 +773,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you lack the `MANAGE_MESSAGES` permission, or are in DMs.
         """
         route = routes.REACTION_EMOJI.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def delete_user_reaction(self, channel_id: str, message_id: str, emoji: str, user_id: str) -> None:
         """Remove a reaction made by a given user using a given emoji on a given message in a given channel.
@@ -917,7 +801,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         route = routes.REACTION_EMOJI_USER.compile(
             self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji, user_id=user_id,
         )
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def get_reactions(
         self, channel_id: str, message_id: str, emoji: str, *, after: str = ..., limit: int = ...,
@@ -958,7 +842,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(query, "after", after)
         conversions.put_if_specified(query, "limit", limit)
         route = routes.REACTIONS.compile(self.GET, channel_id=channel_id, message_id=message_id, emoji=emoji)
-        return await self._request(route, query=query)
+        return await self._request_json_response(route, query=query)
 
     async def delete_all_reactions(self, channel_id: str, message_id: str) -> None:
         """Delete all reactions from a given message in a given channel.
@@ -978,7 +862,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you lack the `MANAGE_MESSAGES` permission.
         """
         route = routes.ALL_REACTIONS.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def edit_message(
         self,
@@ -1037,7 +921,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(payload, "flags", flags)
         conversions.put_if_specified(payload, "allowed_mentions", allowed_mentions)
         route = routes.CHANNEL_MESSAGE.compile(self.PATCH, channel_id=channel_id, message_id=message_id)
-        return await self._request(route, json_body=payload)
+        return await self._request_json_response(route, body=payload)
 
     async def delete_message(self, channel_id: str, message_id: str) -> None:
         """Delete a message in a given channel.
@@ -1058,7 +942,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If the channel or message is not found.
         """
         route = routes.CHANNEL_MESSAGE.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def bulk_delete_messages(self, channel_id: str, messages: typing.Sequence[str]) -> None:
         """Delete multiple messages in a given channel.
@@ -1089,7 +973,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         """
         payload = {"messages": messages}
         route = routes.CHANNEL_MESSAGES_BULK_DELETE.compile(self.POST, channel_id=channel_id)
-        await self._request(route, json_body=payload)
+        await self._request_json_response(route, body=payload)
 
     async def edit_channel_permissions(
         self, channel_id: str, overwrite_id: str, type_: str, *, allow: int = ..., deny: int = ..., reason: str = ...,
@@ -1124,7 +1008,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(payload, "allow", allow)
         conversions.put_if_specified(payload, "deny", deny)
         route = routes.CHANNEL_PERMISSIONS.compile(self.PATCH, channel_id=channel_id, overwrite_id=overwrite_id)
-        await self._request(route, json_body=payload, reason=reason)
+        await self._request_json_response(route, body=payload, reason=reason)
 
     async def get_channel_invites(self, channel_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get invites for a given channel.
@@ -1147,7 +1031,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If the channel does not exist.
         """
         route = routes.CHANNEL_INVITES.compile(self.GET, channel_id=channel_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def create_channel_invite(
         self,
@@ -1209,7 +1093,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(payload, "target_user", target_user)
         conversions.put_if_specified(payload, "target_user_type", target_user_type)
         route = routes.CHANNEL_INVITES.compile(self.POST, channel_id=channel_id)
-        return await self._request(route, json_body=payload, reason=reason)
+        return await self._request_json_response(route, body=payload, reason=reason)
 
     async def delete_channel_permission(self, channel_id: str, overwrite_id: str) -> None:
         """Delete a channel permission overwrite for a user or a role in a channel.
@@ -1229,7 +1113,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you lack the `MANAGE_ROLES` permission for that channel.
         """
         route = routes.CHANNEL_PERMISSIONS.compile(self.DELETE, channel_id=channel_id, overwrite_id=overwrite_id)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def trigger_typing_indicator(self, channel_id: str) -> None:
         """Trigger the account to appear to be typing for the next `10` seconds in the given channel.
@@ -1247,7 +1131,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you are not able to type in the channel.
         """
         route = routes.CHANNEL_TYPING.compile(self.POST, channel_id=channel_id)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get pinned messages for a given channel.
@@ -1275,7 +1159,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             will not be returned.
         """
         route = routes.CHANNEL_PINS.compile(self.GET, channel_id=channel_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def add_pinned_channel_message(self, channel_id: str, message_id: str) -> None:
         """Add a pinned message to the channel.
@@ -1295,7 +1179,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If the message or channel do not exist.
         """
         route = routes.CHANNEL_PINS.compile(self.PUT, channel_id=channel_id, message_id=message_id)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def delete_pinned_channel_message(self, channel_id: str, message_id: str) -> None:
         """Remove a pinned message from the channel.
@@ -1317,7 +1201,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If the message or channel do not exist.
         """
         route = routes.CHANNEL_PIN.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get a list of the emojis for a given guild ID.
@@ -1340,7 +1224,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you aren't a member of the guild.
         """
         route = routes.GUILD_EMOJIS.compile(self.GET, guild_id=guild_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> more_typing.JSONObject:
         """Get an emoji from a given guild and emoji IDs.
@@ -1365,7 +1249,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you aren't a member of said guild.
         """
         route = routes.GUILD_EMOJI.compile(self.GET, guild_id=guild_id, emoji_id=emoji_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def create_guild_emoji(
         self, guild_id: str, name: str, image: bytes, *, roles: typing.Sequence[str] = ..., reason: str = ...,
@@ -1410,7 +1294,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             "image": conversions.image_bytes_to_image_data(image),
         }
         route = routes.GUILD_EMOJIS.compile(self.POST, guild_id=guild_id)
-        return await self._request(route, json_body=payload, reason=reason)
+        return await self._request_json_response(route, body=payload, reason=reason)
 
     async def modify_guild_emoji(
         self, guild_id: str, emoji_id: str, *, name: str = ..., roles: typing.Sequence[str] = ..., reason: str = ...,
@@ -1449,7 +1333,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(payload, "name", name)
         conversions.put_if_specified(payload, "roles", roles)
         route = routes.GUILD_EMOJI.compile(self.PATCH, guild_id=guild_id, emoji_id=emoji_id)
-        return await self._request(route, json_body=payload, reason=reason)
+        return await self._request_json_response(route, body=payload, reason=reason)
 
     async def delete_guild_emoji(self, guild_id: str, emoji_id: str) -> None:
         """Delete an emoji from a given guild.
@@ -1469,7 +1353,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
         """
         route = routes.GUILD_EMOJI.compile(self.DELETE, guild_id=guild_id, emoji_id=emoji_id)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def create_guild(
         self,
@@ -1530,7 +1414,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(payload, "channels", channels)
         conversions.put_if_specified(payload, "icon", icon, conversions.image_bytes_to_image_data)
         route = routes.GUILDS.compile(self.POST)
-        return await self._request(route, json_body=payload)
+        return await self._request_json_response(route, body=payload)
 
     async def get_guild(self, guild_id: str, *, with_counts: bool = True) -> more_typing.JSONObject:
         """Get the information for the guild with the given ID.
@@ -1556,7 +1440,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you do not have access to the guild.
         """
         route = routes.GUILD.compile(self.GET, guild_id=guild_id)
-        return await self._request(route, query={"with_counts": with_counts})
+        return await self._request_json_response(route, query={"with_counts": with_counts})
 
     async def get_guild_preview(self, guild_id: str) -> more_typing.JSONObject:
         """Get a public guild's preview object.
@@ -1581,7 +1465,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If the guild is not found or it isn't `PUBLIC`.
         """
         route = routes.GUILD_PREVIEW.compile(self.GET, guild_id=guild_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     # pylint: disable=too-many-locals
     async def modify_guild(  # lgtm [py/similar-function]
@@ -1659,7 +1543,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(payload, "splash", splash, conversions.image_bytes_to_image_data)
         conversions.put_if_specified(payload, "system_channel_id", system_channel_id)
         route = routes.GUILD.compile(self.PATCH, guild_id=guild_id)
-        return await self._request(route, json_body=payload, reason=reason)
+        return await self._request_json_response(route, body=payload, reason=reason)
 
     # pylint: enable=too-many-locals
 
@@ -1681,7 +1565,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you are not the guild owner.
         """
         route = routes.GUILD.compile(self.DELETE, guild_id=guild_id)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def list_guild_channels(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get all the channels for a given guild.
@@ -1704,7 +1588,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you are not in the guild.
         """
         route = routes.GUILD_CHANNELS.compile(self.GET, guild_id=guild_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def create_guild_channel(
         self,
@@ -1792,7 +1676,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(payload, "permission_overwrites", permission_overwrites)
         conversions.put_if_specified(payload, "parent_id", parent_id)
         route = routes.GUILD_CHANNELS.compile(self.POST, guild_id=guild_id)
-        return await self._request(route, json_body=payload, reason=reason)
+        return await self._request_json_response(route, body=payload, reason=reason)
 
     async def modify_guild_channel_positions(
         self, guild_id: str, channel: typing.Tuple[str, int], *channels: typing.Tuple[str, int]
@@ -1821,7 +1705,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         """
         payload = [{"id": ch[0], "position": ch[1]} for ch in (channel, *channels)]
         route = routes.GUILD_CHANNELS.compile(self.PATCH, guild_id=guild_id)
-        await self._request(route, json_body=payload)
+        await self._request_json_response(route, body=payload)
 
     async def get_guild_member(self, guild_id: str, user_id: str) -> more_typing.JSONObject:
         """Get a given guild member.
@@ -1846,7 +1730,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you don't have access to the target guild.
         """
         route = routes.GUILD_MEMBER.compile(self.GET, guild_id=guild_id, user_id=user_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def list_guild_members(
         self, guild_id: str, *, limit: int = ..., after: str = ...,
@@ -1896,7 +1780,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(query, "limit", limit)
         conversions.put_if_specified(query, "after", after)
         route = routes.GUILD_MEMBERS.compile(self.GET, guild_id=guild_id)
-        return await self._request(route, query=query)
+        return await self._request_json_response(route, query=query)
 
     async def modify_guild_member(  # lgtm [py/similar-function]
         self,
@@ -1956,7 +1840,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(payload, "deaf", deaf)
         conversions.put_if_specified(payload, "channel_id", channel_id)
         route = routes.GUILD_MEMBER.compile(self.PATCH, guild_id=guild_id, user_id=user_id)
-        await self._request(route, json_body=payload, reason=reason)
+        await self._request_json_response(route, body=payload, reason=reason)
 
     async def modify_current_user_nick(self, guild_id: str, nick: typing.Optional[str], *, reason: str = ...) -> None:
         """Edit the current user's nickname for a given guild.
@@ -1982,7 +1866,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         """
         payload = {"nick": nick}
         route = routes.OWN_GUILD_NICKNAME.compile(self.PATCH, guild_id=guild_id)
-        await self._request(route, json_body=payload, reason=reason)
+        await self._request_json_response(route, body=payload, reason=reason)
 
     async def add_guild_member_role(self, guild_id: str, user_id: str, role_id: str, *, reason: str = ...) -> None:
         """Add a role to a given member.
@@ -2007,7 +1891,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER_ROLE.compile(self.PUT, guild_id=guild_id, user_id=user_id, role_id=role_id)
-        await self._request(route, reason=reason)
+        await self._request_json_response(route, reason=reason)
 
     async def remove_guild_member_role(self, guild_id: str, user_id: str, role_id: str, *, reason: str = ...) -> None:
         """Remove a role from a given member.
@@ -2032,7 +1916,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER_ROLE.compile(self.DELETE, guild_id=guild_id, user_id=user_id, role_id=role_id)
-        await self._request(route, reason=reason)
+        await self._request_json_response(route, reason=reason)
 
     async def remove_guild_member(self, guild_id: str, user_id: str, *, reason: str = ...) -> None:
         """Kick a user from a given guild.
@@ -2055,7 +1939,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you lack the `KICK_MEMBERS` permission or are not in the guild.
         """
         route = routes.GUILD_MEMBER.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
-        await self._request(route, reason=reason)
+        await self._request_json_response(route, reason=reason)
 
     async def get_guild_bans(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get the bans for a given guild.
@@ -2078,7 +1962,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         route = routes.GUILD_BANS.compile(self.GET, guild_id=guild_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def get_guild_ban(self, guild_id: str, user_id: str) -> more_typing.JSONObject:
         """Get a ban from a given guild.
@@ -2103,7 +1987,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         route = routes.GUILD_BAN.compile(self.GET, guild_id=guild_id, user_id=user_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def create_guild_ban(
         self, guild_id: str, user_id: str, *, delete_message_days: int = ..., reason: str = ...,
@@ -2134,7 +2018,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(query, "delete-message-days", delete_message_days)
         conversions.put_if_specified(query, "reason", reason)
         route = routes.GUILD_BAN.compile(self.PUT, guild_id=guild_id, user_id=user_id)
-        await self._request(route, query=query)
+        await self._request_json_response(route, query=query)
 
     async def remove_guild_ban(self, guild_id: str, user_id: str, *, reason: str = ...) -> None:
         """Un-bans a user from a given guild.
@@ -2157,7 +2041,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you lack the `BAN_MEMBERS` permission or are not a in the guild.
         """
         route = routes.GUILD_BAN.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
-        await self._request(route, reason=reason)
+        await self._request_json_response(route, reason=reason)
 
     async def get_guild_roles(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get the roles for a given guild.
@@ -2180,7 +2064,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you're not in the guild.
         """
         route = routes.GUILD_ROLES.compile(self.GET, guild_id=guild_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def create_guild_role(
         self,
@@ -2234,7 +2118,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(payload, "hoist", hoist)
         conversions.put_if_specified(payload, "mentionable", mentionable)
         route = routes.GUILD_ROLES.compile(self.POST, guild_id=guild_id)
-        return await self._request(route, json_body=payload, reason=reason)
+        return await self._request_json_response(route, body=payload, reason=reason)
 
     async def modify_guild_role_positions(
         self, guild_id: str, role: typing.Tuple[str, int], *roles: typing.Tuple[str, int]
@@ -2268,7 +2152,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         """
         payload = [{"id": r[0], "position": r[1]} for r in (role, *roles)]
         route = routes.GUILD_ROLES.compile(self.PATCH, guild_id=guild_id)
-        return await self._request(route, json_body=payload)
+        return await self._request_json_response(route, body=payload)
 
     async def modify_guild_role(  # lgtm [py/similar-function]
         self,
@@ -2325,7 +2209,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(payload, "hoist", hoist)
         conversions.put_if_specified(payload, "mentionable", mentionable)
         route = routes.GUILD_ROLE.compile(self.PATCH, guild_id=guild_id, role_id=role_id)
-        return await self._request(route, json_body=payload, reason=reason)
+        return await self._request_json_response(route, body=payload, reason=reason)
 
     async def delete_guild_role(self, guild_id: str, role_id: str) -> None:
         """Delete a role from a given guild.
@@ -2345,7 +2229,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         route = routes.GUILD_ROLE.compile(self.DELETE, guild_id=guild_id, role_id=role_id)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def get_guild_prune_count(self, guild_id: str, days: int) -> int:
         """Get the estimated prune count for a given guild.
@@ -2373,7 +2257,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         """
         payload = {"days": days}
         route = routes.GUILD_PRUNE.compile(self.GET, guild_id=guild_id)
-        result = await self._request(route, query=payload)
+        result = await self._request_json_response(route, query=payload)
         return int(result["pruned"])
 
     async def begin_guild_prune(
@@ -2412,7 +2296,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         query = {"days": days}
         conversions.put_if_specified(query, "compute_prune_count", compute_prune_count, str)
         route = routes.GUILD_PRUNE.compile(self.POST, guild_id=guild_id)
-        result = await self._request(route, query=query, reason=reason)
+        result = await self._request_json_response(route, query=query, reason=reason)
 
         try:
             return int(result["pruned"])
@@ -2440,7 +2324,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you are not in the guild.
         """
         route = routes.GUILD_VOICE_REGIONS.compile(self.GET, guild_id=guild_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def get_guild_invites(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get the invites for a given guild.
@@ -2463,7 +2347,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INVITES.compile(self.GET, guild_id=guild_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get the integrations for a given guild.
@@ -2486,7 +2370,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATIONS.compile(self.GET, guild_id=guild_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def modify_guild_integration(
         self,
@@ -2531,7 +2415,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         # This is inconsistently named in their API.
         conversions.put_if_specified(payload, "enable_emoticons", enable_emojis)
         route = routes.GUILD_INTEGRATION.compile(self.PATCH, guild_id=guild_id, integration_id=integration_id)
-        await self._request(route, json_body=payload, reason=reason)
+        await self._request_json_response(route, body=payload, reason=reason)
 
     async def delete_guild_integration(self, guild_id: str, integration_id: str, *, reason: str = ...) -> None:
         """Delete an integration for the given guild.
@@ -2554,7 +2438,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATION.compile(self.DELETE, guild_id=guild_id, integration_id=integration_id)
-        await self._request(route, reason=reason)
+        await self._request_json_response(route, reason=reason)
 
     async def sync_guild_integration(self, guild_id: str, integration_id: str) -> None:
         """Sync the given integration.
@@ -2574,7 +2458,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_INTEGRATION_SYNC.compile(self.POST, guild_id=guild_id, integration_id=integration_id)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def get_guild_embed(self, guild_id: str) -> more_typing.JSONObject:
         """Get the embed for a given guild.
@@ -2597,7 +2481,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_EMBED.compile(self.GET, guild_id=guild_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def modify_guild_embed(
         self, guild_id: str, *, channel_id: typing.Optional[str] = ..., enabled: bool = ..., reason: str = ...,
@@ -2633,7 +2517,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(payload, "channel_id", channel_id)
         conversions.put_if_specified(payload, "enabled", enabled)
         route = routes.GUILD_EMBED.compile(self.PATCH, guild_id=guild_id)
-        return await self._request(route, json_body=payload, reason=reason)
+        return await self._request_json_response(route, body=payload, reason=reason)
 
     async def get_guild_vanity_url(self, guild_id: str) -> more_typing.JSONObject:
         """Get the vanity URL for a given guild.
@@ -2656,7 +2540,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         route = routes.GUILD_VANITY_URL.compile(self.GET, guild_id=guild_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     def get_guild_widget_image_url(self, guild_id: str, *, style: str = ...) -> str:
         """Get the URL for a guild widget.
@@ -2708,7 +2592,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         query = {}
         conversions.put_if_specified(query, "with_counts", with_counts, str)
         route = routes.INVITE.compile(self.GET, invite_code=invite_code)
-        return await self._request(route, query=query)
+        return await self._request_json_response(route, query=query)
 
     async def delete_invite(self, invite_code: str) -> None:
         """Delete a given invite.
@@ -2733,7 +2617,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             belongs to or `MANAGE_GUILD` for guild-global delete.
         """
         route = routes.INVITE.compile(self.DELETE, invite_code=invite_code)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def get_current_user(self) -> more_typing.JSONObject:
         """Get the current user that is represented by token given to the client.
@@ -2744,7 +2628,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             The current user object.
         """
         route = routes.OWN_USER.compile(self.GET)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def get_user(self, user_id: str) -> more_typing.JSONObject:
         """Get a given user.
@@ -2765,7 +2649,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If the user is not found.
         """
         route = routes.USER.compile(self.GET, user_id=user_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def modify_current_user(
         self, *, username: str = ..., avatar: typing.Optional[bytes] = ...,
@@ -2794,7 +2678,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(payload, "username", username)
         conversions.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
         route = routes.OWN_USER.compile(self.PATCH)
-        return await self._request(route, json_body=payload)
+        return await self._request_json_response(route, body=payload)
 
     async def get_current_user_connections(self) -> typing.Sequence[more_typing.JSONObject]:
         """Get the current user's connections.
@@ -2809,7 +2693,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             A list of connection objects.
         """
         route = routes.OWN_CONNECTIONS.compile(self.GET)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def get_current_user_guilds(
         self, *, before: str = ..., after: str = ..., limit: int = ...,
@@ -2844,7 +2728,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(query, "after", after)
         conversions.put_if_specified(query, "limit", limit)
         route = routes.OWN_GUILDS.compile(self.GET)
-        return await self._request(route, query=query)
+        return await self._request_json_response(route, query=query)
 
     async def leave_guild(self, guild_id: str) -> None:
         """Make the current user leave a given guild.
@@ -2860,7 +2744,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             If the guild is not found.
         """
         route = routes.LEAVE_GUILD.compile(self.DELETE, guild_id=guild_id)
-        await self._request(route)
+        await self._request_json_response(route)
 
     async def create_dm(self, recipient_id: str) -> more_typing.JSONObject:
         """Create a new DM channel with a given user.
@@ -2882,7 +2766,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         """
         payload = {"recipient_id": recipient_id}
         route = routes.OWN_DMS.compile(self.POST)
-        return await self._request(route, json_body=payload)
+        return await self._request_json_response(route, body=payload)
 
     async def list_voice_regions(self) -> typing.Sequence[more_typing.JSONObject]:
         """Get the voice regions that are available.
@@ -2896,7 +2780,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             This does not include VIP servers.
         """
         route = routes.VOICE_REGIONS.compile(self.GET)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def create_webhook(
         self, channel_id: str, name: str, *, avatar: bytes = ..., reason: str = ...,
@@ -2933,7 +2817,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         payload = {"name": name}
         conversions.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
         route = routes.CHANNEL_WEBHOOKS.compile(self.POST, channel_id=channel_id)
-        return await self._request(route, json_body=payload, reason=reason)
+        return await self._request_json_response(route, body=payload, reason=reason)
 
     async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get all webhooks from a given channel.
@@ -2957,7 +2841,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             can not see the given channel.
         """
         route = routes.CHANNEL_WEBHOOKS.compile(self.GET, channel_id=channel_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
         """Get all webhooks for a given guild.
@@ -2981,7 +2865,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             aren't a member of the given guild.
         """
         route = routes.GUILD_WEBHOOKS.compile(self.GET, guild_id=guild_id)
-        return await self._request(route)
+        return await self._request_json_response(route)
 
     async def get_webhook(self, webhook_id: str, *, webhook_token: str = ...) -> more_typing.JSONObject:
         """Get a given webhook.
@@ -3012,7 +2896,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             route = routes.WEBHOOK.compile(self.GET, webhook_id=webhook_id)
         else:
             route = routes.WEBHOOK_WITH_TOKEN.compile(self.GET, webhook_id=webhook_id, webhook_token=webhook_token)
-        return await self._request(route, suppress_authorization_header=webhook_token is not ...)
+        return await self._request_json_response(route, suppress_authorization_header=webhook_token is not ...)
 
     async def modify_webhook(
         self,
@@ -3067,8 +2951,8 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             route = routes.WEBHOOK.compile(self.PATCH, webhook_id=webhook_id)
         else:
             route = routes.WEBHOOK_WITH_TOKEN.compile(self.PATCH, webhook_id=webhook_id, webhook_token=webhook_token)
-        return await self._request(
-            route, json_body=payload, reason=reason, suppress_authorization_header=webhook_token is not ...,
+        return await self._request_json_response(
+            route, body=payload, reason=reason, suppress_authorization_header=webhook_token is not ...,
         )
 
     async def delete_webhook(self, webhook_id: str, *, webhook_token: str = ...) -> None:
@@ -3096,7 +2980,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             route = routes.WEBHOOK.compile(self.DELETE, webhook_id=webhook_id)
         else:
             route = routes.WEBHOOK_WITH_TOKEN.compile(self.DELETE, webhook_id=webhook_id, webhook_token=webhook_token)
-        await self._request(route, suppress_authorization_header=webhook_token is not ...)
+        await self._request_json_response(route, suppress_authorization_header=webhook_token is not ...)
 
     async def execute_webhook(  # pylint:disable=too-many-locals
         self,
@@ -3187,7 +3071,7 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
         conversions.put_if_specified(query, "wait", wait, str)
 
         route = routes.WEBHOOK_WITH_TOKEN.compile(self.POST, webhook_id=webhook_id, webhook_token=webhook_token)
-        return await self._request(route, form_body=form, query=query, suppress_authorization_header=True)
+        return await self._request_json_response(route, body=form, query=query, suppress_authorization_header=True)
 
     ##########
     # OAUTH2 #
@@ -3202,4 +3086,4 @@ class REST:  # pylint: disable=too-many-public-methods, too-many-instance-attrib
             An application info object.
         """
         route = routes.OAUTH2_APPLICATIONS_ME.compile(self.GET)
-        return await self._request(route)
+        return await self._request_json_response(route)

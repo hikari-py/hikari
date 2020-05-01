@@ -30,6 +30,7 @@ import pytest
 
 from hikari import errors
 from hikari.internal import more_collections
+from hikari.net import codes
 from hikari.net import shards
 from hikari.net import user_agents
 from tests.hikari import _helpers
@@ -133,7 +134,7 @@ class TestShardUptimeProperty:
         with mock.patch("time.perf_counter", return_value=now):
             client = shards.Shard(token="xxx", url="yyy")
             client._connected_at = connected_at
-            assert client.uptime == expected_uptime
+            assert client.up_time == expected_uptime
 
 
 @pytest.mark.asyncio
@@ -181,64 +182,10 @@ class TestGatewayCurrentPresenceProperty:
 
 
 @pytest.mark.asyncio
-class TestShardAiohttpClientSessionKwargsProperty:
-    async def test_right_stuff_is_included(self):
-        connector = mock.MagicMock()
-
-        client = shards.Shard(url="...", token="...", connector=connector,)
-
-        assert client._cs_init_kwargs() == dict(connector=connector)
-
-
-@pytest.mark.asyncio
-class TestShardWebSocketKwargsProperty:
-    async def test_right_stuff_is_included(self):
-        url = "http://localhost.lan/discord"
-        proxy_url = "http://localhost.lan/some_proxy"
-        proxy_auth = mock.MagicMock()
-        proxy_headers = mock.MagicMock()
-        verify_ssl = True
-        ssl_context = mock.MagicMock()
-
-        client = shards.Shard(
-            url=url,
-            token="...",
-            proxy_url=proxy_url,
-            proxy_auth=proxy_auth,
-            proxy_headers=proxy_headers,
-            verify_ssl=verify_ssl,
-            ssl_context=ssl_context,
-            version=6,
-        )
-
-        scheme, netloc, url, params, query, fragment = urllib.parse.urlparse(client._url)
-        query = urllib.parse.parse_qs(query)
-        assert query["v"] == ["6"]
-
-        client._url = url
-
-        assert client._ws_connect_kwargs() == dict(
-            url=url,
-            compress=0,
-            autoping=True,
-            max_msg_size=0,
-            proxy=proxy_url,
-            proxy_auth=proxy_auth,
-            proxy_headers=proxy_headers,
-            verify_ssl=verify_ssl,
-            ssl_context=ssl_context,
-        )
-
-
-@pytest.mark.asyncio
 class TestConnect:
-    @pytest.fixture
-    def client_session_t(self):
-        return MockClientSession()
-
     @property
     def hello_payload(self):
-        return {"op": 10, "d": {"heartbeat_interval": 30_000,}}
+        return {"op": 10, "d": {"heartbeat_interval": 30_000}}
 
     @property
     def non_hello_payload(self):
@@ -248,7 +195,7 @@ class TestConnect:
     def client(self, event_loop):
         asyncio.set_event_loop(event_loop)
         client = _helpers.unslot_class(shards.Shard)(url="ws://localhost", token="xxx")
-        client = _helpers.mock_methods_on(client, except_=("connect", "_cs_init_kwargs", "_ws_connect_kwargs"))
+        client = _helpers.mock_methods_on(client, except_=("connect",))
         client._receive = mock.AsyncMock(return_value=self.hello_payload)
         return client
 
@@ -275,10 +222,10 @@ class TestConnect:
         "event_attr", ["closed_event", "handshake_event", "ready_event", "requesting_close_event", "resumed_event"]
     )
     @_helpers.timeout_after(10.0)
-    async def test_events_unset_on_open(self, client, client_session_t, event_attr):
+    async def test_events_unset_on_open(self, client, event_attr):
         getattr(client, event_attr).set()
         with self.suppress_closure():
-            task = asyncio.create_task(client.connect(client_session_t))
+            task = asyncio.create_task(client.connect())
             # Wait until the first main event object is set. By then we expect
             # the event we are testing to have been unset again if it is
             # working properly.
@@ -286,90 +233,78 @@ class TestConnect:
             assert not getattr(client, event_attr).is_set()
             await task
 
-    async def test_hello_event_unset_on_open(self, client, client_session_t):
+    async def test_hello_event_unset_on_open(self, client):
         client.hello_event = mock.MagicMock()
 
         with self.suppress_closure():
-            await client.connect(client_session_t)
+            await client.connect()
 
         client.hello_event.clear.assert_called_once()
         client.hello_event.set.assert_called_once()
 
     @_helpers.timeout_after(10.0)
-    async def test_closed_event_set_on_connect_terminate(self, client, client_session_t):
+    async def test_closed_event_set_on_connect_terminate(self, client):
         with self.suppress_closure():
-            await asyncio.create_task(client.connect(client_session_t))
+            await asyncio.create_task(client.connect())
 
         assert client.closed_event.is_set()
 
     @_helpers.timeout_after(10.0)
-    async def test_session_opened_with_expected_kwargs(self, client, client_session_t):
+    async def test_session_opened_with_expected_kwargs(self, client):
         with self.suppress_closure():
-            await client.connect(client_session_t)
-        assert client_session_t.args == ()
-        assert client_session_t.kwargs == client._cs_init_kwargs()
+            await client.connect()
+        client._create_ws.assert_awaited_once_with(client._url, compress=0, autoping=True, max_msg_size=0)
 
     @_helpers.timeout_after(10.0)
-    async def test_ws_opened_with_expected_kwargs(self, client, client_session_t):
+    async def test_ws_closed_afterwards(self, client):
         with self.suppress_closure():
-            await client.connect(client_session_t)
-        assert client_session_t.ws.args == ()
-        assert client_session_t.ws.kwargs == client._ws_connect_kwargs()
-
-    @_helpers.timeout_after(10.0)
-    async def test_ws_closed_afterwards(self, client, client_session_t):
-        with self.suppress_closure():
-            await client.connect(client_session_t)
+            await client.connect()
         client.close.assert_awaited_with(1000)
 
     @_helpers.timeout_after(10.0)
-    async def test_disconnecting_unsets_connected_at(self, client, client_session_t):
+    async def test_disconnecting_unsets_connected_at(self, client):
         assert math.isnan(client._connected_at)
 
         with mock.patch("time.perf_counter", return_value=420):
             with self.suppress_closure():
-                await client.connect(client_session_t)
+                await client.connect()
             assert math.isnan(client._connected_at)
 
     @_helpers.timeout_after(10.0)
-    async def test_disconnecting_unsets_last_message_received(self, client, client_session_t):
+    async def test_disconnecting_unsets_last_message_received(self, client):
         assert math.isnan(client.last_message_received)
 
         with mock.patch("time.perf_counter", return_value=420):
             with self.suppress_closure():
-                await client.connect(client_session_t)
+                await client.connect()
         assert math.isnan(client.last_message_received)
 
     @_helpers.timeout_after(10.0)
-    async def test_disconnecting_unsets_last_heartbeat_sent(self, client, client_session_t):
+    async def test_disconnecting_unsets_last_heartbeat_sent(
+        self, client,
+    ):
         with self.suppress_closure():
-            await client.connect(client_session_t)
+            await client.connect()
         assert math.isnan(client.last_heartbeat_sent)
 
     @_helpers.timeout_after(10.0)
-    async def test_disconnecting_drops_reference_to_session(self, client, client_session_t):
+    async def test_disconnecting_drops_reference_to_ws(self, client):
         with self.suppress_closure():
-            await client.connect(client_session_t)
-        assert client._session is None
-
-    @_helpers.timeout_after(10.0)
-    async def test_disconnecting_drops_reference_to_ws(self, client, client_session_t):
-        with self.suppress_closure():
-            await client.connect(client_session_t)
+            await client.connect()
         assert client._ws is None
 
     @_helpers.timeout_after(10.0)
-    async def test_disconnecting_increments_disconnect_count(self, client, client_session_t):
+    async def test_disconnecting_increments_disconnect_count(self, client):
         client.disconnect_count = 69
         with self.suppress_closure():
-            await client.connect(client_session_t)
+            await client.connect()
         assert client.disconnect_count == 70
 
     @_helpers.timeout_after(10.0)
-    async def test_connecting_dispatches_CONNECTED(self, client, client_session_t):
+    async def test_connecting_dispatches_CONNECTED(self, client):
         client.dispatch = mock.MagicMock()
         with self.suppress_closure():
-            task = asyncio.create_task(client.connect(client_session_t))
+            task = asyncio.create_task(client.connect())
             await client.hello_event.wait()
             # sanity check for the DISCONNECTED test
             assert mock.call(client, "CONNECTED", more_collections.EMPTY_DICT) in client.dispatch.call_args_list
@@ -377,57 +312,57 @@ class TestConnect:
             await task
 
     @_helpers.timeout_after(10.0)
-    async def test_disconnecting_dispatches_DISCONNECTED(self, client, client_session_t):
+    async def test_disconnecting_dispatches_DISCONNECTED(self, client):
         client.dispatch = mock.MagicMock()
         with self.suppress_closure():
-            task = asyncio.create_task(client.connect(client_session_t))
+            task = asyncio.create_task(client.connect())
             await client.hello_event.wait()
             assert mock.call(client, "DISCONNECTED", more_collections.EMPTY_DICT) not in client.dispatch.call_args_list
             await task
         client.dispatch.assert_called_with(client, "DISCONNECTED", more_collections.EMPTY_DICT)
 
     @_helpers.timeout_after(10.0)
-    async def test_new_zlib_each_time(self, client, client_session_t):
+    async def test_new_zlib_each_time(self, client):
         assert client._zlib is None
         previous_zlib = None
 
         for i in range(20):
             with self.suppress_closure():
-                await client.connect(client_session_t)
+                await client.connect()
             assert client._zlib is not None
             assert previous_zlib is not client._zlib
             previous_zlib = client._zlib
             client._connected_at = float("nan")
 
     @_helpers.timeout_after(10.0)
-    async def test_hello(self, client, client_session_t):
+    async def test_hello(self, client):
         with self.suppress_closure():
-            await client.connect(client_session_t)
+            await client.connect()
 
         client._receive.assert_awaited_once()
 
     @_helpers.timeout_after(10.0)
     @_helpers.assert_raises(type_=errors.GatewayError)
-    async def test_no_hello_throws_GatewayError(self, client, client_session_t):
+    async def test_no_hello_throws_GatewayError(self, client):
         client._receive = mock.AsyncMock(return_value=self.non_hello_payload)
-        await client.connect(client_session_t)
+        await client.connect()
 
     @_helpers.timeout_after(10.0)
-    async def test_heartbeat_keep_alive_correctly_started(self, client, client_session_t):
+    async def test_heartbeat_keep_alive_correctly_started(self, client):
         with self.suppress_closure():
-            await client.connect(client_session_t)
+            await client.connect()
 
         client._heartbeat_keep_alive.assert_called_with(self.hello_payload["d"]["heartbeat_interval"] / 1_000.0)
 
     @_helpers.timeout_after(10.0)
-    async def test_identify_or_resume_then_poll_events_started(self, client, client_session_t):
+    async def test_identify_or_resume_then_poll_events_started(self, client):
         with self.suppress_closure():
-            await client.connect(client_session_t)
+            await client.connect()
 
         client._run.assert_called_once()
 
     @_helpers.timeout_after(10.0)
-    async def test_waits_indefinitely_if_everything_is_working(self, client, client_session_t):
+    async def test_waits_indefinitely_if_everything_is_working(self, client):
         async def deadlock(*_, **__):
             await asyncio.get_running_loop().create_future()
 
@@ -435,13 +370,13 @@ class TestConnect:
         client._run = deadlock
 
         try:
-            await asyncio.wait_for(client.connect(client_session_t), timeout=2.5)
+            await asyncio.wait_for(client.connect(), timeout=2.5)
             assert False
         except asyncio.TimeoutError:
             pass
 
     @_helpers.timeout_after(10.0)
-    async def test_waits_for_run_then_throws_that_exception(self, client, client_session_t):
+    async def test_waits_for_run_then_throws_that_exception(self, client):
         async def deadlock(*_, **__):
             await asyncio.get_running_loop().create_future()
 
@@ -455,14 +390,12 @@ class TestConnect:
         client._run = run
 
         try:
-            await client.connect(client_session_t)
+            await client.connect()
             assert False
         except ExceptionThing:
             pass
 
-    async def test_waits_for_heartbeat_keep_alive_to_return_then_throws_GatewayClientClosedError(
-        self, client, client_session_t
-    ):
+    async def test_waits_for_heartbeat_keep_alive_to_return_then_throws_GatewayClientClosedError(self, client):
         async def deadlock(*_, **__):
             await asyncio.get_running_loop().create_future()
 
@@ -473,13 +406,13 @@ class TestConnect:
         client._run = deadlock
 
         try:
-            await client.connect(client_session_t)
+            await client.connect()
             assert False
         except errors.GatewayClientClosedError:
             pass
 
     async def test_waits_for_identify_or_resume_then_poll_events_to_return_throws_GatewayClientClosedError(
-        self, client, client_session_t
+        self, client,
     ):
         async def deadlock(*_, **__):
             await asyncio.get_running_loop().create_future()
@@ -491,12 +424,12 @@ class TestConnect:
         client._run = run
 
         try:
-            await client.connect(client_session_t)
+            await client.connect()
             assert False
         except errors.GatewayClientClosedError:
             pass
 
-    async def test_TimeoutError_on_heartbeat_keep_alive_raises_GatewayZombiedError(self, client, client_session_t):
+    async def test_TimeoutError_on_heartbeat_keep_alive_raises_GatewayZombiedError(self, client):
         async def deadlock(*_, **__):
             await asyncio.get_running_loop().create_future()
 
@@ -507,14 +440,12 @@ class TestConnect:
         client._run = deadlock
 
         try:
-            await client.connect(client_session_t)
+            await client.connect()
             assert False
         except errors.GatewayZombiedError:
             pass
 
-    async def test_TimeoutError_on_identify_or_resume_then_poll_events_raises_GatewayZombiedError(
-        self, client, client_session_t
-    ):
+    async def test_TimeoutError_on_identify_or_resume_then_poll_events_raises_GatewayZombiedError(self, client):
         async def deadlock(*_, **__):
             await asyncio.get_running_loop().create_future()
 
@@ -525,7 +456,7 @@ class TestConnect:
         client._run = run
 
         try:
-            await client.connect(client_session_t)
+            await client.connect()
             assert False
         except errors.GatewayZombiedError:
             pass
@@ -706,11 +637,13 @@ class TestResume:
     async def test_resume_payload(self, client, seq):
         client.session_id = 69420
         client.seq = seq
-        client.token = "reee"
+        client._token = "reee"
 
         await client._resume()
 
-        client._send.assert_awaited_once_with({"op": 6, "d": {"token": "1234", "session_id": 69420, "seq": seq,}})
+        client._send.assert_awaited_once_with(
+            {"op": codes.GatewayOpcode.RESUME, "d": {"token": "reee", "session_id": 69420, "seq": seq}}
+        )
 
 
 @pytest.mark.asyncio

@@ -18,7 +18,6 @@
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import io
 import pathlib
-import contextlib
 import typing
 
 import mock

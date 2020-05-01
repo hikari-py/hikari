@@ -28,7 +28,7 @@ from hikari.net import rest as low_level_rest
 
 class TestRESTClient:
     def test_init(self):
-        mock_config = configs.RESTConfig(token="blah.blah.blah")
+        mock_config = configs.RESTConfig(token="blah.blah.blah", trust_env=True)
         mock_components = mock.MagicMock(components.Components, config=mock_config)
         mock_low_level_rest_clients = mock.MagicMock(low_level_rest.REST)
         with mock.patch.object(low_level_rest, "REST", return_value=mock_low_level_rest_clients) as patched_init:
@@ -36,12 +36,14 @@ class TestRESTClient:
             patched_init.assert_called_once_with(
                 allow_redirects=mock_config.allow_redirects,
                 connector=mock_config.tcp_connector,
+                debug=False,
                 proxy_headers=mock_config.proxy_headers,
                 proxy_auth=mock_config.proxy_auth,
                 ssl_context=mock_config.ssl_context,
                 verify_ssl=mock_config.verify_ssl,
                 timeout=mock_config.request_timeout,
                 token=f"{mock_config.token_type} {mock_config.token}",
+                trust_env=True,
                 version=mock_config.rest_version,
             )
             assert client._session is mock_low_level_rest_clients

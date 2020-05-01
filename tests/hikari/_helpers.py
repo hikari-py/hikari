@@ -489,3 +489,11 @@ def min_python_version(*mmm):
 
 def max_python_version(*mmm):
     return pytest.mark.skipif(f"__import__('sys').version_info > {mmm!r}", reason="Unsupported for your Python version")
+
+
+def set_private_attr(owner, name, value):
+    setattr(owner, f"_{type(owner).__name__}__{name}", value)
+
+
+def get_private_attr(owner, name, **kwargs):
+    return getattr(owner, f"_{type(owner).__name__}__{name}", **kwargs)

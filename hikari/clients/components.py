@@ -34,23 +34,23 @@ if typing.TYPE_CHECKING:
     from hikari.state import event_managers  # pylint: disable=cyclic-import
 
 
-@attr.s()
+@attr.s
 class Components:
     """A base that defines placement for set of components used in the library."""
 
-    config: configs.BotConfig = attr.attrib()
+    config: configs.BotConfig = attr.attrib(default=None)
     """The config used for this bot."""
 
-    event_dispatcher: dispatchers.EventDispatcher = attr.attrib()
+    event_dispatcher: dispatchers.EventDispatcher = attr.attrib(default=None)
     """The event dispatcher for this bot."""
 
-    event_manager: event_managers.EventManager = attr.attrib()
+    event_manager: event_managers.EventManager = attr.attrib(default=None)
     """The event manager for this bot."""
 
-    rest: rest.RESTClient = attr.attrib()
+    rest: rest.RESTClient = attr.attrib(default=None)
     """The REST HTTP client to use for this bot."""
 
-    shards: typing.Mapping[int, shards.ShardClient] = attr.attrib()
+    shards: typing.Mapping[int, shards.ShardClient] = attr.attrib(default=None)
     """Shards registered to this bot.
 
     These will be created once the bot has started execution.

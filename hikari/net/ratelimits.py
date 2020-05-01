@@ -280,7 +280,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
             future.cancel()
 
         if failed_tasks:
-            self.logger.error("%s rate limiter closed with %s pending tasks!", self.name, failed_tasks)
+            self.logger.debug("%s rate limiter closed with %s pending tasks!", self.name, failed_tasks)
         else:
             self.logger.debug("%s rate limiter closed", self.name)
 
@@ -864,6 +864,11 @@ class RESTBucketManager:
         reset_after = (reset_at_header - date_header).total_seconds()
         reset_at_monotonic = time.perf_counter() + reset_after
         bucket.update_rate_limit(remaining_header, limit_header, reset_at_monotonic)
+
+    @property
+    def is_started(self) -> bool:
+        """Return `True` if the rate limiter GC task is started."""
+        return self.gc_task is not None
 
 
 class ExponentialBackOff:

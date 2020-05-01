@@ -16,16 +16,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
-import datetime
 import contextlib
+import datetime
 
 import mock
 import pytest
 
-from hikari import users
 from hikari import emojis
-from hikari import unset
 from hikari import guilds
+from hikari import unset
+from hikari import users
 from hikari.events import guild
 from hikari.internal import conversions
 from tests.hikari import _helpers

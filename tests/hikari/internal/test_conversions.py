@@ -21,7 +21,6 @@ import datetime
 import inspect
 import typing
 
-import mock
 import pytest
 
 from hikari.internal import conversions
