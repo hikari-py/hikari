@@ -91,6 +91,7 @@ class BotBase(
             self, config=None, event_dispatcher=None, event_manager=None, rest=None, shards={},
         )
 
+        self._is_shutting_down = False
         self.config = configs.BotConfig(**kwargs) if config is None else config
         self.event_dispatcher = self._create_event_dispatcher(self.config)
         self.event_manager = self._create_event_manager(self)
@@ -162,6 +163,8 @@ class BotBase(
         if self.shards:  # pylint: disable=access-member-before-definition
             raise RuntimeError("Bot is already running.")
 
+        self._is_shutting_down = False
+
         gateway_bot = await self.rest.fetch_gateway_bot()
 
         self.logger.info(
@@ -209,7 +212,8 @@ class BotBase(
 
     async def close(self) -> None:
         try:
-            if self.shards:
+            if self.shards and not self._is_shutting_down:
+                self._is_shutting_down = True
                 self.logger.info("stopping %s shard(s)", len(self.shards))
                 start_time = time.perf_counter()
                 try:
