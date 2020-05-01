@@ -64,12 +64,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you don't have access to the channel.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel does not exist.
         """
         payload = await self._session.get_channel(
@@ -142,11 +142,11 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel does not exist.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the permission to make the change.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If you provide incorrect options for the corresponding channel type
             (e.g. a `bitrate` for a text channel).
             If any invalid snowflake IDs are passed; a snowflake may be invalid
@@ -194,12 +194,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel does not exist.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you do not have permission to delete the channel.
 
         !!! note
@@ -251,18 +251,18 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permission to read the channel.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found, or the message
             provided for one of the filter arguments is not found.
 
         !!! note
             If you are missing the `VIEW_CHANNEL` permission, you will receive a
-            hikari.errors.ForbiddenHTTPError. If you are instead missing
+            hikari.errors.Forbidden. If you are instead missing
             the `READ_MESSAGE_HISTORY` permission, you will always receive
             zero results, and thus an empty list will be returned instead.
         """
@@ -323,18 +323,18 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permission to read the channel.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found, or the message
             provided for one of the filter arguments is not found.
 
         !!! note
             If you are missing the `VIEW_CHANNEL` permission, you will receive a
-            hikari.errors.ForbiddenHTTPError. If you are instead missing
+            hikari.errors.Forbidden. If you are instead missing
             the `READ_MESSAGE_HISTORY` permission, you will always receive
             zero results, and thus an empty list will be returned instead.
         """
@@ -396,18 +396,18 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permission to read the channel.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found, or the message
             provided for one of the filter arguments is not found.
 
         !!! note
             If you are missing the `VIEW_CHANNEL` permission, you will receive a
-            `hikari.errors.ForbiddenHTTPError`. If you are instead missing
+            `hikari.errors.Forbidden`. If you are instead missing
             the `READ_MESSAGE_HISTORY` permission, you will always receive
             zero results, and thus an empty list will be returned instead.
         """
@@ -444,12 +444,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permission to see the message.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message is not found.
         """
         payload = await self._session.get_channel_message(
@@ -510,9 +510,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
             empty or greater than `2000` characters; if neither content, files
@@ -521,7 +521,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             due to it being outside of the range of a 64 bit integer.
             If you are trying to upload more than 10 files in total (including
             embed attachments).
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permissions to send to this channel.
         ValueError
             If more than 100 unique objects/entities are passed for
@@ -627,16 +627,16 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message is not found.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             This can be raised if the embed exceeds the defined limits;
             if the message content is specified only and empty or greater
             than `2000` characters; if neither content, file or embed
             are specified.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you try to edit `content` or `embed` or `allowed_mentions`
             on a message you did not author.
             If you try to edit the flags on a message you did not author without
@@ -707,14 +707,14 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you did not author the message and are in a DM, or if you did
             not author the message and lack the `MANAGE_MESSAGES`
             permission in a guild channel.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message is not found.
         ValueError
             If you try to delete over `100` messages in a single request.
@@ -784,12 +784,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the target channel or overwrite doesn't exist.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permission to do this.
         """
         # pylint: enable=line-too-long
@@ -819,12 +819,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_CHANNELS` permission.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel does not exist.
         """
         payload = await self._session.get_channel_invites(
@@ -879,11 +879,11 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `CREATE_INSTANT_MESSAGES` permission.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel does not exist.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If the arguments provided are not valid (e.g. negative age, etc).
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -921,12 +921,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the overwrite or channel do not exist.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission for that channel.
         """
         # pylint: enable=line-too-long
@@ -945,12 +945,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are not able to type in the channel.
         """
         await self._session.trigger_typing_indicator(
@@ -974,12 +974,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you are not able to see the channel.
 
         !!! note
@@ -1009,12 +1009,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_MESSAGES` permission.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the message or channel do not exist.
         """
         await self._session.add_pinned_channel_message(
@@ -1038,12 +1038,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_MESSAGES` permission.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the message or channel do not exist.
         """
         await self._session.delete_pinned_channel_message(
@@ -1080,12 +1080,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_WEBHOOKS` permission or
             can not see the given channel.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If the avatar image is too big or the format is invalid.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -1115,12 +1115,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_WEBHOOKS` permission or
             can not see the given channel.
         """

@@ -58,19 +58,19 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
         emoji : typing.Union[hikari.emojis.Emoji, str]
             The emoji to add. This can either be an emoji object or a string
             representation of an emoji. The string representation will be either
-            `"name:id"` for custom emojis else it's unicode character(s)  (can
-            be UTF-32).
+            `"name:id"` for custom emojis, or it's unicode character(s) for
+            standard emojis.
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If this is the first reaction using this specific emoji on this
             message and you lack the `ADD_REACTIONS` permission. If you lack
             `READ_MESSAGE_HISTORY`, this may also raise this error.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message is not found, or if the emoji is not found.
-        hikari.errors.BadRequestHTTPError
-            If the emoji is not valid, unknown, or formatted incorrectly.
+        hikari.errors.BadRequest
+            If the emoji is invalid, unknown, or formatted incorrectly.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
@@ -102,14 +102,14 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Raises
         ------
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If this is the first reaction using this specific emoji on this
             message and you lack the `ADD_REACTIONS` permission. If you lack
             `READ_MESSAGE_HISTORY`, this may also raise this error.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message is not found, or if the emoji is not
             found.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If the emoji is not valid, unknown, or formatted incorrectly.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
@@ -134,12 +134,12 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_MESSAGES` permission.
         """
         await self._session.delete_all_reactions(
@@ -168,12 +168,12 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message or emoji or user is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack the `MANAGE_MESSAGES` permission, or the channel is a
             DM channel.
         """
@@ -229,12 +229,12 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack access to the message.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel or message is not found.
         """
         if isinstance(after, datetime.datetime):

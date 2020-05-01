@@ -62,15 +62,15 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the webhook is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you're not in the guild that owns this webhook or
             lack the `MANAGE_WEBHOOKS` permission.
-        hikari.errors.UnauthorizedHTTPError
+        hikari.errors.Unauthorized
             If you pass a token that's invalid for the target webhook.
         """
         payload = await self._session.get_webhook(
@@ -117,15 +117,15 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If either the webhook or the channel aren't found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_WEBHOOKS` permission or
             aren't a member of the guild this webhook belongs to.
-        hikari.errors.UnauthorizedHTTPError
+        hikari.errors.Unauthorized
             If you pass a token that's invalid for the target webhook.
         """
         payload = await self._session.modify_webhook(
@@ -155,15 +155,15 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the webhook is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you either lack the `MANAGE_WEBHOOKS` permission or
             aren't a member of the guild this webhook belongs to.
-        hikari.errors.UnauthorizedHTTPError
+        hikari.errors.Unauthorized
                 If you pass a token that's invalid for the target webhook.
         """
         await self._session.delete_webhook(
@@ -232,18 +232,18 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel ID or webhook ID is not found.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
             empty or greater than `2000` characters; if neither content, file
             or embeds are specified.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permissions to send to this channel.
-        hikari.errors.UnauthorizedHTTPError
+        hikari.errors.Unauthorized
             If you pass a token that's invalid for the target webhook.
         ValueError
             If more than 100 unique objects/entities are passed for

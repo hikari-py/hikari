@@ -31,6 +31,7 @@ __all__ = [
     "Message",
 ]
 
+import asyncio
 import typing
 
 import attr
@@ -355,28 +356,109 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you don't have access to the channel this message belongs to.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel this message was created in does not exist.
         """
         return self._components.rest.fetch_channel(channel=self.channel_id)
 
-    def reply(
+    async def edit(
         self,
         *,
         content: str = ...,
-        nonce: str = ...,
-        tts: bool = ...,
-        files: typing.Sequence[_files.File] = ...,
         embed: _embeds.Embed = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
         role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
-    ) -> typing.Coroutine[Message]:
+    ) -> Message:
+        """Edit this message.
+
+        All parameters are optional, meaning that if you do not specify one,
+        then the corresponding piece of information will not be changed.
+
+        Parameters
+        ----------
+        content : str
+            If specified, the message content to set on the message.
+        embed : hikari.embeds.Embed
+            If specified, the embed object to set on the message.
+        mentions_everyone : bool
+            Whether `@everyone` and `@here` mentions should be resolved by
+            discord and lead to actual pings, defaults to `True`.
+        user_mentions : typing.Collection[typing.Union[hikari.users.User, hikari.bases.Snowflake, int]] OR bool
+            Either an array of user objects/IDs to allow mentions for,
+            `True` to allow all user mentions or `False` to block all
+            user mentions from resolving, defaults to `True`.
+        role_mentions: typing.Collection[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]] OR bool
+            Either an array of guild role objects/IDs to allow mentions for,
+            `True` to allow all role mentions or `False` to block all
+            role mentions from resolving, defaults to `True`.
+
+        Returns
+        -------
+        hikari.messages.Message
+            The edited message.
+
+        Raises
+        ------
+        hikari.errors.NotFound
+            If the channel or message is not found.
+        hikari.errors.BadRequest
+            This can be raised if the embed exceeds the defined limits;
+            if the message content is specified only and empty or greater
+            than `2000` characters; if neither content, file or embed
+            are specified.
+            If any invalid snowflake IDs are passed; a snowflake may be invalid
+            due to it being outside of the range of a 64 bit integer.
+        hikari.errors.Forbidden
+            If you try to edit `content` or `embed` or `allowed_mentions`
+            on a message you did not author.
+            If you try to edit the flags on a message you did not author without
+            the `MANAGE_MESSAGES` permission.
+        ValueError
+            If more than 100 unique objects/entities are passed for
+            `role_mentions` or `user_mentions`.
+        """
+        return await self._components.rest.update_message(
+            self.id, self.channel_id, content=content, embed=embed, mentions_everyone=mentions_everyone,
+            user_mentions=user_mentions, role_mentions=role_mentions
+        )
+
+    async def safe_edit(
+        self,
+        *,
+        content: str = ...,
+        embed: _embeds.Embed = ...,
+        mentions_everyone: bool = True,
+        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
+        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+    ) -> Message:
+        """Edit this message.
+
+        This is the same as `edit`, but with all defaults set to prevent any
+        mentions from working by default.
+        """
+        return await self._components.rest.safe_update_message(
+            self.id, self.channel_id, content=content, embed=embed, mentions_everyone=mentions_everyone,
+            user_mentions=user_mentions, role_mentions=role_mentions
+        )
+
+    async def reply(
+        self,
+        *,
+        content: str = ...,
+        embed: _embeds.Embed = ...,
+        files: typing.Sequence[_files.File] = ...,
+        mentions_everyone: bool = True,
+        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
+        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+        nonce: str = ...,
+        tts: bool = ...,
+    ) -> Message:
         """Create a message in the channel this message belongs to.
 
         Parameters
@@ -409,14 +491,14 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
 
         Returns
         -------
-        typing.Coroutine[hikari.messages.Message]
+        hikari.messages.Message
             The created message object.
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the channel this message was created in is not found.
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
             empty or greater than `2000` characters; if neither content, files
@@ -425,14 +507,14 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
             due to it being outside of the range of a 64 bit integer.
             If you are trying to upload more than 10 files in total (including
             embed attachments).
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack permissions to send to the channel this message belongs
             to.
         ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
         """
-        return self._components.rest.create_message(
+        return await self._components.rest.create_message(
             channel=self.channel_id,
             content=content,
             nonce=nonce,
@@ -443,3 +525,82 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
             user_mentions=user_mentions,
             role_mentions=role_mentions,
         )
+
+    async def safe_reply(
+        self,
+        *,
+        content: str = ...,
+        embed: _embeds.Embed = ...,
+        files: typing.Sequence[_files.File] = ...,
+        mentions_everyone: bool = True,
+        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
+        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+        nonce: str = ...,
+        tts: bool = ...,
+    ) -> Message:
+        """Reply to a message.
+
+        This is the same as `reply`, but with all defaults set to prevent any
+        mentions from working by default.
+        """
+        return await self._components.rest.safe_create_message(
+            channel=self.channel_id,
+            content=content,
+            nonce=nonce,
+            tts=tts,
+            files=files,
+            embed=embed,
+            mentions_everyone=mentions_everyone,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
+        )
+
+    async def delete(self) -> None:
+        """Delete this message.
+
+        Raises
+        ------
+        hikari.errors.NotFound
+            If the channel this message was created in is not found, or if the
+            message has already been deleted.
+        hikari.errors.Forbidden
+            If you lack the permissions to delete the message.
+        """
+        await self._components.rest.delete_messages(self.channel_id, self.id)
+
+    async def add_reaction(self, emoji: typing.Union[str, _emojis.Emoji]):
+        """Add a reaction to this message.
+
+        Parameters
+        ----------
+        emoji : str OR hikari.emojis.Emoji
+            The emoji to add.
+
+        Examples
+        --------
+        .. code-block:: python
+
+            # Using a unicode emoji name.
+            await message.add_reaction("\N{OK HAND SIGN}")
+
+            # Using the `name:id` format.
+            await message.add_reaction("rooAYAYA:705837374319493284")
+
+            # Using a UnicodeEmoji
+            await message.add_reaction()
+
+        Raises
+        ------
+        hikari.errors.Forbidden
+            If this is the first reaction using this specific emoji on this
+            message and you lack the `ADD_REACTIONS` permission. If you lack
+            `READ_MESSAGE_HISTORY`, this may also raise this error.
+        hikari.errors.NotFound
+            If the channel or message is not found, or if the emoji is not found.
+        hikari.errors.BadRequest
+            If the emoji is invalid, unknown, or formatted incorrectly.
+            If any invalid snowflake IDs are passed; a snowflake may be invalid
+            due to it being outside of the range of a 64 bit integer.
+
+        """
+        return await self._components.rest.create_reaction(self.channel_id, self.id, emoji)

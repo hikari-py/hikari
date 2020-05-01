@@ -52,10 +52,10 @@ class RESTInviteComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=a
 
         Raises
         ------
-        hikari.errors.BadRequestHTTPError
+        hikari.errors.BadRequest
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the invite is not found.
         """
         payload = await self._session.get_invite(invite_code=getattr(invite, "code", invite), with_counts=with_counts)
@@ -77,9 +77,9 @@ class RESTInviteComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=a
 
         Raises
         ------
-        hikari.errors.NotFoundHTTPError
+        hikari.errors.NotFound
             If the invite is not found.
-        hikari.errors.ForbiddenHTTPError
+        hikari.errors.Forbidden
             If you lack either `MANAGE_CHANNELS` on the channel the invite
             belongs to or `MANAGE_GUILD` for guild-global delete.
         """
