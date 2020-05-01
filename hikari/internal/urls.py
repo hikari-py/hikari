@@ -37,6 +37,9 @@ REST_API_URL: typing.Final[str] = "https://discordapp.com/api/v{0.version}"
 should be interpolated.
 """
 
+OAUTH2_API_URL: typing.Final[str] = "https://discordapp.com/api/oauth2"
+"""The URL to the Discord OAuth2 API."""
+
 
 def generate_cdn_url(*route_parts: str, fmt: str, size: typing.Optional[int]) -> str:
     """Generate a link for a Discord CDN media resource.

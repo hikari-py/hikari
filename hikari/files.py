@@ -28,7 +28,6 @@ import logging
 import os
 import time
 import typing
-
 from concurrent import futures
 
 from hikari.internal import assertions

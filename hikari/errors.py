@@ -46,12 +46,8 @@ import http
 import typing
 
 import aiohttp.typedefs
-import attr
 
 from hikari.net import codes
-
-if typing.TYPE_CHECKING:
-    pass
 
 
 class HikariError(RuntimeError):
@@ -83,9 +79,11 @@ class GatewayError(HikariError):
 
     Parameters
     ----------
-    reason : st
+    reason : str
         A string explaining the issue.
     """
+
+    __slots__ = ("reason",)
 
     reason: str
     """A string to explain the issue."""
@@ -107,6 +105,8 @@ class GatewayClientClosedError(GatewayError):
         A string explaining the issue.
     """
 
+    __slots__ = ()
+
     def __init__(self, reason: str = "The gateway client has been closed") -> None:
         super().__init__(reason)
 
@@ -119,6 +119,8 @@ class GatewayClientDisconnectedError(GatewayError):
     reason : str
         A string explaining the issue.
     """
+
+    __slots__ = ()
 
     def __init__(self, reason: str = "The gateway client has disconnected unexpectedly") -> None:
         super().__init__(reason)
@@ -134,6 +136,8 @@ class GatewayServerClosedConnectionError(GatewayError):
     reason : str, optional
         A string explaining the issue.
     """
+
+    __slots__ = ("close_code",)
 
     close_code: typing.Union[codes.GatewayCloseCode, int, None]
 
@@ -157,6 +161,8 @@ class GatewayServerClosedConnectionError(GatewayError):
 class GatewayInvalidTokenError(GatewayServerClosedConnectionError):
     """An exception that is raised if you failed to authenticate with a valid token to the Gateway."""
 
+    __slots__ = ()
+
     def __init__(self) -> None:
         super().__init__(
             codes.GatewayCloseCode.AUTHENTICATION_FAILED,
@@ -175,6 +181,8 @@ class GatewayInvalidSessionError(GatewayServerClosedConnectionError):
         again instead.
     """
 
+    __slots__ = ("can_resume",)
+
     can_resume: bool
     """`True` if the next reconnection can be RESUMED,
     `False` if it has to be coordinated by re-IDENFITYing.
@@ -192,6 +200,8 @@ class GatewayMustReconnectError(GatewayServerClosedConnectionError):
     This will cause a re-IDENTIFY.
     """
 
+    __slots__ = ()
+
     def __init__(self) -> None:
         super().__init__(reason="The gateway server has requested that the client reconnects with a new session")
 
@@ -202,6 +212,8 @@ class GatewayNeedsShardingError(GatewayServerClosedConnectionError):
     This is a sign you need to increase the number of shards that your bot is
     running with in order to connect to Discord.
     """
+
+    __slots__ = ()
 
     def __init__(self) -> None:
         super().__init__(
@@ -216,58 +228,179 @@ class GatewayZombiedError(GatewayClientClosedError):
     disconnected due to a timeout.
     """
 
+    __slots__ = ()
+
     def __init__(self) -> None:
         super().__init__("No heartbeat was received, the connection has been closed")
 
 
 class HTTPError(HikariError):
-    """Base exception raised if an HTTP error occurs while making a request."""
+    """Base exception raised if an HTTP error occurs while making a request.
 
-    def __init__(self, url: str, message: str):
+    Parameters
+    ----------
+    message : str
+        The error message.
+    url : str
+        The URL that produced this error.
+    """
+
+    __slots__ = ("message", "url")
+
+    message: str
+    """The error message."""
+
+    url: str
+    """The URL that produced this error message."""
+
+    def __init__(self, url: str, message: str) -> None:
+        super().__init__()
         self.message = message
         self.url = url
 
 
 class HTTPErrorResponse(HTTPError):
+    """Base exception for an erroneous HTTP response.
+
+    Parameters
+    ----------
+    url : str
+        The URL that produced the error message.
+    status : http.HTTPStatus
+        The HTTP status code of the response that caused this error.
+    headers : aiohttp.typedefs.LooseHeaders
+        Any headers that were given in the response.
+    raw_body : typing.Any
+        The body that was received.
+    """
+
+    __slots__ = ("status", "headers", "raw_body")
+
+    status: http.HTTPStatus
+    """The HTTP status code for the response."""
+
+    headers: aiohttp.typedefs.LooseHeaders
+    """The headers received in the error response."""
+
+    raw_body: typing.Any
+    """The response body."""
+
     def __init__(
-        self, url: str, status: http.HTTPStatus, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr,
+        self, url: str, status: http.HTTPStatus, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.Any,
     ) -> None:
-        super().__init__(url, str(status))
+        super().__init__(url, f"{status}: {raw_body}")
         self.status = status
         self.headers = headers
         self.raw_body = raw_body
 
+    def __str__(self) -> str:
+        return f"{self.status.value} {self.status.name}: {self.raw_body}"
+
 
 class ClientHTTPErrorResponse(HTTPErrorResponse):
-    pass
+    """Base exception for an erroneous HTTP response that is a client error.
+
+    All exceptions derived from this base should be treated as 4xx client
+    errors when encountered.
+    """
+
+    __slots__ = ()
 
 
 class BadRequest(ClientHTTPErrorResponse):
-    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr,) -> None:
+    """Raised when you send an invalid request somehow.
+
+    Parameters
+    ----------
+    url : str
+        The URL that produced the error message.
+    headers : aiohttp.typedefs.LooseHeaders
+        Any headers that were given in the response.
+    raw_body : typing.Any
+        The body that was received.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr) -> None:
         status = http.HTTPStatus.BAD_REQUEST
         super().__init__(url, status, headers, raw_body)
 
 
 class Unauthorized(ClientHTTPErrorResponse):
-    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr,) -> None:
+    """Raised when you are not authorized to access a specific resource.
+
+    This generally means you did not provide a token, or the token is invalid.
+
+    Parameters
+    ----------
+    url : str
+        The URL that produced the error message.
+    headers : aiohttp.typedefs.LooseHeaders
+        Any headers that were given in the response.
+    raw_body : typing.Any
+        The body that was received.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr) -> None:
         status = http.HTTPStatus.UNAUTHORIZED
         super().__init__(url, status, headers, raw_body)
 
 
 class Forbidden(ClientHTTPErrorResponse):
-    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr,) -> None:
+    """Raised when you are not allowed to access a specific resource.
+
+    This means you lack the permissions to do something, either because of
+    permissions set in a guild, or because your application is not whitelisted
+    to use a specific endpoint.
+
+    Parameters
+    ----------
+    url : str
+        The URL that produced the error message.
+    headers : aiohttp.typedefs.LooseHeaders
+        Any headers that were given in the response.
+    raw_body : typing.Any
+        The body that was received.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr) -> None:
         status = http.HTTPStatus.FORBIDDEN
         super().__init__(url, status, headers, raw_body)
 
 
 class NotFound(ClientHTTPErrorResponse):
-    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr,) -> None:
+    """Raised when something is not found.
+
+    Parameters
+    ----------
+    url : str
+        The URL that produced the error message.
+    headers : aiohttp.typedefs.LooseHeaders
+        Any headers that were given in the response.
+    raw_body : typing.Any
+        The body that was received.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr) -> None:
         status = http.HTTPStatus.NOT_FOUND
         super().__init__(url, status, headers, raw_body)
 
 
 class ServerHTTPErrorResponse(HTTPErrorResponse):
-    pass
+    """Base exception for an erroneous HTTP response that is a server error.
+
+    All exceptions derived from this base should be treated as 5xx server
+    errors when encountered. If you get one of these, it isn't your fault!
+    """
+
+    __slots__ = ()
 
 
 class IntentWarning(HikariWarning):
@@ -275,3 +408,5 @@ class IntentWarning(HikariWarning):
 
     This is caused by your application missing certain intents.
     """
+
+    __slots__ = ()

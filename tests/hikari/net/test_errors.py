@@ -16,11 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import http
+
 import pytest
 
 from hikari import errors
 from hikari.net import codes
-from hikari.net import routes
 
 
 class TestGatewayError:
@@ -92,71 +93,25 @@ class TestGatewayZombiedError:
         assert err.reason.startswith("No heartbeat was received")
 
 
-class TestHTTPError:
-    def test_init(self):
-        err = errors.HTTPError("ree")
-        assert err.reason == "ree"
-
-    def test_str(self):
-        assert str(errors.HTTPError("ree")) == "ree"
-
-
-@pytest.mark.parametrize("type", [errors.CodedHTTPError, errors.ServerHTTPError, errors.ClientHTTPError])
-class TestCodedHTTPErrors:
-    def test_init(self, type):
-        # Garbage test case, doesn't matter really.
-        http = codes.HTTPStatusCode.BAD_GATEWAY if "server" in type.__name__.lower() else codes.HTTPStatusCode.FORBIDDEN
-        route = routes.GATEWAY.compile("GET")
-        message = "you done screwed up son"
-        code = codes.JSONErrorCode.CANNOT_PIN_A_MESSAGE_IN_A_DIFFERENT_CHANNEL
-
-        ex = type(http, route, message, code)
-
-        assert ex.status == http
-        assert ex.route == route
-        assert ex.message == message
-        assert ex.json_code == code
-        assert ex.reason == str(http)
-
-    def test_str(self, type):
-        http = codes.HTTPStatusCode.BAD_GATEWAY if "server" in type.__name__.lower() else codes.HTTPStatusCode.FORBIDDEN
-        route = routes.GATEWAY.compile("GET")
-        message = "you done screwed up son"
-        code = codes.JSONErrorCode.CANNOT_PIN_A_MESSAGE_IN_A_DIFFERENT_CHANNEL
-
-        ex = type(http, route, message, code)
-
-        assert str(ex) == f"{ex.reason}: ({code}) {message}"
-
-
 @pytest.mark.parametrize(
     ("type", "expected_status"),
     [
-        (errors.BadRequestHTTPError, 400),
-        (errors.UnauthorizedHTTPError, 401),
-        (errors.ForbiddenHTTPError, 403),
-        (errors.NotFoundHTTPError, 404),
+        (errors.BadRequest, http.HTTPStatus.BAD_REQUEST),
+        (errors.Unauthorized, http.HTTPStatus.UNAUTHORIZED),
+        (errors.Forbidden, http.HTTPStatus.FORBIDDEN),
+        (errors.NotFound, http.HTTPStatus.NOT_FOUND),
     ],
 )
 class TestHTTPClientErrors:
     def test_init(self, type, expected_status):
-        route = routes.GATEWAY.compile("GET")
-        message = "you done screwed up son"
-        code = codes.JSONErrorCode.CANNOT_PIN_A_MESSAGE_IN_A_DIFFERENT_CHANNEL
-
-        ex = type(route, message, code)
+        ex = type("http://foo.bar/api/v69/nice", {"foo": "bar"}, b"body")
 
         assert ex.status == expected_status
-        assert ex.reason == str(ex.status)
-        assert ex.route == route
-        assert ex.message == message
-        assert ex.json_code == code
+        assert ex.url == "http://foo.bar/api/v69/nice"
+        assert ex.headers == {"foo": "bar"}
+        assert ex.raw_body == b"body"
 
     def test_str(self, type, expected_status):
-        route = routes.GATEWAY.compile("GET")
-        message = "you done screwed up son"
-        code = codes.JSONErrorCode.CANNOT_PIN_A_MESSAGE_IN_A_DIFFERENT_CHANNEL
+        ex = type("http://foo.bar/api/v69/nice", {"foo": "bar"}, b"body")
 
-        ex = type(route, message, code)
-
-        assert str(ex) == f"{ex.reason}: ({code}) {message}"
+        assert str(ex) == f"{expected_status} {expected_status.name}: {b'body'}"

@@ -16,16 +16,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
-import datetime
 import contextlib
+import datetime
 
-import pytest
 import mock
+import pytest
 
-from hikari import users
+from hikari import channels
 from hikari import guilds
 from hikari import invites
-from hikari import channels
+from hikari import users
 from hikari.events import channel
 from hikari.internal import conversions
 from tests.hikari import _helpers
@@ -290,6 +290,6 @@ class TestVoiceServerUpdateEvent:
 
     def test_deserialize(self, test_voice_server_update_payload):
         voice_server_update_obj = channel.VoiceServerUpdateEvent.deserialize(test_voice_server_update_payload)
-        assert voice_server_update_obj._token == "a_token"
+        assert voice_server_update_obj.token == "a_token"
         assert voice_server_update_obj.guild_id == 303030300303
         assert voice_server_update_obj.endpoint == "smart.loyal.discord.gg"

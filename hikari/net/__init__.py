@@ -30,7 +30,6 @@ from hikari.net import rest
 from hikari.net import routes
 from hikari.net import shards
 from hikari.net import user_agents
-
 from hikari.net.codes import *
 from hikari.net.rest import *
 from hikari.net.shards import *

@@ -18,14 +18,14 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
 import datetime
-import io
 
 import mock
 import pytest
+
+from hikari import applications
 from hikari import channels
 from hikari import files
 from hikari import guilds
-from hikari import applications
 from hikari import users
 from hikari.clients import components
 from hikari.clients.rest import me

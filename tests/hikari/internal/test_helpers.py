@@ -19,9 +19,9 @@
 import mock
 import pytest
 
-from hikari.internal import helpers
 from hikari import guilds
 from hikari import users
+from hikari.internal import helpers
 from tests.hikari import _helpers
 
 
