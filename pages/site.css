@@ -20,15 +20,14 @@ a:hover {
 
 .display-1 {
   color: var(--accent-1);
-  margin-bottom: 1em;
-  font-weight: 100 !important;
+  font-size: 4rem;
+  font-weight: 300 !important;
 }
 
 .display-1 > small {
   font-family: monospace;
   color: var(--accent-1);
   font-size: 0.35em;
-  margin-bottom: 1em;
   font-weight: 100 !important;
   font-family: 'Source Code Pro', monospace;
 }
@@ -40,7 +39,9 @@ a:hover {
 html,
 body {
   height: 100%;
+  min-width: 360px;
   background-color: var(--dark-bg);
+  overflow-y: hidden;
 }
 
 header, main, footer {
@@ -49,7 +50,7 @@ header, main, footer {
 
 html, body, .lead {
   font-family: 'Montserrat Alternates', sans-serif !important;
-  font-weight: 300 !important;
+  font-weight: 400 !important;
 }
 
 .lead {
@@ -83,10 +84,6 @@ body {
 /*
  * Header
  */
-.masthead {
-  margin-bottom: 2rem;
-}
-
 .masthead-brand {
   margin-bottom: 0;
 }
@@ -161,12 +158,12 @@ body {
  */
 .hljs {
   display: block;
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: hidden;
   padding: 0.5em;
   /*background: #23241f;*/
   background: inherit;
-  filter: blur(1px) brightness(35%);
+  filter: blur(1px) brightness(20%);
 }
 
 .hljs,
