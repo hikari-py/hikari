@@ -424,8 +424,13 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
             `role_mentions` or `user_mentions`.
         """
         return await self._components.rest.update_message(
-            self.id, self.channel_id, content=content, embed=embed, mentions_everyone=mentions_everyone,
-            user_mentions=user_mentions, role_mentions=role_mentions
+            self.id,
+            self.channel_id,
+            content=content,
+            embed=embed,
+            mentions_everyone=mentions_everyone,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
         )
 
     async def safe_edit(
@@ -443,8 +448,13 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         mentions from working by default.
         """
         return await self._components.rest.safe_update_message(
-            self.id, self.channel_id, content=content, embed=embed, mentions_everyone=mentions_everyone,
-            user_mentions=user_mentions, role_mentions=role_mentions
+            self.id,
+            self.channel_id,
+            content=content,
+            embed=embed,
+            mentions_everyone=mentions_everyone,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
         )
 
     async def reply(
