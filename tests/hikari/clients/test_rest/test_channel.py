@@ -335,8 +335,8 @@ class TestRESTChannelLogging:
         rest_channel_logic_impl._session.create_message.return_value = mock_message_payload
         mock_allowed_mentions_payload = {"parse": ["everyone", "users", "roles"]}
         mock_embed_payload = {"description": "424242"}
-        mock_file_obj = mock.MagicMock(files.File)
-        mock_file_obj2 = mock.MagicMock(files.File)
+        mock_file_obj = mock.MagicMock(files.BaseStream)
+        mock_file_obj2 = mock.MagicMock(files.BaseStream)
         mock_embed_obj = mock.MagicMock(embeds.Embed)
         mock_embed_obj.assets_to_upload = [mock_file_obj2]
         mock_embed_obj.serialize = mock.MagicMock(return_value=mock_embed_payload)
@@ -429,7 +429,7 @@ class TestRESTChannelLogging:
         channel = mock.MagicMock(channels.Channel)
         mock_embed_obj = mock.MagicMock(embeds.Embed)
         mock_message_obj = mock.MagicMock(messages.Message)
-        mock_file_obj = mock.MagicMock(files.File)
+        mock_file_obj = mock.MagicMock(files.BaseStream)
         mock_embed_obj = mock.MagicMock(embeds.Embed)
         rest_channel_logic_impl.create_message = mock.AsyncMock(return_value=mock_message_obj)
         result = await rest_channel_logic_impl.safe_create_message(
@@ -818,7 +818,7 @@ class TestRESTChannelLogging:
         mock_webhook_obj = mock.MagicMock(webhooks.Webhook)
         rest_channel_logic_impl._session.create_webhook.return_value = mock_webhook_payload
         mock_image_data = mock.MagicMock(bytes)
-        mock_image_obj = mock.MagicMock(files.File)
+        mock_image_obj = mock.MagicMock(files.BaseStream)
         mock_image_obj.read_all = mock.AsyncMock(return_value=mock_image_data)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj))

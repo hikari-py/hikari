@@ -85,7 +85,7 @@ class TestRESTUserLogic:
         mock_webhook_payload = {"id": "123123", "avatar": "1wedoklpasdoiksdoka"}
         rest_webhook_logic_impl._session.modify_webhook.return_value = mock_webhook_payload
         mock_image_data = mock.MagicMock(bytes)
-        mock_image_obj = mock.MagicMock(files.File)
+        mock_image_obj = mock.MagicMock(files.BaseStream)
         mock_image_obj.read_all = mock.AsyncMock(return_value=mock_image_data)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj))
@@ -174,8 +174,8 @@ class TestRESTUserLogic:
         rest_webhook_logic_impl._session.execute_webhook.return_value = ...
         mock_allowed_mentions_payload = {"parse": ["everyone", "users", "roles"]}
         mock_embed_payload = {"description": "424242"}
-        mock_file_obj = mock.MagicMock(files.File)
-        mock_file_obj2 = mock.MagicMock(files.File)
+        mock_file_obj = mock.MagicMock(files.BaseStream)
+        mock_file_obj2 = mock.MagicMock(files.BaseStream)
         mock_embed_obj = mock.MagicMock(embeds.Embed)
         mock_embed_obj.assets_to_upload = [mock_file_obj2]
         mock_embed_obj.serialize = mock.MagicMock(return_value=mock_embed_payload)
@@ -261,7 +261,7 @@ class TestRESTUserLogic:
     @pytest.mark.asyncio
     async def test_safe_execute_webhook_with_optionals(self, rest_webhook_logic_impl):
         webhook = mock.MagicMock(webhooks.Webhook)
-        mock_file_obj = mock.MagicMock(files.File)
+        mock_file_obj = mock.MagicMock(files.BaseStream)
         mock_embed_obj = mock.MagicMock(embeds.Embed)
         mock_message_obj = mock.MagicMock(messages.Message)
         rest_webhook_logic_impl.execute_webhook = mock.AsyncMock(return_value=mock_message_obj)

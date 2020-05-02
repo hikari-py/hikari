@@ -30,7 +30,7 @@ from tests.hikari import _helpers
 class TestFile:
     @pytest.fixture
     def stub_file(self):
-        class StubFile(files.File):
+        class StubFile(files.BaseStream):
             def __init__(self):
                 pass
 
@@ -49,7 +49,7 @@ class TestFile:
         ],
     )
     def test__init__(self, input_name, input_data, expected_name, expected_data, expected_path):
-        file_obj = files.File(input_name, input_data)
+        file_obj = files.BaseStream(input_name, input_data)
 
         assert file_obj.name == expected_name
         assert file_obj._data == expected_data
@@ -57,7 +57,7 @@ class TestFile:
 
     @_helpers.assert_raises(type_=TypeError)
     def test__init__when_invalid_type_provided(self):
-        file_obj = files.File("any name", True)
+        file_obj = files.BaseStream("any name", True)
 
     @pytest.mark.asyncio
     async def test__aiter___when_path_is_not_None_and_data_is_None(self, event_loop, stub_file):

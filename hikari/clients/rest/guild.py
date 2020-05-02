@@ -239,7 +239,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         self,
         guild: bases.Hashable[guilds.GuildRole],
         name: str,
-        image: files.File,
+        image: files.BaseStream,
         *,
         roles: typing.Sequence[bases.Hashable[guilds.GuildRole]] = ...,
         reason: str = ...,
@@ -252,7 +252,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             The object or ID of the guild to create the emoji in.
         name : str
             The new emoji's name.
-        image : hikari.files.File
+        image : hikari.files.BaseStream
             The `128x128` image data.
         roles : typing.Sequence[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]]
             If specified, a list of role objects or IDs for which the emoji
@@ -380,7 +380,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         name: str,
         *,
         region: typing.Union[voices.VoiceRegion, str] = ...,
-        icon: files.File = ...,
+        icon: files.BaseStream = ...,
         verification_level: typing.Union[guilds.GuildVerificationLevel, int] = ...,
         default_message_notifications: typing.Union[guilds.GuildMessageNotificationsLevel, int] = ...,
         explicit_content_filter: typing.Union[guilds.GuildExplicitContentFilterLevel, int] = ...,
@@ -400,7 +400,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If specified, the voice region ID for new guild. You can use
             `RESTGuildComponent.fetch_guild_voice_regions` to see which region
             IDs are available.
-        icon : hikari.files.File
+        icon : hikari.files.BaseStream
             If specified, the guild icon image data.
         verification_level : typing.Union[hikari.guilds.GuildVerificationLevel, int]
             If specified, the verification level. Passing a raw int for this
@@ -516,9 +516,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         explicit_content_filter: typing.Union[guilds.GuildExplicitContentFilterLevel, int] = ...,
         afk_channel: bases.Hashable[_channels.GuildVoiceChannel] = ...,
         afk_timeout: typing.Union[datetime.timedelta, int] = ...,
-        icon: files.File = ...,
+        icon: files.BaseStream = ...,
         owner: bases.Hashable[users.User] = ...,
-        splash: files.File = ...,
+        splash: files.BaseStream = ...,
         system_channel: bases.Hashable[_channels.Channel] = ...,
         reason: str = ...,
     ) -> guilds.Guild:
@@ -547,11 +547,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If specified, the object or ID for the new AFK voice channel.
         afk_timeout : typing.Union[datetime.timedelta, int]
             If specified, the new AFK timeout seconds timedelta.
-        icon : hikari.files.File
+        icon : hikari.files.BaseStream
             If specified, the new guild icon image file.
         owner : typing.Union[hikari.users.User, hikari.bases.Snowflake, int]
             If specified, the object or ID of the new guild owner.
-        splash : hikari.files.File
+        splash : hikari.files.BaseStream
             If specified, the new new splash image file.
         system_channel : typing.Union[hikari.channels.GuildVoiceChannel, hikari.bases.Snowflake, int]
             If specified, the object or ID of the new system channel.

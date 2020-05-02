@@ -213,7 +213,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         *,
         headers: typing.Optional[typing.Dict[str, str]] = None,
         query: typing.Optional[more_typing.JSONObject] = None,
-        body: typing.Optional[aiohttp.FormData] = None,
+        body: typing.Optional[typing.Union[aiohttp.FormData, dict, list]] = None,
         reason: str = ...,
         suppress_authorization_header: bool = False,
     ) -> typing.Optional[more_typing.JSONObject, more_typing.JSONArray, bytes]:
@@ -631,7 +631,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         content: str = ...,
         nonce: str = ...,
         tts: bool = ...,
-        files: typing.Sequence[_files.File] = ...,
+        files: typing.Sequence[_files.BaseStream] = ...,
         embed: more_typing.JSONObject = ...,
         allowed_mentions: more_typing.JSONObject = ...,
     ) -> more_typing.JSONObject:
@@ -649,7 +649,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             and can usually be ignored.
         tts : bool
             If specified, whether the message will be sent as a TTS message.
-        files : typing.Sequence[hikari.files.File]
+        files : typing.Sequence[hikari.files.BaseStream]
             If specified, this should be a list of between `1` and `5` file
             objects to upload. Each should have a unique name.
         embed : more_typing.JSONObject
@@ -687,13 +687,13 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(json_payload, "embed", embed)
         conversions.put_if_specified(json_payload, "allowed_mentions", allowed_mentions)
 
-        form.add_field("payload_json", json.dumps(json_payload), content_type="application/json")
+        form.add_field("payload_json", json.dumps(json_payload), content_type=self.APPLICATION_JSON)
 
         if files is ...:
             files = more_collections.EMPTY_SEQUENCE
 
         for i, file in enumerate(files):
-            form.add_field(f"file{i}", file, filename=file.name, content_type="application/octet-stream")
+            form.add_field(f"file{i}", file, filename=file.filename, content_type=self.APPLICATION_OCTET_STREAM)
 
         route = routes.CHANNEL_MESSAGES.compile(self.POST, channel_id=channel_id)
 
@@ -2992,7 +2992,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         avatar_url: str = ...,
         tts: bool = ...,
         wait: bool = ...,
-        files: typing.Sequence[_files.File] = ...,
+        files: typing.Sequence[_files.BaseStream] = ...,
         embeds: typing.Sequence[more_typing.JSONObject] = ...,
         allowed_mentions: more_typing.JSONObject = ...,
     ) -> typing.Optional[more_typing.JSONObject]:
@@ -3017,7 +3017,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         wait : bool
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
-        files : typing.Sequence[hikari.files.File]
+        files : typing.Sequence[hikari.files.BaseStream]
             If specified, the optional file objects to upload.
         embeds : typing.Sequence[more_typing.JSONObject]
             If specified, the sequence of embed objects that will be sent

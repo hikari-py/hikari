@@ -361,10 +361,10 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
         """File assets that need to be uploaded when sending the embed."""
         return self._assets_to_upload
 
-    def _extract_url(self, url) -> typing.Tuple[typing.Optional[str], typing.Optional[files.File]]:
+    def _extract_url(self, url) -> typing.Tuple[typing.Optional[str], typing.Optional[files.BaseStream]]:
         if url is None:
             return None, None
-        if isinstance(url, files.File):
+        if isinstance(url, files.BaseStream):
             return f"attachment://{url.name}", url
         return url, None
 
@@ -372,15 +372,15 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
         if file_obj is not None:
             self._assets_to_upload.append(file_obj)
 
-    def set_footer(self, *, text: str, icon: typing.Optional[str, files.File] = None) -> Embed:
+    def set_footer(self, *, text: str, icon: typing.Optional[str, files.BaseStream] = None) -> Embed:
         """Set the embed footer.
 
         Parameters
         ----------
         text: str
             The optional text to set for the footer.
-        icon: typing.Union[str, hikari.files.File], optional
-            The optional `hikari.files.File` or URL to the image to set.
+        icon: typing.Union[str, hikari.files.BaseStream], optional
+            The optional `hikari.files.BaseStream` or URL to the image to set.
 
         Returns
         -------
@@ -401,13 +401,13 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
         self._maybe_ref_file_obj(file)
         return self
 
-    def set_image(self, image: typing.Optional[str, files.File] = None) -> Embed:
+    def set_image(self, image: typing.Optional[str, files.BaseStream] = None) -> Embed:
         """Set the embed image.
 
         Parameters
         ----------
-        image: typing.Union[str, hikari.files.File], optional
-            The optional `hikari.files.File` or URL to the image to set.
+        image: typing.Union[str, hikari.files.BaseStream], optional
+            The optional `hikari.files.BaseStream` or URL to the image to set.
 
         Returns
         -------
@@ -419,13 +419,13 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
         self._maybe_ref_file_obj(file)
         return self
 
-    def set_thumbnail(self, image: typing.Optional[str, files.File] = None) -> Embed:
+    def set_thumbnail(self, image: typing.Optional[str, files.BaseStream] = None) -> Embed:
         """Set the thumbnail image.
 
         Parameters
         ----------
-        image: typing.Union[str, hikari.files.File], optional
-            The optional `hikari.files.File` or URL to the image to set.
+        image: typing.Union[str, hikari.files.BaseStream], optional
+            The optional `hikari.files.BaseStream` or URL to the image to set.
 
         Returns
         -------
@@ -442,7 +442,7 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
         *,
         name: typing.Optional[str] = None,
         url: typing.Optional[str] = None,
-        icon: typing.Optional[str, files.File] = None,
+        icon: typing.Optional[str, files.BaseStream] = None,
     ) -> Embed:
         """Set the author of this embed.
 
@@ -452,8 +452,8 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
             The optional authors name.
         url: str, optional
             The optional URL to make the author text link to.
-        icon: typing.Union[str, hikari.files.File], optional
-            The optional `hikari.files.File` or URL to the icon to set.
+        icon: typing.Union[str, hikari.files.BaseStream], optional
+            The optional `hikari.files.BaseStream` or URL to the icon to set.
 
         Returns
         -------
