@@ -1440,7 +1440,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If you do not have access to the guild.
         """
         route = routes.GUILD.compile(self.GET, guild_id=guild_id)
-        return await self._request_json_response(route, query={"with_counts": with_counts})
+        return await self._request_json_response(
+            route, query={"with_counts": "true" if with_counts is True else "false"}
+        )
 
     async def get_guild_preview(self, guild_id: str) -> more_typing.JSONObject:
         """Get a public guild's preview object.
@@ -2294,7 +2296,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If you provide invalid values for the `days` or `compute_prune_count` fields.
         """
         query = {"days": days}
-        conversions.put_if_specified(query, "compute_prune_count", compute_prune_count, str)
+        conversions.put_if_specified(query, "compute_prune_count", compute_prune_count, lambda v: str(v).lower())
         route = routes.GUILD_PRUNE.compile(self.POST, guild_id=guild_id)
         result = await self._request_json_response(route, query=query, reason=reason)
 
@@ -2590,7 +2592,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If the invite is not found.
         """
         query = {}
-        conversions.put_if_specified(query, "with_counts", with_counts, str)
+        conversions.put_if_specified(query, "with_counts", with_counts, lambda v: str(v).lower())
         route = routes.INVITE.compile(self.GET, invite_code=invite_code)
         return await self._request_json_response(route, query=query)
 
@@ -3068,7 +3070,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             form.add_field(f"file{i}", file, filename=file.name, content_type="application/octet-stream")
 
         query = {}
-        conversions.put_if_specified(query, "wait", wait, str)
+        conversions.put_if_specified(query, "wait", wait, lambda v: str(v).lower())
 
         route = routes.WEBHOOK_WITH_TOKEN.compile(self.POST, webhook_id=webhook_id, webhook_token=webhook_token)
         return await self._request_json_response(route, body=form, query=query, suppress_authorization_header=True)
