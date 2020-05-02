@@ -389,11 +389,11 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Collection[typing.Union[hikari.users.User, hikari.bases.Snowflake, int]] OR bool
+        user_mentions : typing.Union[typing.Collection[typing.Union[hikari.users.User, hikari.bases.Snowflake, int]], bool]
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]] OR bool
+        role_mentions: typing.Union[typing.Collection[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]], bool]
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -490,11 +490,11 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Collection[typing.Union[hikari.users.User, hikari.bases.Snowflake, int]] OR bool
+        user_mentions : typing.Union[typing.Collection[typing.Union[hikari.users.User, hikari.bases.Snowflake, int]], bool]
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]] OR bool
+        role_mentions: typing.Union[typing.Collection[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]], bool]
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -579,22 +579,20 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         await self._components.rest.delete_messages(self.channel_id, self.id)
 
     async def add_reaction(self, emoji: typing.Union[str, _emojis.Emoji]):
-        """Add a reaction to this message.
+        r"""Add a reaction to this message.
 
         Parameters
         ----------
-        emoji : str OR hikari.emojis.Emoji
+        emoji : typing.Union[str, hikari.emojis.Emoji]
             The emoji to add.
 
         Examples
         --------
-        .. code-block:: python
-
             # Using a unicode emoji.
-            await message.add_reaction("\N{OK HAND SIGN}")
+            await message.add_reaction("👌")
             
             # Using a unicode emoji name.
-            await message.add_reaction("\\N{OK HAND SIGN}")
+            await message.add_reaction("\N{OK HAND SIGN}")
 
             # Using the `name:id` format.
             await message.add_reaction("rooAYAYA:705837374319493284")

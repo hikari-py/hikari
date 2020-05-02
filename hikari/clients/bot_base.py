@@ -65,13 +65,11 @@ class BotBase(
 
     Examples
     --------
-    .. code-block:: python
-
+        # You can use it like this:
         config = hikari.BotConfig(token="...", ...)
         bot = hikari.StatelessBot(config=config)
-
-    .. code-block:: python
-
+        
+        # Or like this:
         bot = hikari.StatelessBot(token="...", ...)
 
     """
