@@ -1088,7 +1088,7 @@ class TestRESTEndpoints:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         ("kwargs", "with_counts"),
-        [({"with_counts": True}, True), ({"with_counts": False}, False), ({}, True),],  # default value only
+        [({"with_counts": True}, "true"), ({"with_counts": False}, "false"), ({}, "true"),],  # default value only
     )
     async def test_get_guild(self, rest_impl, kwargs, with_counts):
         mock_response = {"id": "42", "name": "Hikari"}
@@ -1580,7 +1580,7 @@ class TestRESTEndpoints:
         with mock.patch.object(routes, "GUILD_PRUNE", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.begin_guild_prune("39393", 14, compute_prune_count=True, reason="BYEBYE") == 32
         rest_impl._request_json_response.assert_called_once_with(
-            mock_route, query={"days": 14, "compute_prune_count": "True"}, reason="BYEBYE"
+            mock_route, query={"days": 14, "compute_prune_count": "true"}, reason="BYEBYE"
         )
 
     @pytest.mark.asyncio
@@ -1749,7 +1749,7 @@ class TestRESTEndpoints:
         with mock.patch.object(routes, "INVITE", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_invite("fesdfes", with_counts=True) is mock_response
             routes.INVITE.compile.assert_called_once_with(rest_impl.GET, invite_code="fesdfes")
-        rest_impl._request_json_response.assert_called_once_with(mock_route, query={"with_counts": "True"})
+        rest_impl._request_json_response.assert_called_once_with(mock_route, query={"with_counts": "true"})
 
     @pytest.mark.asyncio
     async def test_delete_invite(self, rest_impl):
@@ -2089,5 +2089,5 @@ class TestRESTEndpoints:
         )
 
         rest_impl._request_json_response.assert_called_once_with(
-            mock_route, body=mock_form, query={"wait": "True"}, suppress_authorization_header=True,
+            mock_route, body=mock_form, query={"wait": "true"}, suppress_authorization_header=True,
         )
