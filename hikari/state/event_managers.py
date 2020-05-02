@@ -90,7 +90,7 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
 
     Parameters
     ----------
-    components: hikari.state.components.Components
+    components: hikari.clients.components.Components
         The client components that this event manager should be bound to.
         Includes the event dispatcher that will store individual events and
         manage dispatching them after this object creates them.
