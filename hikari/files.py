@@ -16,174 +16,212 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Component used to represent a file to make it easier to upload."""
+"""Component used to represent types of file to make it easier to upload."""
 
 from __future__ import annotations
 
-__all__ = ["File"]
+__all__ = ["BaseStream", "AsyncIteratorStream", "WebResourceStream", "FileStream", "ByteStream"]
 
+import abc
 import asyncio
+import concurrent.futures
+import functools
+import http
 import io
-import logging
 import os
-import time
 import typing
-from concurrent import futures
 
-from hikari.internal import assertions
+import aiohttp
+
+from hikari import errors
 
 
-class File(typing.AsyncIterable[bytes]):
-    """A file object.
+MAGIC_NUMBER: typing.Final[int] = 64 * 1024
 
-    It is an async iterator of bytes that is compatible with being passed into
-    aiohttp requests and read asynchronously. By doing this, it facades multiple
-    otherwise incompatible and sometimes blocking IO protocols that Python provides
-    in a way that should be simple to use and require as little consideration from
-    the user as possible.
 
-    In short, it is a facade for `bytes`, `bytearray`, `memoryview`, `io.BytesIO`,
-    `io.IOBase`, `Iterator[bytes]`, `Iterator[bytearray]`, `AsyncIterator[bytes]`,
-    `AsyncIterator[bytearray]`, and for file-system paths that are passed as either
-    `str` or `os.PathLike` objects.
+class BaseStream(abc.ABC, typing.AsyncIterable[bytes]):
+    """A data stream that can be uploaded in a message or downloaded.
 
-    !!! note
-        This class is an async iterable, so it can be iterated across asynchronously
-        to yield arbitrary sized chunks of `bytes` objects from the data stream.
-
-        These iterators do not alter any internal seek of the stream, but will
-        result in the data being cached in-memory after the first full iteration.
+    This is a wrapper for an async iterable of bytes.
     """
 
-    __slots__ = ("name", "_data", "_path", "_executor")
+    filename: str
+    """The name of the stream."""
 
-    _LOGGER = logging.getLogger("hikari.File")
-    ___VALID_TYPES___ = typing.Union[
-        io.BytesIO,
-        io.RawIOBase,
-        bytes,
-        bytearray,
-        memoryview,
-        typing.AsyncIterable[bytes],
-        typing.Iterable[bytes],
-        os.PathLike,
-        str,
-    ]
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
 
-    def __init__(
-        self,
-        name: typing.Union[os.PathLike, str],
-        data: typing.Optional[___VALID_TYPES___] = None,
-        executor: typing.Optional[futures.Executor] = None,
-    ):
-        self._executor = executor
-
-        if isinstance(name, os.PathLike):
-            self._LOGGER.debug("given a path-like %s to interpret as a name, will first convert into str", name)
-            name = str(name.__fspath__())
-
-        if data is None:
-            self.name = os.path.basename(name)
-            self._path = name
-            self._data = None
-            self._LOGGER.debug("given only a file path %s, using that as path; name will be %s", self._path, self.name)
-            return
-
-        self.name = name
-        self._LOGGER.debug("file name is %s", self.name)
-
-        if isinstance(data, memoryview):
-            self._LOGGER.debug("given a memoryview to interpret as a file, will first convert into bytes")
-            data = data.tobytes()
-
-        elif isinstance(data, io.BytesIO):
-            self._LOGGER.debug("given a bytesio to interpret as a file, will read the buffer immediately")
-            data = data.read()
-
-        if isinstance(data, os.PathLike):
-            self._LOGGER.debug("retrieving str file path from path-like %s", data)
-            data = str(data.__fspath__())
-
-        if isinstance(data, str):
-            self._LOGGER.debug("given %s as a file-system path", data)
-            self._path = data
-            self._data = None
-            return
-
-        if isinstance(data, (io.IOBase, typing.Iterable, typing.AsyncIterable, bytes, bytearray)):
-            self._LOGGER.debug("given a RawIOBase, Iterable, AsyncIterable, bytes, or bytearray")
-            self._path = None
-            self._data = data
-        else:
-            raise TypeError(
-                "Expected file object, path-like, str, iterable bytes, async iterable bytes, memoryview, bytes, "
-                f"or bytearray as file data type, but received {type(data).__module__}.{type(data).__qualname__}"
-            )
-
-    async def __aiter__(self) -> typing.AsyncIterator[typing.Union[bytes, bytearray]]:
-        if self._path is not None and self._data is None:
-            self._LOGGER.debug("reading path %s from filesystem in executor", self._path)
-            # They passed a file-system path.
-            # Open the file in binary read mode and return the contents. Do it in
-            # the executor to ensure that it doesn't block.
-            start = time.perf_counter()
-            self._data = await asyncio.get_event_loop().run_in_executor(self._executor, self._read_path)
-            duration = (time.perf_counter() - start) * 1_000
-            self._LOGGER.debug("read %s bytes from filesystem asynchronously in %sms", self._path, duration)
-            yield self._data
-
-        elif isinstance(self._data, io.IOBase):
-            self._LOGGER.debug("reading blocking IO object using executor")
-            # Some raw IO object that was not a bytesio we decoded earlier.
-            # Try to make sure nothing blocks.
-            start = time.perf_counter()
-            self._data = await asyncio.get_event_loop().run_in_executor(self._executor, self._read_lines)
-            duration = (time.perf_counter() - start) * 1_000
-            self._LOGGER.debug("read %s bytes from IO object asynchronously in %sms", self._path, duration)
-            yield self._data
-
-        elif isinstance(self._data, typing.AsyncIterable):
-            self._LOGGER.debug("yielding chunks of data from async iterable")
-            # An async iterable of (hopefully) bytes.
-            async for chunk in self._data:
-                assertions.assert_that(isinstance(chunk, bytes), "async iterator must yield bytes only")
-                yield chunk
-
-        elif isinstance(self._data, (bytes, bytearray)):
-            self._LOGGER.debug("yielding slab of binary data (%s bytes)", len(self._data))
-            # Normal byte array or bytes object. Just yield the whole chunk and let aiohttp swallow it
-            # elsewhere. This is already in-memory
-            yield self._data
-
-        elif isinstance(self._data, typing.Iterable):
-            self._LOGGER.debug("yielding chunks of data from iterable")
-
-            # A normal iterable of (hopefully) bytes.
-            for chunk in self._data:
-                assertions.assert_that(isinstance(chunk, bytes), "iterator must yield bytes only")
-                yield chunk
-
-        else:
-            # Shouldn't ever happen unless the user messes around with the internals, but to be
-            # safe, lets tell them off for it.
-            raise TypeError("Incompatible type passed to file for internal content. Please don't do that!")
-
-    async def read_all(self) -> bytes:
-        """Return the whole file data."""
+    async def read(self) -> bytes:
+        """Return the entire contents of the data stream."""
         data = b""
         async for chunk in self:
             data += chunk
-
         return data
 
-    def _read_path(self):
-        with open(self._path, "rb") as fp:
-            return fp.read()
 
-    def _read_lines(self):
-        lines = self._data.readlines()
+class AsyncIteratorStream(BaseStream):
+    """A simple data stream that wraps an async iterable or async iterator.
 
-        if lines and isinstance(lines[0], str):
-            raise TypeError("Please pass a file object in binary mode only!")
+    Parameters
+    ----------
+    filename : str
+        The file name to use.
+    obj : typing.AsyncIterator[bytes] OR typing.AsyncIterable[str]
+        The async iterator/iterable of bytes to use.
+    """
 
-        return b"".join(lines)
+    def __init__(
+        self, filename: str, obj: typing.Union[typing.AsyncIterator[bytes], typing.AsyncIterable[bytes]]
+    ) -> None:
+        super().__init__(filename)
+        self._obj = obj
+
+    async def __aiter__(self) -> typing.AsyncIterator[bytes]:
+
+        if isinstance(self._obj, typing.AsyncIterator):
+            iterator = self._obj
+        else:
+            iterator = self._obj.__aiter__()
+
+        async for chunk in iterator:
+            yield chunk
+
+
+class WebResourceStream(BaseStream):
+    """An async iterable of bytes that is represented by a web resource.
+
+    Using this to upload an attachment will lazily load chunks and send them
+    using bit-inception, vastly reducing the memory overhead by not storing the
+    entire resource in memory before sending it.
+
+    Parameters
+    ----------
+    filename : str
+        The file name to use.
+    url : str
+        The URL to the resource to stream.
+    """
+
+    url: str
+    """The URL of the resource."""
+
+    def __init__(self, filename: str, url: str) -> None:
+        super().__init__(filename)
+        self.url = url
+
+    async def __aiter__(self) -> typing.AsyncIterator[bytes]:
+        async with aiohttp.request("GET", self.url) as response:
+            if 200 <= response.status < 300:
+                async for chunk in response.content:
+                    yield chunk
+                return
+
+            raw_body = await response.read()
+
+        real_url = str(response.real_url)
+
+        if response.status == http.HTTPStatus.BAD_REQUEST:
+            raise errors.BadRequest(real_url, response.headers, raw_body)
+        if response.status == http.HTTPStatus.UNAUTHORIZED:
+            raise errors.Unauthorized(real_url, response.headers, raw_body)
+        if response.status == http.HTTPStatus.FORBIDDEN:
+            raise errors.Forbidden(real_url, response.headers, raw_body)
+        if response.status == http.HTTPStatus.NOT_FOUND:
+            raise errors.NotFound(real_url, response.headers, raw_body)
+
+        if 400 <= response.status < 500:
+            cls = errors.ClientHTTPErrorResponse
+        elif 500 <= response.status < 600:
+            cls = errors.ServerHTTPErrorResponse
+        else:
+            cls = errors.HTTPErrorResponse
+
+        raise cls(real_url, http.HTTPStatus(response.status), response.headers, raw_body)
+
+
+class FileStream(BaseStream):
+    """Asynchronous reader for a local file.
+
+    This takes one of two formats:
+
+        FileStream("path/to/cat.png")
+
+        FileStream("kitteh.png", "path/to/cat.png")
+
+    Parameters
+    ----------
+    *args : (str, str OR os.PathLike) OR (str OR os.PathLike)
+        Either two arguments, the first being the string file name and the
+        second being the file path; or one argument which is the file path.
+
+        If one argument is given, the file name is used for the upload.
+    executor : concurrent.futures.Executor, optional
+        An optional executor to run the IO operations in. If not specified, the
+        default executor for this loop will
+    """
+
+    @typing.overload
+    def __init__(
+        self,
+        filename: str,
+        path: typing.Union[str, os.PathLike],
+        *,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+    ) -> None:
+        ...
+
+    @typing.overload
+    def __init__(
+        self, path: typing.Union[str, os.PathLike], /, *, executor: typing.Optional[concurrent.futures.Executor] = None,
+    ) -> None:
+        ...
+
+    def __init__(self, *args, executor=None) -> None:
+        if len(args) == 1:
+            super().__init__(os.path.basename(*args))
+            self.path = args[0]
+        else:
+            name, path = args
+            super().__init__(name)
+            self.path = path
+        self._executor = executor
+
+    async def __aiter__(self) -> typing.AsyncIterator[bytes]:
+        loop = asyncio.get_event_loop()
+        fp = await loop.run_in_executor(self._executor, functools.partial(open, self.path, "rb"))
+        try:
+            while chunk := await loop.run_in_executor(self._executor, fp.read, MAGIC_NUMBER):
+                yield chunk
+        finally:
+            await loop.run_in_executor(self._executor, fp.close)
+
+
+class ByteStream(BaseStream):
+    """A stream of raw bytes.
+
+    Parameters
+    ----------
+    filename : str
+        The name of the resource.
+    data : bytes, bytearray, memoryview, str, io.BytesIO, io.StringIO
+        The data to stream.
+    """
+
+    def __init__(
+        self, filename: str, data: typing.Union[io.BytesIO, io.StringIO, str, bytes, bytearray, memoryview]
+    ) -> None:
+        super().__init__(filename)
+
+        if isinstance(data, (io.BytesIO, io.StringIO)):
+            data = data.read()
+
+        if isinstance(data, str):
+            data = bytes(data, "utf-8")
+        elif isinstance(data, memoryview):
+            data = data.tobytes()
+
+        self.data = data
+
+    async def __aiter__(self) -> typing.AsyncIterator[bytes]:
+        for i in range(0, len(self.data), MAGIC_NUMBER):
+            yield self.data[i : i + MAGIC_NUMBER]

@@ -327,7 +327,7 @@ class TestMessage:
 
     @pytest.mark.asyncio
     async def test_reply(self, message_obj, components_impl):
-        mock_file = mock.MagicMock(files.File)
+        mock_file = mock.MagicMock(files.BaseStream)
         mock_embed = mock.MagicMock(embeds.Embed)
         await message_obj.reply(
             content="blah",

@@ -53,14 +53,14 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         payload = await self._session.get_current_user()
         return users.MyUser.deserialize(payload, components=self._components)
 
-    async def update_me(self, *, username: str = ..., avatar: typing.Optional[files.File] = ...) -> users.MyUser:
+    async def update_me(self, *, username: str = ..., avatar: typing.Optional[files.BaseStream] = ...) -> users.MyUser:
         """Edit the current user.
 
         Parameters
         ----------
         username : str
             If specified, the new username string.
-        avatar : hikari.files.File, optional
+        avatar : hikari.files.BaseStream, optional
             If specified, the new avatar image data.
             If it is None, the avatar is removed.
 

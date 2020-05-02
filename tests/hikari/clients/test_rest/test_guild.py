@@ -225,7 +225,7 @@ class TestRESTGuildLogic:
         mock_emoji_obj = mock.MagicMock(emojis.GuildEmoji)
         rest_guild_logic_impl._session.create_guild_emoji.return_value = mock_emoji_payload
         mock_image_data = mock.MagicMock(bytes)
-        mock_image_obj = mock.MagicMock(files.File)
+        mock_image_obj = mock.MagicMock(files.BaseStream)
         mock_image_obj.read_all = mock.AsyncMock(return_value=mock_image_data)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj))
@@ -248,9 +248,9 @@ class TestRESTGuildLogic:
         mock_emoji_payload = {"id": "229292929", "animated": True}
         mock_emoji_obj = mock.MagicMock(emojis.GuildEmoji)
         rest_guild_logic_impl._session.create_guild_emoji.return_value = mock_emoji_payload
-        mock_image_obj = mock.MagicMock(files.File)
+        mock_image_obj = mock.MagicMock(files.BaseStream)
         mock_image_data = mock.MagicMock(bytes)
-        mock_image_obj = mock.MagicMock(files.File)
+        mock_image_obj = mock.MagicMock(files.BaseStream)
         mock_image_obj.read_all = mock.AsyncMock(return_value=mock_image_data)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj))
@@ -320,7 +320,7 @@ class TestRESTGuildLogic:
         mock_guild_obj = mock.MagicMock(guilds.Guild)
         rest_guild_logic_impl._session.create_guild.return_value = mock_guild_payload
         mock_image_data = mock.MagicMock(bytes)
-        mock_image_obj = mock.MagicMock(files.File)
+        mock_image_obj = mock.MagicMock(files.BaseStream)
         mock_image_obj.read_all = mock.AsyncMock(return_value=mock_image_data)
         mock_role_payload = {"permissions": 123123}
         mock_role_obj = mock.MagicMock(guilds.GuildRole)
@@ -422,10 +422,10 @@ class TestRESTGuildLogic:
         mock_guild_obj = mock.MagicMock(guilds.Guild)
         rest_guild_logic_impl._session.modify_guild.return_value = mock_guild_payload
         mock_icon_data = mock.MagicMock(bytes)
-        mock_icon_obj = mock.MagicMock(files.File)
+        mock_icon_obj = mock.MagicMock(files.BaseStream)
         mock_icon_obj.read_all = mock.AsyncMock(return_value=mock_icon_data)
         mock_splash_data = mock.MagicMock(bytes)
-        mock_splash_obj = mock.MagicMock(files.File)
+        mock_splash_obj = mock.MagicMock(files.BaseStream)
         mock_splash_obj.read_all = mock.AsyncMock(return_value=mock_splash_data)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(guilds.Guild, "deserialize", return_value=mock_guild_obj))
