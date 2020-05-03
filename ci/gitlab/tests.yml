@@ -32,10 +32,11 @@
     - |+
       set -e
       set -x
-      pip install -U pip
       apt-get install -qy git gcc g++ make
-      pip install nox
-      nox -s pytest
+      pip install nox 'virtualenv<20.0.19'
+      ls -arhl
+      nox -s pytest --no-error-on-external-run
+      ls -arhl
       mv .coverage "public/${CI_JOB_NAME}.coverage"
   stage: test
 
@@ -55,9 +56,8 @@ coverage:results:
     - |+
       set -e
       set -x
-      pip install -U pip
-      pip install nox
-      nox -s coalesce-coverage
+      pip install nox 'virtualenv<20.0.19'
+      nox -s coalesce-coverage --no-error-on-external-run
   stage: pre-report
 
 ###

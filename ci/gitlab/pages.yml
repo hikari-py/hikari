@@ -51,8 +51,8 @@
     set -x
     apt-get update
     apt-get install -qy graphviz git # FIXME: Remove once in master.
-    pip install nox
-    nox --sessions pages pdoc
+    pip install nox 'virtualenv<20.0.19'
+    nox --sessions pages pdoc --no-error-on-external-run
 
 ###
 ### Generate pages for staging branch and export them.
@@ -75,8 +75,8 @@ pages:test:
       set -x
       apt-get update
       apt-get install -qy graphviz # FIXME: remove once in master
-      pip install nox
-      nox --sessions pages pdoc
+      pip install nox 'virtualenv<20.0.19'
+      nox --sessions pages pdoc --no-error-on-external-run
   except:
     - master
     - staging
@@ -96,8 +96,8 @@ pages:feedback:
     - |+
       set -e
       set -x
-      pip install nox
-      nox --sessions pages pdoc
+      pip install nox 'virtualenv<20.0.19'
+      nox --sessions pages pdoc --no-error-on-external-run
   only:
     # THIS MUST ONLY CONTAIN merge_requests!
     - merge_requests
