@@ -458,7 +458,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
         return _messages.Message.deserialize(payload, components=self._components)
 
-    async def create_message(
+    async def create_message(  # pylint: disable=line-too-long
         self,
         channel: bases.Hashable[_channels.Channel],
         *,
@@ -578,7 +578,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             role_mentions=role_mentions,
         )
 
-    async def update_message(
+    async def update_message(  # pylint: disable=line-too-long
         self,
         message: bases.Hashable[_messages.Message],
         channel: bases.Hashable[_channels.Channel],
@@ -749,8 +749,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
         )
 
-    # pylint: disable=line-too-long
-    async def update_channel_overwrite(
+    async def update_channel_overwrite(  # pylint: disable=line-too-long
         self,
         channel: bases.Hashable[_messages.Message],
         overwrite: typing.Union[_channels.PermissionOverwrite, users.User, guilds.GuildRole, bases.Snowflake, int],
@@ -904,8 +903,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
         return invites.InviteWithMetadata.deserialize(payload, components=self._components)
 
-    # pylint: disable=line-too-long
-    async def delete_channel_overwrite(
+    async def delete_channel_overwrite(  # pylint: disable=line-too-long
         self,
         channel: bases.Hashable[_channels.Channel],
         overwrite: typing.Union[_channels.PermissionOverwrite, guilds.GuildRole, users.User, bases.Snowflake, int],

@@ -171,7 +171,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             webhook_token=webhook_token,
         )
 
-    async def execute_webhook(  # pylint:disable=too-many-locals
+    async def execute_webhook(  # pylint:disable=too-many-locals,line-too-long
         self,
         webhook: bases.Hashable[webhooks.Webhook],
         webhook_token: str,

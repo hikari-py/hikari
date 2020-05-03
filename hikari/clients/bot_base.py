@@ -68,7 +68,7 @@ class BotBase(
         # You can use it like this:
         config = hikari.BotConfig(token="...", ...)
         bot = hikari.StatelessBot(config=config)
-        
+
         # Or like this:
         bot = hikari.StatelessBot(token="...", ...)
 

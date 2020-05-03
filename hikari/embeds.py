@@ -254,7 +254,7 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
     """The title of the embed."""
 
     @title.validator
-    def _title_check(self, attribute, value):  # pylint:disable=unused-argument
+    def _title_check(self, _, value):  # pylint:disable=unused-argument
         if value is not None:
             assertions.assert_that(
                 len(value) <= _MAX_EMBED_TITLE, f"title must not exceed {_MAX_EMBED_TITLE} characters"
@@ -266,7 +266,7 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
     """The description of the embed."""
 
     @description.validator
-    def _description_check(self, attribute, value):  # pylint:disable=unused-argument
+    def _description_check(self, _, value):  # pylint:disable=unused-argument
         if value is not None:
             assertions.assert_that(
                 len(value) <= _MAX_EMBED_DESCRIPTION, f"description must not exceed {_MAX_EMBED_DESCRIPTION} characters"
@@ -361,11 +361,12 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
         """File assets that need to be uploaded when sending the embed."""
         return self._assets_to_upload
 
-    def _extract_url(self, url) -> typing.Tuple[typing.Optional[str], typing.Optional[files.BaseStream]]:
+    @staticmethod
+    def _extract_url(url) -> typing.Tuple[typing.Optional[str], typing.Optional[files.BaseStream]]:
         if url is None:
             return None, None
         if isinstance(url, files.BaseStream):
-            return f"attachment://{url.name}", url
+            return f"attachment://{url.filename}", url
         return url, None
 
     def _maybe_ref_file_obj(self, file_obj) -> None:
@@ -586,7 +587,8 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
         del self.fields[index]
         return self
 
-    def _safe_len(self, item) -> int:
+    @staticmethod
+    def _safe_len(item) -> int:
         return len(item) if item is not None else 0
 
     def _check_total_length(self) -> None:

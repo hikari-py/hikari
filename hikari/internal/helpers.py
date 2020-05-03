@@ -52,7 +52,7 @@ def warning(message: str, category: typing.Type[Warning], stack_level: int = 1) 
     warnings.warn("\n\n" + textwrap.indent(message, " " * 2), category, stacklevel=stack_level + 1)
 
 
-def generate_allowed_mentions(
+def generate_allowed_mentions(  # pylint:disable=line-too-long
     mentions_everyone: bool,
     user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool],
     role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool],
