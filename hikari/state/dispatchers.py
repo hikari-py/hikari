@@ -23,7 +23,6 @@ from __future__ import annotations
 __all__ = ["EventDispatcher"]
 
 import abc
-import inspect
 import typing
 
 from hikari.internal import conversions
@@ -155,25 +154,17 @@ class EventDispatcher(abc.ABC):
             nonlocal event_type
 
             if event_type is None:
-                signature = inspect.signature(callback)
-                parameters = list(signature.parameters.values())
+                parameters, _, signature = conversions.resolve_signature(callback)
 
                 # Seems that the `self` gets unbound for methods automatically by
                 # inspect.signature. That makes my life two lines easier.
                 if len(parameters) == 1:
-                    event_param = parameters[0]
+                    event_type = list(parameters.values())[0]
                 else:
                     raise TypeError(f"Invalid signature for event: async def {callback.__name__}({signature}): ...")
 
-                if event_param.annotation is inspect.Parameter.empty:
+                if event_type is conversions.EMPTY:
                     raise AttributeError(f"No param type hint given for: async def {callback}({signature}): ...")
-
-                frame, *_, = inspect.stack(2)[0]
-
-                try:
-                    event_type = conversions.snoop_typehint_from_scope(frame, event_param.annotation)
-                finally:
-                    del frame, _
 
             return self.add_listener(event_type, callback, _stack_level=3)
 

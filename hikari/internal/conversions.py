@@ -31,7 +31,8 @@ __all__ = [
     "discord_epoch_to_datetime",
     "unix_epoch_to_datetime",
     "pluralize",
-    "snoop_typehint_from_scope",
+    "resolve_signature",
+    "EMPTY",
 ]
 
 import base64
@@ -39,6 +40,7 @@ import contextlib
 import datetime
 import email.utils
 import functools
+import inspect
 import operator
 import re
 import typing
@@ -259,66 +261,47 @@ def pluralize(count: int, name: str, suffix: str = "s") -> str:
     return f"{count} {name + suffix}" if count - 1 else f"{count} {name}"
 
 
-def snoop_typehint_from_scope(frame: types.FrameType, typehint: typing.Union[str, typing.Any]) -> typing.Any:
-    """Resolve a string type hint from a given stack frame.
+EMPTY: typing.Final[inspect.Parameter.empty] = inspect.Parameter.empty
+"""A singleton that empty annotations will be set to in `resolve_signature`."""
 
-    This snoops around the local and global scope for the given frame to find
-    the given attribute name, taking into account nested function calls. The
-    reason to do this is that if a string type hint is used, or the
-    `from __future__ import annotations` directive is used, the physical thing
-    that the type hint represents will no longer be evaluated by the
-    interpreter. This is an implementation that does not require the use of
-    `eval`, and thus reduces the risk of arbitrary code execution as a
-    result.
 
-    Nested parameters such as `typing.Sequence` should also be able to be
-    resolved correctly.
+def resolve_signature(
+    func: typing.Callable[[...], ...]
+) -> typing.Tuple[typing.Mapping[str, typing.Any], typing.Any, inspect.Signature]:
+    """Get the annotations of the passed `func` and it's `inspect.Signature`.
 
     Parameters
     ----------
-    frame : types.FrameType
-        The stack frame that the element with the typehint was defined in.
-        This is retrieved using `inspect.stack` `(frame_no)[0][0]`,
-        where `frame_no` is the number of frames from this invocation that
-        you want to snoop the scope at.
-    typehint : typing.Union[str, typing.Any]
-        The type hint to resolve. If a non-`str` is passed, then this is
-        returned immediately as the result.
+    func : typing.Callable[[...], ...]
+        The function to get the resolved annotations from.
 
     Returns
     -------
-    typing.Any
-        The physical representation of the given type hint.
-
-    Raises
-    ------
-    NameError
-        If the attribute was not found.
-
-    !!! warning
-        The input frame must be manually dereferenced using the `del` keyword
-        after use. Any functions that are decorated and wrapped when using this
-        lookup must use `functools.wraps` to ensure that the correct scope is
-        identified on the stack.
-
-        This is incredibly unpythonic and baremetal, but due to
-        [PEP 563](https://www.python.org/dev/peps/pep-0563/) there is no other
-        consistent way of making this work correctly.
+    typing.Tuple[typing.Mapping[str, typing.Any], typing.Any, inspect.Signature]
+        A mapping of parameter names to their relevant resolved annotations
+        (the annotation will be "EMPTY" if not set) for the passed function's
+        parameters, the resolved function's return annotation or "EMPTY" if it's
+        not set, and the `inspect.Signature` object for the passed function
+        (which may include unresolved forward references).
     """
-    if not isinstance(typehint, str):
-        return typehint
+    signature = inspect.signature(func)
+    parameters = dict(signature.parameters)
+    resolved_type_hints = None
+    for key, value in tuple(parameters.items()):
+        if isinstance(value.annotation, str):
+            if resolved_type_hints is None:
+                resolved_type_hints = typing.get_type_hints(func)
+            parameters[key] = resolved_type_hints[key]
+        else:
+            parameters[key] = value.annotation
 
-    fragments = typehint.split(".")
-
-    for scope in (frame.f_locals, frame.f_globals):
-        try:
-            scope = scope[fragments[0]]
-            for attr in fragments[1:]:
-                scope = getattr(scope, attr)
-            return scope
-        except (AttributeError, KeyError):
-            pass
-    raise NameError(f"No attribute {typehint} was found in enclosing scope")
+    return_annotation = signature.return_annotation
+    if isinstance(return_annotation, str):
+        if resolved_type_hints is None:
+            return_annotation = typing.get_type_hints(func)["return"]
+        else:
+            return_annotation = resolved_type_hints["return"]
+    return parameters, return_annotation, signature
 
 
 def dereference_int_flag(
