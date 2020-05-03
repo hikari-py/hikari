@@ -24,7 +24,6 @@
     - |+
       set -e
       set -x
-      pip install -U pip
       apt install git -y
       pip install nox
       nox --sessions pip-sdist pip-bdist-wheel pip-git
