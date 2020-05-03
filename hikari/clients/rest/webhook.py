@@ -85,7 +85,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         *,
         webhook_token: str = ...,
         name: str = ...,
-        avatar: typing.Optional[_files.File] = ...,
+        avatar: typing.Optional[_files.BaseStream] = ...,
         channel: bases.Hashable[_channels.GuildChannel] = ...,
         reason: str = ...,
     ) -> webhooks.Webhook:
@@ -100,7 +100,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             session's provided authorization `token`).
         name : str
             If specified, the new name string.
-        avatar : hikari.files.File, optional
+        avatar : hikari.files.BaseStream, optional
             If specified, the new avatar image. If `None`, then
             it is removed.
         channel : typing.Union[hikari.channels.GuildChannel, hikari.bases.Snowflake, int]
@@ -171,7 +171,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             webhook_token=webhook_token,
         )
 
-    async def execute_webhook(  # pylint:disable=too-many-locals
+    async def execute_webhook(  # pylint:disable=too-many-locals,line-too-long
         self,
         webhook: bases.Hashable[webhooks.Webhook],
         webhook_token: str,
@@ -181,7 +181,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         avatar_url: str = ...,
         tts: bool = ...,
         wait: bool = False,
-        files: typing.Sequence[_files.File] = ...,
+        files: typing.Sequence[_files.BaseStream] = ...,
         embeds: typing.Sequence[_embeds.Embed] = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
@@ -208,7 +208,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         wait : bool
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
-        files : typing.Sequence[hikari.files.File]
+        files : typing.Sequence[hikari.files.BaseStream]
             If specified, a sequence of files to upload.
         embeds : typing.Sequence[hikari.embeds.Embed]
             If specified, a sequence of between `1` to `10` embed objects
@@ -284,7 +284,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         avatar_url: str = ...,
         tts: bool = ...,
         wait: bool = False,
-        files: typing.Sequence[_files.File] = ...,
+        files: typing.Sequence[_files.BaseStream] = ...,
         embeds: typing.Sequence[_embeds.Embed] = ...,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = False,

@@ -277,6 +277,9 @@ class TestWindowedBurstRateLimiter:
         completion_times = []
         logger = logging.getLogger(__name__)
 
+        asyncio.set_event_loop(event_loop)
+        assert asyncio.get_event_loop().is_running(), "something has gone terribly wrong"
+
         def create_task(i):
             logger.info("making task %s", i)
             future = event_loop.create_future()

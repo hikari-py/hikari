@@ -31,7 +31,6 @@ __all__ = [
     "Message",
 ]
 
-import asyncio
 import typing
 
 import attr
@@ -40,6 +39,7 @@ from hikari import applications
 from hikari import bases
 from hikari import embeds as _embeds
 from hikari import emojis as _emojis
+from hikari import files as _files
 from hikari import guilds
 from hikari import users
 from hikari.internal import conversions
@@ -50,7 +50,6 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import channels
-    from hikari import files as _files
     from hikari.internal import more_typing
 
 
@@ -143,8 +142,13 @@ class MessageActivityType(int, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Attachment(bases.UniqueEntity, marshaller.Deserializable):
-    """Represents a file attached to a message."""
+class Attachment(bases.UniqueEntity, _files.BaseStream, marshaller.Deserializable):
+    """Represents a file attached to a message.
+
+    You can use this object in the same way as a
+    `hikari.files.BaseStream`, by passing it as an attached file when creating a
+    message, etc.
+    """
 
     filename: str = marshaller.attrib(deserializer=str)
     """The name of the file."""
@@ -163,6 +167,9 @@ class Attachment(bases.UniqueEntity, marshaller.Deserializable):
 
     width: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
     """The width of the image (if the file is an image)."""
+
+    def __aiter__(self) -> typing.AsyncIterator[bytes]:
+        return _files.WebResourceStream(self.filename, self.url).__aiter__()
 
 
 @marshaller.marshallable()
@@ -366,7 +373,7 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         """
         return self._components.rest.fetch_channel(channel=self.channel_id)
 
-    async def edit(
+    async def edit(  # pylint:disable=line-too-long
         self,
         *,
         content: str = ...,
@@ -457,12 +464,12 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
             role_mentions=role_mentions,
         )
 
-    async def reply(
+    async def reply(  # pylint:disable=line-too-long
         self,
         *,
         content: str = ...,
         embed: _embeds.Embed = ...,
-        files: typing.Sequence[_files.File] = ...,
+        files: typing.Sequence[_files.BaseStream] = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
         role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
@@ -481,7 +488,7 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
             and can usually be ignored.
         tts : bool
             If specified, whether the message will be sent as a TTS message.
-        files : typing.Sequence[hikari.files.File]
+        files : typing.Sequence[hikari.files.BaseStream]
             If specified, a sequence of files to upload, if desired. Should be
             between 1 and 10 objects in size (inclusive), also including embed
             attachments.
@@ -541,7 +548,7 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         *,
         content: str = ...,
         embed: _embeds.Embed = ...,
-        files: typing.Sequence[_files.File] = ...,
+        files: typing.Sequence[_files.BaseStream] = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
         role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
@@ -590,7 +597,7 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         --------
             # Using a unicode emoji.
             await message.add_reaction("👌")
-            
+
             # Using a unicode emoji name.
             await message.add_reaction("\N{OK HAND SIGN}")
 

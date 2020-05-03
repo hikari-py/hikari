@@ -653,8 +653,8 @@ class TestRESTEndpoints:
         CHANNEL_MESSAGES.compile.return_value = mock_route
         mock_form = mock.MagicMock(aiohttp.FormData, add_field=mock.MagicMock())
         FormData.return_value = mock_form
-        mock_file = mock.MagicMock(files.File)
-        mock_file.name = "file.txt"
+        mock_file = mock.MagicMock(files.BaseStream)
+        mock_file.filename = "file.txt"
         mock_json = '{"description": "I am a message", "tts": "True"}'
         dumps.return_value = mock_json
 
@@ -2045,9 +2045,9 @@ class TestRESTEndpoints:
         WEBHOOK_WITH_TOKEN.compile.return_value = mock_route
         mock_response = {"id": "53", "content": "la"}
         rest_impl._request_json_response.return_value = mock_response
-        mock_file = mock.MagicMock(files.File)
+        mock_file = mock.MagicMock(files.BaseStream)
         mock_file.name = "file.txt"
-        mock_file2 = mock.MagicMock(files.File)
+        mock_file2 = mock.MagicMock(files.BaseStream)
         mock_file2.name = "file2.txt"
         mock_json = '{"content": "A messages", "username": "agent 42"}'
         dumps.return_value = mock_json
