@@ -458,14 +458,14 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
         return _messages.Message.deserialize(payload, components=self._components)
 
-    async def create_message(
+    async def create_message(  # pylint: disable=line-too-long
         self,
         channel: bases.Hashable[_channels.Channel],
         *,
         content: str = ...,
         nonce: str = ...,
         tts: bool = ...,
-        files: typing.Sequence[_files.File] = ...,
+        files: typing.Sequence[_files.BaseStream] = ...,
         embed: _embeds.Embed = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
@@ -485,7 +485,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             and can usually be ignored.
         tts : bool
             If specified, whether the message will be sent as a TTS message.
-        files : typing.Sequence[hikari.files.File]
+        files : typing.Sequence[hikari.files.BaseStream]
             If specified, a sequence of files to upload, if desired. Should be
             between 1 and 10 objects in size (inclusive), also including embed
             attachments.
@@ -553,7 +553,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         content: str = ...,
         nonce: str = ...,
         tts: bool = ...,
-        files: typing.Sequence[_files.File] = ...,
+        files: typing.Sequence[_files.BaseStream] = ...,
         embed: _embeds.Embed = ...,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = False,
@@ -578,7 +578,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             role_mentions=role_mentions,
         )
 
-    async def update_message(
+    async def update_message(  # pylint: disable=line-too-long
         self,
         message: bases.Hashable[_messages.Message],
         channel: bases.Hashable[_channels.Channel],
@@ -749,8 +749,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
         )
 
-    # pylint: disable=line-too-long
-    async def update_channel_overwrite(
+    async def update_channel_overwrite(  # pylint: disable=line-too-long
         self,
         channel: bases.Hashable[_messages.Message],
         overwrite: typing.Union[_channels.PermissionOverwrite, users.User, guilds.GuildRole, bases.Snowflake, int],
@@ -904,8 +903,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
         return invites.InviteWithMetadata.deserialize(payload, components=self._components)
 
-    # pylint: disable=line-too-long
-    async def delete_channel_overwrite(
+    async def delete_channel_overwrite(  # pylint: disable=line-too-long
         self,
         channel: bases.Hashable[_channels.Channel],
         overwrite: typing.Union[_channels.PermissionOverwrite, guilds.GuildRole, users.User, bases.Snowflake, int],
@@ -1056,7 +1054,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         channel: bases.Hashable[_channels.GuildChannel],
         name: str,
         *,
-        avatar: _files.File = ...,
+        avatar: _files.BaseStream = ...,
         reason: str = ...,
     ) -> webhooks.Webhook:
         """Create a webhook for a given channel.
@@ -1067,7 +1065,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             The object or ID of the channel for webhook to be created in.
         name : str
             The webhook's name string.
-        avatar : hikari.files.File
+        avatar : hikari.files.BaseStream
             If specified, the avatar image to use.
         reason : str
             If specified, the audit log reason explaining why the operation

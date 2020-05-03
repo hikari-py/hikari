@@ -32,6 +32,7 @@
     - |+
       set -e
       set -x
+      pip install -U pip
       apt-get install -qy git gcc g++ make
       pip install nox
       nox -s pytest
@@ -54,6 +55,7 @@ coverage:results:
     - |+
       set -e
       set -x
+      pip install -U pip
       pip install nox
       nox -s coalesce-coverage
   stage: pre-report

@@ -27,6 +27,7 @@ import typing
 import attr
 
 from hikari import bases
+from hikari import files
 from hikari import users
 from hikari.internal import marshaller
 
@@ -61,7 +62,7 @@ class UnicodeEmoji(Emoji):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class UnknownEmoji(Emoji, bases.UniqueEntity):
+class UnknownEmoji(Emoji, bases.UniqueEntity, files.BaseStream):
     """Represents a unknown emoji."""
 
     name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None)
@@ -80,6 +81,15 @@ class UnknownEmoji(Emoji, bases.UniqueEntity):
     def url_name(self) -> str:
         """Get the format of this emoji used in request routes."""
         return f"{self.name}:{self.id}"
+
+    @property
+    def url(self) -> str:
+        # TODO: implement.
+        raise NotImplementedError()
+
+    def __aiter__(self) -> typing.AsyncIterator[bytes]:
+        # TODO: implement.
+        raise NotImplementedError()
 
 
 def _deserialize_role_ids(payload: more_typing.JSONArray) -> typing.Set[bases.Snowflake]:

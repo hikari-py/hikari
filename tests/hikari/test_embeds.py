@@ -311,19 +311,19 @@ class TestEmbed:
         ["input", "expected_output"],
         [
             ("https://some.url/to/somewhere.png", ("https://some.url/to/somewhere.png", None)),
-            (files.File("test.png"), ["attachment://test.png", "the inputed file"]),
+            (files.FileStream("test.png"), ["attachment://test.png", "the inputed file"]),
             (None, (None, None)),
         ],
     )
     def test__extract_url(self, input, expected_output):
-        if isinstance(input, files.File):
+        if isinstance(input, files.BaseStream):
             expected_output[1] = input
             expected_output = tuple(expected_output)
         em = embeds.Embed()
         assert em._extract_url(input) == expected_output
 
     def test__maybe_ref_file_obj(self):
-        mock_file_obj = mock.MagicMock(files.File)
+        mock_file_obj = mock.MagicMock(files.BaseStream)
         em = embeds.Embed()
         em._maybe_ref_file_obj(mock_file_obj)
         assert em.assets_to_upload == [mock_file_obj]
@@ -341,8 +341,8 @@ class TestEmbed:
         assert em._assets_to_upload == []
 
     def test_set_footer_with_optionals_with_image_as_file(self):
-        mock_file_obj = mock.MagicMock(files.File)
-        mock_file_obj.name = "test.png"
+        mock_file_obj = mock.MagicMock(files.BaseStream)
+        mock_file_obj.filename = "test.png"
         em = embeds.Embed()
         assert em.set_footer(text="test", icon=mock_file_obj) == em
         assert em.footer.text == "test"
@@ -363,8 +363,8 @@ class TestEmbed:
         assert em._assets_to_upload == []
 
     def test_set_image_with_optionals_with_image_as_file(self):
-        mock_file_obj = mock.MagicMock(files.File)
-        mock_file_obj.name = "test.png"
+        mock_file_obj = mock.MagicMock(files.BaseStream)
+        mock_file_obj.filename = "test.png"
         em = embeds.Embed()
         assert em.set_image(mock_file_obj) == em
         assert em.image.url == "attachment://test.png"
@@ -383,8 +383,8 @@ class TestEmbed:
         assert em._assets_to_upload == []
 
     def test_set_thumbnail_with_optionals_with_image_as_file(self):
-        mock_file_obj = mock.MagicMock(files.File)
-        mock_file_obj.name = "test.png"
+        mock_file_obj = mock.MagicMock(files.BaseStream)
+        mock_file_obj.filename = "test.png"
         em = embeds.Embed()
         assert em.set_thumbnail(mock_file_obj) == em
         assert em.thumbnail.url == "attachment://test.png"
@@ -405,8 +405,8 @@ class TestEmbed:
         assert em._assets_to_upload == []
 
     def test_set_author_with_optionals_with_icon_as_file(self):
-        mock_file_obj = mock.MagicMock(files.File)
-        mock_file_obj.name = "test.png"
+        mock_file_obj = mock.MagicMock(files.BaseStream)
+        mock_file_obj.filename = "test.png"
         em = embeds.Embed()
         assert em.set_author(name="hikari", url="nekokatt.gitlab.io/hikari", icon=mock_file_obj) == em
         assert em.author.name == "hikari"

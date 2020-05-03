@@ -20,9 +20,10 @@
 
 from __future__ import annotations
 
-__all__ = ["completed_future", "wait"]
+__all__ = ["completed_future", "wait", "is_async_iterator", "is_async_iterable"]
 
 import asyncio
+import inspect
 import typing
 
 if typing.TYPE_CHECKING:
@@ -77,3 +78,33 @@ def wait(
     """
     # noinspection PyTypeChecker
     return asyncio.wait([asyncio.ensure_future(f) for f in aws], timeout=timeout, return_when=return_when)
+
+
+# On Python3.8.2, there appears to be a bug with the typing module:
+
+# >>> class Aiterable:
+# ...     async def __aiter__(self):
+# ...         yield ...
+# >>> isinstance(Aiterable(), typing.AsyncIterable)
+# True
+
+# >>> class Aiterator:
+# ...     async def __anext__(self):
+# ...         return ...
+# >>> isinstance(Aiterator(), typing.AsyncIterator)
+# False
+
+# ... so I guess I will have to determine this some other way.
+
+
+def is_async_iterator(obj: typing.Any) -> bool:
+    """Determine if the object is an async iterator or not."""
+    return hasattr(obj, "__anext__") and asyncio.iscoroutinefunction(obj.__anext__)
+
+
+def is_async_iterable(obj: typing.Any) -> bool:
+    """Determine if the object is an async iterable or not."""
+    if not hasattr(obj, "__aiter__"):
+        return False
+    # These could be async generators, or they could be something different.
+    return inspect.isfunction(obj.__aiter__) or inspect.ismethod(obj.__aiter__)
