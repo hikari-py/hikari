@@ -21,6 +21,7 @@
 .lint:
   allow_failure: false
   before_script:
+    - pip install -U pip
     - pip install nox
     - mkdir public || true
   extends:

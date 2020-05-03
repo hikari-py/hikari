@@ -93,3 +93,118 @@ async def test_wait():
         assert result == mock_futures
         asyncio.wait.assert_called_once_with([mock_future], timeout=42, return_when=asyncio.FIRST_COMPLETED)
         asyncio.ensure_future.assert_called_once_with(mock_awaitable)
+
+
+class TestIsAsyncIterator:
+    def test_on_inst(self):
+        class AsyncIterator:
+            async def __anext__(self):
+                return None
+
+        assert more_asyncio.is_async_iterator(AsyncIterator())
+
+    def test_on_class(self):
+        class AsyncIterator:
+            async def __anext__(self):
+                return ...
+
+        assert more_asyncio.is_async_iterator(AsyncIterator)
+
+    @pytest.mark.asyncio
+    async def test_on_genexp(self):
+        async def genexp():
+            yield ...
+            yield ...
+
+        exp = genexp()
+        try:
+            assert not more_asyncio.is_async_iterator(exp)
+        finally:
+            await exp.aclose()
+
+    def test_on_iterator(self):
+        class Iter:
+            def __next__(self):
+                return ...
+
+        assert not more_asyncio.is_async_iterator(Iter())
+
+    def test_on_iterator_class(self):
+        class Iter:
+            def __next__(self):
+                return ...
+
+        assert not more_asyncio.is_async_iterator(Iter)
+
+    def test_on_async_iterable(self):
+        class AsyncIter:
+            def __aiter__(self):
+                yield ...
+
+        assert not more_asyncio.is_async_iterator(AsyncIter())
+
+    def test_on_async_iterable_class(self):
+        class AsyncIter:
+            def __aiter__(self):
+                yield ...
+
+        assert not more_asyncio.is_async_iterator(AsyncIter)
+
+
+class TestIsAsyncIterable:
+    def test_on_instance(self):
+        class AsyncIter:
+            async def __aiter__(self):
+                yield ...
+
+        assert more_asyncio.is_async_iterable(AsyncIter())
+
+    def test_on_class(self):
+        class AsyncIter:
+            async def __aiter__(self):
+                yield ...
+
+        assert more_asyncio.is_async_iterable(AsyncIter)
+
+    def test_on_delegate(self):
+        class AsyncIterator:
+            async def __anext__(self):
+                ...
+
+        class AsyncIterable:
+            def __aiter__(self):
+                return AsyncIterator()
+
+        assert more_asyncio.is_async_iterable(AsyncIterable())
+
+    def test_on_delegate_class(self):
+        class AsyncIterator:
+            async def __anext__(self):
+                ...
+
+        class AsyncIterable:
+            def __aiter__(self):
+                return AsyncIterator()
+
+        assert more_asyncio.is_async_iterable(AsyncIterable)
+
+    def test_on_inst(self):
+        class AsyncIterator:
+            async def __anext__(self):
+                return None
+
+        assert more_asyncio.is_async_iterator(AsyncIterator())
+
+    def test_on_AsyncIterator(self):
+        class AsyncIterator:
+            async def __anext__(self):
+                return ...
+
+        assert not more_asyncio.is_async_iterable(AsyncIterator())
+
+    def test_on_AsyncIterator_class(self):
+        class AsyncIterator:
+            async def __anext__(self):
+                return ...
+
+        assert not more_asyncio.is_async_iterable(AsyncIterator)

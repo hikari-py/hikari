@@ -39,7 +39,7 @@ from hikari import applications
 from hikari import bases
 from hikari import embeds as _embeds
 from hikari import emojis as _emojis
-from hikari import files
+from hikari import files as _files
 from hikari import guilds
 from hikari import users
 from hikari.internal import conversions
@@ -50,7 +50,6 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import channels
-    from hikari import files as _files
     from hikari.internal import more_typing
 
 
@@ -143,7 +142,7 @@ class MessageActivityType(int, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Attachment(bases.UniqueEntity, files.BaseStream, marshaller.Deserializable):
+class Attachment(bases.UniqueEntity, _files.BaseStream, marshaller.Deserializable):
     """Represents a file attached to a message.
 
     You can use this object in the same way as a
@@ -170,7 +169,7 @@ class Attachment(bases.UniqueEntity, files.BaseStream, marshaller.Deserializable
     """The width of the image (if the file is an image)."""
 
     def __aiter__(self) -> typing.AsyncIterator[bytes]:
-        return files.WebResourceStream(self.filename, self.url).__aiter__()
+        return _files.WebResourceStream(self.filename, self.url).__aiter__()
 
 
 @marshaller.marshallable()
@@ -374,7 +373,7 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         """
         return self._components.rest.fetch_channel(channel=self.channel_id)
 
-    async def edit(
+    async def edit(  # pylint:disable=line-too-long
         self,
         *,
         content: str = ...,
@@ -465,7 +464,7 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
             role_mentions=role_mentions,
         )
 
-    async def reply(
+    async def reply(  # pylint:disable=line-too-long
         self,
         *,
         content: str = ...,
@@ -598,7 +597,7 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         --------
             # Using a unicode emoji.
             await message.add_reaction("👌")
-            
+
             # Using a unicode emoji name.
             await message.add_reaction("\N{OK HAND SIGN}")
 

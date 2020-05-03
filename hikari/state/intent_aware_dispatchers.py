@@ -82,7 +82,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
 
     def add_listener(
         self, event_type: typing.Type[base.HikariEvent], callback: dispatchers.EventCallbackT, **kwargs
-    ) -> None:
+    ) -> dispatchers.EventCallbackT:
         """Register a new event callback to a given event name.
 
         Parameters
@@ -91,6 +91,11 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
             The event to register to.
         callback : `async def callback(event: HikariEvent) -> ...`
             The event callback to invoke when this event is fired.
+
+        Returns
+        -------
+        async (event) -> None
+            The async callback that was registered.
 
         Raises
         ------
@@ -136,6 +141,8 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         if event_type not in self._listeners:
             self._listeners[event_type] = []
         self._listeners[event_type].append(callback)
+
+        return callback
 
     def remove_listener(
         self, event_type: typing.Type[dispatchers.EventT], callback: dispatchers.EventCallbackT

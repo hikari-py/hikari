@@ -311,7 +311,7 @@ class TestEmbed:
         ["input", "expected_output"],
         [
             ("https://some.url/to/somewhere.png", ("https://some.url/to/somewhere.png", None)),
-            (files.BaseStream("test.png"), ["attachment://test.png", "the inputed file"]),
+            (files.FileStream("test.png"), ["attachment://test.png", "the inputed file"]),
             (None, (None, None)),
         ],
     )
@@ -342,7 +342,7 @@ class TestEmbed:
 
     def test_set_footer_with_optionals_with_image_as_file(self):
         mock_file_obj = mock.MagicMock(files.BaseStream)
-        mock_file_obj.name = "test.png"
+        mock_file_obj.filename = "test.png"
         em = embeds.Embed()
         assert em.set_footer(text="test", icon=mock_file_obj) == em
         assert em.footer.text == "test"
@@ -364,7 +364,7 @@ class TestEmbed:
 
     def test_set_image_with_optionals_with_image_as_file(self):
         mock_file_obj = mock.MagicMock(files.BaseStream)
-        mock_file_obj.name = "test.png"
+        mock_file_obj.filename = "test.png"
         em = embeds.Embed()
         assert em.set_image(mock_file_obj) == em
         assert em.image.url == "attachment://test.png"
@@ -384,7 +384,7 @@ class TestEmbed:
 
     def test_set_thumbnail_with_optionals_with_image_as_file(self):
         mock_file_obj = mock.MagicMock(files.BaseStream)
-        mock_file_obj.name = "test.png"
+        mock_file_obj.filename = "test.png"
         em = embeds.Embed()
         assert em.set_thumbnail(mock_file_obj) == em
         assert em.thumbnail.url == "attachment://test.png"
@@ -406,7 +406,7 @@ class TestEmbed:
 
     def test_set_author_with_optionals_with_icon_as_file(self):
         mock_file_obj = mock.MagicMock(files.BaseStream)
-        mock_file_obj.name = "test.png"
+        mock_file_obj.filename = "test.png"
         em = embeds.Embed()
         assert em.set_author(name="hikari", url="nekokatt.gitlab.io/hikari", icon=mock_file_obj) == em
         assert em.author.name == "hikari"

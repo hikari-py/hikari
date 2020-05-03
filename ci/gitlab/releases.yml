@@ -24,6 +24,7 @@
     - |+
       set -e
       set -x
+      pip install -U pip
       git log -n 1 "${CI_COMMIT_SHA}" --format="%B" \
           | grep -iqE "\[\s*(skip|no|don'?t|do\s+not)\s+deploy(ments?)?\s*\]" \
         && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" \
