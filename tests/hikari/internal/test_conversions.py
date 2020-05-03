@@ -200,64 +200,66 @@ def test_pluralize(count, name, kwargs, expect):
     assert conversions.pluralize(count, name, **kwargs) == expect
 
 
-class TestSnoopTypeHints:
-    def test_snoop_simple_local_scope(self):
-        x = object()
+class TestResolveSignature:
+    def test_handles_normal_references(self):
+        def foo(bar: str, bat: int) -> str:
+            ...
 
-        frame = inspect.stack(1)[0][0]
-        try:
-            assert conversions.snoop_typehint_from_scope(frame, "x") is x
-        finally:
-            del frame
+        parameters, return_annotation, signature = conversions.resolve_signature(foo)
+        assert parameters == {"bar": str, "bat": int}
+        assert return_annotation is str
+        assert signature == inspect.signature(foo)
 
-    def test_snoop_simple_global_scope(self):
-        frame = inspect.stack(1)[0][0]
-        try:
-            assert conversions.snoop_typehint_from_scope(frame, "pytest") is pytest
-        finally:
-            del frame
+    def test_handles_normal_no_annotations(self):
+        def foo(bar, bat):
+            ...
 
-    # noinspection PyUnusedLocal
-    def test_snoop_nested_local_scope(self):
-        expected = object()
+        parameters, return_annotation, signature = conversions.resolve_signature(foo)
+        assert parameters == {"bar": conversions.EMPTY, "bat": conversions.EMPTY}
+        assert return_annotation is conversions.EMPTY
+        assert signature == inspect.signature(foo)
 
-        class Foo:
-            class Bar:
-                class Baz:
-                    class Bork:
-                        qux = expected
+    def test_handles_forward_annotated_parameters(self):
+        def foo(bar: "str", bat: "int") -> str:
+            ...
 
-        frame = inspect.stack(1)[0][0]
-        try:
-            assert conversions.snoop_typehint_from_scope(frame, "Foo.Bar.Baz.Bork.qux") is expected
-        finally:
-            del frame
+        parameters, return_annotation, signature = conversions.resolve_signature(foo)
+        assert parameters == {"bar": str, "bat": int}
+        assert return_annotation is str
+        assert signature == inspect.signature(foo)
 
-    def test_snoop_nested_global_scope(self):
-        frame = inspect.stack(1)[0][0]
-        try:
-            assert (
-                conversions.snoop_typehint_from_scope(frame, "concurrent.futures.as_completed")
-                is concurrent.futures.as_completed
-            )
-        finally:
-            del frame
+    def test_handles_forward_annotated_return(self):
+        def foo(bar: str, bat: int) -> "str":
+            ...
 
-    def test_snoop_on_resolved_typehint_does_nothing(self):
-        frame = inspect.stack(1)[0][0]
-        try:
-            assert conversions.snoop_typehint_from_scope(frame, typing.Sequence) is typing.Sequence
-        finally:
-            del frame
+        parameters, return_annotation, signature = conversions.resolve_signature(foo)
+        assert parameters == {"bar": str, "bat": int}
+        assert return_annotation is str
+        assert signature == inspect.signature(foo)
 
-    @_helpers.assert_raises(type_=NameError)
-    def test_not_resolved_is_failure(self):
-        attr = "this_is_not_an_attribute"
-        assert attr not in locals(), "change this attribute name to something else so the test can run"
-        assert attr not in globals(), "change this attribute name to something else so the test can run"
+    def test_handles_forward_annotations(self):
+        def foo(bar: "str", bat: "int") -> "str":
+            ...
 
-        frame = inspect.stack(1)[0][0]
-        try:
-            conversions.snoop_typehint_from_scope(frame, attr)
-        finally:
-            del frame
+        parameters, return_annotation, signature = conversions.resolve_signature(foo)
+        assert parameters == {"bar": str, "bat": int}
+        assert return_annotation is str
+        assert signature == inspect.signature(foo)
+
+    def test_handles_mixed_annotations(self):
+        def foo(bar: str, bat: "int"):
+            ...
+
+        parameters, return_annotation, signature = conversions.resolve_signature(foo)
+        assert parameters == {"bar": str, "bat": int}
+        assert return_annotation is conversions.EMPTY
+        assert signature == inspect.signature(foo)
+
+    def test_handles_only_return_annotated(self):
+        def foo(bar, bat) -> str:
+            ...
+
+        parameters, return_annotation, signature = conversions.resolve_signature(foo)
+        assert parameters == {"bar": conversions.EMPTY, "bat": conversions.EMPTY}
+        assert return_annotation is str
+        assert signature == inspect.signature(foo)
