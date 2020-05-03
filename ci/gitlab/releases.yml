@@ -43,7 +43,7 @@
       echo "===================================================================="
       echo
 
-      pip install twine wheel nox
+      pip install twine wheel nox 'virtualenv<20.0.19'
   extends: .cpython
   interruptible: false
   resource_group: deploy
@@ -71,7 +71,7 @@ release:staging:
     - |+
       set -e
       set -x
-      nox -s deploy
+      nox -s deploy --no-error-on-external-run
   variables:
     TARGET_BRANCH: staging
 
@@ -119,6 +119,6 @@ release:master:
       ssh-keyscan -t rsa gitlab.com >> ~/.ssh/known_hosts
       ssh-add ~/.ssh/id_rsa
 
-      nox -s deploy
+      nox -s deploy --no-error-on-external-run
   variables:
     TARGET_BRANCH: master

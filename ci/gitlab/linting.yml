@@ -21,7 +21,7 @@
 .lint:
   allow_failure: false
   before_script:
-    - pip install nox
+    - pip install nox 'virtualenv<20.0.19'
     - mkdir public || true
   extends:
     - .cpython
@@ -45,7 +45,7 @@ pylint:
       junit: public/pylint.xml
   extends: .lint
   script:
-   - nox -s pylint
+   - nox -s pylint --no-error-on-external-run
 
 ###
 ### Documentation linting.
@@ -57,7 +57,7 @@ pydocstyle:
   allow_failure: true
   extends: .lint
   script:
-    - nox -s pydocstyle
+    - nox -s pydocstyle --no-error-on-external-run
 
 ###
 ### Code formatting.
@@ -67,7 +67,7 @@ pydocstyle:
 black:
   extends: .lint
   script:
-   - nox -s check-formatting -- --check --diff
+   - nox -s check-formatting --no-error-on-external-run -- --check --diff
 
 ###
 ### Security checks #1
@@ -78,7 +78,7 @@ black:
 safety:
   extends: .lint
   script:
-   - nox -s safety
+   - nox -s safety --no-error-on-external-run
 
 ###
 ### Security checks #2.
@@ -89,4 +89,4 @@ safety:
 bandit:
   extends: .lint
   script:
-   - nox -s bandit
+   - nox -s bandit --no-error-on-external-run

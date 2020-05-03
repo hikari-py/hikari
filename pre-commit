@@ -5,7 +5,7 @@
 trap "exit" SIGINT SIGTERM SIGKILL
 
 if [[ -z ${SKIP_HOOK} ]]; then
-    command -v nox || pip install nox
+    command -v nox || pip install nox 'virtualenv<20.0.19'
     echo -e '\e[1;32mRUNNING HOOKS - prepend your invocation of git commit with SKIP_HOOK=1 to skip this.\e[0m'
     # Fix trailing whitespace in *.py files
     find hikari tests -type f -name '*.py' -exec sed -i "s/[ ]*$//g" {} \; -exec git add {} \;
