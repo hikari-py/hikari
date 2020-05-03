@@ -171,12 +171,7 @@ class BotBase(
         py_ver = platform.python_version()
         py_compiler = platform.python_compiler()
         self.logger.info(
-            "hikari v%s (installed in %s) (%s %s %s)",
-            version,
-            path,
-            py_impl,
-            py_ver,
-            py_compiler,
+            "hikari v%s (installed in %s) (%s %s %s)", version, path, py_impl, py_ver, py_compiler,
         )
         self._is_shutting_down = False
 
