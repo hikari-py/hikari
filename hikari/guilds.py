@@ -860,10 +860,8 @@ class PartialGuild(bases.UniqueEntity, marshaller.Deserializable):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash:
-            if fmt is None and self.icon_hash.startswith("a_"):
-                fmt = "gif"
-            elif fmt is None:
-                fmt = "png"
+            if fmt is None:
+                fmt = "gif" if self.icon_hash.startswith("a_") else "png"
             return urls.generate_cdn_url("icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
         return None
 
