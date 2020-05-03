@@ -25,11 +25,15 @@ __all__ = ["BotBase"]
 import abc
 import asyncio
 import datetime
+import inspect
 import logging
 import math
+import os
+import platform
 import time
 import typing
 
+from hikari import _about
 from hikari.clients import components as _components
 from hikari.clients import configs
 from hikari.clients import runnable
@@ -161,6 +165,19 @@ class BotBase(
         if self.shards:  # pylint: disable=access-member-before-definition
             raise RuntimeError("Bot is already running.")
 
+        version = _about.__version__
+        path = os.path.abspath(os.path.dirname(inspect.getsourcefile(_about)))
+        py_impl = platform.python_implementation()
+        py_ver = platform.python_version()
+        py_compiler = platform.python_compiler()
+        self.logger.info(
+            "hikari v%s (installed in %s) (%s %s %s)",
+            version,
+            path,
+            py_impl,
+            py_ver,
+            py_compiler,
+        )
         self._is_shutting_down = False
 
         gateway_bot = await self.rest.fetch_gateway_bot()

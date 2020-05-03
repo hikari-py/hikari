@@ -20,17 +20,23 @@
 
 from __future__ import annotations
 
+import inspect
+import os
 import platform
-
 import click
 
-import hikari
+from hikari import _about
 
 
 @click.command()
 def main():
     """Show the application version, then exit."""
-    print(f"{hikari.__name__} {hikari.__version__} from {hikari.__path__[0]} (python {platform.python_version()})")
+    version = _about.__version__
+    path = os.path.abspath(os.path.dirname(inspect.getsourcefile(_about)))
+    py_impl = platform.python_implementation()
+    py_ver = platform.python_version()
+    py_compiler = platform.python_compiler()
+    print(f"hikari v{version} (installed in {path}) ({py_impl} {py_ver} {py_compiler})")
 
 
 main()
