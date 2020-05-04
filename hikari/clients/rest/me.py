@@ -75,7 +75,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             If you pass username longer than the limit (`2-32`) or an invalid image.
         """
         payload = await self._session.modify_current_user(
-            username=username, avatar=await avatar.read_all() if avatar is not ... else ...,
+            username=username, avatar=await avatar.read() if avatar is not ... else ...,
         )
         return users.MyUser.deserialize(payload, components=self._components)
 
