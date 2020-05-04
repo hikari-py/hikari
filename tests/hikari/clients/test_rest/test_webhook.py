@@ -86,7 +86,7 @@ class TestRESTUserLogic:
         rest_webhook_logic_impl._session.modify_webhook.return_value = mock_webhook_payload
         mock_image_data = mock.MagicMock(bytes)
         mock_image_obj = mock.MagicMock(files.BaseStream)
-        mock_image_obj.read_all = mock.AsyncMock(return_value=mock_image_data)
+        mock_image_obj.read = mock.AsyncMock(return_value=mock_image_data)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj))
         with stack:
@@ -110,7 +110,7 @@ class TestRESTUserLogic:
             webhooks.Webhook.deserialize.assert_called_once_with(
                 mock_webhook_payload, components=rest_webhook_logic_impl._components
             )
-            mock_image_obj.read_all.assert_awaited_once()
+            mock_image_obj.read.assert_awaited_once()
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("webhook", 379953393319542784, webhooks.Webhook)

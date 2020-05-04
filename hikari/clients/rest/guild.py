@@ -284,7 +284,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.create_guild_emoji(
             guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
             name=name,
-            image=await image.read_all(),
+            image=await image.read(),
             roles=[str(role.id if isinstance(role, bases.UniqueEntity) else int(role)) for role in roles]
             if roles is not ...
             else ...,
@@ -436,7 +436,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.create_guild(
             name=name,
             region=getattr(region, "id", region),
-            icon=await icon.read_all() if icon is not ... else ...,
+            icon=await icon.read() if icon is not ... else ...,
             verification_level=verification_level,
             default_message_notifications=default_message_notifications,
             explicit_content_filter=explicit_content_filter,
@@ -587,11 +587,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
                 if afk_channel is not ...
                 else ...
             ),
-            icon=await icon.read_all() if icon is not ... else ...,
+            icon=await icon.read() if icon is not ... else ...,
             owner_id=(
                 str(owner.id if isinstance(owner, bases.UniqueEntity) else int(owner)) if owner is not ... else ...
             ),
-            splash=await splash.read_all() if splash is not ... else ...,
+            splash=await splash.read() if splash is not ... else ...,
             system_channel_id=(
                 str(system_channel.id if isinstance(system_channel, bases.UniqueEntity) else int(system_channel))
                 if system_channel is not ...
