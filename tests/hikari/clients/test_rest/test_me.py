@@ -64,7 +64,7 @@ class TestRESTInviteLogic:
         rest_clients_impl._session.modify_current_user.return_value = mock_user_payload
         mock_avatar_data = mock.MagicMock(bytes)
         mock_avatar_obj = mock.MagicMock(files.BaseStream)
-        mock_avatar_obj.read_all = mock.AsyncMock(return_value=mock_avatar_data)
+        mock_avatar_obj.read = mock.AsyncMock(return_value=mock_avatar_data)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(users.MyUser, "deserialize", return_value=mock_user_obj))
         with stack:
@@ -72,7 +72,7 @@ class TestRESTInviteLogic:
             rest_clients_impl._session.modify_current_user.assert_called_once_with(
                 username="aNewName", avatar=mock_avatar_data
             )
-            mock_avatar_obj.read_all.assert_awaited_once()
+            mock_avatar_obj.read.assert_awaited_once()
             users.MyUser.deserialize.assert_called_once_with(
                 mock_user_payload, components=rest_clients_impl._components
             )

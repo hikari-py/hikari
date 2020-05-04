@@ -1091,7 +1091,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         payload = await self._session.create_webhook(
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
             name=name,
-            avatar=await avatar.read_all() if avatar is not ... else ...,
+            avatar=await avatar.read() if avatar is not ... else ...,
             reason=reason,
         )
         return webhooks.Webhook.deserialize(payload, components=self._components)
