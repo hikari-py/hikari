@@ -183,7 +183,7 @@ class TestMessageCrosspost:
             test_message_crosspost_payload, components=mock_components
         )
 
-        assert message_crosspost_obj.message_id == 306588351130107906
+        assert message_crosspost_obj.id == 306588351130107906
         assert message_crosspost_obj.channel_id == 278325129692446722
         assert message_crosspost_obj.guild_id == 278325129692446720
 
