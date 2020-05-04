@@ -49,7 +49,7 @@ class TestRESTReactionLogic:
     @pytest.mark.parametrize("emoji", ["blah:123", emojis.UnknownEmoji(name="blah", id=123, is_animated=False)])
     async def test_create_reaction(self, rest_reaction_logic_impl, channel, message, emoji):
         rest_reaction_logic_impl._session.create_reaction.return_value = ...
-        assert await rest_reaction_logic_impl.create_reaction(channel=channel, message=message, emoji=emoji) is None
+        assert await rest_reaction_logic_impl.add_reaction(channel=channel, message=message, emoji=emoji) is None
         rest_reaction_logic_impl._session.create_reaction.assert_called_once_with(
             channel_id="213123", message_id="987654321", emoji="blah:123",
         )
@@ -58,9 +58,9 @@ class TestRESTReactionLogic:
     @_helpers.parametrize_valid_id_formats_for_models("channel", 213123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 987654321, messages.Message)
     @pytest.mark.parametrize("emoji", ["blah:123", emojis.UnknownEmoji(name="blah", id=123, is_animated=False)])
-    async def test_delete_reaction(self, rest_reaction_logic_impl, channel, message, emoji):
+    async def test_delete_reaction_for_bot_user(self, rest_reaction_logic_impl, channel, message, emoji):
         rest_reaction_logic_impl._session.delete_own_reaction.return_value = ...
-        assert await rest_reaction_logic_impl.delete_reaction(channel=channel, message=message, emoji=emoji) is None
+        assert await rest_reaction_logic_impl.remove_reaction(channel=channel, message=message, emoji=emoji) is None
         rest_reaction_logic_impl._session.delete_own_reaction.assert_called_once_with(
             channel_id="213123", message_id="987654321", emoji="blah:123",
         )
@@ -68,9 +68,24 @@ class TestRESTReactionLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 213123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 987654321, messages.Message)
+    @_helpers.parametrize_valid_id_formats_for_models("user", 96969696, users.User)
+    @pytest.mark.parametrize("emoji", ["blah:123", emojis.UnknownEmoji(name="blah", id=123, is_animated=False)])
+    async def test_delete_reaction_for_other_user(self, rest_reaction_logic_impl, channel, message, emoji, user):
+        rest_reaction_logic_impl._session.delete_user_reaction.return_value = ...
+        assert (
+            await rest_reaction_logic_impl.remove_reaction(channel=channel, message=message, emoji=emoji, user=user)
+            is None
+        )
+        rest_reaction_logic_impl._session.delete_user_reaction.assert_called_once_with(
+            channel_id="213123", message_id="987654321", emoji="blah:123", user_id="96969696",
+        )
+
+    @pytest.mark.asyncio
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 213123, channels.PartialChannel)
+    @_helpers.parametrize_valid_id_formats_for_models("message", 987654321, messages.Message)
     async def test_delete_all_reactions(self, rest_reaction_logic_impl, channel, message):
         rest_reaction_logic_impl._session.delete_all_reactions.return_value = ...
-        assert await rest_reaction_logic_impl.delete_all_reactions(channel=channel, message=message) is None
+        assert await rest_reaction_logic_impl.remove_all_reactions(channel=channel, message=message) is None
         rest_reaction_logic_impl._session.delete_all_reactions.assert_called_once_with(
             channel_id="213123", message_id="987654321",
         )
@@ -82,7 +97,7 @@ class TestRESTReactionLogic:
     async def test_delete_all_reactions_for_emoji(self, rest_reaction_logic_impl, channel, message, emoji):
         rest_reaction_logic_impl._session.delete_all_reactions_for_emoji.return_value = ...
         assert (
-            await rest_reaction_logic_impl.delete_all_reactions_for_emoji(channel=channel, message=message, emoji=emoji)
+            await rest_reaction_logic_impl.remove_all_reactions_for_emoji(channel=channel, message=message, emoji=emoji)
             is None
         )
         rest_reaction_logic_impl._session.delete_all_reactions_for_emoji.assert_called_once_with(
