@@ -1,12 +1,12 @@
 **Note:** this API is still under active daily development, and is in a
 **pre-alpha** stage. If you are looking to give feedback, or want to help us 
-out, then feel free to join our [Discord server](https://discord.gg/HMnGbsv) and
+out, then feel free to join our [Discord server](https://discord.gg/Jx4cNGG) and
 chat to us. Any help is greatly appreciated, no matter what your experience 
 level may be! :-)
 
 --- 
 
-# hikari
+# _hikari_
 
 An opinionated Discord API for Python 3 and asyncio. Built on good intentions 
 and the hope that it will be extendable and reusable, rather than an obstacle.
@@ -28,8 +28,8 @@ async def ping(event):
 bot.run()
 ```
 
-<small>And if that is too verbose, this will be actively reduced with the
-functionality provided by the Stateful bot implementation coming soon!</small>
+_And if that is too verbose, this will be actively reduced with the
+functionality provided by the Stateful bot implementation coming soon!_
 
 ## What does _hikari_ aim to do?
 
@@ -116,5 +116,5 @@ to utilize these components as a black box where necessary.
 ## Getting started
 
 This section is still very bare, and we are still actively writing this framework every day.
-[Why not pop in and say hi?](https://discord.gg/HMnGbsv) More comprehensive tutorials will be
+[Why not pop in and say hi?](https://discord.gg/Jx4cNGG) More comprehensive tutorials will be
 provided soon!
