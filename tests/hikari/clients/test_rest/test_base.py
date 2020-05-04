@@ -21,13 +21,18 @@ import pytest
 
 from hikari.clients import components
 from hikari.clients.rest import base
+from hikari.net import ratelimits
 from hikari.net import rest
 
 
 class TestBaseRESTComponent:
     @pytest.fixture()
     def low_level_rest_impl(self) -> rest.REST:
-        return mock.MagicMock(rest.REST)
+        return mock.MagicMock(
+            rest.REST,
+            global_ratelimiter=mock.create_autospec(ratelimits.ManualRateLimiter, spec_set=True),
+            bucket_ratelimiters=mock.create_autospec(ratelimits.RESTBucketManager, spec_set=True),
+        )
 
     @pytest.fixture()
     def rest_clients_impl(self, low_level_rest_impl) -> base.BaseRESTComponent:
@@ -43,3 +48,25 @@ class TestBaseRESTComponent:
         async with rest_clients_impl as client:
             assert client is rest_clients_impl
         rest_clients_impl.close.assert_called_once_with()
+
+    def test_global_ratelimit_queue_size(self, rest_clients_impl, low_level_rest_impl):
+        low_level_rest_impl.global_ratelimiter.queue = [object() for _ in range(107)]
+        assert rest_clients_impl.global_ratelimit_queue_size == 107
+
+    def test_route_ratelimit_queue_size(self, rest_clients_impl, low_level_rest_impl):
+        low_level_rest_impl.bucket_ratelimiters.real_hashes_to_buckets = {
+            "aaaaa;1234;5678;9101123": mock.create_autospec(
+                ratelimits.RESTBucket, spec_set=True, queue=[object() for _ in range(30)]
+            ),
+            "aaaaa;1234;5678;9101122": mock.create_autospec(
+                ratelimits.RESTBucket, spec_set=True, queue=[object() for _ in range(29)]
+            ),
+            "aaaab;1234;5678;9101123": mock.create_autospec(
+                ratelimits.RESTBucket, spec_set=True, queue=[object() for _ in range(28)]
+            ),
+            "zzzzz;1234;5678;9101123": mock.create_autospec(
+                ratelimits.RESTBucket, spec_set=True, queue=[object() for _ in range(20)]
+            ),
+        }
+
+        assert rest_clients_impl.route_ratelimit_queue_size == 107

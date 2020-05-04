@@ -24,7 +24,8 @@ __all__ = ["CompiledRoute", "RouteTemplate"]
 
 import typing
 
-DEFAULT_MAJOR_PARAMS = {"channel_id", "guild_id", "webhook_id"}
+DEFAULT_MAJOR_PARAMS: typing.Final[typing.Set[str]] = {"channel_id", "guild_id", "webhook_id"}
+HASH_SEPARATOR: typing.Final[str] = ";"
 
 
 class CompiledRoute:
@@ -93,7 +94,7 @@ class CompiledRoute:
             The input hash amalgamated with a hash code produced by the
             major parameters in this compiled route instance.
         """
-        return initial_bucket_hash + ";" + self.major_params_hash
+        return initial_bucket_hash + HASH_SEPARATOR + self.major_params_hash
 
     def __hash__(self) -> int:
         return self.hash_code
