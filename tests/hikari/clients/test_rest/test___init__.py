@@ -35,6 +35,7 @@ class TestRESTClient:
             client = high_level_rest.RESTClient(mock_components)
             patched_init.assert_called_once_with(
                 allow_redirects=mock_config.allow_redirects,
+                base_url=mock_config.rest_url,
                 connector=mock_config.tcp_connector,
                 debug=False,
                 proxy_headers=mock_config.proxy_headers,

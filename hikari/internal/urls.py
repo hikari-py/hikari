@@ -32,12 +32,12 @@ from hikari.internal import assertions
 BASE_CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
 """The URL for the CDN."""
 
-REST_API_URL: typing.Final[str] = "https://discordapp.com/api/v{0.version}"
+REST_API_URL: typing.Final[str] = "https://discord.com/api/v{0.version}"
 """The URL for the REST API. This contains a version number parameter that
 should be interpolated.
 """
 
-OAUTH2_API_URL: typing.Final[str] = "https://discordapp.com/api/oauth2"
+OAUTH2_API_URL: typing.Final[str] = "https://discord.com/api/oauth2"
 """The URL to the Discord OAuth2 API."""
 
 
