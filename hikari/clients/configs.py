@@ -48,13 +48,13 @@ if typing.TYPE_CHECKING:
 
 
 @marshaller.marshallable()
-@attr.s(kw_only=True)
+@attr.s(kw_only=True, repr=False)
 class BaseConfig(marshaller.Deserializable):
     """Base class for any configuration data class."""
 
 
 @marshaller.marshallable()
-@attr.s(kw_only=True)
+@attr.s(kw_only=True, repr=False)
 class DebugConfig(BaseConfig):
     """Configuration for anything with a debugging mode.
 
@@ -68,7 +68,7 @@ class DebugConfig(BaseConfig):
 
 
 @marshaller.marshallable()
-@attr.s(kw_only=True)
+@attr.s(kw_only=True, repr=False)
 class AIOHTTPConfig(BaseConfig):
     """Config for components that use AIOHTTP somewhere.
 
@@ -153,7 +153,7 @@ class AIOHTTPConfig(BaseConfig):
 
 
 @marshaller.marshallable()
-@attr.s(kw_only=True)
+@attr.s(kw_only=True, repr=False)
 class TokenConfig(BaseConfig):
     """Token config options.
 
@@ -204,7 +204,7 @@ def _large_threshold_default() -> int:
 
 
 @marshaller.marshallable()
-@attr.s(kw_only=True)
+@attr.s(kw_only=True, repr=False)
 class GatewayConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
     """Single-websocket specific configuration options.
 
@@ -359,7 +359,7 @@ def _rest_version_default() -> int:
 
 
 @marshaller.marshallable()
-@attr.s(kw_only=True)
+@attr.s(kw_only=True, repr=False)
 class RESTConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
     """Single-websocket specific configuration options.
 
@@ -424,7 +424,7 @@ class RESTConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
 
 
 @marshaller.marshallable()
-@attr.s(kw_only=True)
+@attr.s(kw_only=True, repr=False)
 class BotConfig(RESTConfig, GatewayConfig):
     """Configuration for a standard bot.
 

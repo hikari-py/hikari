@@ -34,7 +34,7 @@ if typing.TYPE_CHECKING:
     from hikari.state import event_managers  # pylint: disable=cyclic-import
 
 
-@attr.s
+@attr.s(repr=False)
 class Components:
     """A base that defines placement for set of components used in the library."""
 

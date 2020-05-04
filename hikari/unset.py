@@ -46,9 +46,6 @@ class Unset(meta.Singleton):
     def __init_subclass__(cls, **kwargs: typing.Any) -> typing.NoReturn:
         raise TypeError("Cannot subclass Unset type")
 
-    def ___defer___(self, *_, **__) -> typing.NoReturn:
-        raise TypeError("This value is unset because it is not available at this time")
-
 
 T = typing.TypeVar("T")
 MayBeUnset = typing.Union[T, Unset]

@@ -128,11 +128,11 @@ class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
     This is received only when IDENTIFYing with the gateway.
     """
 
-    gateway_version: int = marshaller.attrib(raw_name="v", deserializer=int)
+    gateway_version: int = marshaller.attrib(raw_name="v", deserializer=int, repr=True)
     """The gateway version this is currently connected to."""
 
     my_user: users.MyUser = marshaller.attrib(
-        raw_name="user", deserializer=users.MyUser.deserialize, inherit_kwargs=True
+        raw_name="user", deserializer=users.MyUser.deserialize, inherit_kwargs=True, repr=True
     )
     """The object of the current bot account this connection is for."""
 
@@ -144,7 +144,7 @@ class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
     All guilds will start off "unavailable".
     """
 
-    session_id: str = marshaller.attrib(deserializer=str)
+    session_id: str = marshaller.attrib(deserializer=str, repr=True)
     """The id of the current gateway session, used for reconnecting."""
 
     _shard_information: typing.Optional[typing.Tuple[int, int]] = marshaller.attrib(
@@ -169,6 +169,7 @@ class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
         return self._shard_information[1] if self._shard_information else None
 
 
+# TODO: rename to MyUserUpdateEvent
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class UserUpdateEvent(base_events.HikariEvent, users.MyUser):

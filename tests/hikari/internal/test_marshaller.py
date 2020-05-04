@@ -56,6 +56,7 @@ class TestAttrib:
                     marshaller._IF_NONE: mock_default_factory_1,
                     marshaller._MARSHALLER_ATTRIB: True,
                 },
+                repr=False,
             )
 
 

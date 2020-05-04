@@ -112,7 +112,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         self,
         guild: bases.Hashable[guilds.Guild],
         *,
-        before: typing.Union[datetime.datetime, bases.Hashable[audit_logs.AuditLogEntry]] = bases.LARGEST_SNOWFLAKE,
+        before: typing.Union[datetime.datetime, bases.Hashable[audit_logs.AuditLogEntry]] = bases.Snowflake.max(),
         user: bases.Hashable[users.User] = ...,
         action_type: typing.Union[audit_logs.AuditLogEventType, int] = ...,
         limit: typing.Optional[int] = None,

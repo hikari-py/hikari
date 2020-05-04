@@ -98,10 +98,10 @@ class PremiumType(int, more_enums.Enum):
 class User(bases.UniqueEntity, marshaller.Deserializable):
     """Represents a user."""
 
-    discriminator: str = marshaller.attrib(deserializer=str)
+    discriminator: str = marshaller.attrib(deserializer=str, repr=True)
     """This user's discriminator."""
 
-    username: str = marshaller.attrib(deserializer=str)
+    username: str = marshaller.attrib(deserializer=str, repr=True)
     """This user's username."""
 
     avatar_hash: typing.Optional[str] = marshaller.attrib(raw_name="avatar", deserializer=str, if_none=None)

@@ -61,6 +61,9 @@ class HikariError(RuntimeError):
 
     __slots__ = ()
 
+    def __repr__(self):
+        return str(self)
+
 
 class HikariWarning(RuntimeWarning):
     """Base for a warning raised by this API.

@@ -53,19 +53,19 @@ class Webhook(bases.UniqueEntity, marshaller.Deserializable):
     send informational messages to specific channels.
     """
 
-    type: WebhookType = marshaller.attrib(deserializer=WebhookType)
+    type: WebhookType = marshaller.attrib(deserializer=WebhookType, repr=True)
     """The type of the webhook."""
 
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
     )
     """The guild ID of the webhook."""
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
     """The channel ID this webhook is for."""
 
     user: typing.Optional[users.User] = marshaller.attrib(
-        deserializer=users.User.deserialize, if_undefined=None, default=None, inherit_kwargs=True
+        deserializer=users.User.deserialize, if_undefined=None, default=None, inherit_kwargs=True, repr=True
     )
     """The user that created the webhook
 
@@ -74,15 +74,16 @@ class Webhook(bases.UniqueEntity, marshaller.Deserializable):
         than the webhook's token.
     """
 
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None)
-    """The default name of the webhook."""
+    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, repr=True)
+    """The name of the webhook."""
 
     avatar_hash: typing.Optional[str] = marshaller.attrib(raw_name="avatar", deserializer=str, if_none=None)
-    """The default avatar hash of the webhook."""
+    """The avatar hash of the webhook."""
 
     token: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
-    """The token of the webhook.
+    """The token for the webhook.
 
     !!! info
-        This is only available for Incoming webhooks.
+        This is only available for incoming webhooks that are created in the 
+        channel settings.
     """

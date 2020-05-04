@@ -106,10 +106,10 @@ class GuildUnavailableEvent(base_events.HikariEvent, base_entities.UniqueEntity,
 class BaseGuildBanEvent(base_events.HikariEvent, marshaller.Deserializable, abc.ABC):
     """A base object that guild ban events will inherit from."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake, repr=True)
     """The ID of the guild this ban is in."""
 
-    user: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True)
+    user: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True, repr=True)
     """The object of the user this ban targets."""
 
 
@@ -139,11 +139,11 @@ def _deserialize_emojis(
 class GuildEmojisUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Represents a Guild Emoji Update gateway event."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake)
     """The ID of the guild this emoji was updated in."""
 
     emojis: typing.Mapping[base_entities.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
-        deserializer=_deserialize_emojis, inherit_kwargs=True
+        deserializer=_deserialize_emojis, inherit_kwargs=True, repr=True
     )
     """The updated mapping of emojis by their ID."""
 
@@ -154,7 +154,7 @@ class GuildEmojisUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
 class GuildIntegrationsUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Guild Integration Update gateway events."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake, repr=True)
     """The ID of the guild the integration was updated in."""
 
 
@@ -164,7 +164,7 @@ class GuildIntegrationsUpdateEvent(base_events.HikariEvent, marshaller.Deseriali
 class GuildMemberAddEvent(base_events.HikariEvent, guilds.GuildMember):
     """Used to represent a Guild Member Add gateway event."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake, repr=True)
     """The ID of the guild where this member was added."""
 
 
@@ -181,7 +181,7 @@ class GuildMemberUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
     Sent when a guild member or their inner user object is updated.
     """
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake, repr=True)
     """The ID of the guild this member was updated in."""
 
     role_ids: typing.Sequence[base_entities.Snowflake] = marshaller.attrib(
@@ -189,7 +189,7 @@ class GuildMemberUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
     )
     """A sequence of the IDs of the member's current roles."""
 
-    user: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True)
+    user: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True, repr=True)
     """The object of the user who was updated."""
 
     nickname: typing.Union[None, str, unset.Unset] = marshaller.attrib(
@@ -219,10 +219,11 @@ class GuildMemberRemoveEvent(base_events.HikariEvent, marshaller.Deserializable)
     Sent when a member is kicked, banned or leaves a guild.
     """
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    # TODO: make GuildMember event into common base class.
+    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake, repr=True)
     """The ID of the guild this user was removed from."""
 
-    user: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True)
+    user: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True, repr=True)
     """The object of the user who was removed from this guild."""
 
 
@@ -232,7 +233,7 @@ class GuildMemberRemoveEvent(base_events.HikariEvent, marshaller.Deserializable)
 class GuildRoleCreateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake, repr=True)
     """The ID of the guild where this role was created."""
 
     role: guilds.GuildRole = marshaller.attrib(deserializer=guilds.GuildRole.deserialize, inherit_kwargs=True)
@@ -245,10 +246,14 @@ class GuildRoleCreateEvent(base_events.HikariEvent, marshaller.Deserializable):
 class GuildRoleUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    # TODO: make any event with a guild ID into a custom base event.
+    # https://pypi.org/project/stupid/ could this work around the multiple inheritance problem?
+    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake, repr=True)
     """The ID of the guild where this role was updated."""
 
-    role: guilds.GuildRole = marshaller.attrib(deserializer=guilds.GuildRole.deserialize, inherit_kwargs=True)
+    role: guilds.GuildRole = marshaller.attrib(
+        deserializer=guilds.GuildRole.deserialize, inherit_kwargs=True, repr=True
+    )
     """The updated role object."""
 
 
@@ -258,10 +263,10 @@ class GuildRoleUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
 class GuildRoleDeleteEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Represents a gateway Guild Role Delete Event."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake, repr=True)
     """The ID of the guild where this role is being deleted."""
 
-    role_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake.deserialize)
+    role_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake, repr=True)
     """The ID of the role being deleted."""
 
 
