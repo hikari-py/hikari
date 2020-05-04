@@ -31,6 +31,7 @@ if typing.TYPE_CHECKING:
     import types
 
     from hikari.clients import components as _components
+    from hikari.net import ratelimits
     from hikari.net import rest
 
 
@@ -58,3 +59,19 @@ class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
     async def close(self) -> None:
         """Shut down the REST client safely."""
         await self._session.close()
+
+    @property
+    def global_ratelimit_queue_size(self) -> int:
+        """Count of API calls waiting for the global ratelimiter to release.
+        
+        If this is non-zero, then you are being globally ratelimited.
+        """
+        return len(self._session.global_ratelimiter.queue)
+
+    @property
+    def route_ratelimit_queue_size(self) -> int:
+        """Count of API waiting for a route-specific ratelimit to release.
+
+        If this is non-zero, then you are being ratelimited somewhere.
+        """
+        return sum(len(r.queue) for r in self._session.bucket_ratelimiters.real_hashes_to_buckets.values())
