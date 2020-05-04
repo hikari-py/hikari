@@ -41,7 +41,7 @@ if typing.TYPE_CHECKING:
 class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
     """The REST client component for handling requests to reaction endpoints."""
 
-    async def create_reaction(
+    async def add_reaction(
         self,
         channel: bases.Hashable[_channels.PartialChannel],
         message: bases.Hashable[_messages.Message],
@@ -80,13 +80,18 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             emoji=str(getattr(emoji, "url_name", emoji)),
         )
 
-    async def delete_reaction(
+    async def remove_reaction(
         self,
         channel: bases.Hashable[_channels.PartialChannel],
         message: bases.Hashable[_messages.Message],
         emoji: typing.Union[emojis.Emoji, str],
+        *,
+        user: typing.Optional[typing.Hashable[users.User]] = None,
     ) -> None:
-        """Remove your own reaction from the given message in the given channel.
+        """Remove a given reaction from a given message in a given channel.
+
+        If the user is `None`, then the bot's own reaction is removed, otherwise
+        the given user's reaction is removed instead.
 
         Parameters
         ----------
@@ -99,6 +104,9 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             string representation of an emoji. The string representation will be
             either `"name:id"` for custom emojis else it's unicode
             character(s) (can be UTF-32).
+        user : typing.Union[hikari.users.User, hikari.bases.Snowflake, int], optional
+            The user to remove the reaction of. If this is `None`, then the
+            bot's own reaction is removed instead.
 
         Raises
         ------
@@ -106,6 +114,8 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             If this is the first reaction using this specific emoji on this
             message and you lack the `ADD_REACTIONS` permission. If you lack
             `READ_MESSAGE_HISTORY`, this may also raise this error.
+            If the `user` is not `None` and the bot lacks permissions to
+            modify other user's reactions, this will also be raised.
         hikari.errors.NotFound
             If the channel or message is not found, or if the emoji is not
             found.
@@ -114,13 +124,21 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        await self._session.delete_own_reaction(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
-            emoji=str(getattr(emoji, "url_name", emoji)),
-        )
+        if user is None:
+            await self._session.delete_own_reaction(
+                channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+                message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+                emoji=str(getattr(emoji, "url_name", emoji)),
+            )
+        else:
+            await self._session.delete_user_reaction(
+                channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+                message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+                emoji=str(getattr(emoji, "url_name", emoji)),
+                user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
+            )
 
-    async def delete_all_reactions(
+    async def remove_all_reactions(
         self, channel: bases.Hashable[_channels.PartialChannel], message: bases.Hashable[_messages.Message],
     ) -> None:
         """Delete all reactions from a given message in a given channel.
@@ -147,7 +165,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
         )
 
-    async def delete_all_reactions_for_emoji(
+    async def remove_all_reactions_for_emoji(
         self,
         channel: bases.Hashable[_channels.PartialChannel],
         message: bases.Hashable[_messages.Message],
