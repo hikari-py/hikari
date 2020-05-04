@@ -114,6 +114,9 @@ class BaseStream(abc.ABC, typing.AsyncIterable[bytes]):
     def __init__(self, filename: str) -> None:
         self.filename = filename
 
+    def __repr__(self) -> str:
+        return f"{type(self).__qualname__}(filename={self.filename!r})"
+
     async def read(self) -> bytes:
         """Return the entire contents of the data stream."""
         data = io.BytesIO()

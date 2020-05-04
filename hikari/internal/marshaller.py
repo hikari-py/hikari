@@ -179,6 +179,9 @@ def attrib(
     metadata[_INHERIT_KWARGS] = inherit_kwargs
     metadata[_MARSHALLER_ATTRIB] = True
 
+    # Default to not repr-ing a field.
+    kwargs.setdefault("repr", False)
+
     attribute = attr.ib(**kwargs, metadata=metadata)
     # Fool pylint into thinking this is any type.
     return typing.cast(typing.Any, attribute)

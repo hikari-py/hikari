@@ -37,19 +37,19 @@ class VoiceState(bases.HikariEntity, marshaller.Deserializable):
     """Represents a user's voice connection status."""
 
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
     )
     """The ID of the guild this voice state is in, if applicable."""
 
     channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_none=None
+        deserializer=bases.Snowflake, if_none=None, repr=True
     )
     """The ID of the channel this user is connected to.
 
     This will be `None` if they are leaving voice.
     """
 
-    user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
     """The ID of the user this voice state is for."""
 
     member: typing.Optional[guilds.GuildMember] = marshaller.attrib(
@@ -57,7 +57,7 @@ class VoiceState(bases.HikariEntity, marshaller.Deserializable):
     )
     """The guild member this voice state is for if the voice state is in a guild."""
 
-    session_id: str = marshaller.attrib(deserializer=str)
+    session_id: str = marshaller.attrib(deserializer=str, repr=True)
     """The string ID of this voice state's session."""
 
     is_guild_deafened: bool = marshaller.attrib(raw_name="deaf", deserializer=bool)
@@ -82,12 +82,17 @@ class VoiceState(bases.HikariEntity, marshaller.Deserializable):
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class VoiceRegion(bases.HikariEntity, marshaller.Deserializable):
-    """Represent's a voice region server."""
+    """Represents a voice region server."""
 
-    id: str = marshaller.attrib(deserializer=str)
-    """The string ID of this region."""
+    id: str = marshaller.attrib(deserializer=str, repr=True)
+    """The string ID of this region.
+    
+    !!! note
+        Unlike most parts of this API, this ID will always be a string type.
+        This is intentional.
+    """
 
-    name: str = marshaller.attrib(deserializer=str)
+    name: str = marshaller.attrib(deserializer=str, repr=True)
     """The name of this region."""
 
     is_vip: bool = marshaller.attrib(raw_name="vip", deserializer=bool)

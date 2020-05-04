@@ -147,7 +147,7 @@ def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type[Ch
 class Channel(bases.UniqueEntity, marshaller.Deserializable):
     """Base class for all channels."""
 
-    type: ChannelType = marshaller.attrib(deserializer=ChannelType)
+    type: ChannelType = marshaller.attrib(deserializer=ChannelType, repr=True)
     """The channel's type."""
 
 
@@ -159,7 +159,7 @@ class PartialChannel(Channel):
     This is commonly received in REST responses.
     """
 
-    name: str = marshaller.attrib(deserializer=str)
+    name: str = marshaller.attrib(deserializer=str, repr=True)
     """The channel's name."""
 
 
@@ -173,7 +173,7 @@ def _deserialize_recipients(payload: more_typing.JSONArray, **kwargs: typing.Any
 class DMChannel(Channel):
     """Represents a DM channel."""
 
-    last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize, if_none=None)
+    last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
     """The ID of the last message sent in this channel.
 
     !!! note
@@ -181,7 +181,7 @@ class DMChannel(Channel):
     """
 
     recipients: typing.Mapping[bases.Snowflake, users.User] = marshaller.attrib(
-        deserializer=_deserialize_recipients, inherit_kwargs=True
+        deserializer=_deserialize_recipients, inherit_kwargs=True,
     )
     """The recipients of the DM."""
 
@@ -192,17 +192,17 @@ class DMChannel(Channel):
 class GroupDMChannel(DMChannel):
     """Represents a DM group channel."""
 
-    name: str = marshaller.attrib(deserializer=str)
+    name: str = marshaller.attrib(deserializer=str, repr=True)
     """The group's name."""
 
-    owner_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    owner_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
     """The ID of the owner of the group."""
 
     icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str, if_none=None)
     """The hash of the icon of the group."""
 
     application_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None
     )
     """The ID of the application that created the group DM, if it's a bot based group DM."""
 
@@ -221,7 +221,7 @@ class GuildChannel(Channel):
     """The base for anything that is a guild channel."""
 
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
     )
     """The ID of the guild the channel belongs to.
 
@@ -237,7 +237,7 @@ class GuildChannel(Channel):
     )
     """The permission overwrites for the channel."""
 
-    name: str = marshaller.attrib(deserializer=str)
+    name: str = marshaller.attrib(deserializer=str, repr=True)
     """The name of the channel."""
 
     is_nsfw: typing.Optional[bool] = marshaller.attrib(
@@ -250,7 +250,7 @@ class GuildChannel(Channel):
     """
 
     parent_id: bases.Snowflake = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_none=None, if_undefined=None
+        deserializer=bases.Snowflake, if_none=None, if_undefined=None, repr=True
     )
     """The ID of the parent category the channel belongs to."""
 
@@ -275,7 +275,7 @@ class GuildTextChannel(GuildChannel):
     topic: str = marshaller.attrib(deserializer=str, if_none=None)
     """The topic of the channel."""
 
-    last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize, if_none=None)
+    last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
     """The ID of the last message sent in this channel.
 
     !!! note
@@ -300,7 +300,7 @@ class GuildNewsChannel(GuildChannel):
     topic: str = marshaller.attrib(deserializer=str, if_none=None)
     """The topic of the channel."""
 
-    last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize, if_none=None)
+    last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
     """The ID of the last message sent in this channel.
 
     !!! note
@@ -321,10 +321,10 @@ class GuildStoreChannel(GuildChannel):
 class GuildVoiceChannel(GuildChannel):
     """Represents an voice channel."""
 
-    bitrate: int = marshaller.attrib(deserializer=int)
+    bitrate: int = marshaller.attrib(deserializer=int, repr=True)
     """The bitrate for the voice channel (in bits)."""
 
-    user_limit: int = marshaller.attrib(deserializer=int)
+    user_limit: int = marshaller.attrib(deserializer=int, repr=True)
     """The user limit for the voice channel."""
 
 

@@ -20,10 +20,9 @@
 
 from __future__ import annotations
 
-__all__ = ["HikariEntity", "LARGEST_SNOWFLAKE", "Snowflake", "UniqueEntity"]
+__all__ = ["HikariEntity", "Snowflake", "UniqueEntity"]
 
 import abc
-import functools
 import typing
 
 import attr
@@ -46,69 +45,45 @@ class HikariEntity(abc.ABC):
     """The client components that models may use for procedures."""
 
 
-@functools.total_ordering
-class Snowflake(HikariEntity, typing.SupportsInt):
+class Snowflake(int):
     """A concrete representation of a unique identifier for an object on Discord.
 
     This object can be treated as a regular `int` for most purposes.
     """
 
-    __slots__ = ("_value",)
+    __slots__ = ()
 
-    _value: int
-    """The integer value of this ID."""
+    ___MIN___: Snowflake
+    ___MAX___: Snowflake
 
-    def __init__(self, value: typing.Union[int, str]) -> None:
-        super().__init__()
-        self._value = int(value)
+    @staticmethod
+    def __new__(cls, value: typing.Union[int, str]) -> Snowflake:
+        return super(Snowflake, cls).__new__(cls, value)
 
     @property
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
-        epoch = self._value >> 22
+        epoch = self >> 22
         return conversions.discord_epoch_to_datetime(epoch)
 
     @property
     def internal_worker_id(self) -> int:
         """ID of the worker that created this snowflake on Discord's systems."""
-        return (self._value & 0x3E0_000) >> 17
+        return (self & 0x3E0_000) >> 17
 
     @property
     def internal_process_id(self) -> int:
         """ID of the process that created this snowflake on Discord's systems."""
-        return (self._value & 0x1F_000) >> 12
+        return (self & 0x1F_000) >> 12
 
     @property
     def increment(self) -> int:
         """Increment of Discord's system when this object was made."""
-        return self._value & 0xFFF
-
-    def __hash__(self) -> int:
-        return hash(self._value)
-
-    def __int__(self) -> int:
-        return self._value
-
-    def __repr__(self) -> str:
-        return repr(self._value)
-
-    def __str__(self) -> str:
-        return str(self._value)
-
-    def __eq__(self, other: typing.Any) -> bool:
-        return isinstance(other, typing.SupportsInt) and int(other) == self._value
-
-    def __lt__(self, other: "Snowflake") -> bool:
-        return self._value < int(other)
+        return self & 0xFFF
 
     def serialize(self) -> str:
         """Generate a JSON-friendly representation of this object."""
-        return str(self._value)
-
-    @classmethod
-    def deserialize(cls, value: str) -> Snowflake:
-        """Take a `str` ID and convert it into a Snowflake object."""
-        return cls(value)
+        return str(self)
 
     @classmethod
     def from_datetime(cls, date: datetime.datetime) -> Snowflake:
@@ -117,11 +92,22 @@ class Snowflake(HikariEntity, typing.SupportsInt):
 
     @classmethod
     def from_timestamp(cls, timestamp: float) -> Snowflake:
-        """Get a snowflake object from a seconds timestamp."""
+        """Get a snowflake object from a UNIX timestamp."""
         return cls(int(timestamp - conversions.DISCORD_EPOCH) * 1000 << 22)
 
+    @classmethod
+    def min(cls) -> Snowflake:
+        """Minimum value for a snowflake."""
+        if not hasattr(cls, "___MIN___"):
+            cls.___MIN___ = Snowflake(0)
+        return cls.___MIN___
 
-LARGEST_SNOWFLAKE: typing.Final[Snowflake] = Snowflake((1 << 63) - 1)
+    @classmethod
+    def max(cls) -> Snowflake:
+        """Maximum value for a snowflake."""
+        if not hasattr(cls, "___MAX___"):
+            cls.___MAX___ = Snowflake((1 << 63) - 1)
+        return cls.___MAX___
 
 
 @marshaller.marshallable()

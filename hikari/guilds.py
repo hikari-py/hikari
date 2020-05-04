@@ -218,16 +218,16 @@ class GuildEmbed(bases.HikariEntity, marshaller.Deserializable):
     """Represents a guild embed."""
 
     channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, serializer=str, if_none=None
+        deserializer=bases.Snowflake, serializer=str, if_none=None, repr=True
     )
     """The ID of the channel the invite for this embed targets, if enabled."""
 
-    is_enabled: bool = marshaller.attrib(raw_name="enabled", deserializer=bool, serializer=bool)
+    is_enabled: bool = marshaller.attrib(raw_name="enabled", deserializer=bool, serializer=bool, repr=True)
     """Whether this embed is enabled."""
 
 
 def _deserialize_role_ids(payload: more_typing.JSONArray) -> typing.Sequence[bases.Snowflake]:
-    return [bases.Snowflake.deserialize(role_id) for role_id in payload]
+    return [bases.Snowflake(role_id) for role_id in payload]
 
 
 @marshaller.marshallable()
@@ -235,8 +235,10 @@ def _deserialize_role_ids(payload: more_typing.JSONArray) -> typing.Sequence[bas
 class GuildMember(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent a guild bound member."""
 
+    # TODO: make GuildMember delegate to user and implement a common base class
+    # this allows members and users to be used interchangeably.
     user: typing.Optional[users.User] = marshaller.attrib(
-        deserializer=users.User.deserialize, if_undefined=None, default=None, inherit_kwargs=True
+        deserializer=users.User.deserialize, if_undefined=None, default=None, inherit_kwargs=True, repr=True
     )
     """This member's user object.
 
@@ -244,7 +246,7 @@ class GuildMember(bases.HikariEntity, marshaller.Deserializable):
     """
 
     nickname: typing.Optional[str] = marshaller.attrib(
-        raw_name="nick", deserializer=str, if_none=None, if_undefined=None, default=None
+        raw_name="nick", deserializer=str, if_none=None, if_undefined=None, default=None, repr=True
     )
     """This member's nickname, if set."""
 
@@ -276,7 +278,7 @@ class GuildMember(bases.HikariEntity, marshaller.Deserializable):
 class PartialGuildRole(bases.UniqueEntity, marshaller.Deserializable):
     """Represents a partial guild bound Role object."""
 
-    name: str = marshaller.attrib(deserializer=str, serializer=str)
+    name: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
     """The role's name."""
 
 
@@ -285,17 +287,19 @@ class PartialGuildRole(bases.UniqueEntity, marshaller.Deserializable):
 class GuildRole(PartialGuildRole, marshaller.Serializable):
     """Represents a guild bound Role object."""
 
-    color: colors.Color = marshaller.attrib(deserializer=colors.Color, serializer=int, default=colors.Color(0))
+    color: colors.Color = marshaller.attrib(
+        deserializer=colors.Color, serializer=int, default=colors.Color(0), repr=True,
+    )
     """The colour of this role.
 
     This will be applied to a member's name in chat if it's their top coloured role."""
 
-    is_hoisted: bool = marshaller.attrib(raw_name="hoist", deserializer=bool, serializer=bool, default=False)
+    is_hoisted: bool = marshaller.attrib(raw_name="hoist", deserializer=bool, serializer=bool, default=False, repr=True)
     """Whether this role is hoisting the members it's attached to in the member list.
 
     members will be hoisted under their highest role where this is set to `True`."""
 
-    position: int = marshaller.attrib(deserializer=int, serializer=int, default=None)
+    position: int = marshaller.attrib(deserializer=int, serializer=int, default=None, repr=True)
     """The position of this role in the role hierarchy."""
 
     permissions: _permissions.Permission = marshaller.attrib(
@@ -347,12 +351,12 @@ class ActivityTimestamps(bases.HikariEntity, marshaller.Deserializable):
     """The datetimes for the start and/or end of an activity session."""
 
     start: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.unix_epoch_to_datetime, if_undefined=None, default=None
+        deserializer=conversions.unix_epoch_to_datetime, if_undefined=None, default=None, repr=True
     )
     """When this activity's session was started, if applicable."""
 
     end: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.unix_epoch_to_datetime, if_undefined=None, default=None
+        deserializer=conversions.unix_epoch_to_datetime, if_undefined=None, default=None, repr=True
     )
     """When this activity's session will end, if applicable."""
 
@@ -362,7 +366,7 @@ class ActivityTimestamps(bases.HikariEntity, marshaller.Deserializable):
 class ActivityParty(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent activity groups of users."""
 
-    id: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
+    id: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None, repr=True)
     """The string id of this party instance, if set."""
 
     _size_information: typing.Optional[typing.Tuple[int, int]] = marshaller.attrib(
@@ -446,10 +450,10 @@ class ActivityFlag(more_enums.IntFlag):
 class PresenceActivity(bases.HikariEntity, marshaller.Deserializable):
     """Represents an activity that will be attached to a member's presence."""
 
-    name: str = marshaller.attrib(deserializer=str)
+    name: str = marshaller.attrib(deserializer=str, repr=True)
     """The activity's name."""
 
-    type: ActivityType = marshaller.attrib(deserializer=ActivityType)
+    type: ActivityType = marshaller.attrib(deserializer=ActivityType, repr=True)
     """The activity's type."""
 
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None, default=None)
@@ -466,7 +470,7 @@ class PresenceActivity(bases.HikariEntity, marshaller.Deserializable):
     """
 
     application_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None
     )
     """The ID of the application this activity is for, if applicable."""
 
@@ -534,21 +538,22 @@ class ClientStatus(bases.HikariEntity, marshaller.Deserializable):
     """The client statuses for this member."""
 
     desktop: PresenceStatus = marshaller.attrib(
-        deserializer=PresenceStatus, if_undefined=_default_status, default=PresenceStatus.OFFLINE
+        deserializer=PresenceStatus, if_undefined=_default_status, default=PresenceStatus.OFFLINE, repr=True
     )
     """The status of the target user's desktop session."""
 
     mobile: PresenceStatus = marshaller.attrib(
-        deserializer=PresenceStatus, if_undefined=_default_status, default=PresenceStatus.OFFLINE
+        deserializer=PresenceStatus, if_undefined=_default_status, default=PresenceStatus.OFFLINE, repr=True
     )
     """The status of the target user's mobile session."""
 
     web: PresenceStatus = marshaller.attrib(
-        deserializer=PresenceStatus, if_undefined=_default_status, default=PresenceStatus.OFFLINE
+        deserializer=PresenceStatus, if_undefined=_default_status, default=PresenceStatus.OFFLINE, repr=True
     )
     """The status of the target user's web session."""
 
 
+# TODO: should this be an event instead?
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class PresenceUser(users.User):
@@ -560,22 +565,22 @@ class PresenceUser(users.User):
     """
 
     discriminator: typing.Union[str, unset.Unset] = marshaller.attrib(
-        deserializer=str, if_undefined=unset.Unset, default=unset.UNSET
+        deserializer=str, if_undefined=unset.Unset, default=unset.UNSET, repr=True
     )
     """This user's discriminator."""
 
     username: typing.Union[str, unset.Unset] = marshaller.attrib(
-        deserializer=str, if_undefined=unset.Unset, default=unset.UNSET
+        deserializer=str, if_undefined=unset.Unset, default=unset.UNSET, repr=True
     )
     """This user's username."""
 
     avatar_hash: typing.Union[None, str, unset.Unset] = marshaller.attrib(
-        raw_name="avatar", deserializer=str, if_none=None, if_undefined=unset.Unset, default=unset.UNSET
+        raw_name="avatar", deserializer=str, if_none=None, if_undefined=unset.Unset, default=unset.UNSET, repr=True
     )
     """This user's avatar hash, if set."""
 
     is_bot: typing.Union[bool, unset.Unset] = marshaller.attrib(
-        raw_name="bot", deserializer=bool, if_undefined=unset.Unset, default=unset.UNSET
+        raw_name="bot", deserializer=bool, if_undefined=unset.Unset, default=unset.UNSET, repr=True
     )
     """Whether this user is a bot account."""
 
@@ -651,7 +656,7 @@ def _deserialize_activities(payload: more_typing.JSONArray, **kwargs: typing.Any
 class GuildMemberPresence(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent a guild member's presence."""
 
-    user: PresenceUser = marshaller.attrib(deserializer=PresenceUser.deserialize, inherit_kwargs=True)
+    user: PresenceUser = marshaller.attrib(deserializer=PresenceUser.deserialize, inherit_kwargs=True, repr=True)
     """The object of the user who this presence is for.
 
     !!! info
@@ -670,7 +675,7 @@ class GuildMemberPresence(bases.HikariEntity, marshaller.Deserializable):
     """
 
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
     )
     """The ID of the guild this presence belongs to.
 
@@ -678,7 +683,7 @@ class GuildMemberPresence(bases.HikariEntity, marshaller.Deserializable):
     object (e.g on Guild Create).
     """
 
-    visible_status: PresenceStatus = marshaller.attrib(raw_name="status", deserializer=PresenceStatus)
+    visible_status: PresenceStatus = marshaller.attrib(raw_name="status", deserializer=PresenceStatus, repr=True)
     """This user's current status being displayed by the client."""
 
     activities: typing.Sequence[PresenceActivity] = marshaller.attrib(
@@ -700,7 +705,7 @@ class GuildMemberPresence(bases.HikariEntity, marshaller.Deserializable):
     """
 
     nick: typing.Optional[str] = marshaller.attrib(
-        raw_name="nick", deserializer=str, if_undefined=None, if_none=None, default=None
+        raw_name="nick", deserializer=str, if_undefined=None, if_none=None, default=None, repr=True
     )
     """This member's nickname, if set."""
 
@@ -733,10 +738,10 @@ class IntegrationAccount(bases.HikariEntity, marshaller.Deserializable):
 class PartialGuildIntegration(bases.UniqueEntity, marshaller.Deserializable):
     """A partial representation of an integration, found in audit logs."""
 
-    name: str = marshaller.attrib(deserializer=str)
+    name: str = marshaller.attrib(deserializer=str, repr=True)
     """The name of this integration."""
 
-    type: str = marshaller.attrib(deserializer=str)
+    type: str = marshaller.attrib(deserializer=str, repr=True)
     """The type of this integration."""
 
     account: IntegrationAccount = marshaller.attrib(deserializer=IntegrationAccount.deserialize, inherit_kwargs=True)
@@ -752,13 +757,13 @@ def _deserialize_expire_grace_period(payload: int) -> datetime.timedelta:
 class GuildIntegration(bases.UniqueEntity, marshaller.Deserializable):
     """Represents a guild integration object."""
 
-    is_enabled: bool = marshaller.attrib(raw_name="enabled", deserializer=bool)
+    is_enabled: bool = marshaller.attrib(raw_name="enabled", deserializer=bool, repr=True)
     """Whether this integration is enabled."""
 
     is_syncing: bool = marshaller.attrib(raw_name="syncing", deserializer=bool)
     """Whether this integration is syncing subscribers/emojis."""
 
-    role_id: typing.Optional[bases.Snowflake] = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    role_id: typing.Optional[bases.Snowflake] = marshaller.attrib(deserializer=bases.Snowflake)
     """The ID of the managed role used for this integration's subscribers."""
 
     is_emojis_enabled: typing.Optional[bool] = marshaller.attrib(
@@ -792,10 +797,10 @@ class GuildIntegration(bases.UniqueEntity, marshaller.Deserializable):
 class GuildMemberBan(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent guild bans."""
 
-    reason: str = marshaller.attrib(deserializer=str, if_none=None)
+    reason: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, repr=True)
     """The reason for this ban, will be `None` if no reason was given."""
 
-    user: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True)
+    user: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True, repr=True)
     """The object of the user this ban targets."""
 
 
@@ -827,13 +832,13 @@ def _deserialize_features(payload: more_typing.JSONArray) -> typing.Set[typing.U
 class PartialGuild(bases.UniqueEntity, marshaller.Deserializable):
     """Base object for any partial guild objects."""
 
-    name: str = marshaller.attrib(deserializer=str)
+    name: str = marshaller.attrib(deserializer=str, repr=True)
     """The name of the guild."""
 
     icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str, if_none=None)
     """The hash for the guild icon, if there is one."""
 
-    features: typing.Set[typing.Union[GuildFeature, str]] = marshaller.attrib(deserializer=_deserialize_features,)
+    features: typing.Set[typing.Union[GuildFeature, str]] = marshaller.attrib(deserializer=_deserialize_features)
     """A set of the features in this guild."""
 
     def format_icon_url(self, fmt: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[str]:
@@ -895,10 +900,10 @@ class GuildPreview(PartialGuild):
     )
     """The mapping of IDs to the emojis this guild provides."""
 
-    approximate_presence_count: int = marshaller.attrib(deserializer=int)
+    approximate_presence_count: int = marshaller.attrib(deserializer=int, repr=True)
     """The approximate amount of presences in guild."""
 
-    approximate_member_count: int = marshaller.attrib(deserializer=int)
+    approximate_member_count: int = marshaller.attrib(deserializer=int, repr=True)
     """The approximate amount of members in this guild."""
 
     description: typing.Optional[str] = marshaller.attrib(if_none=None, deserializer=str)
@@ -1020,7 +1025,7 @@ class Guild(PartialGuild):
     )
     """The hash of the discovery splash for the guild, if there is one."""
 
-    owner_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    owner_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
     """The ID of the owner of this guild."""
 
     my_permissions: _permissions.Permission = marshaller.attrib(
@@ -1038,9 +1043,7 @@ class Guild(PartialGuild):
     region: str = marshaller.attrib(deserializer=str)
     """The voice region for the guild."""
 
-    afk_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_none=None
-    )
+    afk_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
     """The ID for the channel that AFK voice users get sent to.
 
     If `None`, then no AFK channel is set up for this guild.
@@ -1063,7 +1066,7 @@ class Guild(PartialGuild):
     """
 
     embed_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, if_none=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, if_none=None, default=None
     )
     """The channel ID that the guild embed will generate an invite to.
 
@@ -1096,9 +1099,7 @@ class Guild(PartialGuild):
     mfa_level: GuildMFALevel = marshaller.attrib(deserializer=GuildMFALevel)
     """The required MFA level for users wishing to participate in this guild."""
 
-    application_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_none=None
-    )
+    application_id: typing.Optional[bases.Snowflake] = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
     """The ID of the application that created this guild.
 
     This will always be `None` for guilds that weren't created by a bot.
@@ -1129,7 +1130,7 @@ class Guild(PartialGuild):
     """
 
     widget_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, if_none=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, if_none=None, default=None
     )
     """The channel ID that the widget's generated invite will send the user to.
 
@@ -1137,9 +1138,7 @@ class Guild(PartialGuild):
     this will be `None`.
     """
 
-    system_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        if_none=None, deserializer=bases.Snowflake.deserialize
-    )
+    system_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(if_none=None, deserializer=bases.Snowflake)
     """The ID of the system channel or `None` if it is not enabled.
 
     Welcome messages and Nitro boost messages may be sent to this channel.
@@ -1148,9 +1147,7 @@ class Guild(PartialGuild):
     system_channel_flags: GuildSystemChannelFlag = marshaller.attrib(deserializer=GuildSystemChannelFlag)
     """Flags for the guild system channel to describe which notifications are suppressed."""
 
-    rules_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        if_none=None, deserializer=bases.Snowflake.deserialize
-    )
+    rules_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(if_none=None, deserializer=bases.Snowflake)
     """The ID of the channel where guilds with the `GuildFeature.PUBLIC`
     `features` display rules and guidelines.
 
@@ -1308,7 +1305,7 @@ class Guild(PartialGuild):
     """
 
     public_updates_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        if_none=None, deserializer=bases.Snowflake.deserialize
+        if_none=None, deserializer=bases.Snowflake
     )
     """The channel ID of the channel where admins and moderators receive notices
     from Discord.
