@@ -205,61 +205,68 @@ class TestResolveSignature:
         def foo(bar: str, bat: int) -> str:
             ...
 
-        parameters, return_annotation, signature = conversions.resolve_signature(foo)
-        assert parameters == {"bar": str, "bat": int}
-        assert return_annotation is str
-        assert signature == inspect.signature(foo)
+        signature = conversions.resolve_signature(foo)
+        assert signature.parameters["bar"].annotation is str
+        assert signature.parameters["bat"].annotation is int
+        assert signature.return_annotation is str
 
     def test_handles_normal_no_annotations(self):
         def foo(bar, bat):
             ...
 
-        parameters, return_annotation, signature = conversions.resolve_signature(foo)
-        assert parameters == {"bar": conversions.EMPTY, "bat": conversions.EMPTY}
-        assert return_annotation is conversions.EMPTY
-        assert signature == inspect.signature(foo)
+        signature = conversions.resolve_signature(foo)
+        assert signature.parameters["bar"].annotation is conversions.EMPTY
+        assert signature.parameters["bat"].annotation is conversions.EMPTY
+        assert signature.return_annotation is conversions.EMPTY
 
     def test_handles_forward_annotated_parameters(self):
         def foo(bar: "str", bat: "int") -> str:
             ...
 
-        parameters, return_annotation, signature = conversions.resolve_signature(foo)
-        assert parameters == {"bar": str, "bat": int}
-        assert return_annotation is str
-        assert signature == inspect.signature(foo)
+        signature = conversions.resolve_signature(foo)
+        assert signature.parameters["bar"].annotation is str
+        assert signature.parameters["bat"].annotation is int
+        assert signature.return_annotation is str
 
     def test_handles_forward_annotated_return(self):
         def foo(bar: str, bat: int) -> "str":
             ...
 
-        parameters, return_annotation, signature = conversions.resolve_signature(foo)
-        assert parameters == {"bar": str, "bat": int}
-        assert return_annotation is str
-        assert signature == inspect.signature(foo)
+        signature = conversions.resolve_signature(foo)
+        assert signature.parameters["bar"].annotation is str
+        assert signature.parameters["bat"].annotation is int
+        assert signature.return_annotation is str
 
     def test_handles_forward_annotations(self):
         def foo(bar: "str", bat: "int") -> "str":
             ...
 
-        parameters, return_annotation, signature = conversions.resolve_signature(foo)
-        assert parameters == {"bar": str, "bat": int}
-        assert return_annotation is str
-        assert signature == inspect.signature(foo)
+        signature = conversions.resolve_signature(foo)
+        assert signature.parameters["bar"].annotation is str
+        assert signature.parameters["bat"].annotation is int
+        assert signature.return_annotation is str
 
     def test_handles_mixed_annotations(self):
         def foo(bar: str, bat: "int"):
             ...
 
-        parameters, return_annotation, signature = conversions.resolve_signature(foo)
-        assert parameters == {"bar": str, "bat": int}
-        assert return_annotation is conversions.EMPTY
-        assert signature == inspect.signature(foo)
+        signature = conversions.resolve_signature(foo)
+        assert signature.parameters["bar"].annotation is str
+        assert signature.parameters["bat"].annotation is int
+        assert signature.return_annotation is conversions.EMPTY
 
     def test_handles_only_return_annotated(self):
         def foo(bar, bat) -> str:
             ...
 
-        parameters, return_annotation, signature = conversions.resolve_signature(foo)
-        assert parameters == {"bar": conversions.EMPTY, "bat": conversions.EMPTY}
-        assert return_annotation is str
-        assert signature == inspect.signature(foo)
+        signature = conversions.resolve_signature(foo)
+        assert signature.parameters["bar"].annotation is conversions.EMPTY
+        assert signature.parameters["bat"].annotation is conversions.EMPTY
+        assert signature.return_annotation is str
+
+    def test_handles_nested_annotations(self):
+        def foo(bar: typing.Optional[typing.Iterator[int]]):
+            ...
+
+        signature = conversions.resolve_signature(foo)
+        assert signature.parameters["bar"].annotation == typing.Optional[typing.Iterator[int]]
