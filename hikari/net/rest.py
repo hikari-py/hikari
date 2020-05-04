@@ -645,8 +645,8 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If specified, the message content to send with the message.
         nonce : str
             If specified, an optional ID to send for opportunistic message
-            creation. This doesn't serve any real purpose for general use,
-            and can usually be ignored.
+            creation. Any created message will have this nonce set on it.
+            Nonces are limited to 32 bytes in size.
         tts : bool
             If specified, whether the message will be sent as a TTS message.
         files : typing.Sequence[hikari.files.BaseStream]
