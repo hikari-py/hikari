@@ -132,7 +132,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
             webhook_token=webhook_token,
             name=name,
-            avatar=await avatar.read_all() if avatar is not ... else ...,
+            avatar=await avatar.read() if avatar is not ... else ...,
             channel_id=(
                 str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
                 if channel and channel is not ...
