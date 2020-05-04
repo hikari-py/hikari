@@ -83,6 +83,7 @@ class RESTClient(
             components,
             low_level_rest.REST(
                 allow_redirects=components.config.allow_redirects,
+                base_url=components.config.rest_url,
                 connector=components.config.tcp_connector,
                 debug=components.config.debug,
                 proxy_headers=components.config.proxy_headers,
