@@ -51,10 +51,10 @@ class TestRESTChannelLogging:
         return RESTChannelLogicImpl()
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 1234, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 1234, channels.PartialChannel)
     async def test_fetch_channel(self, rest_channel_logic_impl, channel):
         mock_payload = {"id": "49494994", "type": 3}
-        mock_channel_obj = mock.MagicMock(channels.Channel)
+        mock_channel_obj = mock.MagicMock(channels.PartialChannel)
         rest_channel_logic_impl._session.get_channel.return_value = mock_payload
         with mock.patch.object(channels, "deserialize_channel", return_value=mock_channel_obj):
             assert await rest_channel_logic_impl.fetch_channel(channel) is mock_channel_obj
@@ -64,14 +64,14 @@ class TestRESTChannelLogging:
             )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.Channel)
-    @_helpers.parametrize_valid_id_formats_for_models("parent_channel", 115590097100865541, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.PartialChannel)
+    @_helpers.parametrize_valid_id_formats_for_models("parent_channel", 115590097100865541, channels.PartialChannel)
     @pytest.mark.parametrize("rate_limit_per_user", [42, datetime.timedelta(seconds=42)])
     async def test_update_channel_with_optionals(
         self, rest_channel_logic_impl, channel, parent_channel, rate_limit_per_user
     ):
         mock_payload = {"name": "Qts", "type": 2}
-        mock_channel_obj = mock.MagicMock(channels.Channel)
+        mock_channel_obj = mock.MagicMock(channels.PartialChannel)
         mock_overwrite_payload = {"type": "user", "id": 543543543}
         mock_overwrite_obj = mock.MagicMock(channels.PermissionOverwrite)
         mock_overwrite_obj.serialize = mock.MagicMock(return_value=mock_overwrite_payload)
@@ -110,12 +110,12 @@ class TestRESTChannelLogging:
             )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.PartialChannel)
     async def test_update_channel_without_optionals(
         self, rest_channel_logic_impl, channel,
     ):
         mock_payload = {"name": "Qts", "type": 2}
-        mock_channel_obj = mock.MagicMock(channels.Channel)
+        mock_channel_obj = mock.MagicMock(channels.PartialChannel)
         rest_channel_logic_impl._session.modify_channel.return_value = mock_payload
         with mock.patch.object(channels, "deserialize_channel", return_value=mock_channel_obj):
             result = await rest_channel_logic_impl.update_channel(channel=channel,)
@@ -138,14 +138,14 @@ class TestRESTChannelLogging:
             )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 55555, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 55555, channels.PartialChannel)
     async def test_delete_channel(self, rest_channel_logic_impl, channel):
         rest_channel_logic_impl._session.delete_close_channel.return_value = ...
         assert await rest_channel_logic_impl.delete_channel(channel) is None
         rest_channel_logic_impl._session.delete_close_channel.assert_called_once_with(channel_id="55555")
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 777777777, messages.Message)
     async def test_fetch_messages_after_with_optionals_integration(self, rest_channel_logic_impl, channel, message):
         mock_payload = {"id": "4242", "content": "CONTENT"}
@@ -164,7 +164,7 @@ class TestRESTChannelLogging:
         mock_request.assert_called_once_with(limit=52, after="777777777", channel_id="123123123")
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
     async def test_fetch_messages_after_without_optionals_integration(self, rest_channel_logic_impl, channel):
         mock_payload = {"id": "4242", "content": "CONTENT"}
         mock_request = mock.AsyncMock(return_value=[{"id": "123", "content": "COULDN'T CARE"}, mock_payload])
@@ -196,7 +196,7 @@ class TestRESTChannelLogging:
         mock_request.assert_called_once_with(limit=100, after="537340988620800000", channel_id="123123123")
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 777777777, messages.Message)
     async def test_fetch_messages_before_with_optionals_integration(self, rest_channel_logic_impl, channel, message):
         mock_payload = {"id": "4242", "content": "CONTENT"}
@@ -215,7 +215,7 @@ class TestRESTChannelLogging:
         mock_request.assert_called_once_with(limit=52, before="777777777", channel_id="123123123")
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
     async def test_fetch_messages_before_without_optionals_integration(self, rest_channel_logic_impl, channel):
         mock_payload = {"id": "4242", "content": "CONTENT"}
         mock_request = mock.AsyncMock(return_value=[mock_payload])
@@ -247,7 +247,7 @@ class TestRESTChannelLogging:
         mock_request.assert_called_once_with(limit=100, before="537340988620800000", channel_id="123123123")
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 777777777, messages.Message)
     async def test_fetch_messages_around_with_limit(self, rest_channel_logic_impl, channel, message):
         mock_message_payloads = [{"id": "202020", "content": "Nyaa"}, {"id": "2020222", "content": "Nyaa 2"}]
@@ -269,7 +269,7 @@ class TestRESTChannelLogging:
             )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 777777777, messages.Message)
     async def test_fetch_messages_around_without_limit(self, rest_channel_logic_impl, channel, message):
         mock_message_payloads = [{"id": "202020", "content": "Nyaa"}, {"id": "2020222", "content": "Nyaa 2"}]
@@ -312,7 +312,7 @@ class TestRESTChannelLogging:
             )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 55555, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 55555, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 565656, messages.Message)
     async def test_fetch_message(self, rest_channel_logic_impl, channel, message):
         mock_payload = {"id": "9409404", "content": "I AM A MESSAGE!"}
@@ -328,7 +328,7 @@ class TestRESTChannelLogging:
             )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 694463529998352394, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 694463529998352394, channels.PartialChannel)
     async def test_create_message_with_optionals(self, rest_channel_logic_impl, channel):
         mock_message_obj = mock.MagicMock(messages.Message)
         mock_message_payload = {"id": "2929292992", "content": "222922"}
@@ -376,7 +376,7 @@ class TestRESTChannelLogging:
         mock_embed_obj.serialize.assert_called_once()
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 694463529998352394, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 694463529998352394, channels.PartialChannel)
     async def test_create_message_without_optionals(self, rest_channel_logic_impl, channel):
         mock_message_obj = mock.MagicMock(messages.Message)
         mock_message_payload = {"id": "2929292992", "content": "222922"}
@@ -407,7 +407,7 @@ class TestRESTChannelLogging:
 
     @pytest.mark.asyncio
     async def test_safe_create_message_without_optionals(self, rest_channel_logic_impl):
-        channel = mock.MagicMock(channels.Channel)
+        channel = mock.MagicMock(channels.PartialChannel)
         mock_message_obj = mock.MagicMock(messages.Message)
         rest_channel_logic_impl.create_message = mock.AsyncMock(return_value=mock_message_obj)
         result = await rest_channel_logic_impl.safe_create_message(channel,)
@@ -426,7 +426,7 @@ class TestRESTChannelLogging:
 
     @pytest.mark.asyncio
     async def test_safe_create_message_with_optionals(self, rest_channel_logic_impl):
-        channel = mock.MagicMock(channels.Channel)
+        channel = mock.MagicMock(channels.PartialChannel)
         mock_embed_obj = mock.MagicMock(embeds.Embed)
         mock_message_obj = mock.MagicMock(messages.Message)
         mock_file_obj = mock.MagicMock(files.BaseStream)
@@ -458,7 +458,7 @@ class TestRESTChannelLogging:
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("message", 432, messages.Message)
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 123, channels.PartialChannel)
     async def test_update_message_with_optionals(self, rest_channel_logic_impl, message, channel):
         mock_payload = {"id": "4242", "content": "I HAVE BEEN UPDATED!"}
         mock_message_obj = mock.MagicMock(messages.Message)
@@ -502,7 +502,7 @@ class TestRESTChannelLogging:
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("message", 432, messages.Message)
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 123, channels.PartialChannel)
     async def test_update_message_without_optionals(self, rest_channel_logic_impl, message, channel):
         mock_payload = {"id": "4242", "content": "I HAVE BEEN UPDATED!"}
         mock_message_obj = mock.MagicMock(messages.Message)
@@ -533,7 +533,7 @@ class TestRESTChannelLogging:
     @pytest.mark.asyncio
     async def test_safe_update_message_without_optionals(self, rest_channel_logic_impl):
         message = mock.MagicMock(messages.Message)
-        channel = mock.MagicMock(channels.Channel)
+        channel = mock.MagicMock(channels.PartialChannel)
         mock_message_obj = mock.MagicMock(messages.Message)
         rest_channel_logic_impl.update_message = mock.AsyncMock(return_value=mock_message_obj)
         result = await rest_channel_logic_impl.safe_update_message(message=message, channel=channel,)
@@ -552,7 +552,7 @@ class TestRESTChannelLogging:
     @pytest.mark.asyncio
     async def test_safe_update_message_with_optionals(self, rest_channel_logic_impl):
         message = mock.MagicMock(messages.Message)
-        channel = mock.MagicMock(channels.Channel)
+        channel = mock.MagicMock(channels.PartialChannel)
         mock_embed = mock.MagicMock(embeds.Embed)
         mock_message_obj = mock.MagicMock(messages.Message)
         rest_channel_logic_impl.update_message = mock.AsyncMock(return_value=mock_message_obj)
@@ -579,7 +579,7 @@ class TestRESTChannelLogging:
         )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 115590097100865541, messages.Message)
     async def test_delete_messages_singular(self, rest_channel_logic_impl, channel, message):
         rest_channel_logic_impl._session.delete_message.return_value = ...
@@ -589,7 +589,7 @@ class TestRESTChannelLogging:
         )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 115590097100865541, messages.Message)
     @_helpers.parametrize_valid_id_formats_for_models("additional_message", 115590097100865541, messages.Message)
     async def test_delete_messages_singular_after_duplicate_removal(
@@ -602,7 +602,7 @@ class TestRESTChannelLogging:
         )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 115590097100865541, messages.Message)
     @_helpers.parametrize_valid_id_formats_for_models("additional_message", 572144340277919754, messages.Message)
     async def test_delete_messages_bulk_removes_duplicates(
@@ -625,7 +625,7 @@ class TestRESTChannelLogging:
         assert await rest_channel_logic_impl.delete_messages(123123, *list(range(0, 111))) is None
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 4123123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 4123123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("overwrite", 9999, channels.PermissionOverwrite)
     async def test_update_channel_overwrite_with_optionals(self, rest_channel_logic_impl, channel, overwrite):
         rest_channel_logic_impl._session.edit_channel_permissions.return_value = ...
@@ -643,7 +643,7 @@ class TestRESTChannelLogging:
         )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 4123123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 4123123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("overwrite", 9999, channels.PermissionOverwrite)
     async def test_update_channel_overwrite_without_optionals(self, rest_channel_logic_impl, channel, overwrite):
         rest_channel_logic_impl._session.edit_channel_permissions.return_value = ...
@@ -674,7 +674,7 @@ class TestRESTChannelLogging:
         )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
     async def test_fetch_invites_for_channel(self, rest_channel_logic_impl, channel):
         mock_invite_payload = {"code": "ogogogogogogogo", "guild_id": "123123123"}
         mock_invite_obj = mock.MagicMock(invites.InviteWithMetadata)
@@ -687,7 +687,7 @@ class TestRESTChannelLogging:
             )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 234123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 234123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("user", 333333, users.User)
     @pytest.mark.parametrize("max_age", [4444, datetime.timedelta(seconds=4444)])
     async def test_create_invite_for_channel_with_optionals(self, rest_channel_logic_impl, channel, user, max_age):
@@ -721,7 +721,7 @@ class TestRESTChannelLogging:
             )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 234123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 234123, channels.PartialChannel)
     async def test_create_invite_for_channel_without_optionals(self, rest_channel_logic_impl, channel):
         mock_invite_payload = {"code": "ogogogogogogogo", "guild_id": "123123123"}
         mock_invite_obj = mock.MagicMock(invites.InviteWithMetadata)
@@ -743,7 +743,7 @@ class TestRESTChannelLogging:
             )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 379953393319542784, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("overwrite", 123123123, channels.PermissionOverwrite)
     async def test_delete_channel_overwrite(self, rest_channel_logic_impl, channel, overwrite):
         rest_channel_logic_impl._session.delete_channel_permission.return_value = ...
@@ -779,7 +779,7 @@ class TestRESTChannelLogging:
         )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
     async def test_fetch_pins(self, rest_channel_logic_impl, channel):
         mock_message_payload = {"id": "21232", "content": "CONTENT"}
         mock_message_obj = mock.MagicMock(messages.Message, id=21232)
@@ -792,7 +792,7 @@ class TestRESTChannelLogging:
             )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 292929, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 292929, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 123123, messages.Message)
     async def test_pin_message(self, rest_channel_logic_impl, channel, message):
         rest_channel_logic_impl._session.add_pinned_channel_message.return_value = ...
@@ -802,7 +802,7 @@ class TestRESTChannelLogging:
         )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 292929, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 292929, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 123123, messages.Message)
     async def test_unpin_message(self, rest_channel_logic_impl, channel, message):
         rest_channel_logic_impl._session.delete_pinned_channel_message.return_value = ...
@@ -812,7 +812,7 @@ class TestRESTChannelLogging:
         )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 115590097100865541, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 115590097100865541, channels.PartialChannel)
     async def test_create_webhook_with_optionals(self, rest_channel_logic_impl, channel):
         mock_webhook_payload = {"id": "29292929", "channel_id": "2292992"}
         mock_webhook_obj = mock.MagicMock(webhooks.Webhook)
@@ -836,7 +836,7 @@ class TestRESTChannelLogging:
         )
 
     @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 115590097100865541, channels.Channel)
+    @_helpers.parametrize_valid_id_formats_for_models("channel", 115590097100865541, channels.PartialChannel)
     async def test_create_webhook_without_optionals(self, rest_channel_logic_impl, channel):
         mock_webhook_payload = {"id": "29292929", "channel_id": "2292992"}
         mock_webhook_obj = mock.MagicMock(webhooks.Webhook)

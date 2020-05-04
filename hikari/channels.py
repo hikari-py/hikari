@@ -21,7 +21,6 @@
 from __future__ import annotations
 
 __all__ = [
-    "Channel",
     "ChannelType",
     "PermissionOverwrite",
     "PermissionOverwriteType",
@@ -117,7 +116,9 @@ class PermissionOverwrite(bases.UniqueEntity, marshaller.Deserializable, marshal
         return typing.cast(permissions.Permission, (self.allow | self.deny))
 
 
-def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type[Channel]], typing.Type[Channel]]:
+def register_channel_type(
+    type_: ChannelType,
+) -> typing.Callable[[typing.Type[PartialChannel]], typing.Type[PartialChannel]]:
     """Generate a decorator for channel classes defined in this library.
 
     This allows them to associate themselves with a given channel type.
@@ -144,23 +145,19 @@ def register_channel_type(type_: ChannelType) -> typing.Callable[[typing.Type[Ch
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Channel(bases.UniqueEntity, marshaller.Deserializable):
-    """Base class for all channels."""
-
-    type: ChannelType = marshaller.attrib(deserializer=ChannelType, repr=True)
-    """The channel's type."""
-
-
-@marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
-class PartialChannel(Channel):
+class PartialChannel(bases.UniqueEntity, marshaller.Deserializable):
     """Represents a channel where we've only received it's basic information.
 
     This is commonly received in REST responses.
     """
 
-    name: str = marshaller.attrib(deserializer=str, repr=True)
-    """The channel's name."""
+    name: typing.Optional[str] = marshaller.attrib(
+        deserializer=str, repr=True, default=None, if_undefined=None, if_none=None
+    )
+    """The channel's name. This will be missing for DM channels."""
+
+    type: ChannelType = marshaller.attrib(deserializer=ChannelType, repr=True)
+    """The channel's type."""
 
 
 def _deserialize_recipients(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[users.User]:
@@ -170,7 +167,7 @@ def _deserialize_recipients(payload: more_typing.JSONArray, **kwargs: typing.Any
 @register_channel_type(ChannelType.DM)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class DMChannel(Channel):
+class DMChannel(PartialChannel):
     """Represents a DM channel."""
 
     last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
@@ -191,9 +188,6 @@ class DMChannel(Channel):
 @attr.s(slots=True, kw_only=True)
 class GroupDMChannel(DMChannel):
     """Represents a DM group channel."""
-
-    name: str = marshaller.attrib(deserializer=str, repr=True)
-    """The group's name."""
 
     owner_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
     """The ID of the owner of the group."""
@@ -217,7 +211,7 @@ def _deserialize_overwrites(
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildChannel(Channel):
+class GuildChannel(PartialChannel):
     """The base for anything that is a guild channel."""
 
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
@@ -236,9 +230,6 @@ class GuildChannel(Channel):
         deserializer=_deserialize_overwrites, inherit_kwargs=True
     )
     """The permission overwrites for the channel."""
-
-    name: str = marshaller.attrib(deserializer=str, repr=True)
-    """The name of the channel."""
 
     is_nsfw: typing.Optional[bool] = marshaller.attrib(
         raw_name="nsfw", deserializer=bool, if_undefined=None, default=None

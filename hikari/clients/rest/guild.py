@@ -519,7 +519,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         icon: files.BaseStream = ...,
         owner: bases.Hashable[users.User] = ...,
         splash: files.BaseStream = ...,
-        system_channel: bases.Hashable[_channels.Channel] = ...,
+        system_channel: bases.Hashable[_channels.PartialChannel] = ...,
         reason: str = ...,
     ) -> guilds.Guild:
         """Edit a given guild.
