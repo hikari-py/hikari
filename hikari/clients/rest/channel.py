@@ -49,17 +49,17 @@ if typing.TYPE_CHECKING:
 class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method, too-many-public-methods
     """The REST client component for handling requests to channel endpoints."""
 
-    async def fetch_channel(self, channel: bases.Hashable[_channels.Channel]) -> _channels.Channel:
+    async def fetch_channel(self, channel: bases.Hashable[_channels.PartialChannel]) -> _channels.PartialChannel:
         """Get an up to date channel object from a given channel object or ID.
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object ID of the channel to look up.
 
         Returns
         -------
-        hikari.channels.Channel
+        hikari.channels.PartialChannel
             The channel object that has been found.
 
         Raises
@@ -79,7 +79,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     async def update_channel(
         self,
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         *,
         name: str = ...,
         position: int = ...,
@@ -91,12 +91,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         permission_overwrites: typing.Sequence[_channels.PermissionOverwrite] = ...,
         parent_category: typing.Optional[bases.Hashable[_channels.GuildCategory]] = ...,
         reason: str = ...,
-    ) -> _channels.Channel:
+    ) -> _channels.PartialChannel:
         """Update one or more aspects of a given channel ID.
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The channel ID to update.
         name : str
             If specified, the new name for the channel. This must be
@@ -128,7 +128,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         permission_overwrites : typing.Sequence[hikari.channels.PermissionOverwrite]
             If specified, the new list of permission overwrites that are
             category specific to replace the existing overwrites with.
-        parent_category : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int], optional
+        parent_category : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int], optional
             If specified, the new parent category ID to set for the channel,
             pass `None` to unset.
         reason : str
@@ -137,7 +137,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Returns
         -------
-        hikari.channels.Channel
+        hikari.channels.PartialChannel
             The channel object that has been modified.
 
         Raises
@@ -177,12 +177,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
         return _channels.deserialize_channel(payload, components=self._components)
 
-    async def delete_channel(self, channel: bases.Hashable[_channels.Channel]) -> None:
+    async def delete_channel(self, channel: bases.Hashable[_channels.PartialChannel]) -> None:
         """Delete the given channel ID, or if it is a DM, close it.
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake str]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake str]
             The object or ID of the channel to delete.
 
         Returns
@@ -216,7 +216,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     def fetch_messages_after(
         self,
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         *,
         after: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]] = 0,
         limit: typing.Optional[int] = None,
@@ -228,12 +228,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The ID of the channel to retrieve the messages from.
         limit : int
             If specified, the maximum number of how many messages this iterator
             should return.
-        after : typing.Union[datetime.datetime, hikari.channels.Channel, hikari.bases.Snowflake, int]
+        after : typing.Union[datetime.datetime, hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             A object or ID message. Only return messages sent AFTER this
             message if it's specified else this will return every message after
             (and including) the first message in the channel.
@@ -287,7 +287,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     def fetch_messages_before(
         self,
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         *,
         before: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]] = bases.Snowflake.max(),
         limit: typing.Optional[int] = None,
@@ -299,12 +299,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The ID of the channel to retrieve the messages from.
         limit : int
             If specified, the maximum number of how many messages this iterator
             should return.
-        before : typing.Union[datetime.datetime, hikari.channels.Channel, hikari.bases.Snowflake, int]
+        before : typing.Union[datetime.datetime, hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             A message object or ID. Only return messages sent BEFORE
             this message if this is specified else this will return every
             message before (and including) the most recent message in the
@@ -359,7 +359,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     async def fetch_messages_around(
         self,
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         around: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]],
         *,
         limit: int = ...,
@@ -372,9 +372,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The ID of the channel to retrieve the messages from.
-        around : typing.Union[datetime.datetime, hikari.channels.Channel, hikari.bases.Snowflake, int]
+        around : typing.Union[datetime.datetime, hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the message to get messages that were sent
             AROUND it in the provided channel, unlike `before` and `after`,
             this argument is required and the provided message will also be
@@ -423,13 +423,13 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             yield _messages.Message.deserialize(payload, components=self._components)
 
     async def fetch_message(
-        self, channel: bases.Hashable[_channels.Channel], message: bases.Hashable[_messages.Message],
+        self, channel: bases.Hashable[_channels.PartialChannel], message: bases.Hashable[_messages.Message],
     ) -> _messages.Message:
         """Get a message from known channel that we can access.
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get the message from.
         message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to retrieve.
@@ -460,7 +460,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     async def create_message(  # pylint: disable=line-too-long
         self,
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         *,
         content: str = ...,
         nonce: str = ...,
@@ -475,7 +475,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The channel or ID of the channel to send to.
         content : str
             If specified, the message content to send with the message.
@@ -548,7 +548,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     def safe_create_message(
         self,
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         *,
         content: str = ...,
         nonce: str = ...,
@@ -581,7 +581,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
     async def update_message(  # pylint: disable=line-too-long
         self,
         message: bases.Hashable[_messages.Message],
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         *,
         content: typing.Optional[str] = ...,
         embed: typing.Optional[_embeds.Embed] = ...,
@@ -594,7 +594,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get the message from.
         message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to edit.
@@ -660,7 +660,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
     def safe_update_message(
         self,
         message: bases.Hashable[_messages.Message],
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         *,
         content: typing.Optional[str] = ...,
         embed: typing.Optional[_embeds.Embed] = ...,
@@ -689,7 +689,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     async def delete_messages(
         self,
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         message: bases.Hashable[_messages.Message],
         *additional_messages: bases.Hashable[_messages.Message],
     ) -> None:
@@ -697,7 +697,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get the message from.
         message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to delete.
@@ -802,13 +802,13 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
 
     async def fetch_invites_for_channel(
-        self, channel: bases.Hashable[_channels.Channel]
+        self, channel: bases.Hashable[_channels.PartialChannel]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         """Get invites for a given channel.
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get invites for.
 
         Returns
@@ -833,7 +833,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     async def create_invite_for_channel(
         self,
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         *,
         max_age: typing.Union[int, datetime.timedelta] = ...,
         max_uses: int = ...,
@@ -905,14 +905,14 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     async def delete_channel_overwrite(  # pylint: disable=line-too-long
         self,
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         overwrite: typing.Union[_channels.PermissionOverwrite, guilds.GuildRole, users.User, bases.Snowflake, int],
     ) -> None:
         """Delete a channel permission overwrite for a user or a role.
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel to delete the overwrite from.
         overwrite : typing.Union[hikari.channels.PermissionOverwrite, hikari.guilds.GuildRole, hikari.users.User, hikari.bases.Snowflake, int]
             The ID of the entity this overwrite targets.
@@ -933,12 +933,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             overwrite_id=str(overwrite.id if isinstance(overwrite, bases.UniqueEntity) else int(overwrite)),
         )
 
-    async def trigger_typing(self, channel: bases.Hashable[_channels.Channel]) -> None:
+    async def trigger_typing(self, channel: bases.Hashable[_channels.PartialChannel]) -> None:
         """Trigger the typing indicator for `10` seconds in a channel.
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel to appear to be typing in.
 
         Raises
@@ -956,13 +956,13 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
 
     async def fetch_pins(
-        self, channel: bases.Hashable[_channels.Channel]
+        self, channel: bases.Hashable[_channels.PartialChannel]
     ) -> typing.Mapping[bases.Snowflake, _messages.Message]:
         """Get pinned messages for a given channel.
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get messages from.
 
         Returns
@@ -994,13 +994,13 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         }
 
     async def pin_message(
-        self, channel: bases.Hashable[_channels.Channel], message: bases.Hashable[_messages.Message],
+        self, channel: bases.Hashable[_channels.PartialChannel], message: bases.Hashable[_messages.Message],
     ) -> None:
         """Add a pinned message to the channel.
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel to pin a message to.
         message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to pin.
@@ -1021,7 +1021,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
 
     async def unpin_message(
-        self, channel: bases.Hashable[_channels.Channel], message: bases.Hashable[_messages.Message],
+        self, channel: bases.Hashable[_channels.PartialChannel], message: bases.Hashable[_messages.Message],
     ) -> None:
         """Remove a pinned message from the channel.
 
@@ -1029,7 +1029,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The ID of the channel to remove a pin from.
         message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to unpin.
