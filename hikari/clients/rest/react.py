@@ -43,7 +43,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
     async def create_reaction(
         self,
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         message: bases.Hashable[_messages.Message],
         emoji: typing.Union[emojis.Emoji, str],
     ) -> None:
@@ -51,7 +51,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel to add this reaction in.
         message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to add the reaction in.
@@ -82,7 +82,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
     async def delete_reaction(
         self,
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         message: bases.Hashable[_messages.Message],
         emoji: typing.Union[emojis.Emoji, str],
     ) -> None:
@@ -90,7 +90,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel to add this reaction in.
         message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to add the reaction in.
@@ -121,13 +121,13 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
         )
 
     async def delete_all_reactions(
-        self, channel: bases.Hashable[_channels.Channel], message: bases.Hashable[_messages.Message],
+        self, channel: bases.Hashable[_channels.PartialChannel], message: bases.Hashable[_messages.Message],
     ) -> None:
         """Delete all reactions from a given message in a given channel.
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get the message from.
         message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to remove all reactions from.
@@ -149,7 +149,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
     async def delete_all_reactions_for_emoji(
         self,
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         message: bases.Hashable[_messages.Message],
         emoji: typing.Union[emojis.Emoji, str],
     ) -> None:
@@ -157,7 +157,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get the message from.
         message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to delete the reactions from.
@@ -185,7 +185,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
     def fetch_reactors_after(
         self,
-        channel: bases.Hashable[_channels.Channel],
+        channel: bases.Hashable[_channels.PartialChannel],
         message: bases.Hashable[_messages.Message],
         emoji: typing.Union[emojis.Emoji, str],
         *,
@@ -199,7 +199,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.Channel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
             The object or ID of the channel to get the message from.
         message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to get the reactions from.

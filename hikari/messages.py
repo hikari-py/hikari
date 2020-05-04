@@ -354,12 +354,12 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
     nonce: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
     """The message nonce. This is a string used for validating a message was sent."""
 
-    def fetch_channel(self) -> typing.Coroutine[channels.Channel]:
+    def fetch_channel(self) -> typing.Coroutine[channels.PartialChannel]:
         """Fetch the channel this message was created in.
 
         Returns
         -------
-        typing.Coroutine[hikari.channels.Channel]
+        typing.Coroutine[hikari.channels.PartialChannel]
             The object of the channel this message belongs to.
 
         Raises
