@@ -154,12 +154,12 @@ class EventDispatcher(abc.ABC):
             nonlocal event_type
 
             if event_type is None:
-                parameters, _, signature = conversions.resolve_signature(callback)
+                signature = conversions.resolve_signature(callback)
 
                 # Seems that the `self` gets unbound for methods automatically by
                 # inspect.signature. That makes my life two lines easier.
-                if len(parameters) == 1:
-                    event_type = list(parameters.values())[0]
+                if len(signature.parameters) == 1:
+                    event_type = next(iter(signature.parameters.values())).annotation
                 else:
                     raise TypeError(f"Invalid signature for event: async def {callback.__name__}({signature}): ...")
 
