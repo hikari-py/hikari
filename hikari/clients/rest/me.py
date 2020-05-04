@@ -155,7 +155,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
     def fetch_my_guilds_before(
         self,
         *,
-        before: typing.Union[datetime.datetime, bases.Hashable[guilds.Guild]] = bases.LARGEST_SNOWFLAKE,
+        before: typing.Union[datetime.datetime, bases.Hashable[guilds.Guild]] = bases.Snowflake.max(),
         limit: typing.Optional[int] = None,
     ) -> typing.AsyncIterator[applications.OwnGuild]:
         """Get an async iterator of the guilds the current user is in.

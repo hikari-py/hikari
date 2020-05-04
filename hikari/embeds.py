@@ -61,7 +61,7 @@ _MAX_EMBED_SIZE: typing.Final[int] = 6000
 class EmbedFooter(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed footer."""
 
-    text: str = marshaller.attrib(deserializer=str, serializer=str)
+    text: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
     """The footer text."""
 
     icon_url: typing.Optional[str] = marshaller.attrib(
@@ -85,11 +85,13 @@ class EmbedFooter(bases.HikariEntity, marshaller.Deserializable, marshaller.Seri
 class EmbedImage(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed image."""
 
-    url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None, default=None)
+    url: typing.Optional[str] = marshaller.attrib(
+        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True,
+    )
     """The URL of the image."""
 
     proxy_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=None, if_undefined=None, default=None
+        deserializer=str, serializer=None, if_undefined=None, default=None,
     )
     """The proxied URL of the image.
 
@@ -120,11 +122,13 @@ class EmbedImage(bases.HikariEntity, marshaller.Deserializable, marshaller.Seria
 class EmbedThumbnail(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed thumbnail."""
 
-    url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None, default=None)
+    url: typing.Optional[str] = marshaller.attrib(
+        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True,
+    )
     """The URL of the thumbnail."""
 
     proxy_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=None, if_undefined=None, default=None
+        deserializer=str, serializer=None, if_undefined=None, default=None,
     )
     """The proxied URL of the thumbnail.
 
@@ -161,7 +165,7 @@ class EmbedVideo(bases.HikariEntity, marshaller.Deserializable):
         embed objects.
     """
 
-    url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
+    url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None, repr=True)
     """The URL of the video."""
 
     height: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
@@ -178,14 +182,16 @@ class EmbedProvider(bases.HikariEntity, marshaller.Deserializable):
 
     !!! note
         This embed attached object cannot be sent by bots or webhooks while
-        sending an embed and therefore shouldn't be initiated like the other
-        embed objects.
+        sending an embed and therefore shouldn't be sent by your application.
+        You should still expect to receive these objects where appropriate.
     """
 
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
+    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None, repr=True)
     """The name of the provider."""
 
-    url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None, default=None)
+    url: typing.Optional[str] = marshaller.attrib(
+        deserializer=str, if_undefined=None, if_none=None, default=None, repr=True
+    )
     """The URL of the provider."""
 
 
@@ -194,10 +200,14 @@ class EmbedProvider(bases.HikariEntity, marshaller.Deserializable):
 class EmbedAuthor(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed author."""
 
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None, default=None)
+    name: typing.Optional[str] = marshaller.attrib(
+        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True
+    )
     """The name of the author."""
 
-    url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None, default=None)
+    url: typing.Optional[str] = marshaller.attrib(
+        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True
+    )
     """The URL of the author."""
 
     icon_url: typing.Optional[str] = marshaller.attrib(
@@ -221,14 +231,14 @@ class EmbedAuthor(bases.HikariEntity, marshaller.Deserializable, marshaller.Seri
 class EmbedField(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents a field in a embed."""
 
-    name: str = marshaller.attrib(deserializer=str, serializer=str)
+    name: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
     """The name of the field."""
 
-    value: str = marshaller.attrib(deserializer=str, serializer=str)
+    value: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
     """The value of the field."""
 
     is_inline: bool = marshaller.attrib(
-        raw_name="inline", deserializer=bool, serializer=bool, if_undefined=False, default=False
+        raw_name="inline", deserializer=bool, serializer=bool, if_undefined=False, default=False, repr=True
     )
     """Whether the field should display inline. Defaults to `False`."""
 
@@ -250,7 +260,9 @@ def _serialize_fields(fields: typing.Sequence[EmbedField]) -> more_typing.JSONAr
 class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed."""
 
-    title: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None, default=None)
+    title: typing.Optional[str] = marshaller.attrib(
+        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True
+    )
     """The title of the embed."""
 
     @title.validator
@@ -276,7 +288,11 @@ class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializab
     """The URL of the embed."""
 
     timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, serializer=_serialize_timestamp, if_undefined=None, default=None,
+        deserializer=conversions.parse_iso_8601_ts,
+        serializer=_serialize_timestamp,
+        if_undefined=None,
+        default=None,
+        repr=True,
     )
     """The timestamp of the embed."""
 

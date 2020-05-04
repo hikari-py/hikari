@@ -41,13 +41,13 @@ def _rest_after_deserializer(after: int) -> datetime.timedelta:
 class SessionStartLimit(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent information about the current session start limits."""
 
-    total: int = marshaller.attrib(deserializer=int)
+    total: int = marshaller.attrib(deserializer=int, repr=True)
     """The total number of session starts the current bot is allowed."""
 
-    remaining: int = marshaller.attrib(deserializer=int)
+    remaining: int = marshaller.attrib(deserializer=int, repr=True)
     """The remaining number of session starts this bot has."""
 
-    reset_after: datetime.timedelta = marshaller.attrib(deserializer=_rest_after_deserializer,)
+    reset_after: datetime.timedelta = marshaller.attrib(deserializer=_rest_after_deserializer, repr=True)
     """When `SessionStartLimit.remaining` will reset for the current bot.
 
     After it resets it will be set to `SessionStartLimit.total`.
@@ -59,14 +59,14 @@ class SessionStartLimit(bases.HikariEntity, marshaller.Deserializable):
 class GatewayBot(bases.HikariEntity, marshaller.Deserializable):
     """Used to represent gateway information for the connected bot."""
 
-    url: str = marshaller.attrib(deserializer=str)
+    url: str = marshaller.attrib(deserializer=str, repr=True)
     """The WSS URL that can be used for connecting to the gateway."""
 
-    shard_count: int = marshaller.attrib(raw_name="shards", deserializer=int)
+    shard_count: int = marshaller.attrib(raw_name="shards", deserializer=int, repr=True)
     """The recommended number of shards to use when connecting to the gateway."""
 
     session_start_limit: SessionStartLimit = marshaller.attrib(
-        deserializer=SessionStartLimit.deserialize, inherit_kwargs=True
+        deserializer=SessionStartLimit.deserialize, inherit_kwargs=True, repr=True
     )
     """Information about the bot's current session start limit."""
 
@@ -83,11 +83,11 @@ class Activity(marshaller.Deserializable, marshaller.Serializable):
     This will show the activity as the bot's presence.
     """
 
-    name: str = marshaller.attrib(deserializer=str, serializer=str)
+    name: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
     """The activity name."""
 
     url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_none=None, if_undefined=None, default=None
+        deserializer=str, serializer=str, if_none=None, if_undefined=None, default=None, repr=True
     )
     """The activity URL. Only valid for `STREAMING` activities."""
 
@@ -96,5 +96,6 @@ class Activity(marshaller.Deserializable, marshaller.Serializable):
         serializer=int,
         if_undefined=_undefined_type_default,
         default=guilds.ActivityType.PLAYING,
+        repr=True,
     )
     """The activity type."""
