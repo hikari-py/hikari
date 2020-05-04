@@ -64,6 +64,11 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             If specified, the new avatar image data.
             If it is None, the avatar is removed.
 
+        !!! warning
+            Verified bots will not be able to change their username on this 
+            endpoint, and should contact Discord support instead to change
+            this value.
+
         Returns
         -------
         hikari.users.MyUser
