@@ -159,34 +159,34 @@ def _deserialize_max_age(seconds: int) -> typing.Optional[datetime.timedelta]:
 
 
 AUDIT_LOG_ENTRY_CONVERTERS = {
-    AuditLogChangeKey.OWNER_ID: bases.Snowflake.deserialize,
-    AuditLogChangeKey.AFK_CHANNEL_ID: bases.Snowflake.deserialize,
+    AuditLogChangeKey.OWNER_ID: bases.Snowflake,
+    AuditLogChangeKey.AFK_CHANNEL_ID: bases.Snowflake,
     AuditLogChangeKey.AFK_TIMEOUT: _deserialize_seconds_timedelta,
     AuditLogChangeKey.MFA_LEVEL: guilds.GuildMFALevel,
     AuditLogChangeKey.VERIFICATION_LEVEL: guilds.GuildVerificationLevel,
     AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guilds.GuildExplicitContentFilterLevel,
     AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guilds.GuildMessageNotificationsLevel,
     AuditLogChangeKey.PRUNE_DELETE_DAYS: _deserialize_day_timedelta,
-    AuditLogChangeKey.WIDGET_CHANNEL_ID: bases.Snowflake.deserialize,
+    AuditLogChangeKey.WIDGET_CHANNEL_ID: bases.Snowflake,
     AuditLogChangeKey.POSITION: int,
     AuditLogChangeKey.BITRATE: int,
-    AuditLogChangeKey.APPLICATION_ID: bases.Snowflake.deserialize,
+    AuditLogChangeKey.APPLICATION_ID: bases.Snowflake,
     AuditLogChangeKey.PERMISSIONS: permissions.Permission,
     AuditLogChangeKey.COLOR: colors.Color,
     AuditLogChangeKey.ALLOW: permissions.Permission,
     AuditLogChangeKey.DENY: permissions.Permission,
-    AuditLogChangeKey.CHANNEL_ID: bases.Snowflake.deserialize,
-    AuditLogChangeKey.INVITER_ID: bases.Snowflake.deserialize,
+    AuditLogChangeKey.CHANNEL_ID: bases.Snowflake,
+    AuditLogChangeKey.INVITER_ID: bases.Snowflake,
     AuditLogChangeKey.MAX_USES: _deserialize_max_uses,
     AuditLogChangeKey.USES: int,
     AuditLogChangeKey.MAX_AGE: _deserialize_max_age,
-    AuditLogChangeKey.ID: bases.Snowflake.deserialize,
+    AuditLogChangeKey.ID: bases.Snowflake,
     AuditLogChangeKey.TYPE: str,
     AuditLogChangeKey.ENABLE_EMOTICONS: bool,
     AuditLogChangeKey.EXPIRE_BEHAVIOR: guilds.IntegrationExpireBehaviour,
     AuditLogChangeKey.EXPIRE_GRACE_PERIOD: _deserialize_day_timedelta,
     AuditLogChangeKey.RATE_LIMIT_PER_USER: _deserialize_seconds_timedelta,
-    AuditLogChangeKey.SYSTEM_CHANNEL_ID: bases.Snowflake.deserialize,
+    AuditLogChangeKey.SYSTEM_CHANNEL_ID: bases.Snowflake,
 }
 
 COMPONENT_BOUND_AUDIT_LOG_ENTRY_CONVERTERS = {
@@ -319,12 +319,13 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo):
     entries.
     """
 
-    id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake)
     """The ID of the overwrite being updated, added or removed."""
+
     type: channels.PermissionOverwriteType = marshaller.attrib(deserializer=channels.PermissionOverwriteType)
     """The type of entity this overwrite targets."""
 
-    role_name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
+    role_name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None, repr=True)
     """The name of the role this overwrite targets, if it targets a role."""
 
 
@@ -337,10 +338,10 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     Will be attached to the message pin and message unpin audit log entries.
     """
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
     """The ID of the text based channel where a pinned message is being targeted."""
 
-    message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
     """The ID of the message that's being pinned or unpinned."""
 
 
@@ -350,10 +351,10 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
 class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
     """Represents the extra information attached to guild prune log entries."""
 
-    delete_member_days: datetime.timedelta = marshaller.attrib(deserializer=_deserialize_day_timedelta)
+    delete_member_days: datetime.timedelta = marshaller.attrib(deserializer=_deserialize_day_timedelta, repr=True)
     """The timedelta of how many days members were pruned for inactivity based on."""
 
-    members_removed: int = marshaller.attrib(deserializer=int)
+    members_removed: int = marshaller.attrib(deserializer=int, repr=True)
     """The number of members who were removed by this prune."""
 
 
@@ -363,7 +364,7 @@ class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
 class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
     """Represents extra information for the message bulk delete audit entry."""
 
-    count: int = marshaller.attrib(deserializer=int)
+    count: int = marshaller.attrib(deserializer=int, repr=True)
     """The amount of messages that were deleted."""
 
 
@@ -373,7 +374,7 @@ class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
 class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     """Represents extra information attached to the message delete audit entry."""
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
     """The guild text based channel where these message(s) were deleted."""
 
 
@@ -383,7 +384,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
 class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
     """Represents extra information for the voice chat member disconnect entry."""
 
-    count: int = marshaller.attrib(deserializer=int)
+    count: int = marshaller.attrib(deserializer=int, repr=True)
     """The amount of members who were disconnected from voice in this entry."""
 
 
@@ -393,7 +394,7 @@ class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
 class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     """Represents extra information for the voice chat based member move entry."""
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
     """The amount of members who were disconnected from voice in this entry."""
 
 
@@ -443,7 +444,7 @@ class AuditLogEntry(bases.UniqueEntity, marshaller.Deserializable):
     target_id: typing.Optional[bases.Snowflake] = attr.attrib()
     """The ID of the entity affected by this change, if applicable."""
 
-    changes: typing.Sequence[AuditLogChange] = attr.attrib()
+    changes: typing.Sequence[AuditLogChange] = attr.attrib(repr=False)
     """A sequence of the changes made to `AuditLogEntry.target_id`."""
 
     user_id: bases.Snowflake = attr.attrib()
@@ -452,10 +453,10 @@ class AuditLogEntry(bases.UniqueEntity, marshaller.Deserializable):
     action_type: typing.Union[AuditLogEventType, str] = attr.attrib()
     """The type of action this entry represents."""
 
-    options: typing.Optional[BaseAuditLogEntryInfo] = attr.attrib()
+    options: typing.Optional[BaseAuditLogEntryInfo] = attr.attrib(repr=False)
     """Extra information about this entry. Only be provided for certain `action_type`."""
 
-    reason: typing.Optional[str] = attr.attrib()
+    reason: typing.Optional[str] = attr.attrib(repr=False)
     """The reason for this change, if set (between 0-512 characters)."""
 
     @classmethod
@@ -476,8 +477,8 @@ class AuditLogEntry(bases.UniqueEntity, marshaller.Deserializable):
                 AuditLogChange.deserialize(payload, **kwargs)
                 for payload in payload.get("changes", more_collections.EMPTY_SEQUENCE)
             ],
-            user_id=bases.Snowflake.deserialize(payload["user_id"]),
-            id=bases.Snowflake.deserialize(payload["id"]),
+            user_id=bases.Snowflake(payload["user_id"]),
+            id=bases.Snowflake(payload["id"]),
             action_type=action_type,
             options=options,
             reason=payload.get("reason"),
@@ -595,7 +596,7 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
         self,
         components: _components.Components,
         request: typing.Callable[..., more_typing.Coroutine[typing.Any]],
-        before: typing.Optional[str] = str(bases.LARGEST_SNOWFLAKE),
+        before: typing.Optional[str] = str(bases.Snowflake.max()),
         limit: typing.Optional[int] = None,
     ) -> None:
         self._components = components

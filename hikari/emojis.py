@@ -46,7 +46,7 @@ class Emoji(bases.HikariEntity, marshaller.Deserializable):
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji."""
 
-    name: str = marshaller.attrib(deserializer=str)
+    name: str = marshaller.attrib(deserializer=str, repr=True)
     """The codepoints that form the emoji."""
 
     @property
@@ -65,7 +65,7 @@ class UnicodeEmoji(Emoji):
 class UnknownEmoji(Emoji, bases.UniqueEntity, files.BaseStream):
     """Represents a unknown emoji."""
 
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None)
+    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, repr=True)
     """The name of the emoji."""
 
     is_animated: typing.Optional[bool] = marshaller.attrib(
@@ -93,7 +93,7 @@ class UnknownEmoji(Emoji, bases.UniqueEntity, files.BaseStream):
 
 
 def _deserialize_role_ids(payload: more_typing.JSONArray) -> typing.Set[bases.Snowflake]:
-    return {bases.Snowflake.deserialize(role_id) for role_id in payload}
+    return {bases.Snowflake(role_id) for role_id in payload}
 
 
 @marshaller.marshallable()

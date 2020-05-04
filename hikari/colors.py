@@ -27,7 +27,7 @@ import typing
 from hikari.internal import assertions
 
 
-class Color(int, typing.SupportsInt):
+class Color(int):
     """Representation of a color.
 
     This value is immutable.
@@ -111,10 +111,6 @@ class Color(int, typing.SupportsInt):
 
     def __str__(self) -> str:
         return self.hex_code
-
-    def __int__(self):
-        # Binary-OR to make raw int.
-        return self | 0
 
     # Ignore docstring not starting in an imperative mood
     @property

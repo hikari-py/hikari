@@ -289,7 +289,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         self,
         channel: bases.Hashable[_channels.Channel],
         *,
-        before: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]] = bases.LARGEST_SNOWFLAKE,
+        before: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]] = bases.Snowflake.max(),
         limit: typing.Optional[int] = None,
     ) -> typing.AsyncIterator[_messages.Message]:
         """Return an async iterator that retrieves a channel's message history.

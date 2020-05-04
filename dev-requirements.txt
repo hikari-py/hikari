@@ -2,8 +2,9 @@ async-timeout~=3.0.1
 coverage~=5.1
 nox==2019.11.9
 # Virtualenv 20.0.19 breaks nox randomnly...
-virtualenv~=20.0.18
-pylint~=2.5.0
+virtualenv==20.0.18
+# Pylint 2.5.0 is broken
+pylint==2.4.4
 pylint-json2html-v2~=0.2.2
 pylint-junit~=0.2.0
 pytest~=5.4.1

@@ -150,13 +150,13 @@ class Attachment(bases.UniqueEntity, _files.BaseStream, marshaller.Deserializabl
     message, etc.
     """
 
-    filename: str = marshaller.attrib(deserializer=str)
+    filename: str = marshaller.attrib(deserializer=str, repr=True)
     """The name of the file."""
 
-    size: int = marshaller.attrib(deserializer=int)
+    size: int = marshaller.attrib(deserializer=int, repr=True)
     """The size of the file in bytes."""
 
-    url: str = marshaller.attrib(deserializer=str)
+    url: str = marshaller.attrib(deserializer=str, repr=True)
     """The source URL of file."""
 
     proxy_url: str = marshaller.attrib(deserializer=str)
@@ -177,11 +177,11 @@ class Attachment(bases.UniqueEntity, _files.BaseStream, marshaller.Deserializabl
 class Reaction(bases.HikariEntity, marshaller.Deserializable):
     """Represents a reaction in a message."""
 
-    count: int = marshaller.attrib(deserializer=int)
+    count: int = marshaller.attrib(deserializer=int, repr=True)
     """The amount of times the emoji has been used to react."""
 
     emoji: typing.Union[_emojis.UnicodeEmoji, _emojis.UnknownEmoji] = marshaller.attrib(
-        deserializer=_emojis.deserialize_reaction_emoji, inherit_kwargs=True
+        deserializer=_emojis.deserialize_reaction_emoji, inherit_kwargs=True, repr=True
     )
     """The emoji used to react."""
 
@@ -194,20 +194,21 @@ class Reaction(bases.HikariEntity, marshaller.Deserializable):
 class MessageActivity(bases.HikariEntity, marshaller.Deserializable):
     """Represents the activity of a rich presence-enabled message."""
 
-    type: MessageActivityType = marshaller.attrib(deserializer=MessageActivityType)
+    type: MessageActivityType = marshaller.attrib(deserializer=MessageActivityType, repr=True)
     """The type of message activity."""
 
-    party_id: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
+    party_id: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None, repr=True)
     """The party ID of the message activity."""
 
 
+# TODO: is this a partial message? Should we rename this if so?
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
 class MessageCrosspost(bases.HikariEntity, marshaller.Deserializable):
     """Represents information about a cross-posted message and the origin of the original message."""
 
     message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
     )
     """The ID of the original message.
 
@@ -217,11 +218,11 @@ class MessageCrosspost(bases.HikariEntity, marshaller.Deserializable):
         currently documented.
     """
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
     """The ID of the channel that the message originated from."""
 
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
     )
     """The ID of the guild that the message originated from.
 
@@ -257,26 +258,26 @@ def _deserialize_reactions(payload: more_typing.JSONArray, **kwargs: typing.Any)
 class Message(bases.UniqueEntity, marshaller.Deserializable):
     """Represents a message."""
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake.deserialize)
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
     """The ID of the channel that the message was sent in."""
 
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
     )
     """The ID of the guild that the message was sent in."""
 
-    author: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True)
+    author: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True, repr=True)
     """The author of this message."""
 
     member: typing.Optional[guilds.GuildMember] = marshaller.attrib(
-        deserializer=guilds.GuildMember.deserialize, if_undefined=None, default=None, inherit_kwargs=True
+        deserializer=guilds.GuildMember.deserialize, if_undefined=None, default=None, inherit_kwargs=True, repr=True,
     )
     """The member properties for the message's author."""
 
     content: str = marshaller.attrib(deserializer=str)
     """The content of the message."""
 
-    timestamp: datetime.datetime = marshaller.attrib(deserializer=conversions.parse_iso_8601_ts)
+    timestamp: datetime.datetime = marshaller.attrib(deserializer=conversions.parse_iso_8601_ts, repr=True)
     """The timestamp that the message was sent at."""
 
     edited_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
@@ -325,7 +326,7 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
     """Whether the message is pinned."""
 
     webhook_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake.deserialize, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None
     )
     """If the message was generated by a webhook, the webhook's id."""
 

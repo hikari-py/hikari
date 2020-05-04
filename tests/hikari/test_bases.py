@@ -55,7 +55,7 @@ class TestSnowflake:
 
     @pytest.fixture()
     def neko_snowflake(self, raw_id):
-        return bases.Snowflake.deserialize(raw_id)
+        return bases.Snowflake(raw_id)
 
     def test_created_at(self, neko_snowflake):
         assert neko_snowflake.created_at == datetime.datetime(
@@ -85,14 +85,14 @@ class TestSnowflake:
 
     def test_eq(self, neko_snowflake, raw_id):
         assert neko_snowflake == raw_id
-        assert neko_snowflake == bases.Snowflake.deserialize(raw_id)
+        assert neko_snowflake == bases.Snowflake(raw_id)
         assert str(raw_id) != neko_snowflake
 
     def test_lt(self, neko_snowflake, raw_id):
         assert neko_snowflake < raw_id + 1
 
     def test_deserialize(self, neko_snowflake, raw_id):
-        assert neko_snowflake == bases.Snowflake.deserialize(raw_id)
+        assert neko_snowflake == bases.Snowflake(raw_id)
 
     def test_from_datetime(self):
         result = bases.Snowflake.from_datetime(
@@ -106,6 +106,16 @@ class TestSnowflake:
         assert result == 537340988620800000
         assert isinstance(result, bases.Snowflake)
 
+    def test_min(self):
+        sf = bases.Snowflake.min()
+        assert sf == 0
+        assert bases.Snowflake.min() is sf
+
+    def test_max(self):
+        sf = bases.Snowflake.max()
+        assert sf == (1 << 63) - 1
+        assert bases.Snowflake.max() is sf
+
 
 @marshaller.marshallable()
 @attr.s(slots=True)
@@ -115,7 +125,7 @@ class StubEntity(bases.UniqueEntity, marshaller.Deserializable, marshaller.Seria
 
 class TestUniqueEntity:
     def test_int(self):
-        assert int(bases.UniqueEntity(id=bases.Snowflake.deserialize("2333333"))) == 2333333
+        assert int(bases.UniqueEntity(id=bases.Snowflake("2333333"))) == 2333333
 
     def test_deserialize(self):
         unique_entity = StubEntity.deserialize({"id": "5445"})
