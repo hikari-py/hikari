@@ -84,6 +84,6 @@ class Webhook(bases.UniqueEntity, marshaller.Deserializable):
     """The token for the webhook.
 
     !!! info
-        This is only available for incoming webhooks that are created in the 
+        This is only available for incoming webhooks that are created in the
         channel settings.
     """

@@ -201,16 +201,15 @@ class MessageActivity(bases.HikariEntity, marshaller.Deserializable):
     """The party ID of the message activity."""
 
 
-# TODO: is this a partial message? Should we rename this if so?
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageCrosspost(bases.HikariEntity, marshaller.Deserializable):
+class MessageCrosspost(bases.UniqueEntity, marshaller.Deserializable):
     """Represents information about a cross-posted message and the origin of the original message."""
 
-    message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
+    id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        raw_name="message_id", deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
     )
-    """The ID of the original message.
+    """The ID of the message.
 
     !!! warning
         This may be `None` in some cases according to the Discord API
@@ -586,12 +585,12 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         """
         await self._components.rest.delete_messages(self.channel_id, self.id)
 
-    async def add_reaction(self, emoji: typing.Union[str, _emojis.Emoji]):
+    async def add_reaction(self, emoji: typing.Union[str, _emojis.Emoji]) -> None:
         r"""Add a reaction to this message.
 
         Parameters
         ----------
-        emoji : typing.Union[str, hikari.emojis.Emoji]
+        emoji : str OR hikari.emojis.Emoji
             The emoji to add.
 
         Examples
@@ -605,7 +604,7 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
             # Using the `name:id` format.
             await message.add_reaction("rooAYAYA:705837374319493284")
 
-            # Using a UnicodeEmoji
+            # Using an Emoji object.
             await message.add_reaction(some_emoji_object)
 
         Raises
@@ -622,4 +621,89 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
             due to it being outside of the range of a 64 bit integer.
 
         """
-        return await self._components.rest.create_reaction(self.channel_id, self.id, emoji)
+        await self._components.rest.add_reaction(self.channel_id, self.id, emoji)
+
+    async def remove_reaction(
+        self, emoji: typing.Union[str, _emojis.Emoji], *, user: typing.Optional[users.User] = None
+    ) -> None:
+        r"""Remove a reaction from this message.
+
+        Parameters
+        ----------
+        emoji : str OR hikari.emojis.Emoji
+            The emoji to remove.
+        user : hikari.users.User, optional
+            The user of the reaction to remove. If `None`, then the bot's
+            reaction is removed instead.
+
+        Examples
+        --------
+            # Using a unicode emoji and removing the bot's reaction from this
+            # reaction.
+            await message.remove_reaction("\N{OK HAND SIGN}")
+
+            # Using a unicode emoji and removing a specific user from this
+            # reaction.
+            await message.remove_reaction("\N{OK HAND SIGN}", some_user)
+
+            # Using an Emoji object and removing a specific user from this
+            # reaction.
+            await message.remove_reaction(some_emoji_object, some_user)
+
+        Raises
+        ------
+        hikari.errors.Forbidden
+            If this is the first reaction using this specific emoji on this
+            message and you lack the `ADD_REACTIONS` permission. If you lack
+            `READ_MESSAGE_HISTORY`, this may also raise this error. If you
+            remove the reaction of another user without `MANAGE_MESSAGES`, this
+            will be raised.
+        hikari.errors.NotFound
+            If the channel or message is not found, or if the emoji is not found.
+        hikari.errors.BadRequest
+            If the emoji is invalid, unknown, or formatted incorrectly.
+            If any invalid snowflake IDs are passed; a snowflake may be invalid
+            due to it being outside of the range of a 64 bit integer.
+        """
+        await self._components.rest.remove_reaction(self.channel_id, self.id, emoji, user)
+
+    async def remove_all_reactions_for_emoji(self, emoji: typing.Union[str, _emojis.Emoji]) -> None:
+        r"""Remove all users' reactions for a specific emoji from the message.
+
+        Parameters
+        ----------
+        emoji : str OR hikari.emojis.Emoji
+            The emoji to remove.
+
+        Example
+        --------
+            # Using a unicode emoji and removing all 👌 reacts from the message.
+            # reaction.
+            await message.remove_reaction("\N{OK HAND SIGN}")
+
+        Raises
+        ------
+        hikari.errors.Forbidden
+            If you are missing the `MANAGE_MESSAGES` permission, or the
+            permission to view the channel
+        hikari.errors.NotFound
+            If the channel or message is not found, or if the emoji is not found.
+        hikari.errors.BadRequest
+            If the emoji is invalid, unknown, or formatted incorrectly.
+            If any invalid snowflake IDs are passed; a snowflake may be invalid
+            due to it being outside of the range of a 64 bit integer.
+        """
+        await self._components.rest.remove_all_reactions_for_emoji(self.channel_id, self.id, emoji)
+
+    async def remove_all_reactions(self) -> None:
+        r"""Remove all reactions from the message.
+
+        Raises
+        ------
+        hikari.errors.Forbidden
+            If you are missing the `MANAGE_MESSAGES` permission, or the
+            permission to view the channel
+        hikari.errors.NotFound
+            If the channel or message is not found, or if the emoji is not found.
+        """
+        await self._components.rest.remove_all_reactions(self.channel_id, self.id)
