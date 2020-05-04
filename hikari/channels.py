@@ -170,7 +170,7 @@ def _deserialize_recipients(payload: more_typing.JSONArray, **kwargs: typing.Any
 class DMChannel(PartialChannel):
     """Represents a DM channel."""
 
-    last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
+    last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
     """The ID of the last message sent in this channel.
 
     !!! note
@@ -240,7 +240,7 @@ class GuildChannel(PartialChannel):
     Guild Create).
     """
 
-    parent_id: bases.Snowflake = marshaller.attrib(
+    parent_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
         deserializer=bases.Snowflake, if_none=None, if_undefined=None, repr=True
     )
     """The ID of the parent category the channel belongs to."""
@@ -263,10 +263,10 @@ def _deserialize_rate_limit_per_user(payload: int) -> datetime.timedelta:
 class GuildTextChannel(GuildChannel):
     """Represents a guild text channel."""
 
-    topic: str = marshaller.attrib(deserializer=str, if_none=None)
+    topic: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None)
     """The topic of the channel."""
 
-    last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
+    last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
     """The ID of the last message sent in this channel.
 
     !!! note
@@ -291,7 +291,7 @@ class GuildNewsChannel(GuildChannel):
     topic: str = marshaller.attrib(deserializer=str, if_none=None)
     """The topic of the channel."""
 
-    last_message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
+    last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
     """The ID of the last message sent in this channel.
 
     !!! note
