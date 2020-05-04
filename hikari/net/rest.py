@@ -2666,6 +2666,11 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If specified, the new avatar image in bytes form.
             If it is None, the avatar is removed.
 
+        !!! warning
+            Verified bots will not be able to change their username on this 
+            endpoint, and should contact Discord support instead to change
+            this value.
+
         Returns
         -------
         more_typing.JSONObject
