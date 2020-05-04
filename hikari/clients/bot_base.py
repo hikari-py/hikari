@@ -149,7 +149,7 @@ class BotBase(
         return self.config.gateway_version
 
     # noinspection PyTypeChecker,PyUnresolvedReferences
-    async def start(self):
+    async def start(self) -> None:
         """Start the bot.
 
         This will query Discord for the optimal number of shards to use if
@@ -164,6 +164,7 @@ class BotBase(
         """
         if self.shards:  # pylint: disable=access-member-before-definition
             raise RuntimeError("Bot is already running.")
+        self._is_shutting_down = False
 
         version = _about.__version__
         path = os.path.abspath(os.path.dirname(inspect.getsourcefile(_about)))
@@ -173,8 +174,29 @@ class BotBase(
         self.logger.info(
             "hikari v%s (installed in %s) (%s %s %s)", version, path, py_impl, py_ver, py_compiler,
         )
-        self._is_shutting_down = False
 
+        await self._calculate_shards()
+
+        self.logger.info("starting %s", conversions.pluralize(len(self.shards), "shard"))
+
+        start_time = time.perf_counter()
+
+        for i, shard_id in enumerate(self.shards):
+            if i > 0:
+                self.logger.info("idling for 5 seconds to avoid an invalid session")
+                await asyncio.sleep(5)
+
+            shard_obj = self.shards[shard_id]
+            await shard_obj.start()
+
+        finish_time = time.perf_counter()
+
+        self.logger.info("started %s shard(s) in approx %.2fs", len(self.shards), finish_time - start_time)
+
+        if self.event_manager is not None:
+            await self.dispatch_event(other.StartedEvent())
+
+    async def _calculate_shards(self):
         gateway_bot = await self.rest.fetch_gateway_bot()
 
         self.logger.info(
@@ -196,25 +218,6 @@ class BotBase(
             shard_clients[shard_id] = shard
 
         self.shards = shard_clients  # pylint: disable=attribute-defined-outside-init
-
-        self.logger.info("starting %s", conversions.pluralize(len(self.shards), "shard"))
-
-        start_time = time.perf_counter()
-
-        for i, shard_id in enumerate(self.shards):
-            if i > 0:
-                self.logger.info("idling for 5 seconds to avoid an invalid session")
-                await asyncio.sleep(5)
-
-            shard_obj = self.shards[shard_id]
-            await shard_obj.start()
-
-        finish_time = time.perf_counter()
-
-        self.logger.info("started %s shard(s) in approx %.2fs", len(self.shards), finish_time - start_time)
-
-        if self.event_manager is not None:
-            await self.dispatch_event(other.StartedEvent())
 
     async def join(self) -> None:
         """Wait for each shard to terminate, then return."""

@@ -86,7 +86,7 @@ class VoiceRegion(bases.HikariEntity, marshaller.Deserializable):
 
     id: str = marshaller.attrib(deserializer=str, repr=True)
     """The string ID of this region.
-    
+
     !!! note
         Unlike most parts of this API, this ID will always be a string type.
         This is intentional.
