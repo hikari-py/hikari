@@ -265,10 +265,8 @@ EMPTY: typing.Final[inspect.Parameter.empty] = inspect.Parameter.empty
 """A singleton that empty annotations will be set to in `resolve_signature`."""
 
 
-def resolve_signature(
-    func: typing.Callable[[...], ...]
-) -> typing.Tuple[typing.Mapping[str, typing.Any], typing.Any, inspect.Signature]:
-    """Get the annotations of the passed `func` and it's `inspect.Signature`.
+def resolve_signature(func: typing.Callable) -> inspect.Signature:
+    """Get the `inspect.Signature` of `func` with resolved forward annotations.
 
     Parameters
     ----------
@@ -277,31 +275,30 @@ def resolve_signature(
 
     Returns
     -------
-    typing.Tuple[typing.Mapping[str, typing.Any], typing.Any, inspect.Signature]
-        A mapping of parameter names to their relevant resolved annotations
-        (the annotation will be "EMPTY" if not set) for the passed function's
-        parameters, the resolved function's return annotation or "EMPTY" if it's
-        not set, and the `inspect.Signature` object for the passed function
-        (which may include unresolved forward references).
+    typing.Signature
+        A `typing.Signature` object with all forward reference annotations
+        resolved.
     """
     signature = inspect.signature(func)
-    parameters = dict(signature.parameters)
     resolved_type_hints = None
-    for key, value in tuple(parameters.items()):
+    parameters = []
+    for key, value in signature.parameters.items():
         if isinstance(value.annotation, str):
             if resolved_type_hints is None:
                 resolved_type_hints = typing.get_type_hints(func)
-            parameters[key] = resolved_type_hints[key]
+            parameters.append(value.replace(annotation=resolved_type_hints[key]))
         else:
-            parameters[key] = value.annotation
+            parameters.append(value)
+    signature = signature.replace(parameters=parameters)
 
-    return_annotation = signature.return_annotation
-    if isinstance(return_annotation, str):
+    if isinstance(signature.return_annotation, str):
         if resolved_type_hints is None:
             return_annotation = typing.get_type_hints(func)["return"]
         else:
             return_annotation = resolved_type_hints["return"]
-    return parameters, return_annotation, signature
+        signature = signature.replace(return_annotation=return_annotation)
+
+    return signature
 
 
 def dereference_int_flag(
