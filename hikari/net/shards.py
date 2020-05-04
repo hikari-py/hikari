@@ -27,8 +27,8 @@ specific shard in a swarm of shards making up a larger bot.
 References
 ----------
 * [IANA WS closure code standards](https://www.iana.org/assignments/websocket/websocket.xhtml)
-* [Gateway documentation](https://discordapp.com/developers/docs/topics/gateway)
-* [Opcode documentation](https://discordapp.com/developers/docs/topics/opcodes-and-status-codes)
+* [Gateway documentation](https://discord.com/developers/docs/topics/gateway)
+* [Opcode documentation](https://discord.com/developers/docs/topics/opcodes-and-status-codes)
 """
 
 from __future__ import annotations
@@ -78,7 +78,7 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
     Each `Shard` represents a single shard.
 
     Expected events that may be passed to the event dispatcher are documented in the
-    [gateway event reference](https://discordapp.com/developers/docs/topics/gateway#commands-and-events) .
+    [gateway event reference](https://discord.com/developers/docs/topics/gateway#commands-and-events) .
     No normalization of the gateway event names occurs. In addition to this,
     some internal events can also be triggered to notify you of changes to
     the connection state.

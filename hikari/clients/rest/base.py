@@ -31,7 +31,6 @@ if typing.TYPE_CHECKING:
     import types
 
     from hikari.clients import components as _components
-    from hikari.net import ratelimits
     from hikari.net import rest
 
 

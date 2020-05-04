@@ -42,6 +42,7 @@ from hikari import guilds
 from hikari import intents as _intents
 from hikari.internal import conversions
 from hikari.internal import marshaller
+from hikari.internal import urls
 
 if typing.TYPE_CHECKING:
     import ssl
@@ -214,44 +215,6 @@ class GatewayConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
         If `True`, allow following redirects from `3xx` HTTP responses.
         Generally you do not want to enable this unless you have a good reason to.
         Defaults to `False` if unspecified during deserialization.
-    tcp_connector : aiohttp.TCPConnector, optional
-        This may otherwise be `None` to use the default settings provided by
-        `aiohttp`.
-        This is deserialized as an object reference in the format
-        `package.module#object.attribute` that is expected to point to the
-        desired value.
-        Defaults to `None` if unspecified during deserialization.
-    proxy_headers : typing.Mapping[str, str], optional
-        Optional proxy headers to provide in any HTTP requests.
-        Defaults to `None` if unspecified during deserialization.
-    proxy_auth : aiohttp.BasicAuth, optional
-        Optional proxy authorization to provide in any HTTP requests.
-        This is deserialized using the format `"basic {{base 64 string here}}"`.
-        Defaults to `None` if unspecified during deserialization.
-    proxy_url : str, optional
-        The optional URL of the proxy to send requests via.
-        Defaults to `None` if unspecified during deserialization.
-    request_timeout : float, optional
-        Optional request timeout to use. If an HTTP request takes longer than
-        this, it will be aborted.
-        If not `None`, the value represents a number of seconds as a floating
-        point number.
-        Defaults to `None` if unspecified during deserialization.
-    ssl_context : ssl.SSLContext, optional
-        The optional SSL context to use.
-        This is deserialized as an object reference in the format
-        `package.module#object.attribute` that is expected to point to the
-        desired value.
-        Defaults to `None` if unspecified during deserialization.
-    verify_ssl : bool
-        If `True`, then responses with invalid SSL certificates will be
-        rejected. Generally you want to keep this enabled unless you have a
-        problem with SSL and you know exactly what you are doing by disabling
-        this. Disabling SSL  verification can have major security implications.
-        You turn this off at your own risk.
-        Defaults to `True` if unspecified during deserialization.
-    token : str, optional
-        The token to use.
     debug : bool
         Whether to enable debugging mode. Usually you don't want to enable this.
     gateway_use_compression : bool
@@ -276,14 +239,52 @@ class GatewayConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
         intent names. If unspecified, this will be set to `None`.
     large_threshold : int
         The large threshold to use.
-    shard_id : typing.Sequence[int], optional
-        The shard IDs to produce shard connections for.
-        If being deserialized, this can be several formats shown in `notes`.
+    proxy_headers : typing.Mapping[str, str], optional
+        Optional proxy headers to provide in any HTTP requests.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_auth : aiohttp.BasicAuth, optional
+        Optional proxy authorization to provide in any HTTP requests.
+        This is deserialized using the format `"basic {{base 64 string here}}"`.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_url : str, optional
+        The optional URL of the proxy to send requests via.
+        Defaults to `None` if unspecified during deserialization.
+    request_timeout : float, optional
+        Optional request timeout to use. If an HTTP request takes longer than
+        this, it will be aborted.
+        If not `None`, the value represents a number of seconds as a floating
+        point number.
+        Defaults to `None` if unspecified during deserialization.
     shard_count : int, optional
         The number of shards the entire distributed application should consists
         of. If you run multiple distributed instances of the bot, you should
         ensure this value is consistent.
         This can be set to `None` to enable auto-sharding. This is the default.
+    shard_id : typing.Sequence[int], optional
+        The shard IDs to produce shard connections for.
+        If being deserialized, this can be several formats shown in `notes`.
+    ssl_context : ssl.SSLContext, optional
+        The optional SSL context to use.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    tcp_connector : aiohttp.TCPConnector, optional
+        This may otherwise be `None` to use the default settings provided by
+        `aiohttp`.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    token : str, optional
+        The token to use.
+    verify_ssl : bool
+        If `True`, then responses with invalid SSL certificates will be
+        rejected. Generally you want to keep this enabled unless you have a
+        problem with SSL and you know exactly what you are doing by disabling
+        this. Disabling SSL  verification can have major security implications.
+        You turn this off at your own risk.
+        Defaults to `True` if unspecified during deserialization.
 
     !!! note
         The several formats for `shard_id` are as follows:
@@ -341,8 +342,6 @@ class GatewayConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
 
     large_threshold: int = marshaller.attrib(deserializer=int, if_undefined=_large_threshold_default, default=250)
 
-    """Definition of shard management configuration settings."""
-
     shard_ids: typing.Optional[typing.Sequence[int]] = marshaller.attrib(
         deserializer=_parse_shard_info, if_none=None, if_undefined=None, default=None
     )
@@ -355,7 +354,19 @@ def _token_type_default() -> str:
 
 
 def _rest_version_default() -> int:
-    return 7
+    return 6
+
+
+def _rest_url_default() -> str:
+    return urls.REST_API_URL
+
+
+def _cdn_url_default() -> str:
+    return urls.BASE_CDN_URL
+
+
+def _oauth2_url_default() -> str:
+    return urls.OAUTH2_API_URL
 
 
 @marshaller.marshallable()
@@ -369,13 +380,16 @@ class RESTConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
         If `True`, allow following redirects from `3xx` HTTP responses.
         Generally you do not want to enable this unless you have a good reason to.
         Defaults to `False` if unspecified during deserialization.
-    tcp_connector : aiohttp.TCPConnector, optional
-        This may otherwise be `None` to use the default settings provided by
-        `aiohttp`.
-        This is deserialized as an object reference in the format
-        `package.module#object.attribute` that is expected to point to the
-        desired value.
-        Defaults to `None` if unspecified during deserialization.
+    oauth2_url : str
+        Can be specified to override the default URL for the Discord OAuth2 API.
+        Generally there is no reason to need to specify this, but it can be
+        useful for testing, amongst other things.
+    rest_url : str
+        Can be specified to override the default URL for the Discord API itself.
+        Generally there is no reason to need to specify this, but it can be
+        useful for testing, amongst other things.
+        You can put format-string placeholders in the URL such as `{0.version}`
+        to interpolate the chosen API version to use.
     proxy_headers : typing.Mapping[str, str], optional
         Optional proxy headers to provide in any HTTP requests.
         Defaults to `None` if unspecified during deserialization.
@@ -394,6 +408,13 @@ class RESTConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
         Defaults to `None` if unspecified during deserialization.
     ssl_context : ssl.SSLContext, optional
         The optional SSL context to use.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    tcp_connector : aiohttp.TCPConnector, optional
+        This may otherwise be `None` to use the default settings provided by
+        `aiohttp`.
         This is deserialized as an object reference in the format
         `package.module#object.attribute` that is expected to point to the
         desired value.
@@ -416,11 +437,19 @@ class RESTConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
         The HTTP API version to use. If unspecified, then V7 is used.
     """
 
+    oauth2_url: str = marshaller.attrib(
+        deserializer=str, if_undefined=_oauth2_url_default, default=_oauth2_url_default()
+    )
+
+    rest_url: str = marshaller.attrib(deserializer=str, if_undefined=_rest_url_default, default=_rest_url_default())
+
+    rest_version: int = marshaller.attrib(
+        deserializer=int, if_undefined=_rest_version_default, default=_rest_version_default()
+    )
+
     token_type: typing.Optional[str] = marshaller.attrib(
         deserializer=str, if_undefined=_token_type_default, if_none=None, default="Bot"
     )
-
-    rest_version: int = marshaller.attrib(deserializer=int, if_undefined=_rest_version_default, default=7)
 
 
 @marshaller.marshallable()
@@ -434,44 +463,6 @@ class BotConfig(RESTConfig, GatewayConfig):
         If `True`, allow following redirects from `3xx` HTTP responses.
         Generally you do not want to enable this unless you have a good reason to.
         Defaults to `False` if unspecified during deserialization.
-    tcp_connector : aiohttp.TCPConnector, optional
-        This may otherwise be `None` to use the default settings provided by
-        `aiohttp`.
-        This is deserialized as an object reference in the format
-        `package.module#object.attribute` that is expected to point to the
-        desired value.
-        Defaults to `None` if unspecified during deserialization.
-    proxy_headers : typing.Mapping[str, str], optional
-        Optional proxy headers to provide in any HTTP requests.
-        Defaults to `None` if unspecified during deserialization.
-    proxy_auth : aiohttp.BasicAuth, optional
-        Optional proxy authorization to provide in any HTTP requests.
-        This is deserialized using the format `"basic {{base 64 string here}}"`.
-        Defaults to `None` if unspecified during deserialization.
-    proxy_url : str, optional
-        The optional URL of the proxy to send requests via.
-        Defaults to `None` if unspecified during deserialization.
-    request_timeout : float, optional
-        Optional request timeout to use. If an HTTP request takes longer than
-        this, it will be aborted.
-        If not `None`, the value represents a number of seconds as a floating
-        point number.
-        Defaults to `None` if unspecified during deserialization.
-    ssl_context : ssl.SSLContext, optional
-        The optional SSL context to use.
-        This is deserialized as an object reference in the format
-        `package.module#object.attribute` that is expected to point to the
-        desired value.
-        Defaults to `None` if unspecified during deserialization.
-    verify_ssl : bool
-        If `True`, then responses with invalid SSL certificates will be
-        rejected. Generally you want to keep this enabled unless you have a
-        problem with SSL and you know exactly what you are doing by disabling
-        this. Disabling SSL  verification can have major security implications.
-        You turn this off at your own risk.
-        Defaults to `True` if unspecified during deserialization.
-    token : str, optional
-        The token to use.
     debug : bool
         Whether to enable debugging mode. Usually you don't want to enable this.
     gateway_use_compression : bool
@@ -496,19 +487,67 @@ class BotConfig(RESTConfig, GatewayConfig):
         intent names. If unspecified, this will be set to `None`.
     large_threshold : int
         The large threshold to use.
-    shard_id : typing.Sequence[int], optional
-        The shard IDs to produce shard connections for.
-        If being deserialized, this can be several formats shown in `notes`.
+    oauth2_url : str
+        Can be specified to override the default URL for the Discord OAuth2 API.
+        Generally there is no reason to need to specify this, but it can be
+        useful for testing, amongst other things.
+    proxy_headers : typing.Mapping[str, str], optional
+        Optional proxy headers to provide in any HTTP requests.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_auth : aiohttp.BasicAuth, optional
+        Optional proxy authorization to provide in any HTTP requests.
+        This is deserialized using the format `"basic {{base 64 string here}}"`.
+        Defaults to `None` if unspecified during deserialization.
+    proxy_url : str, optional
+        The optional URL of the proxy to send requests via.
+        Defaults to `None` if unspecified during deserialization.
+    request_timeout : float, optional
+        Optional request timeout to use. If an HTTP request takes longer than
+        this, it will be aborted.
+        If not `None`, the value represents a number of seconds as a floating
+        point number.
+        Defaults to `None` if unspecified during deserialization.
+    rest_url : str
+        Can be specified to override the default URL for the Discord API itself.
+        Generally there is no reason to need to specify this, but it can be
+        useful for testing, amongst other things.
+        You can put format-string placeholders in the URL such as `{0.version}`
+        to interpolate the chosen API version to use.
+    rest_version : int
+        The HTTP API version to use. If unspecified, then V7 is used.
     shard_count : int, optional
         The number of shards the entire distributed application should consists
         of. If you run multiple distributed instances of the bot, you should
         ensure this value is consistent.
         This can be set to `None` to enable auto-sharding. This is the default.
+    shard_id : typing.Sequence[int], optional
+        The shard IDs to produce shard connections for.
+        If being deserialized, this can be several formats shown in `notes`.
+    ssl_context : ssl.SSLContext, optional
+        The optional SSL context to use.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    tcp_connector : aiohttp.TCPConnector, optional
+        This may otherwise be `None` to use the default settings provided by
+        `aiohttp`.
+        This is deserialized as an object reference in the format
+        `package.module#object.attribute` that is expected to point to the
+        desired value.
+        Defaults to `None` if unspecified during deserialization.
+    token : str, optional
+        The token to use.
     token_type : str, optional
         Token authentication scheme, this defaults to `"Bot"` and  should be
         one of `"Bot"` or `"Bearer"`, or `None` if not relevant.
-    rest_version : int
-        The HTTP API version to use. If unspecified, then V7 is used.
+    verify_ssl : bool
+        If `True`, then responses with invalid SSL certificates will be
+        rejected. Generally you want to keep this enabled unless you have a
+        problem with SSL and you know exactly what you are doing by disabling
+        this. Disabling SSL  verification can have major security implications.
+        You turn this off at your own risk.
+        Defaults to `True` if unspecified during deserialization.
 
     !!! note
         The several formats for `shard_id` are as follows:

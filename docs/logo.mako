@@ -40,6 +40,6 @@
     <ul class="links">
         <li><a href="http://gitlab.com/nekokatt/hikari">Source</a></li>
         <li><a href="http://gitlab.com/nekokatt/hikari/pipelines">Builds</a></li>
-        <li><a href="https://discordapp.com/invite/HMnGbsv">Discord Server</a></li>
+        <li><a href="https://discord.com/invite/HMnGbsv">Discord Server</a></li>
     </ul>
 </header>

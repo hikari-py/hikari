@@ -26,6 +26,7 @@ from hikari import gateway_entities
 from hikari import guilds
 from hikari import intents
 from hikari.clients import configs
+from hikari.internal import urls
 from tests.hikari import _helpers
 
 
@@ -57,7 +58,7 @@ def test_token_config():
 def test_websocket_config(test_debug_config, test_aiohttp_config, test_token_config):
     return {
         "gateway_use_compression": False,
-        "gateway_version": 7,
+        "gateway_version": 6,
         "initial_activity": {"name": "test", "url": "some_url", "type": 0},
         "initial_status": "dnd",
         "initial_is_afk": True,
@@ -74,7 +75,13 @@ def test_websocket_config(test_debug_config, test_aiohttp_config, test_token_con
 
 @pytest.fixture
 def test_rest_config(test_aiohttp_config, test_token_config):
-    return {"rest_version": 6, **test_aiohttp_config, **test_token_config}
+    return {
+        "rest_version": 6,
+        **test_aiohttp_config,
+        **test_token_config,
+        "rest_url": "foobar",
+        "oauth2_url": "quxquxx",
+    }
 
 
 @pytest.fixture
@@ -141,7 +148,7 @@ class TestWebsocketConfig:
         websocket_config_obj = configs.GatewayConfig.deserialize(test_websocket_config)
 
         assert websocket_config_obj.gateway_use_compression is False
-        assert websocket_config_obj.gateway_version == 7
+        assert websocket_config_obj.gateway_version == 6
         assert websocket_config_obj.initial_activity == gateway_entities.Activity.deserialize(
             {"name": "test", "url": "some_url", "type": 0}
         )
@@ -222,11 +229,13 @@ class TestRESTConfig:
         assert rest_config_obj.ssl_context == ssl.SSLContext
         assert rest_config_obj.verify_ssl is False
         assert rest_config_obj.token == "token"
+        assert rest_config_obj.rest_url == "foobar"
+        assert rest_config_obj.oauth2_url == "quxquxx"
 
     def test_empty_deserialize(self):
         rest_config_obj = configs.RESTConfig.deserialize({})
 
-        assert rest_config_obj.rest_version == 7
+        assert rest_config_obj.rest_version == 6
         assert rest_config_obj.allow_redirects is False
         assert rest_config_obj.tcp_connector is None
         assert rest_config_obj.proxy_headers is None
@@ -236,6 +245,8 @@ class TestRESTConfig:
         assert rest_config_obj.ssl_context is None
         assert rest_config_obj.verify_ssl is True
         assert rest_config_obj.token is None
+        assert rest_config_obj.rest_url == urls.REST_API_URL
+        assert rest_config_obj.oauth2_url == urls.OAUTH2_API_URL
 
 
 class TestBotConfig:
@@ -259,7 +270,7 @@ class TestBotConfig:
         assert bot_config_obj.shard_ids == [5, 6, 7, 8, 9, 10]
         assert bot_config_obj.shard_count == 17
         assert bot_config_obj.gateway_use_compression is False
-        assert bot_config_obj.gateway_version == 7
+        assert bot_config_obj.gateway_version == 6
         assert bot_config_obj.initial_activity == gateway_entities.Activity.deserialize(
             {"name": "test", "url": "some_url", "type": 0}
         )
@@ -268,11 +279,13 @@ class TestBotConfig:
         assert bot_config_obj.intents == intents.Intent.GUILD_MESSAGES | intents.Intent.GUILDS
         assert bot_config_obj.large_threshold == 1000
         assert bot_config_obj.debug is True
+        assert bot_config_obj.rest_url == "foobar"
+        assert bot_config_obj.oauth2_url == "quxquxx"
 
     def test_empty_deserialize(self):
         bot_config_obj = configs.BotConfig.deserialize({})
 
-        assert bot_config_obj.rest_version == 7
+        assert bot_config_obj.rest_version == 6
         assert bot_config_obj.allow_redirects is False
         assert bot_config_obj.tcp_connector is None
         assert bot_config_obj.proxy_headers is None
@@ -292,3 +305,5 @@ class TestBotConfig:
         assert bot_config_obj.intents is None
         assert bot_config_obj.large_threshold == 250
         assert bot_config_obj.debug is False
+        assert bot_config_obj.rest_url == urls.REST_API_URL
+        assert bot_config_obj.oauth2_url == urls.OAUTH2_API_URL

@@ -473,7 +473,7 @@ class TestRESTEndpoints:
         stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
         with stack:
-            client = rest.REST(base_url="https://discordapp.com/api/v6", token="Bot blah.blah.blah")
+            client = rest.REST(base_url="https://discord.com/api/v6", token="Bot blah.blah.blah")
         client._request_json_response = mock.AsyncMock(return_value=...)
         client.client_session = mock.MagicMock(aiohttp.ClientSession, spec_set=True)
 
@@ -1725,11 +1725,11 @@ class TestRESTEndpoints:
 
     def test_get_guild_widget_image_url_without_style(self, rest_impl):
         url = rest_impl.get_guild_widget_image_url("54949")
-        assert url == "https://discordapp.com/api/v6/guilds/54949/widget.png"
+        assert url == "https://discord.com/api/v6/guilds/54949/widget.png"
 
     def test_get_guild_widget_image_url_with_style(self, rest_impl):
         url = rest_impl.get_guild_widget_image_url("54949", style="banner2")
-        assert url == "https://discordapp.com/api/v6/guilds/54949/widget.png?style=banner2"
+        assert url == "https://discord.com/api/v6/guilds/54949/widget.png?style=banner2"
 
     @pytest.mark.asyncio
     async def test_get_invite_without_counts(self, rest_impl):
