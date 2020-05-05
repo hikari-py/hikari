@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Put this in .git/hooks to make sure 'black' runs every time you commit.
+# Put this in .git/hooks to make sure all test and code formatting sessions run every time you commit.
 
 trap "exit" SIGINT SIGTERM SIGKILL
 
