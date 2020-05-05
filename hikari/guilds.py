@@ -141,6 +141,9 @@ class GuildFeature(str, more_enums.Enum):
     Previously gave access to VIP voice servers.
     """
 
+    WELCOME_SCREEN_ENABLED = "WELCOME_SCREEN_ENABLED"
+    """Guild has enabled the welcome screen."""
+
 
 @more_enums.must_be_unique
 class GuildMessageNotificationsLevel(int, more_enums.Enum):
