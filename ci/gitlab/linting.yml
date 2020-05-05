@@ -45,7 +45,7 @@ pylint:
       junit: public/pylint.xml
   extends: .lint
   script:
-   - nox -s pylint --no-error-on-external-run
+   - nox -s pylint --no-error-on-external-run -- --also-junit-report --also-html-report
 
 ###
 ### Documentation linting.
