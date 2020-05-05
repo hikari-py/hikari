@@ -406,6 +406,7 @@ class TestRESTBucketManager:
         buckets = [MockBucket() for _ in range(30)]
 
         mgr = ratelimits.RESTBucketManager()
+        # noinspection PyFinal
         mgr.real_hashes_to_buckets = {f"blah{i}": bucket for i, bucket in enumerate(buckets)}
 
         mgr.close()
@@ -434,8 +435,8 @@ class TestRESTBucketManager:
         with mock.patch("hikari.net.ratelimits.RESTBucketManager.close") as close:
             with mock.patch("hikari.net.ratelimits.RESTBucketManager.gc") as gc:
                 with ratelimits.RESTBucketManager() as mgr:
-                    mgr.start(0.01)
-                gc.assert_called_once_with(0.01)
+                    mgr.start(0.01, 32)
+                gc.assert_called_once_with(0.01, 32)
             close.assert_called()
 
     @pytest.mark.asyncio
@@ -461,29 +462,15 @@ class TestRESTBucketManager:
     async def test_gc_calls_do_pass(self):
         with _helpers.unslot_class(ratelimits.RESTBucketManager)() as mgr:
             mgr.do_gc_pass = mock.MagicMock()
-            mgr.start(0.01)
+            mgr.start(0.01, 33)
             try:
                 await asyncio.sleep(0.1)
-                mgr.do_gc_pass.assert_called()
+                mgr.do_gc_pass.assert_called_with(33)
             finally:
                 mgr.gc_task.cancel()
 
     @pytest.mark.asyncio
-    async def test_do_gc_pass_any_buckets_that_are_empty_and_unknown_get_closed(self):
-        with _helpers.unslot_class(ratelimits.RESTBucketManager)() as mgr:
-            bucket = mock.MagicMock()
-            bucket.is_empty = True
-            bucket.is_unknown = True
-
-            mgr.real_hashes_to_buckets["foobar"] = bucket
-
-            mgr.do_gc_pass()
-
-            assert "foobar" not in mgr.real_hashes_to_buckets
-            bucket.close.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_do_gc_pass_any_buckets_that_are_empty_and_known_but_still_rate_limited_are_kept(self):
+    async def test_do_gc_pass_any_buckets_that_are_empty_but_still_rate_limited_are_kept_alive(self):
         with _helpers.unslot_class(ratelimits.RESTBucketManager)() as mgr:
             bucket = mock.MagicMock()
             bucket.is_empty = True
@@ -492,13 +479,28 @@ class TestRESTBucketManager:
 
             mgr.real_hashes_to_buckets["foobar"] = bucket
 
-            mgr.do_gc_pass()
+            mgr.do_gc_pass(0)
 
             assert "foobar" in mgr.real_hashes_to_buckets
             bucket.close.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_do_gc_pass_any_buckets_that_are_empty_and_known_but_not_rate_limited_are_closed(self):
+    async def test_do_gc_pass_any_buckets_that_are_empty_but_not_rate_limited_and_not_expired_are_kept_alive(self):
+        with _helpers.unslot_class(ratelimits.RESTBucketManager)() as mgr:
+            bucket = mock.MagicMock()
+            bucket.is_empty = True
+            bucket.is_unknown = False
+            bucket.reset_at = time.perf_counter()
+
+            mgr.real_hashes_to_buckets["foobar"] = bucket
+
+            mgr.do_gc_pass(10)
+
+            assert "foobar" in mgr.real_hashes_to_buckets
+            bucket.close.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_do_gc_pass_any_buckets_that_are_empty_but_not_rate_limited_and_expired_are_closed(self):
         with _helpers.unslot_class(ratelimits.RESTBucketManager)() as mgr:
             bucket = mock.MagicMock()
             bucket.is_empty = True
@@ -507,21 +509,22 @@ class TestRESTBucketManager:
 
             mgr.real_hashes_to_buckets["foobar"] = bucket
 
-            mgr.do_gc_pass()
+            mgr.do_gc_pass(0)
 
             assert "foobar" not in mgr.real_hashes_to_buckets
             bucket.close.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_do_gc_pass_any_buckets_that_are_not_empty_are_kept(self):
+    async def test_do_gc_pass_any_buckets_that_are_not_empty_are_kept_alive(self):
         with _helpers.unslot_class(ratelimits.RESTBucketManager)() as mgr:
             bucket = mock.MagicMock()
             bucket.is_empty = False
             bucket.is_unknown = True
+            bucket.reset_at = time.perf_counter()
 
             mgr.real_hashes_to_buckets["foobar"] = bucket
 
-            mgr.do_gc_pass()
+            mgr.do_gc_pass(0)
 
             assert "foobar" in mgr.real_hashes_to_buckets
             bucket.close.assert_not_called()
