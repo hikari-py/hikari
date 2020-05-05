@@ -24,9 +24,9 @@ __all__ = ["RESTChannelComponent"]
 
 import abc
 import datetime
-import functools
 import typing
 
+from hikari import paginated
 from hikari import bases
 from hikari import channels as _channels
 from hikari import invites
@@ -44,6 +44,36 @@ if typing.TYPE_CHECKING:
     from hikari import users
 
     from hikari.internal import more_typing
+
+
+class _MessagePaginator(paginated.BufferedPaginatedResults[_messages.Message]):
+    __slots__ = ("_channel_id", "_direction", "_first_id", "_components", "_session")
+
+    def __init__(self, channel, direction, first, components, session) -> None:
+        super().__init__()
+        self._channel_id = str(int(channel))
+        self._direction = direction
+        self._first_id = bases.Snowflake.from_datetime(first) if isinstance(first, datetime.datetime) else str(int(first))
+        self._components = components
+        self._session = session
+
+    async def _next_chunk(self):
+        kwargs = {
+            self._direction: self._first_id,
+            "channel_id": self._channel_id,
+            "limit": 100,
+        }
+
+        items = await self._session.get_channel_messages(**kwargs)
+
+        if not items:
+            return None
+        if self._direction == "after":
+            items.reverse()
+
+        self._first_id = items[-1]["id"]
+
+        return (_messages.Message.deserialize(m, components=self._components) for m in items)
 
 
 class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method, too-many-public-methods
@@ -214,213 +244,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
         )
 
-    def fetch_messages_after(
-        self,
-        channel: bases.Hashable[_channels.PartialChannel],
-        *,
-        after: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]] = 0,
-        limit: typing.Optional[int] = None,
-    ) -> typing.AsyncIterator[_messages.Message]:
-        """Return an async iterator that retrieves a channel's message history.
-
-        This will return the message created after a given message object/ID or
-        from the first message in the channel.
-
-        Parameters
-        ----------
-        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
-            The ID of the channel to retrieve the messages from.
-        limit : int
-            If specified, the maximum number of how many messages this iterator
-            should return.
-        after : typing.Union[datetime.datetime, hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
-            A object or ID message. Only return messages sent AFTER this
-            message if it's specified else this will return every message after
-            (and including) the first message in the channel.
-
-        Examples
-        --------
-            async for message in client.fetch_messages_after(channel, after=9876543, limit=3232):
-                if message.author.id in BLACKLISTED_USERS:
-                    await client.ban_member(channel.guild_id,  message.author)
-
-        Returns
-        -------
-        typing.AsyncIterator[hikari.messages.Message]
-            An async iterator that retrieves the channel's message objects.
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
-        hikari.errors.Forbidden
-            If you lack permission to read the channel.
-        hikari.errors.NotFound
-            If the channel is not found, or the message
-            provided for one of the filter arguments is not found.
-
-        !!! note
-            If you are missing the `VIEW_CHANNEL` permission, you will receive a
-            hikari.errors.Forbidden. If you are instead missing
-            the `READ_MESSAGE_HISTORY` permission, you will always receive
-            zero results, and thus an empty list will be returned instead.
-        """
-        if isinstance(after, datetime.datetime):
-            after = str(bases.Snowflake.from_datetime(after))
-        else:
-            after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
-        request = functools.partial(
-            self._session.get_channel_messages,
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-        )
-        deserializer = functools.partial(_messages.Message.deserialize, components=self._components)
-        return helpers.pagination_handler(
-            deserializer=deserializer,
-            direction="after",
-            start=after,
-            request=request,
-            reversing=True,  # This is the only regular paginated endpoint where reversing is needed.
-            maximum_limit=100,
-            limit=limit,
-        )
-
     def fetch_messages_before(
         self,
         channel: bases.Hashable[_channels.PartialChannel],
-        *,
-        before: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]] = bases.Snowflake.max(),
-        limit: typing.Optional[int] = None,
-    ) -> typing.AsyncIterator[_messages.Message]:
-        """Return an async iterator that retrieves a channel's message history.
-
-        This returns the message created after a given message object/ID or
-        from the first message in the channel.
-
-        Parameters
-        ----------
-        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
-            The ID of the channel to retrieve the messages from.
-        limit : int
-            If specified, the maximum number of how many messages this iterator
-            should return.
-        before : typing.Union[datetime.datetime, hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
-            A message object or ID. Only return messages sent BEFORE
-            this message if this is specified else this will return every
-            message before (and including) the most recent message in the
-            channel.
-
-        Examples
-        --------
-            async for message in client.fetch_messages_before(channel, before=9876543, limit=1231):
-                if message.content.lower().contains("delete this"):
-                    await client.delete_message(channel, message)
-
-        Returns
-        -------
-        typing.AsyncIterator[hikari.messages.Message]
-            An async iterator that retrieves the channel's message objects.
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
-        hikari.errors.Forbidden
-            If you lack permission to read the channel.
-        hikari.errors.NotFound
-            If the channel is not found, or the message
-            provided for one of the filter arguments is not found.
-
-        !!! note
-            If you are missing the `VIEW_CHANNEL` permission, you will receive a
-            hikari.errors.Forbidden. If you are instead missing
-            the `READ_MESSAGE_HISTORY` permission, you will always receive
-            zero results, and thus an empty list will be returned instead.
-        """
-        if isinstance(before, datetime.datetime):
-            before = str(bases.Snowflake.from_datetime(before))
-        else:
-            before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
-        request = functools.partial(
-            self._session.get_channel_messages,
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-        )
-        deserializer = functools.partial(_messages.Message.deserialize, components=self._components)
-        return helpers.pagination_handler(
-            deserializer=deserializer,
-            direction="before",
-            start=before,
-            request=request,
-            reversing=False,
-            maximum_limit=100,
-            limit=limit,
-        )
-
-    async def fetch_messages_around(
-        self,
-        channel: bases.Hashable[_channels.PartialChannel],
-        around: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]],
-        *,
-        limit: int = ...,
-    ) -> typing.AsyncIterator[_messages.Message]:
-        """Yield up to 100 messages found around a given point.
-
-        This will return messages in order from newest to oldest, is based
-        around the creation time of the supplied message object/ID and will
-        include the given message if it still exists.
-
-        Parameters
-        ----------
-        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
-            The ID of the channel to retrieve the messages from.
-        around : typing.Union[datetime.datetime, hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
-            The object or ID of the message to get messages that were sent
-            AROUND it in the provided channel, unlike `before` and `after`,
-            this argument is required and the provided message will also be
-            returned if it still exists.
-        limit : int
-            If specified, the maximum number of how many messages this iterator
-            should return, cannot be more than `100`
-
-        Examples
-        --------
-            async for message in client.fetch_messages_around(channel, around=9876543, limit=42):
-                if message.embeds and not message.author.is_bot:
-                    await client.delete_message(channel, message)
-
-        Yields
-        ------
-        hikari.messages.Message
-            The messages found around the given point.
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
-        hikari.errors.Forbidden
-            If you lack permission to read the channel.
-        hikari.errors.NotFound
-            If the channel is not found, or the message
-            provided for one of the filter arguments is not found.
-
-        !!! note
-            If you are missing the `VIEW_CHANNEL` permission, you will receive a
-            `hikari.errors.Forbidden`. If you are instead missing
-            the `READ_MESSAGE_HISTORY` permission, you will always receive
-            zero results, and thus an empty list will be returned instead.
-        """
-        if isinstance(around, datetime.datetime):
-            around = str(bases.Snowflake.from_datetime(around))
-        else:
-            around = str(around.id if isinstance(around, bases.UniqueEntity) else int(around))
-        for payload in await self._session.get_channel_messages(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            limit=limit,
-            around=around,
-        ):
-            yield _messages.Message.deserialize(payload, components=self._components)
+        before: typing.Union[datetime.datetime, typing.Hashable[_messages.Message]],
+    ) -> paginated.PaginatedResults[_messages.Message]:
+        return _MessagePaginator(channel, "before", before, self._components, self._session)
 
     async def fetch_message(
         self, channel: bases.Hashable[_channels.PartialChannel], message: bases.Hashable[_messages.Message],

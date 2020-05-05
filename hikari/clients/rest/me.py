@@ -28,6 +28,7 @@ import functools
 import typing
 
 from hikari import applications
+from hikari import paginated
 from hikari import bases
 from hikari import channels as _channels
 from hikari import users
@@ -109,8 +110,8 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         *,
         after: typing.Union[datetime.datetime, bases.Hashable[guilds.Guild]] = 0,
         limit: typing.Optional[int] = None,
-    ) -> typing.AsyncIterator[applications.OwnGuild]:
-        """Get an async iterator of the guilds the current user is in.
+    ) -> paginated.AsyncIterable[applications.OwnGuild]:
+        """Get an async iterable of the guilds the current user is in.
 
         This returns the guilds created after a given guild object/ID or from
         the oldest guild.
@@ -131,8 +132,8 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Returns
         -------
-        typing.AsyncIterator[hikari.applications.OwnGuild]
-            An async iterator of partial guild objects.
+        hikari.async_iterable.AsyncIterable[hikari.applications.OwnGuild]
+            An async iterable of partial guild objects.
 
         Raises
         ------
@@ -147,14 +148,16 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         else:
             after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
         deserializer = functools.partial(applications.OwnGuild.deserialize, components=self._components)
-        return helpers.pagination_handler(
-            deserializer=deserializer,
-            direction="after",
-            request=self._session.get_current_user_guilds,
-            reversing=False,
-            start=after,
-            maximum_limit=100,
-            limit=limit,
+        return paginated.AsyncIterable(
+            lambda: helpers.pagination_handler(
+                deserializer=deserializer,
+                direction="after",
+                request=self._session.get_current_user_guilds,
+                reversing=False,
+                start=after,
+                maximum_limit=100,
+                limit=limit,
+            )
         )
 
     def fetch_my_guilds_before(
@@ -162,8 +165,8 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         *,
         before: typing.Union[datetime.datetime, bases.Hashable[guilds.Guild]] = bases.Snowflake.max(),
         limit: typing.Optional[int] = None,
-    ) -> typing.AsyncIterator[applications.OwnGuild]:
-        """Get an async iterator of the guilds the current user is in.
+    ) -> paginated.AsyncIterable[applications.OwnGuild]:
+        """Get an async iterable of the guilds the current user is in.
 
         This returns the guilds that were created before a given user object/ID
         or from the newest guild.
@@ -179,8 +182,8 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Returns
         -------
-        typing.AsyncIterator[hikari.applications.OwnGuild]
-            An async iterator of partial guild objects.
+        hikari.async_iterable.AsyncIterable[hikari.applications.OwnGuild]
+            An async iterable of partial guild objects.
 
         Raises
         ------
@@ -195,14 +198,16 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         else:
             before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
         deserializer = functools.partial(applications.OwnGuild.deserialize, components=self._components)
-        return helpers.pagination_handler(
-            deserializer=deserializer,
-            direction="before",
-            request=self._session.get_current_user_guilds,
-            reversing=False,
-            start=before,
-            maximum_limit=100,
-            limit=limit,
+        return paginated.AsyncIterable(
+            lambda: helpers.pagination_handler(
+                deserializer=deserializer,
+                direction="before",
+                request=self._session.get_current_user_guilds,
+                reversing=False,
+                start=before,
+                maximum_limit=100,
+                limit=limit,
+            )
         )
 
     async def leave_guild(self, guild: bases.Hashable[guilds.Guild]) -> None:
