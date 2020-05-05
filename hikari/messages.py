@@ -168,7 +168,7 @@ class Attachment(bases.UniqueEntity, _files.BaseStream, marshaller.Deserializabl
     width: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
     """The width of the image (if the file is an image)."""
 
-    def __aiter__(self) -> typing.AsyncIterator[bytes]:
+    def __aiter__(self) -> typing.AsyncGenerator[bytes]:
         return _files.WebResourceStream(self.filename, self.url).__aiter__()
 
 

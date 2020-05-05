@@ -22,9 +22,7 @@ from __future__ import annotations
 
 __all__ = ["warning"]
 
-import textwrap
 import typing
-import warnings
 
 from hikari import bases
 from hikari.internal import assertions
@@ -34,22 +32,6 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import users
     from hikari.internal import more_typing
-
-
-def warning(message: str, category: typing.Type[Warning], stack_level: int = 1) -> None:
-    """Generate a warning in a style consistent for this library.
-
-    Parameters
-    ----------
-    message : str
-        The message to display.
-    category : typing.Type[Warning]
-        The type of warning to raise.
-    stack_level : int
-        How many stack frames to go back to find the user's invocation.
-
-    """
-    warnings.warn("\n\n" + textwrap.indent(message, " " * 2), category, stacklevel=stack_level + 1)
 
 
 def generate_allowed_mentions(  # pylint:disable=line-too-long
