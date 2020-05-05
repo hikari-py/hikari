@@ -654,6 +654,9 @@ class RESTBucketManager:
     this, it makes the assumption that any limit can change at any time.
     """
 
+    _POLL_PERIOD: typing.Final[typing.ClassVar[int]] = 20
+    _EXPIRE_PERIOD: typing.Final[typing.ClassVar[int]] = 10
+
     __slots__ = (
         "routes_to_hashes",
         "real_hashes_to_buckets",
@@ -696,7 +699,7 @@ class RESTBucketManager:
     def __del__(self) -> None:
         self.close()
 
-    def start(self, poll_period: float = 20) -> None:
+    def start(self, poll_period: float = _POLL_PERIOD, expire_after: float = _EXPIRE_PERIOD) -> None:
         """Start this ratelimiter up.
 
         This spins up internal garbage collection logic in the background to
@@ -708,9 +711,15 @@ class RESTBucketManager:
         poll_period : float
             Period to poll the garbage collector at in seconds. Defaults
             to `20` seconds.
+        expire_after : float
+            Time after which the last `reset_at` was hit for a bucket to
+            remove it. Higher values will retain unneeded ratelimit info for
+            longer, but may produce more effective ratelimiting logic as a
+            result. Using `0` will make the bucket get garbage collected as soon
+            as the rate limit has reset. Defaults to `10` seconds.
         """
         if not self.gc_task:
-            self.gc_task = asyncio.get_running_loop().create_task(self.gc(poll_period))
+            self.gc_task = asyncio.get_running_loop().create_task(self.gc(poll_period, expire_after))
 
     def close(self) -> None:
         """Close the garbage collector and kill any tasks waiting on ratelimits.
@@ -725,7 +734,7 @@ class RESTBucketManager:
         self.routes_to_hashes.clear()
 
     # Ignore docstring not starting in an imperative mood
-    async def gc(self, poll_period: float = 20) -> None:  # noqa: D401
+    async def gc(self, poll_period: float, expire_after: float) -> None:  # noqa: D401
         """The garbage collector loop.
 
         This is designed to run in the background and manage removing unused
@@ -737,7 +746,13 @@ class RESTBucketManager:
         Parameters
         ----------
         poll_period : float
-            The period to poll at. This defaults to once every `20` seconds.
+            The period to poll at.
+        expire_after : float
+            Time after which the last `reset_at` was hit for a bucket to
+            remove it. Higher values will retain unneeded ratelimit info for
+            longer, but may produce more effective ratelimiting logic as a
+            result. Using `0` will make the bucket get garbage collected as soon
+            as the rate limit has reset.
 
         !!! warning
             You generally have no need to invoke this directly. Use
@@ -752,10 +767,10 @@ class RESTBucketManager:
                 await asyncio.wait_for(self.closed_event.wait(), timeout=poll_period)
             except asyncio.TimeoutError:
                 self.logger.debug("performing rate limit garbage collection pass")
-                self.do_gc_pass()
+                self.do_gc_pass(expire_after)
         self.gc_task = None
 
-    def do_gc_pass(self) -> None:
+    def do_gc_pass(self, expire_after: float) -> None:
         """Perform a single garbage collection pass.
 
         This will assess any routes stored in the internal mappings of this
@@ -765,6 +780,14 @@ class RESTBucketManager:
         If the removed routes are used again in the future, they will be
         re-cached automatically.
 
+        Parameters
+        ----------
+        expire_after : float
+            Time after which the last `reset_at` was hit for a bucket to
+            remove it. Defaults to `reset_at` + 20 seconds. Higher values will
+            retain unneeded ratelimit info for longer, but may produce more
+            effective ratelimiting logic as a result.
+
         !!! warning
             You generally have no need to invoke this directly. Use
             `RESTBucketManager.start` and `RESTBucketManager.close` to control
@@ -772,18 +795,35 @@ class RESTBucketManager:
         """
         buckets_to_purge = []
 
+        now = time.perf_counter()
+
+        # We have three main states that a bucket can be in:
+        # 1. active - the bucket is active and is not at risk of deallocation
+        # 2. survival - the bucket is inactive but is still fresh enough to be kept alive.
+        # 3. death - the bucket has been inactive for too long.
+        active = 0
+
         # Discover and purge
-        for full_hash, bucket in self.real_hashes_to_buckets.items():
-            if bucket.is_empty and (bucket.is_unknown or bucket.reset_at < time.perf_counter()):
+        bucket_pairs = self.real_hashes_to_buckets.items()
+
+        for full_hash, bucket in bucket_pairs:
+            if bucket.is_empty and bucket.reset_at + expire_after < now:
                 # If it is still running a throttle and is in memory, it will remain in memory
                 # but we won't know about it.
                 buckets_to_purge.append(full_hash)
+
+            if bucket.reset_at >= now:
+                active += 1
+
+        dead = len(buckets_to_purge)
+        total = len(bucket_pairs)
+        survival = total - active - dead
 
         for full_hash in buckets_to_purge:
             self.real_hashes_to_buckets[full_hash].close()
             del self.real_hashes_to_buckets[full_hash]
 
-        self.logger.debug("purged %s stale buckets", len(buckets_to_purge))
+        self.logger.debug("purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
 
     def acquire(self, compiled_route: routes.CompiledRoute) -> more_typing.Future:
         """Acquire a bucket for the given route.
@@ -817,8 +857,9 @@ class RESTBucketManager:
 
         try:
             bucket = self.real_hashes_to_buckets[real_bucket_hash]
+            self.logger.debug("%s is being mapped to existing bucket %s", compiled_route, real_bucket_hash)
         except KeyError:
-            self.logger.debug("creating new bucket for %s", real_bucket_hash)
+            self.logger.debug("%s is being mapped to new bucket %s", compiled_route, real_bucket_hash)
             bucket = RESTBucket(real_bucket_hash, compiled_route)
             self.real_hashes_to_buckets[real_bucket_hash] = bucket
 
@@ -855,14 +896,31 @@ class RESTBucketManager:
 
         real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
 
-        if real_bucket_hash not in self.real_hashes_to_buckets:
-            bucket = RESTBucket(real_bucket_hash, compiled_route)
-            self.real_hashes_to_buckets[real_bucket_hash] = bucket
-        else:
-            bucket = self.real_hashes_to_buckets[real_bucket_hash]
-
         reset_after = (reset_at_header - date_header).total_seconds()
         reset_at_monotonic = time.perf_counter() + reset_after
+
+        if real_bucket_hash in self.real_hashes_to_buckets:
+            bucket = self.real_hashes_to_buckets[real_bucket_hash]
+            self.logger.debug(
+                "updating %s with bucket %s [reset-after:%ss, limit:%s, remaining:%s]",
+                compiled_route,
+                real_bucket_hash,
+                reset_after,
+                limit_header,
+                remaining_header,
+            )
+        else:
+            bucket = RESTBucket(real_bucket_hash, compiled_route)
+            self.real_hashes_to_buckets[real_bucket_hash] = bucket
+            self.logger.debug(
+                "remapping %s with bucket %s [reset-after:%ss, limit:%s, remaining:%s]",
+                compiled_route,
+                real_bucket_hash,
+                reset_after,
+                limit_header,
+                remaining_header,
+            )
+
         bucket.update_rate_limit(remaining_header, limit_header, reset_at_monotonic)
 
     @property
