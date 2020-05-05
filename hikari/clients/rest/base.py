@@ -62,7 +62,7 @@ class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
     @property
     def global_ratelimit_queue_size(self) -> int:
         """Count of API calls waiting for the global ratelimiter to release.
-        
+
         If this is non-zero, then you are being globally ratelimited.
         """
         return len(self._session.global_ratelimiter.queue)
