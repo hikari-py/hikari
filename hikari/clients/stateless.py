@@ -27,7 +27,7 @@ import typing
 from hikari.clients import bot_base
 from hikari.clients import rest
 from hikari.clients import shards
-from hikari.state import intent_aware_dispatchers
+from hikari.events import intent_aware_dispatchers
 from hikari.state import stateless
 
 if typing.TYPE_CHECKING:

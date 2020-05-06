@@ -38,10 +38,9 @@ from hikari.clients import components as _components
 from hikari.clients import configs
 from hikari.clients import runnable
 from hikari.clients import shard_states
-from hikari.events import other
+from hikari.events import other, dispatchers, event_managers
 from hikari.internal import assertions
 from hikari.internal import conversions
-from hikari.state import dispatchers
 
 if typing.TYPE_CHECKING:
     from hikari import gateway_entities
@@ -51,7 +50,6 @@ if typing.TYPE_CHECKING:
     from hikari.clients import shards as _shards
     from hikari.events import base as event_base
     from hikari.internal import more_typing
-    from hikari.state import event_managers
 
 
 class BotBase(

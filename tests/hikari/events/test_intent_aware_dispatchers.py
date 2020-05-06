@@ -24,8 +24,7 @@ import mock
 import pytest
 
 from hikari import events
-from hikari.intents import Intent as I
-from hikari.state import intent_aware_dispatchers
+from hikari.events import intent_aware_dispatchers
 from tests.hikari import _helpers
 
 
@@ -96,41 +95,6 @@ class TestAddListener:
             intent_aware_dispatcher.add_listener(DummyEventType, callback)
 
         warn.assert_not_called()
-
-    @pytest.mark.parametrize(
-        ["event_requires", "dispatcher_has", "expect_warning"],
-        [
-            ((), I.DIRECT_MESSAGES, False),
-            ((I.GUILD_MESSAGES, I.GUILDS), I.DIRECT_MESSAGES, True),
-            ((I.GUILD_MESSAGES, I.GUILDS), I.DIRECT_MESSAGES | I.GUILD_WEBHOOKS, True),
-            ((I.GUILD_MESSAGES,), I.DIRECT_MESSAGES | I.GUILD_WEBHOOKS, True),
-            ((I.GUILD_MESSAGES,), I.GUILD_WEBHOOKS, True),
-            ((I.GUILD_MESSAGES,), I.GUILD_MESSAGES | I.GUILD_WEBHOOKS, False),
-            ((I.GUILD_MESSAGES,), I.GUILD_MESSAGES, False),
-            ((I.GUILD_MESSAGES | I.GUILDS,), I.GUILD_MESSAGES, True),
-            ((I.GUILD_MESSAGES | I.GUILDS, I.DIRECT_MESSAGES | I.GUILD_BANS), I.GUILD_MESSAGES, True),
-            ((I.GUILD_MESSAGES | I.GUILDS, I.DIRECT_MESSAGES | I.GUILD_BANS), I.GUILD_MESSAGES | I.GUILDS, False),
-            ((I.GUILD_MESSAGES | I.GUILDS, I.DIRECT_MESSAGES | I.GUILD_BANS), I.GUILDS | I.GUILD_BANS, True),
-        ],
-    )
-    def test_enabled_intent_that_is_not_set_fires_warning(
-        self, intent_aware_dispatcher, event_requires, dispatcher_has, expect_warning
-    ):
-        intent_aware_dispatcher._enabled_intents = dispatcher_has
-
-        decorator = events.requires_intents(*event_requires) if event_requires else lambda e: e
-
-        @decorator
-        class SomeEvent(events.HikariEvent):
-            pass
-
-        async def callback(event):
-            pass
-
-        with mock.patch("warnings.warn") as warn:
-            intent_aware_dispatcher.add_listener(SomeEvent, callback)
-
-        warn.assert_called_once() if expect_warning else warn.assert_not_called()
 
     def test_add_when_no_existing_listeners_exist_for_event_adds_new_list_first(self, intent_aware_dispatcher):
         class NewEventType(events.HikariEvent):
