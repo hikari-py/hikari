@@ -33,10 +33,10 @@ from hikari import channels as _channels
 from hikari import emojis
 from hikari import guilds
 from hikari import invites
+from hikari import pagination
 from hikari import voices
 from hikari import webhooks
 from hikari.clients.rest import base
-from hikari.internal import helpers
 
 if typing.TYPE_CHECKING:
     from hikari import colors
@@ -45,8 +45,25 @@ if typing.TYPE_CHECKING:
     from hikari import users
 
 
-def _get_member_id(member: guilds.GuildMember) -> str:
-    return str(member.user.id)
+class _MemberPaginator(pagination.BufferedPaginatedResults[guilds.GuildMember]):
+    __slots__ = ("_guild_id", "_first_id", "_components", "_session")
+
+    def __init__(self, guild, components, session):
+        super().__init__()
+        self._guild_id = str(int(guild))
+        self._first_id = bases.Snowflake.min()
+        self._components = components
+        self._session = session
+
+    async def _next_chunk(self):
+        chunk = await self._session.list_guild_members(self._guild_id, after=self._first_id)
+
+        if not chunk:
+            return None
+
+        self._first_id = chunk[-1]["id"]
+
+        return (guilds.GuildMember.deserialize(m, components=self._components) for m in chunk)
 
 
 class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method, too-many-public-methods
@@ -833,39 +850,23 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         )
         return guilds.GuildMember.deserialize(payload, components=self._components)
 
-    def fetch_members_after(
-        self,
-        guild: bases.Hashable[guilds.Guild],
-        *,
-        after: typing.Union[datetime.datetime, bases.Hashable[users.User]] = 0,
-        limit: typing.Optional[int] = None,
-    ) -> typing.AsyncIterator[guilds.GuildMember]:
+    def fetch_members(self, guild: bases.Hashable[guilds.Guild],) -> pagination.PaginatedResults[guilds.GuildMember]:
         """Get an async iterator of all the members in a given guild.
-
-        This returns the member objects with a user object/ID that was created
-        after the given user object/ID or from the member object or the oldest
-        user.
 
         Parameters
         ----------
         guild : typing.Union[hikari.guilds.Guild, hikari.bases.Snowflake, int]
             The object or ID of the guild to get the members from.
-        limit : int
-            If specified, the maximum number of members this iterator
-            should return.
-        after : typing.Union[datetime.datetime, hikari.users.User, hikari.bases.Snowflake, int]
-            The object or ID of the user this iterator should start
-            after if specified, else this will start at the oldest user.
 
         Examples
         --------
-            async for user in client.fetch_members_after(guild, after=9876543, limit=1231):
+            async for user in client.fetch_members(guild):
                 if member.user.username[0] in HOIST_BLACKLIST:
                     await client.update_member(member, nickname="💩")
 
         Returns
         -------
-        typing.AsyncIterator[hikari.guilds.GuildMember]
+        hikari.pagination.PaginatedResults[[hikari.guilds.GuildMember]
             An async iterator of member objects.
 
         Raises
@@ -878,25 +879,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         hikari.errors.Forbidden
             If you are not in the guild.
         """
-        if isinstance(after, datetime.datetime):
-            after = str(bases.Snowflake.from_datetime(after))
-        else:
-            after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
-        request = functools.partial(
-            self._session.list_guild_members,
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-        )
-        deserializer = functools.partial(guilds.GuildMember.deserialize, components=self._components)
-        return helpers.pagination_handler(
-            deserializer=deserializer,
-            direction="after",
-            request=request,
-            reversing=False,
-            start=after,
-            maximum_limit=1000,
-            limit=limit,
-            id_getter=_get_member_id,
-        )
+        return _MemberPaginator(guild, self._components, self._session)
 
     async def update_member(  # pylint: disable=too-many-arguments
         self,

@@ -22,12 +22,10 @@ from __future__ import annotations
 
 __all__ = ["StatelessEventManagerImpl"]
 
-from hikari.events import channel
+from hikari.events import channel, dispatchers, event_managers
 from hikari.events import guild
 from hikari.events import message
 from hikari.events import other
-from hikari.state import dispatchers
-from hikari.state import event_managers
 
 
 # pylint: disable=too-many-public-methods

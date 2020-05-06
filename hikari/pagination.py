@@ -29,10 +29,7 @@ _T = typing.TypeVar("_T")
 
 
 class PaginatedResults(
-    abc.ABC,
-    typing.AsyncIterator[_T],
-    typing.AsyncIterable[_T],
-    typing.Awaitable[typing.Sequence[_T]]
+    abc.ABC, typing.AsyncIterator[_T], typing.AsyncIterable[_T], typing.Awaitable[typing.Sequence[_T]]
 ):
     """A set of results that are fetched asynchronously from the API as needed.
 
@@ -80,6 +77,7 @@ class PaginatedResults(
         >>> async for item in paginated_results.limit(3):
         ...    process(item)
     """
+
     __slots__ = ()
 
     def enumerate(self, *, start: int = 0) -> PaginatedResults[typing.Tuple[int, _T]]:

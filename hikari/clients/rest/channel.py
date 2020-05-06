@@ -26,7 +26,7 @@ import abc
 import datetime
 import typing
 
-from hikari import paginated
+from hikari import pagination
 from hikari import bases
 from hikari import channels as _channels
 from hikari import invites
@@ -46,14 +46,16 @@ if typing.TYPE_CHECKING:
     from hikari.internal import more_typing
 
 
-class _MessagePaginator(paginated.BufferedPaginatedResults[_messages.Message]):
+class _MessagePaginator(pagination.BufferedPaginatedResults[_messages.Message]):
     __slots__ = ("_channel_id", "_direction", "_first_id", "_components", "_session")
 
     def __init__(self, channel, direction, first, components, session) -> None:
         super().__init__()
         self._channel_id = str(int(channel))
         self._direction = direction
-        self._first_id = bases.Snowflake.from_datetime(first) if isinstance(first, datetime.datetime) else str(int(first))
+        self._first_id = (
+            bases.Snowflake.from_datetime(first) if isinstance(first, datetime.datetime) else str(int(first))
+        )
         self._components = components
         self._session = session
 
@@ -64,16 +66,16 @@ class _MessagePaginator(paginated.BufferedPaginatedResults[_messages.Message]):
             "limit": 100,
         }
 
-        items = await self._session.get_channel_messages(**kwargs)
+        chunk = await self._session.get_channel_messages(**kwargs)
 
-        if not items:
+        if not chunk:
             return None
         if self._direction == "after":
-            items.reverse()
+            chunk.reverse()
 
-        self._first_id = items[-1]["id"]
+        self._first_id = chunk[-1]["id"]
 
-        return (_messages.Message.deserialize(m, components=self._components) for m in items)
+        return (_messages.Message.deserialize(m, components=self._components) for m in chunk)
 
 
 class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method, too-many-public-methods
@@ -248,7 +250,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         self,
         channel: bases.Hashable[_channels.PartialChannel],
         before: typing.Union[datetime.datetime, typing.Hashable[_messages.Message]],
-    ) -> paginated.PaginatedResults[_messages.Message]:
+    ) -> pagination.PaginatedResults[_messages.Message]:
         return _MessagePaginator(channel, "before", before, self._components, self._session)
 
     async def fetch_message(

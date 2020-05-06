@@ -24,16 +24,16 @@ __all__ = ["IntentAwareEventDispatcherImpl"]
 import asyncio
 import logging
 import typing
+import warnings
 
 from hikari import errors
 from hikari import intents
 from hikari.events import base
 from hikari.events import other
 from hikari.internal import assertions
-from hikari.internal import helpers
 from hikari.internal import more_asyncio
 from hikari.internal import more_collections
-from hikari.state import dispatchers
+from hikari.events import dispatchers
 
 if typing.TYPE_CHECKING:
     from hikari.internal import more_typing
@@ -136,7 +136,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
                 + "\n".join(f"    - {intent_list}" for intent_list in intents_lists)
             )
 
-            helpers.warning(message, category=errors.IntentWarning, stack_level=kwargs.pop("_stack_level", 1))
+            warnings.warn(message, category=errors.IntentWarning, stacklevel=kwargs.pop("_stack_level", 1))
 
         if event_type not in self._listeners:
             self._listeners[event_type] = []
