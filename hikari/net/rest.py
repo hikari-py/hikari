@@ -346,7 +346,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         !!! note
             Users are expected to attempt to cache this result.
         """
-        result = await self._request_json_response(routes.GATEWAY.compile(self.GET))
+        result = await self._request_json_response(routes.GET_GATEWAY.compile())
         return result["url"]
 
     async def get_gateway_bot(self) -> more_typing.JSONObject:
@@ -362,7 +362,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         !!! note
             Unlike `REST.get_gateway`, this requires a valid token to work.
         """
-        return await self._request_json_response(routes.GATEWAY_BOT.compile(self.GET))
+        return await self._request_json_response(routes.GET_GATEWAY_BOT.compile())
 
     async def get_guild_audit_log(
         self, guild_id: str, *, user_id: str = ..., action_type: int = ..., limit: int = ..., before: str = ...
@@ -401,7 +401,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(query, "action_type", action_type)
         conversions.put_if_specified(query, "limit", limit)
         conversions.put_if_specified(query, "before", before)
-        route = routes.GUILD_AUDIT_LOGS.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_AUDIT_LOGS.compile(guild_id=guild_id)
         return await self._request_json_response(route, query=query)
 
     async def get_channel(self, channel_id: str) -> more_typing.JSONObject:
@@ -424,7 +424,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.NotFound
             If the channel does not exist.
         """
-        route = routes.CHANNEL.compile(self.GET, channel_id=channel_id)
+        route = routes.GET_CHANNEL.compile(channel_id=channel_id)
         return await self._request_json_response(route)
 
     async def modify_channel(  # lgtm [py/similar-function]
@@ -509,7 +509,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(payload, "user_limit", user_limit)
         conversions.put_if_specified(payload, "permission_overwrites", permission_overwrites)
         conversions.put_if_specified(payload, "parent_id", parent_id)
-        route = routes.CHANNEL.compile(self.PATCH, channel_id=channel_id)
+        route = routes.PATCH_CHANNEL.compile(channel_id=channel_id)
         return await self._request_json_response(route, body=payload, reason=reason)
 
     async def delete_close_channel(self, channel_id: str) -> None:
@@ -537,7 +537,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             Deleted channels cannot be un-deleted. Deletion of DMs is able to be
             undone by reopening the DM.
         """
-        route = routes.CHANNEL.compile(self.DELETE, channel_id=channel_id)
+        route = routes.DELETE_CHANNEL.compile(channel_id=channel_id)
         await self._request_json_response(route)
 
     async def get_channel_messages(
@@ -593,7 +593,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(query, "before", before)
         conversions.put_if_specified(query, "after", after)
         conversions.put_if_specified(query, "around", around)
-        route = routes.CHANNEL_MESSAGES.compile(self.GET, channel_id=channel_id)
+        route = routes.GET_CHANNEL_MESSAGES.compile(channel_id=channel_id)
         return await self._request_json_response(route, query=query)
 
     async def get_channel_message(self, channel_id: str, message_id: str) -> more_typing.JSONObject:
@@ -621,7 +621,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.NotFound
             If the channel or message is not found.
         """
-        route = routes.CHANNEL_MESSAGE.compile(self.GET, channel_id=channel_id, message_id=message_id)
+        route = routes.GET_CHANNEL_MESSAGE.compile(channel_id=channel_id, message_id=message_id)
         return await self._request_json_response(route)
 
     async def create_message(
@@ -695,7 +695,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         for i, file in enumerate(files):
             form.add_field(f"file{i}", file, filename=file.filename, content_type=self.APPLICATION_OCTET_STREAM)
 
-        route = routes.CHANNEL_MESSAGES.compile(self.POST, channel_id=channel_id)
+        route = routes.POST_CHANNEL_MESSAGES.compile(channel_id=channel_id)
 
         return await self._request_json_response(route, body=form)
 
@@ -724,7 +724,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.BadRequest
             If the emoji is not valid, unknown, or formatted incorrectly.
         """
-        route = routes.OWN_REACTION.compile(self.PUT, channel_id=channel_id, message_id=message_id, emoji=emoji)
+        route = routes.PUT_OWN_REACTION.compile(channel_id=channel_id, message_id=message_id, emoji=emoji)
         await self._request_json_response(route)
 
     async def delete_own_reaction(self, channel_id: str, message_id: str, emoji: str) -> None:
@@ -748,7 +748,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.NotFound
             If the channel or message or emoji is not found.
         """
-        route = routes.OWN_REACTION.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
+        route = routes.DELETE_OWN_REACTION.compile(channel_id=channel_id, message_id=message_id, emoji=emoji)
         await self._request_json_response(route)
 
     async def delete_all_reactions_for_emoji(self, channel_id: str, message_id: str, emoji: str) -> None:
@@ -772,7 +772,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `MANAGE_MESSAGES` permission, or are in DMs.
         """
-        route = routes.REACTION_EMOJI.compile(self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji)
+        route = routes.DELETE_REACTION_EMOJI.compile(channel_id=channel_id, message_id=message_id, emoji=emoji)
         await self._request_json_response(route)
 
     async def delete_user_reaction(self, channel_id: str, message_id: str, emoji: str, user_id: str) -> None:
@@ -798,8 +798,8 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `MANAGE_MESSAGES` permission, or are in DMs.
         """
-        route = routes.REACTION_EMOJI_USER.compile(
-            self.DELETE, channel_id=channel_id, message_id=message_id, emoji=emoji, user_id=user_id,
+        route = routes.DELETE_REACTION_USER.compile(
+            channel_id=channel_id, message_id=message_id, emoji=emoji, user_id=user_id,
         )
         await self._request_json_response(route)
 
@@ -841,7 +841,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         query = {}
         conversions.put_if_specified(query, "after", after)
         conversions.put_if_specified(query, "limit", limit)
-        route = routes.REACTIONS.compile(self.GET, channel_id=channel_id, message_id=message_id, emoji=emoji)
+        route = routes.GET_REACTIONS.compile(channel_id=channel_id, message_id=message_id, emoji=emoji)
         return await self._request_json_response(route, query=query)
 
     async def delete_all_reactions(self, channel_id: str, message_id: str) -> None:
@@ -861,7 +861,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `MANAGE_MESSAGES` permission.
         """
-        route = routes.ALL_REACTIONS.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
+        route = routes.DELETE_ALL_REACTIONS.compile(channel_id=channel_id, message_id=message_id)
         await self._request_json_response(route)
 
     async def edit_message(
@@ -920,7 +920,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(payload, "embed", embed)
         conversions.put_if_specified(payload, "flags", flags)
         conversions.put_if_specified(payload, "allowed_mentions", allowed_mentions)
-        route = routes.CHANNEL_MESSAGE.compile(self.PATCH, channel_id=channel_id, message_id=message_id)
+        route = routes.PATCH_CHANNEL_MESSAGE.compile(channel_id=channel_id, message_id=message_id)
         return await self._request_json_response(route, body=payload)
 
     async def delete_message(self, channel_id: str, message_id: str) -> None:
@@ -941,7 +941,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.NotFound
             If the channel or message is not found.
         """
-        route = routes.CHANNEL_MESSAGE.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
+        route = routes.DELETE_CHANNEL_MESSAGE.compile(channel_id=channel_id, message_id=message_id)
         await self._request_json_response(route)
 
     async def bulk_delete_messages(self, channel_id: str, messages: typing.Sequence[str]) -> None:
@@ -972,7 +972,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             `2` weeks then this call will fail.
         """
         payload = {"messages": messages}
-        route = routes.CHANNEL_MESSAGES_BULK_DELETE.compile(self.POST, channel_id=channel_id)
+        route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel_id=channel_id)
         await self._request_json_response(route, body=payload)
 
     async def edit_channel_permissions(
@@ -1007,7 +1007,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         payload = {"type": type_}
         conversions.put_if_specified(payload, "allow", allow)
         conversions.put_if_specified(payload, "deny", deny)
-        route = routes.CHANNEL_PERMISSIONS.compile(self.PATCH, channel_id=channel_id, overwrite_id=overwrite_id)
+        route = routes.PATCH_CHANNEL_PERMISSIONS.compile(channel_id=channel_id, overwrite_id=overwrite_id)
         await self._request_json_response(route, body=payload, reason=reason)
 
     async def get_channel_invites(self, channel_id: str) -> typing.Sequence[more_typing.JSONObject]:
@@ -1030,7 +1030,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.NotFound
             If the channel does not exist.
         """
-        route = routes.CHANNEL_INVITES.compile(self.GET, channel_id=channel_id)
+        route = routes.GET_CHANNEL_INVITES.compile(channel_id=channel_id)
         return await self._request_json_response(route)
 
     async def create_channel_invite(
@@ -1092,7 +1092,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(payload, "unique", unique)
         conversions.put_if_specified(payload, "target_user", target_user)
         conversions.put_if_specified(payload, "target_user_type", target_user_type)
-        route = routes.CHANNEL_INVITES.compile(self.POST, channel_id=channel_id)
+        route = routes.POST_CHANNEL_INVITES.compile(channel_id=channel_id)
         return await self._request_json_response(route, body=payload, reason=reason)
 
     async def delete_channel_permission(self, channel_id: str, overwrite_id: str) -> None:
@@ -1112,7 +1112,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission for that channel.
         """
-        route = routes.CHANNEL_PERMISSIONS.compile(self.DELETE, channel_id=channel_id, overwrite_id=overwrite_id)
+        route = routes.DELETE_CHANNEL_PERMISSIONS.compile(channel_id=channel_id, overwrite_id=overwrite_id)
         await self._request_json_response(route)
 
     async def trigger_typing_indicator(self, channel_id: str) -> None:
@@ -1130,7 +1130,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you are not able to type in the channel.
         """
-        route = routes.CHANNEL_TYPING.compile(self.POST, channel_id=channel_id)
+        route = routes.POST_CHANNEL_TYPING.compile(channel_id=channel_id)
         await self._request_json_response(route)
 
     async def get_pinned_messages(self, channel_id: str) -> typing.Sequence[more_typing.JSONObject]:
@@ -1158,7 +1158,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             `READ_MESSAGE_HISTORY` and the pinned message is an old message), it
             will not be returned.
         """
-        route = routes.CHANNEL_PINS.compile(self.GET, channel_id=channel_id)
+        route = routes.GET_CHANNEL_PINS.compile(channel_id=channel_id)
         return await self._request_json_response(route)
 
     async def add_pinned_channel_message(self, channel_id: str, message_id: str) -> None:
@@ -1178,7 +1178,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.NotFound
             If the message or channel do not exist.
         """
-        route = routes.CHANNEL_PINS.compile(self.PUT, channel_id=channel_id, message_id=message_id)
+        route = routes.PUT_CHANNEL_PINS.compile(channel_id=channel_id, message_id=message_id)
         await self._request_json_response(route)
 
     async def delete_pinned_channel_message(self, channel_id: str, message_id: str) -> None:
@@ -1200,7 +1200,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.NotFound
             If the message or channel do not exist.
         """
-        route = routes.CHANNEL_PIN.compile(self.DELETE, channel_id=channel_id, message_id=message_id)
+        route = routes.DELETE_CHANNEL_PIN.compile(channel_id=channel_id, message_id=message_id)
         await self._request_json_response(route)
 
     async def list_guild_emojis(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
@@ -1223,7 +1223,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you aren't a member of the guild.
         """
-        route = routes.GUILD_EMOJIS.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_EMOJIS.compile(guild_id=guild_id)
         return await self._request_json_response(route)
 
     async def get_guild_emoji(self, guild_id: str, emoji_id: str) -> more_typing.JSONObject:
@@ -1248,7 +1248,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you aren't a member of said guild.
         """
-        route = routes.GUILD_EMOJI.compile(self.GET, guild_id=guild_id, emoji_id=emoji_id)
+        route = routes.GET_GUILD_EMOJI.compile(guild_id=guild_id, emoji_id=emoji_id)
         return await self._request_json_response(route)
 
     async def create_guild_emoji(
@@ -1293,7 +1293,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             "roles": [] if roles is ... else roles,
             "image": conversions.image_bytes_to_image_data(image),
         }
-        route = routes.GUILD_EMOJIS.compile(self.POST, guild_id=guild_id)
+        route = routes.POST_GUILD_EMOJIS.compile(guild_id=guild_id)
         return await self._request_json_response(route, body=payload, reason=reason)
 
     async def modify_guild_emoji(
@@ -1332,7 +1332,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         payload = {}
         conversions.put_if_specified(payload, "name", name)
         conversions.put_if_specified(payload, "roles", roles)
-        route = routes.GUILD_EMOJI.compile(self.PATCH, guild_id=guild_id, emoji_id=emoji_id)
+        route = routes.PATCH_GUILD_EMOJI.compile(guild_id=guild_id, emoji_id=emoji_id)
         return await self._request_json_response(route, body=payload, reason=reason)
 
     async def delete_guild_emoji(self, guild_id: str, emoji_id: str) -> None:
@@ -1352,7 +1352,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you either lack the `MANAGE_EMOJIS` permission or aren't a member of said guild.
         """
-        route = routes.GUILD_EMOJI.compile(self.DELETE, guild_id=guild_id, emoji_id=emoji_id)
+        route = routes.DELETE_GUILD_EMOJI.compile(guild_id=guild_id, emoji_id=emoji_id)
         await self._request_json_response(route)
 
     async def create_guild(
@@ -1413,7 +1413,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(payload, "roles", roles)
         conversions.put_if_specified(payload, "channels", channels)
         conversions.put_if_specified(payload, "icon", icon, conversions.image_bytes_to_image_data)
-        route = routes.GUILDS.compile(self.POST)
+        route = routes.POST_GUILDS.compile()
         return await self._request_json_response(route, body=payload)
 
     async def get_guild(self, guild_id: str, *, with_counts: bool = True) -> more_typing.JSONObject:
@@ -1439,7 +1439,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you do not have access to the guild.
         """
-        route = routes.GUILD.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD.compile(guild_id=guild_id)
         return await self._request_json_response(
             route, query={"with_counts": "true" if with_counts is True else "false"}
         )
@@ -1466,7 +1466,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.NotFound
             If the guild is not found or it isn't `PUBLIC`.
         """
-        route = routes.GUILD_PREVIEW.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_PREVIEW.compile(guild_id=guild_id)
         return await self._request_json_response(route)
 
     # pylint: disable=too-many-locals
@@ -1544,7 +1544,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(payload, "owner_id", owner_id)
         conversions.put_if_specified(payload, "splash", splash, conversions.image_bytes_to_image_data)
         conversions.put_if_specified(payload, "system_channel_id", system_channel_id)
-        route = routes.GUILD.compile(self.PATCH, guild_id=guild_id)
+        route = routes.PATCH_GUILD.compile(guild_id=guild_id)
         return await self._request_json_response(route, body=payload, reason=reason)
 
     # pylint: enable=too-many-locals
@@ -1566,7 +1566,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you are not the guild owner.
         """
-        route = routes.GUILD.compile(self.DELETE, guild_id=guild_id)
+        route = routes.DELETE_GUILD.compile(guild_id=guild_id)
         await self._request_json_response(route)
 
     async def list_guild_channels(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
@@ -1589,7 +1589,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you are not in the guild.
         """
-        route = routes.GUILD_CHANNELS.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_CHANNELS.compile(guild_id=guild_id)
         return await self._request_json_response(route)
 
     async def create_guild_channel(
@@ -1677,7 +1677,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(payload, "user_limit", user_limit)
         conversions.put_if_specified(payload, "permission_overwrites", permission_overwrites)
         conversions.put_if_specified(payload, "parent_id", parent_id)
-        route = routes.GUILD_CHANNELS.compile(self.POST, guild_id=guild_id)
+        route = routes.POST_GUILD_CHANNELS.compile(guild_id=guild_id)
         return await self._request_json_response(route, body=payload, reason=reason)
 
     async def modify_guild_channel_positions(
@@ -1706,7 +1706,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If you provide anything other than the `id` and `position` fields for the channels.
         """
         payload = [{"id": ch[0], "position": ch[1]} for ch in (channel, *channels)]
-        route = routes.GUILD_CHANNELS.compile(self.PATCH, guild_id=guild_id)
+        route = routes.PATCH_GUILD_CHANNELS.compile(guild_id=guild_id)
         await self._request_json_response(route, body=payload)
 
     async def get_guild_member(self, guild_id: str, user_id: str) -> more_typing.JSONObject:
@@ -1731,7 +1731,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you don't have access to the target guild.
         """
-        route = routes.GUILD_MEMBER.compile(self.GET, guild_id=guild_id, user_id=user_id)
+        route = routes.GET_GUILD_MEMBER.compile(guild_id=guild_id, user_id=user_id)
         return await self._request_json_response(route)
 
     async def list_guild_members(
@@ -1781,7 +1781,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         query = {}
         conversions.put_if_specified(query, "limit", limit)
         conversions.put_if_specified(query, "after", after)
-        route = routes.GUILD_MEMBERS.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_MEMBERS.compile(guild_id=guild_id)
         return await self._request_json_response(route, query=query)
 
     async def modify_guild_member(  # lgtm [py/similar-function]
@@ -1841,7 +1841,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(payload, "mute", mute)
         conversions.put_if_specified(payload, "deaf", deaf)
         conversions.put_if_specified(payload, "channel_id", channel_id)
-        route = routes.GUILD_MEMBER.compile(self.PATCH, guild_id=guild_id, user_id=user_id)
+        route = routes.PATCH_GUILD_MEMBER.compile(guild_id=guild_id, user_id=user_id)
         await self._request_json_response(route, body=payload, reason=reason)
 
     async def modify_current_user_nick(self, guild_id: str, nick: typing.Optional[str], *, reason: str = ...) -> None:
@@ -1867,7 +1867,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If you provide a disallowed nickname, one that is too long, or one that is empty.
         """
         payload = {"nick": nick}
-        route = routes.OWN_GUILD_NICKNAME.compile(self.PATCH, guild_id=guild_id)
+        route = routes.PATCH_MY_GUILD_NICKNAME.compile(guild_id=guild_id)
         await self._request_json_response(route, body=payload, reason=reason)
 
     async def add_guild_member_role(self, guild_id: str, user_id: str, role_id: str, *, reason: str = ...) -> None:
@@ -1892,7 +1892,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
-        route = routes.GUILD_MEMBER_ROLE.compile(self.PUT, guild_id=guild_id, user_id=user_id, role_id=role_id)
+        route = routes.PUT_GUILD_MEMBER_ROLE.compile(guild_id=guild_id, user_id=user_id, role_id=role_id)
         await self._request_json_response(route, reason=reason)
 
     async def remove_guild_member_role(self, guild_id: str, user_id: str, role_id: str, *, reason: str = ...) -> None:
@@ -1917,7 +1917,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
-        route = routes.GUILD_MEMBER_ROLE.compile(self.DELETE, guild_id=guild_id, user_id=user_id, role_id=role_id)
+        route = routes.DELETE_GUILD_MEMBER_ROLE.compile(guild_id=guild_id, user_id=user_id, role_id=role_id)
         await self._request_json_response(route, reason=reason)
 
     async def remove_guild_member(self, guild_id: str, user_id: str, *, reason: str = ...) -> None:
@@ -1940,7 +1940,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `KICK_MEMBERS` permission or are not in the guild.
         """
-        route = routes.GUILD_MEMBER.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
+        route = routes.DELETE_GUILD_MEMBER.compile(guild_id=guild_id, user_id=user_id)
         await self._request_json_response(route, reason=reason)
 
     async def get_guild_bans(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
@@ -1963,7 +1963,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
-        route = routes.GUILD_BANS.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_BANS.compile(guild_id=guild_id)
         return await self._request_json_response(route)
 
     async def get_guild_ban(self, guild_id: str, user_id: str) -> more_typing.JSONObject:
@@ -1988,7 +1988,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
-        route = routes.GUILD_BAN.compile(self.GET, guild_id=guild_id, user_id=user_id)
+        route = routes.GET_GUILD_BAN.compile(guild_id=guild_id, user_id=user_id)
         return await self._request_json_response(route)
 
     async def create_guild_ban(
@@ -2019,7 +2019,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         query = {}
         conversions.put_if_specified(query, "delete-message-days", delete_message_days)
         conversions.put_if_specified(query, "reason", reason)
-        route = routes.GUILD_BAN.compile(self.PUT, guild_id=guild_id, user_id=user_id)
+        route = routes.PUT_GUILD_BAN.compile(guild_id=guild_id, user_id=user_id)
         await self._request_json_response(route, query=query)
 
     async def remove_guild_ban(self, guild_id: str, user_id: str, *, reason: str = ...) -> None:
@@ -2042,7 +2042,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `BAN_MEMBERS` permission or are not a in the guild.
         """
-        route = routes.GUILD_BAN.compile(self.DELETE, guild_id=guild_id, user_id=user_id)
+        route = routes.DELETE_GUILD_BAN.compile(guild_id=guild_id, user_id=user_id)
         await self._request_json_response(route, reason=reason)
 
     async def get_guild_roles(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
@@ -2065,7 +2065,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you're not in the guild.
         """
-        route = routes.GUILD_ROLES.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_ROLES.compile(guild_id=guild_id)
         return await self._request_json_response(route)
 
     async def create_guild_role(
@@ -2119,7 +2119,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(payload, "color", color)
         conversions.put_if_specified(payload, "hoist", hoist)
         conversions.put_if_specified(payload, "mentionable", mentionable)
-        route = routes.GUILD_ROLES.compile(self.POST, guild_id=guild_id)
+        route = routes.POST_GUILD_ROLES.compile(guild_id=guild_id)
         return await self._request_json_response(route, body=payload, reason=reason)
 
     async def modify_guild_role_positions(
@@ -2153,7 +2153,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If you provide invalid values for the `position` fields.
         """
         payload = [{"id": r[0], "position": r[1]} for r in (role, *roles)]
-        route = routes.GUILD_ROLES.compile(self.PATCH, guild_id=guild_id)
+        route = routes.PATCH_GUILD_ROLES.compile(guild_id=guild_id)
         return await self._request_json_response(route, body=payload)
 
     async def modify_guild_role(  # lgtm [py/similar-function]
@@ -2210,7 +2210,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(payload, "color", color)
         conversions.put_if_specified(payload, "hoist", hoist)
         conversions.put_if_specified(payload, "mentionable", mentionable)
-        route = routes.GUILD_ROLE.compile(self.PATCH, guild_id=guild_id, role_id=role_id)
+        route = routes.PATCH_GUILD_ROLE.compile(guild_id=guild_id, role_id=role_id)
         return await self._request_json_response(route, body=payload, reason=reason)
 
     async def delete_guild_role(self, guild_id: str, role_id: str) -> None:
@@ -2230,7 +2230,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
-        route = routes.GUILD_ROLE.compile(self.DELETE, guild_id=guild_id, role_id=role_id)
+        route = routes.DELETE_GUILD_ROLE.compile(guild_id=guild_id, role_id=role_id)
         await self._request_json_response(route)
 
     async def get_guild_prune_count(self, guild_id: str, days: int) -> int:
@@ -2258,7 +2258,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If you pass an invalid amount of days.
         """
         payload = {"days": days}
-        route = routes.GUILD_PRUNE.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_PRUNE.compile(guild_id=guild_id)
         result = await self._request_json_response(route, query=payload)
         return int(result["pruned"])
 
@@ -2297,7 +2297,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         """
         query = {"days": days}
         conversions.put_if_specified(query, "compute_prune_count", compute_prune_count, lambda v: str(v).lower())
-        route = routes.GUILD_PRUNE.compile(self.POST, guild_id=guild_id)
+        route = routes.POST_GUILD_PRUNE.compile(guild_id=guild_id)
         result = await self._request_json_response(route, query=query, reason=reason)
 
         try:
@@ -2325,7 +2325,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you are not in the guild.
         """
-        route = routes.GUILD_VOICE_REGIONS.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_VOICE_REGIONS.compile(guild_id=guild_id)
         return await self._request_json_response(route)
 
     async def get_guild_invites(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
@@ -2348,7 +2348,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
-        route = routes.GUILD_INVITES.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_INVITES.compile(guild_id=guild_id)
         return await self._request_json_response(route)
 
     async def get_guild_integrations(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
@@ -2371,7 +2371,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
-        route = routes.GUILD_INTEGRATIONS.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_INTEGRATIONS.compile(guild_id=guild_id)
         return await self._request_json_response(route)
 
     async def modify_guild_integration(
@@ -2416,7 +2416,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(payload, "expire_grace_period", expire_grace_period)
         # This is inconsistently named in their API.
         conversions.put_if_specified(payload, "enable_emoticons", enable_emojis)
-        route = routes.GUILD_INTEGRATION.compile(self.PATCH, guild_id=guild_id, integration_id=integration_id)
+        route = routes.PATCH_GUILD_INTEGRATION.compile(guild_id=guild_id, integration_id=integration_id)
         await self._request_json_response(route, body=payload, reason=reason)
 
     async def delete_guild_integration(self, guild_id: str, integration_id: str, *, reason: str = ...) -> None:
@@ -2439,7 +2439,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
                 If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
-        route = routes.GUILD_INTEGRATION.compile(self.DELETE, guild_id=guild_id, integration_id=integration_id)
+        route = routes.DELETE_GUILD_INTEGRATION.compile(guild_id=guild_id, integration_id=integration_id)
         await self._request_json_response(route, reason=reason)
 
     async def sync_guild_integration(self, guild_id: str, integration_id: str) -> None:
@@ -2459,7 +2459,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
-        route = routes.GUILD_INTEGRATION_SYNC.compile(self.POST, guild_id=guild_id, integration_id=integration_id)
+        route = routes.POST_GUILD_INTEGRATION_SYNC.compile(guild_id=guild_id, integration_id=integration_id)
         await self._request_json_response(route)
 
     async def get_guild_embed(self, guild_id: str) -> more_typing.JSONObject:
@@ -2482,7 +2482,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
-        route = routes.GUILD_EMBED.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_EMBED.compile(guild_id=guild_id)
         return await self._request_json_response(route)
 
     async def modify_guild_embed(
@@ -2518,7 +2518,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         payload = {}
         conversions.put_if_specified(payload, "channel_id", channel_id)
         conversions.put_if_specified(payload, "enabled", enabled)
-        route = routes.GUILD_EMBED.compile(self.PATCH, guild_id=guild_id)
+        route = routes.PATCH_GUILD_EMBED.compile(guild_id=guild_id)
         return await self._request_json_response(route, body=payload, reason=reason)
 
     async def get_guild_vanity_url(self, guild_id: str) -> more_typing.JSONObject:
@@ -2541,7 +2541,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.Forbidden
             If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
-        route = routes.GUILD_VANITY_URL.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_VANITY_URL.compile(guild_id=guild_id)
         return await self._request_json_response(route)
 
     def get_guild_widget_image_url(self, guild_id: str, *, style: str = ...) -> str:
@@ -2568,7 +2568,8 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             this to be valid.
         """
         query = "" if style is ... else f"?style={style}"
-        return f"{self.base_url}/guilds/{guild_id}/widget.png" + query
+        route = routes.GET_GUILD_WIDGET_IMAGE.compile(guild_id=guild_id)
+        return route.create_url(self.base_url) + query
 
     async def get_invite(self, invite_code: str, *, with_counts: bool = ...) -> more_typing.JSONObject:
         """Getsthe given invite.
@@ -2593,7 +2594,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         """
         query = {}
         conversions.put_if_specified(query, "with_counts", with_counts, lambda v: str(v).lower())
-        route = routes.INVITE.compile(self.GET, invite_code=invite_code)
+        route = routes.GET_INVITE.compile(invite_code=invite_code)
         return await self._request_json_response(route, query=query)
 
     async def delete_invite(self, invite_code: str) -> None:
@@ -2618,7 +2619,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If you lack either `MANAGE_CHANNELS` on the channel the invite
             belongs to or `MANAGE_GUILD` for guild-global delete.
         """
-        route = routes.INVITE.compile(self.DELETE, invite_code=invite_code)
+        route = routes.DELETE_INVITE.compile(invite_code=invite_code)
         return await self._request_json_response(route)
 
     async def get_current_user(self) -> more_typing.JSONObject:
@@ -2629,7 +2630,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         more_typing.JSONObject
             The current user object.
         """
-        route = routes.OWN_USER.compile(self.GET)
+        route = routes.GET_MY_USER.compile()
         return await self._request_json_response(route)
 
     async def get_user(self, user_id: str) -> more_typing.JSONObject:
@@ -2650,7 +2651,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.NotFound
             If the user is not found.
         """
-        route = routes.USER.compile(self.GET, user_id=user_id)
+        route = routes.GET_USER.compile(user_id=user_id)
         return await self._request_json_response(route)
 
     async def modify_current_user(
@@ -2684,7 +2685,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         payload = {}
         conversions.put_if_specified(payload, "username", username)
         conversions.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
-        route = routes.OWN_USER.compile(self.PATCH)
+        route = routes.PATCH_MY_USER.compile()
         return await self._request_json_response(route, body=payload)
 
     async def get_current_user_connections(self) -> typing.Sequence[more_typing.JSONObject]:
@@ -2699,7 +2700,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         typing.Sequence[more_typing.JSONObject]
             A list of connection objects.
         """
-        route = routes.OWN_CONNECTIONS.compile(self.GET)
+        route = routes.GET_MY_CONNECTIONS.compile()
         return await self._request_json_response(route)
 
     async def get_current_user_guilds(
@@ -2734,7 +2735,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(query, "before", before)
         conversions.put_if_specified(query, "after", after)
         conversions.put_if_specified(query, "limit", limit)
-        route = routes.OWN_GUILDS.compile(self.GET)
+        route = routes.GET_MY_GUILDS.compile()
         return await self._request_json_response(route, query=query)
 
     async def leave_guild(self, guild_id: str) -> None:
@@ -2750,7 +2751,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.NotFound
             If the guild is not found.
         """
-        route = routes.LEAVE_GUILD.compile(self.DELETE, guild_id=guild_id)
+        route = routes.DELETE_MY_GUILD.compile(guild_id=guild_id)
         await self._request_json_response(route)
 
     async def create_dm(self, recipient_id: str) -> more_typing.JSONObject:
@@ -2772,7 +2773,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If the recipient is not found.
         """
         payload = {"recipient_id": recipient_id}
-        route = routes.OWN_DMS.compile(self.POST)
+        route = routes.POST_MY_CHANNELS.compile()
         return await self._request_json_response(route, body=payload)
 
     async def list_voice_regions(self) -> typing.Sequence[more_typing.JSONObject]:
@@ -2786,7 +2787,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         !!! note
             This does not include VIP servers.
         """
-        route = routes.VOICE_REGIONS.compile(self.GET)
+        route = routes.GET_VOICE_REGIONS.compile()
         return await self._request_json_response(route)
 
     async def create_webhook(
@@ -2823,7 +2824,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         """
         payload = {"name": name}
         conversions.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
-        route = routes.CHANNEL_WEBHOOKS.compile(self.POST, channel_id=channel_id)
+        route = routes.POST_CHANNEL_WEBHOOKS.compile(channel_id=channel_id)
         return await self._request_json_response(route, body=payload, reason=reason)
 
     async def get_channel_webhooks(self, channel_id: str) -> typing.Sequence[more_typing.JSONObject]:
@@ -2847,7 +2848,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If you either lack the `MANAGE_WEBHOOKS` permission or
             can not see the given channel.
         """
-        route = routes.CHANNEL_WEBHOOKS.compile(self.GET, channel_id=channel_id)
+        route = routes.GET_CHANNEL_WEBHOOKS.compile(channel_id=channel_id)
         return await self._request_json_response(route)
 
     async def get_guild_webhooks(self, guild_id: str) -> typing.Sequence[more_typing.JSONObject]:
@@ -2871,7 +2872,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If you either lack the `MANAGE_WEBHOOKS` permission or
             aren't a member of the given guild.
         """
-        route = routes.GUILD_WEBHOOKS.compile(self.GET, guild_id=guild_id)
+        route = routes.GET_GUILD_WEBHOOKS.compile(guild_id=guild_id)
         return await self._request_json_response(route)
 
     async def get_webhook(self, webhook_id: str, *, webhook_token: str = ...) -> more_typing.JSONObject:
@@ -2900,9 +2901,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If you pass a token that's invalid for the target webhook.
         """
         if webhook_token is ...:
-            route = routes.WEBHOOK.compile(self.GET, webhook_id=webhook_id)
+            route = routes.GET_WEBHOOK.compile(webhook_id=webhook_id)
         else:
-            route = routes.WEBHOOK_WITH_TOKEN.compile(self.GET, webhook_id=webhook_id, webhook_token=webhook_token)
+            route = routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook_id=webhook_id, webhook_token=webhook_token)
         return await self._request_json_response(route, suppress_authorization_header=webhook_token is not ...)
 
     async def modify_webhook(
@@ -2955,9 +2956,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         conversions.put_if_specified(payload, "channel_id", channel_id)
         conversions.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
         if webhook_token is ...:
-            route = routes.WEBHOOK.compile(self.PATCH, webhook_id=webhook_id)
+            route = routes.PATCH_WEBHOOK.compile(webhook_id=webhook_id)
         else:
-            route = routes.WEBHOOK_WITH_TOKEN.compile(self.PATCH, webhook_id=webhook_id, webhook_token=webhook_token)
+            route = routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook_id=webhook_id, webhook_token=webhook_token)
         return await self._request_json_response(
             route, body=payload, reason=reason, suppress_authorization_header=webhook_token is not ...,
         )
@@ -2984,9 +2985,9 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
             If you pass a token that's invalid for the target webhook.
         """
         if webhook_token is ...:
-            route = routes.WEBHOOK.compile(self.DELETE, webhook_id=webhook_id)
+            route = routes.DELETE_WEBHOOK.compile(webhook_id=webhook_id)
         else:
-            route = routes.WEBHOOK_WITH_TOKEN.compile(self.DELETE, webhook_id=webhook_id, webhook_token=webhook_token)
+            route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook_id=webhook_id, webhook_token=webhook_token)
         await self._request_json_response(route, suppress_authorization_header=webhook_token is not ...)
 
     async def execute_webhook(  # pylint:disable=too-many-locals
@@ -3077,7 +3078,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         query = {}
         conversions.put_if_specified(query, "wait", wait, lambda v: str(v).lower())
 
-        route = routes.WEBHOOK_WITH_TOKEN.compile(self.POST, webhook_id=webhook_id, webhook_token=webhook_token)
+        route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook_id=webhook_id, webhook_token=webhook_token)
         return await self._request_json_response(route, body=form, query=query, suppress_authorization_header=True)
 
     ##########
@@ -3092,5 +3093,5 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         more_typing.JSONObject
             An application info object.
         """
-        route = routes.OAUTH2_APPLICATIONS_ME.compile(self.GET)
+        route = routes.GET_MY_APPLICATION.compile()
         return await self._request_json_response(route)
