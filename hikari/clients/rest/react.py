@@ -139,37 +139,10 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             )
 
     async def remove_all_reactions(
-        self, channel: bases.Hashable[_channels.PartialChannel], message: bases.Hashable[_messages.Message],
-    ) -> None:
-        """Delete all reactions from a given message in a given channel.
-
-        Parameters
-        ----------
-        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
-            The object or ID of the channel to get the message from.
-        message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
-            The object or ID of the message to remove all reactions from.
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFound
-            If the channel or message is not found.
-        hikari.errors.Forbidden
-            If you lack the `MANAGE_MESSAGES` permission.
-        """
-        await self._session.delete_all_reactions(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
-        )
-
-    async def remove_all_reactions_for_emoji(
         self,
         channel: bases.Hashable[_channels.PartialChannel],
         message: bases.Hashable[_messages.Message],
-        emoji: typing.Union[emojis.Emoji, str],
+        emoji: typing.Optional[typing.Union[emojis.Emoji, str]] = None,
     ) -> None:
         """Remove all reactions for a single given emoji on a given message.
 
@@ -179,10 +152,11 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             The object or ID of the channel to get the message from.
         message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to delete the reactions from.
-        emoji : typing.Union[hikari.emojis.Emoji, str]
+        emoji : typing.Union[hikari.emojis.Emoji, str], optional
             The object or string representation of the emoji to delete. The
             string representation will be either `"name:id"` for custom emojis
             else it's unicode character(s) (can be UTF-32).
+            If `None` or unspecified, then all reactions are removed.
 
         Raises
         ------
@@ -195,11 +169,17 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             If you lack the `MANAGE_MESSAGES` permission, or the channel is a
             DM channel.
         """
-        await self._session.delete_all_reactions_for_emoji(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
-            emoji=str(getattr(emoji, "url_name", emoji)),
-        )
+        if emoji is None:
+            await self._session.delete_all_reactions(
+                channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+                message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+            )
+        else:
+            await self._session.delete_all_reactions_for_emoji(
+                channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+                message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+                emoji=str(getattr(emoji, "url_name", emoji)),
+            )
 
     def fetch_reactors_after(
         self,
