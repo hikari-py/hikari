@@ -667,19 +667,23 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         """
         await self._components.rest.remove_reaction(self.channel_id, self.id, emoji, user)
 
-    async def remove_all_reactions_for_emoji(self, emoji: typing.Union[str, _emojis.Emoji]) -> None:
+    async def remove_all_reactions(self, emoji: typing.Optional[typing.Union[str, _emojis.Emoji]] = None) -> None:
         r"""Remove all users' reactions for a specific emoji from the message.
 
         Parameters
         ----------
-        emoji : str OR hikari.emojis.Emoji
-            The emoji to remove.
+        emoji : str OR hikari.emojis.Emoji, optional
+            The emoji to remove all reactions for. If not specified, or `None`,
+            then all emojis are removed.
 
         Example
         --------
             # Using a unicode emoji and removing all 👌 reacts from the message.
             # reaction.
-            await message.remove_reaction("\N{OK HAND SIGN}")
+            await message.remove_all_reactions("\N{OK HAND SIGN}")
+
+            # Removing all reactions entirely.
+            await message.remove_all_reactions()
 
         Raises
         ------
@@ -693,17 +697,4 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        await self._components.rest.remove_all_reactions_for_emoji(self.channel_id, self.id, emoji)
-
-    async def remove_all_reactions(self) -> None:
-        r"""Remove all reactions from the message.
-
-        Raises
-        ------
-        hikari.errors.Forbidden
-            If you are missing the `MANAGE_MESSAGES` permission, or the
-            permission to view the channel
-        hikari.errors.NotFound
-            If the channel or message is not found, or if the emoji is not found.
-        """
-        await self._components.rest.remove_all_reactions(self.channel_id, self.id)
+        await self._components.rest.remove_all_reactions(self.channel_id, self.id, emoji)
