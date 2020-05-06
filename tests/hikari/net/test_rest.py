@@ -482,37 +482,37 @@ class TestRESTEndpoints:
     @pytest.mark.asyncio
     async def test_get_gateway(self, rest_impl):
         rest_impl._request_json_response.return_value = {"url": "discord.discord///"}
-        mock_route = mock.MagicMock(routes.GATEWAY)
+        mock_route = mock.MagicMock(routes.GET_GATEWAY)
         with mock.patch.object(routes, "GATEWAY", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_gateway() == "discord.discord///"
-            routes.GATEWAY.compile.assert_called_once_with(rest_impl.GET)
+            routes.GET_GATEWAY.compile.assert_called_once_with(rest_impl.GET)
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_gateway_bot(self, rest_impl):
         mock_response = {"url": "discord.discord///"}
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.GATEWAY_BOT)
+        mock_route = mock.MagicMock(routes.GET_GATEWAY_BOT)
         with mock.patch.object(routes, "GATEWAY_BOT", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_gateway_bot() is mock_response
-            routes.GATEWAY_BOT.compile.assert_called_once_with(rest_impl.GET)
+            routes.GET_GATEWAY_BOT.compile.assert_called_once_with(rest_impl.GET)
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_guild_audit_log_without_optionals(self, rest_impl):
         mock_response = {"webhooks": [], "users": []}
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.GUILD_AUDIT_LOGS)
+        mock_route = mock.MagicMock(routes.GET_GUILD_AUDIT_LOGS)
         with mock.patch.object(routes, "GUILD_AUDIT_LOGS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_audit_log("2929292929") is mock_response
-            routes.GUILD_AUDIT_LOGS.compile.assert_called_once_with(rest_impl.GET, guild_id="2929292929")
+            routes.GET_GUILD_AUDIT_LOGS.compile.assert_called_once_with(rest_impl.GET, guild_id="2929292929")
         rest_impl._request_json_response.assert_called_once_with(mock_route, query={})
 
     @pytest.mark.asyncio
     async def test_get_guild_audit_log_with_optionals(self, rest_impl):
         mock_response = {"webhooks": [], "users": []}
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.GUILD_AUDIT_LOGS)
+        mock_route = mock.MagicMock(routes.GET_GUILD_AUDIT_LOGS)
         with mock.patch.object(routes, "GUILD_AUDIT_LOGS", compile=mock.MagicMock(return_value=mock_route)):
             assert (
                 await rest_impl.get_guild_audit_log(
@@ -520,7 +520,7 @@ class TestRESTEndpoints:
                 )
                 is mock_response
             )
-            routes.GUILD_AUDIT_LOGS.compile.assert_called_once_with(rest_impl.GET, guild_id="2929292929")
+            routes.GET_GUILD_AUDIT_LOGS.compile.assert_called_once_with(rest_impl.GET, guild_id="2929292929")
         rest_impl._request_json_response.assert_called_once_with(
             mock_route, query={"user_id": "115590097100865541", "action_type": 42, "limit": 5, "before": "123123123"}
         )
@@ -711,19 +711,19 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_delete_all_reactions_for_emoji(self, rest_impl):
-        mock_route = mock.MagicMock(routes.REACTION_EMOJI)
+        mock_route = mock.MagicMock(routes.DELETE_REACTION_EMOJI)
         with mock.patch.object(routes, "REACTION_EMOJI", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.delete_all_reactions_for_emoji("222", "333", "222:owo") is None
-            routes.REACTION_EMOJI.compile.assert_called_once_with(
+            routes.DELETE_REACTION_EMOJI.compile.assert_called_once_with(
                 rest_impl.DELETE, channel_id="222", message_id="333", emoji="222:owo"
             )
 
     @pytest.mark.asyncio
     async def test_delete_user_reaction(self, rest_impl):
-        mock_route = mock.MagicMock(routes.REACTION_EMOJI_USER)
+        mock_route = mock.MagicMock(routes.DELETE_REACTION_USER)
         with mock.patch.object(routes, "REACTION_EMOJI_USER", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.delete_user_reaction("11111", "4444", "emoji:42", "29292992") is None
-            routes.REACTION_EMOJI_USER.compile.assert_called_once_with(
+            routes.DELETE_REACTION_USER.compile.assert_called_once_with(
                 rest_impl.DELETE, channel_id="11111", message_id="4444", emoji="emoji:42", user_id="29292992"
             )
         rest_impl._request_json_response.assert_called_once_with(mock_route)
@@ -732,10 +732,10 @@ class TestRESTEndpoints:
     async def test_get_reactions_without_optionals(self, rest_impl):
         mock_response = [{"id": "42"}]
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.REACTIONS)
+        mock_route = mock.MagicMock(routes.GET_REACTIONS)
         with mock.patch.object(routes, "REACTIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_reactions("29292929", "48484848", "emoji:42") is mock_response
-            routes.REACTIONS.compile.assert_called_once_with(
+            routes.GET_REACTIONS.compile.assert_called_once_with(
                 rest_impl.GET, channel_id="29292929", message_id="48484848", emoji="emoji:42"
             )
         rest_impl._request_json_response.assert_called_once_with(mock_route, query={})
@@ -744,23 +744,23 @@ class TestRESTEndpoints:
     async def test_get_reactions_with_optionals(self, rest_impl):
         mock_response = [{"id": "42"}]
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.REACTIONS)
+        mock_route = mock.MagicMock(routes.GET_REACTIONS)
         with mock.patch.object(routes, "REACTIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert (
                 await rest_impl.get_reactions("29292929", "48484848", "emoji:42", after="3333333", limit=40)
                 is mock_response
             )
-            routes.REACTIONS.compile.assert_called_once_with(
+            routes.GET_REACTIONS.compile.assert_called_once_with(
                 rest_impl.GET, channel_id="29292929", message_id="48484848", emoji="emoji:42"
             )
         rest_impl._request_json_response.assert_called_once_with(mock_route, query={"after": "3333333", "limit": 40})
 
     @pytest.mark.asyncio
     async def test_delete_all_reactions(self, rest_impl):
-        mock_route = mock.MagicMock(routes.ALL_REACTIONS)
+        mock_route = mock.MagicMock(routes.DELETE_ALL_REACTIONS)
         with mock.patch.object(routes, "ALL_REACTIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.delete_all_reactions("44444", "999999") is None
-            routes.ALL_REACTIONS.compile.assert_called_once_with(
+            routes.DELETE_ALL_REACTIONS.compile.assert_called_once_with(
                 rest_impl.DELETE, channel_id="44444", message_id="999999"
             )
         rest_impl._request_json_response.assert_called_once_with(mock_route)
@@ -917,10 +917,10 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_trigger_typing_indicator(self, rest_impl):
-        mock_route = mock.MagicMock(routes.CHANNEL_TYPING)
+        mock_route = mock.MagicMock(routes.POST_CHANNEL_TYPING)
         with mock.patch.object(routes, "CHANNEL_TYPING", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.trigger_typing_indicator("11111111111") is None
-            routes.CHANNEL_TYPING.compile.assert_called_once_with(rest_impl.POST, channel_id="11111111111")
+            routes.POST_CHANNEL_TYPING.compile.assert_called_once_with(rest_impl.POST, channel_id="11111111111")
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
@@ -935,7 +935,7 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_add_pinned_channel_message(self, rest_impl):
-        mock_route = mock.MagicMock(routes.CHANNEL_PIN)
+        mock_route = mock.MagicMock(routes.DELETE_CHANNEL_PIN)
         with mock.patch.object(routes, "CHANNEL_PINS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.add_pinned_channel_message("292929", "48458484") is None
             routes.CHANNEL_PINS.compile.assert_called_once_with(
@@ -945,10 +945,10 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_delete_pinned_channel_message(self, rest_impl):
-        mock_route = mock.MagicMock(routes.CHANNEL_PIN)
+        mock_route = mock.MagicMock(routes.DELETE_CHANNEL_PIN)
         with mock.patch.object(routes, "CHANNEL_PIN", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.delete_pinned_channel_message("929292", "292929") is None
-            routes.CHANNEL_PIN.compile.assert_called_once_with(
+            routes.DELETE_CHANNEL_PIN.compile.assert_called_once_with(
                 rest_impl.DELETE, channel_id="929292", message_id="292929"
             )
         rest_impl._request_json_response.assert_called_once_with(mock_route)
@@ -1049,7 +1049,7 @@ class TestRESTEndpoints:
         mock_route = mock.MagicMock(routes.GUILD)
         with mock.patch.object(routes, "GUILDS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.create_guild("GUILD TIME") is mock_response
-            routes.GUILDS.compile.assert_called_once_with(rest_impl.POST)
+            routes.POST_GUILDS.compile.assert_called_once_with(rest_impl.POST)
         rest_impl._request_json_response.assert_called_once_with(mock_route, body={"name": "GUILD TIME"})
 
     @pytest.mark.asyncio
@@ -1070,7 +1070,7 @@ class TestRESTEndpoints:
                     channels=[{"type": 0, "name": "444"}],
                 )
                 assert result is mock_response
-                routes.GUILDS.compile.assert_called_once_with(rest_impl.POST)
+                routes.POST_GUILDS.compile.assert_called_once_with(rest_impl.POST)
                 conversions.image_bytes_to_image_data.assert_called_once_with(b"\211PNG\r\n\032\nblah")
         rest_impl._request_json_response.assert_called_once_with(
             mock_route,
@@ -1106,7 +1106,7 @@ class TestRESTEndpoints:
         mock_route = mock.MagicMock(routes.GUILD)
         with mock.patch.object(routes, "GUILD_PREVIEW", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_preview("3939393993939") is mock_response
-            routes.GUILD_PREVIEW.compile.assert_called_once_with(rest_impl.GET, guild_id="3939393993939")
+            routes.GET_GUILD_PREVIEW.compile.assert_called_once_with(rest_impl.GET, guild_id="3939393993939")
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
@@ -1273,22 +1273,22 @@ class TestRESTEndpoints:
     async def test_list_guild_members_without_optionals(self, rest_impl):
         mock_response = [{"id": "379953393319542784", "nick": "Big Moh"}]
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.GUILD_MEMBERS)
+        mock_route = mock.MagicMock(routes.GET_GUILD_MEMBERS)
         with mock.patch.object(routes, "GUILD_MEMBERS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.list_guild_members("115590097100865541") is mock_response
-            routes.GUILD_MEMBERS.compile.assert_called_once_with(rest_impl.GET, guild_id="115590097100865541")
+            routes.GET_GUILD_MEMBERS.compile.assert_called_once_with(rest_impl.GET, guild_id="115590097100865541")
         rest_impl._request_json_response.assert_called_once_with(mock_route, query={})
 
     @pytest.mark.asyncio
     async def test_list_guild_members_with_optionals(self, rest_impl):
         mock_response = [{"id": "379953393319542784", "nick": "Big Moh"}]
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.GUILD_MEMBERS)
+        mock_route = mock.MagicMock(routes.GET_GUILD_MEMBERS)
         with mock.patch.object(routes, "GUILD_MEMBERS", compile=mock.MagicMock(return_value=mock_route)):
             assert (
                 await rest_impl.list_guild_members("115590097100865541", limit=5, after="4444444444") is mock_response
             )
-            routes.GUILD_MEMBERS.compile.assert_called_once_with(rest_impl.GET, guild_id="115590097100865541")
+            routes.GET_GUILD_MEMBERS.compile.assert_called_once_with(rest_impl.GET, guild_id="115590097100865541")
         rest_impl._request_json_response.assert_called_once_with(mock_route, query={"limit": 5, "after": "4444444444"})
 
     @pytest.mark.asyncio
@@ -1328,18 +1328,18 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_modify_current_user_nick_without_reason(self, rest_impl):
-        mock_route = mock.MagicMock(routes.OWN_GUILD_NICKNAME)
+        mock_route = mock.MagicMock(routes.PATCH_MY_GUILD_NICKNAME)
         with mock.patch.object(routes, "OWN_GUILD_NICKNAME", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.modify_current_user_nick("202020202", "Nickname me") is None
-            routes.OWN_GUILD_NICKNAME.compile.assert_called_once_with(rest_impl.PATCH, guild_id="202020202")
+            routes.PATCH_MY_GUILD_NICKNAME.compile.assert_called_once_with(rest_impl.PATCH, guild_id="202020202")
         rest_impl._request_json_response.assert_called_once_with(mock_route, body={"nick": "Nickname me"}, reason=...)
 
     @pytest.mark.asyncio
     async def test_modify_current_user_nick_with_reason(self, rest_impl):
-        mock_route = mock.MagicMock(routes.OWN_GUILD_NICKNAME)
+        mock_route = mock.MagicMock(routes.PATCH_MY_GUILD_NICKNAME)
         with mock.patch.object(routes, "OWN_GUILD_NICKNAME", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.modify_current_user_nick("202020202", "Nickname me", reason="Look at me") is None
-            routes.OWN_GUILD_NICKNAME.compile.assert_called_once_with(rest_impl.PATCH, guild_id="202020202")
+            routes.PATCH_MY_GUILD_NICKNAME.compile.assert_called_once_with(rest_impl.PATCH, guild_id="202020202")
         rest_impl._request_json_response.assert_called_once_with(
             mock_route, body={"nick": "Nickname me"}, reason="Look at me"
         )
@@ -1411,10 +1411,10 @@ class TestRESTEndpoints:
     async def test_get_guild_bans(self, rest_impl):
         mock_response = [{"id": "3939393"}]
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.GUILD_BANS)
+        mock_route = mock.MagicMock(routes.GET_GUILD_BANS)
         with mock.patch.object(routes, "GUILD_BANS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_bans("292929") is mock_response
-            routes.GUILD_BANS.compile.assert_called_once_with(rest_impl.GET, guild_id="292929")
+            routes.GET_GUILD_BANS.compile.assert_called_once_with(rest_impl.GET, guild_id="292929")
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
@@ -1587,30 +1587,30 @@ class TestRESTEndpoints:
     async def test_get_guild_voice_regions(self, rest_impl):
         mock_response = [{"name": "london", "vip": True}]
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.GUILD_VOICE_REGIONS)
+        mock_route = mock.MagicMock(routes.GET_GUILD_VOICE_REGIONS)
         with mock.patch.object(routes, "GUILD_VOICE_REGIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_voice_regions("2393939") is mock_response
-            routes.GUILD_VOICE_REGIONS.compile.assert_called_once_with(rest_impl.GET, guild_id="2393939")
+            routes.GET_GUILD_VOICE_REGIONS.compile.assert_called_once_with(rest_impl.GET, guild_id="2393939")
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_guild_invites(self, rest_impl):
         mock_response = [{"code": "ewkkww"}]
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.GUILD_INVITES)
+        mock_route = mock.MagicMock(routes.GET_GUILD_INVITES)
         with mock.patch.object(routes, "GUILD_INVITES", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_invites("9292929") is mock_response
-            routes.GUILD_INVITES.compile.assert_called_once_with(rest_impl.GET, guild_id="9292929")
+            routes.GET_GUILD_INVITES.compile.assert_called_once_with(rest_impl.GET, guild_id="9292929")
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_guild_integrations(self, rest_impl):
         mock_response = [{"id": "4242"}]
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.GUILD_INTEGRATIONS)
+        mock_route = mock.MagicMock(routes.GET_GUILD_INTEGRATIONS)
         with mock.patch.object(routes, "GUILD_INTEGRATIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_integrations("537340989808050216") is mock_response
-            routes.GUILD_INTEGRATIONS.compile.assert_called_once_with(rest_impl.GET, guild_id="537340989808050216")
+            routes.GET_GUILD_INTEGRATIONS.compile.assert_called_once_with(rest_impl.GET, guild_id="537340989808050216")
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
@@ -1668,10 +1668,10 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_sync_guild_integration(self, rest_impl):
-        mock_route = mock.MagicMock(routes.GUILD_INTEGRATION_SYNC)
+        mock_route = mock.MagicMock(routes.POST_GUILD_INTEGRATION_SYNC)
         with mock.patch.object(routes, "GUILD_INTEGRATION_SYNC", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.sync_guild_integration("3939439", "84884") is None
-            routes.GUILD_INTEGRATION_SYNC.compile.assert_called_once_with(
+            routes.POST_GUILD_INTEGRATION_SYNC.compile.assert_called_once_with(
                 rest_impl.POST, guild_id="3939439", integration_id="84884"
             )
         rest_impl._request_json_response.assert_called_once_with(mock_route)
@@ -1717,10 +1717,10 @@ class TestRESTEndpoints:
     async def test_get_guild_vanity_url(self, rest_impl):
         mock_response = {"code": "dsidid"}
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.GUILD_VANITY_URL)
+        mock_route = mock.MagicMock(routes.GET_GUILD_VANITY_URL)
         with mock.patch.object(routes, "GUILD_VANITY_URL", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_vanity_url("399393") is mock_response
-            routes.GUILD_VANITY_URL.compile.assert_called_once_with(rest_impl.GET, guild_id="399393")
+            routes.GET_GUILD_VANITY_URL.compile.assert_called_once_with(rest_impl.GET, guild_id="399393")
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     def test_get_guild_widget_image_url_without_style(self, rest_impl):
@@ -1765,10 +1765,10 @@ class TestRESTEndpoints:
     async def test_get_current_application_info(self, rest_impl):
         mock_response = {"bot_public": True}
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.OAUTH2_APPLICATIONS_ME)
+        mock_route = mock.MagicMock(routes.GET_MY_APPLICATION)
         with mock.patch.object(routes, "OAUTH2_APPLICATIONS_ME", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_current_application_info() is mock_response
-            routes.OAUTH2_APPLICATIONS_ME.compile.assert_called_once_with(rest_impl.GET)
+            routes.GET_MY_APPLICATION.compile.assert_called_once_with(rest_impl.GET)
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
@@ -1785,10 +1785,10 @@ class TestRESTEndpoints:
     async def test_get_user(self, rest_impl):
         mock_response = {"id": "54959"}
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.USER)
+        mock_route = mock.MagicMock(routes.GET_USER)
         with mock.patch.object(routes, "USER", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_user("54959") is mock_response
-            routes.USER.compile.assert_called_once_with(rest_impl.GET, user_id="54959")
+            routes.GET_USER.compile.assert_called_once_with(rest_impl.GET, user_id="54959")
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
@@ -1821,50 +1821,50 @@ class TestRESTEndpoints:
     async def test_get_current_user_connections(self, rest_impl):
         mock_response = [{"id": "fspeed", "revoked": False}]
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.OWN_CONNECTIONS)
+        mock_route = mock.MagicMock(routes.GET_MY_CONNECTIONS)
         with mock.patch.object(routes, "OWN_CONNECTIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_current_user_connections() is mock_response
-            routes.OWN_CONNECTIONS.compile.assert_called_once_with(rest_impl.GET)
+            routes.GET_MY_CONNECTIONS.compile.assert_called_once_with(rest_impl.GET)
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_get_current_user_guilds_without_optionals(self, rest_impl):
         mock_response = [{"id": "452", "owner_id": "4949"}]
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.OWN_GUILDS)
+        mock_route = mock.MagicMock(routes.GET_MY_GUILDS)
         with mock.patch.object(routes, "OWN_GUILDS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_current_user_guilds() is mock_response
-            routes.OWN_GUILDS.compile.assert_called_once_with(rest_impl.GET)
+            routes.GET_MY_GUILDS.compile.assert_called_once_with(rest_impl.GET)
         rest_impl._request_json_response.assert_called_once_with(mock_route, query={})
 
     @pytest.mark.asyncio
     async def test_get_current_user_guilds_with_optionals(self, rest_impl):
         mock_response = [{"id": "452", "owner_id": "4949"}]
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.OWN_GUILDS)
+        mock_route = mock.MagicMock(routes.GET_MY_GUILDS)
         with mock.patch.object(routes, "OWN_GUILDS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_current_user_guilds(before="292929", after="22288", limit=5) is mock_response
-            routes.OWN_GUILDS.compile.assert_called_once_with(rest_impl.GET)
+            routes.GET_MY_GUILDS.compile.assert_called_once_with(rest_impl.GET)
         rest_impl._request_json_response.assert_called_once_with(
             mock_route, query={"before": "292929", "after": "22288", "limit": 5}
         )
 
     @pytest.mark.asyncio
     async def test_leave_guild(self, rest_impl):
-        mock_route = mock.MagicMock(routes.LEAVE_GUILD)
+        mock_route = mock.MagicMock(routes.DELETE_MY_GUILD)
         with mock.patch.object(routes, "LEAVE_GUILD", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.leave_guild("292929") is None
-            routes.LEAVE_GUILD.compile.assert_called_once_with(rest_impl.DELETE, guild_id="292929")
+            routes.DELETE_MY_GUILD.compile.assert_called_once_with(rest_impl.DELETE, guild_id="292929")
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
     async def test_create_dm(self, rest_impl):
         mock_response = {"id": "404040", "recipients": []}
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.OWN_DMS)
+        mock_route = mock.MagicMock(routes.POST_MY_CHANNELS)
         with mock.patch.object(routes, "OWN_DMS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.create_dm("409491291156774923") is mock_response
-            routes.OWN_DMS.compile.assert_called_once_with(rest_impl.POST)
+            routes.POST_MY_CHANNELS.compile.assert_called_once_with(rest_impl.POST)
         rest_impl._request_json_response.assert_called_once_with(
             mock_route, body={"recipient_id": "409491291156774923"}
         )
@@ -1873,10 +1873,10 @@ class TestRESTEndpoints:
     async def test_list_voice_regions(self, rest_impl):
         mock_response = [{"name": "neko-cafe"}]
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.VOICE_REGIONS)
+        mock_route = mock.MagicMock(routes.GET_VOICE_REGIONS)
         with mock.patch.object(routes, "VOICE_REGIONS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.list_voice_regions() is mock_response
-            routes.VOICE_REGIONS.compile.assert_called_once_with(rest_impl.GET)
+            routes.GET_VOICE_REGIONS.compile.assert_called_once_with(rest_impl.GET)
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
@@ -1923,10 +1923,10 @@ class TestRESTEndpoints:
     async def test_get_guild_webhooks(self, rest_impl):
         mock_response = [{"channel_id": "39393993", "id": "8383838"}]
         rest_impl._request_json_response.return_value = mock_response
-        mock_route = mock.MagicMock(routes.GUILD_WEBHOOKS)
+        mock_route = mock.MagicMock(routes.GET_GUILD_WEBHOOKS)
         with mock.patch.object(routes, "GUILD_WEBHOOKS", compile=mock.MagicMock(return_value=mock_route)):
             assert await rest_impl.get_guild_webhooks("9393939") is mock_response
-            routes.GUILD_WEBHOOKS.compile.assert_called_once_with(rest_impl.GET, guild_id="9393939")
+            routes.GET_GUILD_WEBHOOKS.compile.assert_called_once_with(rest_impl.GET, guild_id="9393939")
         rest_impl._request_json_response.assert_called_once_with(mock_route)
 
     @pytest.mark.asyncio
