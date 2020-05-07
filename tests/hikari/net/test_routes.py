@@ -23,8 +23,12 @@ from hikari.net import routes
 
 class TestCompiledRoute:
     @pytest.fixture
-    def compiled_route(self):
-        return routes.CompiledRoute("get", "/somewhere/{channel_id}", "/somewhere/123", "123")
+    def template_route(self):
+        return routes.RouteTemplate("get", "/somewhere/{channel_id}")
+
+    @pytest.fixture
+    def compiled_route(self, template_route):
+        return routes.CompiledRoute(template_route, "/somewhere/123", "123")
 
     def test_create_url(self, compiled_route):
         assert compiled_route.create_url("https://something.com/api/v6") == "https://something.com/api/v6/somewhere/123"
@@ -44,22 +48,18 @@ class TestCompiledRoute:
 class TestRouteTemplate:
     @pytest.fixture
     def template_route(self):
-        return routes.RouteTemplate("/somewhere/{channel_id}")
+        return routes.RouteTemplate("post", "/somewhere/{channel_id}")
 
     def test__init___without_major_params_uses_default_major_params(self, template_route):
-        assert template_route.major_params == frozenset({"channel_id"})
-
-    def test__init__with_major_params_uses_passed_major_params(self):
-        route = routes.RouteTemplate("/somewhere/{somehow}", frozenset({"somehow"}))
-        assert route.major_params == frozenset({"somehow"})
+        assert template_route.major_param == "channel_id"
 
     def test_compile(self, template_route):
-        expected_compiled_route = routes.CompiledRoute("get", "/somewhere/{channel_id}", "/somewhere/123", "123")
+        expected_compiled_route = routes.CompiledRoute(template_route, "/somewhere/123", 123)
 
-        assert template_route.compile("get", channel_id=123) == expected_compiled_route
+        assert template_route.compile(channel_id=123) == expected_compiled_route
 
     def test__repr__(self, template_route):
-        expected_repr = "RouteTemplate(path_template='/somewhere/{channel_id}', major_params=frozenset({'channel_id'}))"
+        expected_repr = "RouteTemplate(path_template='/somewhere/{channel_id}', major_param='channel_id')"
 
         assert template_route.__repr__() == expected_repr
 
