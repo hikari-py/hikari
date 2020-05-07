@@ -60,18 +60,14 @@ release:staging:
   environment:
     name: staging
     url: https://nekokatt.ci.io/hikari/staging
-  except:
-    - tags
-    - merge_requests
-    - schedules
   extends: .release
-  only:
-    - staging
   script:
     - |+
       set -e
       set -x
       nox -s deploy --no-error-on-external-run
+  rules:
+    - if: "$CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_TAG == null && $CI_COMMIT_REF_NAME == 'staging'"
   variables:
     TARGET_BRANCH: staging
 
@@ -85,13 +81,7 @@ release:master:
   environment:
     name: prod
     url: https://nekokatt.ci.io/hikari
-  except:
-    - tags
-    - merge_requests
-    - schedules
   extends: .release
-  only:
-    - master
   script:
     - |+
       set -e
@@ -120,5 +110,7 @@ release:master:
       ssh-add ~/.ssh/id_rsa
 
       nox -s deploy --no-error-on-external-run
+  rules:
+    - if: "$CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_TAG == null && $CI_COMMIT_REF_NAME == 'master'"    
   variables:
     TARGET_BRANCH: master
