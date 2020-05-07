@@ -105,6 +105,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
     HEAD: typing.Final[str] = "head"
     DELETE: typing.Final[str] = "delete"
     OPTIONS: typing.Final[str] = "options"
+
     APPLICATION_JSON: typing.Final[str] = "application/json"
     APPLICATION_X_WWW_FORM_URLENCODED: typing.Final[str] = "application/x-www-form-urlencoded"
     APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
