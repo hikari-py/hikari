@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import mock
 import pytest
 
 from hikari.net import routes
@@ -44,6 +45,24 @@ class TestCompiledRoute:
     def test__str__(self, compiled_route):
         assert str(compiled_route) == "get /somewhere/123"
 
+    def test___eq___positive(self):
+        template = mock.MagicMock()
+        assert routes.CompiledRoute(template, "/foo/bar", "1a2b3c") == routes.CompiledRoute(
+            template, "/foo/bar", "1a2b3c"
+        )
+
+    def test___eq___negative_path(self):
+        template = mock.MagicMock()
+        assert routes.CompiledRoute(template, "/foo/baz", "1a2b3c") != routes.CompiledRoute(
+            template, "/foo/bar", "1a2b3c"
+        )
+
+    def test___eq___negative_hash(self):
+        template = mock.MagicMock()
+        assert routes.CompiledRoute(template, "/foo/bar", "1a2b3d") != routes.CompiledRoute(
+            template, "/foo/bar", "1a2b3c"
+        )
+
 
 class TestRouteTemplate:
     @pytest.fixture
@@ -54,9 +73,10 @@ class TestRouteTemplate:
         assert template_route.major_param == "channel_id"
 
     def test_compile(self, template_route):
-        expected_compiled_route = routes.CompiledRoute(template_route, "/somewhere/123", 123)
+        expected_compiled_route = routes.CompiledRoute(template_route, "/somewhere/123", "123")
 
-        assert template_route.compile(channel_id=123) == expected_compiled_route
+        actual_compiled_route = template_route.compile(channel_id=123)
+        assert actual_compiled_route == expected_compiled_route
 
     def test__repr__(self, template_route):
         expected_repr = "RouteTemplate(path_template='/somewhere/{channel_id}', major_param='channel_id')"

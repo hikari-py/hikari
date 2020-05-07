@@ -42,12 +42,12 @@ class CompiledRoute:
         The part of the hash identifier to use for the compiled set of major parameters.
     """
 
-    __slots__ = ("route_template", "major_params_hash", "compiled_path", "hash_code")
+    __slots__ = ("route_template", "major_param_hash", "compiled_path", "hash_code")
 
     route_template: typing.Final[RouteTemplate]
     """The route template this compiled route was created from."""
 
-    major_params_hash: typing.Final[str]
+    major_param_hash: typing.Final[str]
     """The major parameters in a bucket hash-compatible representation."""
 
     compiled_path: typing.Final[str]
@@ -58,7 +58,7 @@ class CompiledRoute:
 
     def __init__(self, route_template: RouteTemplate, path: str, major_params_hash: str) -> None:
         self.route_template = route_template
-        self.major_params_hash = major_params_hash
+        self.major_param_hash = major_params_hash
         self.compiled_path = path
         self.hash_code = hash((self.method, self.route_template.path_template, major_params_hash))
 
@@ -100,13 +100,19 @@ class CompiledRoute:
             The input hash amalgamated with a hash code produced by the
             major parameters in this compiled route instance.
         """
-        return initial_bucket_hash + HASH_SEPARATOR + self.major_params_hash
+        return initial_bucket_hash + HASH_SEPARATOR + self.major_param_hash
 
     def __hash__(self) -> int:
         return self.hash_code
 
     def __eq__(self, other) -> bool:
-        return hash(self) == hash(other)
+        return (
+            isinstance(other, CompiledRoute)
+            and self.route_template == other.route_template
+            and self.major_param_hash == other.major_param_hash
+            and self.compiled_path == other.compiled_path
+            and self.hash_code == other.hash_code
+        )
 
     def __repr__(self) -> str:
         this_type = type(self).__name__
@@ -114,7 +120,7 @@ class CompiledRoute:
             (
                 f"method={self.method!r}",
                 f"compiled_path={self.compiled_path!r}",
-                f"major_params_hash={self.major_params_hash!r}",
+                f"major_params_hash={self.major_param_hash!r}",
             )
         )
         return f"{this_type}({major_params})"
@@ -182,7 +188,7 @@ class RouteTemplate:
         return CompiledRoute(
             self,
             self.path_template.format_map(kwargs),
-            kwargs[self.major_param] if self.major_param is not None else "-",
+            str(kwargs[self.major_param]) if self.major_param is not None else "-",
         )
 
     def __repr__(self) -> str:
@@ -193,6 +199,15 @@ class RouteTemplate:
 
     def __hash__(self) -> int:
         return self.hash_code
+
+    def __eq__(self, other) -> bool:
+        return (
+            isinstance(other, RouteTemplate)
+            and self.method == other.method
+            and self.major_param == other.major_param
+            and self.path_template == other.path_template
+            and self.hash_code == other.hash_code
+        )
 
 
 GET = "GET"
