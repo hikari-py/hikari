@@ -724,7 +724,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.BadRequest
             If the emoji is not valid, unknown, or formatted incorrectly.
         """
-        route = routes.PUT_OWN_REACTION.compile(channel_id=channel_id, message_id=message_id, emoji=emoji)
+        route = routes.PUT_MY_REACTION.compile(channel_id=channel_id, message_id=message_id, emoji=emoji)
         await self._request_json_response(route)
 
     async def delete_own_reaction(self, channel_id: str, message_id: str, emoji: str) -> None:
@@ -748,7 +748,7 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
         hikari.errors.NotFound
             If the channel or message or emoji is not found.
         """
-        route = routes.DELETE_OWN_REACTION.compile(channel_id=channel_id, message_id=message_id, emoji=emoji)
+        route = routes.DELETE_MY_REACTION.compile(channel_id=channel_id, message_id=message_id, emoji=emoji)
         await self._request_json_response(route)
 
     async def delete_all_reactions_for_emoji(self, channel_id: str, message_id: str, emoji: str) -> None:
