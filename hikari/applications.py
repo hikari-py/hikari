@@ -60,31 +60,31 @@ class OAuth2Scope(str, more_enums.Enum):
     ACTIVITIES_READ = "activities.read"
     """Enable the app to fetch a user's "Now Playing/Recently Played" list.
 
-    !!! note:
+    !!! note
         You must be whitelisted to use this scope.
     """
 
     ACTIVITIES_WRITE = "activities.write"
     """Enable the app to update a user's activity.
 
-    !!! note:
+    !!! note
         You must be whitelisted to use this scope.
 
-    !!! note:
+    !!! note
         This is not required to use the GameSDK activity manager.
     """
 
     APPLICATIONS_BUILDS_READ = "applications.builds.read"
     """Enable the app to read build data for a user's applications.
 
-    !!! note:
+    !!! note
         You must be whitelisted to use this scope.
     """
 
     APPLICATIONS_BUILDS_UPLOAD = "applications.builds.upload"
     """Enable the app to upload/update builds for a user's applications.
 
-    !!! note:
+    !!! note
         You must be whitelisted to use this scope.
     """
 
@@ -96,14 +96,14 @@ class OAuth2Scope(str, more_enums.Enum):
 
     This includes store listings, achievements, SKU's, etc.
 
-    !!! note:
+    !!! note
         The store API is deprecated and may be removed in the future.
     """
 
     BOT = "bot"
     """Used to add OAuth2 bots to a guild.
 
-    !!! note:
+    !!! note
         This requires you to have set up a bot account for your application.
     """
 
@@ -122,14 +122,14 @@ class OAuth2Scope(str, more_enums.Enum):
     GUILDS_JOIN = "guilds.join"
     """Enable the app to add the user to a specific guild.
 
-    !!! note:
+    !!! note
         This requires you to have set up a bot account for your application.
     """
 
     IDENTIFY = "identify"
     """Enable the app to view info about itself.
 
-    !!! note:
+    !!! note
         This does not include email address info. Use the `EMAIL` scope instead
         to retrieve this information.
     """
@@ -137,21 +137,21 @@ class OAuth2Scope(str, more_enums.Enum):
     RELATIONSHIPS_READ = "relationships.read"
     """Enable the app to view a user's friend list.
 
-    !!! note:
+    !!! note
         You must be whitelisted to use this scope.
     """
 
     RPC = "rpc"
     """Enable the RPC app to control the local user's Discord client.
 
-    !!! note:
+    !!! note
         You must be whitelisted to use this scope.
     """
 
     RPC_API = "rpc.api"
     """Enable the RPC app to access the RPC API as the local user.
 
-    !!! note:
+    !!! note
         You must be whitelisted to use this scope.
     """
 
@@ -161,7 +161,7 @@ class OAuth2Scope(str, more_enums.Enum):
     RPC_NOTIFICATIONS_READ = "rpc.notifications.read"
     """Enable the RPC app to read  from all channels the user is in.
 
-    !!! note:
+    !!! note
         You must be whitelisted to use this scope.
     """
 
