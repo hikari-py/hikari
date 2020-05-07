@@ -327,8 +327,8 @@ PATCH_MY_GUILD_NICKNAME = RouteTemplate(PATCH, "/guilds/{guild_id}/members/@me/n
 GET_MY_USER = RouteTemplate(GET, "/users/@me")
 PATCH_MY_USER = RouteTemplate(PATCH, "/users/@me")
 
-PUT_OWN_REACTION = RouteTemplate(PUT, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me")
-DELETE_OWN_REACTION = RouteTemplate(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me")
+PUT_MY_REACTION = RouteTemplate(PUT, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me")
+DELETE_MY_REACTION = RouteTemplate(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me")
 
 # Voice
 GET_VOICE_REGIONS = RouteTemplate(GET, "/voice/regions")
