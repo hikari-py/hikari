@@ -34,7 +34,7 @@ definition of a route without specific parameter values included (e.g.
 by providing the corresponding parameters as kwargs, as you may already know.
 
 In this module, a "bucket" is an internal data structure that tracks and
-enforces the  rate limit state for a specific `hikari.net.routes.CompiledRoute`,
+enforces the rate limit state for a specific `hikari.net.routes.CompiledRoute`,
 and can manage delaying tasks in the event that we begin to get rate limited.
 It also supports providing in-order execution of queued tasks.
 
@@ -73,9 +73,9 @@ Initially acquiring time on a bucket
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Each time you `BaseRateLimiter.acquire()` a request timeslice for a given
-`hikari.net.routes.CompiledRoute`, several things happen. The first is that we
+`hikari.net.routes.RouteTemplate`, several things happen. The first is that we
 attempt to find the existing bucket for that route, if there is one, or get an
-unknown bucket otherwise. This is done by creating a real bucket hash` from the
+unknown bucket otherwise. This is done by creating a real bucket hash from the
 compiled route. The initial hash is calculated using a lookup table that maps
 `hikari.net.routes.CompiledRoute` objects to their corresponding initial hash
 codes, or to the unknown bucket hash code if not yet known. This initial hash is
@@ -174,7 +174,6 @@ import logging
 import random
 import time
 import typing
-import weakref
 
 from hikari.internal import more_asyncio
 
@@ -248,7 +247,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         self.name = name
         self.throttle_task = None
         self.queue = []
-        self.logger = logging.getLogger(f"hikari.net.ratelimits.{type(self).__qualname__}.{name}")
+        self.logger = logging.getLogger(f"hikari.net.{type(self).__qualname__}.{name}")
 
     @abc.abstractmethod
     def acquire(self) -> more_typing.Future[None]:
@@ -588,8 +587,6 @@ class RESTBucket(WindowedBurstRateLimiter):
 
     def __init__(self, name: str, compiled_route: routes.CompiledRoute) -> None:
         super().__init__(name, 1, 1)
-        # We store this since the compiled route mapping acts as a weak key dictionary to aid in auto garbage
-        # collecting itself; this acts as our solid reference.
         self.compiled_route = compiled_route
 
     @property
@@ -665,8 +662,8 @@ class RESTBucketManager:
         "logger",
     )
 
-    routes_to_hashes: typing.Final[typing.MutableMapping[routes.CompiledRoute, str]]
-    """Maps compiled routes to their `X-RateLimit-Bucket` header being used."""
+    routes_to_hashes: typing.Final[typing.MutableMapping[routes.RouteTemplate, str]]
+    """Maps route templates to their `X-RateLimit-Bucket` header being used."""
 
     real_hashes_to_buckets: typing.Final[typing.MutableMapping[str, RESTBucket]]
     """Maps full bucket hashes (`X-RateLimit-Bucket` appended with a hash of
@@ -684,11 +681,11 @@ class RESTBucketManager:
     """The logger to use for this object."""
 
     def __init__(self) -> None:
-        self.routes_to_hashes = weakref.WeakKeyDictionary()
+        self.routes_to_hashes = {}
         self.real_hashes_to_buckets = {}
         self.closed_event: asyncio.Event = asyncio.Event()
         self.gc_task: typing.Optional[asyncio.Task] = None
-        self.logger = logging.getLogger(f"hikari.net.ratelimits.{type(self).__qualname__}")
+        self.logger = logging.getLogger(f"hikari.net.{type(self).__qualname__}")
 
     def __enter__(self) -> RESTBucketManager:
         return self
@@ -825,7 +822,7 @@ class RESTBucketManager:
 
         self.logger.debug("purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
 
-    def acquire(self, compiled_route: routes.CompiledRoute) -> more_typing.Future:
+    def acquire(self, compiled_route: routes.CompiledRoute) -> more_typing.Future[None]:
         """Acquire a bucket for the given route.
 
         Parameters
@@ -847,11 +844,13 @@ class RESTBucketManager:
         """
         # Returns a future to await on to wait to be allowed to send the request, and a
         # bucket hash to use to update rate limits later.
-        if compiled_route in self.routes_to_hashes:
-            bucket_hash = self.routes_to_hashes[compiled_route]
+        template = compiled_route.route_template
+
+        if template in self.routes_to_hashes:
+            bucket_hash = self.routes_to_hashes[template]
         else:
             bucket_hash = UNKNOWN_HASH
-            self.routes_to_hashes[compiled_route] = bucket_hash
+            self.routes_to_hashes[template] = bucket_hash
 
         real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_hash)
 
@@ -892,7 +891,7 @@ class RESTBucketManager:
         reset_at_header : datetime.datetime
             The `X-RateLimit-Reset` header value as a `datetime.datetime`.
         """
-        self.routes_to_hashes[compiled_route] = bucket_header
+        self.routes_to_hashes[compiled_route.route_template] = bucket_header
 
         real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
 
