@@ -459,6 +459,21 @@ def stupid_windows_please_stop_breaking_my_tests(test):
     return pytest.mark.skipif(os.name == "nt", reason="This test will not pass on Windows :(")(test)
 
 
+def has_sem_open_impl():
+    try:
+        import multiprocessing
+
+        multiprocessing.RLock()
+    except ImportError:
+        return False
+    else:
+        return True
+
+
+def skip_if_no_sem_open(test):
+    return pytest.mark.skipif(not has_sem_open_impl(), reason="Your platform lacks a sem_open implementation")(test)
+
+
 def patch_marshal_attr(target_entity, field_name, *args, deserializer=None, serializer=None, **kwargs):
     if not (deserializer or serializer):
         raise TypeError("patch_marshal_attr() Missing required keyword-only argument: 'deserializer' or 'serializer'")
