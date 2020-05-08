@@ -100,12 +100,12 @@ def run(compression, color, debug, intents, logger, shards, token, verify_ssl, g
     bot_avatar_url = "about:blank"
     startup_time = 0
 
-    @client.on(hikari.StartingEvent)
+    @client.event(hikari.StartingEvent)
     async def on_start(_):
         nonlocal startup_time
         startup_time = time.perf_counter()
 
-    @client.on(hikari.ReadyEvent)
+    @client.event(hikari.ReadyEvent)
     async def on_ready(event):
         nonlocal bot_id, bot_avatar_url
         bot_id = event.my_user.id
@@ -116,7 +116,7 @@ def run(compression, color, debug, intents, logger, shards, token, verify_ssl, g
             return "never"
         return datetime.timedelta(seconds=time.perf_counter() - epoch)
 
-    @client.on(hikari.MessageCreateEvent)
+    @client.event(hikari.MessageCreateEvent)
     async def on_message(event):
         if not event.author.is_bot and re.match(f"^<@!?{bot_id}>$", event.content):
             start = time.perf_counter()
