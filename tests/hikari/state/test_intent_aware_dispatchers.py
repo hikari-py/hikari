@@ -488,7 +488,7 @@ class TestIntentAwareDispatcherImplIT:
         dummy_event_invoked = 0
         event_obj = DummyEventType()
 
-        @intent_aware_dispatcher.on(DummyEventType)
+        @intent_aware_dispatcher.event(DummyEventType)
         async def on_dummy_event(actual_event_obj):
             nonlocal dummy_event_invoked
             dummy_event_invoked += 1
@@ -501,7 +501,7 @@ class TestIntentAwareDispatcherImplIT:
     async def test_dispatch_when_not_invoked_event_integration_test(self, intent_aware_dispatcher):
         dummy_event_invoked = 0
 
-        @intent_aware_dispatcher.on(DummyEventType)
+        @intent_aware_dispatcher.event(DummyEventType)
         async def on_dummy_event(actual_event_obj):
             nonlocal dummy_event_invoked
             dummy_event_invoked += 1
@@ -515,14 +515,14 @@ class TestIntentAwareDispatcherImplIT:
         exception_event_invoked = 0
         event_obj = DummyEventType()
 
-        @intent_aware_dispatcher.on(DummyEventType)
+        @intent_aware_dispatcher.event(DummyEventType)
         async def on_dummy_event(actual_event_obj):
             nonlocal dummy_event_invoked
             dummy_event_invoked += 1
             assert actual_event_obj is event_obj
             raise RuntimeError("BANG")
 
-        @intent_aware_dispatcher.on()
+        @intent_aware_dispatcher.event()
         async def on_exception(actual_exception_event: events.ExceptionEvent):
             nonlocal exception_event_invoked
             assert isinstance(actual_exception_event, events.ExceptionEvent)
