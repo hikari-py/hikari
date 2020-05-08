@@ -374,6 +374,7 @@ class TestFileStream:
 
         assert start == len(random_bytes)
 
+    @_helpers.skip_if_no_sem_open
     async def test_read_in_processpool(self, random_bytes, dummy_file, processpool_executor):
         stream = files.FileStream("xxx", dummy_file, executor=processpool_executor)
 

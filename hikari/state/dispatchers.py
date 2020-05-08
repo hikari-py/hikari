@@ -119,7 +119,7 @@ class EventDispatcher(abc.ABC):
             lookup, but can be implemented this way optionally if documented.
         """
 
-    def on(
+    def event(
         self, event_type: typing.Optional[typing.Type[EventT]] = None  # pylint:disable=unused-argument
     ) -> typing.Callable[[EventCallbackT], EventCallbackT]:
         """Return a decorator equivalent to invoking `EventDispatcher.add_listener`.
@@ -132,22 +132,56 @@ class EventDispatcher(abc.ABC):
             of the first argument is considered. If no type hint is present
             there either, then the call will fail.
 
-        Examples
-        --------
+        Usage
+        -----
+        This can be used in two ways. The first is to pass the event type
+        to the decorator directly.
+
+            @bot.event(hikari.MessageCreatedEvent)
+            async def on_message(event):
+                print(event.content)
+
+        The second method is to provide typehints instead. This allows you
+        to write code that works with a static type checker without needing
+        to specify the event type twice.
+
             # Type-hinted format.
-            @bot.on()
+            @bot.event()
             async def on_message(event: hikari.MessageCreatedEvent) -> None:
                 print(event.content)
 
-            # Explicit format.
-            @bot.on(hikari.MessageCreatedEvent)
-            async def on_message(event):
-                print(event.content)
+        If you do not provide the event type in the decorator, and you do not
+        provide a valid type hint, then a `TypeError` will be raised.
+
+        You can subscribe to multiple events in two ways.
+
+        The first way is to subscribe to a base class of each event you want
+        to listen to. Base classes are described in this documentation on each
+        event type.
+
+        An example would be listening to every event that occurs.
+
+            @bot.event(hikari.HikariEvent)
+            async def on_event(event):
+                print(event)
+
+        The other method is to apply the decorator more than once.
+
+            @bot.event(hikari.MessageCreateEvent)
+            @bot.event(hikari.MessageDeleteEvent)
+            async def on_create_delete(event):
+                print(event)
 
         Returns
         -------
         decorator(T) -> T
             A decorator for a coroutine function that registers the given event.
+
+        Raises
+        ------
+        TypeError:
+            If a coroutine function with an invalid signature is passed,
+            or if no event type is used in the decorator or as a type hint.
         """
 
         def decorator(callback: EventCallbackT) -> EventCallbackT:
@@ -164,7 +198,7 @@ class EventDispatcher(abc.ABC):
                     raise TypeError(f"Invalid signature for event: async def {callback.__name__}({signature}): ...")
 
                 if event_type is conversions.EMPTY:
-                    raise AttributeError(f"No param type hint given for: async def {callback}({signature}): ...")
+                    raise TypeError(f"No param type hint given for: async def {callback}({signature}): ...")
 
             return self.add_listener(event_type, callback, _stack_level=3)
 
