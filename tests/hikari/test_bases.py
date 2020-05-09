@@ -98,12 +98,12 @@ class TestSnowflake:
         result = bases.Snowflake.from_datetime(
             datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
         )
-        assert result == 537340988620800000
+        assert result == 537340989807788032
         assert isinstance(result, bases.Snowflake)
 
     def test_from_timestamp(self):
         result = bases.Snowflake.from_timestamp(1548182475.283)
-        assert result == 537340988620800000
+        assert result == 537340989807788032
         assert isinstance(result, bases.Snowflake)
 
     def test_min(self):

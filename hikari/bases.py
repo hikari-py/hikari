@@ -93,7 +93,7 @@ class Snowflake(int):
     @classmethod
     def from_timestamp(cls, timestamp: float) -> Snowflake:
         """Get a snowflake object from a UNIX timestamp."""
-        return cls(int(timestamp - conversions.DISCORD_EPOCH) * 1000 << 22)
+        return cls(int((timestamp - conversions.DISCORD_EPOCH) * 1000) << 22)
 
     @classmethod
     def min(cls) -> Snowflake:
