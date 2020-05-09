@@ -124,6 +124,10 @@ class StubEntity(bases.UniqueEntity, marshaller.Deserializable, marshaller.Seria
 
 
 class TestUniqueEntity:
+    def test_created_at(self):
+        entity = bases.UniqueEntity(id=bases.Snowflake("9217346714023428234"))
+        assert entity.created_at == entity.id.created_at
+
     def test_int(self):
         assert int(bases.UniqueEntity(id=bases.Snowflake("2333333"))) == 2333333
 

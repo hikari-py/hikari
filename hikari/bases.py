@@ -122,6 +122,11 @@ class UniqueEntity(HikariEntity, typing.SupportsInt, abc.ABC):
     id: Snowflake = marshaller.attrib(hash=True, eq=True, repr=True, deserializer=Snowflake, serializer=str)
     """The ID of this entity."""
 
+    @property
+    def created_at(self) -> datetime.datetime:
+        """When the object was created."""
+        return self.id.created_at
+
     def __int__(self) -> int:
         return int(self.id)
 
