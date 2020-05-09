@@ -37,7 +37,7 @@ if typing.TYPE_CHECKING:
 # Base event, is not deserialized
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class HikariEvent(bases.HikariEntity, abc.ABC):
+class HikariEvent(bases.Entity, abc.ABC):
     """The base class that all events inherit from."""
 
 

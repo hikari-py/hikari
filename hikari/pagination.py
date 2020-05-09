@@ -20,8 +20,10 @@
 from __future__ import annotations
 
 import abc
+import datetime
 import typing
 
+from hikari import bases
 from hikari.internal import assertions
 from hikari.internal import more_collections
 
@@ -29,7 +31,11 @@ _T = typing.TypeVar("_T")
 
 
 class PaginatedResults(
-    abc.ABC, typing.AsyncIterator[_T], typing.AsyncIterable[_T], typing.Awaitable[typing.Sequence[_T]]
+    typing.Generic[_T],
+    typing.AsyncIterator[_T],
+    typing.AsyncIterable[_T],
+    typing.Awaitable[typing.Sequence[_T]],
+    abc.ABC,
 ):
     """A set of results that are fetched asynchronously from the API as needed.
 
@@ -156,6 +162,42 @@ class PaginatedResults(
     async def _fetch_all(self) -> typing.Sequence[_T]:
         return [item async for item in self]
 
+    @staticmethod
+    def _prepare_first_id(value, if_none=bases.Snowflake.min()) -> str:
+        """Prepare the given first ID type passed by the user.
+
+        Given an object with an ID, a datetime, an int, a snowflake, or a string
+        type, convert the element to the string ID snowflake it represents
+        that can be passed to the underlying REST API safely.
+
+        Parameters
+        ----------
+        value
+            The element to prepare.
+        if_none
+            The value to use if the `value` is `None`. Defaults to a snowflake
+            of `0`.
+
+        Returns
+        -------
+        str
+            The string ID.
+        """
+        if value is None:
+            value = if_none
+
+        if isinstance(value, datetime.datetime):
+            value = str(int(bases.Snowflake.from_datetime(value)))
+
+        if isinstance(value, (int, bases.Snowflake)):
+            return str(value)
+        if isinstance(value, bases.Unique):
+            return str(value.id)
+        if isinstance(value, str):
+            return value
+
+        raise TypeError("expected object with ID, datetime, snowflake, or None")
+
     def __await__(self):
         return self._fetch_all().__await__()
 
@@ -164,7 +206,7 @@ class PaginatedResults(
         ...
 
 
-class _EnumeratedPaginatedResults(PaginatedResults[typing.Tuple[int, _T]], typing.Generic[_T]):
+class _EnumeratedPaginatedResults(typing.Generic[_T], PaginatedResults[typing.Tuple[int, _T]]):
     __slots__ = ("_i", "_paginator")
 
     def __init__(self, paginator: PaginatedResults[_T], *, start: int) -> None:
@@ -177,7 +219,7 @@ class _EnumeratedPaginatedResults(PaginatedResults[typing.Tuple[int, _T]], typin
         return pair
 
 
-class _LimitedPaginatedResults(PaginatedResults[_T], typing.Generic[_T]):
+class _LimitedPaginatedResults(typing.Generic[_T], PaginatedResults[_T]):
     __slots__ = ("_paginator", "_count", "_limit")
 
     def __init__(self, paginator: PaginatedResults[_T], limit: int) -> None:
@@ -195,7 +237,9 @@ class _LimitedPaginatedResults(PaginatedResults[_T], typing.Generic[_T]):
         return next_item
 
 
-class BufferedPaginatedResults(PaginatedResults[_T], typing.Generic[_T]):
+class BufferedPaginatedResults(typing.Generic[_T], PaginatedResults[_T]):
+    """A buffered paginator implementation that handles chunked responses."""
+
     __slots__ = ("_buffer",)
 
     def __init__(self) -> None:

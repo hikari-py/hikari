@@ -94,7 +94,7 @@ class PermissionOverwriteType(str, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PermissionOverwrite(bases.UniqueEntity, marshaller.Deserializable, marshaller.Serializable):
+class PermissionOverwrite(bases.Unique, marshaller.Deserializable, marshaller.Serializable):
     """Represents permission overwrites for a channel or role in a channel."""
 
     type: PermissionOverwriteType = marshaller.attrib(deserializer=PermissionOverwriteType, serializer=str)
@@ -145,7 +145,7 @@ def register_channel_type(
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PartialChannel(bases.UniqueEntity, marshaller.Deserializable):
+class PartialChannel(bases.Unique, marshaller.Deserializable):
     """Represents a channel where we've only received it's basic information.
 
     This is commonly received in REST responses.

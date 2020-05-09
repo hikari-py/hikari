@@ -33,7 +33,7 @@ class TestHikariEntity:
     def stub_entity(self) -> typing.Type["StubEntity"]:
         @marshaller.marshallable()
         @attr.s()
-        class StubEntity(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
+        class StubEntity(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
             ...
 
         return StubEntity
@@ -119,17 +119,17 @@ class TestSnowflake:
 
 @marshaller.marshallable()
 @attr.s(slots=True)
-class StubEntity(bases.UniqueEntity, marshaller.Deserializable, marshaller.Serializable):
+class StubEntity(bases.Unique, marshaller.Deserializable, marshaller.Serializable):
     ...
 
 
 class TestUniqueEntity:
     def test_created_at(self):
-        entity = bases.UniqueEntity(id=bases.Snowflake("9217346714023428234"))
+        entity = bases.Unique(id=bases.Snowflake("9217346714023428234"))
         assert entity.created_at == entity.id.created_at
 
     def test_int(self):
-        assert int(bases.UniqueEntity(id=bases.Snowflake("2333333"))) == 2333333
+        assert int(bases.Unique(id=bases.Snowflake("2333333"))) == 2333333
 
     def test_deserialize(self):
         unique_entity = StubEntity.deserialize({"id": "5445"})

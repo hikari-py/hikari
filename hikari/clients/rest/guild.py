@@ -48,10 +48,10 @@ if typing.TYPE_CHECKING:
 class _MemberPaginator(pagination.BufferedPaginatedResults[guilds.GuildMember]):
     __slots__ = ("_guild_id", "_first_id", "_components", "_session")
 
-    def __init__(self, guild, components, session):
+    def __init__(self, guild, created_after, components, session):
         super().__init__()
         self._guild_id = str(int(guild))
-        self._first_id = bases.Snowflake.min()
+        self._first_id = self._prepare_first_id(created_after)
         self._components = components
         self._session = session
 
@@ -71,12 +71,14 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     async def fetch_audit_log(
         self,
-        guild: bases.Hashable[guilds.Guild],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
         *,
-        user: bases.Hashable[users.User] = ...,
+        user: typing.Union[bases.Snowflake, int, str, users.User] = ...,
         action_type: typing.Union[audit_logs.AuditLogEventType, int] = ...,
         limit: int = ...,
-        before: typing.Union[datetime.datetime, bases.Hashable[audit_logs.AuditLogEntry]] = ...,
+        before: typing.Union[
+            datetime.datetime, typing.Union[bases.Snowflake, int, str, audit_logs.AuditLogEntry]
+        ] = ...,
     ) -> audit_logs.AuditLog:
         """Get an audit log object for the given guild.
 
@@ -115,10 +117,10 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             before = str(bases.Snowflake.from_datetime(before))
         elif before is not ...:
             # noinspection PyTypeChecker
-            before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
+            before = str(before.id if isinstance(before, bases.Unique) else int(before))
         payload = await self._session.get_guild_audit_log(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            user_id=(str(user.id if isinstance(user, bases.UniqueEntity) else int(user)) if user is not ... else ...),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            user_id=(str(user.id if isinstance(user, bases.Unique) else int(user)) if user is not ... else ...),
             action_type=action_type,
             limit=limit,
             before=before,
@@ -127,10 +129,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     def fetch_audit_log_entries_before(
         self,
-        guild: bases.Hashable[guilds.Guild],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
         *,
-        before: typing.Union[datetime.datetime, bases.Hashable[audit_logs.AuditLogEntry]] = bases.Snowflake.max(),
-        user: bases.Hashable[users.User] = ...,
+        before: typing.Union[
+            datetime.datetime, typing.Union[bases.Snowflake, int, str, audit_logs.AuditLogEntry]
+        ] = bases.Snowflake.max(),
+        user: typing.Union[bases.Snowflake, int, str, users.User] = ...,
         action_type: typing.Union[audit_logs.AuditLogEventType, int] = ...,
         limit: typing.Optional[int] = None,
     ) -> audit_logs.AuditLogIterator:
@@ -182,17 +186,19 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         if isinstance(before, datetime.datetime):
             before = str(bases.Snowflake.from_datetime(before))
         else:
-            before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
+            before = str(before.id if isinstance(before, bases.Unique) else int(before))
         request = functools.partial(
             self._session.get_guild_audit_log,
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            user_id=(str(user.id if isinstance(user, bases.UniqueEntity) else int(user)) if user is not ... else ...),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            user_id=(str(user.id if isinstance(user, bases.Unique) else int(user)) if user is not ... else ...),
             action_type=action_type,
         )
         return audit_logs.AuditLogIterator(components=self._components, request=request, before=before, limit=limit)
 
     async def fetch_guild_emoji(
-        self, guild: bases.Hashable[guilds.Guild], emoji: bases.Hashable[emojis.GuildEmoji],
+        self,
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        emoji: typing.Union[bases.Snowflake, int, str, emojis.GuildEmoji],
     ) -> emojis.GuildEmoji:
         """Get an updated emoji object from a specific guild.
 
@@ -219,12 +225,14 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you aren't a member of said guild.
         """
         payload = await self._session.get_guild_emoji(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            emoji_id=str(emoji.id if isinstance(emoji, bases.UniqueEntity) else int(emoji)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            emoji_id=str(emoji.id if isinstance(emoji, bases.Unique) else int(emoji)),
         )
         return emojis.GuildEmoji.deserialize(payload, components=self._components)
 
-    async def fetch_guild_emojis(self, guild: bases.Hashable[guilds.Guild]) -> typing.Sequence[emojis.GuildEmoji]:
+    async def fetch_guild_emojis(
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
+    ) -> typing.Sequence[emojis.GuildEmoji]:
         """Get emojis for a given guild object or ID.
 
         Parameters
@@ -248,17 +256,17 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you aren't a member of the guild.
         """
         payload = await self._session.list_guild_emojis(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
         return [emojis.GuildEmoji.deserialize(emoji, components=self._components) for emoji in payload]
 
     async def create_guild_emoji(
         self,
-        guild: bases.Hashable[guilds.GuildRole],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.GuildRole],
         name: str,
         image: files.BaseStream,
         *,
-        roles: typing.Sequence[bases.Hashable[guilds.GuildRole]] = ...,
+        roles: typing.Sequence[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]] = ...,
         reason: str = ...,
     ) -> emojis.GuildEmoji:
         """Create a new emoji for a given guild.
@@ -299,10 +307,10 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_guild_emoji(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             name=name,
             image=await image.read(),
-            roles=[str(role.id if isinstance(role, bases.UniqueEntity) else int(role)) for role in roles]
+            roles=[str(role.id if isinstance(role, bases.Unique) else int(role)) for role in roles]
             if roles is not ...
             else ...,
             reason=reason,
@@ -311,11 +319,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     async def update_guild_emoji(
         self,
-        guild: bases.Hashable[guilds.Guild],
-        emoji: bases.Hashable[emojis.GuildEmoji],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        emoji: typing.Union[bases.Snowflake, int, str, emojis.GuildEmoji],
         *,
         name: str = ...,
-        roles: typing.Sequence[bases.Hashable[guilds.GuildRole]] = ...,
+        roles: typing.Sequence[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]] = ...,
         reason: str = ...,
     ) -> emojis.GuildEmoji:
         """Edits an emoji of a given guild.
@@ -354,10 +362,10 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             member of the given guild.
         """
         payload = await self._session.modify_guild_emoji(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            emoji_id=str(emoji.id if isinstance(emoji, bases.UniqueEntity) else int(emoji)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            emoji_id=str(emoji.id if isinstance(emoji, bases.Unique) else int(emoji)),
             name=name,
-            roles=[str(role.id if isinstance(role, bases.UniqueEntity) else int(role)) for role in roles]
+            roles=[str(role.id if isinstance(role, bases.Unique) else int(role)) for role in roles]
             if roles is not ...
             else ...,
             reason=reason,
@@ -365,7 +373,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         return emojis.GuildEmoji.deserialize(payload, components=self._components)
 
     async def delete_guild_emoji(
-        self, guild: bases.Hashable[guilds.Guild], emoji: bases.Hashable[emojis.GuildEmoji],
+        self,
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        emoji: typing.Union[bases.Snowflake, int, str, emojis.GuildEmoji],
     ) -> None:
         """Delete an emoji from a given guild.
 
@@ -388,8 +398,8 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             member of said guild.
         """
         await self._session.delete_guild_emoji(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            emoji_id=str(emoji.id if isinstance(emoji, bases.UniqueEntity) else int(emoji)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            emoji_id=str(emoji.id if isinstance(emoji, bases.Unique) else int(emoji)),
         )
 
     async def create_guild(
@@ -462,7 +472,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         )
         return guilds.Guild.deserialize(payload, components=self._components)
 
-    async def fetch_guild(self, guild: bases.Hashable[guilds.Guild]) -> guilds.Guild:
+    async def fetch_guild(self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]) -> guilds.Guild:
         """Get a given guild's object.
 
         Parameters
@@ -486,13 +496,15 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you don't have access to the guild.
         """
         payload = await self._session.get_guild(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             # Always get counts. There is no reason you would _not_ want this info, right?
             with_counts=True,
         )
         return guilds.Guild.deserialize(payload, components=self._components)
 
-    async def fetch_guild_preview(self, guild: bases.Hashable[guilds.Guild]) -> guilds.GuildPreview:
+    async def fetch_guild_preview(
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
+    ) -> guilds.GuildPreview:
         """Get a given guild's object.
 
         Parameters
@@ -518,25 +530,25 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If the guild is not found or it isn't `PUBLIC`.
         """
         payload = await self._session.get_guild_preview(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
         return guilds.GuildPreview.deserialize(payload, components=self._components)
 
     async def update_guild(
         self,
-        guild: bases.Hashable[guilds.Guild],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
         *,
         name: str = ...,
         region: typing.Union[voices.VoiceRegion, str] = ...,
         verification_level: typing.Union[guilds.GuildVerificationLevel, int] = ...,
         default_message_notifications: typing.Union[guilds.GuildMessageNotificationsLevel, int] = ...,
         explicit_content_filter: typing.Union[guilds.GuildExplicitContentFilterLevel, int] = ...,
-        afk_channel: bases.Hashable[_channels.GuildVoiceChannel] = ...,
+        afk_channel: typing.Union[bases.Snowflake, int, str, _channels.GuildVoiceChannel] = ...,
         afk_timeout: typing.Union[datetime.timedelta, int] = ...,
         icon: files.BaseStream = ...,
-        owner: bases.Hashable[users.User] = ...,
+        owner: typing.Union[bases.Snowflake, int, str, users.User] = ...,
         splash: files.BaseStream = ...,
-        system_channel: bases.Hashable[_channels.PartialChannel] = ...,
+        system_channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel] = ...,
         reason: str = ...,
     ) -> guilds.Guild:
         """Edit a given guild.
@@ -592,7 +604,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = await self._session.modify_guild(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             name=name,
             region=getattr(region, "id", region) if region is not ... else ...,
             verification_level=verification_level,
@@ -600,17 +612,15 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             explicit_content_filter=explicit_content_filter,
             afk_timeout=afk_timeout.total_seconds() if isinstance(afk_timeout, datetime.timedelta) else afk_timeout,
             afk_channel_id=(
-                str(afk_channel.id if isinstance(afk_channel, bases.UniqueEntity) else int(afk_channel))
+                str(afk_channel.id if isinstance(afk_channel, bases.Unique) else int(afk_channel))
                 if afk_channel is not ...
                 else ...
             ),
             icon=await icon.read() if icon is not ... else ...,
-            owner_id=(
-                str(owner.id if isinstance(owner, bases.UniqueEntity) else int(owner)) if owner is not ... else ...
-            ),
+            owner_id=(str(owner.id if isinstance(owner, bases.Unique) else int(owner)) if owner is not ... else ...),
             splash=await splash.read() if splash is not ... else ...,
             system_channel_id=(
-                str(system_channel.id if isinstance(system_channel, bases.UniqueEntity) else int(system_channel))
+                str(system_channel.id if isinstance(system_channel, bases.Unique) else int(system_channel))
                 if system_channel is not ...
                 else ...
             ),
@@ -618,7 +628,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         )
         return guilds.Guild.deserialize(payload, components=self._components)
 
-    async def delete_guild(self, guild: bases.Hashable[guilds.Guild]) -> None:
+    async def delete_guild(self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]) -> None:
         """Permanently deletes the given guild.
 
         You must be owner of the guild to perform this action.
@@ -638,12 +648,10 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         hikari.errors.Forbidden
             If you are not the guild owner.
         """
-        await self._session.delete_guild(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
-        )
+        await self._session.delete_guild(guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)))
 
     async def fetch_guild_channels(
-        self, guild: bases.Hashable[guilds.Guild]
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
     ) -> typing.Sequence[_channels.GuildChannel]:
         """Get all the channels for a given guild.
 
@@ -668,13 +676,13 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you are not in the guild.
         """
         payload = await self._session.list_guild_channels(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
         return [_channels.deserialize_channel(channel, components=self._components) for channel in payload]
 
     async def create_guild_channel(  # pylint: disable=too-many-arguments
         self,
-        guild: bases.Hashable[guilds.Guild],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
         name: str,
         channel_type: typing.Union[_channels.ChannelType, int] = ...,
         position: int = ...,
@@ -684,7 +692,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         bitrate: int = ...,
         user_limit: int = ...,
         permission_overwrites: typing.Sequence[_channels.PermissionOverwrite] = ...,
-        parent_category: bases.Hashable[_channels.GuildCategory] = ...,
+        parent_category: typing.Union[bases.Snowflake, int, str, _channels.GuildCategory] = ...,
         reason: str = ...,
     ) -> _channels.GuildChannel:
         """Create a channel in a given guild.
@@ -751,7 +759,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_guild_channel(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             name=name,
             type_=channel_type,
             position=position,
@@ -768,7 +776,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
                 [po.serialize() for po in permission_overwrites] if permission_overwrites is not ... else ...
             ),
             parent_id=(
-                str(parent_category.id if isinstance(parent_category, bases.UniqueEntity) else int(parent_category))
+                str(parent_category.id if isinstance(parent_category, bases.Unique) else int(parent_category))
                 if parent_category is not ...
                 else ...
             ),
@@ -778,9 +786,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     async def reposition_guild_channels(
         self,
-        guild: bases.Hashable[guilds.Guild],
-        channel: typing.Tuple[int, bases.Hashable[_channels.GuildChannel]],
-        *additional_channels: typing.Tuple[int, bases.Hashable[_channels.GuildChannel]],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        channel: typing.Tuple[int, typing.Union[bases.Snowflake, int, str, _channels.GuildChannel]],
+        *additional_channels: typing.Tuple[int, typing.Union[bases.Snowflake, int, str, _channels.GuildChannel]],
     ) -> None:
         """Edits the position of one or more given channels.
 
@@ -810,15 +818,17 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             due to it being outside of the range of a 64 bit integer.
         """
         await self._session.modify_guild_channel_positions(
-            str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             *[
-                (str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)), position)
+                (str(channel.id if isinstance(channel, bases.Unique) else int(channel)), position)
                 for position, channel in [channel, *additional_channels]
             ],
         )
 
     async def fetch_member(
-        self, guild: bases.Hashable[guilds.Guild], user: bases.Hashable[users.User],
+        self,
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        user: typing.Union[bases.Snowflake, int, str, users.User],
     ) -> guilds.GuildMember:
         """Get a given guild member.
 
@@ -845,12 +855,14 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you don't have access to the target guild.
         """
         payload = await self._session.get_guild_member(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.Unique) else int(user)),
         )
         return guilds.GuildMember.deserialize(payload, components=self._components)
 
-    def fetch_members(self, guild: bases.Hashable[guilds.Guild],) -> pagination.PaginatedResults[guilds.GuildMember]:
+    def fetch_members(
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+    ) -> pagination.PaginatedResults[guilds.GuildMember]:
         """Get an async iterator of all the members in a given guild.
 
         Parameters
@@ -879,17 +891,17 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         hikari.errors.Forbidden
             If you are not in the guild.
         """
-        return _MemberPaginator(guild, self._components, self._session)
+        return _MemberPaginator(guild=guild, created_after=None, components=self._components, session=self._session)
 
     async def update_member(  # pylint: disable=too-many-arguments
         self,
-        guild: bases.Hashable[guilds.Guild],
-        user: bases.Hashable[users.User],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        user: typing.Union[bases.Snowflake, int, str, users.User],
         nickname: typing.Optional[str] = ...,
-        roles: typing.Sequence[bases.Hashable[guilds.GuildRole]] = ...,
+        roles: typing.Sequence[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]] = ...,
         mute: bool = ...,
         deaf: bool = ...,
-        voice_channel: typing.Optional[bases.Hashable[_channels.GuildVoiceChannel]] = ...,
+        voice_channel: typing.Optional[typing.Union[bases.Snowflake, int, str, _channels.GuildVoiceChannel]] = ...,
         reason: str = ...,
     ) -> None:
         """Edits a guild's member, any unspecified fields will not be changed.
@@ -935,18 +947,18 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             due to it being outside of the range of a 64 bit integer.
         """
         await self._session.modify_guild_member(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.Unique) else int(user)),
             nick=nickname,
             roles=(
-                [str(role.id if isinstance(role, bases.UniqueEntity) else int(role)) for role in roles]
+                [str(role.id if isinstance(role, bases.Unique) else int(role)) for role in roles]
                 if roles is not ...
                 else ...
             ),
             mute=mute,
             deaf=deaf,
             channel_id=(
-                str(voice_channel.id if isinstance(voice_channel, bases.UniqueEntity) else int(voice_channel))
+                str(voice_channel.id if isinstance(voice_channel, bases.Unique) else int(voice_channel))
                 if voice_channel is not ...
                 else ...
             ),
@@ -954,7 +966,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         )
 
     async def update_my_member_nickname(
-        self, guild: bases.Hashable[guilds.Guild], nickname: typing.Optional[str], *, reason: str = ...,
+        self,
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        nickname: typing.Optional[str],
+        *,
+        reason: str = ...,
     ) -> None:
         """Edits the current user's nickname for a given guild.
 
@@ -982,16 +998,14 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             due to it being outside of the range of a 64 bit integer.
         """
         await self._session.modify_current_user_nick(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            nick=nickname,
-            reason=reason,
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)), nick=nickname, reason=reason,
         )
 
     async def add_role_to_member(
         self,
-        guild: bases.Hashable[guilds.Guild],
-        user: bases.Hashable[users.User],
-        role: bases.Hashable[guilds.GuildRole],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        user: typing.Union[bases.Snowflake, int, str, users.User],
+        role: typing.Union[bases.Snowflake, int, str, guilds.GuildRole],
         *,
         reason: str = ...,
     ) -> None:
@@ -1020,17 +1034,17 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         await self._session.add_guild_member_role(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
-            role_id=str(role.id if isinstance(role, bases.UniqueEntity) else int(role)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.Unique) else int(user)),
+            role_id=str(role.id if isinstance(role, bases.Unique) else int(role)),
             reason=reason,
         )
 
     async def remove_role_from_member(
         self,
-        guild: bases.Hashable[guilds.Guild],
-        user: bases.Hashable[users.User],
-        role: bases.Hashable[guilds.GuildRole],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        user: typing.Union[bases.Snowflake, int, str, users.User],
+        role: typing.Union[bases.Snowflake, int, str, guilds.GuildRole],
         *,
         reason: str = ...,
     ) -> None:
@@ -1059,14 +1073,18 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         await self._session.remove_guild_member_role(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
-            role_id=str(role.id if isinstance(role, bases.UniqueEntity) else int(role)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.Unique) else int(user)),
+            role_id=str(role.id if isinstance(role, bases.Unique) else int(role)),
             reason=reason,
         )
 
     async def kick_member(
-        self, guild: bases.Hashable[guilds.Guild], user: bases.Hashable[users.User], *, reason: str = ...,
+        self,
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        user: typing.Union[bases.Snowflake, int, str, users.User],
+        *,
+        reason: str = ...,
     ) -> None:
         """Kicks a user from a given guild.
 
@@ -1091,13 +1109,15 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you lack the `KICK_MEMBERS` permission or are not in the guild.
         """
         await self._session.remove_guild_member(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.Unique) else int(user)),
             reason=reason,
         )
 
     async def fetch_ban(
-        self, guild: bases.Hashable[guilds.Guild], user: bases.Hashable[users.User],
+        self,
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        user: typing.Union[bases.Snowflake, int, str, users.User],
     ) -> guilds.GuildMemberBan:
         """Get a ban from a given guild.
 
@@ -1125,12 +1145,14 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         payload = await self._session.get_guild_ban(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.Unique) else int(user)),
         )
         return guilds.GuildMemberBan.deserialize(payload, components=self._components)
 
-    async def fetch_bans(self, guild: bases.Hashable[guilds.Guild]) -> typing.Sequence[guilds.GuildMemberBan]:
+    async def fetch_bans(
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
+    ) -> typing.Sequence[guilds.GuildMemberBan]:
         """Get the bans for a given guild.
 
         Parameters
@@ -1154,14 +1176,14 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         payload = await self._session.get_guild_bans(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
         return [guilds.GuildMemberBan.deserialize(ban, components=self._components) for ban in payload]
 
     async def ban_member(
         self,
-        guild: bases.Hashable[guilds.Guild],
-        user: bases.Hashable[users.User],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        user: typing.Union[bases.Snowflake, int, str, users.User],
         *,
         delete_message_days: typing.Union[datetime.timedelta, int] = ...,
         reason: str = ...,
@@ -1192,14 +1214,18 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you lack the `BAN_MEMBERS` permission or are not in the guild.
         """
         await self._session.create_guild_ban(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.Unique) else int(user)),
             delete_message_days=getattr(delete_message_days, "days", delete_message_days),
             reason=reason,
         )
 
     async def unban_member(
-        self, guild: bases.Hashable[guilds.Guild], user: bases.Hashable[users.User], *, reason: str = ...,
+        self,
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        user: typing.Union[bases.Snowflake, int, str, users.User],
+        *,
+        reason: str = ...,
     ) -> None:
         """Un-bans a user from a given guild.
 
@@ -1226,13 +1252,13 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             guild.
         """
         await self._session.remove_guild_ban(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            user_id=str(user.id if isinstance(user, bases.Unique) else int(user)),
             reason=reason,
         )
 
     async def fetch_roles(
-        self, guild: bases.Hashable[guilds.Guild],
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
     ) -> typing.Mapping[bases.Snowflake, guilds.GuildRole]:
         """Get the roles for a given guild.
 
@@ -1257,7 +1283,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you're not in the guild.
         """
         payload = await self._session.get_guild_roles(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
         return {
             bases.Snowflake(role["id"]): guilds.GuildRole.deserialize(role, components=self._components)
@@ -1266,7 +1292,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     async def create_role(
         self,
-        guild: bases.Hashable[guilds.Guild],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
         *,
         name: str = ...,
         permissions: typing.Union[_permissions.Permission, int] = ...,
@@ -1315,7 +1341,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_guild_role(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             name=name,
             permissions=permissions,
             color=color,
@@ -1327,9 +1353,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     async def reposition_roles(
         self,
-        guild: bases.Hashable[guilds.Guild],
-        role: typing.Tuple[int, bases.Hashable[guilds.GuildRole]],
-        *additional_roles: typing.Tuple[int, bases.Hashable[guilds.GuildRole]],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        role: typing.Tuple[int, typing.Union[bases.Snowflake, int, str, guilds.GuildRole]],
+        *additional_roles: typing.Tuple[int, typing.Union[bases.Snowflake, int, str, guilds.GuildRole]],
     ) -> typing.Sequence[guilds.GuildRole]:
         """Edits the position of two or more roles in a given guild.
 
@@ -1362,9 +1388,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.modify_guild_role_positions(
-            str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             *[
-                (str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)), position)
+                (str(channel.id if isinstance(channel, bases.Unique) else int(channel)), position)
                 for position, channel in [role, *additional_roles]
             ],
         )
@@ -1372,8 +1398,8 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     async def update_role(
         self,
-        guild: bases.Hashable[guilds.Guild],
-        role: bases.Hashable[guilds.GuildRole],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        role: typing.Union[bases.Snowflake, int, str, guilds.GuildRole],
         *,
         name: str = ...,
         permissions: typing.Union[_permissions.Permission, int] = ...,
@@ -1424,8 +1450,8 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.modify_guild_role(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            role_id=str(role.id if isinstance(role, bases.UniqueEntity) else int(role)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            role_id=str(role.id if isinstance(role, bases.Unique) else int(role)),
             name=name,
             permissions=permissions,
             color=color,
@@ -1435,7 +1461,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         )
         return guilds.GuildRole.deserialize(payload, components=self._components)
 
-    async def delete_role(self, guild: bases.Hashable[guilds.Guild], role: bases.Hashable[guilds.GuildRole]) -> None:
+    async def delete_role(
+        self,
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        role: typing.Union[bases.Snowflake, int, str, guilds.GuildRole],
+    ) -> None:
         """Delete a role from a given guild.
 
         Parameters
@@ -1456,12 +1486,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you lack the `MANAGE_ROLES` permission or are not in the guild.
         """
         await self._session.delete_guild_role(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            role_id=str(role.id if isinstance(role, bases.UniqueEntity) else int(role)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            role_id=str(role.id if isinstance(role, bases.Unique) else int(role)),
         )
 
     async def estimate_guild_prune_count(
-        self, guild: bases.Hashable[guilds.Guild], days: typing.Union[datetime.timedelta, int],
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild], days: typing.Union[datetime.timedelta, int],
     ) -> int:
         """Get the estimated prune count for a given guild.
 
@@ -1489,13 +1519,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             due to it being outside of the range of a 64 bit integer.
         """
         return await self._session.get_guild_prune_count(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            days=getattr(days, "days", days),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)), days=getattr(days, "days", days),
         )
 
     async def begin_guild_prune(
         self,
-        guild: bases.Hashable[guilds.Guild],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
         days: typing.Union[datetime.timedelta, int],
         *,
         compute_prune_count: bool = ...,
@@ -1535,14 +1564,14 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             due to it being outside of the range of a 64 bit integer.
         """
         return await self._session.begin_guild_prune(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             days=getattr(days, "days", days),
             compute_prune_count=compute_prune_count,
             reason=reason,
         )
 
     async def fetch_guild_voice_regions(
-        self, guild: bases.Hashable[guilds.Guild],
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
     ) -> typing.Sequence[voices.VoiceRegion]:
         """Get the voice regions for a given guild.
 
@@ -1567,12 +1596,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you are not in the guild.
         """
         payload = await self._session.get_guild_voice_regions(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
         return [voices.VoiceRegion.deserialize(region, components=self._components) for region in payload]
 
     async def fetch_guild_invites(
-        self, guild: bases.Hashable[guilds.Guild],
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         """Get the invites for a given guild.
 
@@ -1597,11 +1626,13 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = await self._session.get_guild_invites(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
         return [invites.InviteWithMetadata.deserialize(invite, components=self._components) for invite in payload]
 
-    async def fetch_integrations(self, guild: bases.Hashable[guilds.Guild]) -> typing.Sequence[guilds.GuildIntegration]:
+    async def fetch_integrations(
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
+    ) -> typing.Sequence[guilds.GuildIntegration]:
         """Get the integrations for a given guild.
 
         Parameters
@@ -1625,7 +1656,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = await self._session.get_guild_integrations(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
         return [
             guilds.GuildIntegration.deserialize(integration, components=self._components) for integration in payload
@@ -1633,8 +1664,8 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     async def update_integration(
         self,
-        guild: bases.Hashable[guilds.Guild],
-        integration: bases.Hashable[guilds.GuildIntegration],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        integration: typing.Union[bases.Snowflake, int, str, guilds.GuildIntegration],
         *,
         expire_behaviour: typing.Union[guilds.IntegrationExpireBehaviour, int] = ...,
         expire_grace_period: typing.Union[datetime.timedelta, int] = ...,
@@ -1673,8 +1704,8 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         await self._session.modify_guild_integration(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            integration_id=str(integration.id if isinstance(integration, bases.UniqueEntity) else int(integration)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            integration_id=str(integration.id if isinstance(integration, bases.Unique) else int(integration)),
             expire_behaviour=expire_behaviour,
             expire_grace_period=getattr(expire_grace_period, "days", expire_grace_period),
             enable_emojis=enable_emojis,
@@ -1683,8 +1714,8 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     async def delete_integration(
         self,
-        guild: bases.Hashable[guilds.Guild],
-        integration: bases.Hashable[guilds.GuildIntegration],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        integration: typing.Union[bases.Snowflake, int, str, guilds.GuildIntegration],
         *,
         reason: str = ...,
     ) -> None:
@@ -1711,13 +1742,15 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         await self._session.delete_guild_integration(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            integration_id=str(integration.id if isinstance(integration, bases.UniqueEntity) else int(integration)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            integration_id=str(integration.id if isinstance(integration, bases.Unique) else int(integration)),
             reason=reason,
         )
 
     async def sync_guild_integration(
-        self, guild: bases.Hashable[guilds.Guild], integration: bases.Hashable[guilds.GuildIntegration],
+        self,
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
+        integration: typing.Union[bases.Snowflake, int, str, guilds.GuildIntegration],
     ) -> None:
         """Sync the given integration's subscribers/emojis.
 
@@ -1739,11 +1772,13 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         await self._session.sync_guild_integration(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
-            integration_id=str(integration.id if isinstance(integration, bases.UniqueEntity) else int(integration)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
+            integration_id=str(integration.id if isinstance(integration, bases.Unique) else int(integration)),
         )
 
-    async def fetch_guild_embed(self, guild: bases.Hashable[guilds.Guild]) -> guilds.GuildEmbed:
+    async def fetch_guild_embed(
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
+    ) -> guilds.GuildEmbed:
         """Get the embed for a given guild.
 
         Parameters
@@ -1768,15 +1803,15 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             the guild.
         """
         payload = await self._session.get_guild_embed(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
         return guilds.GuildEmbed.deserialize(payload, components=self._components)
 
     async def update_guild_embed(
         self,
-        guild: bases.Hashable[guilds.Guild],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
         *,
-        channel: bases.Hashable[_channels.GuildChannel] = ...,
+        channel: typing.Union[bases.Snowflake, int, str, _channels.GuildChannel] = ...,
         enabled: bool = ...,
         reason: str = ...,
     ) -> guilds.GuildEmbed:
@@ -1813,18 +1848,18 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             the guild.
         """
         payload = await self._session.modify_guild_embed(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)),
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             channel_id=(
-                str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
-                if channel is not ...
-                else ...
+                str(channel.id if isinstance(channel, bases.Unique) else int(channel)) if channel is not ... else ...
             ),
             enabled=enabled,
             reason=reason,
         )
         return guilds.GuildEmbed.deserialize(payload, components=self._components)
 
-    async def fetch_guild_vanity_url(self, guild: bases.Hashable[guilds.Guild]) -> invites.VanityUrl:
+    async def fetch_guild_vanity_url(
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
+    ) -> invites.VanityUrl:
         """
         Get the vanity URL for a given guild.
 
@@ -1851,11 +1886,13 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             the guild.
         """
         payload = await self._session.get_guild_vanity_url(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
         return invites.VanityUrl.deserialize(payload, components=self._components)
 
-    def format_guild_widget_image(self, guild: bases.Hashable[guilds.Guild], *, style: str = ...) -> str:
+    def format_guild_widget_image(
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild], *, style: str = ...
+    ) -> str:
         """Get the URL for a guild widget.
 
         Parameters
@@ -1880,10 +1917,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         """
         # noinspection PyTypeChecker
         return self._session.get_guild_widget_image_url(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)), style=style
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)), style=style
         )
 
-    async def fetch_guild_webhooks(self, guild: bases.Hashable[guilds.Guild]) -> typing.Sequence[webhooks.Webhook]:
+    async def fetch_guild_webhooks(
+        self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
+    ) -> typing.Sequence[webhooks.Webhook]:
         """Get all webhooks for a given guild.
 
         Parameters
@@ -1908,6 +1947,6 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             aren't a member of the given guild.
         """
         payload = await self._session.get_guild_webhooks(
-            guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild))
+            guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
         return [webhooks.Webhook.deserialize(webhook, components=self._components) for webhook in payload]

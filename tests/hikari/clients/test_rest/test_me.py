@@ -17,12 +17,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
-import datetime
+import inspect
 
 import mock
 import pytest
 
 from hikari import applications
+from hikari import bases
 from hikari import channels
 from hikari import files
 from hikari import guilds
@@ -31,6 +32,110 @@ from hikari.clients import components
 from hikari.clients.rest import me
 from hikari.net import rest
 from tests.hikari import _helpers
+
+
+class TestGuildPaginator:
+    @pytest.fixture()
+    def mock_session(self):
+        return mock.MagicMock(spec_set=rest.REST)
+
+    @pytest.fixture()
+    def mock_components(self):
+        return mock.MagicMock(spec_set=components.Components)
+
+    @pytest.fixture()
+    def ownguild_cls(self):
+        with mock.patch.object(applications, "OwnGuild") as own_guild_cls:
+            yield own_guild_cls
+
+    @pytest.mark.parametrize(
+        ["newest_first", "expected_first_id"], [(True, str(bases.Snowflake.max())), (False, str(bases.Snowflake.min()))]
+    )
+    def test_init_with_no_explicit_first_element(self, newest_first, expected_first_id, mock_components, mock_session):
+        pag = me._GuildPaginator(newest_first, None, mock_components, mock_session)
+        assert pag._first_id == expected_first_id
+        assert pag._newest_first is newest_first
+        assert pag._components is mock_components
+        assert pag._session is mock_session
+
+    def test_init_with_explicit_first_element(self, mock_components, mock_session):
+        pag = me._GuildPaginator(False, 12345, mock_components, mock_session)
+        assert pag._first_id == "12345"
+        assert pag._newest_first is False
+        assert pag._components is mock_components
+        assert pag._session is mock_session
+
+    @pytest.mark.parametrize(["newest_first", "direction"], [(True, "before"), (False, "after"),])
+    @pytest.mark.asyncio
+    async def test_next_chunk_performs_correct_api_call(
+        self, mock_session, mock_components, newest_first, direction, ownguild_cls
+    ):
+        pag = me._GuildPaginator(newest_first, None, mock_components, mock_session)
+        pag._first_id = "123456"
+
+        await pag._next_chunk()
+
+        mock_session.get_current_user_guilds.assert_awaited_once_with(**{direction: "123456"})
+
+    @pytest.mark.asyncio
+    async def test_next_chunk_returns_None_if_no_items_returned(self, mock_session, mock_components, ownguild_cls):
+        pag = me._GuildPaginator(False, None, mock_components, mock_session)
+        mock_session.get_current_user_guilds = mock.AsyncMock(return_value=[])
+        assert await pag._next_chunk() is None
+
+    @pytest.mark.asyncio
+    async def test_next_chunk_updates_first_id_to_last_item(self, mock_session, mock_components, ownguild_cls):
+        pag = me._GuildPaginator(False, None, mock_components, mock_session)
+
+        return_payload = [
+            {"id": "1234", ...: ...},
+            {"id": "3456", ...: ...},
+            {"id": "3333", ...: ...},
+            {"id": "512", ...: ...},
+        ]
+
+        mock_session.get_current_user_guilds = mock.AsyncMock(return_value=return_payload)
+        await pag._next_chunk()
+        assert pag._first_id == "512"
+
+    @pytest.mark.asyncio
+    async def test_next_chunk_deserializes_payload_in_generator_lazily(
+        self, mock_session, mock_components, ownguild_cls
+    ):
+        pag = me._GuildPaginator(False, None, mock_components, mock_session)
+
+        return_payload = [
+            {"id": "1234", ...: ...},
+            {"id": "3456", ...: ...},
+            {"id": "3333", ...: ...},
+            {"id": "512", ...: ...},
+        ]
+
+        real_values = [
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock(),
+        ]
+
+        assert len(real_values) == len(return_payload)
+
+        ownguild_cls.deserialize = mock.MagicMock(side_effect=real_values)
+
+        mock_session.get_current_user_guilds = mock.AsyncMock(return_value=return_payload)
+        generator = await pag._next_chunk()
+
+        assert inspect.isgenerator(generator), "expected genexp result"
+
+        # No calls, this should be lazy to be more performant for non-100-divisable limit counts.
+        ownguild_cls.deserialize.assert_not_called()
+
+        for i, input_payload in enumerate(return_payload):
+            expected_value = real_values[i]
+            assert next(generator) is expected_value
+            ownguild_cls.deserialize.assert_called_with(input_payload, components=mock_components)
+
+        assert locals()["i"] == len(return_payload) - 1, "Not iterated correctly somehow"
 
 
 class TestRESTInviteLogic:
@@ -101,8 +206,29 @@ class TestRESTInviteLogic:
                 mock_connection_payload, components=rest_clients_impl._components
             )
 
-    def test_fetch_my_guilds(self):
-        raise NotImplementedError()
+    @pytest.mark.parametrize("newest_first", [True, False])
+    @pytest.mark.parametrize("start_at", [None, "abc", 123])
+    def test_fetch_my_guilds(self, rest_clients_impl, newest_first, start_at):
+        with mock.patch.object(me._GuildPaginator, "__init__", return_value=None) as init:
+            result = rest_clients_impl.fetch_my_guilds(newest_first=newest_first, start_at=start_at)
+        assert isinstance(result, me._GuildPaginator)
+        init.assert_called_once_with(
+            newest_first=newest_first,
+            first_item=start_at,
+            components=rest_clients_impl._components,
+            session=rest_clients_impl._session,
+        )
+
+    def test_fetch_my_guilds_default_directionality(self, rest_clients_impl):
+        with mock.patch.object(me._GuildPaginator, "__init__", return_value=None) as init:
+            result = rest_clients_impl.fetch_my_guilds()
+        assert isinstance(result, me._GuildPaginator)
+        init.assert_called_once_with(
+            newest_first=False,
+            first_item=None,
+            components=rest_clients_impl._components,
+            session=rest_clients_impl._session,
+        )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)

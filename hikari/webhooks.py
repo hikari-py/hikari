@@ -45,7 +45,7 @@ class WebhookType(int, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Webhook(bases.UniqueEntity, marshaller.Deserializable):
+class Webhook(bases.Unique, marshaller.Deserializable):
     """Represents a webhook object on Discord.
 
     This is an endpoint that can have messages sent to it using standard

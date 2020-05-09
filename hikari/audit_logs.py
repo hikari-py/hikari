@@ -198,7 +198,7 @@ COMPONENT_BOUND_AUDIT_LOG_ENTRY_CONVERTERS = {
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class AuditLogChange(bases.HikariEntity, marshaller.Deserializable):
+class AuditLogChange(bases.Entity, marshaller.Deserializable):
     """Represents a change made to an audit log entry's target entity."""
 
     new_value: typing.Optional[typing.Any] = attr.attrib()
@@ -301,7 +301,7 @@ def register_audit_log_entry_info(
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class BaseAuditLogEntryInfo(bases.HikariEntity, marshaller.Deserializable, abc.ABC):
+class BaseAuditLogEntryInfo(bases.Entity, marshaller.Deserializable, abc.ABC):
     """A base object that all audit log entry info objects will inherit from."""
 
 
@@ -438,7 +438,7 @@ def get_entry_info_entity(type_: int) -> typing.Type[_EntryInfoEntityT]:
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class AuditLogEntry(bases.UniqueEntity, marshaller.Deserializable):
+class AuditLogEntry(bases.Unique, marshaller.Deserializable):
     """Represents an entry in a guild's audit log."""
 
     target_id: typing.Optional[bases.Snowflake] = attr.attrib()
@@ -515,7 +515,7 @@ def _deserialize_webhooks(
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class AuditLog(bases.HikariEntity, marshaller.Deserializable):
+class AuditLog(bases.Entity, marshaller.Deserializable):
     """Represents a guilds audit log."""
 
     entries: typing.Mapping[bases.Snowflake, AuditLogEntry] = marshaller.attrib(

@@ -23,6 +23,7 @@ from __future__ import annotations
 __all__ = ["RESTReactionComponent"]
 
 import abc
+import datetime
 import typing
 
 from hikari import bases
@@ -39,17 +40,19 @@ if typing.TYPE_CHECKING:
 class _ReactionPaginator(pagination.BufferedPaginatedResults[_messages.Reaction]):
     __slots__ = ("_channel_id", "_message_id", "_first_id", "_emoji", "_components", "_session")
 
-    def __init__(self, channel, message, emoji, components, session) -> None:
+    def __init__(self, channel, message, emoji, users_after, components, session) -> None:
         super().__init__()
         self._channel_id = str(int(channel))
         self._message_id = str(int(message))
         self._emoji = getattr(emoji, "url_name", emoji)
-        self._first_id = str(bases.Snowflake.min())
+        self._first_id = self._prepare_first_id(users_after)
         self._components = components
         self._session = session
 
     async def _next_chunk(self):
-        chunk = await self._session.get_reactions(self._channel_id, self._message_id, self._emoji, self._first_id)
+        chunk = await self._session.get_reactions(
+            channel_id=self._channel_id, message_id=self._message_id, emoji=self._emoji, after=self._first_id
+        )
 
         if not chunk:
             return None
@@ -64,8 +67,8 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
     async def add_reaction(
         self,
-        channel: bases.Hashable[_channels.PartialChannel],
-        message: bases.Hashable[_messages.Message],
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
+        message: typing.Union[bases.Snowflake, int, str, _messages.Message],
         emoji: typing.Union[emojis.Emoji, str],
     ) -> None:
         """Add a reaction to the given message in the given channel.
@@ -96,15 +99,15 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             due to it being outside of the range of a 64 bit integer.
         """
         await self._session.create_reaction(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.Unique) else int(message)),
             emoji=str(getattr(emoji, "url_name", emoji)),
         )
 
     async def remove_reaction(
         self,
-        channel: bases.Hashable[_channels.PartialChannel],
-        message: bases.Hashable[_messages.Message],
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
+        message: typing.Union[bases.Snowflake, int, str, _messages.Message],
         emoji: typing.Union[emojis.Emoji, str],
         *,
         user: typing.Optional[typing.Hashable[users.User]] = None,
@@ -147,22 +150,22 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
         """
         if user is None:
             await self._session.delete_own_reaction(
-                channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-                message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+                channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
+                message_id=str(message.id if isinstance(message, bases.Unique) else int(message)),
                 emoji=str(getattr(emoji, "url_name", emoji)),
             )
         else:
             await self._session.delete_user_reaction(
-                channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-                message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+                channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
+                message_id=str(message.id if isinstance(message, bases.Unique) else int(message)),
                 emoji=str(getattr(emoji, "url_name", emoji)),
-                user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user)),
+                user_id=str(user.id if isinstance(user, bases.Unique) else int(user)),
             )
 
     async def remove_all_reactions(
         self,
-        channel: bases.Hashable[_channels.PartialChannel],
-        message: bases.Hashable[_messages.Message],
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
+        message: typing.Union[bases.Snowflake, int, str, _messages.Message],
         emoji: typing.Optional[typing.Union[emojis.Emoji, str]] = None,
     ) -> None:
         """Remove all reactions for a single given emoji on a given message.
@@ -192,21 +195,22 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
         """
         if emoji is None:
             await self._session.delete_all_reactions(
-                channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-                message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+                channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
+                message_id=str(message.id if isinstance(message, bases.Unique) else int(message)),
             )
         else:
             await self._session.delete_all_reactions_for_emoji(
-                channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-                message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+                channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
+                message_id=str(message.id if isinstance(message, bases.Unique) else int(message)),
                 emoji=str(getattr(emoji, "url_name", emoji)),
             )
 
-    def fetch_reactors_after(
+    def fetch_reactors(
         self,
-        channel: bases.Hashable[_channels.PartialChannel],
-        message: bases.Hashable[_messages.Message],
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
+        message: typing.Union[bases.Snowflake, int, str, _messages.Message],
         emoji: typing.Union[emojis.Emoji, str],
+        after: typing.Optional[typing.Union[datetime.datetime, bases.Unique, bases.Snowflake, int, str]] = None,
     ) -> pagination.PaginatedResults[users.User]:
         """Get an async iterator of the users who reacted to a message.
 
@@ -224,6 +228,13 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             representation of the emoji. The string representation will be
             either `"name:id"` for custom emojis else it's unicode
             character(s) (can be UTF-32).
+        after : datetime.datetime OR hikari.bases.Unique OR hikari.bases.Snowflake OR int OR str, optional
+            A limit to the users returned. This allows you to only receive
+            users that were created after the given object, if desired.
+            If a snowflake/int/str/unique object, then this will use the
+            corresponding user creation date. If a datetime, the date will
+            be the limit. If unspecified/None, per the default, then all
+            valid users will be returned instead.
 
         Examples
         --------
@@ -246,4 +257,11 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
         hikari.errors.NotFound
             If the channel or message is not found.
         """
-        return _ReactionPaginator(channel, message, emoji, self._components, self._session)
+        return _ReactionPaginator(
+            channel=channel,
+            message=message,
+            emoji=emoji,
+            users_after=after,
+            components=self._components,
+            session=self._session,
+        )

@@ -47,7 +47,7 @@ class TargetUserType(int, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class VanityUrl(bases.HikariEntity, marshaller.Deserializable):
+class VanityUrl(bases.Entity, marshaller.Deserializable):
     """A special case invite object, that represents a guild's vanity url."""
 
     code: str = marshaller.attrib(deserializer=str, repr=True)
@@ -154,7 +154,7 @@ class InviteGuild(guilds.PartialGuild):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Invite(bases.HikariEntity, marshaller.Deserializable):
+class Invite(bases.Entity, marshaller.Deserializable):
     """Represents an invite that's used to add users to a guild or group dm."""
 
     code: str = marshaller.attrib(deserializer=str, repr=True)
