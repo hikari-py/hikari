@@ -217,7 +217,7 @@ class GuildVerificationLevel(int, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildEmbed(bases.HikariEntity, marshaller.Deserializable):
+class GuildEmbed(bases.Entity, marshaller.Deserializable):
     """Represents a guild embed."""
 
     channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
@@ -235,7 +235,7 @@ def _deserialize_role_ids(payload: more_typing.JSONArray) -> typing.Sequence[bas
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMember(bases.HikariEntity, marshaller.Deserializable):
+class GuildMember(bases.Entity, marshaller.Deserializable):
     """Used to represent a guild bound member."""
 
     # TODO: make GuildMember delegate to user and implement a common base class
@@ -278,7 +278,7 @@ class GuildMember(bases.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PartialGuildRole(bases.UniqueEntity, marshaller.Deserializable):
+class PartialGuildRole(bases.Unique, marshaller.Deserializable):
     """Represents a partial guild bound Role object."""
 
     name: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
@@ -350,7 +350,7 @@ class ActivityType(int, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ActivityTimestamps(bases.HikariEntity, marshaller.Deserializable):
+class ActivityTimestamps(bases.Entity, marshaller.Deserializable):
     """The datetimes for the start and/or end of an activity session."""
 
     start: typing.Optional[datetime.datetime] = marshaller.attrib(
@@ -366,7 +366,7 @@ class ActivityTimestamps(bases.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ActivityParty(bases.HikariEntity, marshaller.Deserializable):
+class ActivityParty(bases.Entity, marshaller.Deserializable):
     """Used to represent activity groups of users."""
 
     id: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None, repr=True)
@@ -391,7 +391,7 @@ class ActivityParty(bases.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ActivityAssets(bases.HikariEntity, marshaller.Deserializable):
+class ActivityAssets(bases.Entity, marshaller.Deserializable):
     """Used to represent possible assets for an activity."""
 
     large_image: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
@@ -409,7 +409,7 @@ class ActivityAssets(bases.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ActivitySecret(bases.HikariEntity, marshaller.Deserializable):
+class ActivitySecret(bases.Entity, marshaller.Deserializable):
     """The secrets used for interacting with an activity party."""
 
     join: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
@@ -450,7 +450,7 @@ class ActivityFlag(more_enums.IntFlag):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PresenceActivity(bases.HikariEntity, marshaller.Deserializable):
+class PresenceActivity(bases.Entity, marshaller.Deserializable):
     """Represents an activity that will be attached to a member's presence."""
 
     name: str = marshaller.attrib(deserializer=str, repr=True)
@@ -537,7 +537,7 @@ def _default_status() -> typing.Literal[PresenceStatus.OFFLINE]:
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class ClientStatus(bases.HikariEntity, marshaller.Deserializable):
+class ClientStatus(bases.Entity, marshaller.Deserializable):
     """The client statuses for this member."""
 
     desktop: PresenceStatus = marshaller.attrib(
@@ -656,7 +656,7 @@ def _deserialize_activities(payload: more_typing.JSONArray, **kwargs: typing.Any
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberPresence(bases.HikariEntity, marshaller.Deserializable):
+class GuildMemberPresence(bases.Entity, marshaller.Deserializable):
     """Used to represent a guild member's presence."""
 
     user: PresenceUser = marshaller.attrib(deserializer=PresenceUser.deserialize, inherit_kwargs=True, repr=True)
@@ -726,7 +726,7 @@ class IntegrationExpireBehaviour(int, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class IntegrationAccount(bases.HikariEntity, marshaller.Deserializable):
+class IntegrationAccount(bases.Entity, marshaller.Deserializable):
     """An account that's linked to an integration."""
 
     id: str = marshaller.attrib(deserializer=str)
@@ -738,7 +738,7 @@ class IntegrationAccount(bases.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PartialGuildIntegration(bases.UniqueEntity, marshaller.Deserializable):
+class PartialGuildIntegration(bases.Unique, marshaller.Deserializable):
     """A partial representation of an integration, found in audit logs."""
 
     name: str = marshaller.attrib(deserializer=str, repr=True)
@@ -757,7 +757,7 @@ def _deserialize_expire_grace_period(payload: int) -> datetime.timedelta:
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildIntegration(bases.UniqueEntity, marshaller.Deserializable):
+class GuildIntegration(bases.Unique, marshaller.Deserializable):
     """Represents a guild integration object."""
 
     is_enabled: bool = marshaller.attrib(raw_name="enabled", deserializer=bool, repr=True)
@@ -797,7 +797,7 @@ class GuildIntegration(bases.UniqueEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildMemberBan(bases.HikariEntity, marshaller.Deserializable):
+class GuildMemberBan(bases.Entity, marshaller.Deserializable):
     """Used to represent guild bans."""
 
     reason: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, repr=True)
@@ -809,7 +809,7 @@ class GuildMemberBan(bases.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class UnavailableGuild(bases.UniqueEntity, marshaller.Deserializable):
+class UnavailableGuild(bases.Unique, marshaller.Deserializable):
     """An unavailable guild object, received during gateway events such as READY.
 
     An unavailable guild cannot be interacted with, and most information may
@@ -832,7 +832,7 @@ def _deserialize_features(payload: more_typing.JSONArray) -> typing.Set[typing.U
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class PartialGuild(bases.UniqueEntity, marshaller.Deserializable):
+class PartialGuild(bases.Unique, marshaller.Deserializable):
     """Base object for any partial guild objects."""
 
     name: str = marshaller.attrib(deserializer=str, repr=True)

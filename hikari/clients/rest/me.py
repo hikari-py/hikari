@@ -24,19 +24,43 @@ __all__ = ["RESTCurrentUserComponent"]
 
 import abc
 import datetime
-import functools
 import typing
 
 from hikari import applications
 from hikari import bases
 from hikari import channels as _channels
+from hikari import guilds
+from hikari import pagination
 from hikari import users
 from hikari.clients.rest import base
-from hikari.internal import helpers
 
 if typing.TYPE_CHECKING:
-    from hikari import guilds
     from hikari import files
+
+
+class _GuildPaginator(pagination.BufferedPaginatedResults[guilds.Guild]):
+    __slots__ = ("_session", "_components", "_newest_first", "_first_id")
+
+    def __init__(self, newest_first, first_item, components, session):
+        super().__init__()
+        self._newest_first = newest_first
+        self._first_id = self._prepare_first_id(
+            first_item, bases.Snowflake.max() if newest_first else bases.Snowflake.min(),
+        )
+        self._components = components
+        self._session = session
+
+    async def _next_chunk(self):
+        kwargs = {"before" if self._newest_first else "after": self._first_id}
+
+        chunk = await self._session.get_current_user_guilds(**kwargs)
+
+        if not chunk:
+            return None
+
+        self._first_id = chunk[-1]["id"]
+
+        return (applications.OwnGuild.deserialize(g, components=self._components) for g in chunk)
 
 
 class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
@@ -104,108 +128,40 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             applications.OwnConnection.deserialize(connection, components=self._components) for connection in payload
         ]
 
-    def fetch_my_guilds_after(
+    def fetch_my_guilds(
         self,
         *,
-        after: typing.Union[datetime.datetime, bases.Hashable[guilds.Guild]] = 0,
-        limit: typing.Optional[int] = None,
-    ) -> typing.AsyncIterator[applications.OwnGuild]:
-        """Get an async iterator of the guilds the current user is in.
-
-        This returns the guilds created after a given guild object/ID or from
-        the oldest guild.
+        newest_first: bool = False,
+        start_at: typing.Optional[typing.Union[datetime.datetime, bases.Unique, bases.Snowflake, int]] = None,
+    ) -> pagination.PaginatedResults[applications.OwnGuild]:
+        """Get an async iterable of the guilds the current user is in.
 
         Parameters
         ----------
-        after : typing.Union[datetime.datetime, hikari.guilds.Guild, hikari.bases.Snowflake, int]
-            The object or ID of a guild to get guilds that were created after
-            it if specified, else this will start at the oldest guild.
-        limit : int
-            If specified, the maximum amount of guilds that this paginator
-            should return.
-
-        Examples
-        --------
-            async for user in client.fetch_my_guilds_after(after=9876543, limit=1231):
-                await client.leave_guild(guild)
+        newest_first : bool
+            If specified and `True`, the guilds are returned in the order of
+            newest to oldest. The default is to return oldest guilds first.
+        start_at : datetime.datetime OR hikari.bases.UniqueEntity OR hikari.bases.Snowflake or int, optional
+            The optional first item to start at, if you want to limit your
+            results. This will be interpreted as the date of creation for a
+            guild. If unspecified, the newest or older possible snowflake is
+            used, for `newest_first` being `True` and `False` respectively.
 
         Returns
         -------
-        typing.AsyncIterator[hikari.applications.OwnGuild]
-            An async iterator of partial guild objects.
+        hikari.pagination.PaginatedResults[hikari.applications.OwnGuild]
+            An async iterable of partial guild objects.
 
         Raises
         ------
         hikari.errors.NotFound
             If the guild is not found.
-        hikari.errors.BadRequest
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
         """
-        if isinstance(after, datetime.datetime):
-            after = str(bases.Snowflake.from_datetime(after))
-        else:
-            after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
-        deserializer = functools.partial(applications.OwnGuild.deserialize, components=self._components)
-        return helpers.pagination_handler(
-            deserializer=deserializer,
-            direction="after",
-            request=self._session.get_current_user_guilds,
-            reversing=False,
-            start=after,
-            maximum_limit=100,
-            limit=limit,
+        return _GuildPaginator(
+            newest_first=newest_first, first_item=start_at, components=self._components, session=self._session
         )
 
-    def fetch_my_guilds_before(
-        self,
-        *,
-        before: typing.Union[datetime.datetime, bases.Hashable[guilds.Guild]] = bases.Snowflake.max(),
-        limit: typing.Optional[int] = None,
-    ) -> typing.AsyncIterator[applications.OwnGuild]:
-        """Get an async iterator of the guilds the current user is in.
-
-        This returns the guilds that were created before a given user object/ID
-        or from the newest guild.
-
-        Parameters
-        ----------
-        before : typing.Union[datetime.datetime, hikari.guilds.Guild, hikari.bases.Snowflake, int]
-            The object or ID of a guild to get guilds that were created
-            before it if specified, else this will start at the newest guild.
-        limit : int
-            If specified, the maximum amount of guilds that this paginator
-            should return.
-
-        Returns
-        -------
-        typing.AsyncIterator[hikari.applications.OwnGuild]
-            An async iterator of partial guild objects.
-
-        Raises
-        ------
-        hikari.errors.NotFound
-            If the guild is not found.
-        hikari.errors.BadRequest
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
-        """
-        if isinstance(before, datetime.datetime):
-            before = str(bases.Snowflake.from_datetime(before))
-        else:
-            before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
-        deserializer = functools.partial(applications.OwnGuild.deserialize, components=self._components)
-        return helpers.pagination_handler(
-            deserializer=deserializer,
-            direction="before",
-            request=self._session.get_current_user_guilds,
-            reversing=False,
-            start=before,
-            maximum_limit=100,
-            limit=limit,
-        )
-
-    async def leave_guild(self, guild: bases.Hashable[guilds.Guild]) -> None:
+    async def leave_guild(self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]) -> None:
         """Make the current user leave a given guild.
 
         Parameters
@@ -221,9 +177,11 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        await self._session.leave_guild(guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)))
+        await self._session.leave_guild(guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)))
 
-    async def create_dm_channel(self, recipient: bases.Hashable[users.User]) -> _channels.DMChannel:
+    async def create_dm_channel(
+        self, recipient: typing.Union[bases.Snowflake, int, str, users.User]
+    ) -> _channels.DMChannel:
         """Create a new DM channel with a given user.
 
         Parameters
@@ -245,6 +203,6 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_dm(
-            recipient_id=str(recipient.id if isinstance(recipient, bases.UniqueEntity) else int(recipient))
+            recipient_id=str(recipient.id if isinstance(recipient, bases.Unique) else int(recipient))
         )
         return _channels.DMChannel.deserialize(payload, components=self._components)

@@ -31,7 +31,7 @@ from hikari.clients import configs
 from hikari.clients import shards as high_level_shards
 from hikari.net import codes
 from hikari.net import shards as low_level_shards
-from hikari.state import consumers
+from hikari.events import consumers
 from tests.hikari import _helpers
 
 

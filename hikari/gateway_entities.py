@@ -38,7 +38,7 @@ def _rest_after_deserializer(after: int) -> datetime.timedelta:
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class SessionStartLimit(bases.HikariEntity, marshaller.Deserializable):
+class SessionStartLimit(bases.Entity, marshaller.Deserializable):
     """Used to represent information about the current session start limits."""
 
     total: int = marshaller.attrib(deserializer=int, repr=True)
@@ -56,7 +56,7 @@ class SessionStartLimit(bases.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GatewayBot(bases.HikariEntity, marshaller.Deserializable):
+class GatewayBot(bases.Entity, marshaller.Deserializable):
     """Used to represent gateway information for the connected bot."""
 
     url: str = marshaller.attrib(deserializer=str, repr=True)

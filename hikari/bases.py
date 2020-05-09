@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["HikariEntity", "Snowflake", "UniqueEntity"]
+__all__ = ["Entity", "Snowflake", "Unique"]
 
 import abc
 import typing
@@ -38,7 +38,7 @@ if typing.TYPE_CHECKING:
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True, init=False)
-class HikariEntity(abc.ABC):
+class Entity(abc.ABC):
     """The base for any entity used in this API."""
 
     _components: typing.Optional[components.Components] = attr.attrib(default=None, repr=False, eq=False, hash=False)
@@ -93,7 +93,7 @@ class Snowflake(int):
     @classmethod
     def from_timestamp(cls, timestamp: float) -> Snowflake:
         """Get a snowflake object from a UNIX timestamp."""
-        return cls(int(timestamp - conversions.DISCORD_EPOCH) * 1000 << 22)
+        return cls(int((timestamp - conversions.DISCORD_EPOCH) * 1000) << 22)
 
     @classmethod
     def min(cls) -> Snowflake:
@@ -112,7 +112,7 @@ class Snowflake(int):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class UniqueEntity(HikariEntity, typing.SupportsInt, abc.ABC):
+class Unique(Entity, typing.SupportsInt, abc.ABC):
     """A base for an entity that has an integer ID of some sort.
 
     Casting an object of this type to an `int` will produce the
@@ -122,9 +122,13 @@ class UniqueEntity(HikariEntity, typing.SupportsInt, abc.ABC):
     id: Snowflake = marshaller.attrib(hash=True, eq=True, repr=True, deserializer=Snowflake, serializer=str)
     """The ID of this entity."""
 
+    @property
+    def created_at(self) -> datetime.datetime:
+        """When the object was created."""
+        return self.id.created_at
+
     def __int__(self) -> int:
         return int(self.id)
 
 
-T = typing.TypeVar("T", bound=UniqueEntity)
-Hashable = typing.Union[Snowflake, int, T]
+T = typing.TypeVar("T", bound=Unique)

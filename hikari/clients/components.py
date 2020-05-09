@@ -30,8 +30,7 @@ if typing.TYPE_CHECKING:
     from hikari.clients import configs  # pylint: disable=cyclic-import
     from hikari.clients import rest  # pylint: disable=cyclic-import
     from hikari.clients import shards  # pylint: disable=cyclic-import
-    from hikari.state import dispatchers  # pylint: disable=cyclic-import
-    from hikari.state import event_managers  # pylint: disable=cyclic-import
+    from hikari.events import dispatchers, event_managers
 
 
 @attr.s(repr=False)

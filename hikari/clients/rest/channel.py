@@ -24,9 +24,9 @@ __all__ = ["RESTChannelComponent"]
 
 import abc
 import datetime
-import functools
 import typing
 
+from hikari import pagination
 from hikari import bases
 from hikari import channels as _channels
 from hikari import invites
@@ -46,10 +46,44 @@ if typing.TYPE_CHECKING:
     from hikari.internal import more_typing
 
 
+class _MessagePaginator(pagination.BufferedPaginatedResults[_messages.Message]):
+    __slots__ = ("_channel_id", "_direction", "_first_id", "_components", "_session")
+
+    def __init__(self, channel, direction, first, components, session) -> None:
+        super().__init__()
+        self._channel_id = str(int(channel))
+        self._direction = direction
+        self._first_id = (
+            bases.Snowflake.from_datetime(first) if isinstance(first, datetime.datetime) else str(int(first))
+        )
+        self._components = components
+        self._session = session
+
+    async def _next_chunk(self):
+        kwargs = {
+            self._direction: self._first_id,
+            "channel_id": self._channel_id,
+            "limit": 100,
+        }
+
+        chunk = await self._session.get_channel_messages(**kwargs)
+
+        if not chunk:
+            return None
+        if self._direction == "after":
+            chunk.reverse()
+
+        self._first_id = chunk[-1]["id"]
+
+        return (_messages.Message.deserialize(m, components=self._components) for m in chunk)
+
+
 class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method, too-many-public-methods
     """The REST client component for handling requests to channel endpoints."""
 
-    async def fetch_channel(self, channel: bases.Hashable[_channels.PartialChannel]) -> _channels.PartialChannel:
+    async def fetch_channel(
+        self, channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel]
+    ) -> _channels.PartialChannel:
         """Get an up to date channel object from a given channel object or ID.
 
         Parameters
@@ -73,13 +107,13 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             If the channel does not exist.
         """
         payload = await self._session.get_channel(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel))
         )
         return _channels.deserialize_channel(payload, components=self._components)
 
     async def update_channel(
         self,
-        channel: bases.Hashable[_channels.PartialChannel],
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
         *,
         name: str = ...,
         position: int = ...,
@@ -89,7 +123,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         user_limit: int = ...,
         rate_limit_per_user: typing.Union[int, datetime.timedelta] = ...,
         permission_overwrites: typing.Sequence[_channels.PermissionOverwrite] = ...,
-        parent_category: typing.Optional[bases.Hashable[_channels.GuildCategory]] = ...,
+        parent_category: typing.Optional[typing.Union[bases.Snowflake, int, str, _channels.GuildCategory]] = ...,
         reason: str = ...,
     ) -> _channels.PartialChannel:
         """Update one or more aspects of a given channel ID.
@@ -153,7 +187,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.modify_channel(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
             name=name,
             position=position,
             topic=topic,
@@ -169,7 +203,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
                 [po.serialize() for po in permission_overwrites] if permission_overwrites is not ... else ...
             ),
             parent_id=(
-                str(parent_category.id if isinstance(parent_category, bases.UniqueEntity) else int(parent_category))
+                str(parent_category.id if isinstance(parent_category, bases.Unique) else int(parent_category))
                 if parent_category is not ... and parent_category is not None
                 else parent_category
             ),
@@ -177,7 +211,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
         return _channels.deserialize_channel(payload, components=self._components)
 
-    async def delete_channel(self, channel: bases.Hashable[_channels.PartialChannel]) -> None:
+    async def delete_channel(self, channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel]) -> None:
         """Delete the given channel ID, or if it is a DM, close it.
 
         Parameters
@@ -211,219 +245,162 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             Deleted channels cannot be un-deleted.
         """
         await self._session.delete_close_channel(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel))
         )
 
-    def fetch_messages_after(
-        self,
-        channel: bases.Hashable[_channels.PartialChannel],
-        *,
-        after: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]] = 0,
-        limit: typing.Optional[int] = None,
-    ) -> typing.AsyncIterator[_messages.Message]:
-        """Return an async iterator that retrieves a channel's message history.
+    @typing.overload
+    def fetch_messages(
+        self, channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel]
+    ) -> pagination.PaginatedResults[_messages.Message]:
+        """Fetch the channel history, starting with the newest messages."""
 
-        This will return the message created after a given message object/ID or
-        from the first message in the channel.
+    @typing.overload
+    def fetch_messages(
+        self,
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
+        before: typing.Union[datetime.datetime, int, str, bases.Unique, bases.Snowflake],
+    ) -> pagination.PaginatedResults[_messages.Message]:
+        """Fetch the channel history before a given message/time."""
+
+    @typing.overload
+    def fetch_messages(
+        self,
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
+        after: typing.Union[datetime.datetime, int, str, bases.Unique, bases.Snowflake],
+    ) -> pagination.PaginatedResults[_messages.Message]:
+        """Fetch the channel history after a given message/time."""
+
+    @typing.overload
+    def fetch_messages(
+        self,
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
+        around: typing.Union[datetime.datetime, int, str, bases.Unique, bases.Snowflake],
+    ) -> pagination.PaginatedResults[_messages.Message]:
+        """Fetch the channel history around a given message/time."""
+
+    def fetch_messages(
+        self,
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
+        **kwargs: typing.Union[datetime.datetime, int, str, bases.Unique, bases.Snowflake],
+    ) -> pagination.PaginatedResults[_messages.Message]:
+        """Fetch messages from the channel's history.
 
         Parameters
         ----------
-        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
-            The ID of the channel to retrieve the messages from.
-        limit : int
-            If specified, the maximum number of how many messages this iterator
-            should return.
-        after : typing.Union[datetime.datetime, hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
-            A object or ID message. Only return messages sent AFTER this
-            message if it's specified else this will return every message after
-            (and including) the first message in the channel.
+        channel : hikari.channels.PartialChannel OR hikari.bases.Snowflake OR int OR str
+            The channel to fetch messages from.
+
+        Keyword Arguments
+        -----------------
+        before : datetime.datetime OR int OR str OR hikari.bases.Unique OR hikari.bases.Snowflake
+            If a unique object (like a message), then message created before
+            this object will be returned. If a datetime, then messages before
+            that datetime will be returned. If unspecified or None, the filter
+            is not used.
+        after : datetime.datetime OR int OR str OR hikari.bases.Unique OR hikari.bases.Snowflake
+            If a unique object (like a message), then message created after this
+            object will be returned. If a datetime, then messages after that
+            datetime will be returned. If unspecified or None, the filter is not
+            used.
+        around : datetime.datetime OR int OR str OR hikari.bases.Unique OR hikari.bases.Snowflake
+            If a unique object (like a message), then message created around the
+            same time as this object will be returned. If a datetime, then
+            messages around that datetime will be returned. If unspecified or
+            None, the filter is not used.
+
+        !!! info
+            Using `before` or no filter will return messages in the order
+            of newest-to-oldest. Using the `after` filter will return
+            messages in the order of oldest-to-newest. Using th `around`
+            filter may have arbitrary ordering.
+
+        !!! warning
+            Only one of `before`, `after`, or `around` may be specified.
+
+        !!! note
+            Passing no value for `before`, `after`, or `around` will have the
+            same effect as passing `before=hikari.bases.Snowflake.max()`. This
+            will return all messages that can be found, newest to oldest.
 
         Examples
         --------
-            async for message in client.fetch_messages_after(channel, after=9876543, limit=3232):
-                if message.author.id in BLACKLISTED_USERS:
-                    await client.ban_member(channel.guild_id,  message.author)
+        Fetching the last 20 messages before May 2nd, 2020:
+
+            timestamp = datetime.datetime(2020, 5, 2)
+
+            async for message in rest.fetch_messages(channel, before=timestamp).limit(20):
+                print(message.author, message.content)
+
+        Fetching messages sent around the same time as a given message.
+
+            async for message in rest.fetch_messages(channel, around=event.message):
+                print(message.author, message.content)
+
+        Fetching messages after May 3rd, 2020 at 15:33 UTC.
+
+            timestamp = datetime.datetime(2020, 5, 3, 15, 33, tzinfo=datetime.timezone.utc)
+
+            async for message in rest.fetch_messages(channel, after=timestamp):
+                print(message.author, message.content)
+
+        Fetching all messages, newest to oldest:
+
+            async for message in rest.fetch_messages(channel, before=datetime.datetime.utcnow()):
+                print(message)
+
+            # More efficient alternative
+            async for message in rest.fetch_messages(channel):
+                print(message)
+
+        Fetching all messages, oldest to newest:
+
+            async for message in rest.fetch_messages(channel, after=):
+                print(message)
+
+        !!! warning
+            `datetime.datetime` objects are expected to be `utc` if timezone
+            naieve (which they are by default). This means that
+            `datetime.datetime.now` will always be treated as if it were
+            UTC unless you specify a timezone. Thus, it is important to always
+            use `datetime.datetime.utcnow` over `datetime.datetime.now` if you
+            want your application to work outside the `GMT+0` timezone.
+
+        !!! note
+            The `around` parameter is not documented clearly by Discord.
+            The actual number of messages returned by this, and the direction
+            (e.g. older/newer/both) is not overly intuitive. Thus, this
+            specific functionality may be deprecated in the future in favour
+            of a cleaner Python API until a time comes where this information is
+            documented at a REST API level by Discord.
 
         Returns
         -------
-        typing.AsyncIterator[hikari.messages.Message]
-            An async iterator that retrieves the channel's message objects.
+        hikari.pagination.PaginatedResults[hikari.messages.Message]
+            An async iterator of message objects.
 
         Raises
         ------
-        hikari.errors.BadRequest
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
-        hikari.errors.Forbidden
-            If you lack permission to read the channel.
         hikari.errors.NotFound
-            If the channel is not found, or the message
-            provided for one of the filter arguments is not found.
-
-        !!! note
-            If you are missing the `VIEW_CHANNEL` permission, you will receive a
-            hikari.errors.Forbidden. If you are instead missing
-            the `READ_MESSAGE_HISTORY` permission, you will always receive
-            zero results, and thus an empty list will be returned instead.
-        """
-        if isinstance(after, datetime.datetime):
-            after = str(bases.Snowflake.from_datetime(after))
-        else:
-            after = str(after.id if isinstance(after, bases.UniqueEntity) else int(after))
-        request = functools.partial(
-            self._session.get_channel_messages,
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-        )
-        deserializer = functools.partial(_messages.Message.deserialize, components=self._components)
-        return helpers.pagination_handler(
-            deserializer=deserializer,
-            direction="after",
-            start=after,
-            request=request,
-            reversing=True,  # This is the only regular paginated endpoint where reversing is needed.
-            maximum_limit=100,
-            limit=limit,
-        )
-
-    def fetch_messages_before(
-        self,
-        channel: bases.Hashable[_channels.PartialChannel],
-        *,
-        before: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]] = bases.Snowflake.max(),
-        limit: typing.Optional[int] = None,
-    ) -> typing.AsyncIterator[_messages.Message]:
-        """Return an async iterator that retrieves a channel's message history.
-
-        This returns the message created after a given message object/ID or
-        from the first message in the channel.
-
-        Parameters
-        ----------
-        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
-            The ID of the channel to retrieve the messages from.
-        limit : int
-            If specified, the maximum number of how many messages this iterator
-            should return.
-        before : typing.Union[datetime.datetime, hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
-            A message object or ID. Only return messages sent BEFORE
-            this message if this is specified else this will return every
-            message before (and including) the most recent message in the
-            channel.
-
-        Examples
-        --------
-            async for message in client.fetch_messages_before(channel, before=9876543, limit=1231):
-                if message.content.lower().contains("delete this"):
-                    await client.delete_message(channel, message)
-
-        Returns
-        -------
-        typing.AsyncIterator[hikari.messages.Message]
-            An async iterator that retrieves the channel's message objects.
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
+            If the channel is not found.
         hikari.errors.Forbidden
-            If you lack permission to read the channel.
-        hikari.errors.NotFound
-            If the channel is not found, or the message
-            provided for one of the filter arguments is not found.
-
-        !!! note
-            If you are missing the `VIEW_CHANNEL` permission, you will receive a
-            hikari.errors.Forbidden. If you are instead missing
-            the `READ_MESSAGE_HISTORY` permission, you will always receive
-            zero results, and thus an empty list will be returned instead.
+            If you are missing the `READ_MESSAGE_HISTORY` permission for the
+            channel or guild.
         """
-        if isinstance(before, datetime.datetime):
-            before = str(bases.Snowflake.from_datetime(before))
-        else:
-            before = str(before.id if isinstance(before, bases.UniqueEntity) else int(before))
-        request = functools.partial(
-            self._session.get_channel_messages,
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+        assertions.assert_that(len(kwargs) <= 1, "only one of 'before', 'after', 'around' can be specified")
+
+        try:
+            direction, first = kwargs.popitem()
+        except KeyError:
+            direction, first = "before", bases.Snowflake.max()
+
+        return _MessagePaginator(
+            channel=channel, direction=direction, first=first, components=self._components, session=self._session,
         )
-        deserializer = functools.partial(_messages.Message.deserialize, components=self._components)
-        return helpers.pagination_handler(
-            deserializer=deserializer,
-            direction="before",
-            start=before,
-            request=request,
-            reversing=False,
-            maximum_limit=100,
-            limit=limit,
-        )
-
-    async def fetch_messages_around(
-        self,
-        channel: bases.Hashable[_channels.PartialChannel],
-        around: typing.Union[datetime.datetime, bases.Hashable[_messages.Message]],
-        *,
-        limit: int = ...,
-    ) -> typing.AsyncIterator[_messages.Message]:
-        """Yield up to 100 messages found around a given point.
-
-        This will return messages in order from newest to oldest, is based
-        around the creation time of the supplied message object/ID and will
-        include the given message if it still exists.
-
-        Parameters
-        ----------
-        channel : typing.Union[hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
-            The ID of the channel to retrieve the messages from.
-        around : typing.Union[datetime.datetime, hikari.channels.PartialChannel, hikari.bases.Snowflake, int]
-            The object or ID of the message to get messages that were sent
-            AROUND it in the provided channel, unlike `before` and `after`,
-            this argument is required and the provided message will also be
-            returned if it still exists.
-        limit : int
-            If specified, the maximum number of how many messages this iterator
-            should return, cannot be more than `100`
-
-        Examples
-        --------
-            async for message in client.fetch_messages_around(channel, around=9876543, limit=42):
-                if message.embeds and not message.author.is_bot:
-                    await client.delete_message(channel, message)
-
-        Yields
-        ------
-        hikari.messages.Message
-            The messages found around the given point.
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
-        hikari.errors.Forbidden
-            If you lack permission to read the channel.
-        hikari.errors.NotFound
-            If the channel is not found, or the message
-            provided for one of the filter arguments is not found.
-
-        !!! note
-            If you are missing the `VIEW_CHANNEL` permission, you will receive a
-            `hikari.errors.Forbidden`. If you are instead missing
-            the `READ_MESSAGE_HISTORY` permission, you will always receive
-            zero results, and thus an empty list will be returned instead.
-        """
-        if isinstance(around, datetime.datetime):
-            around = str(bases.Snowflake.from_datetime(around))
-        else:
-            around = str(around.id if isinstance(around, bases.UniqueEntity) else int(around))
-        for payload in await self._session.get_channel_messages(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            limit=limit,
-            around=around,
-        ):
-            yield _messages.Message.deserialize(payload, components=self._components)
 
     async def fetch_message(
-        self, channel: bases.Hashable[_channels.PartialChannel], message: bases.Hashable[_messages.Message],
+        self,
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
+        message: typing.Union[bases.Snowflake, int, str, _messages.Message],
     ) -> _messages.Message:
         """Get a message from known channel that we can access.
 
@@ -453,14 +430,14 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             If the channel or message is not found.
         """
         payload = await self._session.get_channel_message(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.Unique) else int(message)),
         )
         return _messages.Message.deserialize(payload, components=self._components)
 
     async def create_message(  # pylint: disable=line-too-long
         self,
-        channel: bases.Hashable[_channels.PartialChannel],
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
         *,
         content: str = ...,
         nonce: str = ...,
@@ -468,8 +445,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         files: typing.Sequence[_files.BaseStream] = ...,
         embed: _embeds.Embed = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = True,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = True,
     ) -> _messages.Message:
         """Create a message in the given channel.
 
@@ -534,7 +515,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             file_resources += embed.assets_to_upload
 
         payload = await self._session.create_message(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
             content=content,
             nonce=nonce,
             tts=tts,
@@ -548,7 +529,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     def safe_create_message(
         self,
-        channel: bases.Hashable[_channels.PartialChannel],
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
         *,
         content: str = ...,
         nonce: str = ...,
@@ -556,8 +537,12 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         files: typing.Sequence[_files.BaseStream] = ...,
         embed: _embeds.Embed = ...,
         mentions_everyone: bool = False,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = False,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = False,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = False,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = False,
     ) -> more_typing.Coroutine[_messages.Message]:
         """Create a message in the given channel with mention safety.
 
@@ -580,15 +565,19 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     async def update_message(  # pylint: disable=line-too-long
         self,
-        message: bases.Hashable[_messages.Message],
-        channel: bases.Hashable[_channels.PartialChannel],
+        message: typing.Union[bases.Snowflake, int, str, _messages.Message],
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
         *,
         content: typing.Optional[str] = ...,
         embed: typing.Optional[_embeds.Embed] = ...,
         flags: int = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = True,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = True,
     ) -> _messages.Message:
         """Update the given message.
 
@@ -646,8 +635,8 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             `role_mentions` or `user_mentions`.
         """
         payload = await self._session.edit_message(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.Unique) else int(message)),
             content=content,
             embed=embed.serialize() if embed is not ... and embed is not None else embed,
             flags=flags,
@@ -659,15 +648,19 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     def safe_update_message(
         self,
-        message: bases.Hashable[_messages.Message],
-        channel: bases.Hashable[_channels.PartialChannel],
+        message: typing.Union[bases.Snowflake, int, str, _messages.Message],
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
         *,
         content: typing.Optional[str] = ...,
         embed: typing.Optional[_embeds.Embed] = ...,
         flags: int = ...,
         mentions_everyone: bool = False,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = False,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = False,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = False,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = False,
     ) -> typing.Coroutine[typing.Any, typing.Any, _messages.Message]:
         """Update a message in the given channel with mention safety.
 
@@ -689,9 +682,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     async def delete_messages(
         self,
-        channel: bases.Hashable[_channels.PartialChannel],
-        message: bases.Hashable[_messages.Message],
-        *additional_messages: bases.Hashable[_messages.Message],
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
+        message: typing.Union[bases.Snowflake, int, str, _messages.Message],
+        *additional_messages: typing.Union[bases.Snowflake, int, str, _messages.Message],
     ) -> None:
         """Delete a message in a given channel.
 
@@ -730,7 +723,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             messages = list(
                 # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
                 dict.fromkeys(
-                    str(m.id if isinstance(m, bases.UniqueEntity) else int(m)) for m in (message, *additional_messages)
+                    str(m.id if isinstance(m, bases.Unique) else int(m)) for m in (message, *additional_messages)
                 )
             )
             assertions.assert_that(
@@ -739,19 +732,19 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
             if len(messages) > 1:
                 await self._session.bulk_delete_messages(
-                    channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+                    channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
                     messages=messages,
                 )
                 return None
 
         await self._session.delete_message(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.Unique) else int(message)),
         )
 
     async def update_channel_overwrite(  # pylint: disable=line-too-long
         self,
-        channel: bases.Hashable[_messages.Message],
+        channel: typing.Union[bases.Snowflake, int, str, _messages.Message],
         overwrite: typing.Union[_channels.PermissionOverwrite, users.User, guilds.GuildRole, bases.Snowflake, int],
         target_type: typing.Union[_channels.PermissionOverwriteType, str],
         *,
@@ -793,8 +786,8 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         """
         # pylint: enable=line-too-long
         await self._session.edit_channel_permissions(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            overwrite_id=str(overwrite.id if isinstance(overwrite, bases.UniqueEntity) else int(overwrite)),
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
+            overwrite_id=str(overwrite.id if isinstance(overwrite, bases.Unique) else int(overwrite)),
             type_=target_type,
             allow=allow,
             deny=deny,
@@ -802,7 +795,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
 
     async def fetch_invites_for_channel(
-        self, channel: bases.Hashable[_channels.PartialChannel]
+        self, channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         """Get invites for a given channel.
 
@@ -827,19 +820,19 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             If the channel does not exist.
         """
         payload = await self._session.get_channel_invites(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel))
         )
         return [invites.InviteWithMetadata.deserialize(invite, components=self._components) for invite in payload]
 
     async def create_invite_for_channel(
         self,
-        channel: bases.Hashable[_channels.PartialChannel],
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
         *,
         max_age: typing.Union[int, datetime.timedelta] = ...,
         max_uses: int = ...,
         temporary: bool = ...,
         unique: bool = ...,
-        target_user: bases.Hashable[users.User] = ...,
+        target_user: typing.Union[bases.Snowflake, int, str, users.User] = ...,
         target_user_type: typing.Union[invites.TargetUserType, int] = ...,
         reason: str = ...,
     ) -> invites.InviteWithMetadata:
@@ -888,13 +881,13 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_channel_invite(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
             max_age=int(max_age.total_seconds()) if isinstance(max_age, datetime.timedelta) else max_age,
             max_uses=max_uses,
             temporary=temporary,
             unique=unique,
             target_user=(
-                str(target_user.id if isinstance(target_user, bases.UniqueEntity) else int(target_user))
+                str(target_user.id if isinstance(target_user, bases.Unique) else int(target_user))
                 if target_user is not ...
                 else ...
             ),
@@ -905,7 +898,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     async def delete_channel_overwrite(  # pylint: disable=line-too-long
         self,
-        channel: bases.Hashable[_channels.PartialChannel],
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
         overwrite: typing.Union[_channels.PermissionOverwrite, guilds.GuildRole, users.User, bases.Snowflake, int],
     ) -> None:
         """Delete a channel permission overwrite for a user or a role.
@@ -929,11 +922,11 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         """
         # pylint: enable=line-too-long
         await self._session.delete_channel_permission(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            overwrite_id=str(overwrite.id if isinstance(overwrite, bases.UniqueEntity) else int(overwrite)),
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
+            overwrite_id=str(overwrite.id if isinstance(overwrite, bases.Unique) else int(overwrite)),
         )
 
-    async def trigger_typing(self, channel: bases.Hashable[_channels.PartialChannel]) -> None:
+    async def trigger_typing(self, channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel]) -> None:
         """Trigger the typing indicator for `10` seconds in a channel.
 
         Parameters
@@ -952,11 +945,11 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             If you are not able to type in the channel.
         """
         await self._session.trigger_typing_indicator(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel))
         )
 
     async def fetch_pins(
-        self, channel: bases.Hashable[_channels.PartialChannel]
+        self, channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel]
     ) -> typing.Mapping[bases.Snowflake, _messages.Message]:
         """Get pinned messages for a given channel.
 
@@ -986,7 +979,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             will not be returned.
         """
         payload = await self._session.get_pinned_messages(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel))
         )
         return {
             bases.Snowflake(message["id"]): _messages.Message.deserialize(message, components=self._components)
@@ -994,7 +987,9 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         }
 
     async def pin_message(
-        self, channel: bases.Hashable[_channels.PartialChannel], message: bases.Hashable[_messages.Message],
+        self,
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
+        message: typing.Union[bases.Snowflake, int, str, _messages.Message],
     ) -> None:
         """Add a pinned message to the channel.
 
@@ -1016,12 +1011,14 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             If the message or channel do not exist.
         """
         await self._session.add_pinned_channel_message(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.Unique) else int(message)),
         )
 
     async def unpin_message(
-        self, channel: bases.Hashable[_channels.PartialChannel], message: bases.Hashable[_messages.Message],
+        self,
+        channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
+        message: typing.Union[bases.Snowflake, int, str, _messages.Message],
     ) -> None:
         """Remove a pinned message from the channel.
 
@@ -1045,13 +1042,13 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             If the message or channel do not exist.
         """
         await self._session.delete_pinned_channel_message(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
-            message_id=str(message.id if isinstance(message, bases.UniqueEntity) else int(message)),
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
+            message_id=str(message.id if isinstance(message, bases.Unique) else int(message)),
         )
 
     async def create_webhook(
         self,
-        channel: bases.Hashable[_channels.GuildChannel],
+        channel: typing.Union[bases.Snowflake, int, str, _channels.GuildChannel],
         name: str,
         *,
         avatar: _files.BaseStream = ...,
@@ -1089,7 +1086,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_webhook(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel)),
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
             name=name,
             avatar=await avatar.read() if avatar is not ... else ...,
             reason=reason,
@@ -1097,7 +1094,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         return webhooks.Webhook.deserialize(payload, components=self._components)
 
     async def fetch_channel_webhooks(
-        self, channel: bases.Hashable[_channels.GuildChannel]
+        self, channel: typing.Union[bases.Snowflake, int, str, _channels.GuildChannel]
     ) -> typing.Sequence[webhooks.Webhook]:
         """Get all webhooks from a given channel.
 
@@ -1123,6 +1120,6 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             can not see the given channel.
         """
         payload = await self._session.get_channel_webhooks(
-            channel_id=str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
+            channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel))
         )
         return [webhooks.Webhook.deserialize(webhook, components=self._components) for webhook in payload]
