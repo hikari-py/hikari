@@ -99,6 +99,8 @@ class UniqueFunctionMeta(abc.ABCMeta):
         abstract method conduit.
     """
 
+    __slots__ = ()
+
     @classmethod
     def __prepare__(mcs, name, bases, **kwargs):
         routines = {}

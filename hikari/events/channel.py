@@ -76,7 +76,7 @@ def _recipients_deserializer(
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class BaseChannelEvent(base_events.HikariEvent, base_entities.UniqueEntity, marshaller.Deserializable, abc.ABC):
+class BaseChannelEvent(base_events.HikariEvent, base_entities.Unique, marshaller.Deserializable, abc.ABC):
     """A base object that Channel events will inherit from."""
 
     type: channels.ChannelType = marshaller.attrib(deserializer=channels.ChannelType, repr=True)

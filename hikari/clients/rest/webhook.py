@@ -43,7 +43,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
     """The REST client component for handling requests to webhook endpoints."""
 
     async def fetch_webhook(
-        self, webhook: bases.Hashable[webhooks.Webhook], *, webhook_token: str = ...
+        self, webhook: typing.Union[bases.Snowflake, int, str, webhooks.Webhook], *, webhook_token: str = ...
     ) -> webhooks.Webhook:
         """Get a given webhook.
 
@@ -74,19 +74,19 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             If you pass a token that's invalid for the target webhook.
         """
         payload = await self._session.get_webhook(
-            webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
+            webhook_id=str(webhook.id if isinstance(webhook, bases.Unique) else int(webhook)),
             webhook_token=webhook_token,
         )
         return webhooks.Webhook.deserialize(payload, components=self._components)
 
     async def update_webhook(
         self,
-        webhook: bases.Hashable[webhooks.Webhook],
+        webhook: typing.Union[bases.Snowflake, int, str, webhooks.Webhook],
         *,
         webhook_token: str = ...,
         name: str = ...,
         avatar: typing.Optional[_files.BaseStream] = ...,
-        channel: bases.Hashable[_channels.GuildChannel] = ...,
+        channel: typing.Union[bases.Snowflake, int, str, _channels.GuildChannel] = ...,
         reason: str = ...,
     ) -> webhooks.Webhook:
         """Edit a given webhook.
@@ -129,12 +129,12 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             If you pass a token that's invalid for the target webhook.
         """
         payload = await self._session.modify_webhook(
-            webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
+            webhook_id=str(webhook.id if isinstance(webhook, bases.Unique) else int(webhook)),
             webhook_token=webhook_token,
             name=name,
             avatar=await avatar.read() if avatar is not ... else ...,
             channel_id=(
-                str(channel.id if isinstance(channel, bases.UniqueEntity) else int(channel))
+                str(channel.id if isinstance(channel, bases.Unique) else int(channel))
                 if channel and channel is not ...
                 else channel
             ),
@@ -142,7 +142,9 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
         return webhooks.Webhook.deserialize(payload, components=self._components)
 
-    async def delete_webhook(self, webhook: bases.Hashable[webhooks.Webhook], *, webhook_token: str = ...) -> None:
+    async def delete_webhook(
+        self, webhook: typing.Union[bases.Snowflake, int, str, webhooks.Webhook], *, webhook_token: str = ...
+    ) -> None:
         """Delete a given webhook.
 
         Parameters
@@ -167,13 +169,13 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
                 If you pass a token that's invalid for the target webhook.
         """
         await self._session.delete_webhook(
-            webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
+            webhook_id=str(webhook.id if isinstance(webhook, bases.Unique) else int(webhook)),
             webhook_token=webhook_token,
         )
 
     async def execute_webhook(  # pylint:disable=too-many-locals,line-too-long
         self,
-        webhook: bases.Hashable[webhooks.Webhook],
+        webhook: typing.Union[bases.Snowflake, int, str, webhooks.Webhook],
         webhook_token: str,
         *,
         content: str = ...,
@@ -184,8 +186,12 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         files: typing.Sequence[_files.BaseStream] = ...,
         embeds: typing.Sequence[_embeds.Embed] = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = True,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = True,
     ) -> typing.Optional[_messages.Message]:
         """Execute a webhook to create a message.
 
@@ -257,7 +263,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
                 file_resources += embed.assets_to_upload
 
         payload = await self._session.execute_webhook(
-            webhook_id=str(webhook.id if isinstance(webhook, bases.UniqueEntity) else int(webhook)),
+            webhook_id=str(webhook.id if isinstance(webhook, bases.Unique) else int(webhook)),
             webhook_token=webhook_token,
             content=content,
             username=username,
@@ -276,7 +282,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
     def safe_webhook_execute(
         self,
-        webhook: bases.Hashable[webhooks.Webhook],
+        webhook: typing.Union[bases.Snowflake, int, str, webhooks.Webhook],
         webhook_token: str,
         *,
         content: str = ...,
@@ -287,8 +293,12 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         files: typing.Sequence[_files.BaseStream] = ...,
         embeds: typing.Sequence[_embeds.Embed] = ...,
         mentions_everyone: bool = False,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = False,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = False,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = False,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = False,
     ) -> typing.Coroutine[typing.Any, typing.Any, typing.Optional[_messages.Message]]:
         """Execute a webhook to create a message with mention safety.
 

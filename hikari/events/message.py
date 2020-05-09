@@ -87,7 +87,7 @@ def _deserialize_reaction(payload: more_typing.JSONArray, **kwargs: typing.Any) 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageUpdateEvent(base_events.HikariEvent, base_entities.UniqueEntity, marshaller.Deserializable):
+class MessageUpdateEvent(base_events.HikariEvent, base_entities.Unique, marshaller.Deserializable):
     """Represents Message Update gateway events.
 
     !!! note

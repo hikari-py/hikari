@@ -142,7 +142,7 @@ class MessageActivityType(int, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Attachment(bases.UniqueEntity, _files.BaseStream, marshaller.Deserializable):
+class Attachment(bases.Unique, _files.BaseStream, marshaller.Deserializable):
     """Represents a file attached to a message.
 
     You can use this object in the same way as a
@@ -168,13 +168,13 @@ class Attachment(bases.UniqueEntity, _files.BaseStream, marshaller.Deserializabl
     width: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
     """The width of the image (if the file is an image)."""
 
-    def __aiter__(self) -> typing.AsyncIterator[bytes]:
+    def __aiter__(self) -> typing.AsyncGenerator[bytes]:
         return _files.WebResourceStream(self.filename, self.url).__aiter__()
 
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Reaction(bases.HikariEntity, marshaller.Deserializable):
+class Reaction(bases.Entity, marshaller.Deserializable):
     """Represents a reaction in a message."""
 
     count: int = marshaller.attrib(deserializer=int, repr=True)
@@ -191,7 +191,7 @@ class Reaction(bases.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageActivity(bases.HikariEntity, marshaller.Deserializable):
+class MessageActivity(bases.Entity, marshaller.Deserializable):
     """Represents the activity of a rich presence-enabled message."""
 
     type: MessageActivityType = marshaller.attrib(deserializer=MessageActivityType, repr=True)
@@ -203,7 +203,7 @@ class MessageActivity(bases.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageCrosspost(bases.UniqueEntity, marshaller.Deserializable):
+class MessageCrosspost(bases.Unique, marshaller.Deserializable):
     """Represents information about a cross-posted message and the origin of the original message."""
 
     id: typing.Optional[bases.Snowflake] = marshaller.attrib(
@@ -254,7 +254,7 @@ def _deserialize_reactions(payload: more_typing.JSONArray, **kwargs: typing.Any)
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Message(bases.UniqueEntity, marshaller.Deserializable):
+class Message(bases.Unique, marshaller.Deserializable):
     """Represents a message."""
 
     channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
@@ -379,8 +379,12 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         content: str = ...,
         embed: _embeds.Embed = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = True,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = True,
     ) -> Message:
         """Edit this message.
 
@@ -446,8 +450,12 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         content: str = ...,
         embed: _embeds.Embed = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = True,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = True,
     ) -> Message:
         """Edit this message.
 
@@ -471,8 +479,12 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         embed: _embeds.Embed = ...,
         files: typing.Sequence[_files.BaseStream] = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = True,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = True,
         nonce: str = ...,
         tts: bool = ...,
     ) -> Message:
@@ -550,8 +562,12 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         embed: _embeds.Embed = ...,
         files: typing.Sequence[_files.BaseStream] = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = True,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = True,
         nonce: str = ...,
         tts: bool = ...,
     ) -> Message:
@@ -667,19 +683,23 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         """
         await self._components.rest.remove_reaction(self.channel_id, self.id, emoji, user)
 
-    async def remove_all_reactions_for_emoji(self, emoji: typing.Union[str, _emojis.Emoji]) -> None:
+    async def remove_all_reactions(self, emoji: typing.Optional[typing.Union[str, _emojis.Emoji]] = None) -> None:
         r"""Remove all users' reactions for a specific emoji from the message.
 
         Parameters
         ----------
-        emoji : str OR hikari.emojis.Emoji
-            The emoji to remove.
+        emoji : str OR hikari.emojis.Emoji, optional
+            The emoji to remove all reactions for. If not specified, or `None`,
+            then all emojis are removed.
 
         Example
         --------
             # Using a unicode emoji and removing all 👌 reacts from the message.
             # reaction.
-            await message.remove_reaction("\N{OK HAND SIGN}")
+            await message.remove_all_reactions("\N{OK HAND SIGN}")
+
+            # Removing all reactions entirely.
+            await message.remove_all_reactions()
 
         Raises
         ------
@@ -693,17 +713,4 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        await self._components.rest.remove_all_reactions_for_emoji(self.channel_id, self.id, emoji)
-
-    async def remove_all_reactions(self) -> None:
-        r"""Remove all reactions from the message.
-
-        Raises
-        ------
-        hikari.errors.Forbidden
-            If you are missing the `MANAGE_MESSAGES` permission, or the
-            permission to view the channel
-        hikari.errors.NotFound
-            If the channel or message is not found, or if the emoji is not found.
-        """
-        await self._components.rest.remove_all_reactions(self.channel_id, self.id)
+        await self._components.rest.remove_all_reactions(self.channel_id, self.id, emoji)

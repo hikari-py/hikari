@@ -81,7 +81,7 @@ class GuildUpdateEvent(base_events.HikariEvent, guilds.Guild):
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildLeaveEvent(base_events.HikariEvent, base_entities.UniqueEntity, marshaller.Deserializable):
+class GuildLeaveEvent(base_events.HikariEvent, base_entities.Unique, marshaller.Deserializable):
     """Fired when the current user leaves the guild or is kicked/banned from it.
 
     !!! note
@@ -92,7 +92,7 @@ class GuildLeaveEvent(base_events.HikariEvent, base_entities.UniqueEntity, marsh
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class GuildUnavailableEvent(base_events.HikariEvent, base_entities.UniqueEntity, marshaller.Deserializable):
+class GuildUnavailableEvent(base_events.HikariEvent, base_entities.Unique, marshaller.Deserializable):
     """Fired when a guild becomes temporarily unavailable due to an outage.
 
     !!! note

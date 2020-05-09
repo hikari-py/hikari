@@ -33,7 +33,7 @@ class TestHikariEntity:
     def stub_entity(self) -> typing.Type["StubEntity"]:
         @marshaller.marshallable()
         @attr.s()
-        class StubEntity(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
+        class StubEntity(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
             ...
 
         return StubEntity
@@ -98,12 +98,12 @@ class TestSnowflake:
         result = bases.Snowflake.from_datetime(
             datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
         )
-        assert result == 537340988620800000
+        assert result == 537340989807788032
         assert isinstance(result, bases.Snowflake)
 
     def test_from_timestamp(self):
         result = bases.Snowflake.from_timestamp(1548182475.283)
-        assert result == 537340988620800000
+        assert result == 537340989807788032
         assert isinstance(result, bases.Snowflake)
 
     def test_min(self):
@@ -119,13 +119,17 @@ class TestSnowflake:
 
 @marshaller.marshallable()
 @attr.s(slots=True)
-class StubEntity(bases.UniqueEntity, marshaller.Deserializable, marshaller.Serializable):
+class StubEntity(bases.Unique, marshaller.Deserializable, marshaller.Serializable):
     ...
 
 
 class TestUniqueEntity:
+    def test_created_at(self):
+        entity = bases.Unique(id=bases.Snowflake("9217346714023428234"))
+        assert entity.created_at == entity.id.created_at
+
     def test_int(self):
-        assert int(bases.UniqueEntity(id=bases.Snowflake("2333333"))) == 2333333
+        assert int(bases.Unique(id=bases.Snowflake("2333333"))) == 2333333
 
     def test_deserialize(self):
         unique_entity = StubEntity.deserialize({"id": "5445"})

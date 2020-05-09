@@ -300,12 +300,12 @@ class ByteStream(BaseStream):
 
         raise TypeError(f"Expected bytes-like object or async generator, got {type(obj).__qualname__}")
 
-    async def __aiter__(self) -> typing.AsyncIterator[bytes]:
+    async def __aiter__(self) -> typing.AsyncGenerator[bytes]:
         async for chunk in self._obj:
             yield self._to_bytes(chunk)
 
     async def _aiter_async_iterator(
-        self, async_iterator: typing.AsyncIterator[___VALID_BYTE_TYPES___]
+        self, async_iterator: typing.AsyncGenerator[___VALID_BYTE_TYPES___]
     ) -> typing.AsyncIterator[bytes]:
         try:
             while True:
@@ -314,7 +314,7 @@ class ByteStream(BaseStream):
             pass
 
     @staticmethod
-    async def _aiter_bytes(bytes_: bytes) -> typing.AsyncIterator[bytes]:
+    async def _aiter_bytes(bytes_: bytes) -> typing.AsyncGenerator[bytes]:
         stream = io.BytesIO(bytes_)
         while chunk := stream.read(MAGIC_NUMBER):
             yield chunk
@@ -358,7 +358,7 @@ class WebResourceStream(BaseStream):
         super().__init__(filename)
         self.url = url
 
-    async def __aiter__(self) -> typing.AsyncIterator[bytes]:
+    async def __aiter__(self) -> typing.AsyncGenerator[bytes]:
         async with aiohttp.request("GET", self.url) as response:
             if 200 <= response.status < 300:
                 async for chunk in response.content:
@@ -467,7 +467,7 @@ class FileStream(BaseStream):
             self.path = path
         self._executor = executor
 
-    def __aiter__(self) -> typing.AsyncIterator[bytes]:
+    def __aiter__(self) -> typing.AsyncGenerator[bytes]:
         loop = asyncio.get_event_loop()
         # We cant use a process pool in the same way we do a thread pool, as
         # we cannot pickle file objects that we pass between threads. This

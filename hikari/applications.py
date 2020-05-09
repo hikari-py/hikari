@@ -191,7 +191,7 @@ def _deserialize_integrations(
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class OwnConnection(bases.HikariEntity, marshaller.Deserializable):
+class OwnConnection(bases.Entity, marshaller.Deserializable):
     """Represents a user's connection with a third party account.
 
     Returned by the `GET Current User Connections` endpoint.
@@ -258,7 +258,7 @@ class TeamMembershipState(int, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class TeamMember(bases.HikariEntity, marshaller.Deserializable):
+class TeamMember(bases.Entity, marshaller.Deserializable):
     """Represents a member of a Team."""
 
     membership_state: TeamMembershipState = marshaller.attrib(deserializer=TeamMembershipState)
@@ -285,7 +285,7 @@ def _deserialize_members(
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Team(bases.UniqueEntity, marshaller.Deserializable):
+class Team(bases.Unique, marshaller.Deserializable):
     """Represents a development team, along with all its members."""
 
     icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str)
@@ -351,7 +351,7 @@ def _deserialize_verify_key(payload: str) -> bytes:
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Application(bases.UniqueEntity, marshaller.Deserializable):
+class Application(bases.Unique, marshaller.Deserializable):
     """Represents the information of an Oauth2 Application."""
 
     name: str = marshaller.attrib(deserializer=str, repr=True)
