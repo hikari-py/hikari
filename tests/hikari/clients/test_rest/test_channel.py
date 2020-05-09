@@ -144,172 +144,33 @@ class TestRESTChannelLogging:
         assert await rest_channel_logic_impl.delete_channel(channel) is None
         rest_channel_logic_impl._session.delete_close_channel.assert_called_once_with(channel_id="55555")
 
-    @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
-    @_helpers.parametrize_valid_id_formats_for_models("message", 777777777, messages.Message)
-    async def test_fetch_messages_after_with_optionals_integration(self, rest_channel_logic_impl, channel, message):
-        mock_payload = {"id": "4242", "content": "CONTENT"}
-        mock_request = mock.AsyncMock(return_value=[{"id": "123", "content": "COULDN'T CARE"}, mock_payload])
-        rest_channel_logic_impl._session.get_channel_messages = mock_request
-        mock_message_obj = mock.MagicMock(messages.Message)
-        with mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj):
-            async for response_obj in rest_channel_logic_impl.fetch_messages_after(
-                channel=channel, after=message, limit=52
-            ):
-                assert response_obj is mock_message_obj
-                break
-            messages.Message.deserialize.assert_called_once_with(
-                mock_payload, components=rest_channel_logic_impl._components
-            )
-        mock_request.assert_called_once_with(limit=52, after="777777777", channel_id="123123123")
+    @pytest.mark.parametrize(
+        ("direction", "expected_direction", "first", "expected_first"),
+        [
+            [None, "before", None, bases.Snowflake.max()],
+            ["before", "before", "1234", "1234"],
+            ["before", "before", datetime.datetime(2007, 1, 6, 13), datetime.datetime(2007, 1, 6, 13)],
+            ["after", "after", 1235, 1235],
+            ["after", "after", datetime.datetime(2007, 11, 1, 15, 33, 33), datetime.datetime(2007, 11, 1, 15, 33, 33)],
+            ["around", "around", "1234", "1234"],
+            ["around", "around", datetime.datetime(2005, 12, 15), datetime.datetime(2005, 12, 15)],
+        ],
+    )
+    def test_fetch_messages(self, rest_channel_logic_impl, direction, expected_direction, first, expected_first):
+        kwargs = {direction: first} if direction is not None else {}
+        mock_channel = mock.MagicMock(__int__=90213)
 
-    @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
-    async def test_fetch_messages_after_without_optionals_integration(self, rest_channel_logic_impl, channel):
-        mock_payload = {"id": "4242", "content": "CONTENT"}
-        mock_request = mock.AsyncMock(return_value=[{"id": "123", "content": "COULDN'T CARE"}, mock_payload])
-        rest_channel_logic_impl._session.get_channel_messages = mock_request
-        mock_message_obj = mock.MagicMock(messages.Message)
-        with mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj):
-            async for response_obj in rest_channel_logic_impl.fetch_messages_after(channel=channel):
-                assert response_obj is mock_message_obj
-                break
-            messages.Message.deserialize.assert_called_once_with(
-                mock_payload, components=rest_channel_logic_impl._components
-            )
-        mock_request.assert_called_once_with(limit=100, after="0", channel_id="123123123")
+        with mock.patch.object(channel._MessagePaginator, "__init__", return_value=None) as init:
+            result = rest_channel_logic_impl.fetch_messages(mock_channel, **kwargs)
 
-    @pytest.mark.asyncio
-    async def test_fetch_messages_after_with_datetime_object_integration(self, rest_channel_logic_impl):
-        date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        mock_payload = {"id": "4242", "content": "CONTENT"}
-        mock_request = mock.AsyncMock(return_value=[{"id": "123", "content": "COULDN'T CARE"}, mock_payload])
-        rest_channel_logic_impl._session.get_channel_messages = mock_request
-        mock_message_obj = mock.MagicMock(messages.Message)
-        with mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj):
-            async for response_obj in rest_channel_logic_impl.fetch_messages_after(channel=123123123, after=date):
-                assert response_obj is mock_message_obj
-                break
-            messages.Message.deserialize.assert_called_once_with(
-                mock_payload, components=rest_channel_logic_impl._components
-            )
-        mock_request.assert_called_once_with(limit=100, after="537340988620800000", channel_id="123123123")
-
-    @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
-    @_helpers.parametrize_valid_id_formats_for_models("message", 777777777, messages.Message)
-    async def test_fetch_messages_before_with_optionals_integration(self, rest_channel_logic_impl, channel, message):
-        mock_payload = {"id": "4242", "content": "CONTENT"}
-        mock_request = mock.AsyncMock(return_value=[mock_payload])
-        rest_channel_logic_impl._session.get_channel_messages = mock_request
-        mock_message_obj = mock.MagicMock(messages.Message)
-        with mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj):
-            async for response_obj in rest_channel_logic_impl.fetch_messages_before(
-                channel=channel, before=message, limit=52
-            ):
-                assert response_obj is mock_message_obj
-                break
-            messages.Message.deserialize.assert_called_once_with(
-                mock_payload, components=rest_channel_logic_impl._components
-            )
-        mock_request.assert_called_once_with(limit=52, before="777777777", channel_id="123123123")
-
-    @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
-    async def test_fetch_messages_before_without_optionals_integration(self, rest_channel_logic_impl, channel):
-        mock_payload = {"id": "4242", "content": "CONTENT"}
-        mock_request = mock.AsyncMock(return_value=[mock_payload])
-        rest_channel_logic_impl._session.get_channel_messages = mock_request
-        mock_message_obj = mock.MagicMock(messages.Message)
-        with mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj):
-            async for response_obj in rest_channel_logic_impl.fetch_messages_before(channel=channel):
-                assert response_obj is mock_message_obj
-                break
-            messages.Message.deserialize.assert_called_once_with(
-                mock_payload, components=rest_channel_logic_impl._components
-            )
-        mock_request.assert_called_once_with(limit=100, before="9223372036854775807", channel_id="123123123")
-
-    @pytest.mark.asyncio
-    async def test_fetch_messages_before_with_datetime_object_integration(self, rest_channel_logic_impl):
-        date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        mock_payload = {"id": "4242", "content": "CONTENT"}
-        mock_request = mock.AsyncMock(return_value=[mock_payload])
-        rest_channel_logic_impl._session.get_channel_messages = mock_request
-        mock_message_obj = mock.MagicMock(messages.Message)
-        with mock.patch.object(messages.Message, "deserialize", return_value=mock_message_obj):
-            async for response_obj in rest_channel_logic_impl.fetch_messages_before(channel=123123123, before=date):
-                assert response_obj is mock_message_obj
-                break
-            messages.Message.deserialize.assert_called_once_with(
-                mock_payload, components=rest_channel_logic_impl._components
-            )
-        mock_request.assert_called_once_with(limit=100, before="537340988620800000", channel_id="123123123")
-
-    @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
-    @_helpers.parametrize_valid_id_formats_for_models("message", 777777777, messages.Message)
-    async def test_fetch_messages_around_with_limit(self, rest_channel_logic_impl, channel, message):
-        mock_message_payloads = [{"id": "202020", "content": "Nyaa"}, {"id": "2020222", "content": "Nyaa 2"}]
-        mock_message_objects = [mock.MagicMock(messages.Message), mock.MagicMock(messages.Message)]
-        rest_channel_logic_impl._session.get_channel_messages.return_value = mock_message_payloads
-        with mock.patch.object(messages.Message, "deserialize", side_effect=mock_message_objects):
-            results = []
-            async for result in rest_channel_logic_impl.fetch_messages_around(channel, message, limit=2):
-                results.append(result)
-            assert results == mock_message_objects
-            messages.Message.deserialize.assert_has_calls(
-                [
-                    mock.call(mock_message_payloads[0], components=rest_channel_logic_impl._components),
-                    mock.call(mock_message_payloads[1], components=rest_channel_logic_impl._components),
-                ]
-            )
-            rest_channel_logic_impl._session.get_channel_messages.assert_called_once_with(
-                channel_id="123123123", around="777777777", limit=2
-            )
-
-    @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123123123, channels.PartialChannel)
-    @_helpers.parametrize_valid_id_formats_for_models("message", 777777777, messages.Message)
-    async def test_fetch_messages_around_without_limit(self, rest_channel_logic_impl, channel, message):
-        mock_message_payloads = [{"id": "202020", "content": "Nyaa"}, {"id": "2020222", "content": "Nyaa 2"}]
-        mock_message_objects = [mock.MagicMock(messages.Message), mock.MagicMock(messages.Message)]
-        rest_channel_logic_impl._session.get_channel_messages.return_value = mock_message_payloads
-        with mock.patch.object(messages.Message, "deserialize", side_effect=mock_message_objects):
-            results = []
-            async for result in rest_channel_logic_impl.fetch_messages_around(channel, message):
-                results.append(result)
-            assert results == mock_message_objects
-            messages.Message.deserialize.assert_has_calls(
-                [
-                    mock.call(mock_message_payloads[0], components=rest_channel_logic_impl._components),
-                    mock.call(mock_message_payloads[1], components=rest_channel_logic_impl._components),
-                ]
-            )
-            rest_channel_logic_impl._session.get_channel_messages.assert_called_once_with(
-                channel_id="123123123", around="777777777", limit=...
-            )
-
-    @pytest.mark.asyncio
-    async def test_fetch_messages_around_with_datetime_object(self, rest_channel_logic_impl):
-        mock_message_payloads = [{"id": "202020", "content": "Nyaa"}, {"id": "2020222", "content": "Nyaa 2"}]
-        mock_message_objects = [mock.MagicMock(messages.Message), mock.MagicMock(messages.Message)]
-        rest_channel_logic_impl._session.get_channel_messages.return_value = mock_message_payloads
-        date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        with mock.patch.object(messages.Message, "deserialize", side_effect=mock_message_objects):
-            results = []
-            async for result in rest_channel_logic_impl.fetch_messages_around(123123123, date):
-                results.append(result)
-            assert results == mock_message_objects
-            messages.Message.deserialize.assert_has_calls(
-                [
-                    mock.call(mock_message_payloads[0], components=rest_channel_logic_impl._components),
-                    mock.call(mock_message_payloads[1], components=rest_channel_logic_impl._components),
-                ]
-            )
-            rest_channel_logic_impl._session.get_channel_messages.assert_called_once_with(
-                channel_id="123123123", around="537340988620800000", limit=...
-            )
+        assert isinstance(result, channel._MessagePaginator)
+        init.assert_called_once_with(
+            channel=mock_channel,
+            direction=expected_direction,
+            first=expected_first,
+            components=rest_channel_logic_impl._components,
+            session=rest_channel_logic_impl._session,
+        )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 55555, channels.PartialChannel)

@@ -23,6 +23,7 @@ from __future__ import annotations
 __all__ = ["RESTUserComponent"]
 
 import abc
+import typing
 
 from hikari import bases
 from hikari import users
@@ -32,7 +33,7 @@ from hikari.clients.rest import base
 class RESTUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
     """The REST client component for handling requests to user endpoints."""
 
-    async def fetch_user(self, user: bases.Hashable[users.User]) -> users.User:
+    async def fetch_user(self, user: typing.Union[bases.Snowflake, int, str, users.User]) -> users.User:
         """Get a given user.
 
         Parameters
@@ -53,7 +54,5 @@ class RESTUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abs
         hikari.errors.NotFound
             If the user is not found.
         """
-        payload = await self._session.get_user(
-            user_id=str(user.id if isinstance(user, bases.UniqueEntity) else int(user))
-        )
+        payload = await self._session.get_user(user_id=str(user.id if isinstance(user, bases.Unique) else int(user)))
         return users.User.deserialize(payload, components=self._components)

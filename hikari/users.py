@@ -95,7 +95,7 @@ class PremiumType(int, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class User(bases.UniqueEntity, marshaller.Deserializable):
+class User(bases.Unique, marshaller.Deserializable):
     """Represents a user."""
 
     discriminator: str = marshaller.attrib(deserializer=str, repr=True)

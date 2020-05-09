@@ -142,7 +142,7 @@ class MessageActivityType(int, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Attachment(bases.UniqueEntity, _files.BaseStream, marshaller.Deserializable):
+class Attachment(bases.Unique, _files.BaseStream, marshaller.Deserializable):
     """Represents a file attached to a message.
 
     You can use this object in the same way as a
@@ -174,7 +174,7 @@ class Attachment(bases.UniqueEntity, _files.BaseStream, marshaller.Deserializabl
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Reaction(bases.HikariEntity, marshaller.Deserializable):
+class Reaction(bases.Entity, marshaller.Deserializable):
     """Represents a reaction in a message."""
 
     count: int = marshaller.attrib(deserializer=int, repr=True)
@@ -191,7 +191,7 @@ class Reaction(bases.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageActivity(bases.HikariEntity, marshaller.Deserializable):
+class MessageActivity(bases.Entity, marshaller.Deserializable):
     """Represents the activity of a rich presence-enabled message."""
 
     type: MessageActivityType = marshaller.attrib(deserializer=MessageActivityType, repr=True)
@@ -203,7 +203,7 @@ class MessageActivity(bases.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class MessageCrosspost(bases.UniqueEntity, marshaller.Deserializable):
+class MessageCrosspost(bases.Unique, marshaller.Deserializable):
     """Represents information about a cross-posted message and the origin of the original message."""
 
     id: typing.Optional[bases.Snowflake] = marshaller.attrib(
@@ -254,7 +254,7 @@ def _deserialize_reactions(payload: more_typing.JSONArray, **kwargs: typing.Any)
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Message(bases.UniqueEntity, marshaller.Deserializable):
+class Message(bases.Unique, marshaller.Deserializable):
     """Represents a message."""
 
     channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
@@ -379,8 +379,12 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         content: str = ...,
         embed: _embeds.Embed = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = True,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = True,
     ) -> Message:
         """Edit this message.
 
@@ -446,8 +450,12 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         content: str = ...,
         embed: _embeds.Embed = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = True,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = True,
     ) -> Message:
         """Edit this message.
 
@@ -471,8 +479,12 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         embed: _embeds.Embed = ...,
         files: typing.Sequence[_files.BaseStream] = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = True,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = True,
         nonce: str = ...,
         tts: bool = ...,
     ) -> Message:
@@ -550,8 +562,12 @@ class Message(bases.UniqueEntity, marshaller.Deserializable):
         embed: _embeds.Embed = ...,
         files: typing.Sequence[_files.BaseStream] = ...,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[bases.Hashable[users.User]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[bases.Hashable[guilds.GuildRole]], bool] = True,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+        ] = True,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+        ] = True,
         nonce: str = ...,
         tts: bool = ...,
     ) -> Message:

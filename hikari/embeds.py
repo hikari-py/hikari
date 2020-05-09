@@ -58,7 +58,7 @@ _MAX_EMBED_SIZE: typing.Final[int] = 6000
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedFooter(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
+class EmbedFooter(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed footer."""
 
     text: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
@@ -82,7 +82,7 @@ class EmbedFooter(bases.HikariEntity, marshaller.Deserializable, marshaller.Seri
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedImage(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
+class EmbedImage(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed image."""
 
     url: typing.Optional[str] = marshaller.attrib(
@@ -119,7 +119,7 @@ class EmbedImage(bases.HikariEntity, marshaller.Deserializable, marshaller.Seria
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedThumbnail(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
+class EmbedThumbnail(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed thumbnail."""
 
     url: typing.Optional[str] = marshaller.attrib(
@@ -156,7 +156,7 @@ class EmbedThumbnail(bases.HikariEntity, marshaller.Deserializable, marshaller.S
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedVideo(bases.HikariEntity, marshaller.Deserializable):
+class EmbedVideo(bases.Entity, marshaller.Deserializable):
     """Represents an embed video.
 
     !!! note
@@ -177,7 +177,7 @@ class EmbedVideo(bases.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedProvider(bases.HikariEntity, marshaller.Deserializable):
+class EmbedProvider(bases.Entity, marshaller.Deserializable):
     """Represents an embed provider.
 
     !!! note
@@ -197,7 +197,7 @@ class EmbedProvider(bases.HikariEntity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedAuthor(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
+class EmbedAuthor(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed author."""
 
     name: typing.Optional[str] = marshaller.attrib(
@@ -228,7 +228,7 @@ class EmbedAuthor(bases.HikariEntity, marshaller.Deserializable, marshaller.Seri
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class EmbedField(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
+class EmbedField(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
     """Represents a field in a embed."""
 
     name: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
@@ -257,7 +257,7 @@ def _serialize_fields(fields: typing.Sequence[EmbedField]) -> more_typing.JSONAr
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Embed(bases.HikariEntity, marshaller.Deserializable, marshaller.Serializable):
+class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
     """Represents an embed."""
 
     title: typing.Optional[str] = marshaller.attrib(

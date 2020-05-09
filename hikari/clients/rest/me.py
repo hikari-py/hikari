@@ -24,7 +24,6 @@ __all__ = ["RESTCurrentUserComponent"]
 
 import abc
 import datetime
-import functools
 import typing
 
 from hikari import applications
@@ -34,7 +33,6 @@ from hikari import guilds
 from hikari import pagination
 from hikari import users
 from hikari.clients.rest import base
-from hikari.internal import helpers
 
 if typing.TYPE_CHECKING:
     from hikari import files
@@ -43,10 +41,12 @@ if typing.TYPE_CHECKING:
 class _GuildPaginator(pagination.BufferedPaginatedResults[guilds.Guild]):
     __slots__ = ("_session", "_components", "_newest_first", "_first_id")
 
-    def __init__(self, newest_first, components, session):
+    def __init__(self, newest_first, first_item, components, session):
         super().__init__()
         self._newest_first = newest_first
-        self._first_id = str(bases.Snowflake.max() if newest_first else bases.Snowflake.min())
+        self._first_id = self._prepare_first_id(
+            first_item, bases.Snowflake.max() if newest_first else bases.Snowflake.min(),
+        )
         self._components = components
         self._session = session
 
@@ -128,7 +128,12 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             applications.OwnConnection.deserialize(connection, components=self._components) for connection in payload
         ]
 
-    def fetch_my_guilds(self, *, newest_first: bool = False) -> pagination.PaginatedResults[applications.OwnGuild]:
+    def fetch_my_guilds(
+        self,
+        *,
+        newest_first: bool = False,
+        start_at: typing.Optional[typing.Union[datetime.datetime, bases.Unique, bases.Snowflake, int]] = None,
+    ) -> pagination.PaginatedResults[applications.OwnGuild]:
         """Get an async iterable of the guilds the current user is in.
 
         Parameters
@@ -136,6 +141,11 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         newest_first : bool
             If specified and `True`, the guilds are returned in the order of
             newest to oldest. The default is to return oldest guilds first.
+        start_at : datetime.datetime OR hikari.bases.UniqueEntity OR hikari.bases.Snowflake or int, optional
+            The optional first item to start at, if you want to limit your
+            results. This will be interpreted as the date of creation for a
+            guild. If unspecified, the newest or older possible snowflake is
+            used, for `newest_first` being `True` and `False` respectively.
 
         Returns
         -------
@@ -147,9 +157,11 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         hikari.errors.NotFound
             If the guild is not found.
         """
-        return _GuildPaginator(newest_first, self._components, self._session)
+        return _GuildPaginator(
+            newest_first=newest_first, first_item=start_at, components=self._components, session=self._session
+        )
 
-    async def leave_guild(self, guild: bases.Hashable[guilds.Guild]) -> None:
+    async def leave_guild(self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]) -> None:
         """Make the current user leave a given guild.
 
         Parameters
@@ -165,9 +177,11 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        await self._session.leave_guild(guild_id=str(guild.id if isinstance(guild, bases.UniqueEntity) else int(guild)))
+        await self._session.leave_guild(guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)))
 
-    async def create_dm_channel(self, recipient: bases.Hashable[users.User]) -> _channels.DMChannel:
+    async def create_dm_channel(
+        self, recipient: typing.Union[bases.Snowflake, int, str, users.User]
+    ) -> _channels.DMChannel:
         """Create a new DM channel with a given user.
 
         Parameters
@@ -189,6 +203,6 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             due to it being outside of the range of a 64 bit integer.
         """
         payload = await self._session.create_dm(
-            recipient_id=str(recipient.id if isinstance(recipient, bases.UniqueEntity) else int(recipient))
+            recipient_id=str(recipient.id if isinstance(recipient, bases.Unique) else int(recipient))
         )
         return _channels.DMChannel.deserialize(payload, components=self._components)

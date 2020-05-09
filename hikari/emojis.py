@@ -37,7 +37,7 @@ if typing.TYPE_CHECKING:
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class Emoji(bases.HikariEntity, marshaller.Deserializable):
+class Emoji(bases.Entity, marshaller.Deserializable):
     """Base class for all emojis."""
 
 
@@ -62,7 +62,7 @@ class UnicodeEmoji(Emoji):
 
 @marshaller.marshallable()
 @attr.s(slots=True, kw_only=True)
-class UnknownEmoji(Emoji, bases.UniqueEntity, files.BaseStream):
+class UnknownEmoji(Emoji, bases.Unique, files.BaseStream):
     """Represents a unknown emoji."""
 
     name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, repr=True)

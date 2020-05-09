@@ -267,9 +267,9 @@ def parametrize_valid_id_formats_for_models(param_name, id, model_type1, *model_
     def decorator(func):
         mock_models = []
         for model_type in model_types:
-            assert "UniqueEntity" in map(
+            assert bases.Unique.__name__ in map(
                 lambda mro: mro.__name__, model_type.mro()
-            ), "model must be an UniqueEntity derivative"
+            ), f"model must be a {bases.Unique.__name__} derivative"
             mock_models.append(mock_model(model_type, id=bases.Snowflake(id), **kwargs))
 
         return pytest.mark.parametrize(

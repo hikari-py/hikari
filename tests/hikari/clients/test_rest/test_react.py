@@ -17,10 +17,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
+import inspect
 
 import mock
 import pytest
 
+from hikari import bases
 from hikari import channels
 from hikari import emojis
 from hikari import messages
@@ -29,6 +31,147 @@ from hikari.clients import components
 from hikari.clients.rest import react
 from hikari.net import rest
 from tests.hikari import _helpers
+
+
+@pytest.mark.parametrize(
+    "emoji",
+    [
+        "\N{OK HAND SIGN}",
+        emojis.UnicodeEmoji(name="\N{OK HAND SIGN}"),
+        emojis.UnknownEmoji(id=bases.Snowflake(9876), name="foof"),
+    ],
+    ids=lambda arg: str(arg),
+)
+class TestMemberPaginator:
+    @pytest.fixture()
+    def mock_session(self):
+        return mock.MagicMock(spec_set=rest.REST)
+
+    @pytest.fixture()
+    def mock_components(self):
+        return mock.MagicMock(spec_set=components.Components)
+
+    @pytest.fixture()
+    def user_cls(self):
+        with mock.patch.object(users, "User") as user_cls:
+            yield user_cls
+
+    def test_init_no_start_bounds(self, mock_session, mock_components, emoji):
+        message = mock.MagicMock(__int__=lambda _: 22)
+        channel = mock.MagicMock(__int__=lambda _: 33)
+
+        pag = react._ReactionPaginator(channel, message, emoji, None, mock_components, mock_session)
+        assert pag._first_id == "0"
+        assert pag._message_id == "22"
+        assert pag._components is mock_components
+        assert pag._session is mock_session
+
+    @pytest.mark.parametrize(
+        ["start_at", "expected"],
+        [
+            (None, "0"),
+            (53, "53"),
+            (bases.Unique(id=bases.Snowflake(22)), "22"),
+            (bases.Snowflake(22), "22"),
+            (datetime.datetime(2019, 1, 22, 18, 41, 15, 283000, tzinfo=datetime.timezone.utc), "537340989807788032"),
+        ],
+    )
+    def test_init_with_start_bounds(self, mock_session, mock_components, start_at, expected, emoji):
+        message = mock.MagicMock(__int__=lambda _: 22)
+        channel = mock.MagicMock(__int__=lambda _: 33)
+
+        pag = react._ReactionPaginator(channel, message, emoji, start_at, mock_components, mock_session)
+        assert pag._first_id == expected
+        assert pag._message_id == "22"
+        assert pag._channel_id == "33"
+        assert pag._components is mock_components
+        assert pag._session is mock_session
+
+    @pytest.mark.asyncio
+    async def test_next_chunk_performs_correct_api_call(self, mock_session, mock_components, user_cls, emoji):
+        message = mock.MagicMock(__int__=lambda _: 44)
+        channel = mock.MagicMock(__int__=lambda _: 55)
+
+        pag = react._ReactionPaginator(channel, message, emoji, None, mock_components, mock_session)
+        pag._first_id = "123456"
+
+        await pag._next_chunk()
+
+        mock_session.get_reactions.assert_awaited_once_with(
+            channel_id="55", message_id="44", emoji=getattr(emoji, "url_name", emoji), after="123456"
+        )
+
+    @pytest.mark.asyncio
+    async def test_next_chunk_when_empty_returns_None(self, mock_session, mock_components, user_cls, emoji):
+        mock_session.get_reactions = mock.AsyncMock(return_value=[])
+        message = mock.MagicMock(__int__=lambda _: 66)
+        channel = mock.MagicMock(__int__=lambda _: 77)
+
+        pag = react._ReactionPaginator(channel, message, emoji, None, mock_components, mock_session)
+
+        assert await pag._next_chunk() is None
+
+    @pytest.mark.asyncio
+    async def test_next_chunk_updates_first_id_to_last_item(self, mock_session, mock_components, user_cls, emoji):
+        return_payload = [
+            {"id": "1234", ...: ...},
+            {"id": "3456", ...: ...},
+            {"id": "3333", ...: ...},
+            {"id": "512", ...: ...},
+        ]
+
+        mock_session.get_reactions = mock.AsyncMock(return_value=return_payload)
+
+        message = mock.MagicMock(__int__=lambda _: 88)
+        channel = mock.MagicMock(__int__=lambda _: 99)
+
+        pag = react._ReactionPaginator(channel, message, emoji, None, mock_components, mock_session)
+
+        await pag._next_chunk()
+
+        assert pag._first_id == "512"
+
+    @pytest.mark.asyncio
+    async def test_next_chunk_deserializes_payload_in_generator_lazily(
+        self, mock_session, mock_components, user_cls, emoji
+    ):
+        message = mock.MagicMock(__int__=lambda _: 91210)
+        channel = mock.MagicMock(__int__=lambda _: 8008135)
+
+        pag = react._ReactionPaginator(channel, message, emoji, None, mock_components, mock_session)
+
+        return_payload = [
+            {"id": "1234", ...: ...},
+            {"id": "3456", ...: ...},
+            {"id": "3333", ...: ...},
+            {"id": "512", ...: ...},
+        ]
+
+        real_values = [
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock(),
+        ]
+
+        assert len(real_values) == len(return_payload)
+
+        user_cls.deserialize = mock.MagicMock(side_effect=real_values)
+
+        mock_session.get_reactions = mock.AsyncMock(return_value=return_payload)
+        generator = await pag._next_chunk()
+
+        assert inspect.isgenerator(generator), "expected genexp result"
+
+        # No calls, this should be lazy to be more performant for non-100-divisable limit counts.
+        user_cls.deserialize.assert_not_called()
+
+        for i, input_payload in enumerate(return_payload):
+            expected_value = real_values[i]
+            assert next(generator) is expected_value
+            user_cls.deserialize.assert_called_with(input_payload, components=mock_components)
+
+        assert locals()["i"] == len(return_payload) - 1, "Not iterated correctly somehow"
 
 
 class TestRESTReactionLogic:
@@ -83,90 +226,35 @@ class TestRESTReactionLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 213123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 987654321, messages.Message)
-    async def test_delete_all_reactions(self, rest_reaction_logic_impl, channel, message):
-        rest_reaction_logic_impl._session.delete_all_reactions.return_value = ...
-        assert await rest_reaction_logic_impl.remove_all_reactions(channel=channel, message=message) is None
-        rest_reaction_logic_impl._session.delete_all_reactions.assert_called_once_with(
-            channel_id="213123", message_id="987654321",
-        )
-
-    @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 213123, channels.PartialChannel)
-    @_helpers.parametrize_valid_id_formats_for_models("message", 987654321, messages.Message)
-    @pytest.mark.parametrize("emoji", ["blah:123", emojis.UnknownEmoji(name="blah", id=123, is_animated=False)])
-    async def test_delete_all_reactions_for_emoji(self, rest_reaction_logic_impl, channel, message, emoji):
-        rest_reaction_logic_impl._session.delete_all_reactions_for_emoji.return_value = ...
+    @pytest.mark.parametrize("emoji", [None, "blah:123", emojis.UnknownEmoji(name="blah", id=123, is_animated=False)])
+    async def test_delete_all_reactions(self, rest_reaction_logic_impl, channel, message, emoji):
+        rest_reaction_logic_impl._session = mock.MagicMock(spec_set=rest.REST)
         assert (
-            await rest_reaction_logic_impl.remove_all_reactions_for_emoji(channel=channel, message=message, emoji=emoji)
-            is None
-        )
-        rest_reaction_logic_impl._session.delete_all_reactions_for_emoji.assert_called_once_with(
-            channel_id="213123", message_id="987654321", emoji="blah:123",
+            await rest_reaction_logic_impl.remove_all_reactions(channel=channel, message=message, emoji=emoji) is None
         )
 
-    @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("message", 432, messages.Message)
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123, channels.PartialChannel)
-    @pytest.mark.parametrize(
-        "emoji", ["tutu1:456371206225002499", mock.MagicMock(emojis.GuildEmoji, url_name="tutu1:456371206225002499")]
-    )
-    @_helpers.parametrize_valid_id_formats_for_models("user", 140502780547694592, users.User)
-    async def test_fetch_reactors_after_with_optionals(self, rest_reaction_logic_impl, message, channel, emoji, user):
-        mock_user_payload = {"id": "123123", "username": "blahBlah"}
-        mock_request = mock.AsyncMock(return_value=[mock_user_payload])
-        rest_reaction_logic_impl._session.get_reactions = mock_request
-        mock_user_obj = mock.MagicMock(users.User)
-        with mock.patch.object(users.User, "deserialize", return_value=mock_user_obj):
-            async for reactor_obj in rest_reaction_logic_impl.fetch_reactors_after(
-                channel, message, emoji, after=user, limit=47
-            ):
-                assert reactor_obj is mock_user_obj
-                break
-            users.User.deserialize.assert_called_once_with(
-                mock_user_payload, components=rest_reaction_logic_impl._components
+        if emoji is None:
+            rest_reaction_logic_impl._session.delete_all_reactions.assert_called_once_with(
+                channel_id="213123", message_id="987654321",
             )
-        mock_request.assert_called_once_with(
-            channel_id="123", message_id="432", emoji="tutu1:456371206225002499", after="140502780547694592", limit=47
-        )
+        else:
+            rest_reaction_logic_impl._session.delete_all_reactions_for_emoji.assert_called_once_with(
+                channel_id="213123", message_id="987654321", emoji=getattr(emoji, "url_name", emoji)
+            )
 
-    @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("message", 432, messages.Message)
-    @_helpers.parametrize_valid_id_formats_for_models("channel", 123, channels.PartialChannel)
-    @pytest.mark.parametrize(
-        "emoji", ["tutu1:456371206225002499", mock.MagicMock(emojis.GuildEmoji, url_name="tutu1:456371206225002499")]
-    )
-    async def test_fetch_reactors_after_without_optionals(self, rest_reaction_logic_impl, message, channel, emoji):
-        mock_user_payload = {"id": "123123", "username": "blahBlah"}
-        mock_request = mock.AsyncMock(return_value=[mock_user_payload])
-        rest_reaction_logic_impl._session.get_reactions = mock_request
-        mock_user_obj = mock.MagicMock(users.User)
-        with mock.patch.object(users.User, "deserialize", return_value=mock_user_obj):
-            async for reactor_obj in rest_reaction_logic_impl.fetch_reactors_after(channel, message, emoji):
-                assert reactor_obj is mock_user_obj
-                break
-            users.User.deserialize.assert_called_once_with(
-                mock_user_payload, components=rest_reaction_logic_impl._components
+    def test_fetch_reactors(self, rest_reaction_logic_impl):
+        with mock.patch.object(react._ReactionPaginator, "__init__", return_value=None) as init:
+            paginator = rest_reaction_logic_impl.fetch_reactors(
+                channel=1234, message=bases.Snowflake("3456"), emoji="\N{OK HAND SIGN}", after=None
             )
-        mock_request.assert_called_once_with(
-            channel_id="123", message_id="432", emoji="tutu1:456371206225002499", after="0", limit=100
-        )
 
-    @pytest.mark.asyncio
-    async def test_fetch_reactors_after_with_datetime_object(self, rest_reaction_logic_impl):
-        date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        mock_user_payload = {"id": "123123", "username": "blahBlah"}
-        mock_request = mock.AsyncMock(return_value=[mock_user_payload])
-        rest_reaction_logic_impl._session.get_reactions = mock_request
-        mock_user_obj = mock.MagicMock(users.User)
-        with mock.patch.object(users.User, "deserialize", return_value=mock_user_obj):
-            async for reactor_obj in rest_reaction_logic_impl.fetch_reactors_after(
-                123, 432, "tutu1:456371206225002499", after=date
-            ):
-                assert reactor_obj is mock_user_obj
-                break
-            users.User.deserialize.assert_called_once_with(
-                mock_user_payload, components=rest_reaction_logic_impl._components
-            )
-        mock_request.assert_called_once_with(
-            channel_id="123", message_id="432", emoji="tutu1:456371206225002499", after="537340988620800000", limit=100
+            assert isinstance(paginator, react._ReactionPaginator)
+
+        init.assert_called_once_with(
+            channel=1234,
+            message=bases.Snowflake("3456"),
+            users_after=None,
+            emoji="\N{OK HAND SIGN}",
+            components=rest_reaction_logic_impl._components,
+            session=rest_reaction_logic_impl._session,
         )

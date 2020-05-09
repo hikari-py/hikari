@@ -18,11 +18,13 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
 import datetime
+import inspect
 
 import mock
 import pytest
 
 from hikari import audit_logs
+from hikari import bases
 from hikari import channels
 from hikari import colors
 from hikari import emojis
@@ -39,11 +41,119 @@ from hikari.net import rest
 from tests.hikari import _helpers
 
 
-def test__get_member_id():
-    member = mock.MagicMock(
-        guilds.GuildMember, user=mock.MagicMock(users.User, id=123123123, __int__=users.User.__int__)
+class TestMemberPaginator:
+    @pytest.fixture()
+    def mock_session(self):
+        return mock.MagicMock(spec_set=rest.REST)
+
+    @pytest.fixture()
+    def mock_components(self):
+        return mock.MagicMock(spec_set=components.Components)
+
+    @pytest.fixture()
+    def member_cls(self):
+        with mock.patch.object(guilds, "GuildMember") as member_cls:
+            yield member_cls
+
+    def test_init_no_start_bounds(self, mock_session, mock_components):
+        guild = mock.MagicMock(__int__=lambda _: 22)
+        pag = _guild._MemberPaginator(guild, None, mock_components, mock_session)
+        assert pag._first_id == "0"
+        assert pag._guild_id == "22"
+        assert pag._components is mock_components
+        assert pag._session is mock_session
+
+    @pytest.mark.parametrize(
+        ["start_at", "expected"],
+        [
+            (None, "0"),
+            (53, "53"),
+            (bases.Unique(id=bases.Snowflake(22)), "22"),
+            (bases.Snowflake(22), "22"),
+            (datetime.datetime(2019, 1, 22, 18, 41, 15, 283000, tzinfo=datetime.timezone.utc), "537340989807788032"),
+        ],
     )
-    assert _guild._get_member_id(member) == "123123123"
+    def test_init_with_start_bounds(self, mock_session, mock_components, start_at, expected):
+        guild = mock.MagicMock(__int__=lambda _: 25)
+        pag = _guild._MemberPaginator(guild, start_at, mock_components, mock_session)
+        assert pag._first_id == expected
+        assert pag._guild_id == "25"
+        assert pag._components is mock_components
+        assert pag._session is mock_session
+
+    @pytest.mark.asyncio
+    async def test_next_chunk_performs_correct_api_call(self, mock_session, mock_components, member_cls):
+        guild = mock.MagicMock(__int__=lambda _: 34)
+        pag = _guild._MemberPaginator(guild, None, mock_components, mock_session)
+        pag._first_id = "123456"
+
+        await pag._next_chunk()
+
+        mock_session.list_guild_members.assert_awaited_once_with("34", after="123456")
+
+    @pytest.mark.asyncio
+    async def test_next_chunk_when_empty_returns_None(self, mock_session, mock_components, member_cls):
+        mock_session.list_guild_members = mock.AsyncMock(return_value=[])
+        guild = mock.MagicMock(__int__=lambda _: 36)
+        pag = _guild._MemberPaginator(guild, None, mock_components, mock_session)
+
+        assert await pag._next_chunk() is None
+
+    @pytest.mark.asyncio
+    async def test_next_chunk_updates_first_id_to_last_item(self, mock_session, mock_components, member_cls):
+        return_payload = [
+            {"id": "1234", ...: ...},
+            {"id": "3456", ...: ...},
+            {"id": "3333", ...: ...},
+            {"id": "512", ...: ...},
+        ]
+
+        mock_session.list_guild_members = mock.AsyncMock(return_value=return_payload)
+
+        guild = mock.MagicMock(__int__=lambda _: 42)
+        pag = _guild._MemberPaginator(guild, None, mock_components, mock_session)
+
+        await pag._next_chunk()
+
+        assert pag._first_id == "512"
+
+    @pytest.mark.asyncio
+    async def test_next_chunk_deserializes_payload_in_generator_lazily(self, mock_session, mock_components, member_cls):
+        guild = mock.MagicMock(__int__=lambda _: 69)
+        pag = _guild._MemberPaginator(guild, None, mock_components, mock_session)
+
+        return_payload = [
+            {"id": "1234", ...: ...},
+            {"id": "3456", ...: ...},
+            {"id": "3333", ...: ...},
+            {"id": "512", ...: ...},
+        ]
+
+        real_values = [
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock(),
+        ]
+
+        assert len(real_values) == len(return_payload)
+
+        member_cls.deserialize = mock.MagicMock(side_effect=real_values)
+
+        mock_session.list_guild_members = mock.AsyncMock(return_value=return_payload)
+        generator = await pag._next_chunk()
+
+        assert inspect.isgenerator(generator), "expected genexp result"
+
+        # No calls, this should be lazy to be more performant for non-100-divisable limit counts.
+        member_cls.deserialize.assert_not_called()
+
+        for i, input_payload in enumerate(return_payload):
+            expected_value = real_values[i]
+            assert next(generator) is expected_value
+            member_cls.deserialize.assert_called_with(input_payload, components=mock_components)
+
+        assert locals()["i"] == len(return_payload) - 1, "Not iterated correctly somehow"
 
 
 class TestRESTGuildLogic:
@@ -130,7 +240,7 @@ class TestRESTGuildLogic:
                 mock_entry_payload, components=rest_guild_logic_impl._components
             )
         rest_guild_logic_impl._session.get_guild_audit_log.assert_called_once_with(
-            guild_id="123123123", user_id=..., action_type=..., before="537340988620800000", limit=100
+            guild_id="123123123", user_id=..., action_type=..., before="537340989807788032", limit=100
         )
 
     @pytest.mark.asyncio
@@ -182,7 +292,7 @@ class TestRESTGuildLogic:
         with mock.patch.object(audit_logs.AuditLog, "deserialize", return_value=mock_audit_log_obj):
             assert await rest_guild_logic_impl.fetch_audit_log(guild, before=date) is mock_audit_log_obj
             rest_guild_logic_impl._session.get_guild_audit_log.assert_called_once_with(
-                guild_id="379953393319542784", user_id=..., action_type=..., limit=..., before="537340988620800000"
+                guild_id="379953393319542784", user_id=..., action_type=..., limit=..., before="537340989807788032"
             )
             audit_logs.AuditLog.deserialize.assert_called_once_with(
                 mock_audit_log_payload, components=rest_guild_logic_impl._components
@@ -616,54 +726,19 @@ class TestRESTGuildLogic:
                 mock_member_payload, components=rest_guild_logic_impl._components
             )
 
-    @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
-    @_helpers.parametrize_valid_id_formats_for_models("user", 115590097100865541, users.User)
-    async def test_fetch_members_after_with_optionals(self, rest_guild_logic_impl, guild, user):
-        mock_member_obj = mock.MagicMock(guilds.GuildMember)
-        mock_payload = {"user": {}, "nick": "Nyaa"}
-        mock_request = mock.AsyncMock(return_value=[mock_payload])
-        rest_guild_logic_impl._session.list_guild_members = mock_request
-        with mock.patch.object(guilds.GuildMember, "deserialize", return_value=mock_member_obj):
-            async for member_obj in rest_guild_logic_impl.fetch_members_after(guild, after=user, limit=34):
-                assert member_obj is mock_member_obj
-                break
-            mock_request.assert_called_once_with(guild_id="574921006817476608", after="115590097100865541", limit=34)
-            guilds.GuildMember.deserialize.assert_called_once_with(
-                mock_payload, components=rest_guild_logic_impl._components
-            )
+    def test_fetch_members(self, rest_guild_logic_impl):
+        guild = mock.MagicMock()
 
-    @pytest.mark.asyncio
-    @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
-    async def test_fetch_members_after_without_optionals(self, rest_guild_logic_impl, guild):
-        mock_member_obj = mock.MagicMock(guilds.GuildMember)
-        mock_payload = {"user": {}, "nick": "Nyaa"}
-        mock_request = mock.AsyncMock(return_value=[mock_payload])
-        rest_guild_logic_impl._session.list_guild_members = mock_request
-        with mock.patch.object(guilds.GuildMember, "deserialize", return_value=mock_member_obj):
-            async for member_obj in rest_guild_logic_impl.fetch_members_after(guild):
-                assert member_obj is mock_member_obj
-                break
-            mock_request.assert_called_once_with(guild_id="574921006817476608", after="0", limit=1000)
-            guilds.GuildMember.deserialize.assert_called_once_with(
-                mock_payload, components=rest_guild_logic_impl._components
-            )
+        with mock.patch.object(_guild._MemberPaginator, "__init__", return_value=None) as init:
+            result = rest_guild_logic_impl.fetch_members(guild)
 
-    @pytest.mark.asyncio
-    async def test_fetch_members_after_with_datetime_object(self, rest_guild_logic_impl):
-        date = datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
-        mock_member_obj = mock.MagicMock(guilds.GuildMember)
-        mock_payload = {"user": {}, "nick": "Nyaa"}
-        mock_request = mock.AsyncMock(return_value=[mock_payload])
-        rest_guild_logic_impl._session.list_guild_members = mock_request
-        with mock.patch.object(guilds.GuildMember, "deserialize", return_value=mock_member_obj):
-            async for member_obj in rest_guild_logic_impl.fetch_members_after(574921006817476608, after=date):
-                assert member_obj is mock_member_obj
-                break
-            mock_request.assert_called_once_with(guild_id="574921006817476608", after="537340988620800000", limit=1000)
-            guilds.GuildMember.deserialize.assert_called_once_with(
-                mock_payload, components=rest_guild_logic_impl._components
-            )
+        assert isinstance(result, _guild._MemberPaginator)
+        init.assert_called_once_with(
+            guild=guild,
+            created_after=None,
+            components=rest_guild_logic_impl._components,
+            session=rest_guild_logic_impl._session,
+        )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 229292992, guilds.Guild)
