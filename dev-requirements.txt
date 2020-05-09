@@ -7,9 +7,10 @@ virtualenv==20.0.18
 pylint==2.5.2
 pylint-json2html-v2~=0.2.2
 pylint-junit~=0.2.0
-pytest~=5.4.1
+pytest~=5.4.2
 pytest-asyncio~=0.12.0
 pytest-cov~=2.8.1
 pytest-randomly~=3.3.1
+pytest-testdox~=1.2.1
 pytest-xdist~=1.32.0
 mock~=4.0.2
