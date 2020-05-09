@@ -459,7 +459,7 @@ class FileStream(BaseStream):
 
     def __init__(self, *args, executor=None) -> None:
         if len(args) == 1:
-            super().__init__(os.path.basename(*args))
+            super().__init__(os.path.basename(args[0]))
             self.path = args[0]
         else:
             name, path = args
