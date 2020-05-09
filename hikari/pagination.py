@@ -30,13 +30,7 @@ from hikari.internal import more_collections
 _T = typing.TypeVar("_T")
 
 
-class PaginatedResults(
-    typing.Generic[_T],
-    typing.AsyncIterator[_T],
-    typing.AsyncIterable[_T],
-    typing.Awaitable[typing.Sequence[_T]],
-    abc.ABC,
-):
+class PaginatedResults(typing.Generic[_T], abc.ABC):
     """A set of results that are fetched asynchronously from the API as needed.
 
     This is a `typing.AsyncIterable` and `typing.AsyncIterator` with several
@@ -206,7 +200,10 @@ class PaginatedResults(
         ...
 
 
-class _EnumeratedPaginatedResults(typing.Generic[_T], PaginatedResults[typing.Tuple[int, _T]]):
+_EnumeratedT = typing.Tuple[int, _T]
+
+
+class _EnumeratedPaginatedResults(typing.Generic[_T], PaginatedResults[_EnumeratedT]):
     __slots__ = ("_i", "_paginator")
 
     def __init__(self, paginator: PaginatedResults[_T], *, start: int) -> None:

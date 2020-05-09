@@ -26,7 +26,6 @@ from ci import nox
 FLAGS = [
     "-c", config.PYTEST_INI,
     "-r", "a",
-    "--pastebin=all" if config.IS_CI else "",
     "--full-trace",
     "-n", "auto",
     "--cov", config.MAIN_PACKAGE,
@@ -35,6 +34,7 @@ FLAGS = [
     "--cov-report", f"html:{config.COVERAGE_HTML_PATH}",
     "--cov-branch",
     "--junitxml", config.COVERAGE_JUNIT_PATH,
+    "--force-testdox",
     "--showlocals",
     config.TEST_PACKAGE
 ]
