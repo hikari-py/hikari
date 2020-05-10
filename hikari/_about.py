@@ -23,9 +23,12 @@ from __future__ import annotations
 __all__ = ["__author__", "__copyright__", "__docs__", "__email__", "__license__", "__url__", "__version__"]
 
 __author__ = "Nekokatt"
+__ci__ = "https://gitlab.com/nekokatt/hikari/pipelines"
 __copyright__ = "© 2019-2020 Nekokatt"
+__discord_invite__ = ""
 __docs__ = "https://nekokatt.gitlab.io/hikari/staging/index.html"
 __email__ = "3903853-nekokatt@users.noreply.gitlab.com"
+__issue_tracker__ = "https://gitlab.com/nekokatt/hikari/issues"
 __license__ = "LGPL-3.0-ONLY"
 __url__ = "https://gitlab.com/nekokatt/hikari"
 __version__ = "1.0.1.dev"
