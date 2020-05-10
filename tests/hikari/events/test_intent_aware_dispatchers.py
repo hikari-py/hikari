@@ -72,13 +72,6 @@ class TestClose:
 
 class TestAddListener:
     @_helpers.assert_raises(type_=TypeError)
-    def test_non_coroutine_function_raises_TypeError(self, intent_aware_dispatcher):
-        def non_coroutine_function():
-            pass
-
-        intent_aware_dispatcher.add_listener(DummyEventType, non_coroutine_function)
-
-    @_helpers.assert_raises(type_=TypeError)
     def test_non_HikariEvent_base_raises_TypeError(self, intent_aware_dispatcher):
         async def callback(event):
             pass
@@ -396,8 +389,22 @@ class TestDispatchEvent:
 
         await future
 
-    async def test_no_dispatchable_events_is_still_awaitable(self, intent_aware_dispatcher):
+    async def test_no_dispatch_events_is_still_awaitable(self, intent_aware_dispatcher):
         await intent_aware_dispatcher.dispatch_event(DummyEventType())
+
+    async def test_dispatch_event_awaits_async_function(self, intent_aware_dispatcher):
+        mock_async_listener = mock.AsyncMock()
+        dummy_event = DummyEventType()
+        intent_aware_dispatcher._listeners = {DummyEventType: [mock_async_listener]}
+        await intent_aware_dispatcher.dispatch_event(dummy_event)
+        mock_async_listener.assert_called_once_with(dummy_event)
+
+    async def test_dispatch_event_calls_non_async_function(self, intent_aware_dispatcher):
+        mock_listener = mock.MagicMock()
+        dummy_event = DummyEventType()
+        intent_aware_dispatcher._listeners = {DummyEventType: [mock_listener]}
+        await intent_aware_dispatcher.dispatch_event(dummy_event)
+        mock_listener.assert_called_once_with(dummy_event)
 
     async def test_dispatch_event_returns_awaitable_future_if_noop(self, intent_aware_dispatcher):
         try:
@@ -414,7 +421,7 @@ class TestDispatchEvent:
         finally:
             await result
 
-    async def test_dispatch_handles_event_exception(self, intent_aware_dispatcher):
+    async def test_dispatch_event_handles_event_exception(self, intent_aware_dispatcher):
         ex = LookupError("boom")
         inst = DummyEventType()
 
@@ -428,7 +435,7 @@ class TestDispatchEvent:
 
         intent_aware_dispatcher.handle_exception.assert_called_once_with(ex, inst, callback)
 
-    async def test_dispatch_does_not_redispatch_ExceptionEvent_recursively(self, intent_aware_dispatcher):
+    async def test_dispatch_event_does_not_redispatch_ExceptionEvent_recursively(self, intent_aware_dispatcher):
         ex = LookupError("boom")
         inst = DummyEventType()
 
@@ -448,7 +455,7 @@ class TestDispatchEvent:
 
 @pytest.mark.asyncio
 class TestIntentAwareDispatcherImplIT:
-    async def test_dispatch_when_invoked_event_integration_test(self, intent_aware_dispatcher):
+    async def test_dispatch_event_when_invoked_event_integration_test(self, intent_aware_dispatcher):
         dummy_event_invoked = 0
         event_obj = DummyEventType()
 
@@ -462,7 +469,7 @@ class TestIntentAwareDispatcherImplIT:
 
         assert dummy_event_invoked == 1
 
-    async def test_dispatch_when_not_invoked_event_integration_test(self, intent_aware_dispatcher):
+    async def test_dispatch_event_when_not_invoked_event_integration_test(self, intent_aware_dispatcher):
         dummy_event_invoked = 0
 
         @intent_aware_dispatcher.event(DummyEventType)
@@ -474,7 +481,7 @@ class TestIntentAwareDispatcherImplIT:
 
         assert dummy_event_invoked == 0
 
-    async def test_dispatch_when_event_invoked_errors_integration_test(self, intent_aware_dispatcher):
+    async def test_dispatch_event_when_event_invoked_errors_integration_test(self, intent_aware_dispatcher):
         dummy_event_invoked = 0
         exception_event_invoked = 0
         event_obj = DummyEventType()
