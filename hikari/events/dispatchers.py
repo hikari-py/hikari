@@ -33,7 +33,7 @@ if typing.TYPE_CHECKING:
 
     EventT = typing.TypeVar("EventT", bound=bases.HikariEvent)
     PredicateT = typing.Callable[[EventT], typing.Union[more_typing.Coroutine[bool], bool]]
-    EventCallbackT = typing.Callable[[EventT], more_typing.Coroutine[typing.Any]]
+    EventCallbackT = typing.Callable[[EventT], typing.Union[more_typing.Coroutine[typing.Any], typing.Any]]
 
 
 class EventDispatcher(abc.ABC):
@@ -60,26 +60,23 @@ class EventDispatcher(abc.ABC):
         event_type : typing.Type[hikari.events.base.HikariEvent]
             The event to register to.
         callback : `async def callback(event: HikariEvent) -> ...`
-            The event callback to invoke when this event is fired.
-
-        Raises
-        ------
-        TypeError
-            If `coroutine_function` is not a coroutine.
+            The event callback to invoke when this event is fired; this can be
+            async or non-async.
         """
 
     @abc.abstractmethod
     def remove_listener(self, event_type: typing.Type[EventT], callback: EventCallbackT) -> EventCallbackT:
-        """Remove the given coroutine function from the handlers for the given event.
+        """Remove the given function from the handlers for the given event.
 
-        The name is mandatory to enable supporting registering the same event callback for multiple event types.
+        The name is mandatory to enable supportinng registering the same event callback for multiple event types.
 
         Parameters
         ----------
         event_type : typing.Type[hikari.events.base.HikariEvent]
             The type of event to remove the callback from.
         callback : `async def callback(event: HikariEvent) -> ...`
-            The event callback to invoke when this event is fired.
+            The event callback to invoke when this event is fired; this can be
+            async or non-async.
         """
 
     @abc.abstractmethod
@@ -175,13 +172,13 @@ class EventDispatcher(abc.ABC):
         Returns
         -------
         decorator(T) -> T
-            A decorator for a coroutine function that registers the given event.
+            A decorator for a function that registers the given event.
 
         Raises
         ------
         TypeError:
-            If a coroutine function with an invalid signature is passed,
-            or if no event type is used in the decorator or as a type hint.
+            If a function with an invalid signature is passed, or if no event
+            type is used in the decorator or as a type hint.
         """
 
         def decorator(callback: EventCallbackT) -> EventCallbackT:
