@@ -40,7 +40,6 @@ import aiohttp
 from hikari import errors
 from hikari.clients import runnable
 from hikari.clients import shard_states
-from hikari.events import other
 from hikari.internal import assertions
 from hikari.net import codes
 from hikari.net import ratelimits
@@ -254,7 +253,12 @@ class ShardClientImpl(ShardClient):
             compression=components.config.gateway_use_compression,
             connector=components.config.tcp_connector,
             debug=components.config.debug,
-            dispatch=lambda c, n, pl: components.event_manager.process_raw_event(self, n, pl),
+            # This is a bit of a cheat, we should pass a coroutine function here, but
+            # instead we just use a lambda that does the transformation we want (replaces the
+            # low-level shard argument with the reference to this class object), then return
+            # the result of that coroutine. To the low level client, it looks the same :-)
+            # (also hides a useless stack frame from tracebacks, I guess).
+            dispatcher=lambda c, n, pl: components.event_manager.process_raw_event(self, n, pl),
             initial_presence=self._create_presence_pl(
                 status=components.config.initial_status,
                 activity=components.config.initial_activity,
@@ -374,21 +378,15 @@ class ShardClientImpl(ShardClient):
             self._shard_state = shard_states.ShardState.STOPPING
             self.logger.debug("stopping shard")
 
-            await self._components.event_dispatcher.dispatch_event(other.StoppingEvent())
-
             await self._connection.close()
 
             if self._task is not None:
                 await self._task
 
-            await self._components.event_dispatcher.dispatch_event(other.StoppedEvent())
-
     async def _keep_alive(self):  # pylint: disable=too-many-branches
         back_off = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         last_start = time.perf_counter()
         do_not_back_off = True
-
-        await self._components.event_dispatcher.dispatch_event(other.StartingEvent())
 
         while True:
             try:
@@ -405,10 +403,6 @@ class ShardClientImpl(ShardClient):
                 do_not_back_off = False
 
                 connect_task = await self._spin_up()
-
-                if self._components.event_dispatcher is not None and self.reconnect_count == 0:
-                    # Only dispatch this on initial connect, not on reconnect.
-                    await self._components.event_dispatcher.dispatch_event(other.StartedEvent())
 
                 await connect_task
                 self.logger.critical("shut down silently! this shouldn't happen!")
@@ -456,7 +450,7 @@ class ShardClientImpl(ShardClient):
                 self.logger.warning("unexpected connection close, will attempt to reconnect")
 
             except errors.GatewayClientClosedError:
-                self.logger.warning("shutting down")
+                self.logger.warning("gateway client closed by user, will not attempt to restart")
                 return
             except Exception as ex:
                 self.logger.debug("propagating unexpected exception", exc_info=ex)
