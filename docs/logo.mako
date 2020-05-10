@@ -22,16 +22,14 @@
     version = "staging" if "dev" in version.LooseVersion(hikari.__version__).version else "production"
 %>
 <header>
-    % if version == "staging":
         <a class="homelink" rel="home" title="Hikari Home" href="https://nekokatt.gitlab.io/hikari">
-    % endif
-        <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/12050696/Hikari-Logo_1.png" alt="">
-        Hikari
-    </a>
+            <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/12050696/Hikari-Logo_1.png" alt="">
+            Hikari
+        </a>
     <p class="homelink-footer">This is for version ${hikari.__version__}, a ${version} release.</p>
     <ul class="links">
-        <li><a href="http://gitlab.com/nekokatt/hikari">Source</a></li>
-        <li><a href="http://gitlab.com/nekokatt/hikari/pipelines">Builds</a></li>
-        <li><a href="https://discord.gg/Jx4cNGG">Discord Server</a></li>
+        <li><a href="${hikari.__url__}">Source</a></li>
+        <li><a href="${hikari.__ci__}">Builds</a></li>
+        <li><a href="${hikari.__discord_invite__}">Discord Server</a></li>
     </ul>
 </header>

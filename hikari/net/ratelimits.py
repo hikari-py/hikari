@@ -229,7 +229,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     complete logic for safely aborting any pending tasks when being shut down.
     """
 
-    __slots__ = ("name", "throttle_task", "queue", "logger")
+    __slots__ = ("name", "throttle_task", "queue", "logger", "_closed")
 
     name: typing.Final[str]
     """The name of the rate limiter."""
@@ -248,6 +248,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         self.throttle_task = None
         self.queue = []
         self.logger = logging.getLogger(f"hikari.net.{type(self).__qualname__}.{name}")
+        self._closed = False
 
     @abc.abstractmethod
     def acquire(self) -> more_typing.Future[None]:
@@ -268,6 +269,9 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
         Once this is invoked, you should not reuse this object.
         """
+        if self._closed:
+            return
+
         if self.throttle_task is not None:
             self.throttle_task.cancel()
 
@@ -282,6 +286,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
             self.logger.debug("%s rate limiter closed with %s pending tasks!", self.name, failed_tasks)
         else:
             self.logger.debug("%s rate limiter closed", self.name)
+        self._closed = True
 
     @property
     def is_empty(self) -> bool:

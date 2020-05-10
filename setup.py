@@ -172,7 +172,7 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Typing :: Typed",
     ],
-    entry_points={"console_scripts": ["hikari-test = hikari.clients.test"]},
+    entry_points={"console_scripts": ["hikari = hikari.__main__:main", "hikari-test = hikari.clients.test:main",]},
     provides="hikari",
     # """Acceleration stuff for the future."""
     # ext_modules=extensions,
