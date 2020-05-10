@@ -297,7 +297,9 @@ class HTTPErrorResponse(HTTPError):
         self.raw_body = raw_body
 
     def __str__(self) -> str:
-        return f"{self.status.value} {self.status.name}: {self.raw_body}"
+        raw_body = str(self.raw_body)
+        chomped = len(raw_body) > 200
+        return f"{self.status.value} {self.status.name}: {raw_body[:200]}{'...' if chomped else ''}"
 
 
 class ClientHTTPErrorResponse(HTTPErrorResponse):

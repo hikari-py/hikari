@@ -129,8 +129,10 @@ class GuildBanRemoveEvent(BaseGuildBanEvent):
 
 def _deserialize_emojis(
     payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Mapping[base_entities.Snowflake, _emojis.GuildEmoji]:
-    return {base_entities.Snowflake(emoji["id"]): _emojis.GuildEmoji.deserialize(emoji, **kwargs) for emoji in payload}
+) -> typing.Mapping[base_entities.Snowflake, _emojis.KnownCustomEmoji]:
+    return {
+        base_entities.Snowflake(emoji["id"]): _emojis.KnownCustomEmoji.deserialize(emoji, **kwargs) for emoji in payload
+    }
 
 
 @base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
@@ -142,7 +144,7 @@ class GuildEmojisUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
     guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake)
     """The ID of the guild this emoji was updated in."""
 
-    emojis: typing.Mapping[base_entities.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
+    emojis: typing.Mapping[base_entities.Snowflake, _emojis.KnownCustomEmoji] = marshaller.attrib(
         deserializer=_deserialize_emojis, inherit_kwargs=True, repr=True
     )
     """The updated mapping of emojis by their ID."""

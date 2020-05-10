@@ -325,7 +325,7 @@ class MessageReactionAddEvent(base_events.HikariEvent, marshaller.Deserializable
     This will be `None` if this is happening in a DM channel.
     """
 
-    emoji: typing.Union[emojis.UnknownEmoji, emojis.UnicodeEmoji] = marshaller.attrib(
+    emoji: typing.Union[emojis.CustomEmoji, emojis.UnicodeEmoji] = marshaller.attrib(
         deserializer=emojis.deserialize_reaction_emoji, inherit_kwargs=True, repr=True
     )
     """The object of the emoji being added."""
@@ -354,7 +354,7 @@ class MessageReactionRemoveEvent(base_events.HikariEvent, marshaller.Deserializa
     This will be `None` if this event is happening in a DM channel.
     """
 
-    emoji: typing.Union[emojis.UnicodeEmoji, emojis.UnknownEmoji] = marshaller.attrib(
+    emoji: typing.Union[emojis.UnicodeEmoji, emojis.CustomEmoji] = marshaller.attrib(
         deserializer=emojis.deserialize_reaction_emoji, inherit_kwargs=True, repr=True
     )
     """The object of the emoji being removed."""
@@ -401,7 +401,7 @@ class MessageReactionRemoveEmojiEvent(base_events.HikariEvent, marshaller.Deseri
     message_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake, repr=True)
     """The ID of the message the reactions are being removed from."""
 
-    emoji: typing.Union[emojis.UnicodeEmoji, emojis.UnknownEmoji] = marshaller.attrib(
+    emoji: typing.Union[emojis.UnicodeEmoji, emojis.CustomEmoji] = marshaller.attrib(
         deserializer=emojis.deserialize_reaction_emoji, inherit_kwargs=True, repr=True
     )
     """The object of the emoji that's being removed."""

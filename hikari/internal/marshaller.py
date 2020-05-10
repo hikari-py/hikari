@@ -221,7 +221,7 @@ class _AttributeDescriptor:
         if_none: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)],
         if_undefined: typing.Union[typing.Callable[..., typing.Any], None, type(RAISE)],
         is_inheriting_kwargs: bool,
-        deserializer: typing.Callable[[...], typing.Any],
+        deserializer: typing.Callable[..., typing.Any],
         serializer: typing.Callable[[typing.Any], typing.Any],
     ) -> None:
         _default_validator(if_undefined)
@@ -454,14 +454,14 @@ def marshallable(*, marshaller: HikariEntityMarshaller = HIKARI_ENTITY_MARSHALLE
         then default to the hikari-global marshaller instead. This is
         useful, however, for testing and for external usage.
 
-    Returns
-    -------
-    `decorator(T) -> T`
-        A decorator to decorate a class with.
-
     !!! note
         The `auto_attribs` functionality provided by `attr.s` is not
         supported by this marshaller utility. Do not attempt to use it!
+
+    Returns
+    -------
+    typing.Callable
+        A decorator to decorate a class with.
 
     Examples
     --------
@@ -470,6 +470,7 @@ def marshallable(*, marshaller: HikariEntityMarshaller = HIKARI_ENTITY_MARSHALLE
             id: int = attrib(deserializer=int, serializer=str)
             password: str = attrib(deserializer=int, transient=True)
             ...
+
     """
 
     def decorator(cls: ClsT) -> ClsT:

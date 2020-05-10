@@ -39,6 +39,12 @@ should be interpolated.
 OAUTH2_API_URL: typing.Final[str] = "https://discord.com/api/oauth2"
 """The URL to the Discord OAuth2 API."""
 
+TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/72x72/"
+"""The URL for Twemoji PNG artwork for built-in emojis."""
+
+TWEMOJI_SVG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/svg/"
+"""The URL for Twemoji SVG artwork for built-in emojis."""
+
 
 def generate_cdn_url(*route_parts: str, fmt: str, size: typing.Optional[int]) -> str:
     """Generate a link for a Discord CDN media resource.
