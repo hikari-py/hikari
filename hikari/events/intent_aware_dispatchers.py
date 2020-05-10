@@ -30,7 +30,6 @@ from hikari import errors
 from hikari import intents
 from hikari.events import base
 from hikari.events import other
-from hikari.internal import assertions
 from hikari.internal import more_asyncio
 from hikari.internal import more_collections
 from hikari.events import dispatchers
@@ -108,13 +107,11 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         If you subscribe to an event that requires intents that you do not have
         set, you will receive a warning.
         """
-        assertions.assert_that(
-            asyncio.iscoroutinefunction(callback), "You must subscribe a coroutine function only", TypeError
-        )
+        if not asyncio.iscoroutinefunction(callback):
+            raise TypeError("You must subscribe a coroutine function only")
 
-        assertions.assert_that(
-            issubclass(event_type, base.HikariEvent), "Events must subclass hikari.events.HikariEvent", TypeError
-        )
+        if not issubclass(event_type, base.HikariEvent):
+            raise TypeError("Events must subclass hikari.events.HikariEvent")
 
         required_intents = base.get_required_intents_for(event_type)
         enabled_intents = self._enabled_intents if self._enabled_intents is not None else 0
