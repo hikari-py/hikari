@@ -33,7 +33,6 @@ from hikari import invites
 from hikari import messages as _messages
 from hikari import webhooks
 from hikari.clients.rest import base
-from hikari.internal import assertions
 from hikari.internal import helpers
 
 if typing.TYPE_CHECKING:
@@ -386,7 +385,8 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             If you are missing the `READ_MESSAGE_HISTORY` permission for the
             channel or guild.
         """
-        assertions.assert_that(len(kwargs) <= 1, "only one of 'before', 'after', 'around' can be specified")
+        if len(kwargs) > 1:
+            raise TypeError("only one of 'before', 'after', 'around' can be specified")
 
         try:
             direction, first = kwargs.popitem()
@@ -726,9 +726,8 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
                     str(m.id if isinstance(m, bases.Unique) else int(m)) for m in (message, *additional_messages)
                 )
             )
-            assertions.assert_that(
-                len(messages) <= 100, "Only up to 100 messages can be bulk deleted in a single request."
-            )
+            if len(messages) > 100:
+                raise ValueError("Only up to 100 messages can be bulk deleted in a single request.")
 
             if len(messages) > 1:
                 await self._session.bulk_delete_messages(

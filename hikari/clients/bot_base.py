@@ -39,7 +39,6 @@ from hikari.clients import configs
 from hikari.clients import runnable
 from hikari.clients import shard_states
 from hikari.events import other, dispatchers, event_managers
-from hikari.internal import assertions
 from hikari.internal import conversions
 
 if typing.TYPE_CHECKING:
@@ -80,9 +79,8 @@ class BotBase(
     """The logger to use for this bot."""
 
     def __init__(self, *, config: typing.Optional[configs.BotConfig] = None, **kwargs: typing.Any) -> None:
-        assertions.assert_that(
-            bool(config) ^ bool(kwargs), "You must only specify a config object OR kwargs;", TypeError,
-        )
+        if not bool(config) ^ bool(kwargs):
+            raise TypeError("You must only specify a config object OR kwargs.")
 
         runnable.RunnableClient.__init__(self, logging.getLogger(f"hikari.{type(self).__qualname__}"))
 

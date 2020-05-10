@@ -27,7 +27,6 @@ __all__ = [
 import typing
 import urllib.parse
 
-from hikari.internal import assertions
 
 BASE_CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
 """The URL for the CDN."""
@@ -67,9 +66,10 @@ def generate_cdn_url(*route_parts: str, fmt: str, size: typing.Optional[int]) ->
     ValueError
         If `size` is not a power of two or not between 16 and 4096.
     """
-    if size:
-        assertions.assert_in_range(size, 16, 4096)
-        assertions.assert_is_int_power(size, 2)
+    if size and not 16 <= size <= 4096:
+        raise ValueError("Size must be in the inclusive range of 16 and 4096")
+    if size and size % 2 != 0:
+        raise ValueError("Size must be an integer power of 2")
 
     path = "/".join(urllib.parse.unquote(part) for part in route_parts)
     url = urllib.parse.urljoin(BASE_CDN_URL, "/" + path) + "." + str(fmt)

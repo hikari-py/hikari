@@ -230,6 +230,14 @@ class TestEmbedField:
 
 
 class TestEmbed:
+    @_helpers.assert_raises(type_=ValueError)
+    def test_embed___init___raises_value_error_on_invalid_title(self):
+        embeds.Embed(title="x" * 257)
+
+    @_helpers.assert_raises(type_=ValueError)
+    def test_embed___init___raises_value_error_on_invalid_description(self):
+        embeds.Embed(description="x" * 2049)
+
     def test_deserialize(
         self,
         test_embed_payload,
@@ -356,6 +364,11 @@ class TestEmbed:
         assert em.footer.icon_url == "https://somewhere.url/image.png"
         assert em._assets_to_upload == []
 
+    @_helpers.assert_raises(type_=ValueError)
+    @pytest.mark.parametrize("text", ["   ", "", "x" * 2100])
+    def test_set_footer_raises_value_error_on_invalid_text(self, text):
+        embeds.Embed().set_footer(text=text)
+
     def test_set_image_without_optionals(self):
         em = embeds.Embed()
         assert em.set_image() == em
@@ -424,6 +437,11 @@ class TestEmbed:
         assert em.author.icon_url == "https://somewhere.url/image.png"
         assert em._assets_to_upload == []
 
+    @_helpers.assert_raises(type_=ValueError)
+    @pytest.mark.parametrize("name", ["", " ", "x" * 257])
+    def test_set_author_raises_value_error_on_invalid_name(self, name):
+        embeds.Embed().set_author(name=name)
+
     def test_add_field_without_optionals(self):
         em = embeds.Embed()
         assert em.add_field(name="test_name", value="test_value") == em
@@ -445,6 +463,23 @@ class TestEmbed:
             assert em.fields[0].value == "test_value"
             assert em.fields[0].is_inline is True
 
+    @_helpers.assert_raises(type_=ValueError)
+    def test_add_field_raises_value_error_on_too_many_fields(self):
+        fields = [mock.MagicMock(embeds.EmbedField) for _ in range(25)]
+        embeds.Embed(fields=fields).add_field(name="test", value="blam")
+
+    @_helpers.assert_raises(type_=ValueError)
+    @pytest.mark.parametrize("name", ["", " ", "x" * 257])
+    def test_add_field_raises_value_error_on_invalid_name(self, name):
+        fields = [mock.MagicMock(embeds.EmbedField)]
+        embeds.Embed(fields=fields).add_field(name=name, value="blam")
+
+    @_helpers.assert_raises(type_=ValueError)
+    @pytest.mark.parametrize("value", ["", " ", "x" * 2049])
+    def test_add_field_raises_value_error_on_invalid_value(self, value):
+        fields = [mock.MagicMock(embeds.EmbedField)]
+        embeds.Embed(fields=fields).add_field(name="test", value=value)
+
     def test_edit_field_without_optionals(self):
         field_obj = embeds.EmbedField(name="nothing to see here", value="still nothing")
         em = embeds.Embed()
@@ -464,6 +499,18 @@ class TestEmbed:
         assert em.fields[0].name == "test_name"
         assert em.fields[0].value == "test_value"
         assert em.fields[0].is_inline is True
+
+    @_helpers.assert_raises(type_=ValueError)
+    @pytest.mark.parametrize("name", ["", " ", "x" * 257])
+    def test_edit_field_raises_value_error_on_invalid_name(self, name):
+        fields = [mock.MagicMock(embeds.EmbedField)]
+        embeds.Embed(fields=fields).edit_field(0, name=name, value="blam")
+
+    @_helpers.assert_raises(type_=ValueError)
+    @pytest.mark.parametrize("value", ["", " ", "x" * 2049])
+    def test_edit_field_raises_value_error_on_invalid_value(self, value):
+        fields = [mock.MagicMock(embeds.EmbedField)]
+        embeds.Embed(fields=fields).edit_field(0, name="test", value=value)
 
     def test_remove_field(self):
         mock_field1 = mock.MagicMock(embeds.EmbedField)

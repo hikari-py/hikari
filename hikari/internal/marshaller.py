@@ -42,7 +42,6 @@ import weakref
 
 import attr
 
-from hikari.internal import assertions
 from hikari.internal import more_collections
 
 if typing.TYPE_CHECKING:
@@ -195,14 +194,11 @@ def _not_implemented(op, name):
 
 
 def _default_validator(value: typing.Any):
-    assertions.assert_that(
-        value is RAISE or value in _PASSED_THROUGH_SINGLETONS or callable(value),
-        message=(
+    if value is not RAISE and value not in _PASSED_THROUGH_SINGLETONS and not callable(value):
+        raise RuntimeError(
             "Invalid default factory passed for `if_undefined` or `if_none`; "
             f"expected a callable or one of the 'passed through singletons' but got {value}."
-        ),
-        error_type=RuntimeError,
-    )
+        )
 
 
 class _AttributeDescriptor:
@@ -274,11 +270,8 @@ def _construct_attribute_descriptor(field: attr.Attribute) -> _AttributeDescript
 
 
 def _construct_entity_descriptor(entity: typing.Any) -> _EntityDescriptor:
-    assertions.assert_that(
-        hasattr(entity, "__attrs_attrs__"),
-        f"{entity.__module__}.{entity.__qualname__} is not an attr class",
-        error_type=TypeError,
-    )
+    if not hasattr(entity, "__attrs_attrs__"):
+        raise TypeError(f"{entity.__module__}.{entity.__qualname__} is not an attr class")
 
     return _EntityDescriptor(
         entity,

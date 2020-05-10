@@ -24,8 +24,6 @@ __all__ = ["Color", "ColorCompatibleT"]
 import string
 import typing
 
-from hikari.internal import assertions
-
 
 class Color(int):
     """Representation of a color.
@@ -102,7 +100,8 @@ class Color(int):
     __slots__ = ()
 
     def __new__(cls, raw_rgb: typing.SupportsInt) -> Color:
-        assertions.assert_in_range(raw_rgb, 0, 0xFF_FF_FF, "integer value")
+        if not 0 <= int(raw_rgb) <= 0xFF_FF_FF:
+            raise ValueError(f"raw_rgb must be in the exclusive range of 0 and {0xFF_FF_FF}")
         return super(Color, cls).__new__(cls, raw_rgb)
 
     def __repr__(self) -> str:
@@ -186,9 +185,12 @@ class Color(int):
         ValueError
             If red, green, or blue are outside the range [0x0, 0xFF].
         """
-        assertions.assert_in_range(red, 0, 0xFF, "red")
-        assertions.assert_in_range(green, 0, 0xFF, "green")
-        assertions.assert_in_range(blue, 0, 0xFF, "blue")
+        if not 0 <= red <= 0xFF:
+            raise ValueError(f"red must be in the inclusive range of 0 and {0xFF}")
+        if not 0 <= green <= 0xFF:
+            raise ValueError(f"green must be in the inclusive range of 0 and {0xFF}")
+        if not 0 <= blue <= 0xFF:
+            raise ValueError(f"blue must be in the inclusive range of 0 and {0xFF}")
         # noinspection PyTypeChecker
         return cls((red << 16) | (green << 8) | blue)
 
@@ -218,9 +220,12 @@ class Color(int):
         ValueError
             If red, green or blue are outside the range [0, 1].
         """
-        assertions.assert_in_range(red_f, 0, 1, "red")
-        assertions.assert_in_range(green_f, 0, 1, "green")
-        assertions.assert_in_range(blue_f, 0, 1, "blue")
+        if not 0 <= red_f <= 1:
+            raise ValueError("red must be in the inclusive range of 0 and 1.")
+        if not 0 <= green_f <= 1:
+            raise ValueError("green must be in the inclusive range of 0 and 1.")
+        if not 0 <= blue_f <= 1:
+            raise ValueError("blue must be in the inclusive range of 0 and 1.")
         # noinspection PyTypeChecker
         return cls.from_rgb(int(red_f * 0xFF), int(green_f * 0xFF), int(blue_f * 0xFF))
 
@@ -328,15 +333,14 @@ class Color(int):
         if isinstance(values, int):
             return cls.from_int(values)
         if isinstance(values, (list, tuple)):
-            assertions.assert_that(
-                len(values) == 3, f"color must be an RGB triplet if set to a {type(values).__name__} type"
-            )
+            if len(values) != 3:
+                raise ValueError(f"color must be an RGB triplet if set to a {type(values).__name__} type")
 
             if any(isinstance(c, float) for c in values):
-                return cls.from_rgb_float(*values)
+                return cls.from_rgb_float(*values)  # pylint: disable=no-value-for-parameter
 
             if all(isinstance(c, int) for c in values):
-                return cls.from_rgb(*values)
+                return cls.from_rgb(*values)  # pylint: disable=no-value-for-parameter
 
         if isinstance(values, str):
             is_start_hash_or_hex_literal = values.casefold().startswith(("#", "0x"))

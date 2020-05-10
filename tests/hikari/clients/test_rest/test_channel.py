@@ -172,6 +172,19 @@ class TestRESTChannelLogging:
             session=rest_channel_logic_impl._session,
         )
 
+    @_helpers.assert_raises(type_=TypeError)
+    @pytest.mark.parametrize(
+        "directions",
+        (
+            {"after": 123, "before": 324},
+            {"after": 312, "around": 444},
+            {"before": 444, "around": 1010},
+            {"around": 123, "before": 432, "after": 19929},
+        ),
+    )
+    def test_fetch_messages_raises_type_error_on_multiple_directions(self, rest_channel_logic_impl, directions):
+        rest_channel_logic_impl.fetch_messages(123123, **directions)
+
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 55555, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 565656, messages.Message)
