@@ -17,7 +17,7 @@ import hikari
 bot = hikari.StatelessBot(token="...")
 
 
-@bot.on(hikari.MessageCreateEvent)
+@bot.event(hikari.MessageCreateEvent)
 async def ping(event):
     # If a non-bot user sends a message "hk.ping", respond with "Pong!"
 
