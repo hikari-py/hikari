@@ -44,6 +44,7 @@ import attr
 from hikari import bases
 from hikari import permissions
 from hikari import users
+from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import more_collections
 from hikari.internal import more_enums
@@ -281,6 +282,15 @@ class GuildTextChannel(GuildChannel):
         are not affected by this.
     """
 
+    last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
+        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None
+    )
+    """The timestamp of the last-pinned message. 
+    
+    This may be `None` in several cases (currently undocumented clearly by 
+    Discord).
+    """
+
 
 @register_channel_type(ChannelType.GUILD_NEWS)
 @marshaller.marshallable()
@@ -296,6 +306,15 @@ class GuildNewsChannel(GuildChannel):
 
     !!! note
         This might point to an invalid or deleted message.
+    """
+
+    last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
+        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None
+    )
+    """The timestamp of the last-pinned message. 
+
+    This may be `None` in several cases (currently undocumented clearly by 
+    Discord).
     """
 
 
