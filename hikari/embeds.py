@@ -39,7 +39,6 @@ import attr
 from hikari import bases
 from hikari import colors
 from hikari import files
-from hikari.internal import assertions
 from hikari.internal import conversions
 from hikari.internal import marshaller
 
@@ -267,10 +266,8 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
 
     @title.validator
     def _title_check(self, _, value):  # pylint:disable=unused-argument
-        if value is not None:
-            assertions.assert_that(
-                len(value) <= _MAX_EMBED_TITLE, f"title must not exceed {_MAX_EMBED_TITLE} characters"
-            )
+        if value is not None and len(value) > _MAX_EMBED_TITLE:
+            raise ValueError(f"title must not exceed {_MAX_EMBED_TITLE} characters")
 
     description: typing.Optional[str] = marshaller.attrib(
         deserializer=str, serializer=str, if_undefined=None, default=None
@@ -279,10 +276,8 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
 
     @description.validator
     def _description_check(self, _, value):  # pylint:disable=unused-argument
-        if value is not None:
-            assertions.assert_that(
-                len(value) <= _MAX_EMBED_DESCRIPTION, f"description must not exceed {_MAX_EMBED_DESCRIPTION} characters"
-            )
+        if value is not None and len(value) > _MAX_EMBED_DESCRIPTION:
+            raise ValueError(f"description must not exceed {_MAX_EMBED_DESCRIPTION} characters")
 
     url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None, default=None)
     """The URL of the embed."""
@@ -409,10 +404,11 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
         ValueError
             If `text` exceeds 2048 characters or consists purely of whitespaces.
         """
-        assertions.assert_that(len(text.strip()) > 0, "footer.text must not be empty or purely of whitespaces")
-        assertions.assert_that(
-            len(text) <= _MAX_FOOTER_TEXT, f"footer.text must not exceed {_MAX_FOOTER_TEXT} characters"
-        )
+        if not text.strip():
+            raise ValueError("footer.text must not be empty or purely of whitespaces")
+        if len(text) > _MAX_FOOTER_TEXT:
+            raise ValueError(f"footer.text must not exceed {_MAX_FOOTER_TEXT} characters")
+
         icon, file = self._extract_url(icon)
         self.footer = EmbedFooter(text=text, icon_url=icon)
         self._maybe_ref_file_obj(file)
@@ -482,12 +478,11 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
         ValueError
             If `name` exceeds 256 characters or consists purely of whitespaces.
         """
-        assertions.assert_that(
-            name is None or len(name.strip()) > 0, "author.name must not be empty or purely of whitespaces"
-        )
-        assertions.assert_that(
-            name is None or len(name) <= _MAX_AUTHOR_NAME, f"author.name must not exceed {_MAX_AUTHOR_NAME} characters"
-        )
+        if name is not None and not name.strip():
+            raise ValueError("author.name must not be empty or purely of whitespaces")
+        if name is not None and len(name) > _MAX_AUTHOR_NAME:
+            raise ValueError(f"author.name must not exceed {_MAX_AUTHOR_NAME} characters")
+
         icon, icon_file = self._extract_url(icon)
         self.author = EmbedAuthor(name=name, url=url, icon_url=icon)
         self._maybe_ref_file_obj(icon_file)
@@ -520,18 +515,18 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
             25 fields are present in the embed.
         """
         index = index if index is not None else len(self.fields)
-        assertions.assert_that(
-            len(self.fields) <= _MAX_EMBED_FIELDS and index < _MAX_EMBED_FIELDS,
-            f"no more than {_MAX_EMBED_FIELDS} fields can be stored",
-        )
-        assertions.assert_that(len(name.strip()) > 0, "field.name must not be empty or purely of whitespaces")
-        assertions.assert_that(len(value.strip()) > 0, "field.value must not be empty or purely of whitespaces")
-        assertions.assert_that(
-            len(name.strip()) <= _MAX_FIELD_NAME, f"field.name must not exceed {_MAX_FIELD_NAME} characters"
-        )
-        assertions.assert_that(
-            len(value) <= _MAX_FIELD_VALUE, f"field.value must not exceed {_MAX_FIELD_VALUE} characters"
-        )
+        if len(self.fields) >= _MAX_EMBED_FIELDS:
+            raise ValueError(f"no more than {_MAX_EMBED_FIELDS} fields can be stored")
+
+        if not name.strip():
+            raise ValueError("field.name must not be empty or purely of whitespaces")
+        if len(name) > _MAX_FIELD_NAME:
+            raise ValueError(f"field.name must not exceed {_MAX_FIELD_NAME} characters")
+
+        if not value.strip():
+            raise ValueError("field.value must not be empty or purely of whitespaces")
+        if len(value) > _MAX_FIELD_VALUE:
+            raise ValueError(f"field.value must not exceed {_MAX_FIELD_VALUE} characters")
 
         self.fields.insert(index, EmbedField(name=name, value=value, is_inline=inline))
         return self
@@ -564,16 +559,15 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
             If `title` exceeds 256 characters or `value` exceeds 2048 characters; if
             the `name` or `value` consist purely of whitespace, or be zero characters in size.
         """
-        if name is not ...:
-            assertions.assert_that(len(name.strip()) > 0, "field.name must not be empty or purely of whitespaces")
-            assertions.assert_that(
-                len(name.strip()) <= _MAX_FIELD_NAME, f"field.name must not exceed {_MAX_FIELD_NAME} characters"
-            )
-        if value is not ...:
-            assertions.assert_that(len(value.strip()) > 0, "field.value must not be empty or purely of whitespaces")
-            assertions.assert_that(
-                len(value) <= _MAX_FIELD_VALUE, f"field.value must not exceed {_MAX_FIELD_VALUE} characters"
-            )
+        if name is not ... and not name.strip():
+            raise ValueError("field.name must not be empty or purely of whitespaces")
+        if name is not ... and len(name.strip()) > _MAX_FIELD_NAME:
+            raise ValueError(f"field.name must not exceed {_MAX_FIELD_NAME} characters")
+
+        if value is not ... and not value.strip():
+            raise ValueError("field.value must not be empty or purely of whitespaces")
+        if value is not ... and len(value) > _MAX_FIELD_VALUE:
+            raise ValueError(f"field.value must not exceed {_MAX_FIELD_VALUE} characters")
 
         field = self.fields[index]
 
@@ -617,9 +611,8 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
             total_size += len(field.name)
             total_size += len(field.value)
 
-        assertions.assert_that(
-            total_size <= _MAX_EMBED_SIZE, f"Total characters in an embed can not exceed {_MAX_EMBED_SIZE}"
-        )
+        if total_size > _MAX_EMBED_SIZE:
+            raise ValueError("Total characters in an embed can not exceed {_MAX_EMBED_SIZE}")
 
     def serialize(self) -> more_typing.JSONObject:
         self._check_total_length()

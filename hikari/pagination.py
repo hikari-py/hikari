@@ -24,7 +24,6 @@ import datetime
 import typing
 
 from hikari import bases
-from hikari.internal import assertions
 from hikari.internal import more_collections
 
 _T = typing.TypeVar("_T")
@@ -220,7 +219,8 @@ class _LimitedPaginatedResults(typing.Generic[_T], PaginatedResults[_T]):
     __slots__ = ("_paginator", "_count", "_limit")
 
     def __init__(self, paginator: PaginatedResults[_T], limit: int) -> None:
-        assertions.assert_that(limit > 0, "limit must be positive and non-zero")
+        if limit <= 0:
+            raise ValueError("limit must be positive and non-zero")
         self._paginator = paginator
         self._count = 0
         self._limit = limit

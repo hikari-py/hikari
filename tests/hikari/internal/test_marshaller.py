@@ -101,6 +101,15 @@ class TestMarshaller:
     def marshaller_impl(self):
         return marshaller.HikariEntityMarshaller()
 
+    @_helpers.assert_raises(type_=TypeError)
+    def test_register_raises_type_error_on_none_attr_class(self, marshaller_impl):
+        defaulted_foo = mock.MagicMock()
+
+        @marshaller.marshallable(marshaller=marshaller_impl)
+        class User:
+            id: int = marshaller.attrib(deserializer=int)
+            foo: list = attr.attrib(default=defaulted_foo)
+
     def test_register_ignores_none_marshaller_attrs(self, marshaller_impl):
         defaulted_foo = mock.MagicMock()
 

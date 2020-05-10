@@ -26,7 +26,6 @@ import inspect
 import logging
 import typing
 
-from hikari.internal import assertions
 from hikari.events import dispatchers, consumers
 
 if typing.TYPE_CHECKING:
@@ -55,7 +54,9 @@ def raw_event_mapper(name: str) -> typing.Callable[[EventConsumerT], EventConsum
     """
 
     def decorator(callable: EventConsumerT) -> EventConsumerT:
-        assertions.assert_that(inspect.iscoroutinefunction(callable), "Annotated element must be a coroutine function")
+        if not inspect.iscoroutinefunction(callable):
+            raise ValueError("Annotated element must be a coroutine function")
+
         event_set = getattr(callable, EVENT_MARKER_ATTR, set())
         event_set.add(name)
         setattr(callable, EVENT_MARKER_ATTR, event_set)

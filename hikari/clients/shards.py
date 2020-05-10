@@ -40,7 +40,6 @@ import aiohttp
 from hikari import errors
 from hikari.clients import runnable
 from hikari.clients import shard_states
-from hikari.internal import assertions
 from hikari.net import codes
 from hikari.net import ratelimits
 from hikari.net import shards
@@ -524,10 +523,8 @@ class ShardClientImpl(ShardClient):
         is_afk: bool = ...,
     ) -> None:
         # We wouldn't ever want to do this, so throw an error if it happens.
-        assertions.assert_that(
-            status is not ... or activity is not ... or idle_since is not ... or is_afk is not ...,
-            "update_presence requires at least one argument to be passed",
-        )
+        if status is ... and activity is ... and idle_since is ... and is_afk is ...:
+            raise ValueError("update_presence requires at least one argument to be passed")
 
         status = self._status if status is ... else status
         activity = self._activity if activity is ... else activity
