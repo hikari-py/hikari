@@ -92,7 +92,7 @@ class TestShardClientImpl:
             "some_url",
         )
 
-        assert shard_client_obj._connection.dispatch(shard_client_obj, "TEST", {}) == "ASSERT TRUE"
+        assert shard_client_obj._connection.dispatcher(shard_client_obj, "TEST", {}) == "ASSERT TRUE"
 
     def test_connection_is_set(self, shard_client_obj):
         mock_shard_connection = mock.MagicMock(low_level_shards.Shard)

@@ -54,12 +54,12 @@ def raw_event_mapper(name: str) -> typing.Callable[[EventConsumerT], EventConsum
 
     """
 
-    def decorator(callable_item: EventConsumerT) -> EventConsumerT:
-        assertions.assert_that(inspect.isfunction(callable_item), "Annotated element must be a function")
-        event_set = getattr(callable_item, EVENT_MARKER_ATTR, set())
+    def decorator(callable: EventConsumerT) -> EventConsumerT:
+        assertions.assert_that(inspect.iscoroutinefunction(callable), "Annotated element must be a coroutine function")
+        event_set = getattr(callable, EVENT_MARKER_ATTR, set())
         event_set.add(name)
-        setattr(callable_item, EVENT_MARKER_ATTR, event_set)
-        return callable_item
+        setattr(callable, EVENT_MARKER_ATTR, event_set)
+        return callable
 
     return decorator
 
@@ -151,7 +151,7 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
             for event_name in event_names:
                 self.raw_event_mappers[event_name] = member
 
-    def process_raw_event(
+    async def process_raw_event(
         self, shard_client_obj: shards.ShardClient, name: str, payload: typing.Mapping[str, typing.Any],
     ) -> None:
         """Process a low level event.
@@ -175,11 +175,8 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
             return
 
         try:
-            handler(shard_client_obj, payload)
-        except Exception as ex:  # pylint: disable=broad-except
+            await handler(shard_client_obj, payload)
+        except Exception as ex:
             self.logger.exception(
-                "Failed to unmarshal %r event payload. This is likely a bug in Hikari itself. "
-                "Please contact a library dev or make an issue on the issue tracker for more support.",
-                name,
-                exc_info=ex,
+                "Failed to unmarshal %r event payload. This is likely a bug in the library itself.", exc_info=ex,
             )

@@ -254,7 +254,12 @@ class ShardClientImpl(ShardClient):
             compression=components.config.gateway_use_compression,
             connector=components.config.tcp_connector,
             debug=components.config.debug,
-            dispatch=lambda c, n, pl: components.event_manager.process_raw_event(self, n, pl),
+            # This is a bit of a cheat, we should pass a coroutine function here, but
+            # instead we just use a lambda that does the transformation we want (replaces the
+            # low-level shard argument with the reference to this class object), then return
+            # the result of that coroutine. To the low level client, it looks the same :-)
+            # (also hides a useless stack frame from tracebacks, I guess).
+            dispatcher=lambda c, n, pl: components.event_manager.process_raw_event(self, n, pl),
             initial_presence=self._create_presence_pl(
                 status=components.config.initial_status,
                 activity=components.config.initial_activity,
