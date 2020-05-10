@@ -21,6 +21,7 @@ import math
 import pytest
 
 from hikari import colors
+from tests.hikari import _helpers
 
 
 @pytest.mark.model
@@ -137,6 +138,7 @@ class TestColor:
             (0xFF051A, colors.Color(0xFF051A)),
             (16712986, colors.Color(0xFF051A)),
             ((255, 5, 26), colors.Color(0xFF051A)),
+            ((1, 0.5, 0), colors.Color(0xFF7F00)),
             ([0xFF, 0x5, 0x1A], colors.Color(0xFF051A)),
             ("#1a2b3c", colors.Color(0x1A2B3C)),
             ("#123", colors.Color(0x112233)),
@@ -174,12 +176,9 @@ class TestColor:
             b"1ff1ff",
         ],
     )
+    @_helpers.assert_raises(type_=ValueError)
     def test_Color_of_sad_path(self, input):
-        try:
-            result = colors.Color.of(input)
-            assert False, f"Expected ValueError, got {result} returned safely instead"
-        except ValueError:
-            pass
+        colors.Color.of(input)
 
     def test_Color_of_with_multiple_args(self):
         result = colors.Color.of(0xFF, 0x5, 0x1A)

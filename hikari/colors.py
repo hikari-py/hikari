@@ -332,16 +332,12 @@ class Color(int):
                 len(values) == 3, f"color must be an RGB triplet if set to a {type(values).__name__} type"
             )
 
-            if _all_same(*map(type, values)):
-                first = values[0]
-                if isinstance(first, float):
-                    return cls.from_rgb_float(*values)  # pylint:disable=no-value-for-parameter
-                if isinstance(first, int):
-                    return cls.from_rgb(*values)  # pylint:disable=no-value-for-parameter
+            if any(isinstance(c, float) for c in values):
+                return cls.from_rgb_float(*values)
 
-                raise ValueError(
-                    "all three channels must be all int or all float types if setting the color to an RGB triplet"
-                )
+            if all(isinstance(c, int) for c in values):
+                return cls.from_rgb(*values)
+
         if isinstance(values, str):
             is_start_hash_or_hex_literal = values.casefold().startswith(("#", "0x"))
             is_hex_digits = all(c in string.hexdigits for c in values) and len(values) in (3, 6)
