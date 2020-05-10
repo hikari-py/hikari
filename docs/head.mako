@@ -26,7 +26,7 @@
             data-mr-url="https://gitlab.com"
             data-project-path="${os.environ['CI_PROJECT_PATH']}"
             id="review-app-toolbar-script"
-            data-require-auth="true"
+            data-require-auth="false"
             src="https://gitlab.com/assets/webpack/visual_review_toolbar.js">
     </script>
 % endif

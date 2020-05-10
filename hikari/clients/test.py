@@ -70,7 +70,7 @@ _REGULAR_FORMAT: typing.Final[str] = (
 @click.option("--verify-ssl", default=True, type=click.BOOL, help="Enable or disable SSL verification.")
 @click.option("--gateway-version", default=6, type=click.IntRange(min=6), help="Version of the gateway to use.")
 @click.option("--rest-version", default=6, type=click.IntRange(min=6), help="Version of the gateway to use.")
-def run(compression, color, debug, intents, logger, shards, token, verify_ssl, gateway_version, rest_version):
+def main(compression, color, debug, intents, logger, shards, token, verify_ssl, gateway_version, rest_version):
     """`click` command line client for running a test gateway connection.
 
     This is provided for internal testing purposes for benchmarking API
@@ -195,4 +195,4 @@ def run(compression, color, debug, intents, logger, shards, token, verify_ssl, g
 
 
 if __name__ == "__main__":
-    run()  # pylint:disable=no-value-for-parameter
+    main()  # pylint:disable=no-value-for-parameter

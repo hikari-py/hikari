@@ -65,18 +65,15 @@
                 return wrapper
             return decorator
 
-        @bot.on()
+        @bot.event()
         @command("hk.ping")
         async def ping(message: hikari.MessageCreateEvent) -> None:
-            await bot.rest.create_message(message.channel_id, content="Pong!")
+            await event.reply(content="Pong!")
 
-        @bot.on()
+        @bot.event()
         @command("hk.add")
         async def add_numbers(message: hikari.MessageCreateEvent) -> None:
-            await bot.rest.create_message(
-                message.channel_id,
-                content="Please enter the first number",
-            )
+            await event.reply(content="Please enter the first number")
 
             def is_number_check(event):
                 return event.author == message.author and message.content.isdigit()
@@ -87,19 +84,15 @@
                 m2 = await bot.wait_for(hikari.MessageCreateEvent, predicate=is_number_check, timeout=30)
 
             except asyncio.TimeoutError:
-                await bot.rest.create_message(message.channel_id, content="You took too long...")
+                await event.reply("You took too long...")
 
             else:
                 val1 = int(m1.content)
                 val2 = int(m2.content)
 
-                embed = hikari.Embed(
-                    title="Result!",
-                    description=f"{val1} + {val2}"
-                    color="#3f3"
-                )
+                embed = hikari.Embed(title="Result!", description=f"{val1} + {val2}" color="#3f3")
 
-                await bot.rest.create_message(message.channel_id, embed=embed)
+                await event.reply(embed=embed)
 
         bot.run()
     </code>
