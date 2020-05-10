@@ -23,7 +23,7 @@ from __future__ import annotations
 __author__ = "Nekokatt"
 __ci__ = "https://gitlab.com/nekokatt/hikari/pipelines"
 __copyright__ = "© 2019-2020 Nekokatt"
-__discord_invite__ = ""
+__discord_invite__ = "https://discord.gg/Jx4cNGG"
 __docs__ = "https://nekokatt.gitlab.io/hikari/staging/index.html"
 __email__ = "3903853-nekokatt@users.noreply.gitlab.com"
 __issue_tracker__ = "https://gitlab.com/nekokatt/hikari/issues"
