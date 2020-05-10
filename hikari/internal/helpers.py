@@ -25,13 +25,11 @@ __all__ = []
 import typing
 
 from hikari import bases
-from hikari.internal import assertions
 from hikari.internal import more_collections
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import users
-    from hikari.internal import more_typing
 
 
 def generate_allowed_mentions(  # pylint:disable=line-too-long
@@ -82,7 +80,8 @@ def generate_allowed_mentions(  # pylint:disable=line-too-long
                 for user in user_mentions or more_collections.EMPTY_SEQUENCE
             )
         )
-        assertions.assert_that(len(allowed_mentions["users"]) <= 100, "Only up to 100 users can be provided.")
+        if len(allowed_mentions["users"]) > 100:
+            raise ValueError("Only up to 100 users can be provided.")
     if role_mentions is True:
         parsed_mentions.append("roles")
     # This covers both `False` and an array of IDs/objs by using `user_mentions or EMPTY_SEQUENCE`, where a
@@ -95,7 +94,8 @@ def generate_allowed_mentions(  # pylint:disable=line-too-long
                 for role in role_mentions or more_collections.EMPTY_SEQUENCE
             )
         )
-        assertions.assert_that(len(allowed_mentions["roles"]) <= 100, "Only up to 100 roles can be provided.")
+        if len(allowed_mentions["roles"]) > 100:
+            raise ValueError("Only up to 100 roles can be provided.")
     allowed_mentions["parse"] = parsed_mentions
     # As a note, discord will also treat an empty `allowed_mentions` object as if it wasn't passed at all, so we
     # want to use empty lists for blacklisting elements rather than just not including blacklisted elements.

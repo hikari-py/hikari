@@ -84,12 +84,36 @@ class TestColor:
     def test_Color_from_rgb(self, r, g, b, expected):
         assert colors.Color.from_rgb(r, g, b) == expected
 
+    @_helpers.assert_raises(type_=ValueError)
+    def test_color_from_rgb_raises_value_error_on_invalid_red(self):
+        colors.Color.from_rgb(0x999, 32, 32)
+
+    @_helpers.assert_raises(type_=ValueError)
+    def test_color_from_rgb_raises_value_error_on_invalid_green(self):
+        colors.Color.from_rgb(32, 0x999, 32)
+
+    @_helpers.assert_raises(type_=ValueError)
+    def test_color_from_rgb_raises_value_error_on_invalid_blue(self):
+        colors.Color.from_rgb(32, 32, 0x999)
+
     @pytest.mark.parametrize(
         ["r", "g", "b", "expected"],
         [(0x09 / 0xFF, 0x18 / 0xFF, 0x27 / 0xFF, 0x91827), (0x55 / 0xFF, 0x1A / 0xFF, 0xFF / 0xFF, 0x551AFF)],
     )
     def test_Color_from_rgb_float(self, r, g, b, expected):
         assert math.isclose(colors.Color.from_rgb_float(r, g, b), expected, abs_tol=1)
+
+    @_helpers.assert_raises(type_=ValueError)
+    def test_color_from_rgb_float_raises_value_error_on_invalid_red(self):
+        colors.Color.from_rgb_float(float(0x999), 32.0, 32.0)
+
+    @_helpers.assert_raises(type_=ValueError)
+    def test_color_from_rgb_float_raises_value_error_on_invalid_green(self):
+        colors.Color.from_rgb_float(32.0, float(0x999), 32.0)
+
+    @_helpers.assert_raises(type_=ValueError)
+    def test_color_from_rgb_float_raises_value_error_on_invalid_blue(self):
+        colors.Color.from_rgb_float(32.0, 32.0, float(0x999))
 
     @pytest.mark.parametrize(["input", "r", "g", "b"], [(0x91827, 0x9, 0x18, 0x27), (0x551AFF, 0x55, 0x1A, 0xFF)])
     def test_Color_rgb(self, input, r, g, b):
