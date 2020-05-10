@@ -89,27 +89,19 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         event_type : typing.Type[hikari.events.HikariEvent]
             The event to register to.
         callback : `async def callback(event: HikariEvent) -> ...`
-            The event callback to invoke when this event is fired.
+            The event callback to invoke when this event is fired; this can be
+            async or non-async.
 
         Returns
         -------
-        async (event) -> None
-            The async callback that was registered.
-
-        Raises
-        ------
-        TypeError
-            If `coroutine_function` is not a coroutine, or if the passed event
-            type does not subclass `hikari.events.HikariEvent`.
+        async def callback(event: HikariEvent) -> ...
+            The callback that was registered.
 
         Note
         ----
         If you subscribe to an event that requires intents that you do not have
         set, you will receive a warning.
         """
-        if not asyncio.iscoroutinefunction(callback):
-            raise TypeError("You must subscribe a coroutine function only")
-
         if not issubclass(event_type, base.HikariEvent):
             raise TypeError("Events must subclass hikari.events.HikariEvent")
 
@@ -144,7 +136,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
     def remove_listener(
         self, event_type: typing.Type[dispatchers.EventT], callback: dispatchers.EventCallbackT
     ) -> None:
-        """Remove the given coroutine function from the handlers for the given event.
+        """Remove the given function from the handlers for the given event.
 
         The name is mandatory to enable supporting registering the same event callback for multiple event types.
 
@@ -153,7 +145,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         event_type : typing.Type[hikari.events.HikariEvent]
             The type of event to remove the callback from.
         callback : `async def callback(event: HikariEvent) -> ...`
-            The event callback to remove.
+            The event callback to remove; this can be async or non-async.
         """
         if event_type in self._listeners and callback in self._listeners[event_type]:
             if len(self._listeners[event_type]) - 1 == 0:
@@ -164,7 +156,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
     # Do not add an annotation here, it will mess with type hints in PyCharm which can lead to
     # confusing telepathy comments to the user.
     # Additionally, this MUST NOT BE A COROUTINE ITSELF. THIS IS NOT TYPESAFE!
-    def dispatch_event(self, event: base.HikariEvent):
+    def dispatch_event(self, event: base.HikariEvent) -> more_typing.Future[typing.Any]:
         """Dispatch a given event to all listeners and waiters that are applicable.
 
         Parameters
@@ -232,7 +224,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         # Stop intellij shenanigans with broken type hints that ruin my day.
         return typing.cast(typing.Any, result)
 
-    async def _async_check(self, future, predicate, event, event_type):
+    async def _async_check(self, future, predicate, event, event_type) -> None:
         # If the predicate returns true, complete the future and pop it from the waiters.
         # By this point we shouldn't be iterating over it anymore, so this is concurrent-modification
         # safe on a single event loop.
@@ -244,9 +236,11 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
             future.set_exception(ex)
             self._waiters[event_type].pop(future)
 
-    async def _failsafe_invoke(self, event, callback):
+    async def _failsafe_invoke(self, event, callback) -> None:
         try:
-            await callback(event)
+            result = callback(event)
+            if asyncio.iscoroutine(result):
+                await result
         except Exception as ex:  # pylint:disable=broad-except
             self.handle_exception(ex, event, callback)
 
