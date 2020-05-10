@@ -45,13 +45,34 @@ class TestBaseStream:
                 yield b" "
                 yield b"bork"
 
-        i = Impl("foobar")
+            @property
+            def filename(self) -> str:
+                return "poof"
+
+        i = Impl()
 
         assert await i.read() == b"foo bar baz bork"
+
+    def test_repr(self):
+        class Impl(files.BaseStream):
+            @property
+            def filename(self) -> str:
+                return "poofs.gpg"
+
+            async def __aiter__(self):
+                yield b""
+
+        i = Impl()
+
+        assert repr(i) == "Impl(filename='poofs.gpg')"
 
 
 @pytest.mark.asyncio
 class TestByteStream:
+    async def test_filename(self):
+        stream = files.ByteStream("foo.txt", b"(.) (.)")
+        assert stream.filename == "foo.txt"
+
     @pytest.mark.parametrize(
         "chunks",
         [
@@ -251,6 +272,10 @@ class TestWebResource:
         with mock.patch.object(aiohttp, "request", new=mock.MagicMock(return_value=stub_response)) as request:
             yield request
 
+    async def test_filename(self):
+        stream = files.WebResourceStream("cat.png", "http://http.cat")
+        assert stream.filename == "cat.png"
+
     async def test_happy_path_reads_data_in_chunks(self, stub_content, stub_response, mock_request):
         stream = files.WebResourceStream("cat.png", "https://some-websi.te")
 
@@ -351,6 +376,10 @@ class TestFileStream:
                 fp.write(random_bytes)
 
             yield file
+
+    async def test_filename(self):
+        stream = files.FileStream("cat.png", "/root/cat.png")
+        assert stream.filename == "cat.png"
 
     async def test_read_no_executor(self, random_bytes, dummy_file):
         stream = files.FileStream("xxx", dummy_file)

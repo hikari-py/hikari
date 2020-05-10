@@ -16,29 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Black code-style jobs."""
-import subprocess
-
 from ci import nox
 
 
-PATHS = [
-    "hikari",
-    "tests",
-    "setup.py",
-    "noxfile.py",
-]
-
-
-@nox.session(default=True, reuse_venv=True)
-def reformat_code(session: nox.Session) -> None:
-    """Run black code formatter."""
-    session.install("black")
-    session.run("black", *PATHS)
-
-
-@nox.session(reuse_venv=True)
-def check_formatting(session: nox.Session) -> None:
-    """Check that the code matches the black code style."""
-    session.install("black")
-    session.run("black", *PATHS, "--check")
+@nox.session()
+def twemoji_test(session: nox.Session):
+    """Brute-force test all possible Twemoji mappings to ensure the image URLs
+    are correct.
+    """
+    session.install("-e", ".")
+    session.run("python", "scripts/test_twemoji_mapping.py")

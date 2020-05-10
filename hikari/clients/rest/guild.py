@@ -198,8 +198,8 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
     async def fetch_guild_emoji(
         self,
         guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
-        emoji: typing.Union[bases.Snowflake, int, str, emojis.GuildEmoji],
-    ) -> emojis.GuildEmoji:
+        emoji: typing.Union[bases.Snowflake, int, str, emojis.KnownCustomEmoji],
+    ) -> emojis.KnownCustomEmoji:
         """Get an updated emoji object from a specific guild.
 
         Parameters
@@ -211,7 +211,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        hikari.emojis.GuildEmoji
+        hikari.emojis.KnownCustomEmoji
             A guild emoji object.
 
         Raises
@@ -228,11 +228,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             emoji_id=str(emoji.id if isinstance(emoji, bases.Unique) else int(emoji)),
         )
-        return emojis.GuildEmoji.deserialize(payload, components=self._components)
+        return emojis.KnownCustomEmoji.deserialize(payload, components=self._components)
 
     async def fetch_guild_emojis(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
-    ) -> typing.Sequence[emojis.GuildEmoji]:
+    ) -> typing.Sequence[emojis.KnownCustomEmoji]:
         """Get emojis for a given guild object or ID.
 
         Parameters
@@ -242,7 +242,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        typing.Sequence[hikari.emojis.GuildEmoji]
+        typing.Sequence[hikari.emojis.KnownCustomEmoji]
             A list of guild emoji objects.
 
         Raises
@@ -258,7 +258,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.list_guild_emojis(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return [emojis.GuildEmoji.deserialize(emoji, components=self._components) for emoji in payload]
+        return [emojis.KnownCustomEmoji.deserialize(emoji, components=self._components) for emoji in payload]
 
     async def create_guild_emoji(
         self,
@@ -268,7 +268,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         *,
         roles: typing.Sequence[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]] = ...,
         reason: str = ...,
-    ) -> emojis.GuildEmoji:
+    ) -> emojis.KnownCustomEmoji:
         """Create a new emoji for a given guild.
 
         Parameters
@@ -288,7 +288,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        hikari.emojis.GuildEmoji
+        hikari.emojis.KnownCustomEmoji
             The newly created emoji object.
 
         Raises
@@ -315,17 +315,17 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             else ...,
             reason=reason,
         )
-        return emojis.GuildEmoji.deserialize(payload, components=self._components)
+        return emojis.KnownCustomEmoji.deserialize(payload, components=self._components)
 
     async def update_guild_emoji(
         self,
         guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
-        emoji: typing.Union[bases.Snowflake, int, str, emojis.GuildEmoji],
+        emoji: typing.Union[bases.Snowflake, int, str, emojis.KnownCustomEmoji],
         *,
         name: str = ...,
         roles: typing.Sequence[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]] = ...,
         reason: str = ...,
-    ) -> emojis.GuildEmoji:
+    ) -> emojis.KnownCustomEmoji:
         """Edits an emoji of a given guild.
 
         Parameters
@@ -347,7 +347,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        hikari.emojis.GuildEmoji
+        hikari.emojis.KnownCustomEmoji
             The updated emoji object.
 
         Raises
@@ -370,12 +370,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             else ...,
             reason=reason,
         )
-        return emojis.GuildEmoji.deserialize(payload, components=self._components)
+        return emojis.KnownCustomEmoji.deserialize(payload, components=self._components)
 
     async def delete_guild_emoji(
         self,
         guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
-        emoji: typing.Union[bases.Snowflake, int, str, emojis.GuildEmoji],
+        emoji: typing.Union[bases.Snowflake, int, str, emojis.KnownCustomEmoji],
     ) -> None:
         """Delete an emoji from a given guild.
 
@@ -383,7 +383,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         ----------
         guild : typing.Union[hikari.guilds.Guild, hikari.bases.Snowflake, int]
             The object or ID of the guild to delete the emoji from.
-        emoji : typing.Union[hikari.emojis.GuildEmoji, hikari.bases.Snowflake, int]
+        emoji : typing.Union[hikari.emojis.KnownCustomEmoji, hikari.bases.Snowflake, int]
             The object or ID of the guild emoji to be deleted.
 
         Raises
