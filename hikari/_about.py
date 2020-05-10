@@ -20,8 +20,6 @@
 
 from __future__ import annotations
 
-__all__ = ["__author__", "__copyright__", "__docs__", "__email__", "__license__", "__url__", "__version__"]
-
 __author__ = "Nekokatt"
 __ci__ = "https://gitlab.com/nekokatt/hikari/pipelines"
 __copyright__ = "© 2019-2020 Nekokatt"

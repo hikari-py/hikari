@@ -92,7 +92,7 @@ class TestShardConstructor:
 
     async def test_dispatch_is_callable(self):
         client = shards.Shard(token="xxx", url="yyy")
-        client.dispatch(client, "ping", "pong")
+        client.dispatcher(client, "ping", "pong")
 
     @pytest.mark.parametrize(
         ["compression", "expected_url_query"],
@@ -302,24 +302,22 @@ class TestConnect:
 
     @_helpers.timeout_after(10.0)
     async def test_connecting_dispatches_CONNECTED(self, client):
-        client.dispatch = mock.MagicMock()
         with self.suppress_closure():
             task = asyncio.create_task(client.connect())
             await client.hello_event.wait()
             # sanity check for the DISCONNECTED test
-            assert mock.call(client, "CONNECTED", more_collections.EMPTY_DICT) in client.dispatch.call_args_list
-            client.dispatch.assert_called_with(client, "CONNECTED", more_collections.EMPTY_DICT)
+            assert mock.call("CONNECTED", more_collections.EMPTY_DICT) in client.do_dispatch.call_args_list
+            client.do_dispatch.assert_called_with("CONNECTED", more_collections.EMPTY_DICT)
             await task
 
     @_helpers.timeout_after(10.0)
     async def test_disconnecting_dispatches_DISCONNECTED(self, client):
-        client.dispatch = mock.MagicMock()
         with self.suppress_closure():
             task = asyncio.create_task(client.connect())
             await client.hello_event.wait()
-            assert mock.call(client, "DISCONNECTED", more_collections.EMPTY_DICT) not in client.dispatch.call_args_list
+            assert mock.call("DISCONNECTED", more_collections.EMPTY_DICT) not in client.do_dispatch.call_args_list
             await task
-        client.dispatch.assert_called_with(client, "DISCONNECTED", more_collections.EMPTY_DICT)
+        client.do_dispatch.assert_called_with("DISCONNECTED", more_collections.EMPTY_DICT)
 
     @_helpers.timeout_after(10.0)
     async def test_new_zlib_each_time(self, client):
@@ -811,7 +809,7 @@ class TestPollEvents:
 
         await client._run()
 
-        client.dispatch.assert_called_with(client, "MESSAGE_CREATE", {"content": "whatever"})
+        client.do_dispatch.assert_called_with("MESSAGE_CREATE", {"content": "whatever"})
 
     @_helpers.timeout_after(5.0)
     async def test_opcode_0_resume_sets_session_id(self, client):
@@ -826,7 +824,7 @@ class TestPollEvents:
 
         await client._run()
 
-        client.dispatch.assert_called_with(client, "READY", {"v": 69, "session_id": "1a2b3c4d"})
+        client.do_dispatch.assert_called_with("READY", {"v": 69, "session_id": "1a2b3c4d"})
 
         assert client.session_id == "1a2b3c4d"
         assert client.seq == 123

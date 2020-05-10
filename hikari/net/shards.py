@@ -49,6 +49,7 @@ import aiohttp.typedefs
 
 from hikari import errors
 from hikari.internal import more_asyncio
+from hikari.internal import more_typing
 from hikari.net import codes
 from hikari.net import http_client
 from hikari.net import ratelimits
@@ -60,7 +61,7 @@ if typing.TYPE_CHECKING:
     from hikari import intents as _intents
 
 
-DispatchT = typing.Callable[["Shard", str, typing.Dict], None]
+DispatcherT = typing.Callable[["Shard", str, typing.Dict], more_typing.Coroutine[None]]
 """The signature for an event dispatch callback."""
 
 
@@ -103,8 +104,8 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
         information to use when debugging this library or extending it. This
         includes logging every payload that is sent or received to the logger
         as debug entries. Generally it is best to keep this disabled.
-    dispatch : `dispatch function`
-        The function to invoke with any dispatched events. This must not be a
+    dispatcher : `async def dispatch(shard, event_name, payload)`
+        The function to invoke with any dispatched events. This must be a
         coroutine function, and must take three arguments only. The first is
         the reference to this `Shard` The second is the
         event name.
@@ -185,7 +186,7 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
         "_zlib",
         "closed_event",
         "disconnect_count",
-        "dispatch",
+        "dispatcher",
         "handshake_event",
         "heartbeat_interval",
         "heartbeat_latency",
@@ -211,7 +212,7 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
     client instance.
     """
 
-    dispatch: DispatchT
+    dispatcher: DispatcherT
     """The dispatch method to call when dispatching a new event.
 
     This is the method passed in the constructor.
@@ -305,7 +306,7 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
         compression: bool = True,
         connector: typing.Optional[aiohttp.BaseConnector] = None,
         debug: bool = False,
-        dispatch: DispatchT = lambda gw, e, p: None,
+        dispatcher: DispatcherT = lambda gw, e, p: None,
         initial_presence: typing.Optional[typing.Dict] = None,
         intents: typing.Optional[_intents.Intent] = None,
         json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict] = json.loads,
@@ -366,7 +367,7 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
         self._zlib = None
         self.closed_event = asyncio.Event()
         self.disconnect_count = 0
-        self.dispatch = dispatch
+        self.dispatcher = dispatcher
         self.heartbeat_interval = float("nan")
         self.heartbeat_latency = float("nan")
         self.hello_event = asyncio.Event()
@@ -538,7 +539,7 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
 
             self.hello_event.set()
 
-            self.dispatch(self, "CONNECTED", {})
+            self.do_dispatch("CONNECTED", {})
             self.logger.debug("received HELLO [interval:%ss]", self.heartbeat_interval)
 
             # noinspection PyTypeChecker
@@ -584,7 +585,7 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
 
             if not math.isnan(self._connected_at):
                 await self.close(close_code)
-                self.dispatch(self, "DISCONNECTED", {})
+                self.do_dispatch("DISCONNECTED", {})
                 self.disconnect_count += 1
 
             self._ws = None
@@ -703,7 +704,7 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
 
                     self.logger.debug("connection has RESUMED [session:%s, s:%s])", self.session_id, self.seq)
 
-                self.dispatch(self, event_name, d)
+                self.do_dispatch(event_name, d)
 
             elif op == codes.GatewayOpcode.HEARTBEAT:
                 self.logger.debug("received HEARTBEAT, preparing to send HEARTBEAT ACK to server in response")
@@ -828,6 +829,9 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
             self.logger.debug("send payload\n  outbound payload: %s", payload_str)
         else:
             self.logger.debug("sent payload [op:%s, size:%s]", payload.get("op"), len(payload_str))
+
+    def do_dispatch(self, event_name, payload):
+        asyncio.create_task(self.dispatcher(self, event_name, payload), name=f"dispatch {event_name} from websocket")
 
     def __str__(self):
         state = "Connected" if self.is_connected else "Disconnected"
