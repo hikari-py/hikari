@@ -449,13 +449,13 @@ class Message(bases.Unique, marshaller.Deserializable):
         *,
         content: str = ...,
         embed: _embeds.Embed = ...,
-        mentions_everyone: bool = True,
+        mentions_everyone: bool = False,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
-        ] = True,
+        ] = False,
         role_mentions: typing.Union[
             typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
-        ] = True,
+        ] = False,
     ) -> Message:
         """Edit this message.
 
@@ -561,13 +561,13 @@ class Message(bases.Unique, marshaller.Deserializable):
         content: str = ...,
         embed: _embeds.Embed = ...,
         files: typing.Sequence[_files.BaseStream] = ...,
-        mentions_everyone: bool = True,
+        mentions_everyone: bool = False,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
-        ] = True,
+        ] = False,
         role_mentions: typing.Union[
             typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
-        ] = True,
+        ] = False,
         nonce: str = ...,
         tts: bool = ...,
     ) -> Message:
