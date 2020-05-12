@@ -1,6 +1,3 @@
-# aiodns~=2.0.0
 aiohttp~=3.6.2
 attrs~=19.3.0
-# cchardet~=2.1.6
 click~=7.1.2
-setuptools
