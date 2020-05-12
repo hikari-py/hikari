@@ -166,6 +166,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
         self,
         channel: typing.Union[bases.Snowflake, int, str, _channels.PartialChannel],
         message: typing.Union[bases.Snowflake, int, str, _messages.Message],
+        *,
         emoji: typing.Optional[typing.Union[emojis.Emoji, str]] = None,
     ) -> None:
         """Remove all reactions for a single given emoji on a given message.

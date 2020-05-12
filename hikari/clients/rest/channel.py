@@ -661,7 +661,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         role_mentions: typing.Union[
             typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
         ] = False,
-    ) -> typing.Coroutine[typing.Any, typing.Any, _messages.Message]:
+    ) -> more_typing.Coroutine[_messages.Message]:
         """Update a message in the given channel with mention safety.
 
         This endpoint has the same signature as
