@@ -231,7 +231,7 @@ DELETE_CHANNEL_MESSAGE = RouteTemplate(DELETE, "/channels/{channel_id}/messages/
 GET_CHANNEL_MESSAGES = RouteTemplate(GET, "/channels/{channel_id}/messages")
 POST_CHANNEL_MESSAGES = RouteTemplate(POST, "/channels/{channel_id}/messages")
 
-POST_DELETE_CHANNEL_MESSAGES_BULK = RouteTemplate(POST, "/channels/{channel_id}/messages")
+POST_DELETE_CHANNEL_MESSAGES_BULK = RouteTemplate(POST, "/channels/{channel_id}/messages/bulk-delete")
 
 PATCH_CHANNEL_PERMISSIONS = RouteTemplate(PATCH, "/channels/{channel_id}/permissions/{overwrite_id}")
 DELETE_CHANNEL_PERMISSIONS = RouteTemplate(DELETE, "/channels/{channel_id}/permissions/{overwrite_id}")
@@ -239,7 +239,7 @@ DELETE_CHANNEL_PERMISSIONS = RouteTemplate(DELETE, "/channels/{channel_id}/permi
 DELETE_CHANNEL_PIN = RouteTemplate(DELETE, "/channels/{channel_id}/pins/{message_id}")
 
 GET_CHANNEL_PINS = RouteTemplate(GET, "/channels/{channel_id}/pins")
-PUT_CHANNEL_PINS = RouteTemplate(PUT, "/channels/{channel_id}/pins")
+PUT_CHANNEL_PINS = RouteTemplate(PUT, "/channels/{channel_id}/pins/{message_id}")
 
 POST_CHANNEL_TYPING = RouteTemplate(POST, "/channels/{channel_id}/typing")
 
@@ -270,7 +270,6 @@ GET_GUILD_BANS = RouteTemplate(GET, "/guilds/{guild_id}/bans")
 
 GET_GUILD_CHANNELS = RouteTemplate(GET, "/guilds/{guild_id}/channels")
 POST_GUILD_CHANNELS = RouteTemplate(POST, "/guilds/{guild_id}/channels")
-PUT_GUILD_CHANNELS = RouteTemplate(PUT, "/guilds/{guild_id}/channels")
 PATCH_GUILD_CHANNELS = RouteTemplate(PATCH, "/guilds/{guild_id}/channels")
 
 GET_GUILD_EMBED = RouteTemplate(GET, "/guilds/{guild_id}/embed")
@@ -317,9 +316,9 @@ GET_GUILD_VANITY_URL = RouteTemplate(GET, "/guilds/{guild_id}/vanity-url")
 
 GET_GUILD_VOICE_REGIONS = RouteTemplate(GET, "/guilds/{guild_id}/regions")
 
-GET_GUILD_WIDGET_IMAGE = RouteTemplate(GET, "/guilds/{guild_id}/widget.png")
-
 GET_GUILD_WEBHOOKS = RouteTemplate(GET, "/guilds/{guild_id}/webhooks")
+
+GET_GUILD_WIDGET_IMAGE = RouteTemplate(GET, "/guilds/{guild_id}/widget.png")
 
 # Invites
 GET_INVITE = RouteTemplate(GET, "/invites/{invite_code}")
