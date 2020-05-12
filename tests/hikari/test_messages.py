@@ -155,7 +155,7 @@ class TestAttachment:
 
 class TestReaction:
     def test_deserialize(self, test_reaction_payload, mock_components, test_emoji_payload):
-        mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
+        mock_emoji = mock.MagicMock(emojis.CustomEmoji)
 
         with _helpers.patch_marshal_attr(
             messages.Reaction, "emoji", return_value=mock_emoji, deserializer=emojis.deserialize_reaction_emoji

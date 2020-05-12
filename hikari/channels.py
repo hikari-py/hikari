@@ -285,9 +285,9 @@ class GuildTextChannel(GuildChannel):
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
         deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None
     )
-    """The timestamp of the last-pinned message. 
-    
-    This may be `None` in several cases (currently undocumented clearly by 
+    """The timestamp of the last-pinned message.
+
+    This may be `None` in several cases (currently undocumented clearly by
     Discord).
     """
 
@@ -311,9 +311,9 @@ class GuildNewsChannel(GuildChannel):
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
         deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None
     )
-    """The timestamp of the last-pinned message. 
+    """The timestamp of the last-pinned message.
 
-    This may be `None` in several cases (currently undocumented clearly by 
+    This may be `None` in several cases (currently undocumented clearly by
     Discord).
     """
 

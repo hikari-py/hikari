@@ -180,7 +180,7 @@ class Reaction(bases.Entity, marshaller.Deserializable):
     count: int = marshaller.attrib(deserializer=int, repr=True)
     """The amount of times the emoji has been used to react."""
 
-    emoji: typing.Union[_emojis.UnicodeEmoji, _emojis.UnknownEmoji] = marshaller.attrib(
+    emoji: typing.Union[_emojis.UnicodeEmoji, _emojis.CustomEmoji] = marshaller.attrib(
         deserializer=_emojis.deserialize_reaction_emoji, inherit_kwargs=True, repr=True
     )
     """The emoji used to react."""
