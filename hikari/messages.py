@@ -353,12 +353,12 @@ class Message(bases.Unique, marshaller.Deserializable):
     nonce: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
     """The message nonce. This is a string used for validating a message was sent."""
 
-    def fetch_channel(self) -> typing.Coroutine[channels.PartialChannel]:
+    async def fetch_channel(self) -> channels.PartialChannel:
         """Fetch the channel this message was created in.
 
         Returns
         -------
-        typing.Coroutine[hikari.channels.PartialChannel]
+        hikari.channels.PartialChannel
             The object of the channel this message belongs to.
 
         Raises
@@ -371,7 +371,7 @@ class Message(bases.Unique, marshaller.Deserializable):
         hikari.errors.NotFound
             If the channel this message was created in does not exist.
         """
-        return self._components.rest.fetch_channel(channel=self.channel_id)
+        return await self._components.rest.fetch_channel(channel=self.channel_id)
 
     async def edit(  # pylint:disable=line-too-long
         self,
@@ -435,8 +435,8 @@ class Message(bases.Unique, marshaller.Deserializable):
             `role_mentions` or `user_mentions`.
         """
         return await self._components.rest.update_message(
-            self.id,
-            self.channel_id,
+            message=self.id,
+            channel=self.channel_id,
             content=content,
             embed=embed,
             mentions_everyone=mentions_everyone,
@@ -463,8 +463,8 @@ class Message(bases.Unique, marshaller.Deserializable):
         mentions from working by default.
         """
         return await self._components.rest.safe_update_message(
-            self.id,
-            self.channel_id,
+            message=self.id,
+            channel=self.channel_id,
             content=content,
             embed=embed,
             mentions_everyone=mentions_everyone,
@@ -599,7 +599,7 @@ class Message(bases.Unique, marshaller.Deserializable):
         hikari.errors.Forbidden
             If you lack the permissions to delete the message.
         """
-        await self._components.rest.delete_messages(self.channel_id, self.id)
+        await self._components.rest.delete_messages(channel=self.channel_id, message=self.id)
 
     async def add_reaction(self, emoji: typing.Union[str, _emojis.Emoji]) -> None:
         r"""Add a reaction to this message.
@@ -637,7 +637,7 @@ class Message(bases.Unique, marshaller.Deserializable):
             due to it being outside of the range of a 64 bit integer.
 
         """
-        await self._components.rest.add_reaction(self.channel_id, self.id, emoji)
+        await self._components.rest.add_reaction(channel=self.channel_id, message=self.id, emoji=emoji)
 
     async def remove_reaction(
         self, emoji: typing.Union[str, _emojis.Emoji], *, user: typing.Optional[users.User] = None
@@ -681,7 +681,7 @@ class Message(bases.Unique, marshaller.Deserializable):
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        await self._components.rest.remove_reaction(self.channel_id, self.id, emoji, user)
+        await self._components.rest.remove_reaction(channel=self.channel_id, message=self.id, emoji=emoji, user=user)
 
     async def remove_all_reactions(self, emoji: typing.Optional[typing.Union[str, _emojis.Emoji]] = None) -> None:
         r"""Remove all users' reactions for a specific emoji from the message.
@@ -713,4 +713,4 @@ class Message(bases.Unique, marshaller.Deserializable):
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        await self._components.rest.remove_all_reactions(self.channel_id, self.id, emoji)
+        await self._components.rest.remove_all_reactions(channel=self.channel_id, message=self.id, emoji=emoji)

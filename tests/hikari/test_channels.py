@@ -383,7 +383,7 @@ class TestGuildChannelBuilder:
         assert channel_builder_obj._payload == {"type": 0, "name": "A channel", "parent_id": "54321"}
 
     @pytest.mark.parametrize("placeholder_id", [444444, bases.Snowflake(444444)])
-    def test_with_user_limit(self, placeholder_id):
+    def test_with_id(self, placeholder_id):
         channel_builder_obj = channels.GuildChannelBuilder("A channel", channels.ChannelType.GUILD_TEXT).with_id(
             placeholder_id
         )
