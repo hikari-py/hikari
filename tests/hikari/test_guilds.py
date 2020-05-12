@@ -483,7 +483,7 @@ class TestPresenceActivity:
         mock_components,
     ):
         mock_created_at = mock.MagicMock(datetime.datetime)
-        mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
+        mock_emoji = mock.MagicMock(emojis.CustomEmoji)
         stack = contextlib.ExitStack()
         patched_created_at_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
@@ -846,10 +846,10 @@ class TestPartialGuild:
 
 class TestGuildPreview:
     def test_deserialize(self, test_guild_preview_payload, test_emoji_payload, mock_components):
-        mock_emoji = mock.MagicMock(emojis.GuildEmoji, id=41771983429993937)
-        with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji):
+        mock_emoji = mock.MagicMock(emojis.KnownCustomEmoji, id=41771983429993937)
+        with mock.patch.object(emojis.KnownCustomEmoji, "deserialize", return_value=mock_emoji):
             guild_preview_obj = guilds.GuildPreview.deserialize(test_guild_preview_payload, components=mock_components)
-            emojis.GuildEmoji.deserialize.assert_called_once_with(test_emoji_payload, components=mock_components)
+            emojis.KnownCustomEmoji.deserialize.assert_called_once_with(test_emoji_payload, components=mock_components)
         assert guild_preview_obj.splash_hash == "dsa345tfcdg54b"
         assert guild_preview_obj.discovery_splash_hash == "lkodwaidi09239uid"
         assert guild_preview_obj.emojis == {41771983429993937: mock_emoji}
@@ -930,10 +930,10 @@ class TestGuild:
         test_channel_payload,
         test_guild_member_presence,
     ):
-        mock_emoji = mock.MagicMock(emojis.GuildEmoji, id=41771983429993937)
+        mock_emoji = mock.MagicMock(emojis.KnownCustomEmoji, id=41771983429993937)
         mock_guild_channel = mock.MagicMock(channels.GuildChannel, id=1234567)
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji))
+        stack.enter_context(mock.patch.object(emojis.KnownCustomEmoji, "deserialize", return_value=mock_emoji))
         stack.enter_context(mock.patch.object(channels, "deserialize_channel", return_value=mock_guild_channel))
         stack.enter_context(
             _helpers.patch_marshal_attr(
@@ -943,7 +943,7 @@ class TestGuild:
         with stack:
             guild_obj = guilds.Guild.deserialize(test_guild_payload, components=mock_components)
             channels.deserialize_channel.assert_called_once_with(test_channel_payload, components=mock_components)
-            emojis.GuildEmoji.deserialize.assert_called_once_with(test_emoji_payload, components=mock_components)
+            emojis.KnownCustomEmoji.deserialize.assert_called_once_with(test_emoji_payload, components=mock_components)
             assert guild_obj.members == {123456: guilds.GuildMember.deserialize(test_member_payload)}
             assert guild_obj.members[123456]._components is mock_components
         assert guild_obj.presences == {123456: guilds.GuildMemberPresence.deserialize(test_guild_member_presence)}

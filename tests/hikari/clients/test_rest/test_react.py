@@ -38,7 +38,7 @@ from tests.hikari import _helpers
     [
         "\N{OK HAND SIGN}",
         emojis.UnicodeEmoji(name="\N{OK HAND SIGN}"),
-        emojis.UnknownEmoji(id=bases.Snowflake(9876), name="foof"),
+        emojis.CustomEmoji(id=bases.Snowflake(9876), name="foof"),
     ],
     ids=lambda arg: str(arg),
 )
@@ -189,7 +189,7 @@ class TestRESTReactionLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 213123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 987654321, messages.Message)
-    @pytest.mark.parametrize("emoji", ["blah:123", emojis.UnknownEmoji(name="blah", id=123, is_animated=False)])
+    @pytest.mark.parametrize("emoji", ["blah:123", emojis.CustomEmoji(name="blah", id=123, is_animated=False)])
     async def test_create_reaction(self, rest_reaction_logic_impl, channel, message, emoji):
         rest_reaction_logic_impl._session.create_reaction.return_value = ...
         assert await rest_reaction_logic_impl.add_reaction(channel=channel, message=message, emoji=emoji) is None
@@ -200,7 +200,7 @@ class TestRESTReactionLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 213123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 987654321, messages.Message)
-    @pytest.mark.parametrize("emoji", ["blah:123", emojis.UnknownEmoji(name="blah", id=123, is_animated=False)])
+    @pytest.mark.parametrize("emoji", ["blah:123", emojis.CustomEmoji(name="blah", id=123, is_animated=False)])
     async def test_delete_reaction_for_bot_user(self, rest_reaction_logic_impl, channel, message, emoji):
         rest_reaction_logic_impl._session.delete_own_reaction.return_value = ...
         assert await rest_reaction_logic_impl.remove_reaction(channel=channel, message=message, emoji=emoji) is None
@@ -212,7 +212,7 @@ class TestRESTReactionLogic:
     @_helpers.parametrize_valid_id_formats_for_models("channel", 213123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 987654321, messages.Message)
     @_helpers.parametrize_valid_id_formats_for_models("user", 96969696, users.User)
-    @pytest.mark.parametrize("emoji", ["blah:123", emojis.UnknownEmoji(name="blah", id=123, is_animated=False)])
+    @pytest.mark.parametrize("emoji", ["blah:123", emojis.CustomEmoji(name="blah", id=123, is_animated=False)])
     async def test_delete_reaction_for_other_user(self, rest_reaction_logic_impl, channel, message, emoji, user):
         rest_reaction_logic_impl._session.delete_user_reaction.return_value = ...
         assert (
@@ -226,7 +226,7 @@ class TestRESTReactionLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 213123, channels.PartialChannel)
     @_helpers.parametrize_valid_id_formats_for_models("message", 987654321, messages.Message)
-    @pytest.mark.parametrize("emoji", [None, "blah:123", emojis.UnknownEmoji(name="blah", id=123, is_animated=False)])
+    @pytest.mark.parametrize("emoji", [None, "blah:123", emojis.CustomEmoji(name="blah", id=123, is_animated=False)])
     async def test_delete_all_reactions(self, rest_reaction_logic_impl, channel, message, emoji):
         rest_reaction_logic_impl._session = mock.MagicMock(spec_set=rest.REST)
         assert (

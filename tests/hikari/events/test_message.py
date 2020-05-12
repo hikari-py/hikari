@@ -303,7 +303,7 @@ class TestMessageReactionAddEvent:
 
     def test_deserialize(self, test_message_reaction_add_payload, test_member_payload, test_emoji_payload):
         mock_member = mock.MagicMock(guilds.GuildMember)
-        mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
+        mock_emoji = mock.MagicMock(emojis.CustomEmoji)
         stack = contextlib.ExitStack()
         patched_member_deserializer = stack.enter_context(
             _helpers.patch_marshal_attr(
@@ -345,7 +345,7 @@ class TestMessageReactionRemoveEvent:
         }
 
     def test_deserialize(self, test_message_reaction_remove_payload, test_emoji_payload):
-        mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
+        mock_emoji = mock.MagicMock(emojis.CustomEmoji)
         with _helpers.patch_marshal_attr(
             message.MessageReactionRemoveEvent,
             "emoji",
@@ -383,7 +383,7 @@ class TestMessageReactionRemoveEmojiEvent:
         return {"channel_id": "4393939", "message_id": "2993993", "guild_id": "49494949", "emoji": test_emoji_payload}
 
     def test_deserialize(self, test_message_reaction_remove_emoji_payload, test_emoji_payload):
-        mock_emoji = mock.MagicMock(emojis.UnknownEmoji)
+        mock_emoji = mock.MagicMock(emojis.CustomEmoji)
         with _helpers.patch_marshal_attr(
             message.MessageReactionRemoveEmojiEvent,
             "emoji",

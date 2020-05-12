@@ -483,7 +483,7 @@ class PresenceActivity(bases.Entity, marshaller.Deserializable):
     state: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None, default=None)
     """The current status of this activity's target, if set."""
 
-    emoji: typing.Union[None, _emojis.UnicodeEmoji, _emojis.UnknownEmoji] = marshaller.attrib(
+    emoji: typing.Union[None, _emojis.UnicodeEmoji, _emojis.CustomEmoji] = marshaller.attrib(
         deserializer=_emojis.deserialize_reaction_emoji, if_undefined=None, default=None, inherit_kwargs=True
     )
     """The emoji of this activity, if it is a custom status and set."""
@@ -881,8 +881,8 @@ class PartialGuild(bases.Unique, marshaller.Deserializable):
 
 def _deserialize_emojis(
     payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Mapping[bases.Snowflake, _emojis.GuildEmoji]:
-    return {bases.Snowflake(emoji["id"]): _emojis.GuildEmoji.deserialize(emoji, **kwargs) for emoji in payload}
+) -> typing.Mapping[bases.Snowflake, _emojis.KnownCustomEmoji]:
+    return {bases.Snowflake(emoji["id"]): _emojis.KnownCustomEmoji.deserialize(emoji, **kwargs) for emoji in payload}
 
 
 @marshaller.marshallable()
@@ -898,7 +898,7 @@ class GuildPreview(PartialGuild):
     )
     """The hash of the discovery splash for the guild, if there is one."""
 
-    emojis: typing.Mapping[bases.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
+    emojis: typing.Mapping[bases.Snowflake, _emojis.KnownCustomEmoji] = marshaller.attrib(
         deserializer=_deserialize_emojis, inherit_kwargs=True
     )
     """The mapping of IDs to the emojis this guild provides."""
@@ -1094,7 +1094,7 @@ class Guild(PartialGuild):
     )
     """The roles in this guild, represented as a mapping of ID to role object."""
 
-    emojis: typing.Mapping[bases.Snowflake, _emojis.GuildEmoji] = marshaller.attrib(
+    emojis: typing.Mapping[bases.Snowflake, _emojis.KnownCustomEmoji] = marshaller.attrib(
         deserializer=_deserialize_emojis, inherit_kwargs=True
     )
     """A mapping of IDs to the objects of the emojis this guild provides."""

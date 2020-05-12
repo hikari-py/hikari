@@ -300,17 +300,17 @@ class TestRESTGuildLogic:
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 93443949, guilds.Guild)
-    @_helpers.parametrize_valid_id_formats_for_models("emoji", 40404040404, emojis.GuildEmoji)
+    @_helpers.parametrize_valid_id_formats_for_models("emoji", 40404040404, emojis.KnownCustomEmoji)
     async def test_fetch_guild_emoji(self, rest_guild_logic_impl, guild, emoji):
         mock_emoji_payload = {"id": "92929", "name": "nyaa", "animated": True}
-        mock_emoji_obj = mock.MagicMock(emojis.GuildEmoji)
+        mock_emoji_obj = mock.MagicMock(emojis.KnownCustomEmoji)
         rest_guild_logic_impl._session.get_guild_emoji.return_value = mock_emoji_payload
-        with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj):
+        with mock.patch.object(emojis.KnownCustomEmoji, "deserialize", return_value=mock_emoji_obj):
             assert await rest_guild_logic_impl.fetch_guild_emoji(guild=guild, emoji=emoji) is mock_emoji_obj
             rest_guild_logic_impl._session.get_guild_emoji.assert_called_once_with(
                 guild_id="93443949", emoji_id="40404040404",
             )
-            emojis.GuildEmoji.deserialize.assert_called_once_with(
+            emojis.KnownCustomEmoji.deserialize.assert_called_once_with(
                 mock_emoji_payload, components=rest_guild_logic_impl._components
             )
 
@@ -318,12 +318,12 @@ class TestRESTGuildLogic:
     @_helpers.parametrize_valid_id_formats_for_models("guild", 93443949, guilds.Guild)
     async def test_fetch_guild_emojis(self, rest_guild_logic_impl, guild):
         mock_emoji_payload = {"id": "92929", "name": "nyaa", "animated": True}
-        mock_emoji_obj = mock.MagicMock(emojis.GuildEmoji)
+        mock_emoji_obj = mock.MagicMock(emojis.KnownCustomEmoji)
         rest_guild_logic_impl._session.list_guild_emojis.return_value = [mock_emoji_payload]
-        with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj):
+        with mock.patch.object(emojis.KnownCustomEmoji, "deserialize", return_value=mock_emoji_obj):
             assert await rest_guild_logic_impl.fetch_guild_emojis(guild=guild) == [mock_emoji_obj]
             rest_guild_logic_impl._session.list_guild_emojis.assert_called_once_with(guild_id="93443949",)
-            emojis.GuildEmoji.deserialize.assert_called_once_with(
+            emojis.KnownCustomEmoji.deserialize.assert_called_once_with(
                 mock_emoji_payload, components=rest_guild_logic_impl._components
             )
 
@@ -332,19 +332,19 @@ class TestRESTGuildLogic:
     @_helpers.parametrize_valid_id_formats_for_models("role", 537340989808050216, guilds.GuildRole)
     async def test_create_guild_emoji_with_optionals(self, rest_guild_logic_impl, guild, role):
         mock_emoji_payload = {"id": "229292929", "animated": True}
-        mock_emoji_obj = mock.MagicMock(emojis.GuildEmoji)
+        mock_emoji_obj = mock.MagicMock(emojis.KnownCustomEmoji)
         rest_guild_logic_impl._session.create_guild_emoji.return_value = mock_emoji_payload
         mock_image_data = mock.MagicMock(bytes)
         mock_image_obj = mock.MagicMock(files.BaseStream)
         mock_image_obj.read = mock.AsyncMock(return_value=mock_image_data)
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj))
+        stack.enter_context(mock.patch.object(emojis.KnownCustomEmoji, "deserialize", return_value=mock_emoji_obj))
         with stack:
             result = await rest_guild_logic_impl.create_guild_emoji(
                 guild=guild, name="fairEmoji", image=mock_image_obj, roles=[role], reason="hello",
             )
             assert result is mock_emoji_obj
-            emojis.GuildEmoji.deserialize.assert_called_once_with(
+            emojis.KnownCustomEmoji.deserialize.assert_called_once_with(
                 mock_emoji_payload, components=rest_guild_logic_impl._components
             )
             mock_image_obj.read.assert_awaited_once()
@@ -356,20 +356,20 @@ class TestRESTGuildLogic:
     @_helpers.parametrize_valid_id_formats_for_models("guild", 93443949, guilds.Guild)
     async def test_create_guild_emoji_without_optionals(self, rest_guild_logic_impl, guild):
         mock_emoji_payload = {"id": "229292929", "animated": True}
-        mock_emoji_obj = mock.MagicMock(emojis.GuildEmoji)
+        mock_emoji_obj = mock.MagicMock(emojis.KnownCustomEmoji)
         rest_guild_logic_impl._session.create_guild_emoji.return_value = mock_emoji_payload
         mock_image_obj = mock.MagicMock(files.BaseStream)
         mock_image_data = mock.MagicMock(bytes)
         mock_image_obj = mock.MagicMock(files.BaseStream)
         mock_image_obj.read = mock.AsyncMock(return_value=mock_image_data)
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj))
+        stack.enter_context(mock.patch.object(emojis.KnownCustomEmoji, "deserialize", return_value=mock_emoji_obj))
         with stack:
             result = await rest_guild_logic_impl.create_guild_emoji(
                 guild=guild, name="fairEmoji", image=mock_image_obj,
             )
             assert result is mock_emoji_obj
-            emojis.GuildEmoji.deserialize.assert_called_once_with(
+            emojis.KnownCustomEmoji.deserialize.assert_called_once_with(
                 mock_emoji_payload, components=rest_guild_logic_impl._components
             )
             mock_image_obj.read.assert_awaited_once()
@@ -379,29 +379,29 @@ class TestRESTGuildLogic:
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 93443949, guilds.Guild)
-    @_helpers.parametrize_valid_id_formats_for_models("emoji", 4123321, emojis.GuildEmoji)
+    @_helpers.parametrize_valid_id_formats_for_models("emoji", 4123321, emojis.KnownCustomEmoji)
     async def test_update_guild_emoji_without_optionals(self, rest_guild_logic_impl, guild, emoji):
         mock_emoji_payload = {"id": "202020", "name": "Nyaa", "animated": True}
-        mock_emoji_obj = mock.MagicMock(emojis.GuildEmoji)
+        mock_emoji_obj = mock.MagicMock(emojis.KnownCustomEmoji)
         rest_guild_logic_impl._session.modify_guild_emoji.return_value = mock_emoji_payload
-        with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj):
+        with mock.patch.object(emojis.KnownCustomEmoji, "deserialize", return_value=mock_emoji_obj):
             assert await rest_guild_logic_impl.update_guild_emoji(guild, emoji) is mock_emoji_obj
             rest_guild_logic_impl._session.modify_guild_emoji.assert_called_once_with(
                 guild_id="93443949", emoji_id="4123321", name=..., roles=..., reason=...,
             )
-            emojis.GuildEmoji.deserialize.assert_called_once_with(
+            emojis.KnownCustomEmoji.deserialize.assert_called_once_with(
                 mock_emoji_payload, components=rest_guild_logic_impl._components
             )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 93443949, guilds.Guild)
-    @_helpers.parametrize_valid_id_formats_for_models("emoji", 4123321, emojis.GuildEmoji)
+    @_helpers.parametrize_valid_id_formats_for_models("emoji", 4123321, emojis.KnownCustomEmoji)
     @_helpers.parametrize_valid_id_formats_for_models("role", 123123123, guilds.GuildRole)
     async def test_update_guild_emoji_with_optionals(self, rest_guild_logic_impl, guild, emoji, role):
         mock_emoji_payload = {"id": "202020", "name": "Nyaa", "animated": True}
-        mock_emoji_obj = mock.MagicMock(emojis.GuildEmoji)
+        mock_emoji_obj = mock.MagicMock(emojis.KnownCustomEmoji)
         rest_guild_logic_impl._session.modify_guild_emoji.return_value = mock_emoji_payload
-        with mock.patch.object(emojis.GuildEmoji, "deserialize", return_value=mock_emoji_obj):
+        with mock.patch.object(emojis.KnownCustomEmoji, "deserialize", return_value=mock_emoji_obj):
             result = await rest_guild_logic_impl.update_guild_emoji(
                 guild, emoji, name="Nyaa", roles=[role], reason="Agent 42"
             )
@@ -409,13 +409,13 @@ class TestRESTGuildLogic:
             rest_guild_logic_impl._session.modify_guild_emoji.assert_called_once_with(
                 guild_id="93443949", emoji_id="4123321", name="Nyaa", roles=["123123123"], reason="Agent 42",
             )
-            emojis.GuildEmoji.deserialize.assert_called_once_with(
+            emojis.KnownCustomEmoji.deserialize.assert_called_once_with(
                 mock_emoji_payload, components=rest_guild_logic_impl._components
             )
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 93443949, guilds.Guild)
-    @_helpers.parametrize_valid_id_formats_for_models("emoji", 4123321, emojis.GuildEmoji)
+    @_helpers.parametrize_valid_id_formats_for_models("emoji", 4123321, emojis.KnownCustomEmoji)
     async def test_delete_guild_emoji(self, rest_guild_logic_impl, guild, emoji):
         rest_guild_logic_impl._session.delete_guild_emoji.return_value = ...
         assert await rest_guild_logic_impl.delete_guild_emoji(guild, emoji) is None

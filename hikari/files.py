@@ -78,11 +78,6 @@ class BaseStream(abc.ABC, typing.AsyncIterable[bytes]):
 
     This is a wrapper for an async iterable of bytes.
 
-    Parameters
-    ----------
-    filename : str
-        The name of the stream.
-
     Implementations should provide an `__aiter__` method yielding chunks
     to upload. Chunks can be any size that is non-zero, but for performance
     should be around 64-256KiB in size.
@@ -108,14 +103,13 @@ class BaseStream(abc.ABC, typing.AsyncIterable[bytes]):
 
     """
 
-    filename: str
-    """The name of the stream."""
-
-    def __init__(self, filename: str) -> None:
-        self.filename = filename
+    @property
+    @abc.abstractmethod
+    def filename(self) -> str:
+        """Ffilename for the file object."""
 
     def __repr__(self) -> str:
-        return f"{type(self).__qualname__}(filename={self.filename!r})"
+        return f"{type(self).__name__}(filename={self.filename!r})"
 
     async def read(self) -> bytes:
         """Return the entire contents of the data stream."""
@@ -271,7 +265,7 @@ class ByteStream(BaseStream):
     ]
 
     def __init__(self, filename: str, obj: ___VALID_TYPES___) -> None:
-        super().__init__(filename)
+        self._filename = filename
 
         if inspect.isasyncgenfunction(obj):
             self._obj = obj()
@@ -303,6 +297,10 @@ class ByteStream(BaseStream):
     async def __aiter__(self) -> typing.AsyncGenerator[bytes]:
         async for chunk in self._obj:
             yield self._to_bytes(chunk)
+
+    @property
+    def filename(self) -> str:
+        return self._filename
 
     async def _aiter_async_iterator(
         self, async_iterator: typing.AsyncGenerator[___VALID_BYTE_TYPES___]
@@ -355,7 +353,7 @@ class WebResourceStream(BaseStream):
     """The URL of the resource."""
 
     def __init__(self, filename: str, url: str) -> None:
-        super().__init__(filename)
+        self._filename = filename
         self.url = url
 
     async def __aiter__(self) -> typing.AsyncGenerator[bytes]:
@@ -386,6 +384,10 @@ class WebResourceStream(BaseStream):
             cls = errors.HTTPErrorResponse
 
         raise cls(real_url, http.HTTPStatus(response.status), response.headers, raw_body)
+
+    @property
+    def filename(self) -> str:
+        return self._filename
 
 
 class FileStream(BaseStream):
@@ -459,12 +461,10 @@ class FileStream(BaseStream):
 
     def __init__(self, *args, executor=None) -> None:
         if len(args) == 1:
-            super().__init__(os.path.basename(args[0]))
+            self._filename = os.path.basename(args[0])
             self.path = args[0]
         else:
-            name, path = args
-            super().__init__(name)
-            self.path = path
+            self._filename, self.path = args
         self._executor = executor
 
     def __aiter__(self) -> typing.AsyncGenerator[bytes]:
@@ -477,6 +477,10 @@ class FileStream(BaseStream):
             return self._processpool_strategy(loop)
 
         return self._threadpool_strategy(loop)
+
+    @property
+    def filename(self) -> str:
+        return self._filename
 
     async def _threadpool_strategy(self, loop):
         fp = await loop.run_in_executor(self._executor, functools.partial(open, self.path, "rb"))
