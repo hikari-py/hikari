@@ -23,6 +23,7 @@ import mock
 import pytest
 
 from hikari import applications
+from hikari import channels
 from hikari import embeds
 from hikari import emojis
 from hikari import files
@@ -322,14 +323,107 @@ class TestMessage:
 
     @pytest.mark.asyncio
     async def test_fetch_channel(self, message_obj, components_impl):
-        await message_obj.fetch_channel()
+        mock_channel = mock.MagicMock(channels.GuildChannel)
+        components_impl.rest.fetch_channel.return_value = mock_channel
+        assert await message_obj.fetch_channel() is mock_channel
         components_impl.rest.fetch_channel.assert_called_once_with(channel=44444)
 
     @pytest.mark.asyncio
-    async def test_reply(self, message_obj, components_impl):
+    async def test_edit_without_optionals(self, message_obj, components_impl):
+        mock_message = mock.MagicMock(messages.Message)
+        components_impl.rest.update_message.return_value = mock_message
+        assert await message_obj.edit() is mock_message
+        components_impl.rest.update_message.assert_called_once_with(
+            message=123,
+            channel=44444,
+            content=...,
+            embed=...,
+            mentions_everyone=True,
+            user_mentions=True,
+            role_mentions=True,
+        )
+
+    @pytest.mark.asyncio
+    async def test_edit_with_optionals(self, message_obj, components_impl):
+        mock_embed = mock.MagicMock(embeds.Embed)
+        mock_message = mock.MagicMock(messages.Message)
+        components_impl.rest.update_message.return_value = mock_message
+        result = await message_obj.edit(
+            content="OKOKOKOKOKOKOK",
+            embed=mock_embed,
+            mentions_everyone=False,
+            user_mentions=[123],
+            role_mentions=[456],
+        )
+        assert result is mock_message
+        components_impl.rest.update_message.assert_called_once_with(
+            message=123,
+            channel=44444,
+            content="OKOKOKOKOKOKOK",
+            embed=mock_embed,
+            mentions_everyone=False,
+            user_mentions=[123],
+            role_mentions=[456],
+        )
+
+    @pytest.mark.asyncio
+    async def test_safe_edit_without_optionals(self, message_obj, components_impl):
+        mock_message = mock.MagicMock(messages.Message)
+        components_impl.rest.safe_update_message.return_value = mock_message
+        assert await message_obj.safe_edit() is mock_message
+        components_impl.rest.safe_update_message.assert_called_once_with(
+            message=123,
+            channel=44444,
+            content=...,
+            embed=...,
+            mentions_everyone=False,
+            user_mentions=False,
+            role_mentions=False,
+        )
+
+    @pytest.mark.asyncio
+    async def test_safe_edit_with_optionals(self, message_obj, components_impl):
+        mock_embed = mock.MagicMock(embeds.Embed)
+        mock_message = mock.MagicMock(messages.Message)
+        components_impl.rest.safe_update_message.return_value = mock_message
+        result = await message_obj.safe_edit(
+            content="OKOKOKOKOKOKOK", embed=mock_embed, mentions_everyone=True, user_mentions=[123], role_mentions=[456]
+        )
+        assert result is mock_message
+        components_impl.rest.safe_update_message.assert_called_once_with(
+            message=123,
+            channel=44444,
+            content="OKOKOKOKOKOKOK",
+            embed=mock_embed,
+            mentions_everyone=True,
+            user_mentions=[123],
+            role_mentions=[456],
+        )
+
+    @pytest.mark.asyncio
+    async def test_reply_without_optionals(self, message_obj, components_impl):
+        mock_message = mock.MagicMock(messages.Message)
+        components_impl.rest.create_message.return_value = mock_message
+        assert await message_obj.reply() is mock_message
+        components_impl.rest.create_message.assert_called_once_with(
+            channel=44444,
+            content=...,
+            nonce=...,
+            tts=...,
+            files=...,
+            embed=...,
+            mentions_everyone=True,
+            user_mentions=True,
+            role_mentions=True,
+        )
+
+    @pytest.mark.asyncio
+    async def test_reply_with_optionals(self, message_obj, components_impl):
         mock_file = mock.MagicMock(files.BaseStream)
         mock_embed = mock.MagicMock(embeds.Embed)
-        await message_obj.reply(
+        mock_message = mock.MagicMock(messages.Message)
+        components_impl.rest.create_message.return_value = mock_message
+        result = await message_obj.reply(
             content="blah",
             nonce="blah2",
             tts=True,
@@ -339,6 +433,7 @@ class TestMessage:
             user_mentions=[123],
             role_mentions=[444],
         )
+        assert result is mock_message
         components_impl.rest.create_message.assert_called_once_with(
             channel=44444,
             content="blah",
@@ -350,3 +445,88 @@ class TestMessage:
             user_mentions=[123],
             role_mentions=[444],
         )
+
+    @pytest.mark.asyncio
+    async def test_safe_reply_without_optionals(self, message_obj, components_impl):
+        mock_message = mock.MagicMock(messages.Message)
+        components_impl.rest.safe_create_message.return_value = mock_message
+        assert await message_obj.safe_reply() is mock_message
+        components_impl.rest.safe_create_message.assert_called_once_with(
+            channel=44444,
+            content=...,
+            nonce=...,
+            tts=...,
+            files=...,
+            embed=...,
+            mentions_everyone=False,
+            user_mentions=False,
+            role_mentions=False,
+        )
+
+    @pytest.mark.asyncio
+    async def test_safe_reply_with_optionals(self, message_obj, components_impl):
+        mock_file = mock.MagicMock(files.BaseStream)
+        mock_embed = mock.MagicMock(embeds.Embed)
+        mock_message = mock.MagicMock(messages.Message)
+        components_impl.rest.safe_create_message.return_value = mock_message
+        result = await message_obj.safe_reply(
+            content="blah",
+            nonce="blah2",
+            tts=True,
+            files=[mock_file],
+            embed=mock_embed,
+            mentions_everyone=True,
+            user_mentions=[123],
+            role_mentions=[444],
+        )
+        assert result is mock_message
+        components_impl.rest.safe_create_message.assert_called_once_with(
+            channel=44444,
+            content="blah",
+            nonce="blah2",
+            tts=True,
+            files=[mock_file],
+            embed=mock_embed,
+            mentions_everyone=True,
+            user_mentions=[123],
+            role_mentions=[444],
+        )
+
+    @pytest.mark.asyncio
+    async def test_delete(self, message_obj, components_impl):
+        assert await message_obj.delete() is None
+        components_impl.rest.delete_messages.assert_called_once_with(channel=44444, message=123)
+
+    @pytest.mark.asyncio
+    async def test_add_reaction(self, message_obj, components_impl):
+        mock_emoji = mock.MagicMock(emojis.Emoji)
+        assert await message_obj.add_reaction(mock_emoji) is None
+        components_impl.rest.add_reaction.assert_called_once_with(channel=44444, message=123, emoji=mock_emoji)
+
+    @pytest.mark.asyncio
+    async def test_add_reaction_without_user(self, message_obj, components_impl):
+        mock_emoji = mock.MagicMock(emojis.Emoji)
+        assert await message_obj.remove_reaction(mock_emoji) is None
+        components_impl.rest.remove_reaction.assert_called_once_with(
+            channel=44444, message=123, emoji=mock_emoji, user=None
+        )
+
+    @pytest.mark.asyncio
+    async def test_add_reaction_with_user(self, message_obj, components_impl):
+        mock_emoji = mock.MagicMock(emojis.Emoji)
+        user = mock.MagicMock(users.User)
+        assert await message_obj.remove_reaction(mock_emoji, user=user) is None
+        components_impl.rest.remove_reaction.assert_called_once_with(
+            channel=44444, message=123, emoji=mock_emoji, user=user
+        )
+
+    @pytest.mark.asyncio
+    async def test_remove_all_reactions_without_emoji(self, message_obj, components_impl):
+        assert await message_obj.remove_all_reactions() is None
+        components_impl.rest.remove_all_reactions.assert_called_once_with(channel=44444, message=123, emoji=None)
+
+    @pytest.mark.asyncio
+    async def test_remove_all_reactions_with_emoji(self, message_obj, components_impl):
+        mock_emoji = mock.MagicMock(emojis.Emoji)
+        assert await message_obj.remove_all_reactions(mock_emoji) is None
+        components_impl.rest.remove_all_reactions.assert_called_once_with(channel=44444, message=123, emoji=mock_emoji)
