@@ -22,7 +22,7 @@ async def ping(event):
     # If a non-bot user sends a message "hk.ping", respond with "Pong!"
 
     if not event.author.is_bot and event.content.startswith("hk.ping"):
-        await bot.rest.create_message(event.channel_id, content="Pong!")
+        await event.reply(content="Pong!")
 
 
 bot.run()
