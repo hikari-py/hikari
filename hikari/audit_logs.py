@@ -414,10 +414,7 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
         return cls(payload)
 
 
-_EntryInfoEntityT = typing.TypeVar("_EntryInfoEntityT", bound=BaseAuditLogEntryInfo)
-
-
-def get_entry_info_entity(type_: int) -> typing.Type[_EntryInfoEntityT]:
+def get_entry_info_entity(type_: int) -> typing.Type[BaseAuditLogEntryInfo]:
     """Get the entity that's registered for an entry's options.
 
     Parameters
@@ -467,8 +464,8 @@ class AuditLogEntry(bases.Unique, marshaller.Deserializable):
             target_id = bases.Snowflake(target_id)
 
         if (options := payload.get("options")) is not None:
-            if option_converter := get_entry_info_entity(action_type):
-                options = option_converter.deserialize(options, **kwargs)
+            option_converter = get_entry_info_entity(action_type)
+            options = option_converter.deserialize(options, **kwargs)
 
         # noinspection PyArgumentList
         return cls(
@@ -583,13 +580,13 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
         "webhooks",
     )
 
-    integrations: typing.Mapping[bases.Snowflake, guilds.GuildIntegration]
+    integrations: typing.MutableMapping[bases.Snowflake, guilds.GuildIntegration]
     """A mapping of the partial integrations objects found in this log so far."""
 
-    users: typing.Mapping[bases.Snowflake, _users.User]
+    users: typing.MutableMapping[bases.Snowflake, _users.User]
     """A mapping of the objects of users found in this audit log so far."""
 
-    webhooks: typing.Mapping[bases.Snowflake, _webhooks.Webhook]
+    webhooks: typing.MutableMapping[bases.Snowflake, _webhooks.Webhook]
     """A mapping of the objects of webhooks found in this audit log so far."""
 
     def __init__(
