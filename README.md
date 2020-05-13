@@ -28,13 +28,11 @@ async def ping(event):
 bot.run()
 ```
 
-_And if that is too verbose, this will be actively reduced with the
-functionality provided by the Stateful bot implementation coming soon!_
-
 ## What does _hikari_ aim to do?
 
 - **Provide 100% documentation for the entire library.** Build your application
-  bottom-up or top-down with comprehensive documentation as standard.
+  bottom-up or top-down with comprehensive documentation as standard. Currently
+  more than 45% of this codebase consists of documentation.
 - **Ensure all components are reusable.** Most people want a basic framework for
   writing a bot, and _hikari_ will provide that. However, if you decide on a
   bespoke solution using custom components, such as a _Redis_ state cache, or
@@ -62,8 +60,9 @@ ways.
 
 - Modular, reusable components.
 - Extensive documentation.
-- Full type-checking.
+- Support for using type hints to infer event types.
 - Minimal dependencies.
+- Rapidly evolving codebase.
 - Full unit test suite.
 
 ### Network level components
@@ -80,9 +79,10 @@ to utilize these components as a black box where necessary.
 - Low level gateway websocket shard implementation.
 - Rate limiting that complies with the `X-RateLimit-Bucket` header __properly__.
 - Gateway websocket ratelimiting (prevents your websocket getting completely invalidated).
-- Intents
+- Intents.
 - Proxy support for websockets and REST API.
 - File IO that doesn't block you.
+- Fluent Pythonic API that does not limit your creativity.
 
 ### High level components
 
@@ -95,7 +95,7 @@ to utilize these components as a black box where necessary.
   changes are required when a breaking API design is introduced. This reduces the amount of
   stuff you need to fix in your applications as a result.
 - REST only API functionality. Want to write a web dashboard? Feel free to just reuse the 
-  REST client components to achive that!
+  REST client components to achieve that!
   
 ### Stuff coming soon
 
@@ -111,7 +111,6 @@ to utilize these components as a black box where necessary.
   where you want them. Let _hikari_ work out how to put it together!)
 - Full voice transcoding support, natively in your application. Do not rely on invoking ffmpeg
   in a subprocess ever again!
-
 
 ## Getting started
 
