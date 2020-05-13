@@ -18,7 +18,9 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
 import datetime
+import inspect
 
+import attr
 import mock
 import pytest
 
@@ -38,7 +40,146 @@ from hikari.net import rest
 from tests.hikari import _helpers
 
 
-class TestRESTChannelLogging:
+@pytest.mark.asyncio
+class TestMessagePaginator:
+    @pytest.fixture
+    def mock_session(self):
+        return mock.MagicMock(spec_set=rest.REST)
+
+    @pytest.fixture
+    def mock_components(self):
+        return mock.MagicMock(spec_set=components.Components)
+
+    @pytest.fixture
+    def message_cls(self):
+        with mock.patch.object(messages, "Message") as message_cls:
+            yield message_cls
+
+    @pytest.mark.parametrize("direction", ["before", "after", "around"])
+    def test_init_first_id_is_date(self, mock_session, mock_components, direction):
+        date = datetime.datetime(2015, 11, 15, 23, 13, 46, 709000, tzinfo=datetime.timezone.utc)
+        expected_id = 115590097100865536
+        channel_id = 1234567
+        pag = channel._MessagePaginator(channel_id, direction, date, mock_components, mock_session)
+        assert pag._first_id == str(expected_id)
+        assert pag._channel_id == str(channel_id)
+        assert pag._direction == direction
+        assert pag._session is mock_session
+        assert pag._components is mock_components
+
+    @pytest.mark.parametrize("direction", ["before", "after", "around"])
+    def test_init_first_id_is_id(self, mock_session, mock_components, direction):
+        expected_id = 115590097100865536
+        channel_id = 1234567
+        pag = channel._MessagePaginator(channel_id, direction, expected_id, mock_components, mock_session)
+        assert pag._first_id == str(expected_id)
+        assert pag._channel_id == str(channel_id)
+        assert pag._direction == direction
+        assert pag._session is mock_session
+        assert pag._components is mock_components
+
+    @pytest.mark.parametrize("direction", ["before", "after", "around"])
+    async def test_next_chunk_makes_api_call(self, mock_session, mock_components, message_cls, direction):
+        channel_obj = mock.MagicMock(__int__=lambda _: 55)
+
+        mock_session.get_channel_messages = mock.AsyncMock(return_value=[])
+        pag = channel._MessagePaginator(channel_obj, direction, "12345", mock_components, mock_session)
+        pag._first_id = "12345"
+
+        await pag._next_chunk()
+
+        mock_session.get_channel_messages.assert_awaited_once_with(
+            **{direction: "12345", "channel_id": "55", "limit": 100}
+        )
+
+    @pytest.mark.parametrize("direction", ["before", "after", "around"])
+    async def test_next_chunk_empty_response_returns_None(self, mock_session, mock_components, message_cls, direction):
+        channel_obj = mock.MagicMock(__int__=lambda _: 55)
+
+        pag = channel._MessagePaginator(channel_obj, direction, "12345", mock_components, mock_session)
+        pag._first_id = "12345"
+
+        mock_session.get_channel_messages = mock.AsyncMock(return_value=[])
+
+        assert await pag._next_chunk() is None
+
+    @pytest.mark.parametrize(["direction", "expect_reverse"], [("before", False), ("after", True), ("around", False)])
+    async def test_next_chunk_updates_first_id(
+        self, mock_session, mock_components, message_cls, expect_reverse, direction
+    ):
+        return_payload = [
+            {"id": "1234", ...: ...},
+            {"id": "3456", ...: ...},
+            {"id": "3333", ...: ...},
+            {"id": "512", ...: ...},
+        ]
+
+        mock_session.get_channel_messages = mock.AsyncMock(return_value=return_payload)
+
+        channel_obj = mock.MagicMock(__int__=lambda _: 99)
+
+        pag = channel._MessagePaginator(channel_obj, direction, "12345", mock_components, mock_session)
+        pag._first_id = "12345"
+
+        await pag._next_chunk()
+
+        assert pag._first_id == "1234" if expect_reverse else "512"
+
+    @pytest.mark.parametrize(["direction", "expect_reverse"], [("before", False), ("after", True), ("around", False)])
+    async def test_next_chunk_returns_generator(
+        self, mock_session, mock_components, message_cls, expect_reverse, direction
+    ):
+        return_payload = [
+            {"id": "1234", ...: ...},
+            {"id": "3456", ...: ...},
+            {"id": "3333", ...: ...},
+            {"id": "512", ...: ...},
+        ]
+
+        @attr.s(auto_attribs=True)
+        class DummyResponse:
+            id: int
+
+        real_values = [
+            DummyResponse(1234),
+            DummyResponse(3456),
+            DummyResponse(3333),
+            DummyResponse(512),
+        ]
+
+        if expect_reverse:
+            real_values.reverse()
+
+        assert len(real_values) == len(return_payload)
+
+        message_cls.deserialize = mock.MagicMock(side_effect=real_values.copy())
+        mock_session.get_channel_messages = mock.AsyncMock(return_value=return_payload)
+
+        channel_obj = mock.MagicMock(__int__=lambda _: 99)
+
+        pag = channel._MessagePaginator(channel_obj, direction, "12345", mock_components, mock_session)
+        pag._first_id = "12345"
+
+        generator = await pag._next_chunk()
+
+        assert inspect.isgenerator(generator)
+
+        for i, item in enumerate(generator, start=1):
+            assert item == real_values.pop(0)
+
+        assert locals()["i"] == 4, "Not iterated correctly somehow"
+        assert not real_values
+
+        # Clear the generator result.
+        # This doesn't test anything, but there is an issue with coverage not detecting generator
+        # exit conditions properly. This fixes something that would otherwise be marked as
+        # uncovered behaviour erroneously.
+        # https://stackoverflow.com/questions/35317757/python-unittest-branch-coverage-seems-to-miss-executed-generator-in-zip
+        with pytest.raises(StopIteration):
+            next(generator)
+
+
+class TestRESTChannel:
     @pytest.fixture()
     def rest_channel_logic_impl(self):
         mock_components = mock.MagicMock(components.Components)
