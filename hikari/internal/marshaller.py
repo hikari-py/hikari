@@ -367,7 +367,7 @@ class HikariEntityMarshaller:
                     raise AttributeError(
                         "Failed to deserialize data to instance of "
                         f"{target_type.__module__}.{target_type.__qualname__} due to required field {a.field_name} "
-                        f"(from raw key {a.raw_name}) not being included in the input payload\n\n{raw_data}"
+                        f"(from raw key {a.raw_name}) not being included in the input payload\n\n{repr(raw_data)}"
                     )
                 if a.if_undefined in _PASSED_THROUGH_SINGLETONS:
                     kwargs[kwarg_name] = a.if_undefined
@@ -379,8 +379,8 @@ class HikariEntityMarshaller:
                 if a.if_none is RAISE:
                     raise AttributeError(
                         "Failed to deserialize data to instance of "
-                        f"{target_type.__module__}.{target_type.__qualname__} due to non-nullable field {a.field_name}"
-                        f" (from raw key {a.raw_name}) being `None` in the input payload\n\n{raw_data}"
+                        f"{target_type.__module__}.{target_type.__qualname__} due to non-nullable field "
+                        f" (from raw key {a.raw_name!r}) being `None` in the input payload\n\n{raw_data!r}"
                     )
                 if a.if_none in _PASSED_THROUGH_SINGLETONS:
                     kwargs[kwarg_name] = a.if_none
@@ -396,7 +396,7 @@ class HikariEntityMarshaller:
                 raise TypeError(
                     "Failed to deserialize data to instance of "
                     f"{target_type.__module__}.{target_type.__qualname__} because marshalling failed on "
-                    f"attribute {a.field_name} (passed to constructor as {kwarg_name})"
+                    f"attribute {a.field_name!r} (passed to constructor as {kwarg_name!r})\n\n{data!r}"
                 ) from exc
 
         return target_type(**kwargs, **injected_kwargs)
