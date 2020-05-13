@@ -53,7 +53,7 @@ class _MessagePaginator(pagination.BufferedPaginatedResults[_messages.Message]):
         self._channel_id = str(int(channel))
         self._direction = direction
         self._first_id = (
-            bases.Snowflake.from_datetime(first) if isinstance(first, datetime.datetime) else str(int(first))
+            str(bases.Snowflake.from_datetime(first)) if isinstance(first, datetime.datetime) else str(int(first))
         )
         self._components = components
         self._session = session
