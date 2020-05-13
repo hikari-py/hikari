@@ -197,17 +197,17 @@ COMPONENT_BOUND_AUDIT_LOG_ENTRY_CONVERTERS = {
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class AuditLogChange(bases.Entity, marshaller.Deserializable):
     """Represents a change made to an audit log entry's target entity."""
 
-    new_value: typing.Optional[typing.Any] = attr.attrib()
+    new_value: typing.Optional[typing.Any] = attr.attrib(repr=True)
     """The new value of the key, if something was added or changed."""
 
-    old_value: typing.Optional[typing.Any] = attr.attrib()
+    old_value: typing.Optional[typing.Any] = attr.attrib(repr=True)
     """The old value of the key, if something was removed or changed."""
 
-    key: typing.Union[AuditLogChangeKey, str] = attr.attrib()
+    key: typing.Union[AuditLogChangeKey, str] = attr.attrib(repr=True)
     """The name of the audit log change's key."""
 
     @classmethod
@@ -300,7 +300,7 @@ def register_audit_log_entry_info(
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class BaseAuditLogEntryInfo(bases.Entity, marshaller.Deserializable, abc.ABC):
     """A base object that all audit log entry info objects will inherit from."""
 
@@ -311,16 +311,13 @@ class BaseAuditLogEntryInfo(bases.Entity, marshaller.Deserializable, abc.ABC):
     AuditLogEventType.CHANNEL_OVERWRITE_DELETE,
 )
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
-class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo):
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, bases.Unique):
     """Represents the extra information for overwrite related audit log entries.
 
     Will be attached to the overwrite create, update and delete audit log
     entries.
     """
-
-    id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake)
-    """The ID of the overwrite being updated, added or removed."""
 
     type: channels.PermissionOverwriteType = marshaller.attrib(deserializer=channels.PermissionOverwriteType)
     """The type of entity this overwrite targets."""
@@ -331,7 +328,7 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo):
 
 @register_audit_log_entry_info(AuditLogEventType.MESSAGE_PIN, AuditLogEventType.MESSAGE_UNPIN)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The extra information for message pin related audit log entries.
 
@@ -347,7 +344,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
 
 @register_audit_log_entry_info(AuditLogEventType.MEMBER_PRUNE)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
     """Represents the extra information attached to guild prune log entries."""
 
@@ -360,7 +357,7 @@ class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
 
 @register_audit_log_entry_info(AuditLogEventType.MESSAGE_BULK_DELETE)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
     """Represents extra information for the message bulk delete audit entry."""
 
@@ -370,7 +367,7 @@ class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
 
 @register_audit_log_entry_info(AuditLogEventType.MESSAGE_DELETE)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     """Represents extra information attached to the message delete audit entry."""
 
@@ -380,7 +377,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
 
 @register_audit_log_entry_info(AuditLogEventType.MEMBER_DISCONNECT)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
     """Represents extra information for the voice chat member disconnect entry."""
 
@@ -390,7 +387,7 @@ class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
 
 @register_audit_log_entry_info(AuditLogEventType.MEMBER_MOVE)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     """Represents extra information for the voice chat based member move entry."""
 
@@ -434,26 +431,26 @@ def get_entry_info_entity(type_: int) -> typing.Type[BaseAuditLogEntryInfo]:
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class AuditLogEntry(bases.Unique, marshaller.Deserializable):
     """Represents an entry in a guild's audit log."""
 
-    target_id: typing.Optional[bases.Snowflake] = attr.attrib()
+    target_id: typing.Optional[bases.Snowflake] = attr.attrib(eq=False, hash=False)
     """The ID of the entity affected by this change, if applicable."""
 
-    changes: typing.Sequence[AuditLogChange] = attr.attrib(repr=False)
+    changes: typing.Sequence[AuditLogChange] = attr.attrib(eq=False, hash=False, repr=False)
     """A sequence of the changes made to `AuditLogEntry.target_id`."""
 
-    user_id: bases.Snowflake = attr.attrib()
+    user_id: bases.Snowflake = attr.attrib(eq=False, hash=False)
     """The ID of the user who made this change."""
 
-    action_type: typing.Union[AuditLogEventType, str] = attr.attrib()
+    action_type: typing.Union[AuditLogEventType, str] = attr.attrib(eq=False, hash=False)
     """The type of action this entry represents."""
 
-    options: typing.Optional[BaseAuditLogEntryInfo] = attr.attrib(repr=False)
+    options: typing.Optional[BaseAuditLogEntryInfo] = attr.attrib(eq=False, hash=False, repr=False)
     """Extra information about this entry. Only be provided for certain `action_type`."""
 
-    reason: typing.Optional[str] = attr.attrib(repr=False)
+    reason: typing.Optional[str] = attr.attrib(eq=False, hash=False, repr=False)
     """The reason for this change, if set (between 0-512 characters)."""
 
     @classmethod
@@ -511,7 +508,7 @@ def _deserialize_webhooks(
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, repr=False, kw_only=True, slots=True)
 class AuditLog(bases.Entity, marshaller.Deserializable):
     """Represents a guilds audit log."""
 

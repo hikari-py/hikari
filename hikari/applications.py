@@ -190,57 +190,66 @@ def _deserialize_integrations(
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class OwnConnection(bases.Entity, marshaller.Deserializable):
     """Represents a user's connection with a third party account.
 
     Returned by the `GET Current User Connections` endpoint.
     """
 
-    id: str = marshaller.attrib(deserializer=str)
+    id: str = marshaller.attrib(deserializer=str, eq=True, hash=True, repr=True)
     """The string ID of the third party connected account.
 
     !!! warning
         Seeing as this is a third party ID, it will not be a snowflake.
     """
 
-    name: str = marshaller.attrib(deserializer=str, repr=True)
+    name: str = marshaller.attrib(deserializer=str, eq=False, hash=False, repr=True)
     """The username of the connected account."""
 
-    type: str = marshaller.attrib(deserializer=str, repr=True)
+    type: str = marshaller.attrib(deserializer=str, eq=False, hash=False, repr=True)
     """The type of service this connection is for."""
 
-    is_revoked: bool = marshaller.attrib(raw_name="revoked", deserializer=bool, if_undefined=False, default=False)
+    is_revoked: bool = marshaller.attrib(
+        raw_name="revoked", deserializer=bool, if_undefined=False, default=False, eq=False, hash=False,
+    )
     """Whether the connection has been revoked."""
 
     integrations: typing.Sequence[guilds.PartialGuildIntegration] = marshaller.attrib(
-        deserializer=_deserialize_integrations, if_undefined=list, factory=list, inherit_kwargs=True,
+        deserializer=_deserialize_integrations,
+        if_undefined=list,
+        factory=list,
+        inherit_kwargs=True,
+        eq=False,
+        hash=False,
     )
     """A sequence of the partial guild integration objects this connection has."""
 
-    is_verified: bool = marshaller.attrib(raw_name="verified", deserializer=bool)
+    is_verified: bool = marshaller.attrib(raw_name="verified", deserializer=bool, eq=False, hash=False)
     """Whether the connection has been verified."""
 
-    is_friend_syncing: bool = marshaller.attrib(raw_name="friend_sync", deserializer=bool)
+    is_friend_syncing: bool = marshaller.attrib(raw_name="friend_sync", deserializer=bool, eq=False, hash=False)
     """Whether friends should be added based on this connection."""
 
-    is_showing_activity: bool = marshaller.attrib(raw_name="show_activity", deserializer=bool)
+    is_showing_activity: bool = marshaller.attrib(raw_name="show_activity", deserializer=bool, eq=False, hash=False)
     """Whether this connection's activities are shown in the user's presence."""
 
-    visibility: ConnectionVisibility = marshaller.attrib(deserializer=ConnectionVisibility, repr=True)
+    visibility: ConnectionVisibility = marshaller.attrib(
+        deserializer=ConnectionVisibility, eq=False, hash=False, repr=True
+    )
     """The visibility of the connection."""
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class OwnGuild(guilds.PartialGuild):
     """Represents a user bound partial guild object."""
 
-    is_owner: bool = marshaller.attrib(raw_name="owner", deserializer=bool, repr=True)
+    is_owner: bool = marshaller.attrib(raw_name="owner", deserializer=bool, eq=False, hash=False, repr=True)
     """Whether the current user owns this guild."""
 
     my_permissions: permissions.Permission = marshaller.attrib(
-        raw_name="permissions", deserializer=permissions.Permission
+        raw_name="permissions", deserializer=permissions.Permission, eq=False, hash=False
     )
     """The guild level permissions that apply to the current user or bot."""
 
@@ -257,23 +266,25 @@ class TeamMembershipState(int, more_enums.Enum):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class TeamMember(bases.Entity, marshaller.Deserializable):
     """Represents a member of a Team."""
 
-    membership_state: TeamMembershipState = marshaller.attrib(deserializer=TeamMembershipState)
+    membership_state: TeamMembershipState = marshaller.attrib(deserializer=TeamMembershipState, eq=False, hash=False)
     """The state of this user's membership."""
 
-    permissions: typing.Set[str] = marshaller.attrib(deserializer=set)
+    permissions: typing.Set[str] = marshaller.attrib(deserializer=set, eq=False, hash=False)
     """This member's permissions within a team.
 
     Will always be `["*"]` until Discord starts using this.
     """
 
-    team_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
+    team_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, eq=True, hash=True, repr=True)
     """The ID of the team this member belongs to."""
 
-    user: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True, repr=True)
+    user: users.User = marshaller.attrib(
+        deserializer=users.User.deserialize, inherit_kwargs=True, eq=True, hash=True, repr=True
+    )
     """The user object of this team member."""
 
 
@@ -284,19 +295,19 @@ def _deserialize_members(
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class Team(bases.Unique, marshaller.Deserializable):
     """Represents a development team, along with all its members."""
 
-    icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str)
+    icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str, eq=False, hash=False)
     """The hash of this team's icon, if set."""
 
     members: typing.Mapping[bases.Snowflake, TeamMember] = marshaller.attrib(
-        deserializer=_deserialize_members, inherit_kwargs=True
+        deserializer=_deserialize_members, inherit_kwargs=True, eq=False, hash=False
     )
     """The member's that belong to this team."""
 
-    owner_user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
+    owner_user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, eq=False, hash=False, repr=True)
     """The ID of this team's owner."""
 
     @property
@@ -332,11 +343,11 @@ class Team(bases.Unique, marshaller.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class ApplicationOwner(users.User):
     """Represents the user who owns an application, may be a team user."""
 
-    flags: int = marshaller.attrib(deserializer=users.UserFlag, repr=True)
+    flags: int = marshaller.attrib(deserializer=users.UserFlag, eq=False, hash=False, repr=True)
     """This user's flags."""
 
     @property
@@ -350,18 +361,18 @@ def _deserialize_verify_key(payload: str) -> bytes:
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class Application(bases.Unique, marshaller.Deserializable):
     """Represents the information of an Oauth2 Application."""
 
-    name: str = marshaller.attrib(deserializer=str, repr=True)
+    name: str = marshaller.attrib(deserializer=str, eq=False, hash=False, repr=True)
     """The name of this application."""
 
-    description: str = marshaller.attrib(deserializer=str)
+    description: str = marshaller.attrib(deserializer=str, eq=False, hash=False)
     """The description of this application, will be an empty string if unset."""
 
     is_bot_public: typing.Optional[bool] = marshaller.attrib(
-        raw_name="bot_public", deserializer=bool, if_undefined=None, default=None, repr=True
+        raw_name="bot_public", deserializer=bool, if_undefined=None, default=None, eq=False, hash=False, repr=True
     )
     """Whether the bot associated with this application is public.
 
@@ -369,7 +380,7 @@ class Application(bases.Unique, marshaller.Deserializable):
     """
 
     is_bot_code_grant_required: typing.Optional[bool] = marshaller.attrib(
-        raw_name="bot_require_code_grant", deserializer=bool, if_undefined=None, default=None
+        raw_name="bot_require_code_grant", deserializer=bool, if_undefined=None, default=None, eq=False, hash=False
     )
     """Whether this application's bot is requiring code grant for invites.
 
@@ -377,7 +388,13 @@ class Application(bases.Unique, marshaller.Deserializable):
     """
 
     owner: typing.Optional[ApplicationOwner] = marshaller.attrib(
-        deserializer=ApplicationOwner.deserialize, if_undefined=None, default=None, inherit_kwargs=True, repr=True
+        deserializer=ApplicationOwner.deserialize,
+        if_undefined=None,
+        default=None,
+        inherit_kwargs=True,
+        eq=False,
+        hash=False,
+        repr=True,
     )
     """The object of this application's owner.
 
@@ -385,48 +402,58 @@ class Application(bases.Unique, marshaller.Deserializable):
     Discord's oauth2 flow.
     """
 
-    rpc_origins: typing.Optional[typing.Set[str]] = marshaller.attrib(deserializer=set, if_undefined=None, default=None)
+    rpc_origins: typing.Optional[typing.Set[str]] = marshaller.attrib(
+        deserializer=set, if_undefined=None, default=None, eq=False, hash=False
+    )
     """A collection of this application's rpc origin URLs, if rpc is enabled."""
 
-    summary: str = marshaller.attrib(deserializer=str)
+    summary: str = marshaller.attrib(deserializer=str, eq=False, hash=False)
     """This summary for this application's primary SKU if it's sold on Discord.
 
     Will be an empty string if unset.
     """
 
     verify_key: typing.Optional[bytes] = marshaller.attrib(
-        deserializer=_deserialize_verify_key, if_undefined=None, default=None
+        deserializer=_deserialize_verify_key, if_undefined=None, default=None, eq=False, hash=False
     )
     """The base64 encoded key used for the GameSDK's `GetTicket`."""
 
     icon_hash: typing.Optional[str] = marshaller.attrib(
-        raw_name="icon", deserializer=str, if_undefined=None, default=None
+        raw_name="icon", deserializer=str, if_undefined=None, default=None, eq=False, hash=False
     )
     """The hash of this application's icon, if set."""
 
     team: typing.Optional[Team] = marshaller.attrib(
-        deserializer=Team.deserialize, if_undefined=None, if_none=None, default=None, inherit_kwargs=True
+        deserializer=Team.deserialize,
+        if_undefined=None,
+        if_none=None,
+        default=None,
+        eq=False,
+        hash=False,
+        inherit_kwargs=True,
     )
     """This application's team if it belongs to one."""
 
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False
     )
     """The ID of the guild this application is linked to if sold on Discord."""
 
     primary_sku_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False
     )
     """The ID of the primary "Game SKU" of a game that's sold on Discord."""
 
-    slug: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
+    slug: typing.Optional[str] = marshaller.attrib(
+        deserializer=str, if_undefined=None, default=None, eq=False, hash=False
+    )
     """The URL slug that links to this application's store page.
 
     Only applicable to applications sold on Discord.
     """
 
     cover_image_hash: typing.Optional[str] = marshaller.attrib(
-        raw_name="cover_image", deserializer=str, if_undefined=None, default=None
+        raw_name="cover_image", deserializer=str, if_undefined=None, default=None, eq=False, hash=False
     )
     """The hash of this application's cover image on it's store, if set."""
 
