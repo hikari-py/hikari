@@ -47,7 +47,6 @@ import typing
 
 if typing.TYPE_CHECKING:
     import enum
-    import types
 
     IntFlagT = typing.TypeVar("IntFlagT", bound=enum.IntFlag)
     RawIntFlagValueT = typing.Union[typing.AnyStr, typing.SupportsInt, int]
@@ -252,8 +251,20 @@ def unix_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
     -------
     datetime.datetime
         Number of seconds since 1/1/1970 within a datetime object (UTC).
+
+    !!! note
+        If an epoch that's outside the range of what this system can handle,
+        this will return `datetime.datetime.max` or `datetime.datetime.min`.
     """
-    return datetime.datetime.fromtimestamp(epoch / 1000, datetime.timezone.utc)
+    try:
+        return datetime.datetime.fromtimestamp(epoch / 1000, datetime.timezone.utc)
+    # Datetime seems to raise an OSError when you try to convert an out of range timestamp on Windows and a ValueError
+    # if you try on a UNIX system so we want to catch both.
+    except (OSError, ValueError):
+        if epoch > 0:
+            return datetime.datetime.max
+        else:
+            return datetime.datetime.min
 
 
 def pluralize(count: int, name: str, suffix: str = "s") -> str:
