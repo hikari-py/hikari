@@ -796,7 +796,7 @@ class TestPartialGuild:
 
     @pytest.fixture()
     def partial_guild_obj(self, test_partial_guild_payload):
-        return guilds.PartialGuild(
+        return _helpers.unslot_class(guilds.PartialGuild)(
             id=152559372126519269, icon_hash="d4a983885dsaa7691ce8bcaaf945a", name=None, features=None,
         )
 
@@ -836,12 +836,38 @@ class TestPartialGuild:
             urls.generate_cdn_url.assert_not_called()
         assert url is None
 
-    def test_format_icon_url(self, partial_guild_obj):
+    @pytest.mark.parametrize(
+        ["fmt", "expected_fmt", "icon_hash", "size"],
+        [
+            ("png", "png", "a_1a2b3c", 1 << 4),
+            ("png", "png", "1a2b3c", 1 << 5),
+            ("jpeg", "jpeg", "a_1a2b3c", 1 << 6),
+            ("jpeg", "jpeg", "1a2b3c", 1 << 7),
+            ("jpg", "jpg", "a_1a2b3c", 1 << 8),
+            ("jpg", "jpg", "1a2b3c", 1 << 9),
+            ("webp", "webp", "a_1a2b3c", 1 << 10),
+            ("webp", "webp", "1a2b3c", 1 << 11),
+            ("gif", "gif", "a_1a2b3c", 1 << 12),
+            ("gif", "gif", "1a2b3c", 1 << 7),
+            (None, "gif", "a_1a2b3c", 1 << 5),
+            (None, "png", "1a2b3c", 1 << 10),
+        ],
+    )
+    def test_format_icon_url(self, partial_guild_obj, fmt, expected_fmt, icon_hash, size):
         mock_url = "https://cdn.discordapp.com/icons/152559372126519269/d4a983885dsaa7691ce8bcaaf945a.png?size=20"
+        partial_guild_obj.icon_hash = icon_hash
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
-            url = partial_guild_obj.icon_url
-            urls.generate_cdn_url.assert_called_once()
+            url = partial_guild_obj.format_icon_url(fmt, size)
+            urls.generate_cdn_url.assert_called_once_with(
+                "icons", str(partial_guild_obj.id), partial_guild_obj.icon_hash, fmt=expected_fmt, size=size
+            )
         assert url == mock_url
+
+    def test_icon_url_default(self, partial_guild_obj):
+        result = mock.MagicMock()
+        partial_guild_obj.format_icon_url = mock.MagicMock(return_value=result)
+        assert partial_guild_obj.icon_url is result
+        partial_guild_obj.format_icon_url.assert_called_once_with()
 
 
 class TestGuildPreview:
