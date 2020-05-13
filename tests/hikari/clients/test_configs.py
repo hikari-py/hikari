@@ -20,6 +20,7 @@ import datetime
 import ssl
 
 import aiohttp
+import mock
 import pytest
 
 from hikari import gateway_entities
@@ -145,13 +146,18 @@ class TestWebsocketConfig:
     def test_deserialize(self, test_websocket_config):
         datetime_obj = datetime.datetime.now()
         test_websocket_config["initial_idle_since"] = datetime_obj.timestamp()
-        websocket_config_obj = configs.GatewayConfig.deserialize(test_websocket_config)
-
+        mock_activity = mock.MagicMock(gateway_entities.Activity)
+        with _helpers.patch_marshal_attr(
+            configs.GatewayConfig,
+            "initial_activity",
+            deserializer=gateway_entities.Activity.deserialize,
+            return_value=mock_activity,
+        ) as patched_activity_deserializer:
+            websocket_config_obj = configs.GatewayConfig.deserialize(test_websocket_config)
+            patched_activity_deserializer.assert_called_once_with({"name": "test", "url": "some_url", "type": 0})
         assert websocket_config_obj.gateway_use_compression is False
         assert websocket_config_obj.gateway_version == 6
-        assert websocket_config_obj.initial_activity == gateway_entities.Activity.deserialize(
-            {"name": "test", "url": "some_url", "type": 0}
-        )
+        assert websocket_config_obj.initial_activity == mock_activity
         assert websocket_config_obj.initial_status == guilds.PresenceStatus.DND
         assert websocket_config_obj.initial_idle_since == datetime_obj
         assert websocket_config_obj.intents == intents.Intent.GUILD_MESSAGES | intents.Intent.GUILDS
@@ -253,7 +259,15 @@ class TestBotConfig:
     def test_deserialize(self, test_bot_config):
         datetime_obj = datetime.datetime.now()
         test_bot_config["initial_idle_since"] = datetime_obj.timestamp()
-        bot_config_obj = configs.BotConfig.deserialize(test_bot_config)
+        mock_activity = mock.MagicMock(gateway_entities.Activity)
+        with _helpers.patch_marshal_attr(
+            configs.BotConfig,
+            "initial_activity",
+            deserializer=gateway_entities.Activity.deserialize,
+            return_value=mock_activity,
+        ) as patched_activity_deserializer:
+            bot_config_obj = configs.BotConfig.deserialize(test_bot_config)
+            patched_activity_deserializer.assert_called_once_with({"name": "test", "url": "some_url", "type": 0})
 
         assert bot_config_obj.rest_version == 6
         assert bot_config_obj.allow_redirects is True
@@ -271,9 +285,7 @@ class TestBotConfig:
         assert bot_config_obj.shard_count == 17
         assert bot_config_obj.gateway_use_compression is False
         assert bot_config_obj.gateway_version == 6
-        assert bot_config_obj.initial_activity == gateway_entities.Activity.deserialize(
-            {"name": "test", "url": "some_url", "type": 0}
-        )
+        assert bot_config_obj.initial_activity is mock_activity
         assert bot_config_obj.initial_status == guilds.PresenceStatus.DND
         assert bot_config_obj.initial_idle_since == datetime_obj
         assert bot_config_obj.intents == intents.Intent.GUILD_MESSAGES | intents.Intent.GUILDS

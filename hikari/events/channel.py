@@ -75,7 +75,7 @@ def _recipients_deserializer(
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class BaseChannelEvent(base_events.HikariEvent, base_entities.Unique, marshaller.Deserializable, abc.ABC):
     """A base object that Channel events will inherit from."""
 
@@ -164,7 +164,7 @@ class BaseChannelEvent(base_events.HikariEvent, base_entities.Unique, marshaller
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class ChannelCreateEvent(BaseChannelEvent):
     """Represents Channel Create gateway events.
 
@@ -175,21 +175,21 @@ class ChannelCreateEvent(BaseChannelEvent):
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class ChannelUpdateEvent(BaseChannelEvent):
     """Represents Channel Update gateway events."""
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class ChannelDeleteEvent(BaseChannelEvent):
     """Represents Channel Delete gateway events."""
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class ChannelPinUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent the Channel Pins Update gateway event.
 
@@ -219,7 +219,7 @@ class ChannelPinUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
 
 @base_events.requires_intents(intents.Intent.GUILD_WEBHOOKS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class WebhookUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent webhook update gateway events.
 
@@ -239,7 +239,7 @@ def _timestamp_deserializer(date: str) -> datetime.datetime:
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_TYPING, intents.Intent.DIRECT_MESSAGE_TYPING)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class TypingStartEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent typing start gateway events.
 
@@ -282,7 +282,7 @@ def _max_uses_deserializer(count: int) -> typing.Union[int, float]:
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class InviteCreateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Represents a gateway Invite Create event."""
 
@@ -339,7 +339,7 @@ class InviteCreateEvent(base_events.HikariEvent, marshaller.Deserializable):
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class InviteDeleteEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Invite Delete gateway events.
 
@@ -364,7 +364,7 @@ class InviteDeleteEvent(base_events.HikariEvent, marshaller.Deserializable):
 
 @base_events.requires_intents(intents.Intent.GUILD_VOICE_STATES)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class VoiceStateUpdateEvent(base_events.HikariEvent, voices.VoiceState):
     """Used to represent voice state update gateway events.
 
@@ -373,7 +373,7 @@ class VoiceStateUpdateEvent(base_events.HikariEvent, voices.VoiceState):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class VoiceServerUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent voice server update gateway events.
 

@@ -141,7 +141,7 @@ class MessageActivityType(int, more_enums.Enum):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class Attachment(bases.Unique, _files.BaseStream, marshaller.Deserializable):
     """Represents a file attached to a message.
 
@@ -173,24 +173,24 @@ class Attachment(bases.Unique, _files.BaseStream, marshaller.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class Reaction(bases.Entity, marshaller.Deserializable):
     """Represents a reaction in a message."""
 
-    count: int = marshaller.attrib(deserializer=int, repr=True)
+    count: int = marshaller.attrib(deserializer=int, eq=False, hash=False, repr=True)
     """The amount of times the emoji has been used to react."""
 
     emoji: typing.Union[_emojis.UnicodeEmoji, _emojis.CustomEmoji] = marshaller.attrib(
-        deserializer=_emojis.deserialize_reaction_emoji, inherit_kwargs=True, repr=True
+        deserializer=_emojis.deserialize_reaction_emoji, inherit_kwargs=True, eq=True, hash=True, repr=True
     )
     """The emoji used to react."""
 
-    is_reacted_by_me: bool = marshaller.attrib(raw_name="me", deserializer=bool)
+    is_reacted_by_me: bool = marshaller.attrib(raw_name="me", deserializer=bool, eq=False, hash=False)
     """Whether the current user reacted using this emoji."""
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class MessageActivity(bases.Entity, marshaller.Deserializable):
     """Represents the activity of a rich presence-enabled message."""
 
@@ -202,7 +202,7 @@ class MessageActivity(bases.Entity, marshaller.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class MessageCrosspost(bases.Unique, marshaller.Deserializable):
     """Represents information about a cross-posted message and the origin of the original message."""
 
@@ -253,104 +253,142 @@ def _deserialize_reactions(payload: more_typing.JSONArray, **kwargs: typing.Any)
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class Message(bases.Unique, marshaller.Deserializable):
     """Represents a message."""
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, eq=False, hash=False, repr=True)
     """The ID of the channel that the message was sent in."""
 
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
+        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False, repr=True
     )
     """The ID of the guild that the message was sent in."""
 
-    author: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True, repr=True)
+    author: users.User = marshaller.attrib(
+        deserializer=users.User.deserialize, inherit_kwargs=True, eq=False, hash=False, repr=True
+    )
     """The author of this message."""
 
     member: typing.Optional[guilds.GuildMember] = marshaller.attrib(
-        deserializer=guilds.GuildMember.deserialize, if_undefined=None, default=None, inherit_kwargs=True, repr=True,
+        deserializer=guilds.GuildMember.deserialize,
+        if_undefined=None,
+        default=None,
+        inherit_kwargs=True,
+        eq=False,
+        hash=False,
+        repr=True,
     )
     """The member properties for the message's author."""
 
-    content: str = marshaller.attrib(deserializer=str)
+    content: str = marshaller.attrib(deserializer=str, eq=False, hash=False)
     """The content of the message."""
 
-    timestamp: datetime.datetime = marshaller.attrib(deserializer=conversions.parse_iso_8601_ts, repr=True)
+    timestamp: datetime.datetime = marshaller.attrib(
+        deserializer=conversions.parse_iso_8601_ts, eq=False, hash=False, repr=True
+    )
     """The timestamp that the message was sent at."""
 
     edited_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None
+        deserializer=conversions.parse_iso_8601_ts, if_none=None, eq=False, hash=False
     )
     """The timestamp that the message was last edited at.
 
     Will be `None` if it wasn't ever edited.
     """
 
-    is_tts: bool = marshaller.attrib(raw_name="tts", deserializer=bool)
+    is_tts: bool = marshaller.attrib(raw_name="tts", deserializer=bool, eq=False, hash=False)
     """Whether the message is a TTS message."""
 
-    is_mentioning_everyone: bool = marshaller.attrib(raw_name="mention_everyone", deserializer=bool)
+    is_mentioning_everyone: bool = marshaller.attrib(
+        raw_name="mention_everyone", deserializer=bool, eq=False, hash=False
+    )
     """Whether the message mentions `@everyone` or `@here`."""
 
     user_mentions: typing.Set[bases.Snowflake] = marshaller.attrib(
-        raw_name="mentions", deserializer=_deserialize_object_mentions,
+        raw_name="mentions", deserializer=_deserialize_object_mentions, eq=False, hash=False,
     )
     """The users the message mentions."""
 
     role_mentions: typing.Set[bases.Snowflake] = marshaller.attrib(
-        raw_name="mention_roles", deserializer=_deserialize_mentions,
+        raw_name="mention_roles", deserializer=_deserialize_mentions, eq=False, hash=False,
     )
     """The roles the message mentions."""
 
     channel_mentions: typing.Set[bases.Snowflake] = marshaller.attrib(
-        raw_name="mention_channels", deserializer=_deserialize_object_mentions, if_undefined=set, factory=set,
+        raw_name="mention_channels",
+        deserializer=_deserialize_object_mentions,
+        if_undefined=set,
+        eq=False,
+        hash=False,
+        factory=set,
     )
     """The channels the message mentions."""
 
     attachments: typing.Sequence[Attachment] = marshaller.attrib(
-        deserializer=_deserialize_attachments, inherit_kwargs=True
+        deserializer=_deserialize_attachments, inherit_kwargs=True, eq=False, hash=False,
     )
     """The message attachments."""
 
-    embeds: typing.Sequence[_embeds.Embed] = marshaller.attrib(deserializer=_deserialize_embeds, inherit_kwargs=True)
+    embeds: typing.Sequence[_embeds.Embed] = marshaller.attrib(
+        deserializer=_deserialize_embeds, inherit_kwargs=True, eq=False, hash=False
+    )
     """The message embeds."""
 
     reactions: typing.Sequence[Reaction] = marshaller.attrib(
-        deserializer=_deserialize_reactions, if_undefined=list, factory=list, inherit_kwargs=True,
+        deserializer=_deserialize_reactions, if_undefined=list, inherit_kwargs=True, eq=False, hash=False, factory=list,
     )
     """The message reactions."""
 
-    is_pinned: bool = marshaller.attrib(raw_name="pinned", deserializer=bool)
+    is_pinned: bool = marshaller.attrib(raw_name="pinned", deserializer=bool, eq=False, hash=False)
     """Whether the message is pinned."""
 
     webhook_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False,
     )
     """If the message was generated by a webhook, the webhook's id."""
 
-    type: MessageType = marshaller.attrib(deserializer=MessageType)
+    type: MessageType = marshaller.attrib(deserializer=MessageType, eq=False, hash=False)
     """The message type."""
 
     activity: typing.Optional[MessageActivity] = marshaller.attrib(
-        deserializer=MessageActivity.deserialize, if_undefined=None, default=None, inherit_kwargs=True,
+        deserializer=MessageActivity.deserialize,
+        if_undefined=None,
+        inherit_kwargs=True,
+        default=None,
+        eq=False,
+        hash=False,
     )
     """The message activity."""
 
     application: typing.Optional[applications.Application] = marshaller.attrib(
-        deserializer=applications.Application.deserialize, if_undefined=None, default=None, inherit_kwargs=True,
+        deserializer=applications.Application.deserialize,
+        if_undefined=None,
+        inherit_kwargs=True,
+        default=None,
+        eq=False,
+        hash=False,
     )
     """The message application."""
 
     message_reference: typing.Optional[MessageCrosspost] = marshaller.attrib(
-        deserializer=MessageCrosspost.deserialize, if_undefined=None, default=None, inherit_kwargs=True,
+        deserializer=MessageCrosspost.deserialize,
+        if_undefined=None,
+        inherit_kwargs=True,
+        default=None,
+        eq=False,
+        hash=False,
     )
     """The message crossposted reference data."""
 
-    flags: typing.Optional[MessageFlag] = marshaller.attrib(deserializer=MessageFlag, if_undefined=None, default=None)
+    flags: typing.Optional[MessageFlag] = marshaller.attrib(
+        deserializer=MessageFlag, if_undefined=None, default=None, eq=False, hash=False
+    )
     """The message flags."""
 
-    nonce: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
+    nonce: typing.Optional[str] = marshaller.attrib(
+        deserializer=str, if_undefined=None, default=None, eq=False, hash=False
+    )
     """The message nonce. This is a string used for validating a message was sent."""
 
     async def fetch_channel(self) -> channels.PartialChannel:

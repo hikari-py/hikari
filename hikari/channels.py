@@ -94,20 +94,22 @@ class PermissionOverwriteType(str, more_enums.Enum):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class PermissionOverwrite(bases.Unique, marshaller.Deserializable, marshaller.Serializable):
     """Represents permission overwrites for a channel or role in a channel."""
 
-    type: PermissionOverwriteType = marshaller.attrib(deserializer=PermissionOverwriteType, serializer=str)
+    type: PermissionOverwriteType = marshaller.attrib(
+        deserializer=PermissionOverwriteType, serializer=str, eq=True, hash=True
+    )
     """The type of entity this overwrite targets."""
 
     allow: permissions.Permission = marshaller.attrib(
-        deserializer=permissions.Permission, serializer=int, default=permissions.Permission(0)
+        deserializer=permissions.Permission, serializer=int, default=permissions.Permission(0), eq=False, hash=False
     )
     """The permissions this overwrite allows."""
 
     deny: permissions.Permission = marshaller.attrib(
-        deserializer=permissions.Permission, serializer=int, default=permissions.Permission(0)
+        deserializer=permissions.Permission, serializer=int, default=permissions.Permission(0), eq=False, hash=False
     )
     """The permissions this overwrite denies."""
 
@@ -145,7 +147,7 @@ def register_channel_type(
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class PartialChannel(bases.Unique, marshaller.Deserializable):
     """Represents a channel where we've only received it's basic information.
 
@@ -153,11 +155,11 @@ class PartialChannel(bases.Unique, marshaller.Deserializable):
     """
 
     name: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, repr=True, default=None, if_undefined=None, if_none=None
+        deserializer=str, if_undefined=None, if_none=None, default=None, eq=False, hash=False, repr=True
     )
     """The channel's name. This will be missing for DM channels."""
 
-    type: ChannelType = marshaller.attrib(deserializer=ChannelType, repr=True)
+    type: ChannelType = marshaller.attrib(deserializer=ChannelType, eq=False, hash=False, repr=True)
     """The channel's type."""
 
 
@@ -167,11 +169,13 @@ def _deserialize_recipients(payload: more_typing.JSONArray, **kwargs: typing.Any
 
 @register_channel_type(ChannelType.DM)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class DMChannel(PartialChannel):
     """Represents a DM channel."""
 
-    last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
+    last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake, if_none=None, eq=False, hash=False
+    )
     """The ID of the last message sent in this channel.
 
     !!! note
@@ -179,25 +183,27 @@ class DMChannel(PartialChannel):
     """
 
     recipients: typing.Mapping[bases.Snowflake, users.User] = marshaller.attrib(
-        deserializer=_deserialize_recipients, inherit_kwargs=True,
+        deserializer=_deserialize_recipients, inherit_kwargs=True, eq=False, hash=False,
     )
     """The recipients of the DM."""
 
 
 @register_channel_type(ChannelType.GROUP_DM)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class GroupDMChannel(DMChannel):
     """Represents a DM group channel."""
 
-    owner_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
+    owner_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, eq=False, hash=False, repr=True)
     """The ID of the owner of the group."""
 
-    icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str, if_none=None)
+    icon_hash: typing.Optional[str] = marshaller.attrib(
+        raw_name="icon", deserializer=str, if_none=None, eq=False, hash=False
+    )
     """The hash of the icon of the group."""
 
     application_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None
+        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False
     )
     """The ID of the application that created the group DM, if it's a bot based group DM."""
 
@@ -211,12 +217,12 @@ def _deserialize_overwrites(
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class GuildChannel(PartialChannel):
     """The base for anything that is a guild channel."""
 
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
+        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False, repr=True
     )
     """The ID of the guild the channel belongs to.
 
@@ -224,16 +230,16 @@ class GuildChannel(PartialChannel):
     Guild Create).
     """
 
-    position: int = marshaller.attrib(deserializer=int)
+    position: int = marshaller.attrib(deserializer=int, eq=False, hash=False)
     """The sorting position of the channel."""
 
     permission_overwrites: PermissionOverwrite = marshaller.attrib(
-        deserializer=_deserialize_overwrites, inherit_kwargs=True
+        deserializer=_deserialize_overwrites, inherit_kwargs=True, eq=False, hash=False
     )
     """The permission overwrites for the channel."""
 
     is_nsfw: typing.Optional[bool] = marshaller.attrib(
-        raw_name="nsfw", deserializer=bool, if_undefined=None, default=None
+        raw_name="nsfw", deserializer=bool, if_undefined=None, default=None, eq=False, hash=False
     )
     """Whether the channel is marked as NSFW.
 
@@ -242,14 +248,14 @@ class GuildChannel(PartialChannel):
     """
 
     parent_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_none=None, if_undefined=None, repr=True
+        deserializer=bases.Snowflake, if_none=None, if_undefined=None, eq=False, hash=False, repr=True
     )
     """The ID of the parent category the channel belongs to."""
 
 
 @register_channel_type(ChannelType.GUILD_CATEGORY)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class GuildCategory(GuildChannel):
     """Represents a guild category."""
 
@@ -260,21 +266,25 @@ def _deserialize_rate_limit_per_user(payload: int) -> datetime.timedelta:
 
 @register_channel_type(ChannelType.GUILD_TEXT)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class GuildTextChannel(GuildChannel):
     """Represents a guild text channel."""
 
-    topic: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None)
+    topic: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False)
     """The topic of the channel."""
 
-    last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
+    last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake, if_none=None, eq=False, hash=False
+    )
     """The ID of the last message sent in this channel.
 
     !!! note
         This might point to an invalid or deleted message.
     """
 
-    rate_limit_per_user: datetime.timedelta = marshaller.attrib(deserializer=_deserialize_rate_limit_per_user)
+    rate_limit_per_user: datetime.timedelta = marshaller.attrib(
+        deserializer=_deserialize_rate_limit_per_user, eq=False, hash=False
+    )
     """The delay (in seconds) between a user can send a message to this channel.
 
     !!! note
@@ -283,7 +293,7 @@ class GuildTextChannel(GuildChannel):
     """
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None
+        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None, eq=False, hash=False
     )
     """The timestamp of the last-pinned message.
 
@@ -294,14 +304,16 @@ class GuildTextChannel(GuildChannel):
 
 @register_channel_type(ChannelType.GUILD_NEWS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, slots=True, kw_only=True)
 class GuildNewsChannel(GuildChannel):
     """Represents an news channel."""
 
-    topic: str = marshaller.attrib(deserializer=str, if_none=None)
+    topic: str = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False)
     """The topic of the channel."""
 
-    last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(deserializer=bases.Snowflake, if_none=None)
+    last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
+        deserializer=bases.Snowflake, if_none=None, eq=False, hash=False
+    )
     """The ID of the last message sent in this channel.
 
     !!! note
@@ -309,7 +321,7 @@ class GuildNewsChannel(GuildChannel):
     """
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None
+        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None, eq=False, hash=False
     )
     """The timestamp of the last-pinned message.
 
@@ -320,21 +332,21 @@ class GuildNewsChannel(GuildChannel):
 
 @register_channel_type(ChannelType.GUILD_STORE)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class GuildStoreChannel(GuildChannel):
     """Represents a store channel."""
 
 
 @register_channel_type(ChannelType.GUILD_VOICE)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class GuildVoiceChannel(GuildChannel):
     """Represents an voice channel."""
 
-    bitrate: int = marshaller.attrib(deserializer=int, repr=True)
+    bitrate: int = marshaller.attrib(deserializer=int, eq=False, hash=False, repr=True)
     """The bitrate for the voice channel (in bits)."""
 
-    user_limit: int = marshaller.attrib(deserializer=int, repr=True)
+    user_limit: int = marshaller.attrib(deserializer=int, eq=False, hash=False, repr=True)
     """The user limit for the voice channel."""
 
 
