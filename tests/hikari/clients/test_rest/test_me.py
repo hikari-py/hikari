@@ -135,6 +135,14 @@ class TestGuildPaginator:
             assert next(generator) is expected_value
             ownguild_cls.deserialize.assert_called_with(input_payload, components=mock_components)
 
+        # Clear the generator result.
+        # This doesn't test anything, but there is an issue with coverage not detecting generator
+        # exit conditions properly. This fixes something that would otherwise be marked as
+        # uncovered behaviour erroneously.
+        # https://stackoverflow.com/questions/35317757/python-unittest-branch-coverage-seems-to-miss-executed-generator-in-zip
+        with pytest.raises(StopIteration):
+            next(generator)
+
         assert locals()["i"] == len(return_payload) - 1, "Not iterated correctly somehow"
 
 
