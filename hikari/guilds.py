@@ -663,12 +663,12 @@ class PresenceUser(users.User):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.discriminator is unset.UNSET and self.avatar_hash is unset.UNSET:
-            return unset.UNSET
-        return super().format_avatar_url(format_=format_, size=size)
+        if self.discriminator is not unset.UNSET or self.avatar_hash is not unset.UNSET:
+            return super().format_avatar_url(format_=format_, size=size)
+        return unset.UNSET
 
     @property
-    def default_avatar(self) -> typing.Union[int, unset.Unset]:
+    def default_avatar_index(self) -> typing.Union[int, unset.Unset]:
         """Integer representation of this user's default avatar.
 
         !!! note
@@ -676,7 +676,19 @@ class PresenceUser(users.User):
             `hikari.unset.UNSET`.
         """
         if self.discriminator is not unset.UNSET:
-            return int(self.discriminator) % 5
+            return super().default_avatar_index
+        return unset.UNSET
+
+    @property
+    def default_avatar_url(self) -> typing.Union[str, unset.Unset]:
+        """URL for this user's default avatar.
+
+        !!! note
+            This will be `hikari.unset.UNSET` if `PresenceUser.discriminator` is
+            `hikari.unset.UNSET`.
+        """
+        if self.discriminator is not unset.UNSET:
+            return super().default_avatar_url
         return unset.UNSET
 
 
