@@ -23,6 +23,7 @@ import mock
 import pytest
 
 from hikari import applications
+from hikari import bases
 from hikari import channels
 from hikari import embeds
 from hikari import emojis
@@ -151,6 +152,33 @@ class TestAttachment:
         assert attachment_obj.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment_obj.height == 2638
         assert attachment_obj.width == 1844
+
+    @pytest.mark.asyncio
+    async def test_aiter_yields_from_WebResourceStream(self):
+        attachment = messages.Attachment(
+            id=bases.Snowflake("1234"),
+            filename="foobar.png",
+            size=1_024_024,
+            url="https://example.com/foobar.png?x=4096",
+            proxy_url="https://example.com/foobar.png?x=4096",
+        )
+
+        async def __aiter__(_):
+            yield b"foo"
+            yield b"bar"
+            yield b"baz"
+
+        web_resource = mock.MagicMock(spec_set=files.WebResourceStream)
+        web_resource.__aiter__ = __aiter__
+
+        with mock.patch.object(files, "WebResourceStream", return_value=web_resource):
+            async_iterator = attachment.__aiter__()
+            assert await async_iterator.__anext__() == b"foo"
+            assert await async_iterator.__anext__() == b"bar"
+            assert await async_iterator.__anext__() == b"baz"
+
+            with pytest.raises(StopAsyncIteration):
+                await async_iterator.__anext__()
 
 
 class TestReaction:

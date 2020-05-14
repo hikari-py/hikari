@@ -24,6 +24,17 @@ from hikari import errors
 from hikari.net import codes
 
 
+class TestHikariError:
+    def test_repr(self):
+        class ErrorImpl(errors.HikariError):
+            def __str__(self):
+                return "program go boom!"
+
+        inst = ErrorImpl()
+
+        assert repr(inst) == "ErrorImpl('program go boom!')"
+
+
 class TestGatewayError:
     def test_init(self):
         err = errors.GatewayError("boom")
@@ -94,16 +105,31 @@ class TestGatewayZombiedError:
 
 
 @pytest.mark.parametrize(
-    ("type", "expected_status"),
+    ("type", "expected_status", "expected_status_name"),
     [
-        (errors.BadRequest, http.HTTPStatus.BAD_REQUEST),
-        (errors.Unauthorized, http.HTTPStatus.UNAUTHORIZED),
-        (errors.Forbidden, http.HTTPStatus.FORBIDDEN),
-        (errors.NotFound, http.HTTPStatus.NOT_FOUND),
+        (errors.BadRequest, http.HTTPStatus.BAD_REQUEST, "Bad Request"),
+        (errors.Unauthorized, http.HTTPStatus.UNAUTHORIZED, "Unauthorized"),
+        (errors.Forbidden, http.HTTPStatus.FORBIDDEN, "Forbidden"),
+        (errors.NotFound, http.HTTPStatus.NOT_FOUND, "Not Found"),
+        (
+            lambda u, h, pl: errors.ClientHTTPErrorResponse(u, http.HTTPStatus.TOO_MANY_REQUESTS, h, pl),
+            http.HTTPStatus.TOO_MANY_REQUESTS,
+            "Too Many Requests",
+        ),
+        (
+            lambda u, h, pl: errors.ServerHTTPErrorResponse(u, http.HTTPStatus.INTERNAL_SERVER_ERROR, h, pl),
+            http.HTTPStatus.INTERNAL_SERVER_ERROR,
+            "Internal Server Error",
+        ),
+        (
+            lambda u, h, pl: errors.HTTPErrorResponse(u, http.HTTPStatus.CONTINUE, h, pl),
+            http.HTTPStatus.CONTINUE,
+            "Continue",
+        ),
     ],
 )
 class TestHTTPClientErrors:
-    def test_init(self, type, expected_status):
+    def test_init(self, type, expected_status, expected_status_name):
         ex = type("http://foo.bar/api/v69/nice", {"foo": "bar"}, b"body")
 
         assert ex.status == expected_status
@@ -111,7 +137,17 @@ class TestHTTPClientErrors:
         assert ex.headers == {"foo": "bar"}
         assert ex.raw_body == b"body"
 
-    def test_str(self, type, expected_status):
+    def test_str_if_unicode_bytestring(self, type, expected_status, expected_status_name):
         ex = type("http://foo.bar/api/v69/nice", {"foo": "bar"}, b"body")
 
-        assert str(ex) == f"{expected_status} {expected_status.name}: {b'body'}"
+        assert str(ex) == f"{expected_status} {expected_status_name}: body"
+
+    def test_str_if_not_unicode_bytestring(self, type, expected_status, expected_status_name):
+        ex = type("http://foo.bar/api/v69/nice", {"foo": "bar"}, b"\x1f\x0f\xff\xff\xff")
+
+        assert str(ex) == f"{expected_status} {expected_status_name}: b'\\x1f\\x0f\\xff\\xff\\xff'"
+
+    def test_str_if_payload(self, type, expected_status, expected_status_name):
+        ex = type("http://foo.bar/api/v69/nice", {"foo": "bar"}, {"code": 0, "message": "you broke it"})
+
+        assert str(ex) == f"{expected_status} {expected_status_name}: {{'code': 0, 'message': 'you broke it'}}"
