@@ -61,8 +61,8 @@ class HikariError(RuntimeError):
 
     __slots__ = ()
 
-    def __repr__(self):
-        return str(self)
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({str(self)!r})"
 
 
 class HikariWarning(RuntimeWarning):
@@ -289,7 +289,11 @@ class HTTPErrorResponse(HTTPError):
     """The response body."""
 
     def __init__(
-        self, url: str, status: http.HTTPStatus, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.Any,
+        self,
+        url: str,
+        status: typing.Union[int, http.HTTPStatus],
+        headers: aiohttp.typedefs.LooseHeaders,
+        raw_body: typing.Any,
     ) -> None:
         super().__init__(url, f"{status}: {raw_body}")
         self.status = status
@@ -297,9 +301,14 @@ class HTTPErrorResponse(HTTPError):
         self.raw_body = raw_body
 
     def __str__(self) -> str:
-        raw_body = str(self.raw_body)
+        try:
+            raw_body = self.raw_body.decode("utf-8")
+        except (AttributeError, UnicodeDecodeError):
+            raw_body = str(self.raw_body)
+
         chomped = len(raw_body) > 200
-        return f"{self.status.value} {self.status.name}: {raw_body[:200]}{'...' if chomped else ''}"
+        name = self.status.name.replace("_", " ").title()
+        return f"{self.status.value} {name}: {raw_body[:200]}{'...' if chomped else ''}"
 
 
 class ClientHTTPErrorResponse(HTTPErrorResponse):
