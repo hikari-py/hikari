@@ -46,43 +46,51 @@ class TargetUserType(int, more_enums.Enum):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class VanityUrl(bases.Entity, marshaller.Deserializable):
     """A special case invite object, that represents a guild's vanity url."""
 
-    code: str = marshaller.attrib(deserializer=str, repr=True)
+    code: str = marshaller.attrib(deserializer=str, eq=True, hash=True, repr=True)
     """The code for this invite."""
 
-    uses: int = marshaller.attrib(deserializer=int, repr=True)
+    uses: int = marshaller.attrib(deserializer=int, eq=False, hash=False, repr=True)
     """The amount of times this invite has been used."""
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class InviteGuild(guilds.PartialGuild):
     """Represents the partial data of a guild that'll be attached to invites."""
 
-    splash_hash: typing.Optional[str] = marshaller.attrib(raw_name="splash", deserializer=str, if_none=None)
+    splash_hash: typing.Optional[str] = marshaller.attrib(
+        raw_name="splash", deserializer=str, if_none=None, eq=False, hash=False
+    )
     """The hash of the splash for the guild, if there is one."""
 
-    banner_hash: typing.Optional[str] = marshaller.attrib(raw_name="banner", if_none=None, deserializer=str)
+    banner_hash: typing.Optional[str] = marshaller.attrib(
+        raw_name="banner", deserializer=str, if_none=None, eq=False, hash=False
+    )
     """The hash for the guild's banner.
 
     This is only present if `hikari.guilds.GuildFeature.BANNER` is in the
     `features` for this guild. For all other purposes, it is `None`.
     """
 
-    description: typing.Optional[str] = marshaller.attrib(if_none=None, deserializer=str)
+    description: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False)
     """The guild's description.
 
     This is only present if certain `features` are set in this guild.
     Otherwise, this will always be `None`. For all other purposes, it is `None`.
     """
 
-    verification_level: guilds.GuildVerificationLevel = marshaller.attrib(deserializer=guilds.GuildVerificationLevel)
+    verification_level: guilds.GuildVerificationLevel = marshaller.attrib(
+        deserializer=guilds.GuildVerificationLevel, eq=False, hash=False
+    )
     """The verification level required for a user to participate in this guild."""
 
-    vanity_url_code: typing.Optional[str] = marshaller.attrib(if_none=None, deserializer=str, repr=True)
+    vanity_url_code: typing.Optional[str] = marshaller.attrib(
+        if_none=None, deserializer=str, eq=False, hash=False, repr=True
+    )
     """The vanity URL code for the guild's vanity URL.
 
     This is only present if `hikari.guilds.GuildFeature.VANITY_URL` is in the
@@ -153,15 +161,21 @@ class InviteGuild(guilds.PartialGuild):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class Invite(bases.Entity, marshaller.Deserializable):
     """Represents an invite that's used to add users to a guild or group dm."""
 
-    code: str = marshaller.attrib(deserializer=str, repr=True)
+    code: str = marshaller.attrib(deserializer=str, eq=True, hash=True, repr=True)
     """The code for this invite."""
 
     guild: typing.Optional[InviteGuild] = marshaller.attrib(
-        deserializer=InviteGuild.deserialize, if_undefined=None, default=None, inherit_kwargs=True, repr=True
+        deserializer=InviteGuild.deserialize,
+        if_undefined=None,
+        inherit_kwargs=True,
+        default=None,
+        eq=False,
+        hash=False,
+        repr=True,
     )
     """The partial object of the guild this dm belongs to.
 
@@ -169,27 +183,27 @@ class Invite(bases.Entity, marshaller.Deserializable):
     """
 
     channel: channels.PartialChannel = marshaller.attrib(
-        deserializer=channels.PartialChannel.deserialize, inherit_kwargs=True, repr=True
+        deserializer=channels.PartialChannel.deserialize, inherit_kwargs=True, eq=False, hash=False, repr=True,
     )
     """The partial object of the channel this invite targets."""
 
     inviter: typing.Optional[users.User] = marshaller.attrib(
-        deserializer=users.User.deserialize, if_undefined=None, default=None, inherit_kwargs=True,
+        deserializer=users.User.deserialize, if_undefined=None, inherit_kwargs=True, default=None, eq=False, hash=False,
     )
     """The object of the user who created this invite."""
 
     target_user: typing.Optional[users.User] = marshaller.attrib(
-        deserializer=users.User.deserialize, if_undefined=None, default=None, inherit_kwargs=True,
+        deserializer=users.User.deserialize, if_undefined=None, inherit_kwargs=True, default=None, eq=False, hash=False,
     )
     """The object of the user who this invite targets, if set."""
 
     target_user_type: typing.Optional[TargetUserType] = marshaller.attrib(
-        deserializer=TargetUserType, if_undefined=None, default=None
+        deserializer=TargetUserType, if_undefined=None, default=None, eq=False, hash=False,
     )
     """The type of user target this invite is, if applicable."""
 
     approximate_presence_count: typing.Optional[int] = marshaller.attrib(
-        deserializer=int, if_undefined=None, default=None
+        deserializer=int, if_undefined=None, default=None, eq=False, hash=False,
     )
     """The approximate amount of presences in this invite's guild.
 
@@ -198,7 +212,7 @@ class Invite(bases.Entity, marshaller.Deserializable):
     """
 
     approximate_member_count: typing.Optional[int] = marshaller.attrib(
-        deserializer=int, if_undefined=None, default=None
+        deserializer=int, if_undefined=None, default=None, eq=False, hash=False,
     )
     """The approximate amount of members in this invite's guild.
 
@@ -212,7 +226,7 @@ def _max_age_deserializer(age: int) -> datetime.timedelta:
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class InviteWithMetadata(Invite):
     """Extends the base `Invite` object with metadata.
 
@@ -220,25 +234,27 @@ class InviteWithMetadata(Invite):
     guild permissions, rather than it's code.
     """
 
-    uses: int = marshaller.attrib(deserializer=int, repr=True)
+    uses: int = marshaller.attrib(deserializer=int, eq=False, hash=False, repr=True)
     """The amount of times this invite has been used."""
 
-    max_uses: int = marshaller.attrib(deserializer=int, repr=True)
+    max_uses: int = marshaller.attrib(deserializer=int, eq=False, hash=False, repr=True)
     """The limit for how many times this invite can be used before it expires.
 
     If set to `0` then this is unlimited.
     """
 
-    max_age: typing.Optional[datetime.timedelta] = marshaller.attrib(deserializer=_max_age_deserializer)
+    max_age: typing.Optional[datetime.timedelta] = marshaller.attrib(
+        deserializer=_max_age_deserializer, eq=False, hash=False
+    )
     """The timedelta of how long this invite will be valid for.
 
     If set to `None` then this is unlimited.
     """
 
-    is_temporary: bool = marshaller.attrib(raw_name="temporary", deserializer=bool, repr=True)
+    is_temporary: bool = marshaller.attrib(raw_name="temporary", deserializer=bool, eq=False, hash=False, repr=True)
     """Whether this invite grants temporary membership."""
 
-    created_at: datetime.datetime = marshaller.attrib(deserializer=conversions.parse_iso_8601_ts)
+    created_at: datetime.datetime = marshaller.attrib(deserializer=conversions.parse_iso_8601_ts, eq=False, hash=False)
     """When this invite was created."""
 
     @property

@@ -56,7 +56,7 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class MessageCreateEvent(base_events.HikariEvent, messages.Message):
     """Used to represent Message Create gateway events."""
 
@@ -86,7 +86,7 @@ def _deserialize_reaction(payload: more_typing.JSONArray, **kwargs: typing.Any) 
 # This is an arbitrarily partial version of `messages.Message`
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class MessageUpdateEvent(base_events.HikariEvent, base_entities.Unique, marshaller.Deserializable):
     """Represents Message Update gateway events.
 
@@ -235,7 +235,7 @@ class MessageUpdateEvent(base_events.HikariEvent, base_entities.Unique, marshall
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class MessageDeleteEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Message Delete gateway events.
 
@@ -267,7 +267,7 @@ def _deserialize_message_ids(payload: more_typing.JSONArray) -> typing.Set[base_
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class MessageDeleteBulkEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Message Bulk Delete gateway events.
 
@@ -293,7 +293,7 @@ class MessageDeleteBulkEvent(base_events.HikariEvent, marshaller.Deserializable)
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class MessageReactionAddEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Message Reaction Add gateway events."""
 
@@ -333,7 +333,7 @@ class MessageReactionAddEvent(base_events.HikariEvent, marshaller.Deserializable
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class MessageReactionRemoveEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Message Reaction Remove gateway events."""
 
@@ -362,7 +362,7 @@ class MessageReactionRemoveEvent(base_events.HikariEvent, marshaller.Deserializa
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class MessageReactionRemoveAllEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Message Reaction Remove All gateway events.
 
@@ -383,7 +383,7 @@ class MessageReactionRemoveAllEvent(base_events.HikariEvent, marshaller.Deserial
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class MessageReactionRemoveEmojiEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Represents Message Reaction Remove Emoji events.
 

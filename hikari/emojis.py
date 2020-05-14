@@ -39,7 +39,7 @@ if typing.TYPE_CHECKING:
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class Emoji(bases.Entity, marshaller.Deserializable, files.BaseStream, abc.ABC):
     """Base class for all emojis.
 
@@ -73,7 +73,7 @@ class Emoji(bases.Entity, marshaller.Deserializable, files.BaseStream, abc.ABC):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji.
 
@@ -93,7 +93,7 @@ class UnicodeEmoji(Emoji):
         removed in a future release after a deprecation period.
     """
 
-    name: str = marshaller.attrib(deserializer=str, repr=True)
+    name: str = marshaller.attrib(deserializer=str, eq=True, hash=True, repr=True)
     """The code points that form the emoji."""
 
     @property
@@ -176,7 +176,7 @@ class UnicodeEmoji(Emoji):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class CustomEmoji(Emoji, bases.Unique):
     """Represents a custom emoji.
 
@@ -201,11 +201,18 @@ class CustomEmoji(Emoji, bases.Unique):
         https://github.com/discord/discord-api-docs/issues/1614
     """
 
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, repr=True)
+    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False, repr=True)
     """The name of the emoji."""
 
     is_animated: typing.Optional[bool] = marshaller.attrib(
-        raw_name="animated", deserializer=bool, if_undefined=False, if_none=None, default=False, repr=True
+        raw_name="animated",
+        deserializer=bool,
+        if_undefined=False,
+        if_none=None,
+        default=False,
+        eq=False,
+        hash=False,
+        repr=True,
     )
     """Whether the emoji is animated.
 
@@ -239,7 +246,7 @@ def _deserialize_role_ids(payload: more_typing.JSONArray) -> typing.Set[bases.Sn
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class KnownCustomEmoji(CustomEmoji):
     """Represents an emoji that is known from a guild the bot is in.
 
@@ -248,7 +255,7 @@ class KnownCustomEmoji(CustomEmoji):
     """
 
     role_ids: typing.Set[bases.Snowflake] = marshaller.attrib(
-        raw_name="roles", deserializer=_deserialize_role_ids, if_undefined=set, factory=set,
+        raw_name="roles", deserializer=_deserialize_role_ids, if_undefined=set, eq=False, hash=False, factory=set,
     )
     """The IDs of the roles that are whitelisted to use this emoji.
 
@@ -256,7 +263,13 @@ class KnownCustomEmoji(CustomEmoji):
     """
 
     user: typing.Optional[users.User] = marshaller.attrib(
-        deserializer=users.User.deserialize, if_none=None, if_undefined=None, default=None, inherit_kwargs=True
+        deserializer=users.User.deserialize,
+        if_none=None,
+        if_undefined=None,
+        inherit_kwargs=True,
+        default=None,
+        eq=False,
+        hash=False,
     )
     """The user that created the emoji.
 
@@ -266,20 +279,20 @@ class KnownCustomEmoji(CustomEmoji):
     """
 
     is_animated: bool = marshaller.attrib(
-        raw_name="animated", deserializer=bool, if_undefined=False, default=False, repr=True
+        raw_name="animated", deserializer=bool, if_undefined=False, default=False, eq=False, hash=False, repr=True
     )
     """Whether the emoji is animated.
 
     Unlike in `CustomEmoji`, this information is always known, and will thus never be `None`.
     """
 
-    is_colons_required: bool = marshaller.attrib(raw_name="require_colons", deserializer=bool)
+    is_colons_required: bool = marshaller.attrib(raw_name="require_colons", deserializer=bool, eq=False, hash=False)
     """Whether this emoji must be wrapped in colons."""
 
-    is_managed: bool = marshaller.attrib(raw_name="managed", deserializer=bool)
+    is_managed: bool = marshaller.attrib(raw_name="managed", deserializer=bool, eq=False, hash=False)
     """Whether the emoji is managed by an integration."""
 
-    is_available: bool = marshaller.attrib(raw_name="available", deserializer=bool)
+    is_available: bool = marshaller.attrib(raw_name="available", deserializer=bool, eq=False, hash=False)
     """Whether this emoji can currently be used.
 
     May be `False` due to a loss of Sever Boosts on the emoji's guild.

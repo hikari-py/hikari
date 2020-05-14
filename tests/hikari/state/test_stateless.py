@@ -315,7 +315,8 @@ class TestStatelessEventManagerImpl:
             event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     @pytest.mark.asyncio
-    async def test_on_message_create(self, event_manager_impl, mock_payload):
+    async def test_on_message_create_without_member_payload(self, event_manager_impl):
+        mock_payload = {"id": "424242", "user": {"id": "111", "username": "okokok", "discrim": "4242"}}
         mock_event = mock.MagicMock(message.MessageCreateEvent)
 
         with mock.patch("hikari.events.message.MessageCreateEvent.deserialize", return_value=mock_event) as event:
@@ -326,7 +327,27 @@ class TestStatelessEventManagerImpl:
             event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     @pytest.mark.asyncio
-    async def test_on_message_update(self, event_manager_impl, mock_payload):
+    async def test_on_message_create_injects_user_into_member_payload(self, event_manager_impl):
+        mock_payload = {"id": "424242", "author": {"id": "111", "username": "okokok", "discrim": "4242"}, "member": {}}
+        mock_event = mock.MagicMock(message.MessageCreateEvent)
+
+        with mock.patch("hikari.events.message.MessageCreateEvent.deserialize", return_value=mock_event) as event:
+            await event_manager_impl.on_message_create(None, mock_payload)
+
+            assert event_manager_impl.on_message_create.___event_name___ == {"MESSAGE_CREATE"}
+            event.assert_called_once_with(
+                {
+                    "id": "424242",
+                    "author": {"id": "111", "username": "okokok", "discrim": "4242"},
+                    "member": {"user": {"id": "111", "username": "okokok", "discrim": "4242"}},
+                },
+                components=event_manager_impl._components,
+            )
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+
+    @pytest.mark.asyncio
+    async def test_on_message_update_without_member_payload(self, event_manager_impl, mock_payload):
+        mock_payload = {"id": "424242", "user": {"id": "111", "username": "okokok", "discrim": "4242"}}
         mock_event = mock.MagicMock(message.MessageUpdateEvent)
 
         with mock.patch("hikari.events.message.MessageUpdateEvent.deserialize", return_value=mock_event) as event:
@@ -334,6 +355,25 @@ class TestStatelessEventManagerImpl:
 
             assert event_manager_impl.on_message_update.___event_name___ == {"MESSAGE_UPDATE"}
             event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
+            event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
+
+    @pytest.mark.asyncio
+    async def test_on_message_update_injects_user_into_member_payload(self, event_manager_impl, mock_payload):
+        mock_payload = {"id": "424242", "author": {"id": "111", "username": "okokok", "discrim": "4242"}, "member": {}}
+        mock_event = mock.MagicMock(message.MessageUpdateEvent)
+
+        with mock.patch("hikari.events.message.MessageUpdateEvent.deserialize", return_value=mock_event) as event:
+            await event_manager_impl.on_message_update(None, mock_payload)
+
+            assert event_manager_impl.on_message_update.___event_name___ == {"MESSAGE_UPDATE"}
+            event.assert_called_once_with(
+                {
+                    "id": "424242",
+                    "author": {"id": "111", "username": "okokok", "discrim": "4242"},
+                    "member": {"user": {"id": "111", "username": "okokok", "discrim": "4242"}},
+                },
+                components=event_manager_impl._components,
+            )
             event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     @pytest.mark.asyncio

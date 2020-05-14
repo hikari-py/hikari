@@ -50,7 +50,7 @@ if typing.TYPE_CHECKING:
 
 # Synthetic event, is not deserialized, and is produced by the dispatcher.
 @base_events.no_catch()
-@attr.s(slots=True, auto_attribs=True)
+@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
 class ExceptionEvent(base_events.HikariEvent):
     """Descriptor for an exception thrown while processing an event."""
 
@@ -65,30 +65,30 @@ class ExceptionEvent(base_events.HikariEvent):
 
 
 # Synthetic event, is not deserialized
-@attr.s(slots=True, auto_attribs=True)
+@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
 class StartingEvent(base_events.HikariEvent):
     """Event that is fired before the gateway client starts all shards."""
 
 
 # Synthetic event, is not deserialized
-@attr.s(slots=True, auto_attribs=True)
+@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
 class StartedEvent(base_events.HikariEvent):
     """Event that is fired when the gateway client starts all shards."""
 
 
 # Synthetic event, is not deserialized
-@attr.s(slots=True, auto_attribs=True)
+@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
 class StoppingEvent(base_events.HikariEvent):
     """Event that is fired when the gateway client is instructed to disconnect all shards."""
 
 
 # Synthetic event, is not deserialized
-@attr.s(slots=True, auto_attribs=True)
+@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
 class StoppedEvent(base_events.HikariEvent):
     """Event that is fired when the gateway client has finished disconnecting all shards."""
 
 
-@attr.s(slots=True, kw_only=True, auto_attribs=True)
+@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
 class ConnectedEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Event invoked each time a shard connects."""
 
@@ -96,7 +96,7 @@ class ConnectedEvent(base_events.HikariEvent, marshaller.Deserializable):
     """The shard that connected."""
 
 
-@attr.s(slots=True, kw_only=True, auto_attribs=True)
+@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
 class DisconnectedEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Event invoked each time a shard disconnects."""
 
@@ -104,7 +104,7 @@ class DisconnectedEvent(base_events.HikariEvent, marshaller.Deserializable):
     """The shard that disconnected."""
 
 
-@attr.s(slots=True, kw_only=True, auto_attribs=True)
+@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
 class ResumedEvent(base_events.HikariEvent):
     """Represents a gateway Resume event."""
 
@@ -121,7 +121,7 @@ def _deserialize_unavailable_guilds(
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Represents the gateway Ready event.
 
@@ -171,7 +171,7 @@ class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
 
 # TODO: rename to MyUserUpdateEvent
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class UserUpdateEvent(base_events.HikariEvent, users.MyUser):
     """Used to represent User Update gateway events.
 

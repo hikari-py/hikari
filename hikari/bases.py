@@ -37,7 +37,7 @@ if typing.TYPE_CHECKING:
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True, init=False)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class Entity(abc.ABC):
     """The base for any entity used in this API."""
 
@@ -45,7 +45,7 @@ class Entity(abc.ABC):
     """The client components that models may use for procedures."""
 
 
-class Snowflake(int):
+class Snowflake(int, marshaller.Serializable):
     """A concrete representation of a unique identifier for an object on Discord.
 
     This object can be treated as a regular `int` for most purposes.
@@ -111,7 +111,7 @@ class Snowflake(int):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class Unique(Entity, typing.SupportsInt, abc.ABC):
     """A base for an entity that has an integer ID of some sort.
 

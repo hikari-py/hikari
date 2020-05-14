@@ -181,12 +181,22 @@ class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDis
     @event_managers.raw_event_mapper("MESSAGE_CREATE")
     async def on_message_create(self, _, payload) -> None:
         """Handle MESSAGE_CREATE events."""
+        # For consistency's sake and to keep Member.user as a non-nullable field, here we inject the attached user
+        # payload into the member payload when the member payload is present as discord decided not to duplicate the
+        # user object between Message.author and Message.member.user
+        if "member" in payload:
+            payload["member"]["user"] = payload["author"]
         event = message.MessageCreateEvent.deserialize(payload, components=self._components)
         await self._components.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("MESSAGE_UPDATE")
     async def on_message_update(self, _, payload) -> None:
         """Handle MESSAGE_UPDATE events."""
+        # For consistency's sake and to keep Member.user as a non-nullable field, here we inject the attached user
+        # payload into the member payload when the member payload is present as discord decided not to duplicate the
+        # user object between Message.author and Message.member.user
+        if "member" in payload and "author" in payload:
+            payload["member"]["user"] = payload["author"]
         event = message.MessageUpdateEvent.deserialize(payload, components=self._components)
         await self._components.event_dispatcher.dispatch_event(event)
 

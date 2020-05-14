@@ -44,7 +44,7 @@ class WebhookType(int, more_enums.Enum):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class Webhook(bases.Unique, marshaller.Deserializable):
     """Represents a webhook object on Discord.
 
@@ -53,19 +53,25 @@ class Webhook(bases.Unique, marshaller.Deserializable):
     send informational messages to specific channels.
     """
 
-    type: WebhookType = marshaller.attrib(deserializer=WebhookType, repr=True)
+    type: WebhookType = marshaller.attrib(deserializer=WebhookType, eq=False, hash=False, repr=True)
     """The type of the webhook."""
 
     guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
+        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False, repr=True
     )
     """The guild ID of the webhook."""
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
+    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, eq=False, hash=False, repr=True)
     """The channel ID this webhook is for."""
 
     user: typing.Optional[users.User] = marshaller.attrib(
-        deserializer=users.User.deserialize, if_undefined=None, default=None, inherit_kwargs=True, repr=True
+        deserializer=users.User.deserialize,
+        if_undefined=None,
+        inherit_kwargs=True,
+        default=None,
+        eq=False,
+        hash=False,
+        repr=True,
     )
     """The user that created the webhook
 
@@ -74,13 +80,17 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         than the webhook's token.
     """
 
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, repr=True)
+    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False, repr=True)
     """The name of the webhook."""
 
-    avatar_hash: typing.Optional[str] = marshaller.attrib(raw_name="avatar", deserializer=str, if_none=None)
+    avatar_hash: typing.Optional[str] = marshaller.attrib(
+        raw_name="avatar", deserializer=str, if_none=None, eq=False, hash=False
+    )
     """The avatar hash of the webhook."""
 
-    token: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None)
+    token: typing.Optional[str] = marshaller.attrib(
+        deserializer=str, if_undefined=None, default=None, eq=False, hash=False
+    )
     """The token for the webhook.
 
     !!! info

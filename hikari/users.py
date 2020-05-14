@@ -94,27 +94,35 @@ class PremiumType(int, more_enums.Enum):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(
+    eq=True, hash=True, kw_only=True, slots=True,
+)
 class User(bases.Unique, marshaller.Deserializable):
     """Represents a user."""
 
-    discriminator: str = marshaller.attrib(deserializer=str, repr=True)
+    discriminator: str = marshaller.attrib(deserializer=str, eq=False, hash=False, repr=True)
     """This user's discriminator."""
 
-    username: str = marshaller.attrib(deserializer=str, repr=True)
+    username: str = marshaller.attrib(deserializer=str, eq=False, hash=False, repr=True)
     """This user's username."""
 
-    avatar_hash: typing.Optional[str] = marshaller.attrib(raw_name="avatar", deserializer=str, if_none=None)
+    avatar_hash: typing.Optional[str] = marshaller.attrib(
+        raw_name="avatar", deserializer=str, if_none=None, eq=False, hash=False
+    )
     """This user's avatar hash, if set."""
 
-    is_bot: bool = marshaller.attrib(raw_name="bot", deserializer=bool, if_undefined=False, default=False)
+    is_bot: bool = marshaller.attrib(
+        raw_name="bot", deserializer=bool, if_undefined=False, default=False, eq=False, hash=False
+    )
     """Whether this user is a bot account."""
 
-    is_system: bool = marshaller.attrib(raw_name="system", deserializer=bool, if_undefined=False, default=False)
+    is_system: bool = marshaller.attrib(
+        raw_name="system", deserializer=bool, if_undefined=False, default=False, eq=False, hash=False
+    )
     """Whether this user is a system account."""
 
     flags: typing.Optional[UserFlag] = marshaller.attrib(
-        raw_name="public_flags", deserializer=UserFlag, if_undefined=None, default=None
+        raw_name="public_flags", deserializer=UserFlag, if_undefined=None, default=None, eq=False, hash=False
     )
     """The public flags for this user.
 
@@ -167,18 +175,20 @@ class User(bases.Unique, marshaller.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class MyUser(User):
     """Represents a user with extended oauth2 information."""
 
-    is_mfa_enabled: bool = marshaller.attrib(raw_name="mfa_enabled", deserializer=bool)
+    is_mfa_enabled: bool = marshaller.attrib(raw_name="mfa_enabled", deserializer=bool, eq=False, hash=False)
     """Whether the user's account has 2fa enabled."""
 
-    locale: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, if_undefined=None, default=None)
+    locale: typing.Optional[str] = marshaller.attrib(
+        deserializer=str, if_none=None, if_undefined=None, default=None, eq=False, hash=False
+    )
     """The user's set language. This is not provided by the `READY` event."""
 
     is_verified: typing.Optional[bool] = marshaller.attrib(
-        raw_name="verified", deserializer=bool, if_undefined=None, default=None
+        raw_name="verified", deserializer=bool, if_undefined=None, default=None, eq=False, hash=False
     )
     """Whether the email for this user's account has been verified.
 
@@ -186,18 +196,20 @@ class MyUser(User):
     scope.
     """
 
-    email: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None, default=None)
+    email: typing.Optional[str] = marshaller.attrib(
+        deserializer=str, if_undefined=None, if_none=None, default=None, eq=False, hash=False
+    )
     """The user's set email.
 
     Will be `None` if retrieved through the oauth2 flow without the `email`
     scope and for bot users.
     """
 
-    flags: UserFlag = marshaller.attrib(deserializer=UserFlag)
+    flags: UserFlag = marshaller.attrib(deserializer=UserFlag, eq=False, hash=False)
     """This user account's flags."""
 
     premium_type: typing.Optional[PremiumType] = marshaller.attrib(
-        deserializer=PremiumType, if_undefined=None, default=None
+        deserializer=PremiumType, if_undefined=None, default=None, eq=False, hash=False
     )
     """The type of Nitro Subscription this user account had.
 
