@@ -59,7 +59,7 @@
 release:staging:
   environment:
     name: staging
-    url: https://nekokatt.ci.io/hikari/staging
+    url: https://nekokatt.gitlab.io/hikari  # FIXME: change to staging URL when appropriate.
   extends: .release
   script:
     - |+
@@ -80,7 +80,7 @@ release:staging:
 release:master:
   environment:
     name: prod
-    url: https://nekokatt.ci.io/hikari
+    url: https://nekokatt.gitlab.io/hikari
   extends: .release
   script:
     - |+
