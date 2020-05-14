@@ -46,14 +46,14 @@ TWEMOJI_SVG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/ra
 """The URL for Twemoji SVG artwork for built-in emojis."""
 
 
-def generate_cdn_url(*route_parts: str, fmt: str, size: typing.Optional[int]) -> str:
+def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]) -> str:
     """Generate a link for a Discord CDN media resource.
 
     Parameters
     ----------
-    route_parts : str
+    *route_parts : str
         The string route parts that will be used to form the link.
-    fmt : str
+    format_ : str
         The format to use for the wanted cdn entity, will usually be one of
         `webp`, `png`, `jpeg`, `jpg` or `gif` (which will be invalid
         if the target entity doesn't have an animated version available).
@@ -78,6 +78,6 @@ def generate_cdn_url(*route_parts: str, fmt: str, size: typing.Optional[int]) ->
         raise ValueError("Size must be an integer power of 2")
 
     path = "/".join(urllib.parse.unquote(part) for part in route_parts)
-    url = urllib.parse.urljoin(BASE_CDN_URL, "/" + path) + "." + str(fmt)
+    url = urllib.parse.urljoin(BASE_CDN_URL, "/" + path) + "." + str(format_)
     query = urllib.parse.urlencode({"size": size}) if size is not None else None
     return f"{url}?{query}" if query else url

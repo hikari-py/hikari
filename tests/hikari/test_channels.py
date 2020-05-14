@@ -26,6 +26,7 @@ from hikari import channels
 from hikari import permissions
 from hikari import users
 from hikari.clients import components
+from hikari.internal import urls
 
 
 @pytest.fixture()
@@ -227,6 +228,42 @@ class TestGroupDMChannel:
         assert channel_obj.icon_hash == "123asdf123adsf"
         assert channel_obj.owner_id == 456
         assert channel_obj.application_id == 123789
+
+    @pytest.fixture()
+    def group_dm_obj(self):
+        return channels.GroupDMChannel(
+            id=bases.Snowflake(123123123),
+            last_message_id=None,
+            type=None,
+            recipients=None,
+            name=None,
+            icon_hash="123asdf123adsf",
+            owner_id=None,
+            application_id=None,
+        )
+
+    def test_icon_url(self, group_dm_obj):
+        mock_url = "https://cdn.discordapp.com/channel-icons/209333111222/hashmebaby.png?size=4096"
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
+            url = group_dm_obj.icon_url
+            urls.generate_cdn_url.assert_called_once()
+        assert url == mock_url
+
+    def test_format_icon_url(self, group_dm_obj):
+        mock_url = "https://cdn.discordapp.com/channel-icons/22222/wowowowowo.jpg?size=42"
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
+            url = channels.GroupDMChannel.format_icon_url(group_dm_obj, format_="jpg", size=42)
+            urls.generate_cdn_url.assert_called_once_with(
+                "channel-icons", "123123123", "123asdf123adsf", format_="jpg", size=42
+            )
+        assert url == mock_url
+
+    def test_format_icon_url_returns_none(self, group_dm_obj):
+        group_dm_obj.icon_hash = None
+        with mock.patch.object(urls, "generate_cdn_url", return_value=...):
+            url = channels.GroupDMChannel.format_icon_url(group_dm_obj, format_="jpg", size=42)
+            urls.generate_cdn_url.assert_not_called()
+        assert url is None
 
 
 class TestGuildCategory:
