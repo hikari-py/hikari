@@ -238,7 +238,7 @@ class CustomEmoji(Emoji, bases.Unique):
 
     @property
     def url(self) -> str:
-        return urls.generate_cdn_url("emojis", str(self.id), fmt="gif" if self.is_animated else "png", size=None)
+        return urls.generate_cdn_url("emojis", str(self.id), format_="gif" if self.is_animated else "png", size=None)
 
 
 def _deserialize_role_ids(payload: more_typing.JSONArray) -> typing.Set[bases.Snowflake]:

@@ -179,14 +179,14 @@ class TestCustomEmoji:
         emoji = emojis.CustomEmoji(is_animated=animated, id=bases.Snowflake(123), name="Foo")
         assert emoji.is_mentionable is is_mentionable
 
-    @pytest.mark.parametrize(["animated", "fmt"], [(True, "gif"), (False, "png")])
-    def test_url(self, animated, fmt):
+    @pytest.mark.parametrize(["animated", "format_"], [(True, "gif"), (False, "png")])
+    def test_url(self, animated, format_):
         emoji = emojis.CustomEmoji(is_animated=animated, id=bases.Snowflake(98765), name="Foo")
         mock_result = mock.MagicMock(spec_set=str)
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_result) as generate_cdn_url:
             assert emoji.url is mock_result
 
-        generate_cdn_url.assert_called_once_with("emojis", "98765", fmt=fmt, size=None)
+        generate_cdn_url.assert_called_once_with("emojis", "98765", format_=format_, size=None)
 
 
 class TestKnownCustomEmoji:

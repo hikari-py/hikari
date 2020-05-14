@@ -587,7 +587,7 @@ class TestPresenceUser:
         mock_url = mock.MagicMock(str)
         with mock.patch.object(users.User, "format_avatar_url", return_value=mock_url):
             assert test_presence_user_obj.format_avatar_url() is mock_url
-            users.User.format_avatar_url.assert_called_once_with(fmt=None, size=4096)
+            users.User.format_avatar_url.assert_called_once_with(format_=None, size=4096)
 
     @pytest.mark.parametrize(["avatar_hash", "discriminator"], [("dwaea22", unset.UNSET), (unset.UNSET, "2929")])
     def test_format_avatar_url_when_discriminator_or_avatar_hash_set_with_optionals(
@@ -597,8 +597,8 @@ class TestPresenceUser:
         test_presence_user_obj.discriminator = discriminator
         mock_url = mock.MagicMock(str)
         with mock.patch.object(users.User, "format_avatar_url", return_value=mock_url):
-            assert test_presence_user_obj.format_avatar_url(fmt="nyaapeg", size=2048) is mock_url
-            users.User.format_avatar_url.assert_called_once_with(fmt="nyaapeg", size=2048)
+            assert test_presence_user_obj.format_avatar_url(format_="nyaapeg", size=2048) is mock_url
+            users.User.format_avatar_url.assert_called_once_with(format_="nyaapeg", size=2048)
 
     def test_format_avatar_url_when_discriminator_and_avatar_hash_unset(self, test_presence_user_obj):
         test_presence_user_obj.avatar_hash = unset.UNSET
@@ -803,9 +803,9 @@ class TestPartialGuild:
     def test_format_icon_url(self, partial_guild_obj):
         mock_url = "https://cdn.discordapp.com/icons/152559372126519269/d4a983885dsaa7691ce8bcaaf945a.png?size=20"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
-            url = partial_guild_obj.format_icon_url(fmt="nyaapeg", size=42)
+            url = partial_guild_obj.format_icon_url(format_="nyaapeg", size=42)
             urls.generate_cdn_url.assert_called_once_with(
-                "icons", "152559372126519269", "d4a983885dsaa7691ce8bcaaf945a", fmt="nyaapeg", size=42
+                "icons", "152559372126519269", "d4a983885dsaa7691ce8bcaaf945a", format_="nyaapeg", size=42
             )
         assert url == mock_url
 
@@ -815,7 +815,7 @@ class TestPartialGuild:
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = partial_guild_obj.format_icon_url()
             urls.generate_cdn_url.assert_called_once_with(
-                "icons", "152559372126519269", "a_d4a983885dsaa7691ce8bcaaf945a", fmt="gif", size=4096
+                "icons", "152559372126519269", "a_d4a983885dsaa7691ce8bcaaf945a", format_="gif", size=4096
             )
         assert url == mock_url
 
@@ -825,19 +825,19 @@ class TestPartialGuild:
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = partial_guild_obj.format_icon_url()
             urls.generate_cdn_url.assert_called_once_with(
-                "icons", "152559372126519269", "d4a983885dsaa7691ce8bcaaf945a", fmt="png", size=4096
+                "icons", "152559372126519269", "d4a983885dsaa7691ce8bcaaf945a", format_="png", size=4096
             )
         assert url == mock_url
 
     def test_format_icon_url_returns_none(self, partial_guild_obj):
         partial_guild_obj.icon_hash = None
         with mock.patch.object(urls, "generate_cdn_url", return_value=...):
-            url = partial_guild_obj.format_icon_url(fmt="nyaapeg", size=42)
+            url = partial_guild_obj.format_icon_url(format_="nyaapeg", size=42)
             urls.generate_cdn_url.assert_not_called()
         assert url is None
 
     @pytest.mark.parametrize(
-        ["fmt", "expected_fmt", "icon_hash", "size"],
+        ["format_", "expected_format", "icon_hash", "size"],
         [
             ("png", "png", "a_1a2b3c", 1 << 4),
             ("png", "png", "1a2b3c", 1 << 5),
@@ -853,13 +853,13 @@ class TestPartialGuild:
             (None, "png", "1a2b3c", 1 << 10),
         ],
     )
-    def test_format_icon_url(self, partial_guild_obj, fmt, expected_fmt, icon_hash, size):
+    def test_format_icon_url(self, partial_guild_obj, format_, expected_format, icon_hash, size):
         mock_url = "https://cdn.discordapp.com/icons/152559372126519269/d4a983885dsaa7691ce8bcaaf945a.png?size=20"
         partial_guild_obj.icon_hash = icon_hash
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
-            url = partial_guild_obj.format_icon_url(fmt, size)
+            url = partial_guild_obj.format_icon_url(format_=format_, size=size)
             urls.generate_cdn_url.assert_called_once_with(
-                "icons", str(partial_guild_obj.id), partial_guild_obj.icon_hash, fmt=expected_fmt, size=size
+                "icons", str(partial_guild_obj.id), partial_guild_obj.icon_hash, format_=expected_format, size=size
             )
         assert url == mock_url
 
@@ -901,9 +901,9 @@ class TestGuildPreview:
     def test_format_discovery_splash_url(self, test_guild_preview_obj):
         mock_url = "https://not-al"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
-            url = test_guild_preview_obj.format_discovery_splash_url(fmt="nyaapeg", size=4000)
+            url = test_guild_preview_obj.format_discovery_splash_url(format_="nyaapeg", size=4000)
             urls.generate_cdn_url.assert_called_once_with(
-                "discovery-splashes", "23123123123", "lkodwaidi09239uid", fmt="nyaapeg", size=4000
+                "discovery-splashes", "23123123123", "lkodwaidi09239uid", format_="nyaapeg", size=4000
             )
         assert url == mock_url
 
@@ -924,9 +924,9 @@ class TestGuildPreview:
     def test_format_splash_url(self, test_guild_preview_obj):
         mock_url = "https://not-al"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
-            url = test_guild_preview_obj.format_splash_url(fmt="nyaapeg", size=4000)
+            url = test_guild_preview_obj.format_splash_url(format_="nyaapeg", size=4000)
             urls.generate_cdn_url.assert_called_once_with(
-                "splashes", "23123123123", "dsa345tfcdg54b", fmt="nyaapeg", size=4000
+                "splashes", "23123123123", "dsa345tfcdg54b", format_="nyaapeg", size=4000
             )
         assert url == mock_url
 
@@ -1071,9 +1071,9 @@ class TestGuild:
     def test_format_banner_url(self, test_guild_obj):
         mock_url = "https://not-al"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
-            url = test_guild_obj.format_banner_url(fmt="nyaapeg", size=4000)
+            url = test_guild_obj.format_banner_url(format_="nyaapeg", size=4000)
             urls.generate_cdn_url.assert_called_once_with(
-                "banners", "265828729970753537", "1a2b3c", fmt="nyaapeg", size=4000
+                "banners", "265828729970753537", "1a2b3c", format_="nyaapeg", size=4000
             )
         assert url == mock_url
 
@@ -1094,9 +1094,9 @@ class TestGuild:
     def test_format_discovery_splash_url(self, test_guild_obj):
         mock_url = "https://not-al"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
-            url = test_guild_obj.format_discovery_splash_url(fmt="nyaapeg", size=4000)
+            url = test_guild_obj.format_discovery_splash_url(format_="nyaapeg", size=4000)
             urls.generate_cdn_url.assert_called_once_with(
-                "discovery-splashes", "265828729970753537", "famfamFAMFAMfam", fmt="nyaapeg", size=4000
+                "discovery-splashes", "265828729970753537", "famfamFAMFAMfam", format_="nyaapeg", size=4000
             )
         assert url == mock_url
 
@@ -1117,9 +1117,9 @@ class TestGuild:
     def test_format_splash_url(self, test_guild_obj):
         mock_url = "https://not-al"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
-            url = test_guild_obj.format_splash_url(fmt="nyaapeg", size=4000)
+            url = test_guild_obj.format_splash_url(format_="nyaapeg", size=4000)
             urls.generate_cdn_url.assert_called_once_with(
-                "splashes", "265828729970753537", "0ff0ff0ff", fmt="nyaapeg", size=4000
+                "splashes", "265828729970753537", "0ff0ff0ff", format_="nyaapeg", size=4000
             )
         assert url == mock_url
 
