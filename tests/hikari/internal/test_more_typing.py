@@ -23,6 +23,7 @@ import pytest
 from hikari.internal import more_typing
 
 
+# noinspection PyProtocol
 @pytest.mark.asyncio
 class TestFuture:
     async def test_is_instance(self, event_loop):
@@ -34,6 +35,7 @@ class TestFuture:
         assert isinstance(asyncio.create_task(nil()), more_typing.Future)
 
 
+# noinspection PyProtocol
 @pytest.mark.asyncio
 class TestTask:
     async def test_is_instance(self, event_loop):

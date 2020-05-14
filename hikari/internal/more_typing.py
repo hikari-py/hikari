@@ -43,7 +43,7 @@ from typing import Coroutine as _Coroutine
 from typing import Mapping as _Mapping
 from typing import Optional as _Optional
 from typing import Protocol as _Protocol
-from typing import runtime_checkable as _runtime_checkable
+from typing import runtime_checkable as runtime_checkable
 from typing import Sequence as _Sequence
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 from typing import TypeVar as _TypeVar
@@ -99,7 +99,7 @@ This is awaitable but MUST be awaited somewhere to be completed correctly.
 """
 
 
-@_runtime_checkable
+@runtime_checkable
 class Future(_Protocol[T_contra]):
     """Typed protocol representation of an `asyncio.Future`.
 
@@ -142,7 +142,7 @@ class Future(_Protocol[T_contra]):
         ...
 
 
-@_runtime_checkable
+@runtime_checkable
 class Task(_Protocol[T_contra]):
     """Typed protocol representation of an `asyncio.Task`.
 
