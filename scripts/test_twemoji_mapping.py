@@ -31,6 +31,7 @@ import aiohttp
 import hikari
 
 
+skipped_emojis = []
 valid_emojis = []
 invalid_emojis = []
 
@@ -64,6 +65,10 @@ async def run():
     print("Valid emojis:", len(valid_emojis))
     print("Invalid emojis:", len(invalid_emojis))
 
+    if skipped_emojis:
+        print("Emojis may be skipped if persistent 5xx responses come from GitHub.")
+        print("Skipped emojis:", len(skipped_emojis))
+
     for surrogates, name in invalid_emojis:
         print(*map(hex, map(ord, surrogates)), name)
 
@@ -82,6 +87,10 @@ async def try_fetch(i, n, emoji_surrogates, name):
             ex = None
             break
 
+    if isinstance(ex, hikari.errors.ServerHTTPErrorResponse):
+        skipped_emojis.append((emoji_surrogates, name))
+        print("[ SKIP ]", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url, str(ex))
+
     if ex is None:
         valid_emojis.append((emoji_surrogates, name))
         print("[  OK  ]", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url)
@@ -92,5 +101,5 @@ async def try_fetch(i, n, emoji_surrogates, name):
 
 asyncio.run(run())
 
-if invalid_emojis:
+if invalid_emojis or not valid_emojis:
     exit(1)
