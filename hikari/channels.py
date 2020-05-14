@@ -48,6 +48,7 @@ from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import more_collections
 from hikari.internal import more_enums
+from hikari.internal import urls
 
 if typing.TYPE_CHECKING:
     from hikari.internal import more_typing
@@ -206,6 +207,37 @@ class GroupDMChannel(DMChannel):
         deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False
     )
     """The ID of the application that created the group DM, if it's a bot based group DM."""
+
+    @property
+    def icon_url(self) -> typing.Optional[str]:
+        """URL for this DM channel's icon, if set."""
+        return self.format_icon_url()
+
+    def format_icon_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
+        """Generate the URL for this group DM's icon, if set.
+
+        Parameters
+        ----------
+        format_ : str
+            The format to use for this URL, defaults to `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+        size : int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        str, optional
+            The string URL.
+
+        Raises
+        ------
+        ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.icon_hash:
+            return urls.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+        return None
 
 
 def _deserialize_overwrites(

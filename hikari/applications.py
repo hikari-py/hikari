@@ -315,12 +315,12 @@ class Team(bases.Unique, marshaller.Deserializable):
         """URL of this team's icon, if set."""
         return self.format_icon_url()
 
-    def format_icon_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
+    def format_icon_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the icon URL for this team if set.
 
         Parameters
         ----------
-        fmt : str
+        format_ : str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
@@ -338,7 +338,7 @@ class Team(bases.Unique, marshaller.Deserializable):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash:
-            return urls.generate_cdn_url("team-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("team-icons", str(self.id), self.icon_hash, format_=format_, size=size)
         return None
 
 
@@ -462,12 +462,12 @@ class Application(bases.Unique, marshaller.Deserializable):
         """URL for this team's icon, if set."""
         return self.format_icon_url()
 
-    def format_icon_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
+    def format_icon_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the icon URL for this application if set.
 
         Parameters
         ----------
-        fmt : str
+        format_ : str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
@@ -485,7 +485,7 @@ class Application(bases.Unique, marshaller.Deserializable):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash:
-            return urls.generate_cdn_url("app-icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("app-icons", str(self.id), self.icon_hash, format_=format_, size=size)
         return None
 
     @property
@@ -493,12 +493,12 @@ class Application(bases.Unique, marshaller.Deserializable):
         """URL for this icon's store cover image, if set."""
         return self.format_cover_image_url()
 
-    def format_cover_image_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
+    def format_cover_image_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this application's store page's cover image is set and applicable.
 
         Parameters
         ----------
-        fmt : str
+        format_ : str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
@@ -516,5 +516,5 @@ class Application(bases.Unique, marshaller.Deserializable):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.cover_image_hash:
-            return urls.generate_cdn_url("app-assets", str(self.id), self.cover_image_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("app-assets", str(self.id), self.cover_image_hash, format_=format_, size=size)
         return None

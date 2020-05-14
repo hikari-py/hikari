@@ -635,12 +635,14 @@ class PresenceUser(users.User):
         """
         return self.format_avatar_url()
 
-    def format_avatar_url(self, fmt: typing.Optional[str] = None, size: int = 4096) -> typing.Union[str, unset.Unset]:
+    def format_avatar_url(
+        self, *, format_: typing.Optional[str] = None, size: int = 4096
+    ) -> typing.Union[str, unset.Unset]:
         """Generate the avatar URL for this user's avatar if available.
 
         Parameters
         ----------
-        fmt : str
+        format_ : str
             The format to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when animated).
             Will be ignored for default avatars which can only be `png`.
@@ -663,7 +665,7 @@ class PresenceUser(users.User):
         """
         if self.discriminator is unset.UNSET and self.avatar_hash is unset.UNSET:
             return unset.UNSET
-        return super().format_avatar_url(fmt=fmt, size=size)
+        return super().format_avatar_url(format_=format_, size=size)
 
     @property
     def default_avatar(self) -> typing.Union[int, unset.Unset]:
@@ -895,12 +897,12 @@ class PartialGuild(bases.Unique, marshaller.Deserializable):
     )
     """A set of the features in this guild."""
 
-    def format_icon_url(self, fmt: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[str]:
+    def format_icon_url(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's custom icon, if set.
 
         Parameters
         ----------
-        fmt : str
+        format_ : str
             The format to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
@@ -919,9 +921,9 @@ class PartialGuild(bases.Unique, marshaller.Deserializable):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash:
-            if fmt is None:
-                fmt = "gif" if self.icon_hash.startswith("a_") else "png"
-            return urls.generate_cdn_url("icons", str(self.id), self.icon_hash, fmt=fmt, size=size)
+            if format_ is None:
+                format_ = "gif" if self.icon_hash.startswith("a_") else "png"
+            return urls.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
         return None
 
     @property
@@ -965,12 +967,12 @@ class GuildPreview(PartialGuild):
     description: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False)
     """The guild's description, if set."""
 
-    def format_splash_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
+    def format_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's splash image, if set.
 
         Parameters
         ----------
-        fmt : str
+        format_ : str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
@@ -988,7 +990,7 @@ class GuildPreview(PartialGuild):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash:
-            return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
         return None
 
     @property
@@ -996,12 +998,12 @@ class GuildPreview(PartialGuild):
         """URL for this guild's splash, if set."""
         return self.format_splash_url()
 
-    def format_discovery_splash_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
+    def format_discovery_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's discovery splash image, if set.
 
         Parameters
         ----------
-        fmt : str
+        format_ : str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
@@ -1020,7 +1022,7 @@ class GuildPreview(PartialGuild):
         """
         if self.discovery_splash_hash:
             return urls.generate_cdn_url(
-                "discovery-splashes", str(self.id), self.discovery_splash_hash, fmt=fmt, size=size
+                "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
             )
         return None
 
@@ -1418,12 +1420,12 @@ class Guild(PartialGuild):
     remain `None`.
     """
 
-    def format_splash_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
+    def format_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's splash image, if set.
 
         Parameters
         ----------
-        fmt : str
+        format_ : str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
@@ -1441,7 +1443,7 @@ class Guild(PartialGuild):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash:
-            return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
         return None
 
     @property
@@ -1449,12 +1451,12 @@ class Guild(PartialGuild):
         """URL for this guild's splash, if set."""
         return self.format_splash_url()
 
-    def format_discovery_splash_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
+    def format_discovery_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's discovery splash image, if set.
 
         Parameters
         ----------
-        fmt : str
+        format_ : str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
@@ -1473,7 +1475,7 @@ class Guild(PartialGuild):
         """
         if self.discovery_splash_hash:
             return urls.generate_cdn_url(
-                "discovery-splashes", str(self.id), self.discovery_splash_hash, fmt=fmt, size=size
+                "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
             )
         return None
 
@@ -1482,12 +1484,12 @@ class Guild(PartialGuild):
         """URL for this guild's discovery splash, if set."""
         return self.format_discovery_splash_url()
 
-    def format_banner_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
+    def format_banner_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's banner image, if set.
 
         Parameters
         ----------
-        fmt : str
+        format_ : str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
@@ -1505,7 +1507,7 @@ class Guild(PartialGuild):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash:
-            return urls.generate_cdn_url("banners", str(self.id), self.banner_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
         return None
 
     @property
