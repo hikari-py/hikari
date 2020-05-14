@@ -16,7 +16,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import os
 import os as _os
 
 IS_CI = "CI" in _os.environ
@@ -55,8 +54,8 @@ GIT_TEST_SSH_PATH = "git@gitlab.com"
 AUTHOR = "Nekokatt"
 ORIGINAL_REPO_URL = f"https://{GIT_SVC_HOST}/${AUTHOR}/{API_NAME}"
 SSH_DIR = "~/.ssh"
-SSH_PRIVATE_KEY_PATH = os.path.join(SSH_DIR, "id_rsa")
-SSH_KNOWN_HOSTS = os.path.join(SSH_DIR, "known_hosts")
+SSH_PRIVATE_KEY_PATH = _os.path.join(SSH_DIR, "id_rsa")
+SSH_KNOWN_HOSTS = _os.path.join(SSH_DIR, "known_hosts")
 CI_ROBOT_NAME = AUTHOR
 CI_ROBOT_EMAIL = "3903853-nekokatt@users.noreply.gitlab.com"
 SKIP_CI_PHRASE = "[skip ci]"
