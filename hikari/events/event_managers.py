@@ -179,5 +179,5 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
             await handler(shard_client_obj, payload)
         except Exception as ex:
             self.logger.exception(
-                "Failed to unmarshal %r event payload. This is likely a bug in the library itself.", exc_info=ex,
+                "Failed to unmarshal %r event payload. This is likely a bug in the library itself.", name, exc_info=ex,
             )
