@@ -21,20 +21,20 @@ from tests.hikari import _helpers
 
 
 def test_generate_cdn_url():
-    url = urls.generate_cdn_url("not", "a", "path", fmt="neko", size=16)
+    url = urls.generate_cdn_url("not", "a", "path", format_="neko", size=16)
     assert url == "https://cdn.discordapp.com/not/a/path.neko?size=16"
 
 
 def test_generate_cdn_url_with_size_set_to_none():
-    url = urls.generate_cdn_url("not", "a", "path", fmt="neko", size=None)
+    url = urls.generate_cdn_url("not", "a", "path", format_="neko", size=None)
     assert url == "https://cdn.discordapp.com/not/a/path.neko"
 
 
 @_helpers.assert_raises(type_=ValueError)
 def test_generate_cdn_url_with_invalid_size_out_of_limits():
-    urls.generate_cdn_url("not", "a", "path", fmt="neko", size=11)
+    urls.generate_cdn_url("not", "a", "path", format_="neko", size=11)
 
 
 @_helpers.assert_raises(type_=ValueError)
 def test_generate_cdn_url_with_invalid_size_now_power_of_two():
-    urls.generate_cdn_url("not", "a", "path", fmt="neko", size=111)
+    urls.generate_cdn_url("not", "a", "path", format_="neko", size=111)

@@ -98,7 +98,7 @@ class TestUser:
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = user_obj.format_avatar_url(size=3232)
             urls.generate_cdn_url.assert_called_once_with(
-                "avatars", "115590097100865541", "a_820d0e50543216e812ad94e6ab7", fmt="gif", size=3232
+                "avatars", "115590097100865541", "a_820d0e50543216e812ad94e6ab7", format_="gif", size=3232
             )
         assert url == mock_url
 
@@ -107,15 +107,15 @@ class TestUser:
         mock_url = "https://cdn.discordapp.com/embed/avatars/2.png"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = user_obj.format_avatar_url(size=3232)
-            urls.generate_cdn_url("embed/avatars", "115590097100865541", fmt="png", size=None)
+            urls.generate_cdn_url("embed/avatars", "115590097100865541", format_="png", size=None)
         assert url == mock_url
 
     def test_format_avatar_url_when_format_specified(self, user_obj):
         mock_url = "https://cdn.discordapp.com/avatars/115590097100865541/b3b24c6d7c37067061a8.nyaapeg?size=1024"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
-            url = user_obj.format_avatar_url(fmt="nyaapeg", size=1024)
+            url = user_obj.format_avatar_url(format_="nyaapeg", size=1024)
             urls.generate_cdn_url.assert_called_once_with(
-                "avatars", "115590097100865541", "b3b24c6d7cbcdec129d5d537067061a8", fmt="nyaapeg", size=1024
+                "avatars", "115590097100865541", "b3b24c6d7cbcdec129d5d537067061a8", format_="nyaapeg", size=1024
             )
         assert url == mock_url
 

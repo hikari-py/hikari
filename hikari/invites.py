@@ -97,12 +97,12 @@ class InviteGuild(guilds.PartialGuild):
     `features` for this guild. If not, this will always be `None`.
     """
 
-    def format_splash_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
+    def format_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's splash, if set.
 
         Parameters
         ----------
-        fmt : str
+        format_ : str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
@@ -120,7 +120,7 @@ class InviteGuild(guilds.PartialGuild):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash:
-            return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
         return None
 
     @property
@@ -128,12 +128,12 @@ class InviteGuild(guilds.PartialGuild):
         """URL for this guild's splash, if set."""
         return self.format_splash_url()
 
-    def format_banner_url(self, fmt: str = "png", size: int = 4096) -> typing.Optional[str]:
+    def format_banner_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this guild's banner, if set.
 
         Parameters
         ----------
-        fmt : str
+        format_ : str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
@@ -151,7 +151,7 @@ class InviteGuild(guilds.PartialGuild):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash:
-            return urls.generate_cdn_url("banners", str(self.id), self.banner_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
         return None
 
     @property

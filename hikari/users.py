@@ -135,12 +135,12 @@ class User(bases.Unique, marshaller.Deserializable):
         """URL for this user's custom avatar if set, else default."""
         return self.format_avatar_url()
 
-    def format_avatar_url(self, fmt: typing.Optional[str] = None, size: int = 4096) -> str:
+    def format_avatar_url(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> str:
         """Generate the avatar URL for this user's custom avatar if set, else their default avatar.
 
         Parameters
         ----------
-        fmt : str
+        format_ : str
             The format to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated). Will be ignored for default avatars which can only be
@@ -161,12 +161,12 @@ class User(bases.Unique, marshaller.Deserializable):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if not self.avatar_hash:
-            return urls.generate_cdn_url("embed/avatars", str(self.default_avatar), fmt="png", size=None)
-        if fmt is None and self.avatar_hash.startswith("a_"):
-            fmt = "gif"
-        elif fmt is None:
-            fmt = "png"
-        return urls.generate_cdn_url("avatars", str(self.id), self.avatar_hash, fmt=fmt, size=size)
+            return urls.generate_cdn_url("embed/avatars", str(self.default_avatar), format_="png", size=None)
+        if format_ is None and self.avatar_hash.startswith("a_"):
+            format_ = "gif"
+        elif format_ is None:
+            format_ = "png"
+        return urls.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
 
     @property
     def default_avatar(self) -> int:
