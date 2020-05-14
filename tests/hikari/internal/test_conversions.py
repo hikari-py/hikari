@@ -185,6 +185,14 @@ def test_parse_unix_epoch_to_datetime():
     assert conversions.unix_epoch_to_datetime(unix_timestamp) == expected_timestamp
 
 
+def test_unix_epoch_to_datetime_with_out_of_range_positive_timestamp():
+    assert conversions.unix_epoch_to_datetime(996877846784536) == datetime.datetime.max
+
+
+def test_unix_epoch_to_datetime_with_out_of_range_negative_timestamp():
+    assert conversions.unix_epoch_to_datetime(-996877846784536) == datetime.datetime.min
+
+
 @pytest.mark.parametrize(
     ["count", "name", "kwargs", "expect"],
     [
