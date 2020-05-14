@@ -14,6 +14,8 @@
 ##
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-
+<%!
+    import hikari
+%>
 <p><span>Licensed under <a href="https://www.gnu.org/licenses/lgpl-3.0.en.html">GNU LGPLv3.</a></span></p>
-<p><span>Copyright © Nekokatt 2019-2020.</span></p>
+<p><span>${hikari.__copyright__}.</span></p>

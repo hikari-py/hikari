@@ -62,7 +62,7 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildCreateEvent(base_events.HikariEvent, guilds.Guild):
     """Used to represent Guild Create gateway events.
 
@@ -73,14 +73,14 @@ class GuildCreateEvent(base_events.HikariEvent, guilds.Guild):
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildUpdateEvent(base_events.HikariEvent, guilds.Guild):
     """Used to represent Guild Update gateway events."""
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildLeaveEvent(base_events.HikariEvent, base_entities.Unique, marshaller.Deserializable):
     """Fired when the current user leaves the guild or is kicked/banned from it.
 
@@ -91,7 +91,7 @@ class GuildLeaveEvent(base_events.HikariEvent, base_entities.Unique, marshaller.
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildUnavailableEvent(base_events.HikariEvent, base_entities.Unique, marshaller.Deserializable):
     """Fired when a guild becomes temporarily unavailable due to an outage.
 
@@ -102,7 +102,7 @@ class GuildUnavailableEvent(base_events.HikariEvent, base_entities.Unique, marsh
 
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class BaseGuildBanEvent(base_events.HikariEvent, marshaller.Deserializable, abc.ABC):
     """A base object that guild ban events will inherit from."""
 
@@ -115,14 +115,14 @@ class BaseGuildBanEvent(base_events.HikariEvent, marshaller.Deserializable, abc.
 
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildBanAddEvent(BaseGuildBanEvent):
     """Used to represent a Guild Ban Add gateway event."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildBanRemoveEvent(BaseGuildBanEvent):
     """Used to represent a Guild Ban Remove gateway event."""
 
@@ -137,7 +137,7 @@ def _deserialize_emojis(
 
 @base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildEmojisUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Represents a Guild Emoji Update gateway event."""
 
@@ -152,7 +152,7 @@ class GuildEmojisUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
 
 @base_events.requires_intents(intents.Intent.GUILD_INTEGRATIONS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildIntegrationsUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Guild Integration Update gateway events."""
 
@@ -162,7 +162,7 @@ class GuildIntegrationsUpdateEvent(base_events.HikariEvent, marshaller.Deseriali
 
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildMemberAddEvent(base_events.HikariEvent, guilds.GuildMember):
     """Used to represent a Guild Member Add gateway event."""
 
@@ -176,7 +176,7 @@ def _deserialize_role_ids(payload: more_typing.JSONArray) -> typing.Sequence[bas
 
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildMemberUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Member Update gateway event.
 
@@ -214,7 +214,7 @@ class GuildMemberUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
 
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildMemberRemoveEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Guild Member Remove gateway events.
 
@@ -231,7 +231,7 @@ class GuildMemberRemoveEvent(base_events.HikariEvent, marshaller.Deserializable)
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildRoleCreateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
 
@@ -244,7 +244,7 @@ class GuildRoleCreateEvent(base_events.HikariEvent, marshaller.Deserializable):
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildRoleUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
 
@@ -261,7 +261,7 @@ class GuildRoleUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildRoleDeleteEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Represents a gateway Guild Role Delete Event."""
 
@@ -274,7 +274,7 @@ class GuildRoleDeleteEvent(base_events.HikariEvent, marshaller.Deserializable):
 
 @base_events.requires_intents(intents.Intent.GUILD_PRESENCES)
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class PresenceUpdateEvent(base_events.HikariEvent, guilds.GuildMemberPresence):
     """Used to represent Presence Update gateway events.
 

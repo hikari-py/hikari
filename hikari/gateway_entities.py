@@ -37,7 +37,7 @@ def _rest_after_deserializer(after: int) -> datetime.timedelta:
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class SessionStartLimit(bases.Entity, marshaller.Deserializable):
     """Used to represent information about the current session start limits."""
 
@@ -55,7 +55,7 @@ class SessionStartLimit(bases.Entity, marshaller.Deserializable):
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class GatewayBot(bases.Entity, marshaller.Deserializable):
     """Used to represent gateway information for the connected bot."""
 
@@ -76,7 +76,7 @@ def _undefined_type_default() -> typing.Literal[guilds.ActivityType.PLAYING]:
 
 
 @marshaller.marshallable()
-@attr.s(slots=True, kw_only=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class Activity(marshaller.Deserializable, marshaller.Serializable):
     """An activity that the bot can set for one or more shards.
 
