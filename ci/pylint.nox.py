@@ -40,11 +40,7 @@ NON_PYLINT_FLAGS = [JUNIT_FLAG, HTML_FLAG]
 
 @nox.session(default=True, reuse_venv=True)
 def pylint(session: nox.Session) -> None:
-    f"""Run pylint against the code base and report any code smells or issues.
-
-    Pass the {JUNIT_FLAG} flag to also produce a junit report.
-    Pass the {HTML_FLAG} flag to also produce an HTML report.
-    """
+    """Run pylint against the code base and report any code smells or issues."""
 
     tasks = [pylint_text]
     cpus_per_task = max(1, (os.cpu_count() or 1) // len(tasks))
