@@ -38,7 +38,9 @@ from hikari.clients import components as _components
 from hikari.clients import configs
 from hikari.clients import runnable
 from hikari.clients import shard_states
-from hikari.events import other, dispatchers, event_managers
+from hikari.events import dispatchers
+from hikari.events import event_managers
+from hikari.events import other
 from hikari.internal import conversions
 
 if typing.TYPE_CHECKING:

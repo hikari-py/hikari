@@ -22,7 +22,8 @@ from hikari.clients import components
 from hikari.clients import configs
 from hikari.clients import rest
 from hikari.clients import shards
-from hikari.events import dispatchers, event_managers
+from hikari.events import dispatchers
+from hikari.events import event_managers
 
 
 class TestComponents:

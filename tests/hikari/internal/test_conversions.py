@@ -16,15 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import concurrent.futures
 import datetime
-import inspect
 import typing
 
 import pytest
 
 from hikari.internal import conversions
-from tests.hikari import _helpers
 
 
 @pytest.mark.parametrize(

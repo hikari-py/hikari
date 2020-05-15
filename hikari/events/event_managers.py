@@ -26,7 +26,8 @@ import inspect
 import logging
 import typing
 
-from hikari.events import dispatchers, consumers
+from hikari.events import consumers
+from hikari.events import dispatchers
 
 if typing.TYPE_CHECKING:
     from hikari.clients import components as _components
