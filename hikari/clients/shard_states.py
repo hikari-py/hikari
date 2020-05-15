@@ -52,6 +52,3 @@ class ShardState(int, more_enums.Enum):
 
     STOPPED = more_enums.generated_value()
     """The shard has shut down and is no longer connected."""
-
-    def __str__(self) -> str:
-        return self.name
