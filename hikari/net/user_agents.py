@@ -84,12 +84,6 @@ class UserAgent(metaclass=meta.SingletonMeta):
         self.system_type = platform()
         self.user_agent = f"DiscordBot ({__url__}; {__version__}; {__author__}) {python_version()} {self.system_type}"
 
-        def __attr__(_):
-            raise TypeError("cannot change attributes once set")
-
-        self.__delattr__ = __attr__
-        self.__setattr__ = __attr__
-
     @staticmethod
     def _join_strip(*args):
         return " ".join((arg.strip() for arg in args if arg.strip()))
