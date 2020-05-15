@@ -607,13 +607,27 @@ class TestPresenceUser:
             assert test_presence_user_obj.format_avatar_url() is unset.UNSET
             users.User.format_avatar_url.assert_not_called()
 
-    def test_default_avatar_when_discriminator_set(self, test_presence_user_obj):
+    def test_default_avatar_index_when_discriminator_set(self, test_presence_user_obj):
         test_presence_user_obj.discriminator = 4242
-        assert test_presence_user_obj.default_avatar == 2
+        assert test_presence_user_obj.default_avatar_index == 2
 
     def test_default_avatar_when_discriminator_unset(self, test_presence_user_obj):
         test_presence_user_obj.discriminator = unset.UNSET
-        assert test_presence_user_obj.default_avatar is unset.UNSET
+        assert test_presence_user_obj.default_avatar_index is unset.UNSET
+
+    def test_default_avatar_url_when_discriminator_is_set(self, test_presence_user_obj):
+        mock_url = "https://cdn.discordapp.com/embed/avatars/2.png"
+        test_presence_user_obj.discriminator = 4232
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
+            url = test_presence_user_obj.default_avatar_url is mock_url
+            urls.generate_cdn_url.assert_called_once_with("embed", "avatars", "2", format_="png", size=None)
+
+    def test_default_avatar_url_when_discriminator_is_unset(self, test_presence_user_obj):
+        mock_url = ...
+        test_presence_user_obj.discriminator = unset.UNSET
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
+            assert test_presence_user_obj.default_avatar_url is unset.UNSET
+            urls.generate_cdn_url.assert_not_called()
 
 
 @pytest.fixture()

@@ -130,6 +130,21 @@ class User(bases.Unique, marshaller.Deserializable):
         This will be `None` if it's a webhook user.
     """
 
+    async def fetch_self(self) -> User:
+        """Get this user's up-to-date object.
+
+        Returns
+        -------
+        hikari.users.User
+            The requested user object.
+
+        Raises
+        ------
+        hikari.errors.NotFound
+            If the user is not found.
+        """
+        return await self._components.rest.fetch_user(user=self.id)
+
     @property
     def avatar_url(self) -> str:
         """URL for this user's custom avatar if set, else default."""
@@ -161,7 +176,8 @@ class User(bases.Unique, marshaller.Deserializable):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if not self.avatar_hash:
-            return urls.generate_cdn_url("embed/avatars", str(self.default_avatar), format_="png", size=None)
+            return self.default_avatar_url
+
         if format_ is None and self.avatar_hash.startswith("a_"):
             format_ = "gif"
         elif format_ is None:
@@ -169,9 +185,14 @@ class User(bases.Unique, marshaller.Deserializable):
         return urls.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
 
     @property
-    def default_avatar(self) -> int:
+    def default_avatar_index(self) -> int:
         """Integer representation of this user's default avatar."""
         return int(self.discriminator) % 5
+
+    @property
+    def default_avatar_url(self) -> str:
+        """URL for this user's default avatar."""
+        return urls.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
 
 
 @marshaller.marshallable()
@@ -215,3 +236,13 @@ class MyUser(User):
 
     This will always be `None` for bots.
     """
+
+    async def fetch_self(self) -> MyUser:
+        """Get this user's up-to-date object.
+
+        Returns
+        -------
+        hikari.users.User
+            The requested user object.
+        """
+        return await self._components.rest.fetch_me()
