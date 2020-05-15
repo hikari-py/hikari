@@ -241,7 +241,7 @@ class BufferedPaginatedResults(typing.Generic[_T], PaginatedResults[_T]):
 
     def __init__(self) -> None:
         # Start with an empty generator to force the paginator to get the next item.
-        self._buffer = more_collections.EMPTY_GENERATOR_EXPRESSION
+        self._buffer = (_ for _ in more_collections.EMPTY_COLLECTION)
 
     @abc.abstractmethod
     async def _next_chunk(self) -> typing.Optional[typing.Generator[typing.Any, None, _T]]:
