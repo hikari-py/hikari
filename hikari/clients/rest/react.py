@@ -27,9 +27,9 @@ import datetime
 import typing
 
 from hikari import bases
+from hikari import messages as _messages
 from hikari import pagination
 from hikari import users
-from hikari import messages as _messages
 from hikari.clients.rest import base
 
 if typing.TYPE_CHECKING:
