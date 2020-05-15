@@ -60,6 +60,7 @@ def coalesce_coverage(session: nox.Session) -> None:
     for file in os.listdir(config.ARTIFACT_DIRECTORY):
         if file.endswith(".coverage"):
             coverage_files.append(os.path.join(config.ARTIFACT_DIRECTORY, file))
+    print("files for coverage:", coverage_files)
 
-    session.run("coverage", "combine", *coverage_files)
-    session.run("coverage", "report", "-i")
+    session.run("coverage", "combine", f"--rcfile={config.COVERAGE_INI}", *coverage_files)
+    session.run("coverage", "report", "-i", "-m", f"--rcfile={config.COVERAGE_INI}")
