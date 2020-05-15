@@ -22,7 +22,7 @@ from hikari.internal import more_enums
 
 class TestEnumMixin:
     def test_str(self):
-        class TestType(more_enums.IntFlag):
+        class TestType(more_enums.Enum):
             a = 1
             b = 2
             c = 4

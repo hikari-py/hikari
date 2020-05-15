@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,10 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Alias for the `hikari.colors` module."""
+from hikari import intents
 
-from __future__ import annotations
 
-__all__ = ["Colour"]
+class TestIntent:
+    def test_is_privileged(self):
+        assert intents.Intent.GUILD_MEMBERS.is_privileged
 
-from hikari.colors import Color as Colour
+    def test_not_is_privileged(self):
+        assert not intents.Intent.DIRECT_MESSAGE_TYPING.is_privileged

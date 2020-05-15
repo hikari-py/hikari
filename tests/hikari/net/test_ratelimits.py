@@ -366,7 +366,7 @@ class TestWindowedBurstRateLimiter:
 class TestRESTBucket:
     @pytest.fixture
     def template(self):
-        return routes.RouteTemplate("GET", "/foo/bar")
+        return routes.Route("GET", "/foo/bar")
 
     @pytest.fixture
     def compiled_route(self, template):
@@ -556,7 +556,7 @@ class TestRESTBucketManager:
             # noinspection PyAsyncCall
             mgr.acquire(route)
 
-            assert mgr.routes_to_hashes[route.route_template] == "UNKNOWN"
+            assert mgr.routes_to_hashes[route.route] == "UNKNOWN"
 
     @pytest.mark.asyncio
     async def test_acquire_route_when_route_cached_already_obtains_hash_from_route_and_bucket_from_hash(self):
@@ -592,7 +592,7 @@ class TestRESTBucketManager:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(return_value="eat pant;bobs")
             bucket = mock.MagicMock()
-            mgr.routes_to_hashes[route] = "eat pant"
+            mgr.routes_to_hashes[route.route] = "eat pant"
             mgr.real_hashes_to_buckets["eat pant;bobs"] = bucket
 
             f = mgr.acquire(route)
@@ -603,9 +603,9 @@ class TestRESTBucketManager:
         with ratelimits.RESTBucketManager() as mgr:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
-            mgr.routes_to_hashes[route.route_template] = "123"
+            mgr.routes_to_hashes[route.route] = "123"
             mgr.update_rate_limits(route, "blep", 22, 23, datetime.datetime.now(), datetime.datetime.now())
-            assert mgr.routes_to_hashes[route.route_template] == "blep"
+            assert mgr.routes_to_hashes[route.route] == "blep"
             assert isinstance(mgr.real_hashes_to_buckets["blep;bobs"], ratelimits.RESTBucket)
 
     @pytest.mark.asyncio
@@ -613,11 +613,11 @@ class TestRESTBucketManager:
         with ratelimits.RESTBucketManager() as mgr:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
-            mgr.routes_to_hashes[route] = "123"
+            mgr.routes_to_hashes[route.route] = "123"
             bucket = mock.MagicMock()
             mgr.real_hashes_to_buckets["123;bobs"] = bucket
             mgr.update_rate_limits(route, "123", 22, 23, datetime.datetime.now(), datetime.datetime.now())
-            assert mgr.routes_to_hashes[route] == "123"
+            assert mgr.routes_to_hashes[route.route] == "123"
             assert mgr.real_hashes_to_buckets["123;bobs"] is bucket
 
     @pytest.mark.asyncio
@@ -625,7 +625,7 @@ class TestRESTBucketManager:
         with ratelimits.RESTBucketManager() as mgr:
             route = mock.MagicMock()
             route.create_real_bucket_hash = mock.MagicMock(wraps=lambda intial_hash: intial_hash + ";bobs")
-            mgr.routes_to_hashes[route] = "123"
+            mgr.routes_to_hashes[route.route] = "123"
             bucket = mock.MagicMock()
             mgr.real_hashes_to_buckets["123;bobs"] = bucket
             date = datetime.datetime.now().replace(year=2004)
@@ -635,6 +635,12 @@ class TestRESTBucketManager:
                 expect_reset_at_monotonic = 27 + (reset_at - date).total_seconds()
                 mgr.update_rate_limits(route, "123", 22, 23, date, reset_at)
                 bucket.update_rate_limit.assert_called_once_with(22, 23, expect_reset_at_monotonic)
+
+    @pytest.mark.parametrize(("gc_task", "is_started"), [(None, False), (object(), True)])
+    def test_is_started(self, gc_task, is_started):
+        with ratelimits.RESTBucketManager() as mgr:
+            mgr.gc_task = gc_task
+            assert mgr.is_started is is_started
 
 
 class TestExponentialBackOff:

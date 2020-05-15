@@ -45,7 +45,7 @@ class Entity(abc.ABC):
     """The client components that models may use for procedures."""
 
 
-class Snowflake(int, marshaller.Serializable):
+class Snowflake(int):
     """A concrete representation of a unique identifier for an object on Discord.
 
     This object can be treated as a regular `int` for most purposes.
@@ -80,10 +80,6 @@ class Snowflake(int, marshaller.Serializable):
     def increment(self) -> int:
         """Increment of Discord's system when this object was made."""
         return self & 0xFFF
-
-    def serialize(self) -> str:
-        """Generate a JSON-friendly representation of this object."""
-        return str(self)
 
     @classmethod
     def from_datetime(cls, date: datetime.datetime) -> Snowflake:

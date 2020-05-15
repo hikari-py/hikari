@@ -361,10 +361,6 @@ def _rest_url_default() -> str:
     return urls.REST_API_URL
 
 
-def _cdn_url_default() -> str:
-    return urls.BASE_CDN_URL
-
-
 def _oauth2_url_default() -> str:
     return urls.OAUTH2_API_URL
 

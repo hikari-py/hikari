@@ -24,6 +24,21 @@ from hikari.internal import marshaller
 from tests.hikari import _helpers
 
 
+class TestDereferenceHandle:
+    def test_dereference_handle_module_only(self):
+        from concurrent import futures
+
+        assert marshaller.dereference_handle("concurrent.futures") is futures
+
+    def test_dereference_handle_module_and_attribute(self):
+        from hikari.net import codes
+
+        assert (
+            marshaller.dereference_handle("hikari.net.codes#GatewayCloseCode.AUTHENTICATION_FAILED")
+            is codes.GatewayCloseCode.AUTHENTICATION_FAILED
+        )
+
+
 class TestAttrib:
     def test_invokes_attrs(self):
         deserializer = lambda _: _

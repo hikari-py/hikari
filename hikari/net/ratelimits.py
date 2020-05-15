@@ -27,10 +27,10 @@ What is the theory behind this implementation?
 
 In this module, we refer to a `hikari.net.routes.CompiledRoute` as a definition
 of a route with specific major parameter values included (e.g.
-`POST /channels/123/messages`), and a `hikari.net.routes.RouteTemplate` as a
+`POST /channels/123/messages`), and a `hikari.net.routes.Route` as a
 definition of a route without specific parameter values included (e.g.
 `POST /channels/{channel_id}/messages`). We can compile a
-`hikari.net.routes.CompiledRoute` from a `hikari.net.routes.RouteTemplate`
+`hikari.net.routes.CompiledRoute` from a `hikari.net.routes.Route`
 by providing the corresponding parameters as kwargs, as you may already know.
 
 In this module, a "bucket" is an internal data structure that tracks and
@@ -73,7 +73,7 @@ Initially acquiring time on a bucket
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Each time you `BaseRateLimiter.acquire()` a request timeslice for a given
-`hikari.net.routes.RouteTemplate`, several things happen. The first is that we
+`hikari.net.routes.Route`, several things happen. The first is that we
 attempt to find the existing bucket for that route, if there is one, or get an
 unknown bucket otherwise. This is done by creating a real bucket hash from the
 compiled route. The initial hash is calculated using a lookup table that maps
@@ -667,8 +667,8 @@ class RESTBucketManager:
         "logger",
     )
 
-    routes_to_hashes: typing.Final[typing.MutableMapping[routes.RouteTemplate, str]]
-    """Maps route templates to their `X-RateLimit-Bucket` header being used."""
+    routes_to_hashes: typing.Final[typing.MutableMapping[routes.Route, str]]
+    """Maps routes to their `X-RateLimit-Bucket` header being used."""
 
     real_hashes_to_buckets: typing.Final[typing.MutableMapping[str, RESTBucket]]
     """Maps full bucket hashes (`X-RateLimit-Bucket` appended with a hash of
@@ -849,7 +849,7 @@ class RESTBucketManager:
         """
         # Returns a future to await on to wait to be allowed to send the request, and a
         # bucket hash to use to update rate limits later.
-        template = compiled_route.route_template
+        template = compiled_route.route
 
         if template in self.routes_to_hashes:
             bucket_hash = self.routes_to_hashes[template]
@@ -896,7 +896,7 @@ class RESTBucketManager:
         reset_at_header : datetime.datetime
             The `X-RateLimit-Reset` header value as a `datetime.datetime`.
         """
-        self.routes_to_hashes[compiled_route.route_template] = bucket_header
+        self.routes_to_hashes[compiled_route.route] = bucket_header
 
         real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
 

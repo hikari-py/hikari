@@ -38,7 +38,6 @@ __all__ = [
 
 import importlib
 import typing
-import weakref
 
 import attr
 
@@ -104,7 +103,7 @@ def dereference_handle(handle_string: str) -> typing.Any:
     for attr_name in attribute_names:
         obj = getattr(obj, attr_name)
 
-    return weakref.proxy(obj)
+    return obj
 
 
 def attrib(
@@ -161,14 +160,6 @@ def attrib(
     typing.Any
         The result of `attr.ib` internally being called with additional metadata.
     """
-    # Sphinx decides to be really awkward and inject the wrong default values
-    # by default. Not helpful when it documents non-optional shit as defaulting
-    # to None. Hack to fix this seems to be to turn on autodoc's
-    # typing.TYPE_CHECKING mode, and then if that is enabled, always return
-    # some dummy class that has a repr that returns a literal "..." string.
-    if typing.TYPE_CHECKING:
-        return type("Literal", (), {"__repr__": lambda *_: "..."})()
-
     metadata = kwargs.pop("metadata", {})
     metadata[_RAW_NAME_ATTR] = raw_name
     metadata[_SERIALIZER_ATTR] = serializer
