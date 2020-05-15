@@ -22,6 +22,7 @@ import datetime
 import email.utils
 import http
 import json
+import logging
 
 import aiohttp
 import mock
@@ -138,6 +139,7 @@ class TestRESTRequestJsonResponse:
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=global_ratelimiter))
         with stack:
             client = rest.REST(base_url="http://example.bloop.com", token="Bot blah.blah.blah")
+        client.logger = mock.MagicMock(spec_set=logging.Logger)
         client.json_deserialize = json.loads
         client.serialize = json.dumps
         client._perform_request = mock.AsyncMock(spec_set=client._perform_request, return_value=MockResponse(None))
@@ -376,6 +378,7 @@ class TestHandleRateLimitsForResponse:
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=global_ratelimiter))
         with stack:
             client = rest.REST(base_url="http://example.bloop.com", token="Bot blah.blah.blah")
+        client.logger = mock.MagicMock(spec_set=logging.Logger)
         return client
 
     @pytest.mark.parametrize("status", [200, 201, 202, 203, 204, 400, 401, 403, 404, 429, 500])
@@ -481,6 +484,7 @@ class TestRESTEndpoints:
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
         with stack:
             client = rest.REST(base_url="https://discord.com/api/v6", token="Bot blah.blah.blah")
+        client.logger = mock.MagicMock(spec_set=logging.Logger)
         client._request_json_response = mock.AsyncMock(return_value=...)
         client.client_session = mock.MagicMock(aiohttp.ClientSession, spec_set=True)
 
