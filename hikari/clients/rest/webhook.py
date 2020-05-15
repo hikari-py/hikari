@@ -239,7 +239,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         Raises
         ------
         hikari.errors.NotFound
-            If the channel ID or webhook ID is not found.
+            If the webhook ID is not found.
         hikari.errors.BadRequest
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
@@ -247,8 +247,6 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             or embeds are specified.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.Forbidden
-            If you lack permissions to send to this channel.
         hikari.errors.Unauthorized
             If you pass a token that's invalid for the target webhook.
         ValueError

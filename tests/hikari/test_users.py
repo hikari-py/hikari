@@ -19,8 +19,10 @@
 import mock
 import pytest
 
+from hikari import bases
 from hikari import users
 from hikari.clients import components
+from hikari.clients import rest
 from hikari.internal import urls
 
 
@@ -55,8 +57,8 @@ def test_oauth_user_payload():
 
 
 @pytest.fixture()
-def mock_components():
-    return mock.MagicMock(components.Components)
+def mock_components() -> components.Components:
+    return mock.MagicMock(components.Components, rest=mock.AsyncMock(rest.RESTClient))
 
 
 class TestUser:
@@ -71,9 +73,10 @@ class TestUser:
         assert user_obj.flags == users.UserFlag.VERIFIED_BOT_DEVELOPER
 
     @pytest.fixture()
-    def user_obj(self, test_user_payload):
+    def user_obj(self, test_user_payload, mock_components):
         return users.User(
-            id="115590097100865541",
+            components=mock_components,
+            id=bases.Snowflake(115590097100865541),
             username=None,
             avatar_hash="b3b24c6d7cbcdec129d5d537067061a8",
             discriminator="6127",
@@ -82,6 +85,13 @@ class TestUser:
             flags=None,
         )
 
+    @pytest.mark.asyncio
+    async def test_fetch_self(self, user_obj, mock_components):
+        mock_user = mock.MagicMock(users.User)
+        mock_components.rest.fetch_user.return_value = mock_user
+        assert await user_obj.fetch_self() is mock_user
+        mock_components.rest.fetch_user.assert_called_once_with(user=115590097100865541)
+
     def test_avatar_url(self, user_obj):
         mock_url = "https://cdn.discordapp.com/avatars/115590097100865541"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
@@ -89,8 +99,15 @@ class TestUser:
             urls.generate_cdn_url.assert_called_once()
         assert url == mock_url
 
-    def test_default_avatar(self, user_obj):
-        assert user_obj.default_avatar == 2
+    def test_default_avatar_index(self, user_obj):
+        assert user_obj.default_avatar_index == 2
+
+    def test_default_avatar_url(self, user_obj):
+        mock_url = "https://cdn.discordapp.com/embed/avatars/2.png"
+        with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
+            url = user_obj.default_avatar_url
+            urls.generate_cdn_url.assert_called_once_with("embed", "avatars", "2", format_="png", size=None)
+        assert url == mock_url
 
     def test_format_avatar_url_when_animated(self, user_obj):
         mock_url = "https://cdn.discordapp.com/avatars/115590097100865541/a_820d0e50543216e812ad94e6ab7.gif?size=3232"
@@ -107,7 +124,7 @@ class TestUser:
         mock_url = "https://cdn.discordapp.com/embed/avatars/2.png"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = user_obj.format_avatar_url(size=3232)
-            urls.generate_cdn_url("embed/avatars", "115590097100865541", format_="png", size=None)
+            urls.generate_cdn_url.assert_called_once_with("embed", "avatars", "2", format_="png", size=None)
         assert url == mock_url
 
     def test_format_avatar_url_when_format_specified(self, user_obj):
@@ -133,3 +150,26 @@ class TestMyUser:
         assert my_user_obj.email == "blahblah@blah.blah"
         assert my_user_obj.flags == users.UserFlag.DISCORD_PARTNER | users.UserFlag.DISCORD_EMPLOYEE
         assert my_user_obj.premium_type is users.PremiumType.NITRO_CLASSIC
+
+    @pytest.fixture()
+    def my_user_obj(self, mock_components):
+        return users.MyUser(
+            components=mock_components,
+            id=None,
+            username=None,
+            avatar_hash=None,
+            discriminator=None,
+            is_mfa_enabled=None,
+            locale=None,
+            is_verified=None,
+            email=None,
+            flags=None,
+            premium_type=None,
+        )
+
+    @pytest.mark.asyncio
+    async def test_fetch_me(self, my_user_obj, mock_components):
+        mock_user = mock.MagicMock(users.MyUser)
+        mock_components.rest.fetch_me.return_value = mock_user
+        assert await my_user_obj.fetch_self() is mock_user
+        mock_components.rest.fetch_me.assert_called_once()
