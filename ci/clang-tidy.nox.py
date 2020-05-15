@@ -31,9 +31,11 @@ def _clang_tidy(*args):
 
 @nox.session(reuse_venv=True)
 def clang_tidy_check(session: nox.Session) -> None:
+    """Check C and C++ sources match the correct format for this library."""
     _clang_tidy()
 
 
 @nox.session(reuse_venv=True)
 def clang_tidy_fix(session: nox.Session) -> None:
+    """Reformat C and C++ sources."""
     _clang_tidy("--fix")
