@@ -20,7 +20,6 @@
 
 from __future__ import annotations
 
-__all__ = ["Colour", "ColourCompatibleT"]
+__all__ = ["Colour"]
 
 from hikari.colors import Color as Colour
-from hikari.colors import ColorCompatibleT as ColourCompatibleT
