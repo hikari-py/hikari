@@ -23,6 +23,7 @@ from __future__ import annotations
 import inspect
 import os
 import platform
+
 import click
 
 from hikari import _about

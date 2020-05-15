@@ -325,6 +325,17 @@ class REST(http_client.HTTPClient):  # pylint: disable=too-many-public-methods, 
                     retry_after = float(body["retry_after"]) / 1_000
                     self.global_ratelimiter.throttle(retry_after)
 
+                    self.logger.warning(
+                        "you are being rate-limited globally - trying again after %ss", retry_after,
+                    )
+                else:
+                    self.logger.warning(
+                        "you are being rate-limited on bucket %s for route %s - trying again after %ss",
+                        bucket,
+                        compiled_route,
+                        reset,
+                    )
+
                 raise _RateLimited()
 
             # We might find out Cloudflare causes this scenario to occur.

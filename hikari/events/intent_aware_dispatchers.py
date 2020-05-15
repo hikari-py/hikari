@@ -29,10 +29,10 @@ import warnings
 from hikari import errors
 from hikari import intents
 from hikari.events import base
+from hikari.events import dispatchers
 from hikari.events import other
 from hikari.internal import more_asyncio
 from hikari.internal import more_collections
-from hikari.events import dispatchers
 
 if typing.TYPE_CHECKING:
     from hikari.internal import more_typing

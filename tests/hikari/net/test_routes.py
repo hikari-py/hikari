@@ -25,7 +25,7 @@ from hikari.net import routes
 class TestCompiledRoute:
     @pytest.fixture
     def template_route(self):
-        return routes.RouteTemplate("get", "/somewhere/{channel_id}")
+        return routes.Route("get", "/somewhere/{channel_id}")
 
     @pytest.fixture
     def compiled_route(self, template_route):
@@ -58,30 +58,54 @@ class TestCompiledRoute:
         )
 
     def test___eq___negative_hash(self):
-        template = mock.MagicMock()
-        assert routes.CompiledRoute(template, "/foo/bar", "1a2b3d") != routes.CompiledRoute(
-            template, "/foo/bar", "1a2b3c"
-        )
+        t = mock.MagicMock()
+        assert routes.CompiledRoute(t, "/foo/bar", "1a2b3d") != routes.CompiledRoute(t, "/foo/bar", "1a2b3c")
+
+    def test___hash___positive(self):
+        t = mock.MagicMock()
+        assert hash(routes.CompiledRoute(t, "/foo/bar", "1a2b3")) == hash(routes.CompiledRoute(t, "/foo/bar", "1a2b3"))
+
+    def test___hash___negative(self):
+        t = mock.MagicMock()
+        assert hash(routes.CompiledRoute(t, "/foo/bar", "1a2b3c")) != hash(routes.CompiledRoute(t, "/foo/bar", "1a2b3"))
 
 
-class TestRouteTemplate:
+class TestRoute:
     @pytest.fixture
-    def template_route(self):
-        return routes.RouteTemplate("post", "/somewhere/{channel_id}")
+    def route(self):
+        return routes.Route("post", "/somewhere/{channel_id}")
 
-    def test__init___without_major_params_uses_default_major_params(self, template_route):
-        assert template_route.major_param == "channel_id"
+    def test__init___without_major_params_uses_default_major_params(self, route):
+        assert route.major_param == "channel_id"
 
-    def test_compile(self, template_route):
-        expected_compiled_route = routes.CompiledRoute(template_route, "/somewhere/123", "123")
+    def test_compile(self, route):
+        expected_compiled_route = routes.CompiledRoute(route, "/somewhere/123", "123")
 
-        actual_compiled_route = template_route.compile(channel_id=123)
+        actual_compiled_route = route.compile(channel_id=123)
         assert actual_compiled_route == expected_compiled_route
 
-    def test__repr__(self, template_route):
-        expected_repr = "RouteTemplate(path_template='/somewhere/{channel_id}', major_param='channel_id')"
+    def test__repr__(self, route):
+        expected_repr = "Route(path_template='/somewhere/{channel_id}', major_param='channel_id')"
 
-        assert template_route.__repr__() == expected_repr
+        assert route.__repr__() == expected_repr
 
-    def test__str__(self, template_route):
-        assert str(template_route) == "/somewhere/{channel_id}"
+    def test__str__(self, route):
+        assert str(route) == "/somewhere/{channel_id}"
+
+    def test___eq__(self):
+        assert routes.Route("foo", "bar") == routes.Route("foo", "bar")
+
+    def test___ne___method(self):
+        assert routes.Route("foobar", "bar") != routes.Route("foo", "bar")
+
+    def test___ne___path(self):
+        assert routes.Route("foo", "barbaz") != routes.Route("foo", "bar")
+
+    def test___hash__when_equal(self):
+        assert hash(routes.Route("foo", "bar")) == hash(routes.Route("foo", "bar"))
+
+    def test___hash___when_path_differs(self):
+        assert hash(routes.Route("foo", "barbaz")) != hash(routes.Route("foo", "bar"))
+
+    def test___hash___when_method_differs(self):
+        assert hash(routes.Route("foobar", "baz")) != hash(routes.Route("foo", "baz"))

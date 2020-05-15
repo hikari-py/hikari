@@ -25,7 +25,6 @@ __all__ = [
     "EMPTY_SET",
     "EMPTY_COLLECTION",
     "EMPTY_DICT",
-    "EMPTY_GENERATOR_EXPRESSION",
     "WeakKeyDictionary",
 ]
 
@@ -42,7 +41,6 @@ EMPTY_SEQUENCE: typing.Final[typing.Sequence[_T]] = tuple()
 EMPTY_SET: typing.Final[typing.AbstractSet[_T]] = frozenset()
 EMPTY_COLLECTION: typing.Final[typing.Collection[_T]] = tuple()
 EMPTY_DICT: typing.Final[typing.Mapping[_K, _V]] = types.MappingProxyType({})
-EMPTY_GENERATOR_EXPRESSION: typing.Final[typing.Iterator[_T]] = (_ for _ in EMPTY_COLLECTION)
 
 
 class WeakKeyDictionary(typing.Generic[_K, _V], weakref.WeakKeyDictionary, typing.MutableMapping[_K, _V]):

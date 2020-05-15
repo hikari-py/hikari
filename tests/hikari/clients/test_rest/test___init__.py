@@ -19,6 +19,7 @@
 import inspect
 
 import mock
+import pytest
 
 from hikari.clients import components
 from hikari.clients import configs
@@ -27,8 +28,16 @@ from hikari.net import rest as low_level_rest
 
 
 class TestRESTClient:
-    def test_init(self):
-        mock_config = configs.RESTConfig(token="blah.blah.blah", trust_env=True)
+    @pytest.mark.parametrize(
+        ["token", "token_type", "expected_token"],
+        [
+            ("foobar.baz.bork", None, None),
+            ("foobar.baz.bork", "Bot", "Bot foobar.baz.bork"),
+            ("foobar.baz.bork", "Bearer", "Bearer foobar.baz.bork"),
+        ],
+    )
+    def test_init(self, token, token_type, expected_token):
+        mock_config = configs.RESTConfig(token=token, token_type=token_type, trust_env=True)
         mock_components = mock.MagicMock(components.Components, config=mock_config)
         mock_low_level_rest_clients = mock.MagicMock(low_level_rest.REST)
         with mock.patch.object(low_level_rest, "REST", return_value=mock_low_level_rest_clients) as patched_init:
@@ -43,7 +52,7 @@ class TestRESTClient:
                 ssl_context=mock_config.ssl_context,
                 verify_ssl=mock_config.verify_ssl,
                 timeout=mock_config.request_timeout,
-                token=f"{mock_config.token_type} {mock_config.token}",
+                token=expected_token,
                 trust_env=True,
                 version=mock_config.rest_version,
             )

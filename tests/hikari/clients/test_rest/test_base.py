@@ -25,23 +25,25 @@ from hikari.net import ratelimits
 from hikari.net import rest
 
 
-class TestBaseRESTComponent:
-    @pytest.fixture()
-    def low_level_rest_impl(self) -> rest.REST:
-        return mock.MagicMock(
-            rest.REST,
-            global_ratelimiter=mock.create_autospec(ratelimits.ManualRateLimiter, spec_set=True),
-            bucket_ratelimiters=mock.create_autospec(ratelimits.RESTBucketManager, spec_set=True),
-        )
+@pytest.fixture()
+def low_level_rest_impl() -> rest.REST:
+    return mock.MagicMock(
+        spec=rest.REST,
+        global_ratelimiter=mock.create_autospec(ratelimits.ManualRateLimiter, spec_set=True),
+        bucket_ratelimiters=mock.create_autospec(ratelimits.RESTBucketManager, spec_set=True),
+    )
 
-    @pytest.fixture()
-    def rest_clients_impl(self, low_level_rest_impl) -> base.BaseRESTComponent:
-        class RestClientImpl(base.BaseRESTComponent):
-            def __init__(self):
-                super().__init__(mock.MagicMock(components.Components), low_level_rest_impl)
 
-        return RestClientImpl()
+@pytest.fixture()
+def rest_clients_impl(low_level_rest_impl) -> base.BaseRESTComponent:
+    class RestClientImpl(base.BaseRESTComponent):
+        def __init__(self):
+            super().__init__(mock.MagicMock(components.Components), low_level_rest_impl)
 
+    return RestClientImpl()
+
+
+class TestBaseRESTComponentContextManager:
     @pytest.mark.asyncio
     async def test___aenter___and___aexit__(self, rest_clients_impl):
         rest_clients_impl.close = mock.AsyncMock()
@@ -49,6 +51,15 @@ class TestBaseRESTComponent:
             assert client is rest_clients_impl
         rest_clients_impl.close.assert_called_once_with()
 
+
+class TestBaseRESTComponentClose:
+    @pytest.mark.asyncio
+    async def test_close_delegates_to_low_level_rest_impl(self, rest_clients_impl):
+        await rest_clients_impl.close()
+        rest_clients_impl._session.close.assert_awaited_once_with()
+
+
+class TestBaseRESTComponentQueueSizeProperties:
     def test_global_ratelimit_queue_size(self, rest_clients_impl, low_level_rest_impl):
         low_level_rest_impl.global_ratelimiter.queue = [object() for _ in range(107)]
         assert rest_clients_impl.global_ratelimit_queue_size == 107

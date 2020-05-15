@@ -19,7 +19,7 @@
 """Model that represents a common RGB color and provides simple conversions to other common color systems."""
 from __future__ import annotations
 
-__all__ = ["Color", "ColorCompatibleT"]
+__all__ = ["Color"]
 
 import string
 import typing
@@ -157,8 +157,7 @@ class Color(int):
     @property
     def is_web_safe(self) -> bool:  # noqa: D401
         """`True` if the color is web safe, `False` otherwise."""
-        hex_code = self.raw_hex_code
-        return all(_all_same(*c) for c in (hex_code[:2], hex_code[2:4], hex_code[4:]))
+        return not (((self & 0xFF0000) % 0x110000) or ((self & 0xFF00) % 0x1100) or ((self & 0xFF) % 0x11))
 
     @classmethod
     def from_rgb(cls, red: int, green: int, blue: int) -> Color:
@@ -186,11 +185,11 @@ class Color(int):
             If red, green, or blue are outside the range [0x0, 0xFF].
         """
         if not 0 <= red <= 0xFF:
-            raise ValueError(f"red must be in the inclusive range of 0 and {0xFF}")
+            raise ValueError("red must be in the inclusive range of 0 and 255")
         if not 0 <= green <= 0xFF:
-            raise ValueError(f"green must be in the inclusive range of 0 and {0xFF}")
+            raise ValueError("green must be in the inclusive range of 0 and 255")
         if not 0 <= blue <= 0xFF:
-            raise ValueError(f"blue must be in the inclusive range of 0 and {0xFF}")
+            raise ValueError("blue must be in the inclusive range of 0 and 255")
         # noinspection PyTypeChecker
         return cls((red << 16) | (green << 8) | blue)
 
@@ -312,7 +311,18 @@ class Color(int):
         return Color(int.from_bytes(bytes_, byteorder, signed=signed))
 
     @classmethod
-    def of(cls, *values: ColorCompatibleT) -> Color:
+    def of(
+        cls,
+        *values: typing.Union[
+            Color,
+            typing.SupportsInt,
+            typing.Tuple[typing.SupportsInt, typing.SupportsInt, typing.SupportsInt],
+            typing.Tuple[typing.SupportsFloat, typing.SupportsFloat, typing.SupportsFloat],
+            typing.Sequence[typing.SupportsInt],
+            typing.Sequence[typing.SupportsFloat],
+            str,
+        ],
+    ) -> Color:
         """Convert the value to a `Color`.
 
         Parameters
@@ -371,23 +381,3 @@ class Color(int):
             The bytes representation of the Color.
         """
         return int(self).to_bytes(length, byteorder, signed=signed)
-
-
-def _all_same(first, *rest):
-    for r in rest:
-        if r != first:
-            return False
-
-    return True
-
-
-ColorCompatibleT = typing.Union[
-    Color,
-    typing.SupportsInt,
-    typing.Tuple[typing.SupportsInt, typing.SupportsInt, typing.SupportsInt],
-    typing.Tuple[typing.SupportsFloat, typing.SupportsFloat, typing.SupportsFloat],
-    typing.Sequence[typing.SupportsInt],
-    typing.Sequence[typing.SupportsFloat],
-    str,
-]
-"""Any type that can be converted into a color object."""
