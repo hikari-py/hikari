@@ -16,7 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import pytest
+
 from hikari import unset
+from tests.hikari import _helpers
 
 
 class TestUnset:
@@ -32,3 +35,14 @@ class TestUnset:
     def test_singleton_behaviour(self):
         assert unset.Unset() is unset.Unset()
         assert unset.UNSET is unset.Unset()
+
+    @_helpers.assert_raises(type_=TypeError)
+    def test_cannot_subclass(self):
+        class _(unset.Unset):
+            pass
+
+
+class TestIsUnset:
+    @pytest.mark.parametrize(["obj", "is_unset"], [(unset.UNSET, True), (object(), False),])
+    def test_is_unset(self, obj, is_unset):
+        assert unset.is_unset(obj) is is_unset
