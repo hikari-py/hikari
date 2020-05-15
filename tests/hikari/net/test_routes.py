@@ -25,7 +25,7 @@ from hikari.net import routes
 class TestCompiledRoute:
     @pytest.fixture
     def template_route(self):
-        return routes.RouteTemplate("get", "/somewhere/{channel_id}")
+        return routes.Route("get", "/somewhere/{channel_id}")
 
     @pytest.fixture
     def compiled_route(self, template_route):
@@ -67,7 +67,7 @@ class TestCompiledRoute:
 class TestRouteTemplate:
     @pytest.fixture
     def template_route(self):
-        return routes.RouteTemplate("post", "/somewhere/{channel_id}")
+        return routes.Route("post", "/somewhere/{channel_id}")
 
     def test__init___without_major_params_uses_default_major_params(self, template_route):
         assert template_route.major_param == "channel_id"
@@ -79,7 +79,7 @@ class TestRouteTemplate:
         assert actual_compiled_route == expected_compiled_route
 
     def test__repr__(self, template_route):
-        expected_repr = "RouteTemplate(path_template='/somewhere/{channel_id}', major_param='channel_id')"
+        expected_repr = "Route(path_template='/somewhere/{channel_id}', major_param='channel_id')"
 
         assert template_route.__repr__() == expected_repr
 
