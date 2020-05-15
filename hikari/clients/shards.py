@@ -382,6 +382,8 @@ class ShardClientImpl(ShardClient):
             if self._task is not None:
                 await self._task
 
+            self._shard_state = shard_states.ShardState.STOPPED
+
     async def _keep_alive(self):  # pylint: disable=too-many-branches
         back_off = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         last_start = time.perf_counter()
@@ -553,16 +555,3 @@ class ShardClientImpl(ShardClient):
             "game": activity.serialize() if activity is not None else None,
             "afk": is_afk,
         }
-
-    def __str__(self) -> str:
-        return f"Shard {self.shard_id} in pool of {self.shard_count} shards"
-
-    def __repr__(self) -> str:
-        return (
-            "ShardClient("
-            + ", ".join(
-                f"{k}={getattr(self, k)!r}"
-                for k in ("shard_id", "shard_count", "connection_state", "heartbeat_interval", "heartbeat_latency")
-            )
-            + ")"
-        )
