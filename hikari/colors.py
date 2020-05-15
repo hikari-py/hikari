@@ -185,11 +185,11 @@ class Color(int):
             If red, green, or blue are outside the range [0x0, 0xFF].
         """
         if not 0 <= red <= 0xFF:
-            raise ValueError(f"red must be in the inclusive range of 0 and {0xFF}")
+            raise ValueError("red must be in the inclusive range of 0 and 255")
         if not 0 <= green <= 0xFF:
-            raise ValueError(f"green must be in the inclusive range of 0 and {0xFF}")
+            raise ValueError("green must be in the inclusive range of 0 and 255")
         if not 0 <= blue <= 0xFF:
-            raise ValueError(f"blue must be in the inclusive range of 0 and {0xFF}")
+            raise ValueError("blue must be in the inclusive range of 0 and 255")
         # noinspection PyTypeChecker
         return cls((red << 16) | (green << 8) | blue)
 
