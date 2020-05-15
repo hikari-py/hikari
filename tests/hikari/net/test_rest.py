@@ -60,8 +60,8 @@ class MockResponse:
 @contextlib.contextmanager
 def mock_patch_route(real_route):
     compiled_route = mock.MagicMock(routes.CompiledRoute)
-    compile = mock.Mock(spec=routes.RouteTemplate.compile, spec_set=True, return_value=compiled_route)
-    route_template = mock.MagicMock(spec_set=routes.RouteTemplate, compile=compile)
+    compile = mock.Mock(spec=routes.Route.compile, spec_set=True, return_value=compiled_route)
+    route_template = mock.MagicMock(spec_set=routes.Route, compile=compile)
     with mock.patch.object(routes, real_route, new=route_template):
         yield route_template, compiled_route
 
@@ -113,7 +113,7 @@ class TestRESTClose:
 
 @pytest.fixture
 def compiled_route():
-    template = routes.RouteTemplate("POST", "/foo/{bar}/baz")
+    template = routes.Route("POST", "/foo/{bar}/baz")
     return routes.CompiledRoute(template, "/foo/bar/baz", "1a2a3b4b5c6d")
 
 

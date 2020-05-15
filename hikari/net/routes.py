@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["CompiledRoute", "RouteTemplate"]
+__all__ = ["CompiledRoute", "Route"]
 
 import re
 import typing
@@ -34,18 +34,18 @@ class CompiledRoute:
 
     Parameters
     ----------
-    route_template : RouteTemplate
-        The route template used to make this route.
+    route : Route
+        The route used to make this compiled route.
     path : str
         The path with any major parameters interpolated in.
     major_params_hash : str
         The part of the hash identifier to use for the compiled set of major parameters.
     """
 
-    __slots__ = ("route_template", "major_param_hash", "compiled_path", "hash_code")
+    __slots__ = ("route", "major_param_hash", "compiled_path", "hash_code")
 
-    route_template: typing.Final[RouteTemplate]
-    """The route template this compiled route was created from."""
+    route: typing.Final[Route]
+    """The route this compiled route was created from."""
 
     major_param_hash: typing.Final[str]
     """The major parameters in a bucket hash-compatible representation."""
@@ -56,16 +56,16 @@ class CompiledRoute:
     hash_code: typing.Final[int]
     """The hash code."""
 
-    def __init__(self, route_template: RouteTemplate, path: str, major_params_hash: str) -> None:
-        self.route_template = route_template
+    def __init__(self, route: Route, path: str, major_params_hash: str) -> None:
+        self.route = route
         self.major_param_hash = major_params_hash
         self.compiled_path = path
-        self.hash_code = hash((self.method, self.route_template.path_template, major_params_hash))
+        self.hash_code = hash((self.method, self.route.path_template, major_params_hash))
 
     @property
     def method(self) -> str:
         """Return the HTTP method of this compiled route."""
-        return self.route_template.method
+        return self.route.method
 
     def create_url(self, base_url: str) -> str:
         """Create the full URL with which you can make a request.
@@ -108,7 +108,7 @@ class CompiledRoute:
     def __eq__(self, other) -> bool:
         return (
             isinstance(other, CompiledRoute)
-            and self.route_template == other.route_template
+            and self.route == other.route
             and self.major_param_hash == other.major_param_hash
             and self.compiled_path == other.compiled_path
             and self.hash_code == other.hash_code
@@ -129,7 +129,7 @@ class CompiledRoute:
         return f"{self.method} {self.compiled_path}"
 
 
-class RouteTemplate:
+class Route:
     """A template used to create compiled routes for specific parameters.
 
     These compiled routes are used to identify rate limit buckets. Compiled
@@ -143,6 +143,7 @@ class RouteTemplate:
         The template string for the path to use.
     """
 
+    # noinspection RegExpRedundantEscape
     _MAJOR_PARAM_REGEX = re.compile(r"\{(.*?)\}")
 
     __slots__ = ("method", "path_template", "major_param", "hash_code")
@@ -171,7 +172,7 @@ class RouteTemplate:
         self.hash_code = hash((self.method, self.path_template))
 
     def compile(self, **kwargs: typing.Any) -> CompiledRoute:
-        """Generate a formatted `CompiledRoute` for this route template.
+        """Generate a formatted `CompiledRoute` for this route.
 
         This takes into account any URL parameters that have been passed.
 
@@ -202,7 +203,7 @@ class RouteTemplate:
 
     def __eq__(self, other) -> bool:
         return (
-            isinstance(other, RouteTemplate)
+            isinstance(other, Route)
             and self.method == other.method
             and self.major_param == other.major_param
             and self.path_template == other.path_template
@@ -217,153 +218,153 @@ PUT = "PUT"
 POST = "POST"
 
 # Channels
-GET_CHANNEL = RouteTemplate(GET, "/channels/{channel_id}")
-PATCH_CHANNEL = RouteTemplate(PATCH, "/channels/{channel_id}")
-DELETE_CHANNEL = RouteTemplate(DELETE, "/channels/{channel_id}")
+GET_CHANNEL = Route(GET, "/channels/{channel_id}")
+PATCH_CHANNEL = Route(PATCH, "/channels/{channel_id}")
+DELETE_CHANNEL = Route(DELETE, "/channels/{channel_id}")
 
-GET_CHANNEL_INVITES = RouteTemplate(GET, "/channels/{channel_id}/invites")
-POST_CHANNEL_INVITES = RouteTemplate(POST, "/channels/{channel_id}/invites")
+GET_CHANNEL_INVITES = Route(GET, "/channels/{channel_id}/invites")
+POST_CHANNEL_INVITES = Route(POST, "/channels/{channel_id}/invites")
 
-GET_CHANNEL_MESSAGE = RouteTemplate(GET, "/channels/{channel_id}/messages/{message_id}")
-PATCH_CHANNEL_MESSAGE = RouteTemplate(PATCH, "/channels/{channel_id}/messages/{message_id}")
-DELETE_CHANNEL_MESSAGE = RouteTemplate(DELETE, "/channels/{channel_id}/messages/{message_id}")
+GET_CHANNEL_MESSAGE = Route(GET, "/channels/{channel_id}/messages/{message_id}")
+PATCH_CHANNEL_MESSAGE = Route(PATCH, "/channels/{channel_id}/messages/{message_id}")
+DELETE_CHANNEL_MESSAGE = Route(DELETE, "/channels/{channel_id}/messages/{message_id}")
 
-GET_CHANNEL_MESSAGES = RouteTemplate(GET, "/channels/{channel_id}/messages")
-POST_CHANNEL_MESSAGES = RouteTemplate(POST, "/channels/{channel_id}/messages")
+GET_CHANNEL_MESSAGES = Route(GET, "/channels/{channel_id}/messages")
+POST_CHANNEL_MESSAGES = Route(POST, "/channels/{channel_id}/messages")
 
-POST_DELETE_CHANNEL_MESSAGES_BULK = RouteTemplate(POST, "/channels/{channel_id}/messages/bulk-delete")
+POST_DELETE_CHANNEL_MESSAGES_BULK = Route(POST, "/channels/{channel_id}/messages/bulk-delete")
 
-PATCH_CHANNEL_PERMISSIONS = RouteTemplate(PATCH, "/channels/{channel_id}/permissions/{overwrite_id}")
-DELETE_CHANNEL_PERMISSIONS = RouteTemplate(DELETE, "/channels/{channel_id}/permissions/{overwrite_id}")
+PATCH_CHANNEL_PERMISSIONS = Route(PATCH, "/channels/{channel_id}/permissions/{overwrite_id}")
+DELETE_CHANNEL_PERMISSIONS = Route(DELETE, "/channels/{channel_id}/permissions/{overwrite_id}")
 
-DELETE_CHANNEL_PIN = RouteTemplate(DELETE, "/channels/{channel_id}/pins/{message_id}")
+DELETE_CHANNEL_PIN = Route(DELETE, "/channels/{channel_id}/pins/{message_id}")
 
-GET_CHANNEL_PINS = RouteTemplate(GET, "/channels/{channel_id}/pins")
-PUT_CHANNEL_PINS = RouteTemplate(PUT, "/channels/{channel_id}/pins/{message_id}")
+GET_CHANNEL_PINS = Route(GET, "/channels/{channel_id}/pins")
+PUT_CHANNEL_PINS = Route(PUT, "/channels/{channel_id}/pins/{message_id}")
 
-POST_CHANNEL_TYPING = RouteTemplate(POST, "/channels/{channel_id}/typing")
+POST_CHANNEL_TYPING = Route(POST, "/channels/{channel_id}/typing")
 
-POST_CHANNEL_WEBHOOKS = RouteTemplate(POST, "/channels/{channel_id}/webhooks")
-GET_CHANNEL_WEBHOOKS = RouteTemplate(GET, "/channels/{channel_id}/webhooks")
+POST_CHANNEL_WEBHOOKS = Route(POST, "/channels/{channel_id}/webhooks")
+GET_CHANNEL_WEBHOOKS = Route(GET, "/channels/{channel_id}/webhooks")
 
 # Reactions
-DELETE_ALL_REACTIONS = RouteTemplate(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions")
+DELETE_ALL_REACTIONS = Route(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions")
 
-DELETE_REACTION_EMOJI = RouteTemplate(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}")
-DELETE_REACTION_USER = RouteTemplate(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{used_id}")
-GET_REACTIONS = RouteTemplate(GET, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}")
+DELETE_REACTION_EMOJI = Route(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}")
+DELETE_REACTION_USER = Route(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{used_id}")
+GET_REACTIONS = Route(GET, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}")
 
 # Guilds
-GET_GUILD = RouteTemplate(GET, "/guilds/{guild_id}")
-PATCH_GUILD = RouteTemplate(PATCH, "/guilds/{guild_id}")
-DELETE_GUILD = RouteTemplate(DELETE, "/guilds/{guild_id}")
+GET_GUILD = Route(GET, "/guilds/{guild_id}")
+PATCH_GUILD = Route(PATCH, "/guilds/{guild_id}")
+DELETE_GUILD = Route(DELETE, "/guilds/{guild_id}")
 
-POST_GUILDS = RouteTemplate(POST, "/guilds")
+POST_GUILDS = Route(POST, "/guilds")
 
-GET_GUILD_AUDIT_LOGS = RouteTemplate(GET, "/guilds/{guild_id}/audit-logs")
+GET_GUILD_AUDIT_LOGS = Route(GET, "/guilds/{guild_id}/audit-logs")
 
-GET_GUILD_BAN = RouteTemplate(GET, "/guilds/{guild_id}/bans/{user_id}")
-PUT_GUILD_BAN = RouteTemplate(PUT, "/guilds/{guild_id}/bans/{user_id}")
-DELETE_GUILD_BAN = RouteTemplate(DELETE, "/guilds/{guild_id}/bans/{user_id}")
+GET_GUILD_BAN = Route(GET, "/guilds/{guild_id}/bans/{user_id}")
+PUT_GUILD_BAN = Route(PUT, "/guilds/{guild_id}/bans/{user_id}")
+DELETE_GUILD_BAN = Route(DELETE, "/guilds/{guild_id}/bans/{user_id}")
 
-GET_GUILD_BANS = RouteTemplate(GET, "/guilds/{guild_id}/bans")
+GET_GUILD_BANS = Route(GET, "/guilds/{guild_id}/bans")
 
-GET_GUILD_CHANNELS = RouteTemplate(GET, "/guilds/{guild_id}/channels")
-POST_GUILD_CHANNELS = RouteTemplate(POST, "/guilds/{guild_id}/channels")
-PATCH_GUILD_CHANNELS = RouteTemplate(PATCH, "/guilds/{guild_id}/channels")
+GET_GUILD_CHANNELS = Route(GET, "/guilds/{guild_id}/channels")
+POST_GUILD_CHANNELS = Route(POST, "/guilds/{guild_id}/channels")
+PATCH_GUILD_CHANNELS = Route(PATCH, "/guilds/{guild_id}/channels")
 
-GET_GUILD_EMBED = RouteTemplate(GET, "/guilds/{guild_id}/embed")
-PATCH_GUILD_EMBED = RouteTemplate(PATCH, "/guilds/{guild_id}/embed")
+GET_GUILD_EMBED = Route(GET, "/guilds/{guild_id}/embed")
+PATCH_GUILD_EMBED = Route(PATCH, "/guilds/{guild_id}/embed")
 
-GET_GUILD_EMOJI = RouteTemplate(GET, "/guilds/{guild_id}/emojis/{emoji_id}")
-PATCH_GUILD_EMOJI = RouteTemplate(PATCH, "/guilds/{guild_id}/emojis/{emoji_id}")
-DELETE_GUILD_EMOJI = RouteTemplate(DELETE, "/guilds/{guild_id}/emojis/{emoji_id}")
+GET_GUILD_EMOJI = Route(GET, "/guilds/{guild_id}/emojis/{emoji_id}")
+PATCH_GUILD_EMOJI = Route(PATCH, "/guilds/{guild_id}/emojis/{emoji_id}")
+DELETE_GUILD_EMOJI = Route(DELETE, "/guilds/{guild_id}/emojis/{emoji_id}")
 
-GET_GUILD_EMOJIS = RouteTemplate(GET, "/guilds/{guild_id}/emojis")
-POST_GUILD_EMOJIS = RouteTemplate(POST, "/guilds/{guild_id}/emojis")
+GET_GUILD_EMOJIS = Route(GET, "/guilds/{guild_id}/emojis")
+POST_GUILD_EMOJIS = Route(POST, "/guilds/{guild_id}/emojis")
 
-PATCH_GUILD_INTEGRATION = RouteTemplate(PATCH, "/guilds/{guild_id}/integrations/{integration_id}")
-DELETE_GUILD_INTEGRATION = RouteTemplate(DELETE, "/guilds/{guild_id}/integrations/{integration_id}")
+PATCH_GUILD_INTEGRATION = Route(PATCH, "/guilds/{guild_id}/integrations/{integration_id}")
+DELETE_GUILD_INTEGRATION = Route(DELETE, "/guilds/{guild_id}/integrations/{integration_id}")
 
-GET_GUILD_INTEGRATIONS = RouteTemplate(GET, "/guilds/{guild_id}/integrations")
+GET_GUILD_INTEGRATIONS = Route(GET, "/guilds/{guild_id}/integrations")
 
-POST_GUILD_INTEGRATION_SYNC = RouteTemplate(POST, "/guilds/{guild_id}/integrations/{integration_id}")
+POST_GUILD_INTEGRATION_SYNC = Route(POST, "/guilds/{guild_id}/integrations/{integration_id}")
 
-GET_GUILD_INVITES = RouteTemplate(GET, "/guilds/{guild_id}/invites")
+GET_GUILD_INVITES = Route(GET, "/guilds/{guild_id}/invites")
 
-GET_GUILD_MEMBERS = RouteTemplate(GET, "/guilds/{guild_id}/members")
+GET_GUILD_MEMBERS = Route(GET, "/guilds/{guild_id}/members")
 
-GET_GUILD_MEMBER = RouteTemplate(GET, "/guilds/{guild_id}/members/{user_id}")
-PATCH_GUILD_MEMBER = RouteTemplate(PATCH, "/guilds/{guild_id}/members/{user_id}")
-DELETE_GUILD_MEMBER = RouteTemplate(DELETE, "/guilds/{guild_id}/members/{user_id}")
+GET_GUILD_MEMBER = Route(GET, "/guilds/{guild_id}/members/{user_id}")
+PATCH_GUILD_MEMBER = Route(PATCH, "/guilds/{guild_id}/members/{user_id}")
+DELETE_GUILD_MEMBER = Route(DELETE, "/guilds/{guild_id}/members/{user_id}")
 
-PUT_GUILD_MEMBER_ROLE = RouteTemplate(PUT, "/guilds/{guild_id}/members/{user_id}/roles/{role_id}")
-DELETE_GUILD_MEMBER_ROLE = RouteTemplate(DELETE, "/guilds/{guild_id}/members/{user_id}/roles/{role_id}")
+PUT_GUILD_MEMBER_ROLE = Route(PUT, "/guilds/{guild_id}/members/{user_id}/roles/{role_id}")
+DELETE_GUILD_MEMBER_ROLE = Route(DELETE, "/guilds/{guild_id}/members/{user_id}/roles/{role_id}")
 
-GET_GUILD_PREVIEW = RouteTemplate(GET, "/guilds/{guild_id}/preview")
+GET_GUILD_PREVIEW = Route(GET, "/guilds/{guild_id}/preview")
 
-GET_GUILD_PRUNE = RouteTemplate(GET, "/guilds/{guild_id}/prune")
-POST_GUILD_PRUNE = RouteTemplate(POST, "/guilds/{guild_id}/prune")
+GET_GUILD_PRUNE = Route(GET, "/guilds/{guild_id}/prune")
+POST_GUILD_PRUNE = Route(POST, "/guilds/{guild_id}/prune")
 
-PATCH_GUILD_ROLE = RouteTemplate(PATCH, "/guilds/{guild_id}/roles/{role_id}")
-DELETE_GUILD_ROLE = RouteTemplate(DELETE, "/guilds/{guild_id}/roles/{role_id}")
+PATCH_GUILD_ROLE = Route(PATCH, "/guilds/{guild_id}/roles/{role_id}")
+DELETE_GUILD_ROLE = Route(DELETE, "/guilds/{guild_id}/roles/{role_id}")
 
-GET_GUILD_ROLES = RouteTemplate(GET, "/guilds/{guild_id}/roles")
-POST_GUILD_ROLES = RouteTemplate(POST, "/guilds/{guild_id}/roles")
-PATCH_GUILD_ROLES = RouteTemplate(PATCH, "/guilds/{guild_id}/roles")
+GET_GUILD_ROLES = Route(GET, "/guilds/{guild_id}/roles")
+POST_GUILD_ROLES = Route(POST, "/guilds/{guild_id}/roles")
+PATCH_GUILD_ROLES = Route(PATCH, "/guilds/{guild_id}/roles")
 
-GET_GUILD_VANITY_URL = RouteTemplate(GET, "/guilds/{guild_id}/vanity-url")
+GET_GUILD_VANITY_URL = Route(GET, "/guilds/{guild_id}/vanity-url")
 
-GET_GUILD_VOICE_REGIONS = RouteTemplate(GET, "/guilds/{guild_id}/regions")
+GET_GUILD_VOICE_REGIONS = Route(GET, "/guilds/{guild_id}/regions")
 
-GET_GUILD_WEBHOOKS = RouteTemplate(GET, "/guilds/{guild_id}/webhooks")
+GET_GUILD_WEBHOOKS = Route(GET, "/guilds/{guild_id}/webhooks")
 
-GET_GUILD_WIDGET_IMAGE = RouteTemplate(GET, "/guilds/{guild_id}/widget.png")
+GET_GUILD_WIDGET_IMAGE = Route(GET, "/guilds/{guild_id}/widget.png")
 
 # Invites
-GET_INVITE = RouteTemplate(GET, "/invites/{invite_code}")
-DELETE_INVITE = RouteTemplate(DELETE, "/invites/{invite_code}")
+GET_INVITE = Route(GET, "/invites/{invite_code}")
+DELETE_INVITE = Route(DELETE, "/invites/{invite_code}")
 
 # Users
-GET_USER = RouteTemplate(GET, "/users/{user_id}")
+GET_USER = Route(GET, "/users/{user_id}")
 
 # @me
-DELETE_MY_GUILD = RouteTemplate(DELETE, "/users/@me/guilds/{guild_id}")
+DELETE_MY_GUILD = Route(DELETE, "/users/@me/guilds/{guild_id}")
 
-GET_MY_CONNECTIONS = RouteTemplate(GET, "/users/@me/connections")  # OAuth2 only
+GET_MY_CONNECTIONS = Route(GET, "/users/@me/connections")  # OAuth2 only
 
-POST_MY_CHANNELS = RouteTemplate(POST, "/users/@me/channels")
+POST_MY_CHANNELS = Route(POST, "/users/@me/channels")
 
-GET_MY_GUILDS = RouteTemplate(GET, "/users/@me/guilds")
+GET_MY_GUILDS = Route(GET, "/users/@me/guilds")
 
-PATCH_MY_GUILD_NICKNAME = RouteTemplate(PATCH, "/guilds/{guild_id}/members/@me/nick")
+PATCH_MY_GUILD_NICKNAME = Route(PATCH, "/guilds/{guild_id}/members/@me/nick")
 
-GET_MY_USER = RouteTemplate(GET, "/users/@me")
-PATCH_MY_USER = RouteTemplate(PATCH, "/users/@me")
+GET_MY_USER = Route(GET, "/users/@me")
+PATCH_MY_USER = Route(PATCH, "/users/@me")
 
-PUT_MY_REACTION = RouteTemplate(PUT, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me")
-DELETE_MY_REACTION = RouteTemplate(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me")
+PUT_MY_REACTION = Route(PUT, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me")
+DELETE_MY_REACTION = Route(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me")
 
 # Voice
-GET_VOICE_REGIONS = RouteTemplate(GET, "/voice/regions")
+GET_VOICE_REGIONS = Route(GET, "/voice/regions")
 
 # Webhooks
-GET_WEBHOOK = RouteTemplate(GET, "/webhooks/{webhook_id}")
-PATCH_WEBHOOK = RouteTemplate(PATCH, "/webhooks/{webhook_id}")
-POST_WEBHOOK = RouteTemplate(POST, "/webhooks/{webhook_id}")
-DELETE_WEBHOOK = RouteTemplate(DELETE, "/webhooks/{webhook_id}")
+GET_WEBHOOK = Route(GET, "/webhooks/{webhook_id}")
+PATCH_WEBHOOK = Route(PATCH, "/webhooks/{webhook_id}")
+POST_WEBHOOK = Route(POST, "/webhooks/{webhook_id}")
+DELETE_WEBHOOK = Route(DELETE, "/webhooks/{webhook_id}")
 
-GET_WEBHOOK_WITH_TOKEN = RouteTemplate(GET, "/webhooks/{webhook_id}/{webhook_token}")
-PATCH_WEBHOOK_WITH_TOKEN = RouteTemplate(PATCH, "/webhooks/{webhook_id}/{webhook_token}")
-DELETE_WEBHOOK_WITH_TOKEN = RouteTemplate(DELETE, "/webhooks/{webhook_id}/{webhook_token}")
-POST_WEBHOOK_WITH_TOKEN = RouteTemplate(POST, "/webhooks/{webhook_id}/{webhook_token}")
+GET_WEBHOOK_WITH_TOKEN = Route(GET, "/webhooks/{webhook_id}/{webhook_token}")
+PATCH_WEBHOOK_WITH_TOKEN = Route(PATCH, "/webhooks/{webhook_id}/{webhook_token}")
+DELETE_WEBHOOK_WITH_TOKEN = Route(DELETE, "/webhooks/{webhook_id}/{webhook_token}")
+POST_WEBHOOK_WITH_TOKEN = Route(POST, "/webhooks/{webhook_id}/{webhook_token}")
 
-POST_WEBHOOK_WITH_TOKEN_GITHUB = RouteTemplate(POST, "/webhooks/{webhook_id}/{webhook_token}/github")
-POST_WEBHOOK_WITH_TOKEN_SLACK = RouteTemplate(POST, "/webhooks/{webhook_id}/{webhook_token}/slack")
+POST_WEBHOOK_WITH_TOKEN_GITHUB = Route(POST, "/webhooks/{webhook_id}/{webhook_token}/github")
+POST_WEBHOOK_WITH_TOKEN_SLACK = Route(POST, "/webhooks/{webhook_id}/{webhook_token}/slack")
 
 # OAuth2 API
-GET_MY_APPLICATION = RouteTemplate(GET, "/oauth2/applications/@me")
+GET_MY_APPLICATION = Route(GET, "/oauth2/applications/@me")
 
 # Gateway
-GET_GATEWAY = RouteTemplate(GET, "/gateway")
-GET_GATEWAY_BOT = RouteTemplate(GET, "/gateway/bot")
+GET_GATEWAY = Route(GET, "/gateway")
+GET_GATEWAY_BOT = Route(GET, "/gateway/bot")
