@@ -20,6 +20,7 @@ import asyncio
 import datetime
 
 import aiohttp
+import async_timeout
 import mock
 import pytest
 
@@ -29,9 +30,10 @@ from hikari import guilds
 from hikari.clients import components
 from hikari.clients import configs
 from hikari.clients import shards as high_level_shards
+from hikari.events import consumers
+from hikari.internal import more_asyncio
 from hikari.net import codes
 from hikari.net import shards as low_level_shards
-from hikari.events import consumers
 from tests.hikari import _helpers
 
 
@@ -109,6 +111,16 @@ class TestShardClientImpl:
 
 
 class TestShardClientImplDelegateProperties:
+    def test_shard_id(self, shard_client_obj):
+        marker = object()
+        shard_client_obj._connection.shard_id = marker
+        assert shard_client_obj.shard_id is marker
+
+    def test_shard_count(self, shard_client_obj):
+        marker = object()
+        shard_client_obj._connection.shard_count = marker
+        assert shard_client_obj.shard_count is marker
+
     def test_status(self, shard_client_obj):
         marker = object()
         shard_client_obj._status = marker
@@ -302,6 +314,27 @@ class TestShardClientImplStart:
 
         shard_client_obj._connection.close.assert_not_called()
 
+    @pytest.mark.asyncio
+    async def test_close_when_not_running_is_not_an_error(self, shard_client_obj):
+        shard_client_obj._shard_state = hikari.clients.shard_states.ShardState.NOT_RUNNING
+        shard_client_obj._task = None
+
+        await shard_client_obj.close()
+
+        shard_client_obj._connection.close.assert_called_once()
+
+    @_helpers.timeout_after(5)
+    @pytest.mark.asyncio
+    async def test__keep_alive_repeats_silently_if_task_returns(self, shard_client_obj):
+        shard_client_obj._spin_up = mock.AsyncMock(return_value=more_asyncio.completed_future())
+
+        try:
+            async with async_timeout.timeout(1):
+                await shard_client_obj._keep_alive()
+            assert False
+        except asyncio.TimeoutError:
+            assert shard_client_obj._spin_up.await_count > 0
+
     @_helpers.assert_raises(type_=RuntimeError)
     @pytest.mark.parametrize(
         "error",
@@ -315,6 +348,7 @@ class TestShardClientImplStart:
         ],
     )
     @pytest.mark.asyncio
+    @_helpers.timeout_after(5)
     async def test__keep_alive_handles_errors(self, error, shard_client_obj):
         should_return = False
 
@@ -332,6 +366,7 @@ class TestShardClientImplStart:
             await shard_client_obj._keep_alive()
 
     @pytest.mark.asyncio
+    @_helpers.timeout_after(5)
     async def test__keep_alive_shuts_down_when_GatewayClientClosedError(self, shard_client_obj):
         shard_client_obj._spin_up = mock.AsyncMock(
             return_value=_helpers.AwaitableMock(return_value=errors.GatewayClientClosedError)
@@ -354,6 +389,7 @@ class TestShardClientImplStart:
         ],
     )
     @pytest.mark.asyncio
+    @_helpers.timeout_after(5)
     async def test__keep_alive_shuts_down_when_GatewayServerClosedConnectionError(self, code, shard_client_obj):
         shard_client_obj._spin_up = mock.AsyncMock(
             return_value=_helpers.AwaitableMock(return_value=errors.GatewayServerClosedConnectionError(code))
@@ -364,6 +400,7 @@ class TestShardClientImplStart:
 
     @_helpers.assert_raises(type_=RuntimeError)
     @pytest.mark.asyncio
+    @_helpers.timeout_after(5)
     async def test__keep_alive_ignores_when_GatewayServerClosedConnectionError_with_other_code(self, shard_client_obj):
         should_return = False
 
