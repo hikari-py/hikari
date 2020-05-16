@@ -30,8 +30,6 @@ __all__ = [
     "TypingStartEvent",
     "InviteCreateEvent",
     "InviteDeleteEvent",
-    "VoiceStateUpdateEvent",
-    "VoiceServerUpdateEvent",
 ]
 
 import abc
@@ -46,7 +44,6 @@ from hikari import guilds
 from hikari import intents
 from hikari import invites
 from hikari import users
-from hikari import voices
 from hikari.events import base as base_events
 from hikari.internal import conversions
 from hikari.internal import marshaller
@@ -361,32 +358,3 @@ class InviteDeleteEvent(base_events.HikariEvent, marshaller.Deserializable):
 
     This will be `None` if this invite belonged to a DM channel.
     """
-
-
-@base_events.requires_intents(intents.Intent.GUILD_VOICE_STATES)
-@marshaller.marshallable()
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class VoiceStateUpdateEvent(base_events.HikariEvent, voices.VoiceState):
-    """Used to represent voice state update gateway events.
-
-    Sent when a user joins, leaves or moves voice channel(s).
-    """
-
-
-@marshaller.marshallable()
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class VoiceServerUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
-    """Used to represent voice server update gateway events.
-
-    Sent when initially connecting to voice and when the current voice instance
-    falls over to a new server.
-    """
-
-    token: str = marshaller.attrib(deserializer=str)
-    """The voice connection's string token."""
-
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake, repr=True)
-    """The ID of the guild this voice server update is for."""
-
-    endpoint: str = marshaller.attrib(deserializer=str, repr=True)
-    """The uri for this voice server host."""

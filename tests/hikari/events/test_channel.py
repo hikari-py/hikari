@@ -276,20 +276,3 @@ class TestInviteDeleteEvent:
         assert invite_delete_obj.channel_id == 393939
         assert invite_delete_obj.code == "blahblahblah"
         assert invite_delete_obj.guild_id == 3834833
-
-
-# Doesn't declare any new fields.
-class TestVoiceStateUpdateEvent:
-    ...
-
-
-class TestVoiceServerUpdateEvent:
-    @pytest.fixture()
-    def test_voice_server_update_payload(self):
-        return {"token": "a_token", "guild_id": "303030300303", "endpoint": "smart.loyal.discord.gg"}
-
-    def test_deserialize(self, test_voice_server_update_payload):
-        voice_server_update_obj = channel.VoiceServerUpdateEvent.deserialize(test_voice_server_update_payload)
-        assert voice_server_update_obj.token == "a_token"
-        assert voice_server_update_obj.guild_id == 303030300303
-        assert voice_server_update_obj.endpoint == "smart.loyal.discord.gg"
