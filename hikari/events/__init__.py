@@ -25,11 +25,13 @@ from hikari.events import channel
 from hikari.events import guild
 from hikari.events import message
 from hikari.events import other
+from hikari.events import voice
 from hikari.events.base import *
 from hikari.events.channel import *
 from hikari.events.guild import *
 from hikari.events.message import *
 from hikari.events.other import *
+from hikari.events.voice import *
 
 __all__ = [
     *base.__all__,
@@ -37,4 +39,5 @@ __all__ = [
     *guild.__all__,
     *message.__all__,
     *other.__all__,
+    *voice.__all__,
 ]

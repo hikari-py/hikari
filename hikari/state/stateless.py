@@ -31,6 +31,9 @@ from hikari.events import other
 
 
 # pylint: disable=too-many-public-methods
+from hikari.events import voice
+
+
 class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDispatcher]):
     """Stateless event manager implementation for stateless bots.
 
@@ -257,13 +260,13 @@ class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDis
     @event_managers.raw_event_mapper("VOICE_STATE_UPDATE")
     async def on_voice_state_update(self, _, payload) -> None:
         """Handle VOICE_STATE_UPDATE events."""
-        event = channel.VoiceStateUpdateEvent.deserialize(payload, components=self._components)
+        event = voice.VoiceStateUpdateEvent.deserialize(payload, components=self._components)
         await self._components.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("VOICE_SERVER_UPDATE")
     async def on_voice_server_update(self, _, payload) -> None:
         """Handle VOICE_SERVER_UPDATE events."""
-        event = channel.VoiceStateUpdateEvent.deserialize(payload, components=self._components)
+        event = voice.VoiceServerUpdateEvent.deserialize(payload, components=self._components)
         await self._components.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("WEBHOOK_UPDATE")
