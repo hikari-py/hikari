@@ -16,31 +16,18 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Pylint support."""
-import traceback
-from ci import config
-from ci import nox
+import pytest
 
-FLAGS = [
-    "pylint",
-    config.MAIN_PACKAGE,
-    "--rcfile",
-    config.PYLINT_INI
-]
-
-SUCCESS_CODES = list(range(0, 256))
+from hikari.events import voice
 
 
-@nox.session(default=True, reuse_venv=True)
-def pylint(session: nox.Session) -> None:
-    """Run pylint against the code base and report any code smells or issues."""
+class TestVoiceServerUpdateEvent:
+    @pytest.fixture()
+    def test_voice_server_update_payload(self):
+        return {"token": "a_token", "guild_id": "303030300303", "endpoint": "smart.loyal.discord.gg"}
 
-    session.install(
-        "-r", config.REQUIREMENTS, "-r", config.DEV_REQUIREMENTS,
-    )
-
-    try:
-        print("generating plaintext report")
-        session.run(*FLAGS, *session.posargs, success_codes=SUCCESS_CODES)
-    except Exception:
-        traceback.print_exc()
+    def test_deserialize(self, test_voice_server_update_payload):
+        voice_server_update_obj = voice.VoiceServerUpdateEvent.deserialize(test_voice_server_update_payload)
+        assert voice_server_update_obj.token == "a_token"
+        assert voice_server_update_obj.guild_id == 303030300303
+        assert voice_server_update_obj.endpoint == "smart.loyal.discord.gg"
