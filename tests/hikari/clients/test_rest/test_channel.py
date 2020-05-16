@@ -24,19 +24,19 @@ import attr
 import mock
 import pytest
 
-from hikari import bases
-from hikari import channels
-from hikari import embeds
-from hikari import files
-from hikari import guilds
-from hikari import invites
-from hikari import messages
-from hikari import users
-from hikari import webhooks
-from hikari.clients import components
-from hikari.clients.rest import channel
+from hikari.models import bases
+from hikari.models import channels
+from hikari.models import embeds
+from hikari.models import files
+from hikari.models import guilds
+from hikari.models import invites
+from hikari.models import messages
+from hikari.models import users
+from hikari.models import webhooks
+from hikari.components import application
+from hikari.rest import channel
 from hikari.internal import helpers
-from hikari.net import rest
+from hikari.rest import session
 from tests.hikari import _helpers
 
 
@@ -44,11 +44,11 @@ from tests.hikari import _helpers
 class TestMessagePaginator:
     @pytest.fixture
     def mock_session(self):
-        return mock.MagicMock(spec_set=rest.REST)
+        return mock.MagicMock(spec_set=session.RESTSession)
 
     @pytest.fixture
     def mock_components(self):
-        return mock.MagicMock(spec_set=components.Components)
+        return mock.MagicMock(spec_set=application.Application)
 
     @pytest.fixture
     def message_cls(self):
@@ -182,8 +182,8 @@ class TestMessagePaginator:
 class TestRESTChannel:
     @pytest.fixture()
     def rest_channel_logic_impl(self):
-        mock_components = mock.MagicMock(components.Components)
-        mock_low_level_restful_client = mock.MagicMock(rest.REST)
+        mock_components = mock.MagicMock(application.Application)
+        mock_low_level_restful_client = mock.MagicMock(session.RESTSession)
 
         class RESTChannelLogicImpl(channel.RESTChannelComponent):
             def __init__(self):

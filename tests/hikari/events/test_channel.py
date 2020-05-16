@@ -22,10 +22,7 @@ import datetime
 import mock
 import pytest
 
-from hikari import channels
-from hikari import guilds
-from hikari import invites
-from hikari import users
+from hikari.models import guilds, users, channels, invites
 from hikari.events import channel
 from hikari.internal import conversions
 from tests.hikari import _helpers

@@ -27,8 +27,8 @@ import aiohttp
 import mock
 import pytest
 
+from hikari.models import files
 from hikari import errors
-from hikari import files
 from tests.hikari import _helpers
 
 

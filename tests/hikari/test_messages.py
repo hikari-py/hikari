@@ -22,16 +22,8 @@ import datetime
 import mock
 import pytest
 
-from hikari import applications
-from hikari import bases
-from hikari import channels
-from hikari import embeds
-from hikari import emojis
-from hikari import files
-from hikari import guilds
-from hikari import messages
-from hikari import users
-from hikari.clients import components
+from hikari.models import embeds, messages, guilds, applications, users, channels, emojis, bases, files
+from hikari.components import application
 from hikari.internal import conversions
 from tests.hikari import _helpers
 
@@ -74,7 +66,7 @@ def test_application_payload():
     return {
         "id": "456",
         "name": "hikari",
-        "description": "The best app",
+        "description": "The best application",
         "icon": "2658b3029e775a931ffb49380073fa63",
         "cover_image": "58982a23790c4f22787b05d3be38a026",
     }
@@ -138,7 +130,7 @@ def test_message_payload(
 
 @pytest.fixture()
 def mock_components():
-    return mock.MagicMock(components.Components)
+    return mock.MagicMock(application.Application)
 
 
 class TestAttachment:
@@ -280,7 +272,7 @@ class TestMessage:
                 test_reaction_payload["emoji"], components=mock_components
             )
             assert message_obj.reactions == [messages.Reaction.deserialize(test_reaction_payload)]
-            assert message_obj.reactions[0]._components is mock_components
+            assert message_obj.reactions[0]._app is mock_components
             patched_application_deserializer.assert_called_once_with(
                 test_application_payload, components=mock_components
             )
@@ -303,23 +295,23 @@ class TestMessage:
         assert message_obj.role_mentions == {987}
         assert message_obj.channel_mentions == {456}
         assert message_obj.attachments == [messages.Attachment.deserialize(test_attachment_payload)]
-        assert message_obj.attachments[0]._components is mock_components
+        assert message_obj.attachments[0]._app is mock_components
         assert message_obj.embeds == [embeds.Embed.deserialize({})]
-        assert message_obj.embeds[0]._components is mock_components
+        assert message_obj.embeds[0]._app is mock_components
         assert message_obj.is_pinned is True
         assert message_obj.webhook_id == 1234
         assert message_obj.type == messages.MessageType.DEFAULT
         assert message_obj.activity == messages.MessageActivity.deserialize(test_message_activity_payload)
-        assert message_obj.activity._components is mock_components
+        assert message_obj.activity._app is mock_components
         assert message_obj.application == mock_app
         assert message_obj.message_reference == messages.MessageCrosspost.deserialize(test_message_crosspost_payload)
-        assert message_obj.message_reference._components is mock_components
+        assert message_obj.message_reference._app is mock_components
         assert message_obj.flags == messages.MessageFlag.IS_CROSSPOST
         assert message_obj.nonce == "171000788183678976"
 
     @pytest.fixture()
-    def components_impl(self) -> components.Components:
-        return mock.MagicMock(components.Components, rest=mock.AsyncMock())
+    def components_impl(self) -> application.Application:
+        return mock.MagicMock(application.Application, rest=mock.AsyncMock())
 
     @pytest.fixture()
     def message_obj(self, components_impl):

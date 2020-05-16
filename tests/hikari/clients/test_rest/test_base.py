@@ -19,16 +19,16 @@
 import mock
 import pytest
 
-from hikari.clients import components
-from hikari.clients.rest import base
-from hikari.net import ratelimits
-from hikari.net import rest
+from hikari.components import application
+from hikari.rest import base
+from hikari.internal import ratelimits
+from hikari.rest import session
 
 
 @pytest.fixture()
-def low_level_rest_impl() -> rest.REST:
+def low_level_rest_impl() -> session.RESTSession:
     return mock.MagicMock(
-        spec=rest.REST,
+        spec=session.RESTSession,
         global_ratelimiter=mock.create_autospec(ratelimits.ManualRateLimiter, spec_set=True),
         bucket_ratelimiters=mock.create_autospec(ratelimits.RESTBucketManager, spec_set=True),
     )
@@ -38,7 +38,7 @@ def low_level_rest_impl() -> rest.REST:
 def rest_clients_impl(low_level_rest_impl) -> base.BaseRESTComponent:
     class RestClientImpl(base.BaseRESTComponent):
         def __init__(self):
-            super().__init__(mock.MagicMock(components.Components), low_level_rest_impl)
+            super().__init__(mock.MagicMock(application.Application), low_level_rest_impl)
 
     return RestClientImpl()
 

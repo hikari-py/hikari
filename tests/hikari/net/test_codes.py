@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-from hikari.net import codes
+from hikari.internal import codes
 
 
 def test_str_GatewayCloseCode():

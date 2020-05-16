@@ -35,7 +35,7 @@ import async_timeout
 import mock
 import pytest
 
-from hikari import bases
+from hikari.models import bases
 from hikari.internal import marshaller
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ def purge_loop():
 
 def mock_methods_on(obj, except_=(), also_mock=()):
     # Mock any methods we don't care about. also_mock is a collection of attribute names that we can eval to access
-    # and mock specific components with a coroutine mock to mock other external components quickly :)
+    # and mock specific application with a coroutine mock to mock other external application quickly :)
     magics = ["__enter__", "__exit__", "__aenter__", "__aexit__", "__iter__", "__aiter__"]
 
     except_ = set(except_)

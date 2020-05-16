@@ -19,17 +19,15 @@
 import mock
 import pytest
 
-from hikari import applications
-from hikari import guilds
-from hikari import users
-from hikari.clients import components
+from hikari.models import guilds, applications, users
+from hikari.components import application
 from hikari.internal import urls
 from tests.hikari import _helpers
 
 
 @pytest.fixture()
 def mock_components():
-    return mock.MagicMock(components.Components)
+    return mock.MagicMock(application.Application)
 
 
 @pytest.fixture()
@@ -95,7 +93,7 @@ def application_information_payload(owner_payload, team_payload):
         "id": "209333111222",
         "name": "Dream Sweet in Sea Major",
         "icon": "iwiwiwiwiw",
-        "description": "I am an app",
+        "description": "I am an application",
         "rpc_origins": ["127.0.0.0"],
         "bot_public": True,
         "bot_require_code_grant": False,
@@ -214,13 +212,13 @@ class TestApplication:
             application_information_payload, components=mock_components
         )
         assert application_obj.team == applications.Team.deserialize(team_payload)
-        assert application_obj.team._components is mock_components
+        assert application_obj.team._app is mock_components
         assert application_obj.owner == applications.ApplicationOwner.deserialize(owner_payload)
-        assert application_obj.owner._components is mock_components
+        assert application_obj.owner._app is mock_components
         assert application_obj.id == 209333111222
         assert application_obj.name == "Dream Sweet in Sea Major"
         assert application_obj.icon_hash == "iwiwiwiwiw"
-        assert application_obj.description == "I am an app"
+        assert application_obj.description == "I am an application"
         assert application_obj.rpc_origins == {"127.0.0.0"}
         assert application_obj.is_bot_public is True
         assert application_obj.is_bot_code_grant_required is False
@@ -267,7 +265,9 @@ class TestApplication:
         mock_url = "https://cdn.discordapp.com/app-icons/22222/wosososoos.jpg?size=4"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = applications.Application.format_icon_url(mock_application, format_="jpg", size=4)
-            urls.generate_cdn_url.assert_called_once_with("app-icons", "22222", "wosososoos", format_="jpg", size=4)
+            urls.generate_cdn_url.assert_called_once_with(
+                "application-icons", "22222", "wosososoos", format_="jpg", size=4
+            )
         assert url == mock_url
 
     def test_format_icon_url_returns_none(self, mock_application):
@@ -289,7 +289,9 @@ class TestApplication:
         mock_url = "https://cdn.discordapp.com/app-assets/22222/wowowowowo.jpg?size=42"
         with mock.patch.object(urls, "generate_cdn_url", return_value=mock_url):
             url = applications.Application.format_cover_image_url(mock_application, format_="jpg", size=42)
-            urls.generate_cdn_url.assert_called_once_with("app-assets", "22222", "wowowowowo", format_="jpg", size=42)
+            urls.generate_cdn_url.assert_called_once_with(
+                "application-assets", "22222", "wowowowowo", format_="jpg", size=42
+            )
         assert url == mock_url
 
     def test_format_cover_image_url_returns_none(self, mock_application):

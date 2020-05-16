@@ -19,18 +19,15 @@
 import mock
 import pytest
 
-from hikari import bases
-from hikari import emojis
-from hikari import files
-from hikari import users
-from hikari.clients import components
+from hikari.models import users, emojis, bases, files
+from hikari.components import application
 from hikari.internal import urls
 from tests.hikari import _helpers
 
 
 @pytest.fixture()
 def mock_components():
-    return mock.MagicMock(components.Components)
+    return mock.MagicMock(application.Application)
 
 
 class TestEmoji:

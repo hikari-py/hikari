@@ -20,17 +20,17 @@
 import mock
 import pytest
 
-from hikari import gateway_entities
-from hikari.clients import components
-from hikari.clients.rest import gateway
-from hikari.net import rest
+from hikari.models import gateway
+from hikari.components import application
+from hikari.rest import gateway
+from hikari.rest import session
 
 
 class TestRESTReactionLogic:
     @pytest.fixture()
     def rest_gateway_logic_impl(self):
-        mock_components = mock.MagicMock(components.Components)
-        mock_low_level_restful_client = mock.MagicMock(rest.REST)
+        mock_components = mock.MagicMock(application.Application)
+        mock_low_level_restful_client = mock.MagicMock(session.RESTSession)
 
         class RESTGatewayLogicImpl(gateway.RESTGatewayComponent):
             def __init__(self):
@@ -48,11 +48,11 @@ class TestRESTReactionLogic:
     @pytest.mark.asyncio
     async def test_fetch_gateway_bot(self, rest_gateway_logic_impl):
         mock_payload = {"url": "wss://gateway.discord.gg/", "shards": 9, "session_start_limit": {}}
-        mock_gateway_bot_obj = mock.MagicMock(gateway_entities.GatewayBot)
+        mock_gateway_bot_obj = mock.MagicMock(gateway.GatewayBot)
         rest_gateway_logic_impl._session.get_gateway_bot.return_value = mock_payload
-        with mock.patch.object(gateway_entities.GatewayBot, "deserialize", return_value=mock_gateway_bot_obj):
+        with mock.patch.object(gateway.GatewayBot, "deserialize", return_value=mock_gateway_bot_obj):
             assert await rest_gateway_logic_impl.fetch_gateway_bot() is mock_gateway_bot_obj
             rest_gateway_logic_impl._session.get_gateway_bot.assert_called_once()
-            gateway_entities.GatewayBot.deserialize.assert_called_once_with(
+            gateway.GatewayBot.deserialize.assert_called_once_with(
                 mock_payload, components=rest_gateway_logic_impl._components
             )

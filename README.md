@@ -75,12 +75,12 @@ Most mainstream Python Discord APIs lack one or more of the following features. 
 implement each feature as part of the design, rather than an additional component. This enables you
 to utilize these components as a black box where necessary.
 
-- Low level REST API implementation.
+- Low level RESTSession API implementation.
 - Low level gateway websocket shard implementation.
 - Rate limiting that complies with the `X-RateLimit-Bucket` header __properly__.
 - Gateway websocket ratelimiting (prevents your websocket getting completely invalidated).
 - Intents.
-- Proxy support for websockets and REST API.
+- Proxy support for websockets and RESTSession API.
 - File IO that doesn't block you.
 - Fluent Pythonic API that does not limit your creativity.
 
@@ -94,8 +94,8 @@ to utilize these components as a black box where necessary.
   to the original format of information provided by Discord as possible ensures that minimal
   changes are required when a breaking API design is introduced. This reduces the amount of
   stuff you need to fix in your applications as a result.
-- REST only API functionality. Want to write a web dashboard? Feel free to just reuse the 
-  REST client components to achieve that!
+- RESTSession only API functionality. Want to write a web dashboard? Feel free to just reuse the 
+  RESTSession client components to achieve that!
   
 ### Stuff coming soon
 

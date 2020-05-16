@@ -27,8 +27,8 @@ import time
 import mock
 import pytest
 
-from hikari.net import ratelimits
-from hikari.net import routes
+from hikari.internal import ratelimits
+from hikari.rest import routes
 from tests.hikari import _helpers
 
 

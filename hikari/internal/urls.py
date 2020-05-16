@@ -32,7 +32,7 @@ BASE_CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
 """The URL for the CDN."""
 
 REST_API_URL: typing.Final[str] = "https://discord.com/api/v{0.version}"
-"""The URL for the REST API. This contains a version number parameter that
+"""The URL for the RESTSession API. This contains a version number parameter that
 should be interpolated.
 """
 

@@ -21,8 +21,7 @@ import contextlib
 import mock
 import pytest
 
-from hikari import guilds
-from hikari import users
+from hikari.models import guilds, users
 from hikari.events import other
 from tests.hikari import _helpers
 

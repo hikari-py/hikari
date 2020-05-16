@@ -18,8 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import pytest
 
-from hikari import colors
-from hikari import colours
+from hikari.models import colors, colours
 
 
 @pytest.mark.model

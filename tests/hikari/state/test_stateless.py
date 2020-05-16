@@ -19,14 +19,14 @@
 import mock
 import pytest
 
-from hikari.clients import components
-from hikari.clients import shards
+from hikari.components import application
+from hikari.gateway import client
 from hikari.events import channel
 from hikari.events import guild
 from hikari.events import message
 from hikari.events import other
 from hikari.events import voice
-from hikari.state import stateless
+from hikari.stateless import manager
 
 
 class TestStatelessEventManagerImpl:
@@ -39,13 +39,13 @@ class TestStatelessEventManagerImpl:
         class MockDispatcher:
             dispatch_event = mock.AsyncMock()
 
-        return stateless.StatelessEventManagerImpl(
-            components=mock.MagicMock(components.Components, event_dispatcher=MockDispatcher())
+        return manager.StatelessEventManagerImpl(
+            components=mock.MagicMock(application.Application, event_dispatcher=MockDispatcher())
         )
 
     @pytest.fixture
     def mock_shard(self):
-        return mock.MagicMock(shards.ShardClient)
+        return mock.MagicMock(client.GatewayClient)
 
     @pytest.mark.asyncio
     async def test_on_connect(self, event_manager_impl, mock_shard):

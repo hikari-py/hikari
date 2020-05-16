@@ -18,12 +18,12 @@
 # along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
 import mock
 
-from hikari.clients import components
-from hikari.clients import configs
-from hikari.clients import rest
-from hikari.clients import shards
-from hikari.events import dispatchers
-from hikari.events import event_managers
+from hikari.components import application
+from hikari import configs
+from hikari import rest
+from hikari.gateway import client
+from hikari.components import dispatchers
+from hikari.components import event_managers
 
 
 class TestComponents:
@@ -32,8 +32,8 @@ class TestComponents:
         mock_event_dispatcher = mock.MagicMock(dispatchers.EventDispatcher)
         mock_event_manager = mock.MagicMock(event_managers.EventManager)
         mock_rest = mock.MagicMock(rest.RESTClient)
-        mock_shards = mock.MagicMock(shards.ShardClient)
-        component = components.Components(
+        mock_shards = mock.MagicMock(client.GatewayClient)
+        component = application.Application(
             config=mock_config,
             event_manager=mock_event_manager,
             event_dispatcher=mock_event_dispatcher,

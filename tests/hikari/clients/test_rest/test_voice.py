@@ -19,17 +19,17 @@
 import mock
 import pytest
 
-from hikari import voices
-from hikari.clients import components
-from hikari.clients.rest import voice
-from hikari.net import rest
+from hikari.models import voices
+from hikari.components import application
+from hikari.rest import voice
+from hikari.rest import session
 
 
 class TestRESTUserLogic:
     @pytest.fixture()
     def rest_voice_logic_impl(self):
-        mock_components = mock.MagicMock(components.Components)
-        mock_low_level_restful_client = mock.MagicMock(rest.REST)
+        mock_components = mock.MagicMock(application.Application)
+        mock_low_level_restful_client = mock.MagicMock(session.RESTSession)
 
         class RESTVoiceLogicImpl(voice.RESTVoiceComponent):
             def __init__(self):

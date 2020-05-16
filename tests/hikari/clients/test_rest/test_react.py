@@ -22,14 +22,14 @@ import inspect
 import mock
 import pytest
 
-from hikari import bases
-from hikari import channels
-from hikari import emojis
-from hikari import messages
-from hikari import users
-from hikari.clients import components
-from hikari.clients.rest import react
-from hikari.net import rest
+from hikari.models import bases
+from hikari.models import channels
+from hikari.models import emojis
+from hikari.models import messages
+from hikari.models import users
+from hikari.components import application
+from hikari.rest import react
+from hikari.rest import session
 from tests.hikari import _helpers
 
 
@@ -45,11 +45,11 @@ from tests.hikari import _helpers
 class TestMemberPaginator:
     @pytest.fixture()
     def mock_session(self):
-        return mock.MagicMock(spec_set=rest.REST)
+        return mock.MagicMock(spec_set=session.RESTSession)
 
     @pytest.fixture()
     def mock_components(self):
-        return mock.MagicMock(spec_set=components.Components)
+        return mock.MagicMock(spec_set=application.Application)
 
     @pytest.fixture()
     def user_cls(self):
@@ -185,8 +185,8 @@ class TestMemberPaginator:
 class TestRESTReactionLogic:
     @pytest.fixture()
     def rest_reaction_logic_impl(self):
-        mock_components = mock.MagicMock(components.Components)
-        mock_low_level_restful_client = mock.MagicMock(rest.REST)
+        mock_components = mock.MagicMock(application.Application)
+        mock_low_level_restful_client = mock.MagicMock(session.RESTSession)
 
         class RESTReactionLogicImpl(react.RESTReactionComponent):
             def __init__(self):
@@ -236,7 +236,7 @@ class TestRESTReactionLogic:
     @_helpers.parametrize_valid_id_formats_for_models("message", 987654321, messages.Message)
     @pytest.mark.parametrize("emoji", [None, "blah:123", emojis.CustomEmoji(name="blah", id=123, is_animated=False)])
     async def test_delete_all_reactions(self, rest_reaction_logic_impl, channel, message, emoji):
-        rest_reaction_logic_impl._session = mock.MagicMock(spec_set=rest.REST)
+        rest_reaction_logic_impl._session = mock.MagicMock(spec_set=session.RESTSession)
         assert (
             await rest_reaction_logic_impl.remove_all_reactions(channel=channel, message=message, emoji=emoji) is None
         )
