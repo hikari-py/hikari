@@ -44,7 +44,7 @@ class RawEventConsumer(abc.ABC):
     """
 
     @abc.abstractmethod
-    def process_raw_event(
+    async def process_raw_event(
         self, shard_client_obj: shards.ShardClient, name: str, payload: typing.Mapping[str, str],
     ) -> None:
         """Consume a raw event that was received from a shard connection.

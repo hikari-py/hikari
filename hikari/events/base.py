@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Bases for components and entities that are used to describe Discord gateway events."""
+
 from __future__ import annotations
 
 __all__ = ["HikariEvent", "get_required_intents_for", "requires_intents", "no_catch", "is_no_catch_event"]

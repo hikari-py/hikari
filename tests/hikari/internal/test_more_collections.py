@@ -46,3 +46,29 @@ class TestWeakKeyDictionary:
         assert len([*d.keys()]) == 1
         assert value1 in d.values()
         assert value2 not in d.values()
+
+
+class TestWeakValueDictionary:
+    def test_is_weak(self):
+        class Key:
+            pass
+
+        class Value:
+            pass
+
+        d: more_collections.WeakValueDictionary[Key, Value] = more_collections.WeakValueDictionary()
+
+        key1 = Key()
+        key2 = Key()
+        value1 = Value()
+        value2 = Value()
+
+        d[key1] = value1
+        d[key2] = value2
+
+        assert key1 in d
+        assert key2 in d
+        del value2
+        assert len([*d.keys()]) == 1
+        assert key1 in d
+        assert key2 not in d

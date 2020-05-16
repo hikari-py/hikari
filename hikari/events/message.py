@@ -97,8 +97,6 @@ class MessageUpdateEvent(base_events.HikariEvent, base_entities.Unique, marshall
         alongside field nullability.
     """
 
-    # FIXME: the id here is called "id", but in MessageDeleteEvent it is "message_id"...
-
     channel_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake, repr=True)
     """The ID of the channel that the message was sent in."""
 

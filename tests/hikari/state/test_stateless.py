@@ -124,13 +124,13 @@ class TestStatelessEventManagerImpl:
             event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     @pytest.mark.asyncio
-    async def test_on_channel_pin_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(channel.ChannelPinUpdateEvent)
+    async def test_on_channel_pins_update(self, event_manager_impl, mock_payload):
+        mock_event = mock.MagicMock(channel.ChannelPinsUpdateEvent)
 
-        with mock.patch("hikari.events.channel.ChannelPinUpdateEvent.deserialize", return_value=mock_event) as event:
-            await event_manager_impl.on_channel_pin_update(None, mock_payload)
+        with mock.patch("hikari.events.channel.ChannelPinsUpdateEvent.deserialize", return_value=mock_event) as event:
+            await event_manager_impl.on_channel_pins_update(None, mock_payload)
 
-            assert event_manager_impl.on_channel_pin_update.___event_name___ == {"CHANNEL_PIN_UPDATE"}
+            assert event_manager_impl.on_channel_pins_update.___event_name___ == {"CHANNEL_PINS_UPDATE"}
             event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
             event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
@@ -462,13 +462,13 @@ class TestStatelessEventManagerImpl:
             event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 
     @pytest.mark.asyncio
-    async def test_on_user_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(other.UserUpdateEvent)
+    async def test_on_my_user_update(self, event_manager_impl, mock_payload):
+        mock_event = mock.MagicMock(other.MyUserUpdateEvent)
 
-        with mock.patch("hikari.events.other.UserUpdateEvent.deserialize", return_value=mock_event) as event:
-            await event_manager_impl.on_user_update(None, mock_payload)
+        with mock.patch("hikari.events.other.MyUserUpdateEvent.deserialize", return_value=mock_event) as event:
+            await event_manager_impl.on_my_user_update(None, mock_payload)
 
-            assert event_manager_impl.on_user_update.___event_name___ == {"USER_UPDATE"}
+            assert event_manager_impl.on_my_user_update.___event_name___ == {"USER_UPDATE"}
             event.assert_called_once_with(mock_payload, components=event_manager_impl._components)
             event_manager_impl._components.event_dispatcher.dispatch_event.assert_called_once_with(mock_event)
 

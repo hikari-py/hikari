@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Model that represents a common RGB color and provides simple conversions to other common color systems."""
+
 from __future__ import annotations
 
 __all__ = ["Color"]

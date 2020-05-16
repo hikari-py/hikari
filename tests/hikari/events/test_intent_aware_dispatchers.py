@@ -262,9 +262,9 @@ class TestDispatchEvent:
             return True
 
         intent_aware_dispatcher._waiters = {
-            Event1: {f1_1: truthy, f1_2: truthy, f1_3: truthy},
-            Event2: {f2_1: truthy, f2_2: truthy, f2_3: truthy},
-            Event3: {f3_1: truthy, f3_2: truthy, f3_3: truthy},
+            Event1: {f1_1: None, f1_2: truthy, f1_3: None},
+            Event2: {f2_1: truthy, f2_2: None, f2_3: truthy},
+            Event3: {f3_1: None, f3_2: None, f3_3: None},
         }
 
         inst = Event2()
@@ -307,9 +307,9 @@ class TestDispatchEvent:
             return True
 
         intent_aware_dispatcher._waiters = {
-            A: {a_future: truthy},
+            A: {a_future: None},
             B: {b_future: truthy},
-            C: {c_future: truthy},
+            C: {c_future: None},
             D: {d_future: truthy},
         }
 
