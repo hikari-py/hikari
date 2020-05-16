@@ -251,8 +251,8 @@ class BotBase(
         self,
         event_type: typing.Type[dispatchers.EventT],
         *,
-        timeout: typing.Optional[float],
-        predicate: dispatchers.PredicateT,
+        timeout: typing.Optional[float] = None,
+        predicate: typing.Optional[dispatchers.PredicateT] = None,
     ) -> more_typing.Future:
         return self.event_dispatcher.wait_for(event_type, timeout=timeout, predicate=predicate)
 

@@ -118,7 +118,7 @@ class TestChannelDeleteEvent:
     ...
 
 
-class TestChannelPinUpdateEvent:
+class TestChannelPinsUpdateEvent:
     @pytest.fixture()
     def test_chanel_pin_update_payload(self):
         return {
@@ -130,12 +130,12 @@ class TestChannelPinUpdateEvent:
     def test_deserialize(self, test_chanel_pin_update_payload):
         mock_timestamp = mock.MagicMock(datetime.datetime)
         with _helpers.patch_marshal_attr(
-            channel.ChannelPinUpdateEvent,
+            channel.ChannelPinsUpdateEvent,
             "last_pin_timestamp",
             deserializer=conversions.parse_iso_8601_ts,
             return_value=mock_timestamp,
         ) as patched_iso_parser:
-            channel_pin_add_obj = channel.ChannelPinUpdateEvent.deserialize(test_chanel_pin_update_payload)
+            channel_pin_add_obj = channel.ChannelPinsUpdateEvent.deserialize(test_chanel_pin_update_payload)
             patched_iso_parser.assert_called_once_with("2020-03-20T16:08:25.412000+00:00")
         assert channel_pin_add_obj.guild_id == 424242
         assert channel_pin_add_obj.channel_id == 29292929

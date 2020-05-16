@@ -1077,7 +1077,7 @@ def _deserialize_presences(
 
 @marshaller.marshallable()
 @attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class Guild(PartialGuild):
+class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     """A representation of a guild on Discord.
 
     !!! note
@@ -1259,7 +1259,7 @@ class Guild(PartialGuild):
     """Whether the guild is considered to be large or not.
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
-    event. If the guild is received from any other place, this will always b
+    event. If the guild is received from any other place, this will always be
     `None`.
 
     The implications of a large guild are that presence information will not be
@@ -1357,7 +1357,7 @@ class Guild(PartialGuild):
     )
     """The maximum number of users allowed in a video channel together.
 
-    If not available, this field will be `None`.
+    This information may not be present, in which case, it will be `None`.
     """
 
     vanity_url_code: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False)

@@ -58,3 +58,19 @@ class WeakKeyDictionary(typing.Generic[_K, _V], weakref.WeakKeyDictionary, typin
     """
 
     __slots__ = ()
+
+
+class WeakValueDictionary(typing.Generic[_K, _V], weakref.WeakValueDictionary, typing.MutableMapping[_K, _V]):
+    """A dictionary that has weak references to the values.
+
+    This is a type-safe version of `weakref.WeakValueDictionary` which is
+    subscriptable.
+
+    Examples
+    --------
+        @attr.s(auto_attribs=True)
+        class Commands:
+            aliases: WeakValueDictionary[str, Command]
+    """
+
+    __slots__ = ()

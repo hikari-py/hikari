@@ -299,7 +299,9 @@ def _deserialize_members(
 class Team(bases.Unique, marshaller.Deserializable):
     """Represents a development team, along with all its members."""
 
-    icon_hash: typing.Optional[str] = marshaller.attrib(raw_name="icon", deserializer=str, eq=False, hash=False)
+    icon_hash: typing.Optional[str] = marshaller.attrib(
+        raw_name="icon", deserializer=str, if_none=None, eq=False, hash=False
+    )
     """The hash of this team's icon, if set."""
 
     members: typing.Mapping[bases.Snowflake, TeamMember] = marshaller.attrib(
@@ -419,7 +421,7 @@ class Application(bases.Unique, marshaller.Deserializable):
     """The base64 encoded key used for the GameSDK's `GetTicket`."""
 
     icon_hash: typing.Optional[str] = marshaller.attrib(
-        raw_name="icon", deserializer=str, if_undefined=None, default=None, eq=False, hash=False
+        raw_name="icon", deserializer=str, if_undefined=None, if_none=None, default=None, eq=False, hash=False
     )
     """The hash of this application's icon, if set."""
 
