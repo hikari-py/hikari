@@ -280,7 +280,7 @@ class GuildChannel(PartialChannel):
     """
 
     parent_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_none=None, if_undefined=None, eq=False, hash=False, repr=True
+        deserializer=bases.Snowflake, if_none=None, if_undefined=None, default=None, eq=False, hash=False, repr=True
     )
     """The ID of the parent category the channel belongs to."""
 
@@ -325,7 +325,7 @@ class GuildTextChannel(GuildChannel):
     """
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None, eq=False, hash=False
+        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None, default=None, eq=False, hash=False
     )
     """The timestamp of the last-pinned message.
 
@@ -340,7 +340,7 @@ class GuildTextChannel(GuildChannel):
 class GuildNewsChannel(GuildChannel):
     """Represents an news channel."""
 
-    topic: str = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False)
+    topic: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False)
     """The topic of the channel."""
 
     last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
@@ -353,7 +353,7 @@ class GuildNewsChannel(GuildChannel):
     """
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None, eq=False, hash=False
+        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None, default=None, eq=False, hash=False
     )
     """The timestamp of the last-pinned message.
 

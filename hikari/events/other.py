@@ -30,7 +30,7 @@ __all__ = [
     "StoppedEvent",
     "ReadyEvent",
     "ResumedEvent",
-    "UserUpdateEvent",
+    "MyUserUpdateEvent",
 ]
 
 import typing
@@ -169,10 +169,9 @@ class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
         return self._shard_information[1] if self._shard_information else None
 
 
-# TODO: rename to MyUserUpdateEvent
 @marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class UserUpdateEvent(base_events.HikariEvent, users.MyUser):
+class MyUserUpdateEvent(base_events.HikariEvent, users.MyUser):
     """Used to represent User Update gateway events.
 
     Sent when the current user is updated.

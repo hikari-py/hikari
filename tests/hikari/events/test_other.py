@@ -124,5 +124,5 @@ class TestResumedEvent:
 
 
 # Doesn't declare any new fields.
-class TestUserUpdateEvent:
+class TestMyUserUpdateEvent:
     ...

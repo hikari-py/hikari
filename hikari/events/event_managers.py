@@ -32,6 +32,7 @@ from hikari.events import dispatchers
 if typing.TYPE_CHECKING:
     from hikari.clients import components as _components
     from hikari.clients import shards
+    from hikari.internal import more_typing
 
 EVENT_MARKER_ATTR: typing.Final[str] = "___event_name___"
 
@@ -154,7 +155,7 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
                 self.raw_event_mappers[event_name] = member
 
     async def process_raw_event(
-        self, shard_client_obj: shards.ShardClient, name: str, payload: typing.Mapping[str, typing.Any],
+        self, shard_client_obj: shards.ShardClient, name: str, payload: more_typing.JSONObject,
     ) -> None:
         """Process a low level event.
 

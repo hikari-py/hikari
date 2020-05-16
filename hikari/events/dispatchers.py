@@ -81,7 +81,11 @@ class EventDispatcher(abc.ABC):
 
     @abc.abstractmethod
     def wait_for(
-        self, event_type: typing.Type[EventT], *, timeout: typing.Optional[float], predicate: PredicateT
+        self,
+        event_type: typing.Type[EventT],
+        *,
+        timeout: typing.Optional[float] = None,
+        predicate: typing.Optional[PredicateT] = None,
     ) -> more_typing.Future:
         """Wait for the given event type to occur.
 
@@ -96,9 +100,9 @@ class EventDispatcher(abc.ABC):
             may leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
             using an event listener instead of this function.
-        predicate : `def predicate(event) -> bool` or `async def predicate(event) -> bool`
-            A function that takes the arguments for the event and returns True
-            if it is a match, or False if it should be ignored.
+        predicate : `def predicate(event) -> bool` or `async def predicate(event) -> bool`, optional
+            A function that takes the arguments for the event and returns `True`
+            if it is a match, or `False` if it should be ignored.
             This can be a coroutine function that returns a boolean, or a
             regular function.
 

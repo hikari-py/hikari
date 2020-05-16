@@ -81,10 +81,10 @@ class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDis
         event = channel.ChannelDeleteEvent.deserialize(payload, components=self._components)
         await self._components.event_dispatcher.dispatch_event(event)
 
-    @event_managers.raw_event_mapper("CHANNEL_PIN_UPDATE")
-    async def on_channel_pin_update(self, _, payload) -> None:
-        """Handle CHANNEL_PIN_UPDATE events."""
-        event = channel.ChannelPinUpdateEvent.deserialize(payload, components=self._components)
+    @event_managers.raw_event_mapper("CHANNEL_PINS_UPDATE")
+    async def on_channel_pins_update(self, _, payload) -> None:
+        """Handle CHANNEL_PINS_UPDATE events."""
+        event = channel.ChannelPinsUpdateEvent.deserialize(payload, components=self._components)
         await self._components.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("GUILD_CREATE")
@@ -249,9 +249,9 @@ class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDis
         await self._components.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("USER_UPDATE")
-    async def on_user_update(self, _, payload) -> None:
+    async def on_my_user_update(self, _, payload) -> None:
         """Handle USER_UPDATE events."""
-        event = other.UserUpdateEvent.deserialize(payload, components=self._components)
+        event = other.MyUserUpdateEvent.deserialize(payload, components=self._components)
         await self._components.event_dispatcher.dispatch_event(event)
 
     @event_managers.raw_event_mapper("VOICE_STATE_UPDATE")
