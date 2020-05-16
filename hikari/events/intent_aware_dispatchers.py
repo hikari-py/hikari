@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Event dispatcher implementations that are intent-aware."""
+
 from __future__ import annotations
 
 __all__ = ["IntentAwareEventDispatcherImpl"]
@@ -192,6 +193,12 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
             subtype_waiters = self._waiters.get(base_event_type, more_collections.EMPTY_DICT)
 
             for future, predicate in subtype_waiters.items():
+                # If there is no predicate, there is nothing to check, so just return what we got.
+                if not predicate:
+                    future.set_result(event)
+                    futures_to_remove.append(future)
+                    continue
+
                 # We execute async predicates differently to sync, because we hope most of the time
                 # these checks will be synchronous only, as these will perform significantly faster.
                 # I preferred execution speed over terseness here.
@@ -288,8 +295,8 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         self,
         event_type: typing.Type[dispatchers.EventT],
         *,
-        timeout: typing.Optional[float],
-        predicate: dispatchers.PredicateT,
+        timeout: typing.Optional[float] = None,
+        predicate: typing.Optional[dispatchers.PredicateT] = None,
     ) -> more_typing.Future:
         """Wait for a event to occur once and then return the arguments the event was called with.
 
@@ -312,9 +319,9 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
             leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
             using an event listener instead of this function.
-        predicate : `def predicate(event) -> bool`
-            A function that takes the arguments for the event and returns True
-            if it is a match, or False if it should be ignored. This must be
+        predicate : `def predicate(event) -> bool` or `async def predicate(event) -> bool`, optional
+            A function that takes the arguments for the event and returns `True`
+            if it is a match, or `False` if it should be ignored. This must be
             a regular function.
 
         Returns
