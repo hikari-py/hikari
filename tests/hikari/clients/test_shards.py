@@ -24,16 +24,16 @@ import async_timeout
 import mock
 import pytest
 
-import hikari.clients.shard_states
+import hikari.gateway.gateway_state
+from hikari.models import guilds
 from hikari import errors
-from hikari import guilds
-from hikari.clients import components
-from hikari.clients import configs
-from hikari.clients import shards as high_level_shards
-from hikari.events import consumers
+from hikari.components import application
+from hikari import configs
+from hikari.gateway import client as high_level_shards
+from hikari.components import consumers
 from hikari.internal import more_asyncio
-from hikari.net import codes
-from hikari.net import shards as low_level_shards
+from hikari.internal import codes
+from hikari.gateway import connection as low_level_shards
 from tests.hikari import _helpers
 
 
@@ -54,7 +54,7 @@ def _generate_mock_task(exception=None):
 
 @pytest.fixture
 def mock_components():
-    class ComponentsImpl(components.Components):
+    class ApplicationImpl(application.Application):
         def __init__(self):
             super().__init__(
                 config=mock.MagicMock(),
@@ -64,7 +64,7 @@ def mock_components():
                 shards=mock.MagicMock(),
             )
 
-    return ComponentsImpl()
+    return ApplicationImpl()
 
 
 @pytest.fixture
@@ -78,7 +78,7 @@ def shard_client_obj(mock_components):
         session_id=None,
     )
     with mock.patch("hikari.net.shards.Shard", return_value=mock_shard_connection):
-        return _helpers.unslot_class(high_level_shards.ShardClientImpl)(0, 1, mock_components, "some_url")
+        return _helpers.unslot_class(high_level_shards.GatewayClient)(0, 1, mock_components, "some_url")
 
 
 class TestShardClientImpl:
@@ -87,10 +87,10 @@ class TestShardClientImpl:
             def process_raw_event(self, _client, name, payload):
                 return "ASSERT TRUE"
 
-        shard_client_obj = high_level_shards.ShardClientImpl(
+        shard_client_obj = high_level_shards.GatewayClient(
             0,
             1,
-            mock.MagicMock(components.Components, config=configs.GatewayConfig(), event_manager=DummyConsumer()),
+            mock.MagicMock(application.Application, config=configs.GatewayConfig(), event_manager=DummyConsumer()),
             "some_url",
         )
 
@@ -100,10 +100,10 @@ class TestShardClientImpl:
         mock_shard_connection = mock.MagicMock(low_level_shards.Shard)
 
         with mock.patch("hikari.net.shards.Shard", return_value=mock_shard_connection):
-            shard_client_obj = high_level_shards.ShardClientImpl(
+            shard_client_obj = high_level_shards.GatewayClient(
                 0,
                 1,
-                mock.MagicMock(components.Components, event_manager=None, config=configs.GatewayConfig()),
+                mock.MagicMock(application.Application, event_manager=None, config=configs.GatewayConfig()),
                 "some_url",
             )
 
@@ -278,7 +278,7 @@ class TestShardClientImplStart:
     @_helpers.assert_raises(type_=RuntimeError)
     @pytest.mark.asyncio
     async def test_start_when_already_started(self, shard_client_obj):
-        shard_client_obj._shard_state = hikari.clients.shard_states.ShardState.READY
+        shard_client_obj._shard_state = hikari.gateway.gateway_state.GatewayState.READY
 
         await shard_client_obj.start()
 
@@ -308,7 +308,7 @@ class TestShardClientImplStart:
 
     @pytest.mark.asyncio
     async def test_close_when_already_stopping(self, shard_client_obj):
-        shard_client_obj._shard_state = hikari.clients.shard_states.ShardState.STOPPING
+        shard_client_obj._shard_state = hikari.gateway.gateway_state.GatewayState.STOPPING
 
         await shard_client_obj.close()
 
@@ -316,7 +316,7 @@ class TestShardClientImplStart:
 
     @pytest.mark.asyncio
     async def test_close_when_not_running_is_not_an_error(self, shard_client_obj):
-        shard_client_obj._shard_state = hikari.clients.shard_states.ShardState.NOT_RUNNING
+        shard_client_obj._shard_state = hikari.gateway.gateway_state.GatewayState.NOT_RUNNING
         shard_client_obj._task = None
 
         await shard_client_obj.close()

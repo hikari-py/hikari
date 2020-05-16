@@ -20,17 +20,17 @@
 import mock
 import pytest
 
-from hikari import applications
-from hikari.clients import components
-from hikari.clients.rest import oauth2
-from hikari.net import rest
+from hikari.models import applications
+from hikari.components import application
+from hikari.rest import oauth2
+from hikari.rest import session
 
 
 class TestRESTReactionLogic:
     @pytest.fixture()
     def rest_oauth2_logic_impl(self):
-        mock_components = mock.MagicMock(components.Components)
-        mock_low_level_restful_client = mock.MagicMock(rest.REST)
+        mock_components = mock.MagicMock(application.Application)
+        mock_low_level_restful_client = mock.MagicMock(session.RESTSession)
 
         class RESTOauth2LogicImpl(oauth2.RESTOAuth2Component):
             def __init__(self):
@@ -40,7 +40,7 @@ class TestRESTReactionLogic:
 
     @pytest.mark.asyncio
     async def test_fetch_my_application_info(self, rest_oauth2_logic_impl):
-        mock_application_payload = {"id": "2929292", "name": "blah blah", "description": "an app"}
+        mock_application_payload = {"id": "2929292", "name": "blah blah", "description": "an application"}
         mock_application_obj = mock.MagicMock(applications.Application)
         rest_oauth2_logic_impl._session.get_current_application_info.return_value = mock_application_payload
         with mock.patch.object(applications.Application, "deserialize", return_value=mock_application_obj):

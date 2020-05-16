@@ -22,17 +22,13 @@ import datetime
 import mock
 import pytest
 
-from hikari import audit_logs
-from hikari import channels
-from hikari import guilds
-from hikari import users
-from hikari import webhooks
-from hikari.clients import components
+from hikari.models import audit_logs, guilds, users, webhooks, channels
+from hikari.components import application
 
 
 @pytest.fixture()
 def mock_components():
-    return mock.MagicMock(components.Components)
+    return mock.MagicMock(application.Application)
 
 
 class TestAuditLogChangeKey:
@@ -478,7 +474,7 @@ class TestAuditLog:
         assert audit_log_obj.entries == {
             694026906592477214: audit_logs.AuditLogEntry.deserialize(test_audit_log_entry_payload)
         }
-        assert audit_log_obj.entries[694026906592477214]._components is mock_components
+        assert audit_log_obj.entries[694026906592477214]._app is mock_components
         assert audit_log_obj.webhooks == {424242: mock_webhook_obj}
         assert audit_log_obj.users == {92929292: mock_user_obj}
         assert audit_log_obj.integrations == {33590653072239123: mock_integration_obj}
@@ -503,7 +499,7 @@ class TestAuditLogIterator:
             }
         )
         audit_log_iterator = audit_logs.AuditLogIterator(
-            components=mock_components, request=mock_request, before="123", limit=None,
+            app=mock_components, request=mock_request, before="123", limit=None,
         )
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(users.User, "deserialize", return_value=mock_user_obj))
@@ -523,7 +519,7 @@ class TestAuditLogIterator:
         assert audit_log_iterator.users == {929292: mock_user_obj}
         assert audit_log_iterator.integrations == {123123123: mock_integration_obj}
         assert audit_log_iterator._buffer == [mock_audit_log_entry_payload]
-        assert audit_log_iterator._components is mock_components
+        assert audit_log_iterator._app is mock_components
         mock_request.assert_called_once_with(
             before="123", limit=100,
         )
@@ -534,7 +530,7 @@ class TestAuditLogIterator:
             return_value={"webhooks": [], "users": [], "audit_log_entries": [], "integrations": []}
         )
         audit_log_iterator = audit_logs.AuditLogIterator(
-            components=mock_components, request=mock_request, before="222222222", limit=None,
+            app=mock_components, request=mock_request, before="222222222", limit=None,
         )
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(users.User, "deserialize", return_value=...))
@@ -565,7 +561,7 @@ class TestAuditLogIterator:
             }
         )
         audit_log_iterator = audit_logs.AuditLogIterator(
-            components=mock_components, request=mock_request, before="123", limit=None,
+            app=mock_components, request=mock_request, before="123", limit=None,
         )
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(users.User, "deserialize", return_value=...))
@@ -590,7 +586,7 @@ class TestAuditLogIterator:
             }
         )
         audit_log_iterator = audit_logs.AuditLogIterator(
-            components=mock_components, request=mock_request, before="222222222", limit=44,
+            app=mock_components, request=mock_request, before="222222222", limit=44,
         )
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(users.User, "deserialize", return_value=...))
@@ -609,9 +605,7 @@ class TestAuditLogIterator:
         mock_request = mock.AsyncMock(
             return_value={"webhooks": [], "users": [], "audit_log_entries": [], "integrations": []}
         )
-        iterator = audit_logs.AuditLogIterator(
-            components=mock_components, request=mock_request, before="123", limit=None
-        )
+        iterator = audit_logs.AuditLogIterator(app=mock_components, request=mock_request, before="123", limit=None)
         with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", return_value=...):
             async for _ in iterator:
                 assert False, "Iterator shouldn't have yielded anything."
@@ -624,9 +618,7 @@ class TestAuditLogIterator:
             side_effect=[{"webhooks": [], "users": [], "audit_log_entries": [{"id": "666666"}], "integrations": []}]
         )
         mock_audit_log_entry = mock.MagicMock(audit_logs.AuditLogEntry, id=666666)
-        iterator = audit_logs.AuditLogIterator(
-            components=mock_components, request=mock_request, before="123", limit=None
-        )
+        iterator = audit_logs.AuditLogIterator(app=mock_components, request=mock_request, before="123", limit=None)
         with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", side_effect=[mock_audit_log_entry]):
             async for result in iterator:
                 assert result is mock_audit_log_entry
@@ -643,9 +635,7 @@ class TestAuditLogIterator:
             side_effect=[{"webhooks": [], "users": [], "audit_log_entries": [], "integrations": []}]
         )
         mock_audit_log_entry = mock.MagicMock(audit_logs.AuditLogEntry, id=666666)
-        iterator = audit_logs.AuditLogIterator(
-            components=mock_components, request=mock_request, before="123", limit=None
-        )
+        iterator = audit_logs.AuditLogIterator(app=mock_components, request=mock_request, before="123", limit=None)
         with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", side_effect=[mock_audit_log_entry]):
             async for _ in iterator:
                 assert False, "Iterator shouldn't have yielded anything."
@@ -659,7 +649,7 @@ class TestAuditLogIterator:
     async def test___anext___when_filled(self, mock_components):
         mock_request = mock.AsyncMock(side_effect=[])
         mock_audit_log_entry = mock.MagicMock(audit_logs.AuditLogEntry, id=4242)
-        iterator = audit_logs.AuditLogIterator(components=mock_components, request=mock_request, before="123",)
+        iterator = audit_logs.AuditLogIterator(app=mock_components, request=mock_request, before="123",)
         iterator._buffer = [{"id": "123123"}]
         with mock.patch.object(audit_logs.AuditLogEntry, "deserialize", side_effect=[mock_audit_log_entry]):
             async for result in iterator:

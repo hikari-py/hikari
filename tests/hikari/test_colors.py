@@ -20,7 +20,7 @@ import math
 
 import pytest
 
-from hikari import colors
+from hikari.models import colors
 from tests.hikari import _helpers
 
 

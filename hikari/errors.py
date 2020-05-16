@@ -47,7 +47,7 @@ import typing
 
 import aiohttp.typedefs
 
-from hikari.net import codes
+from hikari.internal import codes
 
 
 class HikariError(RuntimeError):

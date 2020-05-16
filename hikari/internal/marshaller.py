@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""An internal marshalling utility used by internal API components.
+"""An internal marshalling utility used by internal API application.
 
 !!! warning
     You should not change anything in this file, if you do, you will likely get
@@ -41,10 +41,10 @@ import typing
 
 import attr
 
-from hikari.internal import more_collections
+from . import more_collections
 
 if typing.TYPE_CHECKING:
-    from hikari.internal import more_typing
+    from . import more_typing
 
 _RAW_NAME_ATTR: typing.Final[str] = __name__ + "_RAW_NAME"
 _SERIALIZER_ATTR: typing.Final[str] = __name__ + "_SERIALIZER"
@@ -277,7 +277,7 @@ def _construct_entity_descriptor(entity: typing.Any) -> _EntityDescriptor:
 class HikariEntityMarshaller:
     """Hikari's utility to manage automated serialization and deserialization.
 
-    It can deserialize and serialize any internal components that that are
+    It can deserialize and serialize any internal application that that are
     decorated with the `marshallable` decorator, and that are
     `attr.s` classes using fields with the`attrib` function call descriptor.
     """

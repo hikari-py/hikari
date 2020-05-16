@@ -19,22 +19,16 @@
 import mock
 import pytest
 
-from hikari import bases
-from hikari import channels
-from hikari import embeds
-from hikari import files
-from hikari import messages
-from hikari import users
-from hikari import webhooks
-from hikari.clients import components
-from hikari.clients import rest
+from hikari import rest
+from hikari.models import embeds, messages, users, webhooks, channels, bases, files
+from hikari.components import application
 from hikari.internal import urls
 from tests.hikari import _helpers
 
 
 @pytest.fixture()
-def mock_components() -> components.Components:
-    return mock.MagicMock(components.Components, rest=mock.AsyncMock(rest.RESTClient))
+def mock_components() -> application.Application:
+    return mock.MagicMock(application.Application, rest=mock.AsyncMock(rest.RESTClient))
 
 
 class TestWebhook:

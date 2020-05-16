@@ -21,22 +21,22 @@ import contextlib
 import mock
 import pytest
 
-from hikari import embeds
-from hikari import files
-from hikari import messages
-from hikari import webhooks
-from hikari.clients import components
-from hikari.clients.rest import webhook
+from hikari.models import embeds
+from hikari.models import files
+from hikari.models import messages
+from hikari.models import webhooks
+from hikari.components import application
+from hikari.rest import webhook
 from hikari.internal import helpers
-from hikari.net import rest
+from hikari.rest import session
 from tests.hikari import _helpers
 
 
 class TestRESTUserLogic:
     @pytest.fixture()
     def rest_webhook_logic_impl(self):
-        mock_components = mock.MagicMock(components.Components)
-        mock_low_level_restful_client = mock.MagicMock(rest.REST)
+        mock_components = mock.MagicMock(application.Application)
+        mock_low_level_restful_client = mock.MagicMock(session.RESTSession)
 
         class RESTWebhookLogicImpl(webhook.RESTWebhookComponent):
             def __init__(self):

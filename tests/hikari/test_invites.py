@@ -22,11 +22,8 @@ import datetime
 import mock
 import pytest
 
-from hikari import channels
-from hikari import guilds
-from hikari import invites
-from hikari import users
-from hikari.clients import components
+from hikari.models import guilds, users, channels, invites
+from hikari.components import application
 from hikari.internal import conversions
 from hikari.internal import urls
 from tests.hikari import _helpers
@@ -90,7 +87,7 @@ def test_invite_with_metadata_payload(test_invite_payload):
 
 @pytest.fixture()
 def mock_components():
-    return mock.MagicMock(components.Components)
+    return mock.MagicMock(application.Application)
 
 
 class TestInviteGuild:

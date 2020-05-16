@@ -19,10 +19,9 @@
 import mock
 import pytest
 
-from hikari import bases
-from hikari import users
-from hikari.clients import components
-from hikari.clients import rest
+from hikari import rest
+from hikari.models import users, bases
+from hikari.components import application
 from hikari.internal import urls
 
 
@@ -57,8 +56,8 @@ def test_oauth_user_payload():
 
 
 @pytest.fixture()
-def mock_components() -> components.Components:
-    return mock.MagicMock(components.Components, rest=mock.AsyncMock(rest.RESTClient))
+def mock_components() -> application.Application:
+    return mock.MagicMock(application.Application, rest=mock.AsyncMock(rest.RESTClient))
 
 
 class TestUser:

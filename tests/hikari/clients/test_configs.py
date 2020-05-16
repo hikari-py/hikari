@@ -23,10 +23,8 @@ import aiohttp
 import mock
 import pytest
 
-from hikari import gateway_entities
-from hikari import guilds
-from hikari import intents
-from hikari.clients import configs
+from hikari.models import guilds, intents, gateway
+from hikari import configs
 from hikari.internal import urls
 from tests.hikari import _helpers
 
@@ -146,11 +144,11 @@ class TestWebsocketConfig:
     def test_deserialize(self, test_websocket_config):
         datetime_obj = datetime.datetime.now()
         test_websocket_config["initial_idle_since"] = datetime_obj.timestamp()
-        mock_activity = mock.MagicMock(gateway_entities.Activity)
+        mock_activity = mock.MagicMock(gateway.Activity)
         with _helpers.patch_marshal_attr(
             configs.GatewayConfig,
             "initial_activity",
-            deserializer=gateway_entities.Activity.deserialize,
+            deserializer=gateway.Activity.deserialize,
             return_value=mock_activity,
         ) as patched_activity_deserializer:
             websocket_config_obj = configs.GatewayConfig.deserialize(test_websocket_config)
@@ -259,11 +257,11 @@ class TestBotConfig:
     def test_deserialize(self, test_bot_config):
         datetime_obj = datetime.datetime.now()
         test_bot_config["initial_idle_since"] = datetime_obj.timestamp()
-        mock_activity = mock.MagicMock(gateway_entities.Activity)
+        mock_activity = mock.MagicMock(gateway.Activity)
         with _helpers.patch_marshal_attr(
             configs.BotConfig,
             "initial_activity",
-            deserializer=gateway_entities.Activity.deserialize,
+            deserializer=gateway.Activity.deserialize,
             return_value=mock_activity,
         ) as patched_activity_deserializer:
             bot_config_obj = configs.BotConfig.deserialize(test_bot_config)

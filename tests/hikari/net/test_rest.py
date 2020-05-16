@@ -29,12 +29,12 @@ import mock
 import pytest
 
 from hikari import errors
-from hikari import files
+from hikari.models import files
 from hikari.internal import conversions
-from hikari.net import http_client
-from hikari.net import ratelimits
-from hikari.net import rest
-from hikari.net import routes
+from hikari.internal import http_client
+from hikari.internal import ratelimits
+from hikari.rest import session
+from hikari.rest import routes
 from tests.hikari import _helpers
 
 
@@ -70,27 +70,29 @@ def mock_patch_route(real_route):
 @pytest.mark.asyncio
 class TestRESTInit:
     async def test_base_url_is_formatted_correctly(self):
-        async with rest.REST(base_url="http://example.com/api/v{0.version}/test", token=None, version=69) as client:
+        async with session.RESTSession(
+            base_url="http://example.com/api/v{0.version}/test", token=None, version=69
+        ) as client:
             assert client.base_url == "http://example.com/api/v69/test"
 
     async def test_no_token_sets_field_to_None(self):
-        async with rest.REST(token=None) as client:
+        async with session.RESTSession(token=None) as client:
             assert client._token is None
 
     @_helpers.assert_raises(type_=RuntimeError)
     async def test_bare_old_token_without_auth_scheme_raises_error(self):
-        async with rest.REST(token="1a2b.3c4d") as client:
+        async with session.RESTSession(token="1a2b.3c4d") as client:
             pass
 
     @_helpers.assert_raises(type_=RuntimeError)
     async def test_bare_old_token_without_recognised_auth_scheme_raises_error(self):
-        async with rest.REST(token="Token 1a2b.3c4d") as client:
+        async with session.RESTSession(token="Token 1a2b.3c4d") as client:
             pass
 
     @pytest.mark.parametrize("auth_type", ["Bot", "Bearer"])
     async def test_known_auth_type_is_allowed(self, auth_type):
         token = f"{auth_type} 1a2b.3c4d"
-        async with rest.REST(token=token) as client:
+        async with session.RESTSession(token=token) as client:
             assert client._token == token
 
 
@@ -98,9 +100,9 @@ class TestRESTInit:
 class TestRESTClose:
     @pytest.fixture
     def rest_impl(self, event_loop):
-        rest_impl = rest.REST(token="Bot token")
+        rest_impl = session.RESTSession(token="Bot token")
         yield rest_impl
-        event_loop.run_until_complete(super(rest.REST, rest_impl).close())
+        event_loop.run_until_complete(super(session.RESTSession, rest_impl).close())
         rest_impl.bucket_ratelimiters.close()
         rest_impl.global_ratelimiter.close()
 
@@ -138,7 +140,7 @@ class TestRESTRequestJsonResponse:
         stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager", return_value=bucket_ratelimiters))
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=global_ratelimiter))
         with stack:
-            client = rest.REST(base_url="http://example.bloop.com", token="Bot blah.blah.blah")
+            client = session.RESTSession(base_url="http://example.bloop.com", token="Bot blah.blah.blah")
         client.logger = mock.MagicMock(spec_set=logging.Logger)
         client.json_deserialize = json.loads
         client.serialize = json.dumps
@@ -340,7 +342,7 @@ class TestRESTRequestJsonResponse:
         rest_impl._handle_rate_limits_for_response = mock.AsyncMock(
             # In reality, the ratelimiting logic will ensure we wait before retrying, but this
             # is a test for a spammy edge-case scenario.
-            side_effect=[rest._RateLimited, rest._RateLimited, rest._RateLimited, None]
+            side_effect=[session._RateLimited, session._RateLimited, session._RateLimited, None]
         )
         # when
         await rest_impl._request_json_response(compiled_route)
@@ -377,7 +379,7 @@ class TestHandleRateLimitsForResponse:
         stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager", return_value=bucket_ratelimiters))
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter", return_value=global_ratelimiter))
         with stack:
-            client = rest.REST(base_url="http://example.bloop.com", token="Bot blah.blah.blah")
+            client = session.RESTSession(base_url="http://example.bloop.com", token="Bot blah.blah.blah")
         client.logger = mock.MagicMock(spec_set=logging.Logger)
         return client
 
@@ -414,7 +416,7 @@ class TestHandleRateLimitsForResponse:
         )
 
     @pytest.mark.parametrize("body", [b"{}", b'{"global": false}'])
-    @_helpers.assert_raises(type_=rest._RateLimited)
+    @_helpers.assert_raises(type_=session._RateLimited)
     async def test_non_global_429_raises_Ratelimited(self, rest_impl, compiled_route, body):
         response = MockResponse(
             headers={
@@ -448,7 +450,7 @@ class TestHandleRateLimitsForResponse:
         try:
             await rest_impl._handle_rate_limits_for_response(compiled_route, response)
             assert False
-        except rest._RateLimited:
+        except session._RateLimited:
             global_ratelimiter.throttle.assert_called_once_with(1024.768)
 
     async def test_non_json_429_causes_httperror(self, rest_impl, compiled_route):
@@ -483,7 +485,7 @@ class TestRESTEndpoints:
         stack.enter_context(mock.patch.object(ratelimits, "RESTBucketManager"))
         stack.enter_context(mock.patch.object(ratelimits, "ManualRateLimiter"))
         with stack:
-            client = rest.REST(base_url="https://discord.com/api/v6", token="Bot blah.blah.blah")
+            client = session.RESTSession(base_url="https://discord.com/api/v6", token="Bot blah.blah.blah")
         client.logger = mock.MagicMock(spec_set=logging.Logger)
         client._request_json_response = mock.AsyncMock(return_value=...)
         client.client_session = mock.MagicMock(aiohttp.ClientSession, spec_set=True)

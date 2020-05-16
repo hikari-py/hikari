@@ -20,7 +20,7 @@ import attr
 import mock
 import pytest
 
-from hikari.internal import marshaller
+from hikari.internal import marshaller, codes
 from tests.hikari import _helpers
 
 
@@ -31,8 +31,6 @@ class TestDereferenceHandle:
         assert marshaller.dereference_handle("concurrent.futures") is futures
 
     def test_dereference_handle_module_and_attribute(self):
-        from hikari.net import codes
-
         assert (
             marshaller.dereference_handle("hikari.net.codes#GatewayCloseCode.AUTHENTICATION_FAILED")
             is codes.GatewayCloseCode.AUTHENTICATION_FAILED

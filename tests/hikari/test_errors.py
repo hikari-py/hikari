@@ -21,7 +21,7 @@ import http
 import pytest
 
 from hikari import errors
-from hikari.net import codes
+from hikari.internal import codes
 
 
 class TestHikariError:

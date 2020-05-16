@@ -22,10 +22,7 @@ import datetime
 import mock
 import pytest
 
-from hikari import emojis
-from hikari import guilds
-from hikari import unset
-from hikari import users
+from hikari.models import unset, guilds, users, emojis
 from hikari.events import guild
 from hikari.internal import conversions
 from tests.hikari import _helpers

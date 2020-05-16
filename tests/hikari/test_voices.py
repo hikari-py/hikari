@@ -19,8 +19,8 @@
 import mock
 import pytest
 
-from hikari import voices
-from hikari.clients import components
+from hikari.models import voices
+from hikari.components import application
 
 
 @pytest.fixture()
@@ -45,7 +45,7 @@ def voice_region_payload():
 
 @pytest.fixture()
 def mock_components():
-    return mock.MagicMock(components.Components)
+    return mock.MagicMock(application.Application)
 
 
 class TestVoiceState:

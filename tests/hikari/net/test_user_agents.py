@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-from hikari.net import user_agents
+from hikari.internal import user_agents
 
 
 def test_library_version_is_callable_and_produces_string():

@@ -21,15 +21,14 @@ import datetime
 import mock
 import pytest
 
-from hikari import gateway_entities
-from hikari import guilds
-from hikari.clients import components
+from hikari.models import guilds, gateway
+from hikari.components import application
 from tests.hikari import _helpers
 
 
 @pytest.fixture()
 def mock_components():
-    return mock.MagicMock(components.Components)
+    return mock.MagicMock(application.Application)
 
 
 @pytest.fixture()
@@ -39,7 +38,7 @@ def test_session_start_limit_payload():
 
 class TestSessionStartLimit:
     def test_deserialize(self, test_session_start_limit_payload, mock_components):
-        session_start_limit_obj = gateway_entities.SessionStartLimit.deserialize(
+        session_start_limit_obj = gateway.SessionStartLimit.deserialize(
             test_session_start_limit_payload, components=mock_components
         )
         assert session_start_limit_obj.total == 1000
@@ -53,16 +52,14 @@ class TestGatewayBot:
         return {"url": "wss://gateway.discord.gg", "shards": 1, "session_start_limit": test_session_start_limit_payload}
 
     def test_deserialize(self, test_gateway_bot_payload, test_session_start_limit_payload, mock_components):
-        mock_session_start_limit = mock.MagicMock(gateway_entities.SessionStartLimit)
+        mock_session_start_limit = mock.MagicMock(gateway.SessionStartLimit)
         with _helpers.patch_marshal_attr(
-            gateway_entities.GatewayBot,
+            gateway.GatewayBot,
             "session_start_limit",
-            deserializer=gateway_entities.SessionStartLimit.deserialize,
+            deserializer=gateway.SessionStartLimit.deserialize,
             return_value=mock_session_start_limit,
         ) as patched_start_limit_deserializer:
-            gateway_bot_obj = gateway_entities.GatewayBot.deserialize(
-                test_gateway_bot_payload, components=mock_components
-            )
+            gateway_bot_obj = gateway.GatewayBot.deserialize(test_gateway_bot_payload, components=mock_components)
             patched_start_limit_deserializer.assert_called_once_with(
                 test_session_start_limit_payload, components=mock_components
             )
@@ -77,19 +74,19 @@ class TestGatewayActivity:
         return {"name": "Presence me baby", "url": "http://a-url-name", "type": 1}
 
     def test_deserialize_full_config(self, test_gateway_activity_config):
-        gateway_activity_obj = gateway_entities.Activity.deserialize(test_gateway_activity_config)
+        gateway_activity_obj = gateway.Activity.deserialize(test_gateway_activity_config)
         assert gateway_activity_obj.name == "Presence me baby"
         assert gateway_activity_obj.url == "http://a-url-name"
         assert gateway_activity_obj.type is guilds.ActivityType.STREAMING
 
     def test_deserialize_partial_config(self):
-        gateway_activity_obj = gateway_entities.Activity.deserialize({"name": "Presence me baby"})
+        gateway_activity_obj = gateway.Activity.deserialize({"name": "Presence me baby"})
         assert gateway_activity_obj.name == "Presence me baby"
         assert gateway_activity_obj.url == None
         assert gateway_activity_obj.type is guilds.ActivityType.PLAYING
 
     def test_serialize_full_activity(self):
-        gateway_activity_obj = gateway_entities.Activity(
+        gateway_activity_obj = gateway.Activity(
             name="Presence me baby", url="http://a-url-name", type=guilds.ActivityType.STREAMING
         )
         assert gateway_activity_obj.serialize() == {
@@ -99,7 +96,7 @@ class TestGatewayActivity:
         }
 
     def test_serialize_partial_activity(self):
-        gateway_activity_obj = gateway_entities.Activity(name="Presence me baby",)
+        gateway_activity_obj = gateway.Activity(name="Presence me baby",)
         assert gateway_activity_obj.serialize() == {
             "name": "Presence me baby",
             "type": 0,

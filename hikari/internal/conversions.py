@@ -328,10 +328,6 @@ def dereference_int_flag(
     raw_value : Castable Value
         The raw value to convert.
 
-    Returns
-    -------
-    enum.IntFlag
-        The cast value as a flag.
 
     !!! note
         Types that are a `Castable Value` include:
@@ -342,6 +338,11 @@ def dereference_int_flag(
 
         When a collection is passed, values will be combined using functional
         reduction via the `operator.or_` operator.
+
+    Returns
+    -------
+    enum.IntFlag
+        The cast value as a flag.
     """
     if isinstance(raw_value, str) and raw_value.isdigit():
         raw_value = int(raw_value)

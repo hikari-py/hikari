@@ -24,7 +24,7 @@ import mock
 import pytest
 
 from hikari import events
-from hikari.events import intent_aware_dispatchers
+from hikari.components import intent_aware_dispatchers
 from tests.hikari import _helpers
 
 

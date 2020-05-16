@@ -21,11 +21,8 @@ import datetime
 import mock
 import pytest
 
-from hikari import bases
-from hikari import channels
-from hikari import permissions
-from hikari import users
-from hikari.clients import components
+from hikari.models import permissions, users, channels, bases
+from hikari.components import application
 from hikari.internal import urls
 
 
@@ -142,7 +139,7 @@ def test_guild_voice_channel_payload(test_permission_overwrite_payload):
 
 @pytest.fixture()
 def mock_components():
-    return mock.MagicMock(components.Components)
+    return mock.MagicMock(application.Application)
 
 
 class TestPartialChannel:
@@ -274,7 +271,7 @@ class TestGuildCategory:
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
-        assert channel_obj.permission_overwrites[4242]._components is mock_components
+        assert channel_obj.permission_overwrites[4242]._app is mock_components
         assert channel_obj.guild_id == 9876
         assert channel_obj.position == 3
         assert channel_obj.name == "Test"
@@ -291,7 +288,7 @@ class TestGuildTextChannel:
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
-        assert channel_obj.permission_overwrites[4242]._components is mock_components
+        assert channel_obj.permission_overwrites[4242]._app is mock_components
         assert channel_obj.guild_id == 567
         assert channel_obj.position == 6
         assert channel_obj.name == "general"
@@ -311,7 +308,7 @@ class TestGuildNewsChannel:
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
-        assert channel_obj.permission_overwrites[4242]._components is mock_components
+        assert channel_obj.permission_overwrites[4242]._app is mock_components
         assert channel_obj.guild_id == 123
         assert channel_obj.position == 0
         assert channel_obj.name == "Important Announcements"
@@ -332,7 +329,7 @@ class TestGuildStoreChannel:
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
-        assert channel_obj.permission_overwrites[4242]._components is mock_components
+        assert channel_obj.permission_overwrites[4242]._app is mock_components
         assert channel_obj.guild_id == 1234
         assert channel_obj.position == 2
         assert channel_obj.name == "Half Life 3"
@@ -351,7 +348,7 @@ class TestGuildVoiceChannell:
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
-        assert channel_obj.permission_overwrites[4242]._components is mock_components
+        assert channel_obj.permission_overwrites[4242]._app is mock_components
         assert channel_obj.guild_id == 789
         assert channel_obj.position == 4
         assert channel_obj.name == "Secret Developer Discussions"

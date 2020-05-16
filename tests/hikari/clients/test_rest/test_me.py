@@ -22,26 +22,26 @@ import inspect
 import mock
 import pytest
 
-from hikari import applications
-from hikari import bases
-from hikari import channels
-from hikari import files
-from hikari import guilds
-from hikari import users
-from hikari.clients import components
-from hikari.clients.rest import me
-from hikari.net import rest
+from hikari.models import applications
+from hikari.models import bases
+from hikari.models import channels
+from hikari.models import files
+from hikari.models import guilds
+from hikari.models import users
+from hikari.components import application
+from hikari.rest import me
+from hikari.rest import session
 from tests.hikari import _helpers
 
 
 class TestGuildPaginator:
     @pytest.fixture()
     def mock_session(self):
-        return mock.MagicMock(spec_set=rest.REST)
+        return mock.MagicMock(spec_set=session.RESTSession)
 
     @pytest.fixture()
     def mock_components(self):
-        return mock.MagicMock(spec_set=components.Components)
+        return mock.MagicMock(spec_set=application.Application)
 
     @pytest.fixture()
     def ownguild_cls(self):
@@ -149,8 +149,8 @@ class TestGuildPaginator:
 class TestRESTInviteLogic:
     @pytest.fixture()
     def rest_clients_impl(self):
-        mock_components = mock.MagicMock(components.Components)
-        mock_low_level_restful_client = mock.MagicMock(rest.REST)
+        mock_components = mock.MagicMock(application.Application)
+        mock_low_level_restful_client = mock.MagicMock(session.RESTSession)
 
         class RESTCurrentUserLogicImpl(me.RESTCurrentUserComponent):
             def __init__(self):
