@@ -507,6 +507,40 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
         await self._send({"op": codes.GatewayOpcode.PRESENCE_UPDATE, "d": presence})
         self._presence = presence
 
+    async def update_voice_state(
+        self, guild_id: str, channel_id: typing.Optional[str], self_mute: bool = False, self_deaf: bool = False,
+    ) -> None:
+        """Send a VOICE_STATE_UPDATE payload for voice control.
+
+        After sending this payload, you should wait for a VOICE_STATE_UPDATE
+        event to be received for the corresponding guild and channel ID. This
+        will contain instructions where appropriate to continue with creating
+        a new voice connection, etc.
+
+        This implementation will only request the initial voice payload. Any
+        logic for initializing a voice connection must be done separately.
+
+        Parameters
+        ----------
+        guild_id : str
+            The guild ID to change the voice state within.
+        channel_id : str, optional
+            The channel ID in the guild to change the voice state within.
+            If this is `None`, then this will behave as a disconnect opcode.
+        self_mute : bool
+            If `True`, then the bot user will be muted. Defaults to `False`.
+        self_deaf : bool
+            If `True`, then the bot user will be deafened. Defaults to `False`.
+            This doesn't currently have much effect, since receiving voice
+            data is undocumented for bots.
+        """
+        payload = {
+            "op": codes.GatewayOpcode.VOICE_STATE_UPDATE,
+            "d": {"guild_id": guild_id, "channel_id": channel_id, "self_mute": self_mute, "self_deaf": self_deaf,},
+        }
+
+        await self._send(payload)
+
     async def connect(self) -> None:
         """Connect to the gateway and return when it closes."""
         if self.is_connected:

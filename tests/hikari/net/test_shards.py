@@ -891,3 +891,23 @@ class TestUpdatePresence:
         await client.update_presence({"foo": "bar"})
         for k in ("foo", "afk", "game", "since", "status"):
             assert k in client._presence
+
+
+@pytest.mark.asyncio
+class TestUpdateVoiceState:
+    @pytest.fixture
+    def client(self, event_loop):
+        asyncio.set_event_loop(event_loop)
+        client = _helpers.unslot_class(shards.Shard)(token="1234", url="xxx")
+        client = _helpers.mock_methods_on(client, except_=("update_voice_state",))
+        return client
+
+    @pytest.mark.parametrize("channel_id", ["1234", None])
+    async def test_sends_payload(self, client, channel_id):
+        await client.update_voice_state("9987", channel_id, True, False)
+        client._send.assert_awaited_once_with(
+            {
+                "op": codes.GatewayOpcode.VOICE_STATE_UPDATE,
+                "d": {"guild_id": "9987", "channel_id": channel_id, "self_mute": True, "self_deaf": False,},
+            }
+        )

@@ -25,6 +25,7 @@ from hikari.events import channel
 from hikari.events import guild
 from hikari.events import message
 from hikari.events import other
+from hikari.events import voice
 from hikari.state import stateless
 
 
@@ -474,9 +475,9 @@ class TestStatelessEventManagerImpl:
 
     @pytest.mark.asyncio
     async def test_on_voice_state_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(channel.VoiceStateUpdateEvent)
+        mock_event = mock.MagicMock(voice.VoiceStateUpdateEvent)
 
-        with mock.patch("hikari.events.channel.VoiceStateUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.voice.VoiceStateUpdateEvent.deserialize", return_value=mock_event) as event:
             await event_manager_impl.on_voice_state_update(None, mock_payload)
 
             assert event_manager_impl.on_voice_state_update.___event_name___ == {"VOICE_STATE_UPDATE"}
@@ -485,9 +486,9 @@ class TestStatelessEventManagerImpl:
 
     @pytest.mark.asyncio
     async def test_on_voice_server_update(self, event_manager_impl, mock_payload):
-        mock_event = mock.MagicMock(channel.VoiceStateUpdateEvent)
+        mock_event = mock.MagicMock(voice.VoiceStateUpdateEvent)
 
-        with mock.patch("hikari.events.channel.VoiceStateUpdateEvent.deserialize", return_value=mock_event) as event:
+        with mock.patch("hikari.events.voice.VoiceServerUpdateEvent.deserialize", return_value=mock_event) as event:
             await event_manager_impl.on_voice_server_update(None, mock_payload)
 
             assert event_manager_impl.on_voice_server_update.___event_name___ == {"VOICE_SERVER_UPDATE"}
