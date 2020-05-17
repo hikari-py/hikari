@@ -16,9 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Utilities to handle cache management and object deserialization."""
+from __future__ import annotations
 
 import abc
 import typing
+
+from hikari.models import bases
 
 if typing.TYPE_CHECKING:
     from hikari.models import applications
@@ -36,24 +40,63 @@ if typing.TYPE_CHECKING:
     from hikari.internal import more_typing
 
 
-class CRUD(abc.ABC):
-    """CRUD interface for model caching.
+class ObjectFactory:
+    """Class that handles deserialization and cache operations.
 
     This is designed to be interfaced with using the event manager.
     """
 
+    def __init__(self, app):
+        self.app = app
+
     ################
     # APPLICATIONS #
     ################
-    @abc.abstractmethod
     async def create_application(self, payload: more_typing.JSONObject) -> applications.Application:
-        ...
+        application = applications.Application()
 
-    @abc.abstractmethod
+        application.name = payload["name"]
+        application.description = payload["description"]
+        application.is_bot_public = payload.get("bot_public")
+        application.is_bot_code_grant_required = payload.get("bot_require_code_grant")
+        application.summary = payload["summary"]
+        application.slug = payload.get("slug")
+        application.cover_image_hash = payload.get("cover_image")
+
+        if "guild_id" in payload:
+            application.guild_id = bases.Snowflake(application["guild_id"])
+
+        if "primary_sku_id" in payload:
+            application.primary_sku_id = bases.Snowflake(application["primary_sku_id"])
+
+        if "rpc_origins" in payload:
+            application.rpc_origins = set(payload.get("rpc_origins"))
+
+        if "verify_key" in payload:
+            application.verify_key = bytes(payload["verify_key"], "utf-8")
+
+        if "owner" in payload:
+            application.owner = self._make_user(payload["owner"])
+
+        if (raw_team := payload.get("team")) is not None:
+            team = applications.Team()
+            team.id = bases.Snowflake(raw_team["id"])
+            team.icon_hash = raw_team.get("icon_hash")
+            team.owner_user_id = bases.Snowflake(raw_team["owner_user_id"])
+
+            team.members = {}
+            for raw_member in raw_team["members"]:
+                member = applications.TeamMember()
+                member.team_id = team.id
+                member.user = self._make_user(raw_member["user"])
+                member.permissions = set(raw_member["permissions"])
+                member.membership_state = applications.TeamMembershipState(raw_member["membership_state"])
+
+        return application
+
     async def create_own_guild(self, payload: more_typing.JSONObject) -> applications.OwnGuild:
         ...
 
-    @abc.abstractmethod
     async def create_own_connection(self, payload: more_typing.JSONObject) -> applications.OwnConnection:
         ...
 
@@ -61,19 +104,15 @@ class CRUD(abc.ABC):
     # AUDIT LOGS #
     ##############
 
-    @abc.abstractmethod
     async def create_audit_log_change(self, payload: more_typing.JSONObject) -> audit_logs.AuditLogChange:
         ...
 
-    @abc.abstractmethod
     async def create_audit_log_entry_info(self, payload: more_typing.JSONObject) -> audit_logs.BaseAuditLogEntryInfo:
         ...
 
-    @abc.abstractmethod
     async def create_audit_log_entry(self, payload: more_typing.JSONObject) -> audit_logs.AuditLogEntry:
         ...
 
-    @abc.abstractmethod
     async def create_audit_log(self, payload: more_typing.JSONObject) -> audit_logs.AuditLog:
         ...
 
@@ -81,21 +120,17 @@ class CRUD(abc.ABC):
     # CHANNELS #
     ############
 
-    @abc.abstractmethod
     async def create_channel(self, payload: more_typing.JSONObject, can_cache: bool = False) -> channels.PartialChannel:
         ...
 
-    @abc.abstractmethod
     async def update_channel(
         self, channel: channels.PartialChannel, payload: more_typing.JSONObject,
     ) -> channels.PartialChannel:
         ...
 
-    @abc.abstractmethod
     async def get_channel(self, channel_id: int) -> typing.Optional[channels.PartialChannel]:
         ...
 
-    @abc.abstractmethod
     async def delete_channel(self, channel_id: int) -> typing.Optional[channels.PartialChannel]:
         ...
 
@@ -103,7 +138,6 @@ class CRUD(abc.ABC):
     # EMBEDS #
     ##########
 
-    @abc.abstractmethod
     async def create_embed(self, payload: more_typing.JSONObject) -> embeds.Embed:
         ...
 
@@ -111,19 +145,15 @@ class CRUD(abc.ABC):
     # EMOJIS #
     ##########
 
-    @abc.abstractmethod
     async def create_emoji(self, payload: more_typing.JSONObject, can_cache: bool = False) -> emojis.Emoji:
         ...
 
-    @abc.abstractmethod
     async def update_emoji(self, payload: more_typing.JSONObject) -> emojis.Emoji:
         ...
 
-    @abc.abstractmethod
     async def get_emoji(self, emoji_id: int) -> typing.Optional[emojis.KnownCustomEmoji]:
         ...
 
-    @abc.abstractmethod
     async def delete_emoji(self, emoji_id: int) -> typing.Optional[emojis.KnownCustomEmoji]:
         ...
 
@@ -131,7 +161,6 @@ class CRUD(abc.ABC):
     # GATEWAY #
     ###########
 
-    @abc.abstractmethod
     async def create_gateway_bot(self, payload: more_typing.JSONObject) -> gateway.GatewayBot:
         ...
 
@@ -139,127 +168,99 @@ class CRUD(abc.ABC):
     # GUILDS #
     ##########
 
-    @abc.abstractmethod
     async def create_member(self, payload: more_typing.JSONObject, can_cache: bool = False) -> guilds.GuildMember:
         # TODO: revisit for the voodoo to make a member into a special user.
         ...
 
-    @abc.abstractmethod
     async def update_member(self, member: guilds.GuildMember, payload: more_typing.JSONObject) -> guilds.GuildMember:
         ...
 
-    @abc.abstractmethod
     async def get_member(self, guild_id: int, user_id: int) -> typing.Optional[guilds.GuildMember]:
         ...
 
-    @abc.abstractmethod
     async def delete_member(self, guild_id: int, user_id: int) -> typing.Optional[guilds.GuildMember]:
         ...
 
-    @abc.abstractmethod
     async def create_role(self, payload: more_typing.JSONObject, can_cache: bool = False) -> guilds.PartialGuildRole:
         ...
 
-    @abc.abstractmethod
     async def update_role(
         self, role: guilds.PartialGuildRole, payload: more_typing.JSONObject
     ) -> guilds.PartialGuildRole:
         ...
 
-    @abc.abstractmethod
     async def get_role(self, guild_id: int, role_id: int) -> typing.Optional[guilds.PartialGuildRole]:
         ...
 
-    @abc.abstractmethod
     async def delete_role(self, guild_id: int, role_id: int) -> typing.Optional[guilds.PartialGuildRole]:
         ...
 
-    @abc.abstractmethod
     async def create_presence(
         self, payload: more_typing.JSONObject, can_cache: bool = False
     ) -> guilds.GuildMemberPresence:
         ...
 
-    @abc.abstractmethod
     async def update_presence(
         self, role: guilds.GuildMemberPresence, payload: more_typing.JSONObject
     ) -> guilds.GuildMemberPresence:
         ...
 
-    @abc.abstractmethod
     async def get_presence(self, guild_id: int, user_id: int) -> typing.Optional[guilds.GuildMemberPresence]:
         ...
 
-    # TODO: do we need this?
-    @abc.abstractmethod
     async def delete_presence(self, guild_id: int, user_id: int) -> typing.Optional[guilds.GuildMemberPresence]:
         ...
 
-    @abc.abstractmethod
     async def create_guild_ban(self, payload: more_typing.JSONObject) -> guilds.GuildMemberBan:
         ...
 
-    @abc.abstractmethod
     async def create_guild_integration(self, payload: more_typing.JSONObject) -> guilds.PartialGuildIntegration:
         ...
 
-    # FIXME: should this be Guild instead of PartialGuild
-    @abc.abstractmethod
     async def create_guild(self, payload: more_typing.JSONObject, can_cache: bool = False) -> guilds.PartialGuild:
         ...
 
-    @abc.abstractmethod
     async def update_guild(self, guild: guilds.PartialGuild, payload: more_typing.JSONObject) -> guilds.PartialGuild:
         ...
 
-    @abc.abstractmethod
     async def get_guild(self, guild_id: int) -> typing.Optional[guilds.PartialGuild]:
         ...
 
-    @abc.abstractmethod
     async def delete_guild(self, guild_id: int) -> typing.Optional[guilds.PartialGuild]:
         ...
 
-    @abc.abstractmethod
     async def create_guild_preview(self, payload: more_typing.JSONObject) -> guilds.GuildPreview:
         ...
 
     ###########
     # INVITES #
     ###########
-    @abc.abstractmethod
     async def create_invite(self, payload: more_typing.JSONObject) -> invites.Invite:
         ...
 
     ############
     # MESSAGES #
     ############
-    @abc.abstractmethod
     async def create_reaction(self, payload: more_typing.JSONObject) -> messages.Reaction:
         ...
 
-    @abc.abstractmethod
     async def create_message(self, payload: more_typing.JSONObject, can_cache: bool = False) -> messages.Message:
         ...
 
-    @abc.abstractmethod
     async def update_message(self, message: messages.Message, payload: more_typing.JSONObject) -> messages.Message:
         ...
 
-    @abc.abstractmethod
     async def get_message(self, channel_id: int, message_id: int) -> typing.Optional[messages.Message]:
         ...
 
-    @abc.abstractmethod
     async def delete_message(self, channel_id: int, message_id: int) -> typing.Optional[messages.Message]:
         ...
 
     #########
     # USERS #
     #########
-    @abc.abstractmethod
     async def create_user(self, payload: more_typing.JSONObject, can_cache: bool = False) -> users.User:
-        ...
+        return self._make_user(payload)
 
     @abc.abstractmethod
     async def update_user(self, user: users.User, payload: more_typing.JSONObject) -> users.User:
@@ -314,3 +315,14 @@ class CRUD(abc.ABC):
     @abc.abstractmethod
     async def create_webhook(self, payload: more_typing.JSONObject) -> webhooks.Webhook:
         ...
+
+    def _make_user(self, payload):
+        user_obj = users.User(app=self.app)
+        user_obj.id = bases.Snowflake(payload["id"])
+        user_obj.discriminator = payload["discriminator"]
+        user_obj.username = payload["username"]
+        user_obj.avatar_hash = payload["avatar"]
+        user_obj.is_bot = payload.get("bot", False)
+        user_obj.is_system = payload.get("system", False)
+        user_obj.flags = payload.get("bot", False)
+        return user_obj
