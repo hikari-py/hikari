@@ -409,7 +409,7 @@ class Message(bases.Unique, marshaller.Deserializable):
         hikari.errors.NotFound
             If the channel this message was created in does not exist.
         """
-        return await self._components.rest.fetch_channel(channel=self.channel_id)
+        return await self._app.rest.fetch_channel(channel=self.channel_id)
 
     async def edit(  # pylint:disable=line-too-long
         self,
@@ -472,7 +472,7 @@ class Message(bases.Unique, marshaller.Deserializable):
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
         """
-        return await self._components.rest.update_message(
+        return await self._app.rest.update_message(
             message=self.id,
             channel=self.channel_id,
             content=content,
@@ -500,7 +500,7 @@ class Message(bases.Unique, marshaller.Deserializable):
         This is the same as `edit`, but with all defaults set to prevent any
         mentions from working by default.
         """
-        return await self._components.rest.safe_update_message(
+        return await self._app.rest.safe_update_message(
             message=self.id,
             channel=self.channel_id,
             content=content,
@@ -581,7 +581,7 @@ class Message(bases.Unique, marshaller.Deserializable):
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
         """
-        return await self._components.rest.create_message(
+        return await self._app.rest.create_message(
             channel=self.channel_id,
             content=content,
             nonce=nonce,
@@ -614,7 +614,7 @@ class Message(bases.Unique, marshaller.Deserializable):
         This is the same as `reply`, but with all defaults set to prevent any
         mentions from working by default.
         """
-        return await self._components.rest.safe_create_message(
+        return await self._app.rest.safe_create_message(
             channel=self.channel_id,
             content=content,
             nonce=nonce,
@@ -637,7 +637,7 @@ class Message(bases.Unique, marshaller.Deserializable):
         hikari.errors.Forbidden
             If you lack the permissions to delete the message.
         """
-        await self._components.rest.delete_messages(channel=self.channel_id, message=self.id)
+        await self._app.rest.delete_messages(channel=self.channel_id, message=self.id)
 
     async def add_reaction(self, emoji: typing.Union[str, emojis_.Emoji]) -> None:
         r"""Add a reaction to this message.
@@ -675,7 +675,7 @@ class Message(bases.Unique, marshaller.Deserializable):
             due to it being outside of the range of a 64 bit integer.
 
         """
-        await self._components.rest.add_reaction(channel=self.channel_id, message=self.id, emoji=emoji)
+        await self._app.rest.add_reaction(channel=self.channel_id, message=self.id, emoji=emoji)
 
     async def remove_reaction(
         self, emoji: typing.Union[str, emojis_.Emoji], *, user: typing.Optional[users.User] = None
@@ -719,7 +719,7 @@ class Message(bases.Unique, marshaller.Deserializable):
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        await self._components.rest.remove_reaction(channel=self.channel_id, message=self.id, emoji=emoji, user=user)
+        await self._app.rest.remove_reaction(channel=self.channel_id, message=self.id, emoji=emoji, user=user)
 
     async def remove_all_reactions(self, emoji: typing.Optional[typing.Union[str, emojis_.Emoji]] = None) -> None:
         r"""Remove all users' reactions for a specific emoji from the message.
@@ -751,4 +751,4 @@ class Message(bases.Unique, marshaller.Deserializable):
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        await self._components.rest.remove_all_reactions(channel=self.channel_id, message=self.id, emoji=emoji)
+        await self._app.rest.remove_all_reactions(channel=self.channel_id, message=self.id, emoji=emoji)

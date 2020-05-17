@@ -50,7 +50,7 @@ if typing.TYPE_CHECKING:
     from hikari.internal import more_typing
     from hikari.models import gateway as gateway_models
     from hikari.models import guilds
-    from hikari.models import intents
+    from hikari.models import intents as intents_
     from hikari.rest import client as rest_client
 
 
@@ -135,7 +135,7 @@ class BotBase(
         return sum(s.reconnect_count for s in self.shards.values())
 
     @property
-    def intents(self) -> typing.Optional[intents.Intent]:  # noqa: D401
+    def intents(self) -> typing.Optional[intents_.Intent]:  # noqa: D401
         """Intents that are in use for the connection.
 
         If intents are not being used at all, then this will be `None` instead.

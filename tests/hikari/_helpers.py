@@ -35,8 +35,8 @@ import async_timeout
 import mock
 import pytest
 
-from hikari.models import bases
 from hikari.internal import marshaller
+from hikari.models import bases
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -47,16 +47,16 @@ if typing.TYPE_CHECKING:
 
 
 class _MessagePaginator(pagination.BufferedPaginatedResults[messages_.Message]):
-    __slots__ = ("_channel_id", "_direction", "_first_id", "_components", "_session")
+    __slots__ = ("_app", "_channel_id", "_direction", "_first_id", "_session")
 
-    def __init__(self, channel, direction, first, components, session) -> None:
+    def __init__(self, app, channel, direction, first, session) -> None:
         super().__init__()
+        self._app = app
         self._channel_id = str(int(channel))
         self._direction = direction
         self._first_id = (
             str(bases.Snowflake.from_datetime(first)) if isinstance(first, datetime.datetime) else str(int(first))
         )
-        self._components = components
         self._session = session
 
     async def _next_chunk(self):
@@ -66,7 +66,7 @@ class _MessagePaginator(pagination.BufferedPaginatedResults[messages_.Message]):
             "limit": 100,
         }
 
-        chunk = await self._session.get_channelmessages_(**kwargs)
+        chunk = await self._session.get_channel_messages(**kwargs)
 
         if not chunk:
             return None
@@ -75,7 +75,7 @@ class _MessagePaginator(pagination.BufferedPaginatedResults[messages_.Message]):
 
         self._first_id = chunk[-1]["id"]
 
-        return (messages_.Message.deserialize(m, components=self._components) for m in chunk)
+        return (messages_.Message.deserialize(m, app=self._app) for m in chunk)
 
 
 class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method, too-many-public-methods
@@ -109,7 +109,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         payload = await self._session.get_channel(
             channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel))
         )
-        return channels_.deserialize_channel(payload, components=self._components)
+        return channels_.deserialize_channel(payload, app=self._app)
 
     async def update_channel(
         self,
@@ -209,7 +209,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             ),
             reason=reason,
         )
-        return channels_.deserialize_channel(payload, components=self._components)
+        return channels_.deserialize_channel(payload, app=self._app)
 
     async def delete_channel(self, channel: typing.Union[bases.Snowflake, int, str, channels_.PartialChannel]) -> None:
         """Delete the given channel ID, or if it is a DM, close it.
@@ -249,13 +249,13 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         )
 
     @typing.overload
-    def fetchmessages_(
+    def fetch_messages(
         self, channel: typing.Union[bases.Snowflake, int, str, channels_.PartialChannel]
     ) -> pagination.PaginatedResults[messages_.Message]:
         """Fetch the channel history, starting with the newest messages."""
 
     @typing.overload
-    def fetchmessages_(
+    def fetch_messages(
         self,
         channel: typing.Union[bases.Snowflake, int, str, channels_.PartialChannel],
         before: typing.Union[datetime.datetime, int, str, bases.Unique, bases.Snowflake],
@@ -263,7 +263,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         """Fetch the channel history before a given message/time."""
 
     @typing.overload
-    def fetchmessages_(
+    def fetch_messages(
         self,
         channel: typing.Union[bases.Snowflake, int, str, channels_.PartialChannel],
         after: typing.Union[datetime.datetime, int, str, bases.Unique, bases.Snowflake],
@@ -271,14 +271,14 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         """Fetch the channel history after a given message/time."""
 
     @typing.overload
-    def fetchmessages_(
+    def fetch_messages(
         self,
         channel: typing.Union[bases.Snowflake, int, str, channels_.PartialChannel],
         around: typing.Union[datetime.datetime, int, str, bases.Unique, bases.Snowflake],
     ) -> pagination.PaginatedResults[messages_.Message]:
         """Fetch the channel history around a given message/time."""
 
-    def fetchmessages_(
+    def fetch_messages(
         self,
         channel: typing.Union[bases.Snowflake, int, str, channels_.PartialChannel],
         **kwargs: typing.Union[datetime.datetime, int, str, bases.Unique, bases.Snowflake],
@@ -328,33 +328,33 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
             timestamp = datetime.datetime(2020, 5, 2)
 
-            async for message in rest.fetchmessages_(channel, before=timestamp).limit(20):
+            async for message in rest.fetch_messages(channel, before=timestamp).limit(20):
                 print(message.author, message.content)
 
         Fetching messages sent around the same time as a given message.
 
-            async for message in rest.fetchmessages_(channel, around=event.message):
+            async for message in rest.fetch_messages(channel, around=event.message):
                 print(message.author, message.content)
 
         Fetching messages after May 3rd, 2020 at 15:33 UTC.
 
             timestamp = datetime.datetime(2020, 5, 3, 15, 33, tzinfo=datetime.timezone.utc)
 
-            async for message in rest.fetchmessages_(channel, after=timestamp):
+            async for message in rest.fetch_messages(channel, after=timestamp):
                 print(message.author, message.content)
 
         Fetching all messages, newest to oldest:
 
-            async for message in rest.fetchmessages_(channel, before=datetime.datetime.utcnow()):
+            async for message in rest.fetch_messages(channel, before=datetime.datetime.utcnow()):
                 print(message)
 
             # More efficient alternative
-            async for message in rest.fetchmessages_(channel):
+            async for message in rest.fetch_messages(channel):
                 print(message)
 
         Fetching all messages, oldest to newest:
 
-            async for message in rest.fetchmessages_(channel, after=):
+            async for message in rest.fetch_messages(channel, after=):
                 print(message)
 
         !!! warning
@@ -395,7 +395,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             direction, first = "before", bases.Snowflake.max()
 
         return _MessagePaginator(
-            channel=channel, direction=direction, first=first, components=self._components, session=self._session,
+            app=self._app, channel=channel, direction=direction, first=first, session=self._session,
         )
 
     async def fetch_message(
@@ -434,7 +434,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel)),
             message_id=str(message.id if isinstance(message, bases.Unique) else int(message)),
         )
-        return messages_.Message.deserialize(payload, components=self._components)
+        return messages_.Message.deserialize(payload, app=self._app)
 
     async def create_message(  # pylint: disable=line-too-long
         self,
@@ -526,7 +526,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
                 mentions_everyone=mentions_everyone, user_mentions=user_mentions, role_mentions=role_mentions
             ),
         )
-        return messages_.Message.deserialize(payload, components=self._components)
+        return messages_.Message.deserialize(payload, app=self._app)
 
     def safe_create_message(
         self,
@@ -645,7 +645,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
                 mentions_everyone=mentions_everyone, user_mentions=user_mentions, role_mentions=role_mentions,
             ),
         )
-        return messages_.Message.deserialize(payload, components=self._components)
+        return messages_.Message.deserialize(payload, app=self._app)
 
     def safe_update_message(
         self,
@@ -681,11 +681,11 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             role_mentions=role_mentions,
         )
 
-    async def deletemessages_(
+    async def delete_messages(
         self,
         channel: typing.Union[bases.Snowflake, int, str, channels_.PartialChannel],
         message: typing.Union[bases.Snowflake, int, str, messages_.Message],
-        *additionalmessages_: typing.Union[bases.Snowflake, int, str, messages_.Message],
+        *additional_messages: typing.Union[bases.Snowflake, int, str, messages_.Message],
     ) -> None:
         """Delete a message in a given channel.
 
@@ -695,7 +695,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             The object or ID of the channel to get the message from.
         message : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             The object or ID of the message to delete.
-        *additionalmessages_ : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
+        *additional_messages : typing.Union[hikari.messages.Message, hikari.bases.Snowflake, int]
             Objects and/or IDs of additional messages to delete in the same
             channel, in total you can delete up to 100 messages in a request.
 
@@ -720,11 +720,11 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             messages that are newer than `2` weeks in age. If any of the
             messages are older than `2` weeks then this call will fail.
         """
-        if additionalmessages_:
+        if additional_messages:
             messages = list(
                 # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
                 dict.fromkeys(
-                    str(m.id if isinstance(m, bases.Unique) else int(m)) for m in (message, *additionalmessages_)
+                    str(m.id if isinstance(m, bases.Unique) else int(m)) for m in (message, *additional_messages)
                 )
             )
             if len(messages) > 100:
@@ -822,7 +822,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         payload = await self._session.get_channel_invites(
             channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel))
         )
-        return [invites.InviteWithMetadata.deserialize(invite, components=self._components) for invite in payload]
+        return [invites.InviteWithMetadata.deserialize(invite, app=self._app) for invite in payload]
 
     async def create_invite_for_channel(
         self,
@@ -894,7 +894,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             target_user_type=target_user_type,
             reason=reason,
         )
-        return invites.InviteWithMetadata.deserialize(payload, components=self._components)
+        return invites.InviteWithMetadata.deserialize(payload, app=self._app)
 
     async def delete_channel_overwrite(  # pylint: disable=line-too-long
         self,
@@ -982,8 +982,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel))
         )
         return {
-            bases.Snowflake(message["id"]): messages_.Message.deserialize(message, components=self._components)
-            for message in payload
+            bases.Snowflake(message["id"]): messages_.Message.deserialize(message, app=self._app) for message in payload
         }
 
     async def pin_message(
@@ -1091,7 +1090,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             avatar=await avatar.read() if avatar is not ... else ...,
             reason=reason,
         )
-        return webhooks.Webhook.deserialize(payload, components=self._components)
+        return webhooks.Webhook.deserialize(payload, app=self._app)
 
     async def fetch_channel_webhooks(
         self, channel: typing.Union[bases.Snowflake, int, str, channels_.GuildChannel]
@@ -1122,4 +1121,4 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         payload = await self._session.get_channel_webhooks(
             channel_id=str(channel.id if isinstance(channel, bases.Unique) else int(channel))
         )
-        return [webhooks.Webhook.deserialize(webhook, components=self._components) for webhook in payload]
+        return [webhooks.Webhook.deserialize(webhook, app=self._app) for webhook in payload]

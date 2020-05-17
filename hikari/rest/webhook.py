@@ -78,7 +78,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             webhook_id=str(webhook.id if isinstance(webhook, bases.Unique) else int(webhook)),
             webhook_token=webhook_token,
         )
-        return webhooks.Webhook.deserialize(payload, components=self._components)
+        return webhooks.Webhook.deserialize(payload, app=self._app)
 
     async def update_webhook(
         self,
@@ -141,7 +141,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             ),
             reason=reason,
         )
-        return webhooks.Webhook.deserialize(payload, components=self._components)
+        return webhooks.Webhook.deserialize(payload, app=self._app)
 
     async def delete_webhook(
         self, webhook: typing.Union[bases.Snowflake, int, str, webhooks.Webhook], *, webhook_token: str = ...
@@ -276,7 +276,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             ),
         )
         if wait is True:
-            return messages_.Message.deserialize(payload, components=self._components)
+            return messages_.Message.deserialize(payload, app=self._app)
         return None
 
     def safe_webhook_execute(

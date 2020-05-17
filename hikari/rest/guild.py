@@ -47,13 +47,13 @@ if typing.TYPE_CHECKING:
 
 
 class _MemberPaginator(pagination.BufferedPaginatedResults[guilds.GuildMember]):
-    __slots__ = ("_guild_id", "_first_id", "_components", "_session")
+    __slots__ = ("_app", "_guild_id", "_first_id", "_session")
 
-    def __init__(self, guild, created_after, components, session):
+    def __init__(self, app, guild, created_after, session):
         super().__init__()
+        self._app = app
         self._guild_id = str(int(guild))
         self._first_id = self._prepare_first_id(created_after)
-        self._components = components
         self._session = session
 
     async def _next_chunk(self):
@@ -64,7 +64,7 @@ class _MemberPaginator(pagination.BufferedPaginatedResults[guilds.GuildMember]):
 
         self._first_id = chunk[-1]["id"]
 
-        return (guilds.GuildMember.deserialize(m, components=self._components) for m in chunk)
+        return (guilds.GuildMember.deserialize(m, app=self._app) for m in chunk)
 
 
 class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method, too-many-public-methods
@@ -126,7 +126,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             limit=limit,
             before=before,
         )
-        return audit_logs.AuditLog.deserialize(payload, components=self._components)
+        return audit_logs.AuditLog.deserialize(payload, app=self._app)
 
     def fetch_audit_log_entries_before(
         self,
@@ -194,7 +194,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             user_id=(str(user.id if isinstance(user, bases.Unique) else int(user)) if user is not ... else ...),
             action_type=action_type,
         )
-        return audit_logs.AuditLogIterator(app=self._components, request=request, before=before, limit=limit)
+        return audit_logs.AuditLogIterator(app=self._app, request=request, before=before, limit=limit)
 
     async def fetch_guild_emoji(
         self,
@@ -229,7 +229,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             emoji_id=str(emoji.id if isinstance(emoji, bases.Unique) else int(emoji)),
         )
-        return emojis.KnownCustomEmoji.deserialize(payload, components=self._components)
+        return emojis.KnownCustomEmoji.deserialize(payload, app=self._app)
 
     async def fetch_guild_emojis(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
@@ -259,7 +259,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.list_guild_emojis(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return [emojis.KnownCustomEmoji.deserialize(emoji, components=self._components) for emoji in payload]
+        return [emojis.KnownCustomEmoji.deserialize(emoji, app=self._app) for emoji in payload]
 
     async def create_guild_emoji(
         self,
@@ -316,7 +316,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             else ...,
             reason=reason,
         )
-        return emojis.KnownCustomEmoji.deserialize(payload, components=self._components)
+        return emojis.KnownCustomEmoji.deserialize(payload, app=self._app)
 
     async def update_guild_emoji(
         self,
@@ -371,7 +371,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             else ...,
             reason=reason,
         )
-        return emojis.KnownCustomEmoji.deserialize(payload, components=self._components)
+        return emojis.KnownCustomEmoji.deserialize(payload, app=self._app)
 
     async def delete_guild_emoji(
         self,
@@ -471,7 +471,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             roles=[role.serialize() for role in roles] if roles is not ... else ...,
             channels=[channel.serialize() for channel in channels] if channels is not ... else ...,
         )
-        return guilds.Guild.deserialize(payload, components=self._components)
+        return guilds.Guild.deserialize(payload, app=self._app)
 
     async def fetch_guild(self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]) -> guilds.Guild:
         """Get a given guild's object.
@@ -501,7 +501,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             # Always get counts. There is no reason you would _not_ want this info, right?
             with_counts=True,
         )
-        return guilds.Guild.deserialize(payload, components=self._components)
+        return guilds.Guild.deserialize(payload, app=self._app)
 
     async def fetch_guild_preview(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
@@ -533,7 +533,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_preview(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return guilds.GuildPreview.deserialize(payload, components=self._components)
+        return guilds.GuildPreview.deserialize(payload, app=self._app)
 
     async def update_guild(
         self,
@@ -627,7 +627,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             ),
             reason=reason,
         )
-        return guilds.Guild.deserialize(payload, components=self._components)
+        return guilds.Guild.deserialize(payload, app=self._app)
 
     async def delete_guild(self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]) -> None:
         """Permanently deletes the given guild.
@@ -679,7 +679,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.list_guild_channels(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return [channels_.deserialize_channel(channel, components=self._components) for channel in payload]
+        return [channels_.deserialize_channel(channel, app=self._app) for channel in payload]
 
     async def create_guild_channel(  # pylint: disable=too-many-arguments
         self,
@@ -783,7 +783,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             ),
             reason=reason,
         )
-        return channels_.deserialize_channel(payload, components=self._components)
+        return channels_.deserialize_channel(payload, app=self._app)
 
     async def reposition_guild_channels(
         self,
@@ -859,7 +859,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             user_id=str(user.id if isinstance(user, bases.Unique) else int(user)),
         )
-        return guilds.GuildMember.deserialize(payload, components=self._components)
+        return guilds.GuildMember.deserialize(payload, app=self._app)
 
     def fetch_members(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
@@ -892,7 +892,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         hikari.errors.Forbidden
             If you are not in the guild.
         """
-        return _MemberPaginator(guild=guild, created_after=None, components=self._components, session=self._session)
+        return _MemberPaginator(app=self._app, guild=guild, created_after=None, session=self._session)
 
     async def update_member(  # pylint: disable=too-many-arguments
         self,
@@ -1149,7 +1149,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             user_id=str(user.id if isinstance(user, bases.Unique) else int(user)),
         )
-        return guilds.GuildMemberBan.deserialize(payload, components=self._components)
+        return guilds.GuildMemberBan.deserialize(payload, app=self._app)
 
     async def fetch_bans(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
@@ -1179,7 +1179,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_bans(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return [guilds.GuildMemberBan.deserialize(ban, components=self._components) for ban in payload]
+        return [guilds.GuildMemberBan.deserialize(ban, app=self._app) for ban in payload]
 
     async def ban_member(
         self,
@@ -1286,10 +1286,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_roles(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return {
-            bases.Snowflake(role["id"]): guilds.GuildRole.deserialize(role, components=self._components)
-            for role in payload
-        }
+        return {bases.Snowflake(role["id"]): guilds.GuildRole.deserialize(role, app=self._app) for role in payload}
 
     async def create_role(
         self,
@@ -1350,7 +1347,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             mentionable=mentionable,
             reason=reason,
         )
-        return guilds.GuildRole.deserialize(payload, components=self._components)
+        return guilds.GuildRole.deserialize(payload, app=self._app)
 
     async def reposition_roles(
         self,
@@ -1395,7 +1392,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
                 for position, channel in [role, *additional_roles]
             ],
         )
-        return [guilds.GuildRole.deserialize(role, components=self._components) for role in payload]
+        return [guilds.GuildRole.deserialize(role, app=self._app) for role in payload]
 
     async def update_role(
         self,
@@ -1460,7 +1457,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             mentionable=mentionable,
             reason=reason,
         )
-        return guilds.GuildRole.deserialize(payload, components=self._components)
+        return guilds.GuildRole.deserialize(payload, app=self._app)
 
     async def delete_role(
         self,
@@ -1599,7 +1596,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_voice_regions(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return [voices.VoiceRegion.deserialize(region, components=self._components) for region in payload]
+        return [voices.VoiceRegion.deserialize(region, app=self._app) for region in payload]
 
     async def fetch_guild_invites(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
@@ -1629,7 +1626,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_invites(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return [invites.InviteWithMetadata.deserialize(invite, components=self._components) for invite in payload]
+        return [invites.InviteWithMetadata.deserialize(invite, app=self._app) for invite in payload]
 
     async def fetch_integrations(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
@@ -1659,9 +1656,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_integrations(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return [
-            guilds.GuildIntegration.deserialize(integration, components=self._components) for integration in payload
-        ]
+        return [guilds.GuildIntegration.deserialize(integration, app=self._app) for integration in payload]
 
     async def update_integration(
         self,
@@ -1806,7 +1801,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_embed(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return guilds.GuildEmbed.deserialize(payload, components=self._components)
+        return guilds.GuildEmbed.deserialize(payload, app=self._app)
 
     async def update_guild_embed(
         self,
@@ -1856,7 +1851,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             enabled=enabled,
             reason=reason,
         )
-        return guilds.GuildEmbed.deserialize(payload, components=self._components)
+        return guilds.GuildEmbed.deserialize(payload, app=self._app)
 
     async def fetch_guild_vanity_url(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
@@ -1889,7 +1884,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_vanity_url(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return invites.VanityUrl.deserialize(payload, components=self._components)
+        return invites.VanityUrl.deserialize(payload, app=self._app)
 
     def format_guild_widget_image(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild], *, style: str = ...
@@ -1950,4 +1945,4 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_webhooks(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return [webhooks.Webhook.deserialize(webhook, components=self._components) for webhook in payload]
+        return [webhooks.Webhook.deserialize(webhook, app=self._app) for webhook in payload]

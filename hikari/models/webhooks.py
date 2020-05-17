@@ -185,7 +185,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         if not self.token:
             raise ValueError("Cannot send a message using a webhook where we don't know it's token.")
 
-        return await self._components.rest.execute_webhook(
+        return await self._app.rest.execute_webhook(
             webhook=self.id,
             webhook_token=self.token,
             content=content,
@@ -228,7 +228,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         if not self.token:
             raise ValueError("Cannot execute a webhook with a unknown token (set to `None`).")
 
-        return await self._components.rest.safe_webhook_execute(
+        return await self._app.rest.safe_webhook_execute(
             webhook=self.id,
             webhook_token=self.token,
             content=content,
@@ -270,7 +270,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         if use_token is None and self.token:
             use_token = True
 
-        await self._components.rest.delete_webhook(webhook=self.id, webhook_token=self.token if use_token else ...)
+        await self._app.rest.delete_webhook(webhook=self.id, webhook_token=self.token if use_token else ...)
 
     async def edit(
         self,
@@ -329,7 +329,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         if use_token is None and self.token:
             use_token = True
 
-        return await self._components.rest.update_webhook(
+        return await self._app.rest.update_webhook(
             webhook=self.id,
             webhook_token=self.token if use_token else ...,
             name=name,
@@ -353,7 +353,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         hikari.errors.NotFound
             If the channel this message was created in does not exist.
         """
-        return await self._components.rest.fetch_channel(channel=self.channel_id)
+        return await self._app.rest.fetch_channel(channel=self.channel_id)
 
     async def fetch_guild(self) -> guilds_.Guild:
         """Fetch the guild this webhook belongs to.
@@ -369,7 +369,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
             If you don't have access to the guild this webhook belongs to or it
             doesn't exist.
         """
-        return await self._components.rest.fetch_guild(guild=self.guild_id)
+        return await self._app.rest.fetch_guild(guild=self.guild_id)
 
     async def fetch_self(self, *, use_token: typing.Optional[bool] = None) -> Webhook:
         if use_token and not self.token:
@@ -378,9 +378,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         if use_token is None and self.token:
             use_token = True
 
-        return await self._components.rest.fetch_webhook(
-            webhook=self.id, webhook_token=self.token if use_token else ...
-        )
+        return await self._app.rest.fetch_webhook(webhook=self.id, webhook_token=self.token if use_token else ...)
 
     @property
     def avatar_url(self) -> str:

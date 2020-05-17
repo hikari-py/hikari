@@ -137,15 +137,15 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
 
     Parameters
     ----------
-    components: hikari.clients.application.Application
+    app: hikari.clients.application.Application
         The client application that this event manager should be bound to.
         Includes the event dispatcher that will store individual events and
         manage dispatching them after this object creates them.
     """
 
-    def __init__(self, components: application.Application) -> None:
+    def __init__(self, app: application.Application) -> None:
+        self._app = app
         self.logger = logging.getLogger(type(self).__qualname__)
-        self._components = components
         self.raw_event_mappers = {}
 
         # Look for events and register them.

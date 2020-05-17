@@ -44,4 +44,4 @@ class RESTVoiceComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             This does not include VIP servers.
         """
         payload = await self._session.list_voice_regions()
-        return [voices.VoiceRegion.deserialize(region, components=self._components) for region in payload]
+        return [voices.VoiceRegion.deserialize(region, app=self._app) for region in payload]
