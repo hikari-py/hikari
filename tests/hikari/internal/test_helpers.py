@@ -18,8 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import pytest
 
-from hikari import guilds
-from hikari import users
+from hikari.models import guilds, users
 from hikari.internal import helpers
 from tests.hikari import _helpers
 

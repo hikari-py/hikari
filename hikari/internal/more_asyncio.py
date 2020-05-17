@@ -27,7 +27,7 @@ import inspect
 import typing
 
 if typing.TYPE_CHECKING:
-    from hikari.internal import more_typing
+    from . import more_typing
 
 
 @typing.overload
