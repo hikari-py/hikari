@@ -15,7 +15,7 @@
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
+# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 from hikari.internal import urls
 from tests.hikari import _helpers
 

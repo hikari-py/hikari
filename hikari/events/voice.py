@@ -24,11 +24,12 @@ __all__ = ["VoiceStateUpdateEvent", "VoiceServerUpdateEvent"]
 
 import attr
 
-from hikari.events import base as base_events
-from hikari import bases as base_entities
-from hikari import intents
-from hikari import voices
 from hikari.internal import marshaller
+from hikari.models import bases as base_models
+from hikari.models import intents
+from hikari.models import voices
+
+from . import base as base_events
 
 
 @base_events.requires_intents(intents.Intent.GUILD_VOICE_STATES)
@@ -53,7 +54,7 @@ class VoiceServerUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
     token: str = marshaller.attrib(deserializer=str)
     """The voice connection's string token."""
 
-    guild_id: base_entities.Snowflake = marshaller.attrib(deserializer=base_entities.Snowflake, repr=True)
+    guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the guild this voice server update is for."""
 
     endpoint: str = marshaller.attrib(deserializer=str, repr=True)

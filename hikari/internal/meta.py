@@ -26,7 +26,7 @@ import abc
 import inspect
 import typing
 
-from hikari.internal import more_collections
+from . import more_collections
 
 
 class SingletonMeta(type):

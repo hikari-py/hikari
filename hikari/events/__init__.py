@@ -16,28 +16,15 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Components and entities that are used to describe Discord gateway events."""
+"""Application and entities that are used to describe Discord gateway events."""
 
 from __future__ import annotations
 
-from hikari.events import base
-from hikari.events import channel
-from hikari.events import guild
-from hikari.events import message
-from hikari.events import other
-from hikari.events import voice
-from hikari.events.base import *
-from hikari.events.channel import *
-from hikari.events.guild import *
-from hikari.events.message import *
-from hikari.events.other import *
-from hikari.events.voice import *
+from .base import *
+from .channel import *
+from .guild import *
+from .message import *
+from .other import *
+from .voice import *
 
-__all__ = [
-    *base.__all__,
-    *channel.__all__,
-    *guild.__all__,
-    *message.__all__,
-    *other.__all__,
-    *voice.__all__,
-]
+__all__ = base.__all__ + channel.__all__ + guild.__all__ + message.__all__ + other.__all__ + voice.__all__

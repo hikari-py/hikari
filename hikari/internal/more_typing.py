@@ -50,11 +50,13 @@ from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
 if _TYPE_CHECKING:
+    import asyncio
+    import contextvars
+
     from types import FrameType as _FrameType
     from typing import Callable as _Callable
     from typing import IO as _IO
-    import asyncio
-    import contextvars
+
 # pylint: enable=ungrouped-imports
 
 T_contra = _TypeVar("T_contra", contravariant=True)

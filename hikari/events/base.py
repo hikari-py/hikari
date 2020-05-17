@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Bases for components and entities that are used to describe Discord gateway events."""
+"""Bases for application and entities that are used to describe Discord gateway events."""
 
 from __future__ import annotations
 
@@ -27,18 +27,18 @@ import typing
 
 import attr
 
-from hikari import bases
 from hikari.internal import marshaller
 from hikari.internal import more_collections
+from hikari.models import bases as base_models
 
 if typing.TYPE_CHECKING:
-    from hikari import intents
+    from hikari.models import intents
 
 
 # Base event, is not deserialized
 @marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class HikariEvent(bases.Entity, abc.ABC):
+class HikariEvent(base_models.Entity, abc.ABC):
     """The base class that all events inherit from."""
 
 

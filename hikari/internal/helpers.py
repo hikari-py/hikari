@@ -22,14 +22,21 @@ from __future__ import annotations
 
 __all__ = []
 
+import logging
 import typing
 
-from hikari import bases
-from hikari.internal import more_collections
+from hikari.models import bases
+
+from . import more_collections
 
 if typing.TYPE_CHECKING:
-    from hikari import guilds
-    from hikari import users
+    from hikari.models import guilds
+    from hikari.models import users
+
+
+def get_logger(cls: typing.Union[typing.Type, typing.Any], *additional_args: str) -> logging.Logger:
+    cls = cls if isinstance(cls, type) else type(cls)
+    return logging.getLogger(".".join((cls.__module__, cls.__qualname__, *additional_args)))
 
 
 def generate_allowed_mentions(  # pylint:disable=line-too-long
