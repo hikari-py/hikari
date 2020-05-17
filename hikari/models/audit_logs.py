@@ -508,6 +508,7 @@ def _deserialize_webhooks(
     return {bases.Snowflake(webhook["id"]): webhooks_.Webhook.deserialize(webhook, **kwargs) for webhook in payload}
 
 
+# TODO: can we remove this? it is used by a seemingly duplicated endpoint that can just use the iterator.
 @marshaller.marshallable()
 @attr.s(eq=True, repr=False, kw_only=True, slots=True)
 class AuditLog(bases.Entity, marshaller.Deserializable):
