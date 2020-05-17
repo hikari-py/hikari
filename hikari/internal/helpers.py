@@ -25,10 +25,11 @@ __all__ = []
 import logging
 import typing
 
+from hikari.models import bases
+
 from . import more_collections
 
 if typing.TYPE_CHECKING:
-    from hikari.models import bases
     from hikari.models import guilds
     from hikari.models import users
 

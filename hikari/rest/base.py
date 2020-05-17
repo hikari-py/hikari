@@ -44,8 +44,8 @@ class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
     """
 
     @abc.abstractmethod
-    def __init__(self, components: application.Application, session: rest_session.RESTSession) -> None:
-        self._components = components
+    def __init__(self, app: application.Application, session: rest_session.RESTSession) -> None:
+        self._app = app
         self._session = session
 
     async def __aenter__(self) -> BaseRESTComponent:

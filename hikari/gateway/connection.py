@@ -535,7 +535,7 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
         """
         payload = {
             "op": codes.GatewayOpcode.VOICE_STATE_UPDATE,
-            "d": {"guild_id": guild_id, "channel_id": channel_id, "self_mute": self_mute, "self_deaf": self_deaf,},
+            "d": {"guild_id": guild_id, "channel_id": channel_id, "self_mute": self_mute, "self_deaf": self_deaf},
         }
 
         await self._send(payload)

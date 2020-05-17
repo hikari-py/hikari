@@ -84,7 +84,7 @@ class GatewayClient(runnable.RunnableClient):
 
     __slots__ = (
         "_activity",
-        "_components",
+        "_app",
         "_connection",
         "_idle_since",
         "_is_afk",
@@ -97,7 +97,7 @@ class GatewayClient(runnable.RunnableClient):
 
     def __init__(self, shard_id: int, shard_count: int, app: application.Application, url: str) -> None:
         super().__init__(helpers.get_logger(self, str(shard_id)))
-        self._components = app
+        self._app = app
         self._raw_event_consumer = app.event_manager
         self._activity = app.config.initial_activity
         self._idle_since = app.config.initial_idle_since

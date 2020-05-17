@@ -40,15 +40,15 @@ if typing.TYPE_CHECKING:
 
 
 class _GuildPaginator(pagination.BufferedPaginatedResults[guilds.Guild]):
-    __slots__ = ("_session", "_components", "_newest_first", "_first_id")
+    __slots__ = ("_app", "_session", "_newest_first", "_first_id")
 
-    def __init__(self, newest_first, first_item, components, session):
+    def __init__(self, app, newest_first, first_item, session):
         super().__init__()
+        self._app = app
         self._newest_first = newest_first
         self._first_id = self._prepare_first_id(
             first_item, bases.Snowflake.max() if newest_first else bases.Snowflake.min(),
         )
-        self._components = components
         self._session = session
 
     async def _next_chunk(self):
@@ -61,7 +61,7 @@ class _GuildPaginator(pagination.BufferedPaginatedResults[guilds.Guild]):
 
         self._first_id = chunk[-1]["id"]
 
-        return (applications.OwnGuild.deserialize(g, components=self._components) for g in chunk)
+        return (applications.OwnGuild.deserialize(g, app=self._app) for g in chunk)
 
 
 class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
@@ -76,7 +76,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             The current user object.
         """
         payload = await self._session.get_current_user()
-        return users.MyUser.deserialize(payload, components=self._components)
+        return users.MyUser.deserialize(payload, app=self._app)
 
     async def update_me(self, *, username: str = ..., avatar: typing.Optional[files.BaseStream] = ...) -> users.MyUser:
         """Edit the current user.
@@ -107,7 +107,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         payload = await self._session.modify_current_user(
             username=username, avatar=await avatar.read() if avatar is not ... else ...,
         )
-        return users.MyUser.deserialize(payload, components=self._components)
+        return users.MyUser.deserialize(payload, app=self._app)
 
     async def fetch_my_connections(self) -> typing.Sequence[applications.OwnConnection]:
         """
@@ -125,9 +125,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
             A list of connection objects.
         """
         payload = await self._session.get_current_user_connections()
-        return [
-            applications.OwnConnection.deserialize(connection, components=self._components) for connection in payload
-        ]
+        return [applications.OwnConnection.deserialize(connection, app=self._app) for connection in payload]
 
     def fetch_my_guilds(
         self,
@@ -158,9 +156,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         hikari.errors.NotFound
             If the guild is not found.
         """
-        return _GuildPaginator(
-            newest_first=newest_first, first_item=start_at, components=self._components, session=self._session
-        )
+        return _GuildPaginator(app=self._app, newest_first=newest_first, first_item=start_at, session=self._session)
 
     async def leave_guild(self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]) -> None:
         """Make the current user leave a given guild.
@@ -206,4 +202,4 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         payload = await self._session.create_dm(
             recipient_id=str(recipient.id if isinstance(recipient, bases.Unique) else int(recipient))
         )
-        return channels_.DMChannel.deserialize(payload, components=self._components)
+        return channels_.DMChannel.deserialize(payload, app=self._app)

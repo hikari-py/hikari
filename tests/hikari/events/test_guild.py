@@ -15,16 +15,19 @@
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along ith Hikari. If not, see <https://www.gnu.org/licenses/>.
+# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import contextlib
 import datetime
 
 import mock
 import pytest
 
-from hikari.models import unset, guilds, users, emojis
 from hikari.events import guild
 from hikari.internal import conversions
+from hikari.models import emojis
+from hikari.models import guilds
+from hikari.models import unset
+from hikari.models import users
 from tests.hikari import _helpers
 
 

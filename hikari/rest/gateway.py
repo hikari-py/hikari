@@ -59,4 +59,4 @@ class RESTGatewayComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             The bot specific gateway information object.
         """
         payload = await self._session.get_gateway_bot()
-        return gateway.GatewayBot.deserialize(payload, components=self._components)
+        return gateway.GatewayBot.deserialize(payload, app=self._app)

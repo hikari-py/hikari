@@ -610,7 +610,7 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
         if not self._buffer and self._limit != 0:
             await self._fill()
         try:
-            entry = AuditLogEntry.deserialize(self._buffer.pop(), components=self._app)
+            entry = AuditLogEntry.deserialize(self._buffer.pop(), app=self._app)
             self._front = str(entry.id)
             return entry
         except IndexError:
@@ -629,19 +629,17 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
         self._buffer.extend(payload["audit_log_entries"])
         if users := payload.get("users"):
             self.users = copy.copy(self.users)
-            self.users.update(
-                {bases.Snowflake(u["id"]): users_.User.deserialize(u, components=self._app) for u in users}
-            )
+            self.users.update({bases.Snowflake(u["id"]): users_.User.deserialize(u, app=self._app) for u in users})
         if webhooks := payload.get("webhooks"):
             self.webhooks = copy.copy(self.webhooks)
             self.webhooks.update(
-                {bases.Snowflake(w["id"]): webhooks_.Webhook.deserialize(w, components=self._app) for w in webhooks}
+                {bases.Snowflake(w["id"]): webhooks_.Webhook.deserialize(w, app=self._app) for w in webhooks}
             )
         if integrations := payload.get("integrations"):
             self.integrations = copy.copy(self.integrations)
             self.integrations.update(
                 {
-                    bases.Snowflake(i["id"]): guilds.PartialGuildIntegration.deserialize(i, components=self._app)
+                    bases.Snowflake(i["id"]): guilds.PartialGuildIntegration.deserialize(i, app=self._app)
                     for i in integrations
                 }
             )

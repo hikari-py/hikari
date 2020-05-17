@@ -41,7 +41,7 @@ if typing.TYPE_CHECKING:
 class Entity(abc.ABC):
     """The base for any entity used in this API."""
 
-    _components: typing.Optional[application.Application] = attr.attrib(default=None, repr=False, eq=False, hash=False)
+    _app: typing.Optional[application.Application] = attr.attrib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
 

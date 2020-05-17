@@ -38,15 +38,15 @@ if typing.TYPE_CHECKING:
 
 
 class _ReactionPaginator(pagination.BufferedPaginatedResults[messages_.Reaction]):
-    __slots__ = ("_channel_id", "_message_id", "_first_id", "_emoji", "_components", "_session")
+    __slots__ = ("_app", "_channel_id", "_message_id", "_first_id", "_emoji", "_session")
 
-    def __init__(self, channel, message, emoji, users_after, components, session) -> None:
+    def __init__(self, app, channel, message, emoji, users_after, session) -> None:
         super().__init__()
+        self._app = app
         self._channel_id = str(int(channel))
         self._message_id = str(int(message))
         self._emoji = getattr(emoji, "url_name", emoji)
         self._first_id = self._prepare_first_id(users_after)
-        self._components = components
         self._session = session
 
     async def _next_chunk(self):
@@ -59,7 +59,7 @@ class _ReactionPaginator(pagination.BufferedPaginatedResults[messages_.Reaction]
 
         self._first_id = chunk[-1]["id"]
 
-        return (users.User.deserialize(u, components=self._components) for u in chunk)
+        return (users.User.deserialize(u, app=self._app) for u in chunk)
 
 
 class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
@@ -259,10 +259,5 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
             If the channel or message is not found.
         """
         return _ReactionPaginator(
-            channel=channel,
-            message=message,
-            emoji=emoji,
-            users_after=after,
-            components=self._components,
-            session=self._session,
+            app=self._app, channel=channel, message=message, emoji=emoji, users_after=after, session=self._session,
         )

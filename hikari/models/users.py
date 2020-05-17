@@ -143,7 +143,7 @@ class User(bases.Unique, marshaller.Deserializable):
         hikari.errors.NotFound
             If the user is not found.
         """
-        return await self._components.rest.fetch_user(user=self.id)
+        return await self._app.rest.fetch_user(user=self.id)
 
     @property
     def avatar_url(self) -> str:
@@ -245,4 +245,4 @@ class MyUser(User):
         hikari.users.User
             The requested user object.
         """
-        return await self._components.rest.fetch_me()
+        return await self._app.rest.fetch_me()
