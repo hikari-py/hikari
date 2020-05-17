@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["BotBase"]
+__all__ = ["Application"]
 
 import abc
 import asyncio
@@ -39,10 +39,9 @@ from hikari.events import other as other_events
 from hikari.internal import conversions
 from hikari.internal import helpers
 
-from . import application
-from . import dispatchers
-from . import event_managers
-from . import runnable
+from hikari.gateway import dispatchers
+from hikari.gateway import event_managers
+from hikari.gateway import runnable
 
 if typing.TYPE_CHECKING:
     from hikari.events import base as event_base
@@ -54,9 +53,7 @@ if typing.TYPE_CHECKING:
     from hikari.rest import client as rest_client
 
 
-class BotBase(
-    application.Application, runnable.RunnableClient, dispatchers.EventDispatcher, abc.ABC,
-):
+class Application(runnable.RunnableClient, dispatchers.EventDispatcher, abc.ABC):
     """An abstract base class for a bot implementation.
 
     Parameters
@@ -87,16 +84,12 @@ class BotBase(
 
         runnable.RunnableClient.__init__(self, helpers.get_logger(self))
 
-        # noinspection PyArgumentList
-        application.Application.__init__(
-            self, config=None, event_dispatcher=None, event_manager=None, rest=None, shards={},
-        )
-
         self._is_shutting_down = False
         self.config = configs.BotConfig(**kwargs) if config is None else config
         self.event_dispatcher = self._create_event_dispatcher(self.config)
         self.event_manager = self._create_event_manager(self)
         self.rest = self._create_rest(self)
+        self.shards = None
 
     @property
     def heartbeat_latency(self) -> float:
@@ -305,9 +298,7 @@ class BotBase(
 
     @staticmethod
     @abc.abstractmethod
-    def _create_shard(
-        app: application.Application, shard_id: int, shard_count: int, url: str
-    ) -> gateway_client.GatewayClient:
+    def _create_shard(app: Application, shard_id: int, shard_count: int, url: str) -> gateway_client.GatewayClient:
         """Return a new shard for the given parameters.
 
         Parameters
@@ -336,7 +327,7 @@ class BotBase(
 
     @staticmethod
     @abc.abstractmethod
-    def _create_rest(app: application.Application) -> rest_client.RESTClient:
+    def _create_rest(app: Application) -> rest_client.RESTClient:
         """Return a new RESTSession client from the given configuration.
 
         Parameters
@@ -352,7 +343,7 @@ class BotBase(
 
     @staticmethod
     @abc.abstractmethod
-    def _create_event_manager(app: application.Application) -> event_managers.EventManager:
+    def _create_event_manager(app: Application) -> event_managers.EventManager:
         """Return a new instance of an event manager implementation.
 
         Parameters

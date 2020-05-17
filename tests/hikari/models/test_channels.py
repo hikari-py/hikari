@@ -25,7 +25,7 @@ from hikari.models import bases
 from hikari.models import channels
 from hikari.models import permissions
 from hikari.models import users
-from hikari.components import application
+from hikari import application
 from hikari.internal import urls
 
 

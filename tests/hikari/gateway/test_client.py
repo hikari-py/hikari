@@ -26,8 +26,8 @@ import pytest
 
 from hikari import configs
 from hikari import errors
-from hikari.components import application
-from hikari.components import consumers
+from hikari import application
+from hikari.gateway import consumers
 from hikari.gateway import client as high_level_shards
 from hikari.gateway import connection as low_level_shards
 from hikari.gateway import gateway_state
@@ -54,17 +54,13 @@ def _generate_mock_task(exception=None):
 
 @pytest.fixture
 def mock_app():
-    class ApplicationImpl(application.Application):
-        def __init__(self):
-            super().__init__(
-                config=mock.MagicMock(),
-                event_dispatcher=mock.MagicMock(dispatch_event=mock.MagicMock(return_value=_helpers.AwaitableMock())),
-                event_manager=mock.MagicMock(),
-                rest=mock.MagicMock(),
-                shards=mock.MagicMock(),
-            )
-
-    return ApplicationImpl()
+    app = mock.MagicMock()
+    app.config = mock.MagicMock()
+    app.event_dispatcher = mock.MagicMock(dispatch_event=mock.MagicMock(return_value=_helpers.AwaitableMock()))
+    app.event_manager = mock.MagicMock()
+    app.rest = mock.MagicMock()
+    app.shards = mock.MagicMock()
+    return app
 
 
 @pytest.fixture

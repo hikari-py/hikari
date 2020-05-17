@@ -20,7 +20,7 @@
 import mock
 import pytest
 
-from hikari.components import application
+from hikari import application
 from hikari.models import gateway as gateway_models
 from hikari.rest import gateway
 from hikari.rest import session

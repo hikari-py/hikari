@@ -41,7 +41,7 @@ from . import voice
 from . import webhook
 
 if typing.TYPE_CHECKING:
-    from hikari.components import application
+    from hikari import application
 
 
 class RESTClient(

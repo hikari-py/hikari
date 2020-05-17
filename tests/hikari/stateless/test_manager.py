@@ -19,7 +19,7 @@
 import mock
 import pytest
 
-from hikari.components import application
+from hikari import application
 from hikari.events import channel
 from hikari.events import guild
 from hikari.events import message

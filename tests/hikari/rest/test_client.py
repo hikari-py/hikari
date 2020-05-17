@@ -23,7 +23,7 @@ import pytest
 
 from hikari import configs
 from hikari import rest as high_level_rest
-from hikari.components import application
+from hikari import application
 from hikari.rest import channel
 from hikari.rest import gateway
 from hikari.rest import guild

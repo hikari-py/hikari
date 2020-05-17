@@ -23,7 +23,7 @@ import attr
 import mock
 import pytest
 
-from hikari.components import application
+from hikari import application
 from hikari.internal import marshaller
 from hikari.models import bases
 

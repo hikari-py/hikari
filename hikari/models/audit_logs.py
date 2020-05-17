@@ -60,7 +60,7 @@ from . import users as users_
 from . import webhooks as webhooks_
 
 if typing.TYPE_CHECKING:
-    from hikari.components import application
+    from hikari import application
     from hikari.internal import more_typing
 
 

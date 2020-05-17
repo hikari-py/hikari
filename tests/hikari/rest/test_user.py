@@ -19,7 +19,7 @@
 import mock
 import pytest
 
-from hikari.components import application
+from hikari import application
 from hikari.models import users
 from hikari.rest import session
 from hikari.rest import user

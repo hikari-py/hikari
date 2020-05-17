@@ -22,7 +22,7 @@ import datetime
 import mock
 import pytest
 
-from hikari.components import application
+from hikari import application
 from hikari.internal import conversions
 from hikari.internal import urls
 from hikari.models import channels
