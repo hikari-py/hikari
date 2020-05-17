@@ -22,7 +22,6 @@ from __future__ import annotations
 
 __all__ = [
     "Application",
-    "ApplicationOwner",
     "ConnectionVisibility",
     "OAuth2Scope",
     "OwnConnection",
@@ -345,20 +344,6 @@ class Team(bases.Unique, marshaller.Deserializable):
         return None
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class ApplicationOwner(users.User):
-    """Represents the user who owns an application, may be a team user."""
-
-    flags: int = marshaller.attrib(deserializer=users.UserFlag, eq=False, hash=False, repr=True)
-    """This user's flags."""
-
-    @property
-    def is_team_user(self) -> bool:
-        """If this user is a Team user (the owner of an application that's owned by a team)."""
-        return bool((self.flags >> 10) & 1)
-
-
 def _deserialize_verify_key(payload: str) -> bytes:
     return bytes(payload, "utf-8")
 
@@ -390,8 +375,8 @@ class Application(bases.Unique, marshaller.Deserializable):
     Will be `None` if this application doesn't have a bot.
     """
 
-    owner: typing.Optional[ApplicationOwner] = marshaller.attrib(
-        deserializer=ApplicationOwner.deserialize,
+    owner: typing.Optional[users.User] = marshaller.attrib(
+        deserializer=users.User.deserialize,
         if_undefined=None,
         default=None,
         inherit_kwargs=True,
