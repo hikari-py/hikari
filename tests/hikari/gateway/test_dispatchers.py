@@ -20,7 +20,7 @@ import mock
 import pytest
 
 from hikari import events
-from hikari.components import dispatchers
+from hikari.gateway import dispatchers
 from tests.hikari import _helpers
 
 

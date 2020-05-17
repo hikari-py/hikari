@@ -24,19 +24,19 @@ __all__ = ["StatelessBot"]
 
 import typing
 
+from hikari import application
 from hikari import rest
-from hikari.components import bot_base
-from hikari.components import intent_aware_dispatchers
 from hikari.gateway import client
+from hikari.gateway import intent_aware_dispatchers
 
 from . import manager
 
 if typing.TYPE_CHECKING:
-    from hikari.components import application
+    from hikari import application
     from hikari import configs
 
 
-class StatelessBot(bot_base.BotBase):
+class StatelessBot(application.Application):
     """Bot client without any state internals.
 
     This is the most basic type of bot you can create.

@@ -19,7 +19,7 @@
 import mock
 import pytest
 
-from hikari.components import application
+from hikari import application
 from hikari.internal import urls
 from hikari.models import bases
 from hikari.models import emojis

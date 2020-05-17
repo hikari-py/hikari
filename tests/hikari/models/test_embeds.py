@@ -21,7 +21,7 @@ import datetime
 import mock
 import pytest
 
-from hikari.components import application
+from hikari import application
 from hikari.internal import conversions
 from hikari.models import colors
 from hikari.models import embeds

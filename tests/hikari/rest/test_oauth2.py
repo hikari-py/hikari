@@ -20,7 +20,7 @@
 import mock
 import pytest
 
-from hikari.components import application
+from hikari import application
 from hikari.models import applications
 from hikari.rest import oauth2
 from hikari.rest import session

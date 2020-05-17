@@ -21,7 +21,7 @@ import contextlib
 import mock
 import pytest
 
-from hikari.components import application
+from hikari import application
 from hikari.internal import helpers
 from hikari.models import embeds
 from hikari.models import files

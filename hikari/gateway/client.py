@@ -35,22 +35,23 @@ import typing
 
 import aiohttp
 
-from hikari.components import runnable
+from hikari import errors
 from hikari.internal import codes
 from hikari.internal import helpers
 from hikari.internal import ratelimits
-from .. import errors
 
 from . import connection as gateway_connection
 from . import gateway_state
+from . import runnable
+
 
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import application
     from hikari.models import gateway
     from hikari.models import guilds
     from hikari.models import intents as intents_
-    from hikari.components import application
 
 
 class GatewayClient(runnable.RunnableClient):
@@ -75,7 +76,7 @@ class GatewayClient(runnable.RunnableClient):
 
     !!! note
         Generally, you want to use
-        `hikari.components.bot_base.BotBase` rather than this class
+        `hikari.clients.bot_base.Application` rather than this class
         directly, as that will handle sharding where enabled and applicable,
         and provides a few more bits and pieces that may be useful such as state
         management and event dispatcher integration. and If you want to customize

@@ -30,8 +30,7 @@ from hikari.internal import meta
 if typing.TYPE_CHECKING:
     import types
 
-    from hikari.components import application
-
+    from hikari import application
     from . import session as rest_session
 
 

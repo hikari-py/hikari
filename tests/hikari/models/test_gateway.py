@@ -21,7 +21,7 @@ import datetime
 import mock
 import pytest
 
-from hikari.components import application
+from hikari import application
 from hikari.models import gateway
 from hikari.models import guilds
 from tests.hikari import _helpers

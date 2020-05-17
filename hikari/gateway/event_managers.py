@@ -30,10 +30,11 @@ from . import consumers
 from . import dispatchers
 
 if typing.TYPE_CHECKING:
-    from hikari.gateway import client as gateway_client
+    from hikari import application
+
     from hikari.internal import more_typing
 
-    from . import application
+    from . import client as gateway_client
 
 EVENT_MARKER_ATTR: typing.Final[str] = "___event_name___"
 

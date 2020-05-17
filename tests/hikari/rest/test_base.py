@@ -19,7 +19,7 @@
 import mock
 import pytest
 
-from hikari.components import application
+from hikari import application
 from hikari.internal import ratelimits
 from hikari.rest import base
 from hikari.rest import buckets

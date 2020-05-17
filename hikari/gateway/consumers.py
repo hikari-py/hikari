@@ -29,7 +29,7 @@ import abc
 import typing
 
 if typing.TYPE_CHECKING:
-    from hikari.gateway import client as gateway_client
+    from . import client as gateway_client
 
 
 class RawEventConsumer(abc.ABC):

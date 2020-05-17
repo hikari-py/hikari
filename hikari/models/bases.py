@@ -33,7 +33,7 @@ from hikari.internal import marshaller
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.components import application
+    from hikari import application
 
 
 @marshaller.marshallable()
