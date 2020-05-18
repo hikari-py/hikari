@@ -84,9 +84,9 @@ def dereference_handle(handle_string: str) -> typing.Any:
 
         Refers to `asyncio.tasks.Task`
 
-    * `"hikari.net"`:
+    * `"hikari.rest"`:
 
-        Refers to `hikari.net`
+        Refers to `hikari.rest`
 
     * `"foo.bar#baz.bork.qux"`:
 

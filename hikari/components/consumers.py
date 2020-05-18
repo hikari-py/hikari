@@ -51,7 +51,7 @@ class RawEventConsumer(abc.ABC):
 
         Parameters
         ----------
-        shard_client_obj : hikari.clients.client.GatewayClient
+        shard_client_obj : hikari.gateway.client.GatewayClient
             The client for the shard that received the event.
         name : str
             The raw event name.

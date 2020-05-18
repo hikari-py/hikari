@@ -579,7 +579,7 @@ class PresenceUser(users.User):
     """A user representation specifically used for presence updates.
 
     !!! warning
-        Every attribute except `PresenceUser.id` may be as `hikari.unset.UNSET`
+        Every attribute except `PresenceUser.id` may be as `hikari.models.unset.UNSET`
         unless it is specifically being modified for this update.
     """
 
@@ -631,8 +631,8 @@ class PresenceUser(users.User):
         """URL for this user's avatar if the relevant info is available.
 
         !!! note
-            This will be `hikari.unset.UNSET` if both `PresenceUser.avatar_hash`
-            and `PresenceUser.discriminator` are `hikari.unset.UNSET`.
+            This will be `hikari.models.unset.UNSET` if both `PresenceUser.avatar_hash`
+            and `PresenceUser.discriminator` are `hikari.models.unset.UNSET`.
         """
         return self.format_avatar_url()
 
@@ -654,10 +654,10 @@ class PresenceUser(users.User):
 
         Returns
         -------
-        typing.Union[str, hikari.unset.UNSET]
+        typing.Union[str, hikari.models.unset.UNSET]
             The string URL of the user's custom avatar if
             either `PresenceUser.avatar_hash` is set or their default avatar if
-            `PresenceUser.discriminator` is set, else `hikari.unset.UNSET`.
+            `PresenceUser.discriminator` is set, else `hikari.models.unset.UNSET`.
 
         Raises
         ------
@@ -673,8 +673,8 @@ class PresenceUser(users.User):
         """Integer representation of this user's default avatar.
 
         !!! note
-            This will be `hikari.unset.UNSET` if `PresenceUser.discriminator` is
-            `hikari.unset.UNSET`.
+            This will be `hikari.models.unset.UNSET` if `PresenceUser.discriminator` is
+            `hikari.models.unset.UNSET`.
         """
         if self.discriminator is not unset.UNSET:
             return super().default_avatar_index
@@ -685,8 +685,8 @@ class PresenceUser(users.User):
         """URL for this user's default avatar.
 
         !!! note
-            This will be `hikari.unset.UNSET` if `PresenceUser.discriminator` is
-            `hikari.unset.UNSET`.
+            This will be `hikari.models.unset.UNSET` if `PresenceUser.discriminator` is
+            `hikari.models.unset.UNSET`.
         """
         if self.discriminator is not unset.UNSET:
             return super().default_avatar_url

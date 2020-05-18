@@ -73,7 +73,7 @@ class InviteGuild(guilds.PartialGuild):
     )
     """The hash for the guild's banner.
 
-    This is only present if `hikari.guilds.GuildFeature.BANNER` is in the
+    This is only present if `hikari.models.guilds.GuildFeature.BANNER` is in the
     `features` for this guild. For all other purposes, it is `None`.
     """
 
@@ -94,7 +94,7 @@ class InviteGuild(guilds.PartialGuild):
     )
     """The vanity URL code for the guild's vanity URL.
 
-    This is only present if `hikari.guilds.GuildFeature.VANITY_URL` is in the
+    This is only present if `hikari.models.guilds.GuildFeature.VANITY_URL` is in the
     `features` for this guild. If not, this will always be `None`.
     """
 

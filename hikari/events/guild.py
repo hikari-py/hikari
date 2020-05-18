@@ -202,7 +202,7 @@ class GuildMemberUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
     """This member's nickname.
 
     When set to `None`, this has been removed and when set to
-    `hikari.unset.UNSET` this hasn't been acted on.
+    `hikari.models.unset.UNSET` this hasn't been acted on.
     """
 
     premium_since: typing.Union[None, datetime.datetime, unset.Unset] = marshaller.attrib(

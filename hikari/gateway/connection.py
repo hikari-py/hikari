@@ -113,7 +113,7 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
         initial presence of the bot user once online. If `None`, then it
         will be set to the default, which is showing up as online without a
         custom status message.
-    intents : hikari.intents.Intent, optional
+    intents : hikari.models.intents.Intent, optional
         Bitfield of intents to use. If you use the V7 API, this is mandatory.
         This field will determine what events you will receive.
     json_deserialize : `deserialization function`

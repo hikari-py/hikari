@@ -222,10 +222,10 @@ class GatewayConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
         Usually you want this turned on.
     gateway_version : int
         The gateway API version to use. Defaults to v6
-    initial_activity : hikari.gateway_entities.Activity, optional
+    initial_activity : hikari.models.gateway.Activity, optional
         The initial activity to set all shards to when starting the gateway.
         If this is `None` then no activity will be set, this is the default.
-    initial_status : hikari.guilds.PresenceStatus
+    initial_status : hikari.models.guilds.PresenceStatus
         The initial status to set the shards to when starting the gateway.
         Defaults to `ONLINE`.
     initial_is_afk : bool
@@ -233,7 +233,7 @@ class GatewayConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
     initial_idle_since : datetime.datetime, optional
         The idle time to show on signing in.
         If set to `None` to not show an idle time, this is the default.
-    intents : hikari.intents.Intent
+    intents : hikari.models.intents.Intent
         The intents to use for the connection.
         If being deserialized, this can be an integer bitfield, or a sequence of
         intent names. If unspecified, this will be set to `None`.
@@ -305,7 +305,7 @@ class GatewayConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
         sequence of intent names. If unspecified, `intents` will be set to
         `None`.
 
-        See `hikari.intents.Intent` for valid names of intents you
+        See `hikari.models.intents.Intent` for valid names of intents you
         can use. Integer values are as documented on Discord's developer portal.
 
     !!! warning
@@ -466,10 +466,10 @@ class BotConfig(RESTConfig, GatewayConfig):
         Usually you want this turned on.
     gateway_version : int
         The gateway API version to use. Defaults to v6
-    initial_activity : hikari.gateway_entities.Activity, optional
+    initial_activity : hikari.models.gateway.Activity, optional
         The initial activity to set all shards to when starting the gateway.
         If this is `None` then no activity will be set, this is the default.
-    initial_status : hikari.guilds.PresenceStatus
+    initial_status : hikari.models.guilds.PresenceStatus
         The initial status to set the shards to when starting the gateway.
         Defaults to `ONLINE`.
     initial_is_afk : bool
@@ -477,7 +477,7 @@ class BotConfig(RESTConfig, GatewayConfig):
     initial_idle_since : datetime.datetime, optional
         The idle time to show on signing in.
         If set to `None` to not show an idle time, this is the default.
-    intents : hikari.intents.Intent
+    intents : hikari.models.intents.Intent
         The intents to use for the connection.
         If being deserialized, this can be an integer bitfield, or a sequence of
         intent names. If unspecified, this will be set to `None`.
@@ -564,7 +564,7 @@ class BotConfig(RESTConfig, GatewayConfig):
         sequence of intent names. If unspecified, `intents` will be set to
         `None`.
 
-        See `hikari.intents.Intent` for valid names of intents you
+        See `hikari.models.intents.Intent` for valid names of intents you
         can use. Integer values are as documented on Discord's developer portal.
 
     !!! warning

@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Provides a facade around `hikari.net.shards.Shard`.
+"""Provides a facade around `hikari.gateway.connection.Shard`.
 
 This handles parsing and initializing the object from a configuration, as
 well as restarting it if it disconnects.
@@ -66,7 +66,7 @@ class GatewayClient(runnable.RunnableClient):
         The ID of this specific shard.
     shard_id : int
         The number of shards that make up this distributed application.
-    app : hikari.clients.application.Application
+    app : hikari.components.application.Application
         The client application that this shard client should be bound by.
         Includes the the gateway configuration to use to initialize this shard
         and the consumer of a raw event.
@@ -75,7 +75,7 @@ class GatewayClient(runnable.RunnableClient):
 
     !!! note
         Generally, you want to use
-        `hikari.clients.bot_base.BotBase` rather than this class
+        `hikari.components.bot_base.BotBase` rather than this class
         directly, as that will handle sharding where enabled and applicable,
         and provides a few more bits and pieces that may be useful such as state
         management and event dispatcher integration. and If you want to customize
@@ -434,9 +434,9 @@ class GatewayClient(runnable.RunnableClient):
 
         Parameters
         ----------
-        status : hikari.guilds.PresenceStatus
+        status : hikari.models.guilds.PresenceStatus
             If specified, the new status to set.
-        activity : hikari.gateway_entities.Activity, optional
+        activity : hikari.models.gateway.Activity, optional
             If specified, the new activity to set.
         idle_since : datetime.datetime, optional
             If specified, the time to show up as being idle since, or

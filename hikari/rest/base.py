@@ -39,7 +39,7 @@ class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
     """An abstract class that all RESTSession client logic classes should inherit from.
 
     This defines the abstract method `__init__` which will assign an instance
-    of `hikari.net.rest.RESTSession` to the attribute that all application will expect
+    of `hikari.rest.session.RESTSession` to the attribute that all application will expect
     to make calls to.
     """
 

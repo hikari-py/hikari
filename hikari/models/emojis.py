@@ -44,9 +44,9 @@ if typing.TYPE_CHECKING:
 class Emoji(bases.Entity, marshaller.Deserializable, files.BaseStream, abc.ABC):
     """Base class for all emojis.
 
-    Any emoji implementation supports being used as a `hikari.files.BaseStream`
+    Any emoji implementation supports being used as a `hikari.models.files.BaseStream`
     when uploading an attachment to the API. This is achieved in the same
-    way as using a `hikari.files.WebResourceStream` would achieve this.
+    way as using a `hikari.models.files.WebResourceStream` would achieve this.
     """
 
     @property
@@ -184,7 +184,7 @@ class CustomEmoji(Emoji, bases.Unique):
     This is a custom emoji that is from a guild you might not be part of.
 
     All CustomEmoji objects and their derivatives act as valid
-    `hikari.files.BaseStream` objects. This means you can use them as a
+    `hikari.models.files.BaseStream` objects. This means you can use them as a
     file when sending a message.
 
         >>> emojis = await bot.rest.fetch_guild_emojis(12345)
