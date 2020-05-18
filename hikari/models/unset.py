@@ -47,7 +47,7 @@ class Unset(meta.Singleton):
         raise TypeError("Cannot subclass Unset type")
 
 
-T = typing.TypeVar("ComponentImplT")
+T = typing.TypeVar("T")
 MayBeUnset = typing.Union[T, Unset]
 
 UNSET: typing.Final[Unset] = Unset()

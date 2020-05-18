@@ -134,7 +134,7 @@ def register_channel_type(
 
     Returns
     -------
-    decorator(ComponentImplT) -> ComponentImplT
+    decorator(T) -> T
         The decorator to decorate the class with.
     """
 

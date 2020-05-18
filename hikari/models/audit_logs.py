@@ -285,7 +285,7 @@ def register_audit_log_entry_info(
 
     Returns
     -------
-    decorator(ComponentImplT) -> ComponentImplT
+    decorator(T) -> T
         The decorator to decorate the class with.
     """
 
@@ -504,7 +504,7 @@ def _deserialize_users(
 def _deserialize_webhooks(
     payload: more_typing.JSONArray, **kwargs: typing.Any
 ) -> typing.Mapping[bases.Snowflake, webhooks_.Webhook]:
-    return {bases.Snowflake(webhook["id"]): webhooks_.Webhook.deserialize(we1bhook, **kwargs) for webhook in payload}
+    return {bases.Snowflake(webhook["id"]): webhooks_.Webhook.deserialize(webhook, **kwargs) for webhook in payload}
 
 
 # TODO: can we remove this? it is used by a seemingly duplicated endpoint that can just use the iterator.

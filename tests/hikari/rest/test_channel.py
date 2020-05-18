@@ -475,7 +475,7 @@ class TestRESTChannel:
             result = await rest_channel_logic_impl.update_message(
                 message=message,
                 channel=channel,
-                content="C O N ComponentImplT E N ComponentImplT",
+                content="C O N T E N T",
                 embed=mock_embed,
                 flags=messages.MessageFlag.IS_CROSSPOST | messages.MessageFlag.SUPPRESS_EMBEDS,
                 mentions_everyone=False,
@@ -486,7 +486,7 @@ class TestRESTChannel:
             rest_channel_logic_impl._session.edit_message.assert_called_once_with(
                 channel_id="123",
                 message_id="432",
-                content="C O N ComponentImplT E N ComponentImplT",
+                content="C O N T E N T",
                 embed=mock_embed_payload,
                 flags=6,
                 allowed_mentions=mock_allowed_mentions_payload,
@@ -554,7 +554,7 @@ class TestRESTChannel:
         result = await rest_channel_logic_impl.safe_update_message(
             message=message,
             channel=channel,
-            content="C O N ComponentImplT E N ComponentImplT",
+            content="C O N T E N T",
             embed=mock_embed,
             flags=messages.MessageFlag.IS_CROSSPOST | messages.MessageFlag.SUPPRESS_EMBEDS,
             mentions_everyone=True,
@@ -565,7 +565,7 @@ class TestRESTChannel:
         rest_channel_logic_impl.update_message.assert_called_once_with(
             message=message,
             channel=channel,
-            content="C O N ComponentImplT E N ComponentImplT",
+            content="C O N T E N T",
             embed=mock_embed,
             flags=messages.MessageFlag.IS_CROSSPOST | messages.MessageFlag.SUPPRESS_EMBEDS,
             mentions_everyone=True,

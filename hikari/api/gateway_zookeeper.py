@@ -41,7 +41,7 @@ class IGatewayZookeeper(base_app.IBaseApp, abc.ABC):
 
     These events will be produced by a low-level gateway implementation, and
     will produce `list` and `dict` types only.
- q
+
     This may be combined with `IGatewayDispatcher` for most single-process
     bots, or may be a specific component for large distributed applications
     that feed new events into a message queue, for example.
