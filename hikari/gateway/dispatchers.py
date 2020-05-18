@@ -170,7 +170,7 @@ class EventDispatcher(abc.ABC):
 
         Returns
         -------
-        decorator(ComponentImplT) -> ComponentImplT
+        decorator(T) -> T
             A decorator for a function that registers the given event.
 
         Raises

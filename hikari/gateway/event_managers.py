@@ -50,7 +50,7 @@ def raw_event_mapper(name: str) -> typing.Callable[[EventConsumerT], EventConsum
 
     Returns
     -------
-    decorator(ComponentImplT) -> ComponentImplT
+    decorator(T) -> T
         A decorator for a method.
     """
 

@@ -117,7 +117,7 @@ class PaginatedResults(typing.Generic[_T], abc.ABC):
 
         Returns
         -------
-        PaginatedResults[typing.Tuple[int, ComponentImplT]]
+        PaginatedResults[typing.Tuple[int, T]]
             A paginated results view that asynchronously yields an increasing
             counter in a tuple with each result, lazily.
         """
@@ -139,7 +139,7 @@ class PaginatedResults(typing.Generic[_T], abc.ABC):
 
         Returns
         -------
-        PaginatedResults[ComponentImplT]
+        PaginatedResults[T]
             A paginated results view that asynchronously yields a maximum
             of the given number of items before completing.
         """
