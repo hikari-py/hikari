@@ -30,7 +30,6 @@ import attr
 
 from hikari.internal import marshaller
 from hikari.internal import urls
-
 from . import bases
 from . import files
 from . import users

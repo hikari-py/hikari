@@ -29,7 +29,6 @@ import attr
 from hikari.internal import marshaller
 from hikari.internal import more_enums
 from hikari.internal import urls
-
 from . import bases
 from . import users as users_
 

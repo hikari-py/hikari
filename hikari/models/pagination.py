@@ -24,7 +24,6 @@ import datetime
 import typing
 
 from hikari.internal import more_collections
-
 from . import bases
 
 _T = typing.TypeVar("_T")
@@ -118,7 +117,7 @@ class PaginatedResults(typing.Generic[_T], abc.ABC):
 
         Returns
         -------
-        PaginatedResults[typing.Tuple[int, T]]
+        PaginatedResults[typing.Tuple[int, ComponentImplT]]
             A paginated results view that asynchronously yields an increasing
             counter in a tuple with each result, lazily.
         """
@@ -140,7 +139,7 @@ class PaginatedResults(typing.Generic[_T], abc.ABC):
 
         Returns
         -------
-        PaginatedResults[T]
+        PaginatedResults[ComponentImplT]
             A paginated results view that asynchronously yields a maximum
             of the given number of items before completing.
         """
