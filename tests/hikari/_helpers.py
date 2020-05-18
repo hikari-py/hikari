@@ -157,7 +157,7 @@ def fqn2(module, item_identifier):
     return module.__name__ + "." + item_identifier
 
 
-T = typing.TypeVar("T")
+T = typing.TypeVar("ComponentImplT")
 
 
 def _can_weakref(spec_set):

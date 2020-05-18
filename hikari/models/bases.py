@@ -127,4 +127,4 @@ class Unique(Entity, typing.SupportsInt, abc.ABC):
         return int(self.id)
 
 
-T = typing.TypeVar("T", bound=Unique)
+T = typing.TypeVar("ComponentImplT", bound=Unique)

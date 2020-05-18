@@ -35,20 +35,19 @@ import typing
 
 import aiohttp
 
+from hikari import aiohttp_config
 from hikari import errors
+from hikari.api import gateway_zookeeper
+from hikari.gateway import connection as gateway_connection
+from hikari.gateway import gateway_state
+from hikari.gateway import runnable
 from hikari.internal import codes
 from hikari.internal import helpers
 from hikari.internal import ratelimits
 
-from . import connection as gateway_connection
-from . import gateway_state
-from . import runnable
-
-
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import application
     from hikari.models import gateway
     from hikari.models import guilds
     from hikari.models import intents as intents_
@@ -85,7 +84,7 @@ class GatewayClient(runnable.RunnableClient):
 
     __slots__ = (
         "_activity",
-        "_app",
+        "_zookeeper",
         "_connection",
         "_idle_since",
         "_is_afk",
@@ -96,46 +95,61 @@ class GatewayClient(runnable.RunnableClient):
         "logger",
     )
 
-    def __init__(self, shard_id: int, shard_count: int, app: application.Application, url: str) -> None:
+    def __init__(
+        self,
+        *,
+        config: aiohttp_config.AIOHTTPConfig,
+        debug: bool,
+        initial_activity: typing.Optional[gateway.Activity],
+        initial_idle_since: typing.Optional[datetime.datetime],
+        initial_is_afk: bool,
+        initial_status: guilds.PresenceStatus,
+        intents: typing.Optional[intents_.Intent],
+        large_threshold: int,
+        shard_id: int,
+        shard_count: int,
+        token: str,
+        url: str,
+        use_compression: bool,
+        version: int,
+        zookeeper: gateway_zookeeper.IGatewayZookeeper,
+    ) -> None:
         super().__init__(helpers.get_logger(self, str(shard_id)))
-        self._app = app
-        self._raw_event_consumer = app.event_manager
-        self._activity = app.config.initial_activity
-        self._idle_since = app.config.initial_idle_since
-        self._is_afk = app.config.initial_is_afk
-        self._status = app.config.initial_status
+        self._zookeeper = zookeeper
+        self._activity = initial_activity
+        self._idle_since = initial_idle_since
+        self._is_afk = initial_is_afk
+        self._status = initial_status
         self._shard_state = gateway_state.GatewayState.NOT_RUNNING
         self._task = None
         self._connection = gateway_connection.Shard(
-            compression=app.config.gateway_use_compression,
-            connector=app.config.tcp_connector,
-            debug=app.config.debug,
+            compression=use_compression,
+            connector=config.tcp_connector,
+            debug=debug,
             # This is a bit of a cheat, we should pass a coroutine function here, but
             # instead we just use a lambda that does the transformation we want (replaces the
             # low-level shard argument with the reference to this class object), then return
             # the result of that coroutine. To the low level client, it looks the same :-)
             # (also hides a useless stack frame from tracebacks, I guess).
-            dispatcher=lambda c, n, pl: app.event_manager.process_raw_event(self, n, pl),
+            # FIXME: implement dispatch.
+            dispatcher=lambda c, n, pl: self._zookeeper.event_consumer.consume_raw_event(self, n, pl),
             initial_presence=self._create_presence_pl(
-                status=app.config.initial_status,
-                activity=app.config.initial_activity,
-                idle_since=app.config.initial_idle_since,
-                is_afk=app.config.initial_is_afk,
+                status=initial_status, activity=initial_activity, idle_since=initial_idle_since, is_afk=initial_is_afk,
             ),
-            intents=app.config.intents,
-            large_threshold=app.config.large_threshold,
-            proxy_auth=app.config.proxy_auth,
-            proxy_headers=app.config.proxy_headers,
-            proxy_url=app.config.proxy_url,
+            intents=intents,
+            large_threshold=large_threshold,
+            proxy_auth=config.proxy_auth,
+            proxy_headers=config.proxy_headers,
+            proxy_url=config.proxy_url,
             session_id=None,
             seq=None,
             shard_id=shard_id,
             shard_count=shard_count,
-            ssl_context=app.config.ssl_context,
-            token=app.config.token,
+            ssl_context=config.ssl_context,
+            token=token,
             url=url,
-            verify_ssl=app.config.verify_ssl,
-            version=app.config.gateway_version,
+            verify_ssl=config.verify_ssl,
+            version=version,
         )
 
     @property

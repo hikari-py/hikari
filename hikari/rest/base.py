@@ -30,8 +30,8 @@ from hikari.internal import meta
 if typing.TYPE_CHECKING:
     import types
 
-    from hikari import application
-    from . import session as rest_session
+    from hikari import api
+    from hikari.rest import session as rest_session
 
 
 class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
@@ -43,7 +43,7 @@ class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
     """
 
     @abc.abstractmethod
-    def __init__(self, app: application.Application, session: rest_session.RESTSession) -> None:
+    def __init__(self, app: api.IRESTApp, session: rest_session.RESTSession) -> None:
         self._app = app
         self._session = session
 
@@ -58,6 +58,13 @@ class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
     async def close(self) -> None:
         """Shut down the RESTSession client safely."""
         await self._session.close()
+
+    # XXX: my plan is to abolish the low level objects soon and integrate their logic in here
+    # directly, thus I want this gone before 2.0.0.
+    @property
+    def session(self) -> rest_session.RESTSession:
+        """The low-level REST API session."""
+        return self._session
 
     @property
     def global_ratelimit_queue_size(self) -> int:

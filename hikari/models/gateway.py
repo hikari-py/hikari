@@ -28,7 +28,6 @@ import typing
 import attr
 
 from hikari.internal import marshaller
-
 from . import bases
 from . import guilds
 

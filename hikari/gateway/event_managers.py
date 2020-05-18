@@ -26,15 +26,13 @@ import inspect
 import logging
 import typing
 
-from . import consumers
-from . import dispatchers
+from hikari.gateway import consumers
+from hikari.gateway import dispatchers
 
 if typing.TYPE_CHECKING:
     from hikari import application
-
+    from hikari.gateway import client as gateway_client
     from hikari.internal import more_typing
-
-    from . import client as gateway_client
 
 EVENT_MARKER_ATTR: typing.Final[str] = "___event_name___"
 
@@ -52,7 +50,7 @@ def raw_event_mapper(name: str) -> typing.Callable[[EventConsumerT], EventConsum
 
     Returns
     -------
-    decorator(T) -> T
+    decorator(ComponentImplT) -> ComponentImplT
         A decorator for a method.
     """
 

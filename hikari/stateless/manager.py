@@ -22,8 +22,6 @@ from __future__ import annotations
 
 __all__ = ["StatelessEventManagerImpl"]
 
-from hikari.gateway import dispatchers
-from hikari.gateway import event_managers
 from hikari.events import channel
 from hikari.events import guild
 from hikari.events import message
@@ -31,6 +29,8 @@ from hikari.events import other
 
 # pylint: disable=too-many-public-methods
 from hikari.events import voice
+from hikari.gateway import dispatchers
+from hikari.gateway import event_managers
 
 
 class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDispatcher]):

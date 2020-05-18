@@ -36,8 +36,7 @@ from hikari.models import invites
 from hikari.models import pagination
 from hikari.models import voices
 from hikari.models import webhooks
-
-from . import base
+from hikari.rest import base
 
 if typing.TYPE_CHECKING:
     from hikari.models import colors

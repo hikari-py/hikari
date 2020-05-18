@@ -274,7 +274,7 @@ class TestMessage:
             message_obj = messages.Message.deserialize(test_message_payload, app=mock_app)
             patched_emoji_deserializer.assert_called_once_with(test_reaction_payload["emoji"], app=mock_app)
             assert message_obj.reactions == [messages.Reaction.deserialize(test_reaction_payload)]
-            assert message_obj.reactions[0]._app is mock_app
+            assert message_obj.reactions[0]._zookeeper is mock_app
             patched_application_deserializer.assert_called_once_with(test_application_payload, app=mock_app)
             patched_edited_timestamp_deserializer.assert_called_once_with("2020-04-21T21:20:16.510000+00:00")
             patched_timestamp_deserializer.assert_called_once_with("2020-03-21T21:20:16.510000+00:00")
@@ -295,17 +295,17 @@ class TestMessage:
         assert message_obj.role_mentions == {987}
         assert message_obj.channel_mentions == {456}
         assert message_obj.attachments == [messages.Attachment.deserialize(test_attachment_payload)]
-        assert message_obj.attachments[0]._app is mock_app
+        assert message_obj.attachments[0]._zookeeper is mock_app
         assert message_obj.embeds == [embeds.Embed.deserialize({})]
-        assert message_obj.embeds[0]._app is mock_app
+        assert message_obj.embeds[0]._zookeeper is mock_app
         assert message_obj.is_pinned is True
         assert message_obj.webhook_id == 1234
         assert message_obj.type == messages.MessageType.DEFAULT
         assert message_obj.activity == messages.MessageActivity.deserialize(test_message_activity_payload)
-        assert message_obj.activity._app is mock_app
+        assert message_obj.activity._zookeeper is mock_app
         assert message_obj.application == mock_app
         assert message_obj.message_reference == messages.MessageCrosspost.deserialize(test_message_crosspost_payload)
-        assert message_obj.message_reference._app is mock_app
+        assert message_obj.message_reference._zookeeper is mock_app
         assert message_obj.flags == messages.MessageFlag.IS_CROSSPOST
         assert message_obj.nonce == "171000788183678976"
 

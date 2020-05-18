@@ -50,7 +50,6 @@ from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import more_collections
 from hikari.internal import more_enums
-
 from . import bases
 from . import channels
 from . import colors
@@ -286,7 +285,7 @@ def register_audit_log_entry_info(
 
     Returns
     -------
-    decorator(T) -> T
+    decorator(ComponentImplT) -> ComponentImplT
         The decorator to decorate the class with.
     """
 

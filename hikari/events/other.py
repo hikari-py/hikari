@@ -41,7 +41,6 @@ from hikari.internal import marshaller
 from hikari.models import bases as base_models
 from hikari.models import guilds
 from hikari.models import users
-
 from . import base as base_events
 
 if typing.TYPE_CHECKING:

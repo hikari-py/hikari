@@ -32,8 +32,7 @@ from hikari.models import channels as channels_
 from hikari.models import guilds
 from hikari.models import pagination
 from hikari.models import users
-
-from . import base
+from hikari.rest import base
 
 if typing.TYPE_CHECKING:
     from hikari.models import files

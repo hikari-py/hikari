@@ -28,7 +28,6 @@ from hikari.internal import marshaller
 from hikari.models import bases as base_models
 from hikari.models import intents
 from hikari.models import voices
-
 from . import base as base_events
 
 

@@ -28,12 +28,11 @@ from hikari import application
 from hikari import rest
 from hikari.gateway import client
 from hikari.gateway import intent_aware_dispatchers
-
 from . import manager
 
 if typing.TYPE_CHECKING:
     from hikari import application
-    from hikari import configs
+    from hikari import aiohttp_config
 
 
 class StatelessBot(application.Application):
@@ -55,5 +54,7 @@ class StatelessBot(application.Application):
         return manager.StatelessEventManagerImpl(app)
 
     @staticmethod
-    def _create_event_dispatcher(config: configs.BotConfig) -> intent_aware_dispatchers.IntentAwareEventDispatcherImpl:
+    def _create_event_dispatcher(
+        config: aiohttp_config.BotConfig,
+    ) -> intent_aware_dispatchers.IntentAwareEventDispatcherImpl:
         return intent_aware_dispatchers.IntentAwareEventDispatcherImpl(config.intents)
