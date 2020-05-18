@@ -82,7 +82,7 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
     """Abstract definition of the application for an event system for a bot.
 
     The class itself inherits from
-    `hikari.state.consumers.RawEventConsumer` (which allows it to provide the
+    `hikari.components.consumers.RawEventConsumer` (which allows it to provide the
     ability to transform a raw payload into an event object).
 
     This is designed as a basis to enable transformation of raw incoming events
@@ -96,7 +96,7 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
 
         These methods are expected to have the following parameters:
 
-        * shard_obj : `hikari.clients.client.GatewayClient`
+        * shard_obj : `hikari.gateway.client.GatewayClient`
 
             The shard client that emitted the event.
 
@@ -137,7 +137,7 @@ class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer)
 
     Parameters
     ----------
-    app: hikari.clients.application.Application
+    app: hikari.components.application.Application
         The client application that this event manager should be bound to.
         Includes the event dispatcher that will store individual events and
         manage dispatching them after this object creates them.

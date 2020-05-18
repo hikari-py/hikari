@@ -57,7 +57,7 @@ def get_required_intents_for(event_type: typing.Type[HikariEvent]) -> typing.Col
 
     Returns
     -------
-    typing.Collection[hikari.intents.Intent]
+    typing.Collection[hikari.models.intents.Intent]
         Collection of acceptable subset combinations of intent needed to
         be able to receive the given event type.
     """
@@ -71,10 +71,10 @@ def requires_intents(
 
     Parameters
     ----------
-    first : hikari.intents.Intent
+    first : hikari.models.intents.Intent
         First combination of intents that are acceptable in order to receive
         the decorated event type.
-    *rest : hikari.intents.Intent
+    *rest : hikari.models.intents.Intent
         Zero or more additional combinations of intents to require for this
         event to be subscribed to.
 

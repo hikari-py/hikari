@@ -542,8 +542,8 @@ class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
 
     Parameters
     ----------
-    app : hikari.clients.application.Application
-        The `hikari.clients.application.Application` that this should pass through
+    app : hikari.components.application.Application
+        The `hikari.components.application.Application` that this should pass through
         to the generated entities.
     request : typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, typing.Any]]
         The prepared session bound partial function that this iterator should

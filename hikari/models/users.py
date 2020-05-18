@@ -135,7 +135,7 @@ class User(bases.Unique, marshaller.Deserializable):
 
         Returns
         -------
-        hikari.users.User
+        hikari.models.users.User
             The requested user object.
 
         Raises
@@ -242,7 +242,7 @@ class MyUser(User):
 
         Returns
         -------
-        hikari.users.User
+        hikari.models.users.User
             The requested user object.
         """
         return await self._app.rest.fetch_me()

@@ -494,7 +494,7 @@ class GuildChannelBuilder(marshaller.Serializable):
 
         Parameters
         ----------
-        category : typing.Union[hikari.bases.Snowflake, int]
+        category : typing.Union[hikari.models.bases.Snowflake, int]
             The placeholder ID of the category channel that should be this
             channel's parent.
         """
@@ -506,7 +506,7 @@ class GuildChannelBuilder(marshaller.Serializable):
 
         Parameters
         ----------
-        channel_id : typing.Union[hikari.bases.Snowflake, int]
+        channel_id : typing.Union[hikari.models.bases.Snowflake, int]
             The placeholder ID to use.
 
         !!! note

@@ -37,7 +37,7 @@ class RESTVoiceComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        typing.Sequence[hikari.voices.VoiceRegion]
+        typing.Sequence[hikari.models.voices.VoiceRegion]
             A list of voice regions available
 
         !!! note
