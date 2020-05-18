@@ -85,17 +85,17 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to get the audit logs for.
-        user : typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]
+        user : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             If specified, the object or ID of the user to filter by.
-        action_type : typing.Union[hikari.models.audit_logs.AuditLogEventType, int]
+        action_type : hikari.models.audit_logs.AuditLogEventType | int
             If specified, the action type to look up. Passing a raw integer
             for this may lead to unexpected behaviour.
         limit : int
             If specified, the limit to apply to the number of records.
             Defaults to `50`. Must be between `1` and `100` inclusive.
-        before : typing.Union[datetime.datetime, hikari.models.audit_logs.AuditLogEntry, hikari.models.bases.Snowflake, int]
+        before : datetime.datetime | hikari.models.audit_logs.AuditLogEntry | hikari.models.bases.Snowflake | int | str
             If specified, the object or ID of the entry that all retrieved
             entries should have occurred before.
 
@@ -146,18 +146,18 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The ID or object of the guild to get audit log entries for
-        before : typing.Union[datetime.datetime, hikari.models.audit_logs.AuditLogEntry, hikari.models.bases.Snowflake, int], optional
+        before : datetime.datetime | hikari.models.audit_logs.AuditLogEntry | hikari.models.bases.Snowflake | int | str | None
             If specified, the ID or object of the entry or datetime to get
             entries that happened before otherwise this will start from the
             newest entry.
-        user : typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]
+        user : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             If specified, the object or ID of the user to filter by.
-        action_type : typing.Union[hikari.models.audit_logs.AuditLogEventType, int]
+        action_type : hikari.models.audit_logs.AuditLogEventType | int
             If specified, the action type to look up. Passing a raw integer
             for this may lead to unexpected behaviour.
-        limit : int, optional
+        limit : int | None
             If specified, the limit for how many entries this iterator should
             return, defaults to unlimited.
 
@@ -205,9 +205,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to get the emoji from.
-        emoji : typing.Union[hikari.models.emojis.KnownCustomEmoji, hikari.models.bases.Snowflake, int]
+        emoji : hikari.models.emojis.KnownCustomEmoji | hikari.models.bases.Snowflake | int | str
             The object or ID of the emoji to get.
 
         Returns
@@ -238,7 +238,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to get the emojis for.
 
         Returns
@@ -274,13 +274,13 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to create the emoji in.
         name : str
             The new emoji's name.
         image : hikari.models.files.BaseStream
             The `128x128` image data.
-        roles : typing.Sequence[typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]]
+        roles : typing.Sequence[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str]
             If specified, a list of role objects or IDs for which the emoji
             will be whitelisted. If empty, all roles are whitelisted.
         reason : str
@@ -331,14 +331,14 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to which the emoji to edit belongs to.
-        emoji : typing.Union[hikari.models.emojis.KnownCustomEmoji, hikari.models.bases.Snowflake, int]
+        emoji : hikari.models.emojis.KnownCustomEmoji | hikari.models.bases.Snowflake | int | str
             The object or ID of the emoji to edit.
         name : str
             If specified, a new emoji name string. Keep unspecified to leave the
             name unchanged.
-        roles : typing.Sequence[typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]]
+        roles : typing.Sequence[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str]
             If specified, a list of objects or IDs for the new whitelisted
             roles. Set to an empty list to whitelist all roles.
             Keep unspecified to leave the same roles already set.
@@ -382,9 +382,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to delete the emoji from.
-        emoji : typing.Union[hikari.models.emojis.KnownCustomEmoji, hikari.models.bases.Snowflake, int]
+        emoji : hikari.models.emojis.KnownCustomEmoji | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild emoji to be deleted.
 
         Raises
@@ -430,13 +430,13 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             IDs are available.
         icon : hikari.models.files.BaseStream
             If specified, the guild icon image data.
-        verification_level : typing.Union[hikari.models.guilds.GuildVerificationLevel, int]
+        verification_level : hikari.models.guilds.GuildVerificationLevel | int
             If specified, the verification level. Passing a raw int for this
             may lead to unexpected behaviour.
-        default_message_notifications : typing.Union[hikari.models.guilds.GuildMessageNotificationsLevel, int]
+        default_message_notifications : hikari.models.guilds.GuildMessageNotificationsLevel | int
             If specified, the default notification level. Passing a raw int for
             this may lead to unexpected behaviour.
-        explicit_content_filter : typing.Union[hikari.models.guilds.GuildExplicitContentFilterLevel, int]
+        explicit_content_filter : hikari.models.guilds.GuildExplicitContentFilterLevel | int
             If specified, the explicit content filter. Passing a raw int for
             this may lead to unexpected behaviour.
         roles : typing.Sequence[hikari.models.guilds.GuildRole]
@@ -478,7 +478,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to get.
 
         Returns
@@ -510,7 +510,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to get the preview object for.
 
         Returns
@@ -556,7 +556,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to be edited.
         name : str
             If specified, the new name string for the guild (`2-100` characters).
@@ -564,26 +564,26 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If specified, the new voice region ID for guild. You can use
             `RESTGuildComponent.fetch_guild_voice_regions` to see which region
             IDs are available.
-        verification_level : typing.Union[hikari.models.guilds.GuildVerificationLevel, int]
+        verification_level : hikari.models.guilds.GuildVerificationLevel | int
             If specified, the new verification level. Passing a raw int for this
             may lead to unexpected behaviour.
-        default_message_notifications : typing.Union[hikari.models.guilds.GuildMessageNotificationsLevel, int]
+        default_message_notifications : hikari.models.guilds.GuildMessageNotificationsLevel | int
             If specified, the new default notification level. Passing a raw int
             for this may lead to unexpected behaviour.
-        explicit_content_filter : typing.Union[hikari.models.guilds.GuildExplicitContentFilterLevel, int]
+        explicit_content_filter : hikari.models.guilds.GuildExplicitContentFilterLevel | int
             If specified, the new explicit content filter. Passing a raw int for
             this may lead to unexpected behaviour.
-        afk_channel : typing.Union[hikari.models.channels.GuildVoiceChannel, hikari.models.bases.Snowflake, int]
+        afk_channel : hikari.models.channels.GuildVoiceChannel | hikari.models.bases.Snowflake | int | str
             If specified, the object or ID for the new AFK voice channel.
-        afk_timeout : typing.Union[datetime.timedelta, int]
+        afk_timeout : datetime.timedelta | int
             If specified, the new AFK timeout seconds timedelta.
         icon : hikari.models.files.BaseStream
             If specified, the new guild icon image file.
-        owner : typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]
+        owner : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             If specified, the object or ID of the new guild owner.
         splash : hikari.models.files.BaseStream
             If specified, the new new splash image file.
-        system_channel : typing.Union[hikari.models.channels.GuildVoiceChannel, hikari.models.bases.Snowflake, int]
+        system_channel : hikari.models.channels.PartialChannel | hikari.models.bases.Snowflake | int | str
             If specified, the object or ID of the new system channel.
         reason : str
             If specified, the audit log reason explaining why the operation
@@ -636,7 +636,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to be deleted.
 
         Raises
@@ -658,7 +658,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild :hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to get the channels from.
 
         Returns
@@ -700,12 +700,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to create the channel in.
         name : str
             If specified, the name for the channel. This must be
             inclusively between `1` and `100` characters in length.
-        channel_type : typing.Union[hikari.models.channels.ChannelType, int]
+        channel_type : hikari.models.channels.ChannelType | int
             If specified, the channel type, passing through a raw integer here
             may lead to unexpected behaviour.
         position : int
@@ -717,7 +717,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         nsfw : bool
             If specified, whether the channel will be marked as NSFW.
             Only applicable for text channels.
-        rate_limit_per_user : typing.Union[datetime.timedelta, int]
+        rate_limit_per_user : datetime.timedelta | int
             If specified, the second time delta the user has to wait before
             sending another message.  This will not apply to bots, or to
             members with `MANAGE_MESSAGES` or `MANAGE_CHANNEL` permissions.
@@ -734,9 +734,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         permission_overwrites : typing.Sequence[hikari.models.channels.PermissionOverwrite]
             If specified, the list of permission overwrite objects that are
             category specific to replace the existing overwrites with.
-        parent_category : typing.Union[hikari.models.channels.GuildCategory, hikari.models.bases.Snowflake, int]
+        parent_category : hikari.models.guilds.GuildCategory | hikari.models.bases.Snowflake | int | str
             If specified, the object or ID of the parent category to set for
-             the channel.
+            the channel.
         reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
@@ -795,12 +795,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild in which to edit the channels.
-        channel : typing.Tuple[int , typing.Union[hikari.models.channels.GuildChannel, hikari.models.bases.Snowflake, int]]
+        channel : typing.Tuple[int , hikari.models.channels.GuildChannel | hikari.models.bases.Snowflake | int | str]
             The first channel to change the position of. This is a tuple of the
             integer position the channel object or ID.
-        *additional_channels: typing.Tuple[int, typing.Union[hikari.models.channels.GuildChannel, hikari.models.bases.Snowflake, int]]
+        *additional_channels: typing.Tuple[int, hikari.models.channels.GuildChannel | hikari.models.bases.Snowflake | int | str]
             Optional additional channels to change the position of. These must
             be tuples of integer positions to change to and the channel object
             or ID and the.
@@ -835,9 +835,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to get the member from.
-        user : typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]
+        user : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             The object or ID of the member to get.
 
         Returns
@@ -868,7 +868,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to get the members from.
 
         Examples
@@ -909,14 +909,14 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to edit the member from.
-        user : typing.Union[hikari.models.guilds.GuildMember, hikari.models.bases.Snowflake, int]
+        user : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             The object or ID of the member to edit.
-        nickname : str, optional
+        nickname : str | None
             If specified, the new nickname string. Setting it to `None`
             explicitly will clear the nickname.
-        roles : typing.Sequence[typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]]
+        roles : typing.Sequence[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str]
             If specified, a list of role IDs the member should have.
         mute : bool
             If specified, whether the user should be muted in the voice channel
@@ -924,7 +924,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         deaf : bool
             If specified, whether the user should be deafen in the voice
             channel or not.
-        voice_channel : typing.Union[hikari.models.channels.GuildVoiceChannel, hikari.models.bases.Snowflake, int], optional
+        voice_channel : hikari.models.channels.GuildVoiceChannel | hikari.models.bases.Snowflake | int | str | None
             If specified, the ID of the channel to move the member to. Setting
             it to `None` explicitly will disconnect the user.
         reason : str
@@ -977,9 +977,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild you want to change the nick on.
-        nickname : str, optional
+        nickname : str | None
             The new nick string. Setting this to `None` clears the nickname.
         reason : str
             If specified, the audit log reason explaining why the operation
@@ -1014,11 +1014,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild the member belongs to.
-        user : typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]
+        user : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             The object or ID of the member you want to add the role to.
-        role : typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]
+        role : hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str
             The object or ID of the role you want to add.
         reason : str
             If specified, the audit log reason explaining why the operation
@@ -1053,11 +1053,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild the member belongs to.
-        user : typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]
+        user : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             The object or ID of the member you want to remove the role from.
-        role : typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]
+        role : hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str
             The object or ID of the role you want to remove.
         reason : str
             If specified, the audit log reason explaining why the operation
@@ -1091,9 +1091,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild the member belongs to.
-        user : typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]
+        user : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             The object or ID of the member you want to kick.
         reason : str
             If specified, the audit log reason explaining why the operation
@@ -1124,9 +1124,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild you want to get the ban from.
-        user : typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]
+        user : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             The object or ID of the user to get the ban information for.
 
         Returns
@@ -1158,7 +1158,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild you want to get the bans from.
 
         Returns
@@ -1193,11 +1193,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild the member belongs to.
-        user : typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]
+        user : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             The object or ID of the member you want to ban.
-        delete_message_days : typing.Union[datetime.timedelta, int]
+        delete_message_days : datetime.timedelta | int
             If specified, the tim delta of how many days of messages from the
             user should be removed.
         reason : str
@@ -1232,9 +1232,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to un-ban the user from.
-        user : typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]
+        user : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             The ID of the user you want to un-ban.
         reason : str
             If specified, the audit log reason explaining why the operation
@@ -1265,7 +1265,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild you want to get the roles from.
 
         Returns
@@ -1303,14 +1303,14 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild you want to create the role on.
         name : str
             If specified, the new role name string.
-        permissions : typing.Union[hikari.models.permissions.Permission, int]
+        permissions : hikari.permissions.Permission | int
             If specified, the permissions integer for the role, passing a raw
             integer rather than the int flag may lead to unexpected results.
-        color : typing.Union[hikari.models.colors.Color, int]
+        color : hikari.colors.Color | int
             If specified, the color for the role.
         hoist : bool
             If specified, whether the role will be hoisted.
@@ -1359,12 +1359,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The ID of the guild the roles belong to.
-        role : typing.Tuple[int, typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]]
+        role : typing.Tuple[int, hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str]
             The first role to move. This is a tuple of the integer position and
             the role object or ID.
-        *additional_roles : typing.Tuple[int, typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]]
+        *additional_roles : typing.Tuple[int, thikari.guilds.GuildRole | hikari.models.bases.Snowflake | int | str]
             Optional extra roles to move. These must be tuples of the integer
             position and the role object or ID.
 
@@ -1410,16 +1410,16 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild the role belong to.
-        role : typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]
+        role : hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str
             The object or ID of the role you want to edit.
         name : str
             If specified, the new role's name string.
-        permissions : typing.Union[hikari.models.permissions.Permission, int]
+        permissions : hikari.permissions.Permission | int
             If specified, the new permissions integer for the role, passing a
             raw integer for this may lead to unexpected behaviour.
-        color : typing.Union[hikari.models.colors.Color, int]
+        color : hikari.colors.Color | int
             If specified, the new color for the new role passing a raw integer
             for this may lead to unexpected behaviour.
         hoist : bool
@@ -1468,9 +1468,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild you want to remove the role from.
-        role : typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]
+        role : hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str
             The object or ID of the role you want to delete.
 
         Raises
@@ -1495,9 +1495,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild you want to get the count for.
-        days : typing.Union[datetime.timedelta, int]
+        days : datetime.timedelta | int
             The time delta of days to count prune for (at least `1`).
 
         Returns
@@ -1532,9 +1532,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild you want to prune member of.
-        days : typing.Union[datetime.timedelta, int]
+        days : datetime.timedelta | int
             The time delta of inactivity days you want to use as filter.
         compute_prune_count : bool
             Whether a count of pruned members is returned or not.
@@ -1545,7 +1545,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        int, optional
+        int | None
             The number of members who were kicked if `compute_prune_count`
             is `True`, else `None`.
 
@@ -1575,7 +1575,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to get the voice regions for.
 
         Returns
@@ -1605,7 +1605,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to get the invites for.
 
         Returns
@@ -1635,7 +1635,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to get the integrations for.
 
         Returns
@@ -1672,15 +1672,15 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to which the integration belongs to.
-        integration : typing.Union[hikari.models.guilds.GuildIntegration, hikari.models.bases.Snowflake, int]
+        integration : hikari.models.guilds.GuildIntegration | hikari.models.bases.Snowflake | int | str
             The object or ID of the integration to update.
-        expire_behaviour : typing.Union[hikari.models.guilds.IntegrationExpireBehaviour, int]
+        expire_behaviour : hikari.models.guilds.IntegrationExpireBehaviour | int
             If specified, the behaviour for when an integration subscription
             expires (passing a raw integer for this may lead to unexpected
             behaviour).
-        expire_grace_period : typing.Union[datetime.timedelta, int]
+        expire_grace_period : datetime.timedelta | int
             If specified, time time delta of how many days the integration will
             ignore lapsed subscriptions for.
         enable_emojis : bool
@@ -1719,9 +1719,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to which the integration belongs to.
-        integration : typing.Union[hikari.models.guilds.GuildIntegration, hikari.models.bases.Snowflake, int]
+        integration : hikari.models.guilds.GuildIntegration | hikari.models.bases.Snowflake | int | str
             The object or ID of the integration to delete.
         reason : str
             If specified, the audit log reason explaining why the operation
@@ -1752,9 +1752,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to which the integration belongs to.
-        integration : typing.Union[hikari.models.guilds.GuildIntegration, hikari.models.bases.Snowflake, int]
+        integration : hikari.models.guilds.GuildIntegration | hikari.models.bases.Snowflake | int | str
             The ID of the integration to sync.
 
         Raises
@@ -1779,7 +1779,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to get the embed for.
 
         Returns
@@ -1815,9 +1815,9 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to edit the embed for.
-        channel : typing.Union[hikari.models.channels.GuildChannel, hikari.models.bases.Snowflake, int], optional
+        channel : hikari.models.guilds.GuildChannel | hikari.models.bases.Snowflake | int | str | None
             If specified, the object or ID of the channel that this embed's
             invite should target. Set to `None` to disable invites for this
             embed.
@@ -1861,7 +1861,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to get the vanity URL for.
 
         Returns
@@ -1893,7 +1893,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to form the widget.
         style : str
             If specified, the style of the widget.
@@ -1923,7 +1923,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID for the guild to get the webhooks from.
 
         Returns

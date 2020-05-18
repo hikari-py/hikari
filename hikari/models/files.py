@@ -395,13 +395,13 @@ class FileStream(BaseStream):
 
     Parameters
     ----------
-    filename : str, optional
+    filename : str | None
         The custom file name to give the file when uploading it. May be
         omitted.
-    path : str OR os.PathLike
+    path : os.PathLike | str
         The path-like object that describes the file to upload.
 
-    executor : concurrent.futures.Executor, optional
+    executor : concurrent.futures.Executor | None
         An optional executor to run the IO operations in. If not specified, the
         default executor for this loop will be used instead.
 

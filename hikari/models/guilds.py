@@ -654,7 +654,7 @@ class PresenceUser(users.User):
 
         Returns
         -------
-        typing.Union[str, hikari.models.unset.UNSET]
+        hikari.models.unset.UNSET | str
             The string URL of the user's custom avatar if
             either `PresenceUser.avatar_hash` is set or their default avatar if
             `PresenceUser.discriminator` is set, else `hikari.models.unset.UNSET`.
@@ -925,7 +925,7 @@ class PartialGuild(bases.Unique, marshaller.Deserializable):
 
         Returns
         -------
-        str, optional
+        str | None
             The string URL.
 
         Raises
@@ -994,7 +994,7 @@ class GuildPreview(PartialGuild):
 
         Returns
         -------
-        str, optional
+        str | None
             The string URL.
 
         Raises
@@ -1025,7 +1025,7 @@ class GuildPreview(PartialGuild):
 
         Returns
         -------
-        str, optional
+        str | None
             The string URL.
 
         Raises
@@ -1447,7 +1447,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
         Returns
         -------
-        str, optional
+        str | None
             The string URL.
 
         Raises
@@ -1478,7 +1478,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
         Returns
         -------
-        str, optional
+        str | None
             The string URL.
 
         Raises
@@ -1511,7 +1511,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
         Returns
         -------
-        str, optional
+        str | None
             The string URL.
 
         Raises

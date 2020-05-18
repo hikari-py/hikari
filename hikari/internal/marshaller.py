@@ -126,29 +126,29 @@ def attrib(
 
     Parameters
     ----------
-    deserializer : typing.Callable[[...], typing.Any], optional
+    deserializer : typing.Callable[[...], typing.Any] | None
         The deserializer to use to deserialize raw elements.
         If `None` then this field will never be deserialized from a payload
         and will have to be attached to the object after generation or passed
         through to `deserialize` as a kwarg.
-    raw_name : str, optional
+    raw_name : str | None
         The raw name of the element in its raw serialized form. If not provided,
         then this will use the field's default name later.
     inherit_kwargs : bool
         If `True` then any fields passed to deserialize for the entity this
         attribute is attached to as kwargs will also be passed through to this
         entity's deserializer as kwargs. Defaults to `False`.
-    if_none : typing.Union[typing.Callable[[], typing.Any], None]
+    if_none : typing.Callable[[], typing.Any] | None
         Either a default factory function called to get the default for when
         this field is `None` or one of `None`, `False` or `True` to specify that
         this should default to the given singleton. Will raise an exception when
         `None` is received for this field later if this isn't specified.
-    if_undefined : typing.Union[typing.Callable[[], typing.Any], None]
+    if_undefined : typing.Callable[[], typing.Any] | None
         Either a default factory function called to get the default for when
         this field isn't defined or one of `None`, `False` or `True` to specify
         that this should default to the given singleton. Will raise an exception
         when this field is undefined later on if this isn't specified.
-    serializer : typing.Callable[[typing.Any], typing.Any], optional
+    serializer : typing.Callable[[typing.Any], typing.Any] | None
         The serializer to use. If not specified, then serializing the entire
         class that this attribute is in will trigger a `TypeError` later.
         If `None` then the field will not be serialized.
@@ -397,12 +397,12 @@ class HikariEntityMarshaller:
 
         Parameters
         ----------
-        obj : typing.Any, optional
+        obj : typing.Any | None
             The entity to serialize.
 
         Returns
         -------
-        typing.Mapping[str, typing.Any], optional
+        typing.Mapping[str, typing.Any] | None
             The serialized raw data item.
 
         Raises

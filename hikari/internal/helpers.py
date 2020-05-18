@@ -51,11 +51,11 @@ def generate_allowed_mentions(  # pylint:disable=line-too-long
     mentions_everyone : bool
         Whether `@everyone` and `@here` mentions should be resolved by
         discord and lead to actual pings.
-    user_mentions : typing.Union[typing.Collection[typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]], bool]
+    user_mentions : typing.Collection[hikari.models.users.User | hikari.models.bases.Snowflake | int | str] | bool
         Either an array of user objects/IDs to allow mentions for,
         `True` to allow all user mentions or `False` to block all
         user mentions from resolving.
-    role_mentions : typing.Union[typing.Collection[typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]], bool]
+    role_mentions : typing.Collection[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str] | bool
         Either an array of guild role objects/IDs to allow mentions for,
         `True` to allow all role mentions or `False` to block all
         role mentions from resolving.

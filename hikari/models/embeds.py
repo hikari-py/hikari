@@ -392,7 +392,7 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
         ----------
         text: str
             The optional text to set for the footer.
-        icon: typing.Union[str, hikari.models.files.BaseStream], optional
+        icon: hikari.models.files.BaseStream | str | None
             The optional `hikari.models.files.BaseStream` or URL to the image to set.
 
         Returns
@@ -420,7 +420,7 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
 
         Parameters
         ----------
-        image: typing.Union[str, hikari.models.files.BaseStream], optional
+        image: hikari.models.files.BaseStream | str | None
             The optional `hikari.models.files.BaseStream` or URL to the image to set.
 
         Returns
@@ -438,7 +438,7 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
 
         Parameters
         ----------
-        image: typing.Union[str, hikari.models.files.BaseStream], optional
+        image: hikari.models.files.BaseStream | str | None
             The optional `hikari.models.files.BaseStream` or URL to the image to set.
 
         Returns
@@ -462,11 +462,11 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
 
         Parameters
         ----------
-        name: str, optional
+        name: str | None
             The optional authors name.
-        url: str, optional
+        url: str | None
             The optional URL to make the author text link to.
-        icon: typing.Union[str, hikari.models.files.BaseStream], optional
+        icon: hikari.models.files.BaseStream | str | None
             The optional `hikari.models.files.BaseStream` or URL to the icon to set.
 
         Returns
@@ -500,7 +500,7 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
             The fields value.
         inline: bool
             Whether to set the field to behave as if it were inline or not. Defaults to `False`.
-        index: int, optional
+        index: int | None
             The optional index to insert the field at. If `None`, it will append to the end.
 
         Returns

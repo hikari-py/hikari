@@ -81,16 +81,16 @@ EventDispatcherT = typing.TypeVar("EventDispatcherT", bound=dispatchers.EventDis
 class EventManager(typing.Generic[EventDispatcherT], consumers.RawEventConsumer):
     """Abstract definition of the application for an event system for a bot.
 
-    The class itself inherits from
-    `hikari.components.consumers.RawEventConsumer` (which allows it to provide the
-    ability to transform a raw payload into an event object).
+    The class itself inherits from `hikari.components.consumers.RawEventConsumer`
+    (which allows it to provide the ability to transform a raw payload into an
+    event object).
 
     This is designed as a basis to enable transformation of raw incoming events
     from the websocket into more usable native Python objects, and to then
     dispatch them to a given event dispatcher. It does not provide the logic for
     how to specifically parse each event however.
 
-     !!! note
+    !!! note
         This object will detect internal event mapper functions by looking for
         coroutine functions wrapped with `raw_event_mapper`.
 

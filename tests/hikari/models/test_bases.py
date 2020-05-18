@@ -123,7 +123,7 @@ class StubEntity(bases.Unique, marshaller.Deserializable, marshaller.Serializabl
     ...
 
 
-class TestUniqueEntity:
+class TestUnique:
     def test_created_at(self):
         entity = bases.Unique(id=bases.Snowflake("9217346714023428234"))
         assert entity.created_at == entity.id.created_at

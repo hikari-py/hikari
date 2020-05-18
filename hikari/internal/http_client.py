@@ -47,7 +47,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
     ----------
     allow_redirects : bool
         Whether to allow redirects or not. Defaults to `False`.
-    connector : aiohttp.BaseConnector, optional
+    connector : aiohttp.BaseConnector | None
         Optional aiohttp connector info for making an HTTP connection
     debug : bool
         Defaults to `False`. If `True`, then a lot of contextual information
@@ -57,19 +57,19 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         A custom JSON deserializer function to use. Defaults to `json.loads`.
     json_serialize : serialization function
         A custom JSON serializer function to use. Defaults to `json.dumps`.
-    proxy_headers : typing.Mapping[str, str], optional
+    proxy_headers : typing.Mapping[str, str] | None
         Optional proxy headers to pass to HTTP requests.
-    proxy_auth : aiohttp.BasicAuth, optional
+    proxy_auth : aiohttp.BasicAuth | None
         Optional authorization to be used if using a proxy.
-    proxy_url : str, optional
+    proxy_url : str | None
         Optional proxy URL to use for HTTP requests.
-    ssl_context : ssl.SSLContext, optional
+    ssl_context : ssl.SSLContext | None
         The optional SSL context to be used.
     verify_ssl : bool
         Whether or not the client should enforce SSL signed certificate
         verification. If 1 it will ignore potentially malicious
         SSL certificates.
-    timeout : float, optional
+    timeout : float | None
         The optional timeout for all HTTP requests.
     trust_env : bool
         If `True`, and no proxy info is given, then `HTTP_PROXY` and
@@ -266,7 +266,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
             The URL to hit.
         headers : typing.Dict[str, str]
             Headers to use when making the request.
-        body : typing.Union[aiohttp.FormData, dict, list, None]
+        body : aiohttp.FormData | dict | list | None
             The body to send. Currently this will send the content in
             a form body if you pass an instance of `aiohttp.FormData`, or
             as a JSON body if you pass a `list` or `dict`. Any other types

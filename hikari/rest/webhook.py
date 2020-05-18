@@ -50,7 +50,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : typing.Union[hikari.models.webhooks.Webhook, hikari.models.bases.Snowflake, int]
+        webhook : hikari.models.webhooks.Webhook | hikari.models.bases.Snowflake | int | str
             The object or ID of the webhook to get.
         webhook_token : str
             If specified, the webhook token to use to get it (bypassing this
@@ -94,17 +94,17 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : typing.Union[hikari.models.webhooks.Webhook, hikari.models.bases.Snowflake, int]
+        webhook : hikari.models.webhooks.Webhook | hikari.models.bases.Snowflake | int | str
             The object or ID of the webhook to edit.
         webhook_token : str
             If specified, the webhook token to use to modify it (bypassing this
             session's provided authorization `token`).
         name : str
             If specified, the new name string.
-        avatar : hikari.models.files.BaseStream, optional
+        avatar : hikari.models.files.BaseStream | None
             If specified, the new avatar image. If `None`, then
             it is removed.
-        channel : typing.Union[hikari.models.channels.GuildChannel, hikari.models.bases.Snowflake, int]
+        channel : hikari.models.channels.GuildChannel | hikari.models.bases.Snowflake | int | str
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
         reason : str
@@ -150,7 +150,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : typing.Union[hikari.models.webhooks.Webhook, hikari.models.bases.Snowflake, int]
+        webhook : hikari.models.webhooks.Webhook | hikari.models.bases.Snowflake | int | str
             The object or ID of the webhook to delete
         webhook_token : str
             If specified, the webhook token to use to delete it (bypassing this
@@ -198,7 +198,7 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         Parameters
         ----------
-        webhook : typing.Union[hikari.models.webhooks.Webhook, hikari.models.bases.Snowflake, int]
+        webhook : hikari.models.webhooks.Webhook | hikari.models.bases.Snowflake | int | str
             The object or ID of the webhook to execute.
         webhook_token : str
             The token of the webhook to execute.
@@ -223,18 +223,18 @@ class RESTWebhookComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Union[typing.Collection[typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]], bool]
+        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.bases.Snowflake | int | str] | bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions : typing.Union[typing.Collection[typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]], bool]
+        role_mentions : typing.Collection[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str] | bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
 
         Returns
         -------
-        hikari.models.messages.Message, optional
+        hikari.models.messages.Message | None
             The created message object, if `wait` is `True`, else `None`.
 
         Raises
