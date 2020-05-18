@@ -39,7 +39,7 @@ class RESTUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abs
 
         Parameters
         ----------
-        user : typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]
+        user : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             The object or ID of the user to get.
 
         Returns

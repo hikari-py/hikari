@@ -332,7 +332,7 @@ class Team(bases.Unique, marshaller.Deserializable):
 
         Returns
         -------
-        str, optional
+        str | None
             The string URL.
 
         Raises
@@ -479,7 +479,7 @@ class Application(bases.Unique, marshaller.Deserializable):
 
         Returns
         -------
-        str, optional
+        str | None
             The string URL.
 
         Raises
@@ -510,7 +510,7 @@ class Application(bases.Unique, marshaller.Deserializable):
 
         Returns
         -------
-        str, optional
+        str | None
             The string URL.
 
         Raises

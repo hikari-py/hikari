@@ -65,7 +65,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         Whether to allow redirects or not. Defaults to `False`.
     base_url : str
         The base URL and route for the discord API
-    connector : aiohttp.BaseConnector, optional
+    connector : aiohttp.BaseConnector | None
         Optional aiohttp connector info for making an HTTP connection
     debug : bool
         Defaults to `False`. If `True`, then a lot of contextual information
@@ -75,21 +75,21 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         A custom JSON deserializer function to use. Defaults to `json.loads`.
     json_serialize : serialization function
         A custom JSON serializer function to use. Defaults to `json.dumps`.
-    proxy_headers : typing.Mapping[str, str], optional
+    proxy_headers : typing.Mapping[str, str] | None
         Optional proxy headers to pass to HTTP requests.
-    proxy_auth : aiohttp.BasicAuth, optional
+    proxy_auth : aiohttp.BasicAuth | None
         Optional authorization to be used if using a proxy.
-    proxy_url : str, optional
+    proxy_url : str | None
         Optional proxy URL to use for HTTP requests.
-    ssl_context : ssl.SSLContext, optional
+    ssl_context : ssl.SSLContext | None
         The optional SSL context to be used.
     verify_ssl : bool
         Whether or not the client should enforce SSL signed certificate
         verification. If 1 it will ignore potentially malicious
         SSL certificates.
-    timeout : float, optional
+    timeout : float | None
         The optional timeout for all HTTP requests.
-    token : string, optional
+    token : string | None
         The bot token for the client to use. You may start this with
         a prefix of either `Bot` or `Bearer` to force the token type, or
         not provide this information if you want to have it auto-detected.
@@ -489,9 +489,9 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         permission_overwrites : typing.Sequence[more_typing.JSONObject]
             If specified, the new list of permission overwrites that are category
             specific to replace the existing overwrites with.
-        parent_id : str, optional
-            If specified, the new parent category ID to set for the channel.,
-            pass `None` to unset.
+        parent_id : str | None
+            If specified, the new parent category ID to set for the channel.
+            Pass `None` to unset.
         reason : str
             If specified, the audit log reason explaining why the operation
             was performed.
@@ -894,10 +894,10 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
             The ID of the channel to get the message from.
         message_id : str
             The ID of the message to edit.
-        content : str, optional
+        content : str | None
             If specified, the string content to replace with in the message.
             If `None`, the content will be removed from the message.
-        embed : more_typing.JSONObject, optional
+        embed : more_typing.JSONObject | None
             If specified, the embed to replace with in the message.
             If `None`, the embed will be removed from the message.
         flags : int
@@ -1815,7 +1815,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
             The ID of the guild to edit the member from.
         user_id : str
             The ID of the member to edit.
-        nick : str, optional
+        nick : str | None
             If specified, the new nickname string. Setting it to None
             explicitly will clear the nickname.
         roles : typing.Sequence[str]
@@ -1862,7 +1862,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         ----------
         guild_id : str
             The ID of the guild you want to change the nick on.
-        nick : str, optional
+        nick : str | None
             The new nick string. Setting this to `None` clears the nickname.
         reason : str
             If specified, the audit log reason explaining why the operation
@@ -2293,7 +2293,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
 
         Returns
         -------
-        int, optional
+        int | None
             The number of members who were kicked if `compute_prune_count`
             is True, else None.
 
@@ -2505,7 +2505,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         ----------
         guild_id : str
             The ID of the guild to edit the embed for.
-        channel_id : str, optional
+        channel_id : str | None
             If specified, the channel that this embed's invite should target.
             Set to None to disable invites for this embed.
         enabled : bool
@@ -2674,7 +2674,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         ----------
         username : str
             If specified, the new username string.
-        avatar : bytes, optional
+        avatar : bytes | None
             If specified, the new avatar image in bytes form.
             If it is None, the avatar is removed.
 
@@ -3047,7 +3047,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
 
         Returns
         -------
-        more_typing.JSONObject, optional
+        more_typing.JSONObject | None
             The created message object if `wait` is `True`, else
             `None`.
 

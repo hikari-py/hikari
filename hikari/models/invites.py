@@ -112,7 +112,7 @@ class InviteGuild(guilds.PartialGuild):
 
         Returns
         -------
-        str, optional
+        str | None
             The string URL.
 
         Raises
@@ -143,7 +143,7 @@ class InviteGuild(guilds.PartialGuild):
 
         Returns
         -------
-        str, optional
+        str | None
             The string URL.
 
         Raises

@@ -228,7 +228,7 @@ class GroupDMChannel(DMChannel):
 
         Returns
         -------
-        str, optional
+        str | None
             The string URL.
 
         Raises
@@ -478,7 +478,7 @@ class GuildChannelBuilder(marshaller.Serializable):
 
         Parameters
         ----------
-        rate_limit_per_user : typing.Union[datetime.timedelta, int]
+        rate_limit_per_user : datetime.timedelta | int
             The amount of seconds users will have to wait before sending another
             message in the channel to set.
         """
@@ -494,7 +494,7 @@ class GuildChannelBuilder(marshaller.Serializable):
 
         Parameters
         ----------
-        category : typing.Union[hikari.models.bases.Snowflake, int]
+        category : hikari.models.bases.Snowflake | int
             The placeholder ID of the category channel that should be this
             channel's parent.
         """
@@ -506,7 +506,7 @@ class GuildChannelBuilder(marshaller.Serializable):
 
         Parameters
         ----------
-        channel_id : typing.Union[hikari.models.bases.Snowflake, int]
+        channel_id : hikari.models.bases.Snowflake | int
             The placeholder ID to use.
 
         !!! note

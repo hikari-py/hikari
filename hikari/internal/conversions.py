@@ -112,7 +112,7 @@ def put_if_specified(
         The key to add the value under.
     value : typing.Any
         The value to add.
-    type_after : typing.Callable[[`input type`], `output type`], optional
+    type_after : typing.Callable[[`input type`], `output type`] | None
         Type to apply to the value when added.
     """
     if value is not ...:
@@ -127,7 +127,7 @@ def image_bytes_to_image_data(img_bytes: typing.Optional[bytes] = None, /) -> ty
 
     Parameters
     ----------
-    img_bytes : bytes, optional
+    img_bytes : bytes | None
         The image bytes.
 
     Raises
@@ -137,7 +137,7 @@ def image_bytes_to_image_data(img_bytes: typing.Optional[bytes] = None, /) -> ty
 
     Returns
     -------
-    str, optional
+    str | None
         The `image_bytes` given encoded into an image data string or
         `None`.
 

@@ -571,7 +571,7 @@ class ExponentialBackOff:
     ----------
     base : float
         The base to use. Defaults to `2`.
-    maximum : float, optional
+    maximum : float | None
         If not `None`, then this is the max value the backoff can be in a
         single iteration before an `asyncio.TimeoutError` is raised.
         Defaults to `64` seconds.
