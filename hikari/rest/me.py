@@ -85,7 +85,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         ----------
         username : str
             If specified, the new username string.
-        avatar : hikari.models.files.BaseStream, optional
+        avatar : hikari.models.files.BaseStream | None
             If specified, the new avatar image data.
             If it is None, the avatar is removed.
 
@@ -140,7 +140,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         newest_first : bool
             If specified and `True`, the guilds are returned in the order of
             newest to oldest. The default is to return oldest guilds first.
-        start_at : datetime.datetime OR hikari.models.bases.Unique OR hikari.models.bases.Snowflake or int, optional
+        start_at : datetime.datetime | hikari.models.bases.Unique | hikari.models.bases.Snowflake | int | None
             The optional first item to start at, if you want to limit your
             results. This will be interpreted as the date of creation for a
             guild. If unspecified, the newest or older possible snowflake is
@@ -163,7 +163,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Parameters
         ----------
-        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
+        guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild to leave.
 
         Raises
@@ -183,7 +183,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Parameters
         ----------
-        recipient : typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]
+        recipient : hikari.models.users.User | hikari.models.bases.Snowflake | int
             The object or ID of the user to create the new DM channel with.
 
         Returns

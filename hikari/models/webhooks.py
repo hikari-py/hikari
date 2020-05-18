@@ -151,18 +151,18 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Union[typing.Collection[typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]], bool]
+        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.bases.Snowflake | int | str] | bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions : typing.Union[typing.Collection[typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]], bool]
+        role_mentions: typing.Collection[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str] | bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
 
         Returns
         -------
-        hikari.models.messages.Message, optional
+        hikari.models.messages.Message | None
             The created message object, if `wait` is `True`, else `None`.
 
         Raises
@@ -248,7 +248,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
 
         Parameters
         ----------
-        use_token : bool, optional
+        use_token : bool | None
             If set to `True` then the webhook's token will be used for this
             request; if set to `False` then bot authorization will be used;
             if not specified then the webhook's token will be used for the
@@ -287,17 +287,17 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         ----------
         name : str
             If specified, the new name string.
-        avatar : hikari.models.files.BaseStream, optional
+        avatar : hikari.models.files.BaseStream | None
             If specified, the new avatar image. If `None`, then
             it is removed.
-        channel : typing.Union[hikari.models.channels.GuildChannel, hikari.models.bases.Snowflake, int]
+        channel : hikari.models.channels.GuildChannel | hikari.models.bases.Snowflake | int
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
         reason : str
             If specified, the audit log reason explaining why the operation
             was performed. This field will be used when using the webhook's
             token rather than bot authorization.
-        use_token : bool, optional
+        use_token : bool | None
             If set to `True` then the webhook's token will be used for this
             request; if set to `False` then bot authorization will be used;
             if not specified then the webhook's token will be used for the
@@ -372,6 +372,36 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         return await self._app.rest.fetch_guild(guild=self.guild_id)
 
     async def fetch_self(self, *, use_token: typing.Optional[bool] = None) -> Webhook:
+        """Fetch this webhook.
+
+        Parameters
+        ----------
+        use_token : bool | None
+            If set to `True` then the webhook's token will be used for this
+            request; if set to `False` then bot authorization will be used;
+            if not specified then the webhook's token will be used for the
+            request if it's set else bot authorization.
+
+        Returns
+        -------
+        hikari.models.webhooks.Webhook
+            The requested webhook object.
+
+        Raises
+        ------
+        hikari.errors.BadRequest
+            If any invalid snowflake IDs are passed; a snowflake may be invalid
+            due to it being outside of the range of a 64 bit integer.
+        hikari.errors.NotFound
+            If the webhook is not found.
+        hikari.errors.Forbidden
+            If you're not in the guild that owns this webhook or
+            lack the `MANAGE_WEBHOOKS` permission.
+        hikari.errors.Unauthorized
+            If you pass a token that's invalid for the target webhook.
+        ValueError
+            If `use_token` is passed as `True` when `Webhook.token` is `None`.
+        """
         if use_token and not self.token:
             raise ValueError("This webhook's token is unknown.")
 

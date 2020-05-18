@@ -40,7 +40,7 @@ class RESTInviteComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=a
 
         Parameters
         ----------
-        invite : typing.Union[hikari.models.invites.Invite, str]
+        invite : hikari.models.invites.Invite | str
             The object or code of the wanted invite.
         with_counts : bool
             If specified, whether to attempt to count the number of
@@ -67,7 +67,7 @@ class RESTInviteComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=a
 
         Parameters
         ----------
-        invite : typing.Union[hikari.models.invites.Invite, str]
+        invite : hikari.models.invites.Invite | str
             The object or ID for the invite to be deleted.
 
         Returns

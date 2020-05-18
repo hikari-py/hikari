@@ -59,7 +59,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
 
     Parameters
     ----------
-    enabled_intents : hikari.models.intents.Intent, optional
+    enabled_intents : hikari.models.intents.Intent | None
         The intents that are enabled for the application. If `None`, then no
         intent checks are performed when subscribing a new event.
     """
@@ -313,14 +313,14 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
         ----------
         event_type : typing.Type[hikari.events.HikariEvent]
             The name of the event to wait for.
-        timeout : float, optional
+        timeout : float | None
             The timeout to wait for before cancelling and raising an
             `asyncio.TimeoutError` instead. If this is `None`, this will
             wait forever. Care must be taken if you use `None` as this may
             leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
             using an event listener instead of this function.
-        predicate : `def predicate(event) -> bool` or `async def predicate(event) -> bool`, optional
+        predicate : `def predicate(event) -> bool` or `async def predicate(event) -> bool` | None
             A function that takes the arguments for the event and returns `True`
             if it is a match, or `False` if it should be ignored. This must be
             a regular function.
