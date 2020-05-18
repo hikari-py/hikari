@@ -661,7 +661,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
             Nonces are limited to 32 bytes in size.
         tts : bool
             If specified, whether the message will be sent as a TTS message.
-        files : typing.Sequence[hikari.files.BaseStream]
+        files : typing.Sequence[hikari.models.files.BaseStream]
             If specified, this should be a list of between `1` and `5` file
             objects to upload. Each should have a unique name.
         embed : more_typing.JSONObject
@@ -3036,7 +3036,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         wait : bool
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
-        files : typing.Sequence[hikari.files.BaseStream]
+        files : typing.Sequence[hikari.models.files.BaseStream]
             If specified, the optional file objects to upload.
         embeds : typing.Sequence[more_typing.JSONObject]
             If specified, the sequence of embed objects that will be sent

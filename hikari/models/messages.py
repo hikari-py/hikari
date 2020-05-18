@@ -146,7 +146,7 @@ class Attachment(bases.Unique, files_.BaseStream, marshaller.Deserializable):
     """Represents a file attached to a message.
 
     You can use this object in the same way as a
-    `hikari.files.BaseStream`, by passing it as an attached file when creating a
+    `hikari.models.files.BaseStream`, by passing it as an attached file when creating a
     message, etc.
     """
 
@@ -396,7 +396,7 @@ class Message(bases.Unique, marshaller.Deserializable):
 
         Returns
         -------
-        hikari.channels.PartialChannel
+        hikari.models.channels.PartialChannel
             The object of the channel this message belongs to.
 
         Raises
@@ -433,23 +433,23 @@ class Message(bases.Unique, marshaller.Deserializable):
         ----------
         content : str
             If specified, the message content to set on the message.
-        embed : hikari.embeds.Embed
+        embed : hikari.models.embeds.Embed
             If specified, the embed object to set on the message.
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Union[typing.Collection[typing.Union[hikari.users.User, hikari.bases.Snowflake, int]], bool]
+        user_mentions : typing.Union[typing.Collection[typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]], bool]
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Union[typing.Collection[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]], bool]
+        role_mentions: typing.Union[typing.Collection[typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]], bool]
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
 
         Returns
         -------
-        hikari.messages.Message
+        hikari.models.messages.Message
             The edited message.
 
         Raises
@@ -538,27 +538,27 @@ class Message(bases.Unique, marshaller.Deserializable):
             and can usually be ignored.
         tts : bool
             If specified, whether the message will be sent as a TTS message.
-        files : typing.Sequence[hikari.files.BaseStream]
+        files : typing.Sequence[hikari.models.files.BaseStream]
             If specified, a sequence of files to upload, if desired. Should be
             between 1 and 10 objects in size (inclusive), also including embed
             attachments.
-        embed : hikari.embeds.Embed
+        embed : hikari.models.embeds.Embed
             If specified, the embed object to send with the message.
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Union[typing.Collection[typing.Union[hikari.users.User, hikari.bases.Snowflake, int]], bool]
+        user_mentions : typing.Union[typing.Collection[typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]], bool]
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Union[typing.Collection[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]], bool]
+        role_mentions: typing.Union[typing.Collection[typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]], bool]
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
 
         Returns
         -------
-        hikari.messages.Message
+        hikari.models.messages.Message
             The created message object.
 
         Raises
@@ -644,7 +644,7 @@ class Message(bases.Unique, marshaller.Deserializable):
 
         Parameters
         ----------
-        emoji : str OR hikari.emojis.Emoji
+        emoji : str OR hikari.models.emojis.Emoji
             The emoji to add.
 
         Examples
@@ -684,9 +684,9 @@ class Message(bases.Unique, marshaller.Deserializable):
 
         Parameters
         ----------
-        emoji : str OR hikari.emojis.Emoji
+        emoji : str OR hikari.models.emojis.Emoji
             The emoji to remove.
-        user : hikari.users.User, optional
+        user : hikari.models.users.User, optional
             The user of the reaction to remove. If `None`, then the bot's
             reaction is removed instead.
 
@@ -726,7 +726,7 @@ class Message(bases.Unique, marshaller.Deserializable):
 
         Parameters
         ----------
-        emoji : str OR hikari.emojis.Emoji, optional
+        emoji : str OR hikari.models.emojis.Emoji, optional
             The emoji to remove all reactions for. If not specified, or `None`,
             then all emojis are removed.
 

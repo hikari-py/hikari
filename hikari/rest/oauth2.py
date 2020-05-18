@@ -36,7 +36,7 @@ class RESTOAuth2Component(base.BaseRESTComponent, abc.ABC):  # pylint: disable=a
 
         Returns
         -------
-        hikari.applications.Application
+        hikari.models.applications.Application
             An application info object.
         """
         payload = await self._session.get_current_application_info()

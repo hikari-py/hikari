@@ -162,7 +162,7 @@ class RESTBucketManager:
         self.real_hashes_to_buckets = {}
         self.closed_event: asyncio.Event = asyncio.Event()
         self.gc_task: typing.Optional[asyncio.Task] = None
-        self.logger = logging.getLogger("hikari.rest.ratelimits.RESTBucketManager")
+        self.logger = logging.getLogger("hikari.rest.buckets.RESTBucketManager")
 
     def __enter__(self) -> RESTBucketManager:
         return self
@@ -304,7 +304,7 @@ class RESTBucketManager:
 
         Parameters
         ----------
-        compiled_route : hikari.net.routes.CompiledRoute
+        compiled_route : hikari.rest.routes.CompiledRoute
             The route to get the bucket for.
 
         Returns
@@ -354,7 +354,7 @@ class RESTBucketManager:
 
         Parameters
         ----------
-        compiled_route : hikari.net.routes.CompiledRoute
+        compiled_route : hikari.rest.routes.CompiledRoute
             The compiled route to get the bucket for.
         bucket_header : str, optional
             The `X-RateLimit-Bucket` header that was provided in the response,
