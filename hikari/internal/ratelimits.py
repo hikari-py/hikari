@@ -25,16 +25,16 @@ correctly.
 What is the theory behind this implementation?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In this module, we refer to a `hikari.net.routes.CompiledRoute` as a definition
+In this module, we refer to a `hikari.rest.routes.CompiledRoute` as a definition
 of a route with specific major parameter values included (e.g.
-`POST /channels/123/messages`), and a `hikari.net.routes.Route` as a
+`POST /channels/123/messages`), and a `hikari.rest.routes.Route` as a
 definition of a route without specific parameter values included (e.g.
 `POST /channels/{channel_id}/messages`). We can compile a
-`hikari.net.routes.CompiledRoute` from a `hikari.net.routes.Route`
+`hikari.rest.routes.CompiledRoute` from a `hikari.rest.routes.Route`
 by providing the corresponding parameters as kwargs, as you may already know.
 
 In this module, a "bucket" is an internal data structure that tracks and
-enforces the rate limit state for a specific `hikari.net.routes.CompiledRoute`,
+enforces the rate limit state for a specific `hikari.rest.routes.CompiledRoute`,
 and can manage delaying tasks in the event that we begin to get rate limited.
 It also supports providing in-order execution of queued tasks.
 
@@ -59,12 +59,12 @@ major parameters. This is used for quick bucket indexing internally in this
 module.
 
 One issue that occurs from this is that we cannot effectively hash a
-`hikari.net.routes.CompiledRoute` that has not yet been hit, meaning that
+`hikari.rest.routes.CompiledRoute` that has not yet been hit, meaning that
 until we receive a response from this endpoint, we have no idea what our rate
 limits could be, nor the bucket that they sit in. This is usually not
 problematic, as the first request to an endpoint should never be rate limited
 unless you are hitting it from elsewhere in the same time window outside your
-hikari.applications. To manage this situation, unknown endpoints are allocated to
+hikari.models.applications. To manage this situation, unknown endpoints are allocated to
 a special unlimited bucket until they have an initial bucket hash code allocated
 from a response. Once this happens, the route is reallocated a dedicated bucket.
 Unknown buckets have a hardcoded initial hash code internally.
@@ -73,13 +73,13 @@ Initially acquiring time on a bucket
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Each time you `BaseRateLimiter.acquire()` a request timeslice for a given
-`hikari.net.routes.Route`, several things happen. The first is that we
+`hikari.rest.routes.Route`, several things happen. The first is that we
 attempt to find the existing bucket for that route, if there is one, or get an
 unknown bucket otherwise. This is done by creating a real bucket hash from the
 compiled route. The initial hash is calculated using a lookup table that maps
-`hikari.net.routes.CompiledRoute` objects to their corresponding initial hash
+`hikari.rest.routes.CompiledRoute` objects to their corresponding initial hash
 codes, or to the unknown bucket hash code if not yet known. This initial hash is
-processed by the `hikari.net.routes.CompiledRoute` to provide the real bucket
+processed by the `hikari.rest.routes.CompiledRoute` to provide the real bucket
 hash we need to get the route's bucket object internally.
 
 The `acquire` method will take the bucket and acquire a new timeslice on
@@ -239,7 +239,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         self.name = name
         self.throttle_task = None
         self.queue = []
-        self.logger = logging.getLogger(f"hikari.net.{type(self).__qualname__}.{name}")
+        self.logger = logging.getLogger(f"hikari.internal.ratelimits.{type(self).__qualname__}.{name}")
         self._closed = False
 
     @abc.abstractmethod

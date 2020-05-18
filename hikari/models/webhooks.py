@@ -143,26 +143,26 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         wait : bool
             If specified, whether this request should wait for the webhook
             to be executed and return the resultant message object.
-        files : typing.Sequence[hikari.files.BaseStream]
+        files : typing.Sequence[hikari.models.files.BaseStream]
             If specified, a sequence of files to upload.
-        embeds : typing.Sequence[hikari.embeds.Embed]
+        embeds : typing.Sequence[hikari.models.embeds.Embed]
             If specified, a sequence of between `1` to `10` embed objects
             (inclusive) to send with the embed.
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Union[typing.Collection[typing.Union[hikari.users.User, hikari.bases.Snowflake, int]], bool]
+        user_mentions : typing.Union[typing.Collection[typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]], bool]
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions : typing.Union[typing.Collection[typing.Union[hikari.guilds.GuildRole, hikari.bases.Snowflake, int]], bool]
+        role_mentions : typing.Union[typing.Collection[typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]], bool]
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
 
         Returns
         -------
-        hikari.messages.Message, optional
+        hikari.models.messages.Message, optional
             The created message object, if `wait` is `True`, else `None`.
 
         Raises
@@ -221,7 +221,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         """Execute the webhook to create a message with mention safety.
 
         This endpoint has the same signature as
-        `Webhook.execute_webhook` with the only difference being
+        `Webhook.execute` with the only difference being
         that `mentions_everyone`, `user_mentions` and `role_mentions` default to
         `False`.
         """
@@ -287,10 +287,10 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         ----------
         name : str
             If specified, the new name string.
-        avatar : hikari.files.BaseStream, optional
+        avatar : hikari.models.files.BaseStream, optional
             If specified, the new avatar image. If `None`, then
             it is removed.
-        channel : typing.Union[hikari.channels.GuildChannel, hikari.bases.Snowflake, int]
+        channel : typing.Union[hikari.models.channels.GuildChannel, hikari.models.bases.Snowflake, int]
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
         reason : str
@@ -305,7 +305,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
 
         Returns
         -------
-        hikari.webhooks.Webhook
+        hikari.models.webhooks.Webhook
             The updated webhook object.
 
         Raises
@@ -343,7 +343,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
 
         Returns
         -------
-        hikari.channels.PartialChannel
+        hikari.models.channels.PartialChannel
             The object of the channel this webhook targets.
 
         Raises
@@ -360,7 +360,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
 
         Returns
         -------
-        hikari.guilds.Guild
+        hikari.models.guilds.Guild
             The object of the channel this message belongs to.
 
         Raises

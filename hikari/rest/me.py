@@ -72,7 +72,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Returns
         -------
-        hikari.users.MyUser
+        hikari.models.users.MyUser
             The current user object.
         """
         payload = await self._session.get_current_user()
@@ -85,7 +85,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         ----------
         username : str
             If specified, the new username string.
-        avatar : hikari.files.BaseStream, optional
+        avatar : hikari.models.files.BaseStream, optional
             If specified, the new avatar image data.
             If it is None, the avatar is removed.
 
@@ -96,7 +96,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Returns
         -------
-        hikari.users.MyUser
+        hikari.models.users.MyUser
             The updated user object.
 
         Raises
@@ -121,7 +121,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Returns
         -------
-        typing.Sequence[hikari.applications.OwnConnection]
+        typing.Sequence[hikari.models.applications.OwnConnection]
             A list of connection objects.
         """
         payload = await self._session.get_current_user_connections()
@@ -140,7 +140,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
         newest_first : bool
             If specified and `True`, the guilds are returned in the order of
             newest to oldest. The default is to return oldest guilds first.
-        start_at : datetime.datetime OR hikari.bases.UniqueEntity OR hikari.bases.Snowflake or int, optional
+        start_at : datetime.datetime OR hikari.models.bases.Unique OR hikari.models.bases.Snowflake or int, optional
             The optional first item to start at, if you want to limit your
             results. This will be interpreted as the date of creation for a
             guild. If unspecified, the newest or older possible snowflake is
@@ -148,7 +148,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Returns
         -------
-        hikari.pagination.PaginatedResults[hikari.applications.OwnGuild]
+        hikari.models.pagination.PaginatedResults[hikari.models.applications.OwnGuild]
             An async iterable of partial guild objects.
 
         Raises
@@ -163,7 +163,7 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Parameters
         ----------
-        guild : typing.Union[hikari.guilds.Guild, hikari.bases.Snowflake, int]
+        guild : typing.Union[hikari.models.guilds.Guild, hikari.models.bases.Snowflake, int]
             The object or ID of the guild to leave.
 
         Raises
@@ -183,12 +183,12 @@ class RESTCurrentUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disa
 
         Parameters
         ----------
-        recipient : typing.Union[hikari.users.User, hikari.bases.Snowflake, int]
+        recipient : typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]
             The object or ID of the user to create the new DM channel with.
 
         Returns
         -------
-        hikari.channels.DMChannel
+        hikari.models.channels.DMChannel
             The newly created DM channel object.
 
         Raises

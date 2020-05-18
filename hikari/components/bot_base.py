@@ -61,10 +61,10 @@ class BotBase(
 
     Parameters
     ----------
-    config : hikari.app.configs.BotConfig
+    config : hikari.configs.BotConfig
         The config object to use.
     **kwargs
-        Parameters to use to create a `hikari.app.configs.BotConfig`
+        Parameters to use to create a `hikari.configs.BotConfig`
         from, instead of passing a raw config object.
 
     Examples
@@ -104,7 +104,7 @@ class BotBase(
 
         This will return a mean of all the heartbeat intervals for all shards
         with a valid heartbeat latency that are in the
-        `hikari.clients.shard_states.GatewayState.READY` state.
+        `hikari.gateway.gateway_state.GatewayState.READY` state.
 
         If no shards are in this state, this will return `float("nan")`
         instead.
@@ -284,9 +284,9 @@ class BotBase(
 
         Parameters
         ----------
-        status : hikari.guilds.PresenceStatus
+        status : hikari.models.guilds.PresenceStatus
             If specified, the new status to set.
-        activity : hikari.gateway_entities.Activity, optional
+        activity : hikari.models.gateway.Activity, optional
             If specified, the new activity to set.
         idle_since : datetime.datetime, optional
             If specified, the time to show up as being idle since,
@@ -330,7 +330,7 @@ class BotBase(
 
         Returns
         -------
-        hikari.clients.client.GatewayClient
+        hikari.gateway.client.GatewayClient
             The shard client implementation to use for the given shard ID.
         """
 
@@ -346,7 +346,7 @@ class BotBase(
 
         Returns
         -------
-        hikari.clients.rest.RESTClient
+        hikari.components.rest.RESTClient
             The RESTSession client to use.
         """
 
@@ -373,7 +373,7 @@ class BotBase(
 
         Parameters
         ----------
-        config : hikari.app.configs.BotConfig
+        config : hikari.configs.BotConfig
             The bot config to use.
 
         Returns

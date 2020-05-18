@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Alias for the `hikari.colors` module."""
+"""Alias for the `hikari.models.colors` module."""
 
 from __future__ import annotations
 

@@ -59,7 +59,7 @@ class IntentAwareEventDispatcherImpl(dispatchers.EventDispatcher):
 
     Parameters
     ----------
-    enabled_intents : hikari.intents.Intent, optional
+    enabled_intents : hikari.models.intents.Intent, optional
         The intents that are enabled for the application. If `None`, then no
         intent checks are performed when subscribing a new event.
     """
