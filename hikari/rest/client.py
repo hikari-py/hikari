@@ -28,20 +28,19 @@ __all__ = ["RESTClient"]
 
 import typing
 
-from . import channel
-from . import gateway
-from . import guild
-from . import invite
-from . import me
-from . import oauth2
-from . import react
-from . import session
-from . import user
-from . import voice
-from . import webhook
-
-if typing.TYPE_CHECKING:
-    from hikari import application
+from hikari import aiohttp_config
+from hikari.api import rest_app
+from hikari.rest import channel
+from hikari.rest import gateway
+from hikari.rest import guild
+from hikari.rest import invite
+from hikari.rest import me
+from hikari.rest import oauth2
+from hikari.rest import react
+from hikari.rest import session
+from hikari.rest import user
+from hikari.rest import voice
+from hikari.rest import webhook
 
 
 class RESTClient(
@@ -75,24 +74,33 @@ class RESTClient(
         additional characters being cut off.
     """
 
-    def __init__(self, app: application.Application) -> None:
-        token = None
-        if app.config.token_type is not None:
-            token = f"{app.config.token_type} {app.config.token}"
+    def __init__(
+        self,
+        *,
+        app: rest_app.IRESTApp,
+        config: aiohttp_config.AIOHTTPConfig,
+        debug: bool,
+        token: typing.Optional[str],
+        token_type: typing.Optional[str],
+        rest_url,
+        version,
+    ) -> None:
+        if token_type is not None:
+            token = f"{token_type} {token}"
         super().__init__(
             app,
             session.RESTSession(
-                allow_redirects=app.config.allow_redirects,
-                base_url=app.config.rest_url,
-                connector=app.config.tcp_connector,
-                debug=app.config.debug,
-                proxy_headers=app.config.proxy_headers,
-                proxy_auth=app.config.proxy_auth,
-                ssl_context=app.config.ssl_context,
-                verify_ssl=app.config.verify_ssl,
-                timeout=app.config.request_timeout,
+                allow_redirects=config.allow_redirects,
+                base_url=rest_url,
+                connector=config.tcp_connector,
+                debug=debug,
+                proxy_headers=config.proxy_headers,
+                proxy_auth=config.proxy_auth,
+                ssl_context=config.ssl_context,
+                verify_ssl=config.verify_ssl,
+                timeout=config.request_timeout,
                 token=token,
-                trust_env=app.config.trust_env,
-                version=app.config.rest_version,
+                trust_env=config.trust_env,
+                version=version,
             ),
         )

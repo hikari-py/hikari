@@ -28,13 +28,11 @@ import typing
 import warnings
 
 from hikari import errors
-
 from hikari.events import base as event_base
 from hikari.events import other as other_events
 from hikari.internal import more_asyncio
 from hikari.internal import more_collections
 from hikari.models import intents
-
 from . import dispatchers
 
 if typing.TYPE_CHECKING:

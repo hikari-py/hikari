@@ -20,6 +20,10 @@
 
 from __future__ import annotations
 
+####
+#### DELETE
+####
+
 __all__ = ["RESTSession"]
 
 import asyncio
@@ -31,16 +35,15 @@ import typing
 
 import aiohttp.typedefs
 
-from hikari.internal import user_agents
+from hikari import errors
 from hikari.internal import conversions
 from hikari.internal import http_client
 from hikari.internal import more_collections
 from hikari.internal import ratelimits
 from hikari.internal import urls
-from hikari import errors
-
-from . import buckets
-from . import routes
+from hikari.internal import user_agents
+from hikari.rest import buckets
+from hikari.rest import routes
 
 if typing.TYPE_CHECKING:
     import ssl

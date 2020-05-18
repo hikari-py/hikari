@@ -30,13 +30,11 @@ from ._about import __issue_tracker__
 from ._about import __license__
 from ._about import __url__
 from ._about import __version__
-from .configs import *
-from .events import *
+from .aiohttp_config import *
 from .errors import *
+from .events import *
 from .gateway import *
 from .models import *
 from .rest import *
-from .stateful import *
-from .stateless import *
 
 __all__ = []

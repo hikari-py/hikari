@@ -52,7 +52,6 @@ from hikari.models import guilds
 from hikari.models import intents
 from hikari.models import unset
 from hikari.models import users
-
 from . import base as base_events
 
 if typing.TYPE_CHECKING:

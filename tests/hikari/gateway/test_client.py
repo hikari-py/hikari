@@ -24,7 +24,7 @@ import async_timeout
 import mock
 import pytest
 
-from hikari import configs
+from hikari import aiohttp_config
 from hikari import errors
 from hikari import application
 from hikari.gateway import consumers
@@ -86,7 +86,9 @@ class TestShardClientImpl:
         shard_client_obj = high_level_shards.GatewayClient(
             0,
             1,
-            mock.MagicMock(application.Application, config=configs.GatewayConfig(), event_manager=DummyConsumer()),
+            mock.MagicMock(
+                application.Application, config=aiohttp_config.GatewayConfig(), event_manager=DummyConsumer()
+            ),
             "some_url",
         )
 
@@ -99,7 +101,7 @@ class TestShardClientImpl:
             shard_client_obj = high_level_shards.GatewayClient(
                 0,
                 1,
-                mock.MagicMock(application.Application, event_manager=None, config=configs.GatewayConfig()),
+                mock.MagicMock(application.Application, event_manager=None, config=aiohttp_config.GatewayConfig()),
                 "some_url",
             )
 

@@ -23,7 +23,7 @@ import aiohttp
 import mock
 import pytest
 
-from hikari import configs
+from hikari import aiohttp_config
 from hikari.internal import urls
 from hikari.models import gateway
 from hikari.models import guilds
@@ -92,19 +92,19 @@ def test_bot_config(test_rest_config, test_websocket_config):
 
 class TestDebugConfig:
     def test_deserialize(self, test_debug_config):
-        debug_config_obj = configs.DebugConfig.deserialize(test_debug_config)
+        debug_config_obj = aiohttp_config.DebugConfig.deserialize(test_debug_config)
 
         assert debug_config_obj.debug is True
 
     def test_empty_deserialize(self):
-        debug_config_obj = configs.DebugConfig.deserialize({})
+        debug_config_obj = aiohttp_config.DebugConfig.deserialize({})
 
         assert debug_config_obj.debug is False
 
 
 class TestAIOHTTPConfig:
     def test_deserialize(self, test_aiohttp_config):
-        aiohttp_config_obj = configs.AIOHTTPConfig.deserialize(test_aiohttp_config)
+        aiohttp_config_obj = aiohttp_config.AIOHTTPConfig.deserialize(test_aiohttp_config)
 
         assert aiohttp_config_obj.allow_redirects is True
         assert aiohttp_config_obj.tcp_connector == aiohttp.TCPConnector
@@ -118,7 +118,7 @@ class TestAIOHTTPConfig:
         assert aiohttp_config_obj.verify_ssl is False
 
     def test_empty_deserialize(self):
-        aiohttp_config_obj = configs.AIOHTTPConfig.deserialize({})
+        aiohttp_config_obj = aiohttp_config.AIOHTTPConfig.deserialize({})
 
         assert aiohttp_config_obj.allow_redirects is False
         assert aiohttp_config_obj.tcp_connector is None
@@ -132,12 +132,12 @@ class TestAIOHTTPConfig:
 
 class TestTokenConfig:
     def test_deserialize(self, test_token_config):
-        token_config_obj = configs.TokenConfig.deserialize(test_token_config)
+        token_config_obj = aiohttp_config.TokenConfig.deserialize(test_token_config)
 
         assert token_config_obj.token == "token"
 
     def test_empty_deserialize(self):
-        token_config_obj = configs.TokenConfig.deserialize({})
+        token_config_obj = aiohttp_config.TokenConfig.deserialize({})
 
         assert token_config_obj.token is None
 
@@ -148,12 +148,12 @@ class TestWebsocketConfig:
         test_websocket_config["initial_idle_since"] = datetime_obj.timestamp()
         mock_activity = mock.MagicMock(gateway.Activity)
         with _helpers.patch_marshal_attr(
-            configs.GatewayConfig,
+            aiohttp_config.GatewayConfig,
             "initial_activity",
             deserializer=gateway.Activity.deserialize,
             return_value=mock_activity,
         ) as patched_activity_deserializer:
-            websocket_config_obj = configs.GatewayConfig.deserialize(test_websocket_config)
+            websocket_config_obj = aiohttp_config.GatewayConfig.deserialize(test_websocket_config)
             patched_activity_deserializer.assert_called_once_with({"name": "test", "url": "some_url", "type": 0})
         assert websocket_config_obj.gateway_use_compression is False
         assert websocket_config_obj.gateway_version == 6
@@ -178,7 +178,7 @@ class TestWebsocketConfig:
         assert websocket_config_obj.shard_count == 17
 
     def test_empty_deserialize(self):
-        websocket_config_obj = configs.GatewayConfig.deserialize({})
+        websocket_config_obj = aiohttp_config.GatewayConfig.deserialize({})
 
         assert websocket_config_obj.gateway_use_compression is True
         assert websocket_config_obj.gateway_version == 6
@@ -203,25 +203,25 @@ class TestWebsocketConfig:
 
 class TestParseShardInfo:
     def test__parse_shard_info_when_exclusive_range(self):
-        assert configs._parse_shard_info("0..2") == [0, 1]
+        assert aiohttp_config._parse_shard_info("0..2") == [0, 1]
 
     def test__parse_shard_info_when_inclusive_range(self):
-        assert configs._parse_shard_info("0...2") == [0, 1, 2]
+        assert aiohttp_config._parse_shard_info("0...2") == [0, 1, 2]
 
     def test__parse_shard_info_when_specific_id(self):
-        assert configs._parse_shard_info(2) == [2]
+        assert aiohttp_config._parse_shard_info(2) == [2]
 
     def test__parse_shard_info_when_list(self):
-        assert configs._parse_shard_info([2, 5, 6]) == [2, 5, 6]
+        assert aiohttp_config._parse_shard_info([2, 5, 6]) == [2, 5, 6]
 
     @_helpers.assert_raises(type_=ValueError)
     def test__parse_shard_info_when_invalid(self):
-        configs._parse_shard_info("something invalid")
+        aiohttp_config._parse_shard_info("something invalid")
 
 
 class TestRESTConfig:
     def test_deserialize(self, test_rest_config):
-        rest_config_obj = configs.RESTConfig.deserialize(test_rest_config)
+        rest_config_obj = aiohttp_config.RESTConfig.deserialize(test_rest_config)
 
         assert rest_config_obj.rest_version == 6
         assert rest_config_obj.allow_redirects is True
@@ -239,7 +239,7 @@ class TestRESTConfig:
         assert rest_config_obj.oauth2_url == "quxquxx"
 
     def test_empty_deserialize(self):
-        rest_config_obj = configs.RESTConfig.deserialize({})
+        rest_config_obj = aiohttp_config.RESTConfig.deserialize({})
 
         assert rest_config_obj.rest_version == 6
         assert rest_config_obj.allow_redirects is False
@@ -261,12 +261,12 @@ class TestBotConfig:
         test_bot_config["initial_idle_since"] = datetime_obj.timestamp()
         mock_activity = mock.MagicMock(gateway.Activity)
         with _helpers.patch_marshal_attr(
-            configs.BotConfig,
+            aiohttp_config.BotConfig,
             "initial_activity",
             deserializer=gateway.Activity.deserialize,
             return_value=mock_activity,
         ) as patched_activity_deserializer:
-            bot_config_obj = configs.BotConfig.deserialize(test_bot_config)
+            bot_config_obj = aiohttp_config.BotConfig.deserialize(test_bot_config)
             patched_activity_deserializer.assert_called_once_with({"name": "test", "url": "some_url", "type": 0})
 
         assert bot_config_obj.rest_version == 6
@@ -295,7 +295,7 @@ class TestBotConfig:
         assert bot_config_obj.oauth2_url == "quxquxx"
 
     def test_empty_deserialize(self):
-        bot_config_obj = configs.BotConfig.deserialize({})
+        bot_config_obj = aiohttp_config.BotConfig.deserialize({})
 
         assert bot_config_obj.rest_version == 6
         assert bot_config_obj.allow_redirects is False

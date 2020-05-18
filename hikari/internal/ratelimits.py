@@ -176,7 +176,6 @@ import typing
 if typing.TYPE_CHECKING:
     from . import more_typing
 
-
 UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""
 

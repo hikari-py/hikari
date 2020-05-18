@@ -30,8 +30,7 @@ import typing
 from hikari.internal import more_asyncio
 from hikari.internal import more_typing
 from hikari.internal import ratelimits
-
-from . import routes
+from hikari.rest import routes
 
 UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""
