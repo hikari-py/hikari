@@ -57,7 +57,7 @@ def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]
         The format to use for the wanted cdn entity, will usually be one of
         `webp`, `png`, `jpeg`, `jpg` or `gif` (which will be invalid
         if the target entity doesn't have an animated version available).
-    size : int, optional
+    size : int | None
         The size to specify for the image in the query string if applicable,
         should be passed through as None to avoid the param being set.
         Must be any power of two between 16 and 4096.

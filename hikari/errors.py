@@ -134,9 +134,9 @@ class GatewayServerClosedConnectionError(GatewayError):
 
     Parameters
     ----------
-    close_code : typing.Union[hikari.internal.codes.GatewayCloseCode, int], optional
+    close_code : hikari.internal.codes.GatewayCloseCode | int | None
         The close code provided by the server, if there was one.
-    reason : str, optional
+    reason : str | None
         A string explaining the issue.
     """
 

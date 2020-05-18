@@ -286,9 +286,9 @@ class BotBase(
         ----------
         status : hikari.models.guilds.PresenceStatus
             If specified, the new status to set.
-        activity : hikari.models.gateway.Activity, optional
+        activity : hikari.models.gateway.Activity | None
             If specified, the new activity to set.
-        idle_since : datetime.datetime, optional
+        idle_since : datetime.datetime | None
             If specified, the time to show up as being idle since,
             or `None` if not applicable.
         is_afk : bool

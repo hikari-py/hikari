@@ -79,29 +79,29 @@ class AIOHTTPConfig(BaseConfig):
         If `True`, allow following redirects from `3xx` HTTP responses.
         Generally you do not want to enable this unless you have a good reason to.
         Defaults to `False` if unspecified during deserialization.
-    proxy_auth : aiohttp.BasicAuth, optional
+    proxy_auth : aiohttp.BasicAuth | None
         Optional proxy authorization to provide in any HTTP requests.
         This is deserialized using the format `"basic {{base 64 string here}}"`.
         Defaults to `None` if unspecified during deserialization.
-    proxy_headers : typing.Mapping[str, str], optional
+    proxy_headers : typing.Mapping[str, str] | None
         Optional proxy headers to provide in any HTTP requests.
         Defaults to `None` if unspecified during deserialization.
-    proxy_url : str, optional
+    proxy_url : str | None
         The optional URL of the proxy to send requests via.
         Defaults to `None` if unspecified during deserialization.
-    request_timeout : float, optional
+    request_timeout : float | None
         Optional request timeout to use. If an HTTP request takes longer than
         this, it will be aborted.
         If not `None`, the value represents a number of seconds as a floating
         point number.
         Defaults to `None` if unspecified during deserialization.
-    ssl_context : ssl.SSLContext, optional
+    ssl_context : ssl.SSLContext | None
         The optional SSL context to use.
         This is deserialized as an object reference in the format
         `package.module#object.attribute` that is expected to point to the
         desired value.
         Defaults to `None` if unspecified during deserialization.
-    tcp_connector : aiohttp.TCPConnector, optional
+    tcp_connector : aiohttp.TCPConnector | None
         This may otherwise be `None` to use the default settings provided by
         `aiohttp`.
         This is deserialized as an object reference in the format
@@ -160,7 +160,7 @@ class TokenConfig(BaseConfig):
 
     Attributes
     ----------
-    token : str, optional
+    token : str | None
         The token to use.
     """
 
@@ -222,7 +222,7 @@ class GatewayConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
         Usually you want this turned on.
     gateway_version : int
         The gateway API version to use. Defaults to v6
-    initial_activity : hikari.models.gateway.Activity, optional
+    initial_activity : hikari.models.gateway.Activity | None
         The initial activity to set all shards to when starting the gateway.
         If this is `None` then no activity will be set, this is the default.
     initial_status : hikari.models.guilds.PresenceStatus
@@ -230,7 +230,7 @@ class GatewayConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
         Defaults to `ONLINE`.
     initial_is_afk : bool
         Whether to show up as AFK or not on sign-in.
-    initial_idle_since : datetime.datetime, optional
+    initial_idle_since : datetime.datetime | None
         The idle time to show on signing in.
         If set to `None` to not show an idle time, this is the default.
     intents : hikari.models.intents.Intent
@@ -239,44 +239,44 @@ class GatewayConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
         intent names. If unspecified, this will be set to `None`.
     large_threshold : int
         The large threshold to use.
-    proxy_headers : typing.Mapping[str, str], optional
+    proxy_headers : typing.Mapping[str, str] | None
         Optional proxy headers to provide in any HTTP requests.
         Defaults to `None` if unspecified during deserialization.
-    proxy_auth : aiohttp.BasicAuth, optional
+    proxy_auth : aiohttp.BasicAuth | None
         Optional proxy authorization to provide in any HTTP requests.
         This is deserialized using the format `"basic {{base 64 string here}}"`.
         Defaults to `None` if unspecified during deserialization.
-    proxy_url : str, optional
+    proxy_url : str | None
         The optional URL of the proxy to send requests via.
         Defaults to `None` if unspecified during deserialization.
-    request_timeout : float, optional
+    request_timeout : float | None
         Optional request timeout to use. If an HTTP request takes longer than
         this, it will be aborted.
         If not `None`, the value represents a number of seconds as a floating
         point number.
         Defaults to `None` if unspecified during deserialization.
-    shard_count : int, optional
+    shard_count : int | None
         The number of shards the entire distributed application should consists
         of. If you run multiple distributed instances of the bot, you should
         ensure this value is consistent.
         This can be set to `None` to enable auto-sharding. This is the default.
-    shard_id : typing.Sequence[int], optional
+    shard_id : typing.Sequence[int] | None
         The shard IDs to produce shard connections for.
         If being deserialized, this can be several formats shown in `notes`.
-    ssl_context : ssl.SSLContext, optional
+    ssl_context : ssl.SSLContext | None
         The optional SSL context to use.
         This is deserialized as an object reference in the format
         `package.module#object.attribute` that is expected to point to the
         desired value.
         Defaults to `None` if unspecified during deserialization.
-    tcp_connector : aiohttp.TCPConnector, optional
+    tcp_connector : aiohttp.TCPConnector | None
         This may otherwise be `None` to use the default settings provided by
         `aiohttp`.
         This is deserialized as an object reference in the format
         `package.module#object.attribute` that is expected to point to the
         desired value.
         Defaults to `None` if unspecified during deserialization.
-    token : str, optional
+    token : str | None
         The token to use.
     verify_ssl : bool
         If `True`, then responses with invalid SSL certificates will be
@@ -386,29 +386,29 @@ class RESTConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
         useful for testing, amongst other things.
         You can put format-string placeholders in the URL such as `{0.version}`
         to interpolate the chosen API version to use.
-    proxy_headers : typing.Mapping[str, str], optional
+    proxy_headers : typing.Mapping[str, str] | None
         Optional proxy headers to provide in any HTTP requests.
         Defaults to `None` if unspecified during deserialization.
-    proxy_auth : aiohttp.BasicAuth, optional
+    proxy_auth : aiohttp.BasicAuth | None
         Optional proxy authorization to provide in any HTTP requests.
         This is deserialized using the format `"basic {{base 64 string here}}"`.
         Defaults to `None` if unspecified during deserialization.
-    proxy_url : str, optional
+    proxy_url : str | None
         The optional URL of the proxy to send requests via.
         Defaults to `None` if unspecified during deserialization.
-    request_timeout : float, optional
+    request_timeout : float | None
         Optional request timeout to use. If an HTTP request takes longer than
         this, it will be aborted.
         If not `None`, the value represents a number of seconds as a floating
         point number.
         Defaults to `None` if unspecified during deserialization.
-    ssl_context : ssl.SSLContext, optional
+    ssl_context : ssl.SSLContext | None
         The optional SSL context to use.
         This is deserialized as an object reference in the format
         `package.module#object.attribute` that is expected to point to the
         desired value.
         Defaults to `None` if unspecified during deserialization.
-    tcp_connector : aiohttp.TCPConnector, optional
+    tcp_connector : aiohttp.TCPConnector | None
         This may otherwise be `None` to use the default settings provided by
         `aiohttp`.
         This is deserialized as an object reference in the format
@@ -422,11 +422,11 @@ class RESTConfig(AIOHTTPConfig, DebugConfig, TokenConfig):
         this. Disabling SSL  verification can have major security implications.
         You turn this off at your own risk.
         Defaults to `True` if unspecified during deserialization.
-    token : str, optional
+    token : str | None
         The token to use.
     debug : bool
         Whether to enable debugging mode. Usually you don't want to enable this.
-    token_type : str, optional
+    token_type : str | None
         Token authentication scheme, this defaults to `"Bot"` and  should be
         one of `"Bot"` or `"Bearer"`, or `None` if not relevant.
     rest_version : int
@@ -466,7 +466,7 @@ class BotConfig(RESTConfig, GatewayConfig):
         Usually you want this turned on.
     gateway_version : int
         The gateway API version to use. Defaults to v6
-    initial_activity : hikari.models.gateway.Activity, optional
+    initial_activity : hikari.models.gateway.Activity | None
         The initial activity to set all shards to when starting the gateway.
         If this is `None` then no activity will be set, this is the default.
     initial_status : hikari.models.guilds.PresenceStatus
@@ -474,7 +474,7 @@ class BotConfig(RESTConfig, GatewayConfig):
         Defaults to `ONLINE`.
     initial_is_afk : bool
         Whether to show up as AFK or not on sign-in.
-    initial_idle_since : datetime.datetime, optional
+    initial_idle_since : datetime.datetime | None
         The idle time to show on signing in.
         If set to `None` to not show an idle time, this is the default.
     intents : hikari.models.intents.Intent
@@ -487,17 +487,17 @@ class BotConfig(RESTConfig, GatewayConfig):
         Can be specified to override the default URL for the Discord OAuth2 API.
         Generally there is no reason to need to specify this, but it can be
         useful for testing, amongst other things.
-    proxy_headers : typing.Mapping[str, str], optional
+    proxy_headers : typing.Mapping[str, str] | None
         Optional proxy headers to provide in any HTTP requests.
         Defaults to `None` if unspecified during deserialization.
-    proxy_auth : aiohttp.BasicAuth, optional
+    proxy_auth : aiohttp.BasicAuth | None
         Optional proxy authorization to provide in any HTTP requests.
         This is deserialized using the format `"basic {{base 64 string here}}"`.
         Defaults to `None` if unspecified during deserialization.
-    proxy_url : str, optional
+    proxy_url : str | None
         The optional URL of the proxy to send requests via.
         Defaults to `None` if unspecified during deserialization.
-    request_timeout : float, optional
+    request_timeout : float | None
         Optional request timeout to use. If an HTTP request takes longer than
         this, it will be aborted.
         If not `None`, the value represents a number of seconds as a floating
@@ -511,30 +511,30 @@ class BotConfig(RESTConfig, GatewayConfig):
         to interpolate the chosen API version to use.
     rest_version : int
         The HTTP API version to use. If unspecified, then V7 is used.
-    shard_count : int, optional
+    shard_count : int | None
         The number of shards the entire distributed application should consists
         of. If you run multiple distributed instances of the bot, you should
         ensure this value is consistent.
         This can be set to `None` to enable auto-sharding. This is the default.
-    shard_id : typing.Sequence[int], optional
+    shard_id : typing.Sequence[int] | None
         The shard IDs to produce shard connections for.
         If being deserialized, this can be several formats shown in `notes`.
-    ssl_context : ssl.SSLContext, optional
+    ssl_context : ssl.SSLContext | None
         The optional SSL context to use.
         This is deserialized as an object reference in the format
         `package.module#object.attribute` that is expected to point to the
         desired value.
         Defaults to `None` if unspecified during deserialization.
-    tcp_connector : aiohttp.TCPConnector, optional
+    tcp_connector : aiohttp.TCPConnector | None
         This may otherwise be `None` to use the default settings provided by
         `aiohttp`.
         This is deserialized as an object reference in the format
         `package.module#object.attribute` that is expected to point to the
         desired value.
         Defaults to `None` if unspecified during deserialization.
-    token : str, optional
+    token : str | None
         The token to use.
-    token_type : str, optional
+    token_type : str | None
         Token authentication scheme, this defaults to `"Bot"` and  should be
         one of `"Bot"` or `"Bearer"`, or `None` if not relevant.
     verify_ssl : bool

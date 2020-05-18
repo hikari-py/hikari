@@ -438,11 +438,11 @@ class Message(bases.Unique, marshaller.Deserializable):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Union[typing.Collection[typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]], bool]
+        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.bases.Snowflake | int | str] | bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Union[typing.Collection[typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]], bool]
+        role_mentions: typing.Collection[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str] | bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -547,11 +547,11 @@ class Message(bases.Unique, marshaller.Deserializable):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Union[typing.Collection[typing.Union[hikari.models.users.User, hikari.models.bases.Snowflake, int]], bool]
+        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.bases.Snowflake | int | str] | bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Union[typing.Collection[typing.Union[hikari.models.guilds.GuildRole, hikari.models.bases.Snowflake, int]], bool]
+        role_mentions: typing.Collection[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str] | bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -644,7 +644,7 @@ class Message(bases.Unique, marshaller.Deserializable):
 
         Parameters
         ----------
-        emoji : str OR hikari.models.emojis.Emoji
+        emoji : hikari.models.emojis.Emoji | str
             The emoji to add.
 
         Examples
@@ -684,9 +684,9 @@ class Message(bases.Unique, marshaller.Deserializable):
 
         Parameters
         ----------
-        emoji : str OR hikari.models.emojis.Emoji
+        emoji : hikari.models.emojis.Emoji | str
             The emoji to remove.
-        user : hikari.models.users.User, optional
+        user : hikari.models.users.User | None
             The user of the reaction to remove. If `None`, then the bot's
             reaction is removed instead.
 
@@ -726,7 +726,7 @@ class Message(bases.Unique, marshaller.Deserializable):
 
         Parameters
         ----------
-        emoji : str OR hikari.models.emojis.Emoji, optional
+        emoji : hikari.models.emojis.Emoji | str | None
             The emoji to remove all reactions for. If not specified, or `None`,
             then all emojis are removed.
 

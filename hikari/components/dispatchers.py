@@ -94,14 +94,14 @@ class EventDispatcher(abc.ABC):
         ----------
         event_type : typing.Type[hikari.events.base.HikariEvent]
             The name of the event to wait for.
-        timeout : float, optional
+        timeout : float | None
             The timeout to wait for before cancelling and raising an
             `asyncio.TimeoutError` instead. If this is `None`, this
             will wait forever. Care must be taken if you use `None` as this
             may leak memory if you do this from an event listener that gets
             repeatedly called. If you want to do this, you should consider
             using an event listener instead of this function.
-        predicate : `def predicate(event) -> bool` or `async def predicate(event) -> bool`, optional
+        predicate : `def predicate(event) -> bool` | `async def predicate(event) -> bool` | None
             A function that takes the arguments for the event and returns `True`
             if it is a match, or `False` if it should be ignored.
             This can be a coroutine function that returns a boolean, or a
@@ -162,7 +162,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.base.HikariEvent], optional
+        event_type : typing.Type[hikari.events.base.HikariEvent] | None
             The event type to register the produced decorator to. If this is not
             specified, then the given function is used instead and the type hint
             of the first argument is considered. If no type hint is present

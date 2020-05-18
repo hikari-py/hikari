@@ -94,7 +94,7 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
         If `True`, then payload compression is enabled on the connection.
         If `False`, no payloads are compressed. You usually want to keep this
         enabled.
-    connector : aiohttp.BaseConnector, optional
+    connector : aiohttp.BaseConnector | None
         The `aiohttp.BaseConnector` to use for the HTTP session that
         gets upgraded to a websocket connection. You can use this to customise
         connection pooling, etc.
@@ -108,12 +108,12 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
         coroutine function, and must take three arguments only. The first is
         the reference to this `Shard` The second is the
         event name.
-    initial_presence : typing.Dict, optional
+    initial_presence : typing.Dict | None
         A raw JSON object as a `typing.Dict` that should be set as the
         initial presence of the bot user once online. If `None`, then it
         will be set to the default, which is showing up as online without a
         custom status message.
-    intents : hikari.models.intents.Intent, optional
+    intents : hikari.models.intents.Intent | None
         Bitfield of intents to use. If you use the V7 API, this is mandatory.
         This field will determine what events you will receive.
     json_deserialize : `deserialization function`
@@ -125,19 +125,19 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
         considered to be "large". Large guilds will not have member information
         sent automatically, and must manually request that member chunks be
         sent using `ShardConnection.request_guild_members`.
-    proxy_auth : aiohttp.BasicAuth, optional
+    proxy_auth : aiohttp.BasicAuth | None
         Optional `aiohttp.BasicAuth` object that can be provided to
         allow authenticating with a proxy if you use one. Leave `None` to ignore.
-    proxy_headers : typing.Mapping[str, str], optional
+    proxy_headers : typing.Mapping[str, str] | None
         Optional `typing.Mapping` to provide as headers to allow the
         connection through a proxy if you use one. Leave `None` to ignore.
-    proxy_url : str, optional
+    proxy_url : str | None
         Optional `str` to use for a proxy server. If `None`, then it is ignored.
-    session_id : str, optional
+    session_id : str | None
         The session ID to use. If specified along with `seq`, then the
         gateway client will attempt to `RESUME` an existing session rather than
         re-`IDENTIFY`. Otherwise, it will be ignored.
-    seq : int, optional
+    seq : int | None
         The sequence number to use. If specified along with `session_id`, then
         the gateway client will attempt to `RESUME` an existing session rather
         than re-`IDENTIFY`. Otherwise, it will be ignored.
@@ -146,10 +146,10 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
     shard_count : int
         The number of shards on this gateway. Defaults to `1`, which implies no
         sharding is taking place.
-    ssl_context : ssl.SSLContext, optional
+    ssl_context : ssl.SSLContext | None
         An optional custom `ssl.SSLContext` to provide to customise how
         SSL works.
-    timeout : float, optional
+    timeout : float | None
         The optional timeout for all HTTP requests.
     token : str
         The mandatory bot token for the bot account to use, minus the "Bot"
@@ -523,7 +523,7 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
         ----------
         guild_id : str
             The guild ID to change the voice state within.
-        channel_id : str, optional
+        channel_id : str | None
             The channel ID in the guild to change the voice state within.
             If this is `None`, then this will behave as a disconnect opcode.
         self_mute : bool
