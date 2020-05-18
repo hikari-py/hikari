@@ -41,7 +41,7 @@ class TestHikariEntity:
     def test_deserialize(self, stub_entity):
         mock_app = mock.MagicMock(application.Application)
         entity = stub_entity.deserialize({}, app=mock_app)
-        assert entity._app is mock_app
+        assert entity._zookeeper is mock_app
 
     def test_serialize(self, stub_entity):
         mock_app = mock.MagicMock(application.Application)

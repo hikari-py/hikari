@@ -264,19 +264,19 @@ class TestEmbed:
         assert embed_obj.timestamp == mock_datetime
         assert embed_obj.color == colors.Color(14014915)
         assert embed_obj.footer == embeds.EmbedFooter.deserialize(test_footer_payload)
-        assert embed_obj.footer._app is mock_app
+        assert embed_obj.footer._zookeeper is mock_app
         assert embed_obj.image == embeds.EmbedImage.deserialize(test_image_payload)
-        assert embed_obj.image._app is mock_app
+        assert embed_obj.image._zookeeper is mock_app
         assert embed_obj.thumbnail == embeds.EmbedThumbnail.deserialize(test_thumbnail_payload)
-        assert embed_obj.thumbnail._app is mock_app
+        assert embed_obj.thumbnail._zookeeper is mock_app
         assert embed_obj.video == embeds.EmbedVideo.deserialize(test_video_payload)
-        assert embed_obj.video._app is mock_app
+        assert embed_obj.video._zookeeper is mock_app
         assert embed_obj.provider == embeds.EmbedProvider.deserialize(test_provider_payload)
-        assert embed_obj.provider._app is mock_app
+        assert embed_obj.provider._zookeeper is mock_app
         assert embed_obj.author == embeds.EmbedAuthor.deserialize(test_author_payload)
-        assert embed_obj.author._app is mock_app
+        assert embed_obj.author._zookeeper is mock_app
         assert embed_obj.fields == [embeds.EmbedField.deserialize(test_field_payload)]
-        assert embed_obj.fields[0]._app is mock_app
+        assert embed_obj.fields[0]._zookeeper is mock_app
 
     def test_serialize_full_embed(self):
         embed_obj = embeds.Embed(

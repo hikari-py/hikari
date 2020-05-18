@@ -27,7 +27,6 @@ __all__ = [
 import typing
 import urllib.parse
 
-
 BASE_CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
 """The URL for the CDN."""
 

@@ -66,8 +66,8 @@ import typing
 
 import aiohttp
 
-from hikari.internal import more_asyncio
 from hikari import errors
+from hikari.internal import more_asyncio
 
 # XXX: find optimal size.
 MAGIC_NUMBER: typing.Final[int] = 128 * 1024

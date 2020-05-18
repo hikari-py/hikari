@@ -432,7 +432,7 @@ class TestAuditLog:
         assert audit_log_obj.entries == {
             694026906592477214: audit_logs.AuditLogEntry.deserialize(test_audit_log_entry_payload)
         }
-        assert audit_log_obj.entries[694026906592477214]._app is mock_app
+        assert audit_log_obj.entries[694026906592477214]._zookeeper is mock_app
         assert audit_log_obj.webhooks == {424242: mock_webhook_obj}
         assert audit_log_obj.users == {92929292: mock_user_obj}
         assert audit_log_obj.integrations == {33590653072239123: mock_integration_obj}

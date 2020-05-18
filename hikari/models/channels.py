@@ -46,7 +46,6 @@ from hikari.internal import marshaller
 from hikari.internal import more_collections
 from hikari.internal import more_enums
 from hikari.internal import urls
-
 from . import bases
 from . import permissions
 from . import users
@@ -135,7 +134,7 @@ def register_channel_type(
 
     Returns
     -------
-    decorator(T) -> T
+    decorator(ComponentImplT) -> ComponentImplT
         The decorator to decorate the class with.
     """
 

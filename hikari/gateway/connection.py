@@ -47,13 +47,13 @@ import zlib
 
 import aiohttp.typedefs
 
+from hikari import errors
 from hikari.internal import codes
 from hikari.internal import http_client
 from hikari.internal import more_asyncio
 from hikari.internal import more_typing
 from hikari.internal import ratelimits
 from hikari.internal import user_agents
-from hikari import errors
 
 if typing.TYPE_CHECKING:
     import ssl
@@ -62,7 +62,6 @@ if typing.TYPE_CHECKING:
 
 DispatcherT = typing.Callable[["Shard", str, typing.Dict], more_typing.Coroutine[None]]
 """The signature for an event dispatch callback."""
-
 
 VERSION_6: typing.Final[int] = 6
 VERSION_7: typing.Final[int] = 7
@@ -305,7 +304,7 @@ class Shard(http_client.HTTPClient):  # pylint: disable=too-many-instance-attrib
         compression: bool = True,
         connector: typing.Optional[aiohttp.BaseConnector] = None,
         debug: bool = False,
-        dispatcher: DispatcherT = lambda gw, e, p: None,
+        dispatcher: DispatcherT,
         initial_presence: typing.Optional[typing.Dict] = None,
         intents: typing.Optional[_intents.Intent] = None,
         json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict] = json.loads,

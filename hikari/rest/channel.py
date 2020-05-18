@@ -33,8 +33,7 @@ from hikari.models import invites
 from hikari.models import messages as messages_
 from hikari.models import pagination
 from hikari.models import webhooks
-
-from . import base
+from hikari.rest import base
 
 if typing.TYPE_CHECKING:
     from hikari.models import embeds as embeds_

@@ -21,7 +21,7 @@ import inspect
 import mock
 import pytest
 
-from hikari import configs
+from hikari import aiohttp_config
 from hikari import rest as high_level_rest
 from hikari import application
 from hikari.rest import channel
@@ -47,7 +47,7 @@ class TestRESTClient:
         ],
     )
     def test_init(self, token, token_type, expected_token):
-        mock_config = configs.RESTConfig(token=token, token_type=token_type, trust_env=True)
+        mock_config = aiohttp_config.RESTConfig(token=token, token_type=token_type, trust_env=True)
         mock_app = mock.MagicMock(application.Application, config=mock_config)
         mock_low_level_rest_clients = mock.MagicMock(low_level_rest.RESTSession)
         with mock.patch.object(low_level_rest, "RESTSession", return_value=mock_low_level_rest_clients) as patched_init:

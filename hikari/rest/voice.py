@@ -26,7 +26,7 @@ import abc
 import typing
 
 from hikari.models import voices
-from . import base
+from hikari.rest import base
 
 
 class RESTVoiceComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method
