@@ -1244,7 +1244,7 @@ class TestRESTEndpoints:
             template.compile.assert_called_once_with(guild_id="115590097100865541", user_id="379953393319542784")
         rest_impl._request_json_response.assert_awaited_once_with(
             compiled,
-            body={"nick": "QT", "roles": ["222222222"], "mute": True, "deaf": True, "channel_id": "777"},
+            body={"nick": "QT", "roles": ["222222222"], "mute": True, "deaf": True, "channel": "777"},
             reason="I will drink your blood.",
         )
 
@@ -1551,7 +1551,7 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_guild_embed(self, rest_impl):
-        mock_response = {"channel_id": "4304040", "enabled": True}
+        mock_response = {"channel": "4304040", "enabled": True}
         rest_impl._request_json_response.return_value = mock_response
         with mock_patch_route("GET_GUILD_EMBED") as (template, compiled):
             assert await rest_impl.get_guild_embed("4949") is mock_response
@@ -1560,18 +1560,18 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_modify_guild_embed_without_reason(self, rest_impl):
-        mock_response = {"channel_id": "4444", "enabled": False}
+        mock_response = {"channel": "4444", "enabled": False}
         rest_impl._request_json_response.return_value = mock_response
         with mock_patch_route("PATCH_GUILD_EMBED") as (template, compiled):
             assert await rest_impl.modify_guild_embed("393939", channel_id="222", enabled=True) is mock_response
             template.compile.assert_called_once_with(guild_id="393939")
         rest_impl._request_json_response.assert_awaited_once_with(
-            compiled, body={"channel_id": "222", "enabled": True}, reason=...
+            compiled, body={"channel": "222", "enabled": True}, reason=...
         )
 
     @pytest.mark.asyncio
     async def test_modify_guild_embed_with_reason(self, rest_impl):
-        mock_response = {"channel_id": "4444", "enabled": False}
+        mock_response = {"channel": "4444", "enabled": False}
         rest_impl._request_json_response.return_value = mock_response
         with mock_patch_route("PATCH_GUILD_EMBED") as (template, compiled):
             assert (
@@ -1580,7 +1580,7 @@ class TestRESTEndpoints:
             )
             template.compile.assert_called_once_with(guild_id="393939")
         rest_impl._request_json_response.assert_awaited_once_with(
-            compiled, body={"channel_id": "222", "enabled": True}, reason="OK"
+            compiled, body={"channel": "222", "enabled": True}, reason="OK"
         )
 
     @pytest.mark.asyncio
@@ -1735,7 +1735,7 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_create_webhook_without_optionals(self, rest_impl):
-        mock_response = {"channel_id": "39393993", "id": "8383838"}
+        mock_response = {"channel": "39393993", "id": "8383838"}
         rest_impl._request_json_response.return_value = mock_response
         with mock_patch_route("POST_CHANNEL_WEBHOOKS") as (template, compiled):
             assert await rest_impl.create_webhook("39393939", "I am a webhook") is mock_response
@@ -1744,7 +1744,7 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_create_webhook_with_optionals(self, rest_impl):
-        mock_response = {"channel_id": "39393993", "id": "8383838"}
+        mock_response = {"channel": "39393993", "id": "8383838"}
         rest_impl._request_json_response.return_value = mock_response
         mock_image_data = "data:image/png;base64,iVBORw0KGgpibGFo"
         with mock_patch_route("POST_CHANNEL_WEBHOOKS") as (template, compiled):
@@ -1761,7 +1761,7 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_channel_webhooks(self, rest_impl):
-        mock_response = [{"channel_id": "39393993", "id": "8383838"}]
+        mock_response = [{"channel": "39393993", "id": "8383838"}]
         rest_impl._request_json_response.return_value = mock_response
         with mock_patch_route("GET_CHANNEL_WEBHOOKS") as (template, compiled):
             assert await rest_impl.get_channel_webhooks("9393939") is mock_response
@@ -1770,7 +1770,7 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_guild_webhooks(self, rest_impl):
-        mock_response = [{"channel_id": "39393993", "id": "8383838"}]
+        mock_response = [{"channel": "39393993", "id": "8383838"}]
         rest_impl._request_json_response.return_value = mock_response
         with mock_patch_route("GET_GUILD_WEBHOOKS") as (template, compiled):
             assert await rest_impl.get_guild_webhooks("9393939") is mock_response
@@ -1779,7 +1779,7 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_webhook_without_token(self, rest_impl):
-        mock_response = {"channel_id": "39393993", "id": "8383838"}
+        mock_response = {"channel": "39393993", "id": "8383838"}
         rest_impl._request_json_response.return_value = mock_response
         with mock_patch_route("GET_WEBHOOK") as (template, compiled):
             assert await rest_impl.get_webhook("9393939") is mock_response
@@ -1788,7 +1788,7 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_webhook_with_token(self, rest_impl):
-        mock_response = {"channel_id": "39393993", "id": "8383838"}
+        mock_response = {"channel": "39393993", "id": "8383838"}
         rest_impl._request_json_response.return_value = mock_response
         with mock_patch_route("GET_WEBHOOK_WITH_TOKEN") as (template, compiled):
             assert await rest_impl.get_webhook("9393939", webhook_token="a_webhook_token") is mock_response
@@ -1797,7 +1797,7 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_modify_webhook_without_optionals_without_token(self, rest_impl):
-        mock_response = {"channel_id": "39393993", "id": "8383838"}
+        mock_response = {"channel": "39393993", "id": "8383838"}
         rest_impl._request_json_response.return_value = mock_response
         with mock_patch_route("PATCH_WEBHOOK") as (template, compiled):
             assert await rest_impl.modify_webhook("929292") is mock_response
@@ -1808,7 +1808,7 @@ class TestRESTEndpoints:
 
     @pytest.mark.asyncio
     async def test_modify_webhook_with_optionals_without_token(self, rest_impl):
-        mock_response = {"channel_id": "39393993", "id": "8383838"}
+        mock_response = {"channel": "39393993", "id": "8383838"}
         rest_impl._request_json_response.return_value = mock_response
         with mock_patch_route("PATCH_WEBHOOK") as (template, compiled):
             assert (
@@ -1820,14 +1820,14 @@ class TestRESTEndpoints:
             template.compile.assert_called_once_with(webhook_id="929292")
         rest_impl._request_json_response.assert_awaited_once_with(
             compiled,
-            body={"name": "nyaa", "avatar": "data:image/png;base64,iVBORw0KGgpibGFo", "channel_id": "2929292929",},
+            body={"name": "nyaa", "avatar": "data:image/png;base64,iVBORw0KGgpibGFo", "channel": "2929292929",},
             reason="nuzzle",
             suppress_authorization_header=False,
         )
 
     @pytest.mark.asyncio
     async def test_modify_webhook_without_optionals_with_token(self, rest_impl):
-        mock_response = {"channel_id": "39393993", "id": "8383838"}
+        mock_response = {"channel": "39393993", "id": "8383838"}
         rest_impl._request_json_response.return_value = mock_response
         with mock_patch_route("PATCH_WEBHOOK_WITH_TOKEN") as (template, compiled):
             assert await rest_impl.modify_webhook("929292", webhook_token="a_webhook_token") is mock_response

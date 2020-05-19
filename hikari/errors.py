@@ -31,11 +31,6 @@ __all__ = [
     "HTTPErrorResponse",
     "ClientHTTPErrorResponse",
     "ServerHTTPErrorResponse",
-    "GatewayZombiedError",
-    "GatewayNeedsShardingError",
-    "GatewayMustReconnectError",
-    "GatewayInvalidSessionError",
-    "GatewayInvalidTokenError",
     "GatewayServerClosedConnectionError",
     "GatewayClientClosedError",
     "GatewayClientDisconnectedError",
@@ -46,8 +41,6 @@ import http
 import typing
 
 import aiohttp.typedefs
-
-from hikari.internal import codes
 
 
 class HikariError(RuntimeError):
@@ -134,107 +127,31 @@ class GatewayServerClosedConnectionError(GatewayError):
 
     Parameters
     ----------
-    close_code : hikari.internal.codes.GatewayCloseCode | int | None
-        The close code provided by the server, if there was one.
     reason : str | None
         A string explaining the issue.
+    code : int | None
+        The close code.
+
     """
 
-    __slots__ = ("close_code",)
-
-    close_code: typing.Union[codes.GatewayCloseCode, int, None]
+    __slots__ = ("code", "can_reconnect", "can_resume", "should_backoff")
 
     def __init__(
         self,
-        close_code: typing.Optional[typing.Union[codes.GatewayCloseCode, int]] = None,
-        reason: typing.Optional[str] = None,
+        reason: str,
+        code: typing.Optional[int] = None,
+        can_reconnect: bool = False,
+        can_resume: bool = False,
+        should_backoff: bool = True,
     ) -> None:
-        try:
-            name = close_code.name
-        except AttributeError:
-            name = str(close_code) if close_code is not None else "no reason"
-
-        if reason is None:
-            reason = f"Gateway connection closed by server ({name})"
-
-        self.close_code = close_code
+        self.code = code
+        self.can_reconnect = can_reconnect
+        self.can_resume = can_resume
+        self.should_backoff = should_backoff
         super().__init__(reason)
 
-
-class GatewayInvalidTokenError(GatewayServerClosedConnectionError):
-    """An exception that is raised if you failed to authenticate with a valid token to the Gateway."""
-
-    __slots__ = ()
-
-    def __init__(self) -> None:
-        super().__init__(
-            codes.GatewayCloseCode.AUTHENTICATION_FAILED,
-            "The account token specified is invalid for the gateway connection",
-        )
-
-
-class GatewayInvalidSessionError(GatewayServerClosedConnectionError):
-    """An exception raised if a Gateway session becomes invalid.
-
-    Parameters
-    ----------
-    can_resume : bool
-        `True` if the connection will be able to RESUME next time it starts
-        rather than re-IDENTIFYing, or `False` if you need to IDENTIFY
-        again instead.
-    """
-
-    __slots__ = ("can_resume",)
-
-    can_resume: bool
-    """`True` if the next reconnection can be RESUMED,
-    `False` if it has to be coordinated by re-IDENFITYing.
-    """
-
-    def __init__(self, can_resume: bool) -> None:
-        self.can_resume = can_resume
-        instruction = "restart the shard and RESUME" if can_resume else "restart the shard with a fresh session"
-        super().__init__(reason=f"The session has been invalidated; {instruction}")
-
-
-class GatewayMustReconnectError(GatewayServerClosedConnectionError):
-    """An exception raised when the Gateway has to re-connect with a new session.
-
-    This will cause a re-IDENTIFY.
-    """
-
-    __slots__ = ()
-
-    def __init__(self) -> None:
-        super().__init__(reason="The gateway server has requested that the client reconnects with a new session")
-
-
-class GatewayNeedsShardingError(GatewayServerClosedConnectionError):
-    """An exception raised if you have too many guilds on one of the current Gateway shards.
-
-    This is a sign you need to increase the number of shards that your bot is
-    running with in order to connect to Discord.
-    """
-
-    __slots__ = ()
-
-    def __init__(self) -> None:
-        super().__init__(
-            codes.GatewayCloseCode.SHARDING_REQUIRED, "You are in too many guilds. Shard the bot to connect",
-        )
-
-
-class GatewayZombiedError(GatewayClientClosedError):
-    """An exception raised if a shard becomes zombied.
-
-    This means that Discord is no longer responding to us, and we have
-    disconnected due to a timeout.
-    """
-
-    __slots__ = ()
-
-    def __init__(self) -> None:
-        super().__init__("No heartbeat was received, the connection has been closed")
+    def __str__(self) -> str:
+        return f"Server closed connection with code {self.code} because {self.reason}"
 
 
 class HTTPError(HikariError):

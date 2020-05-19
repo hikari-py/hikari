@@ -25,7 +25,7 @@ from hikari.events import guild
 from hikari.events import message
 from hikari.events import other
 from hikari.events import voice
-from hikari.gateway import client
+from hikari import gateway
 from hikari.stateless import manager
 
 
@@ -45,7 +45,7 @@ class TestStatelessEventManagerImpl:
 
     @pytest.fixture
     def mock_shard(self):
-        return mock.MagicMock(client.GatewayClient)
+        return mock.MagicMock(gateway.Gateway)
 
     @pytest.mark.asyncio
     async def test_on_connect(self, event_manager_impl, mock_shard):

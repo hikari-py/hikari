@@ -575,7 +575,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         afk_channel : hikari.models.channels.GuildVoiceChannel | hikari.models.bases.Snowflake | int | str
             If specified, the object or ID for the new AFK voice channel.
         afk_timeout : datetime.timedelta | int
-            If specified, the new AFK timeout seconds timedelta.
+            If specified, the new AFK _request_timeout seconds timedelta.
         icon : hikari.models.files.BaseStream
             If specified, the new guild icon image file.
         owner : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
@@ -941,7 +941,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             to the end channel. This will also be raised if you're not in the
             guild.
         hikari.errors.BadRequest
-            If you pass `mute`, `deaf` or `channel_id` while the member
+            If you pass `mute`, `deaf` or `channel` while the member
             is not connected to a voice channel.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.

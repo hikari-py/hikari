@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["AIOHTTPConfig"]
+__all__ = ["HTTPSettings"]
 
 import typing
 
@@ -32,7 +32,7 @@ if typing.TYPE_CHECKING:
 
 
 @attr.s(kw_only=True, repr=False, auto_attribs=True)
-class AIOHTTPConfig:
+class HTTPSettings:
     """Config for application that use AIOHTTP."""
 
     allow_redirects: bool = False
@@ -51,7 +51,7 @@ class AIOHTTPConfig:
     """The optional URL of the proxy to send requests via."""
 
     request_timeout: typing.Optional[float] = None
-    """Optional request timeout to use. If an HTTP request takes longer than
+    """Optional request _request_timeout to use. If an HTTP request takes longer than
     this, it will be aborted.
 
     If not `None`, the value represents a number of seconds as a floating

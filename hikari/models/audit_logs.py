@@ -100,7 +100,7 @@ class AuditLogChangeKey(str, more_enums.Enum):
     ALLOW = "allow"
     DENY = "deny"
     INVITE_CODE = "code"
-    CHANNEL_ID = "channel_id"
+    CHANNEL_ID = "channel"
     INVITER_ID = "inviter_id"
     MAX_USES = "max_uses"
     USES = "uses"

@@ -23,7 +23,7 @@ import aiohttp
 import mock
 import pytest
 
-from hikari import aiohttp_config
+from hikari import http_settings
 from hikari.internal import urls
 from hikari.models import gateway
 from hikari.models import guilds
@@ -33,20 +33,20 @@ from tests.hikari import _helpers
 
 @pytest.fixture
 def test_debug_config():
-    return {"debug": True}
+    return {"_debug": True}
 
 
 @pytest.fixture
 def test_aiohttp_config():
     return {
-        "allow_redirects": True,
+        "_allow_redirects": True,
         "tcp_connector": "aiohttp#TCPConnector",
-        "proxy_headers": {"Some-Header": "headercontent"},
-        "proxy_auth": "basic Tm90aGluZyB0byBzZWUgaGVyZSA6IGpvaW4gZGlzY29yZC5nZy9IS0dQRTlRIDopIH5kYXZmc2E=",
-        "proxy_url": "proxy_url",
+        "_proxy_headers": {"Some-Header": "headercontent"},
+        "_proxy_auth": "basic Tm90aGluZyB0byBzZWUgaGVyZSA6IGpvaW4gZGlzY29yZC5nZy9IS0dQRTlRIDopIH5kYXZmc2E=",
+        "_proxy_url": "_proxy_url",
         "request_timeout": 100,
-        "ssl_context": "ssl#SSLContext",
-        "verify_ssl": False,
+        "_ssl_context": "ssl#SSLContext",
+        "_verify_ssl": False,
     }
 
 
@@ -92,52 +92,52 @@ def test_bot_config(test_rest_config, test_websocket_config):
 
 class TestDebugConfig:
     def test_deserialize(self, test_debug_config):
-        debug_config_obj = aiohttp_config.DebugConfig.deserialize(test_debug_config)
+        debug_config_obj = http_settings.DebugConfig.deserialize(test_debug_config)
 
-        assert debug_config_obj.debug is True
+        assert debug_config_obj._debug is True
 
     def test_empty_deserialize(self):
-        debug_config_obj = aiohttp_config.DebugConfig.deserialize({})
+        debug_config_obj = http_settings.DebugConfig.deserialize({})
 
-        assert debug_config_obj.debug is False
+        assert debug_config_obj._debug is False
 
 
 class TestAIOHTTPConfig:
     def test_deserialize(self, test_aiohttp_config):
-        aiohttp_config_obj = aiohttp_config.AIOHTTPConfig.deserialize(test_aiohttp_config)
+        aiohttp_config_obj = http_settings.HTTPSettings.deserialize(test_aiohttp_config)
 
-        assert aiohttp_config_obj.allow_redirects is True
+        assert aiohttp_config_obj._allow_redirects is True
         assert aiohttp_config_obj.tcp_connector == aiohttp.TCPConnector
-        assert aiohttp_config_obj.proxy_headers == {"Some-Header": "headercontent"}
-        assert aiohttp_config_obj.proxy_auth == aiohttp.BasicAuth.decode(
+        assert aiohttp_config_obj._proxy_headers == {"Some-Header": "headercontent"}
+        assert aiohttp_config_obj._proxy_auth == aiohttp.BasicAuth.decode(
             "basic Tm90aGluZyB0byBzZWUgaGVyZSA6IGpvaW4gZGlzY29yZC5nZy9IS0dQRTlRIDopIH5kYXZmc2E="
         )
-        assert aiohttp_config_obj.proxy_url == "proxy_url"
+        assert aiohttp_config_obj._proxy_url == "_proxy_url"
         assert aiohttp_config_obj.request_timeout == 100
-        assert aiohttp_config_obj.ssl_context == ssl.SSLContext
-        assert aiohttp_config_obj.verify_ssl is False
+        assert aiohttp_config_obj._ssl_context == ssl.SSLContext
+        assert aiohttp_config_obj._verify_ssl is False
 
     def test_empty_deserialize(self):
-        aiohttp_config_obj = aiohttp_config.AIOHTTPConfig.deserialize({})
+        aiohttp_config_obj = http_settings.HTTPSettings.deserialize({})
 
-        assert aiohttp_config_obj.allow_redirects is False
+        assert aiohttp_config_obj._allow_redirects is False
         assert aiohttp_config_obj.tcp_connector is None
-        assert aiohttp_config_obj.proxy_headers is None
-        assert aiohttp_config_obj.proxy_auth is None
-        assert aiohttp_config_obj.proxy_url is None
+        assert aiohttp_config_obj._proxy_headers is None
+        assert aiohttp_config_obj._proxy_auth is None
+        assert aiohttp_config_obj._proxy_url is None
         assert aiohttp_config_obj.request_timeout is None
-        assert aiohttp_config_obj.ssl_context is None
-        assert aiohttp_config_obj.verify_ssl is True
+        assert aiohttp_config_obj._ssl_context is None
+        assert aiohttp_config_obj._verify_ssl is True
 
 
 class TestTokenConfig:
     def test_deserialize(self, test_token_config):
-        token_config_obj = aiohttp_config.TokenConfig.deserialize(test_token_config)
+        token_config_obj = http_settings.TokenConfig.deserialize(test_token_config)
 
         assert token_config_obj.token == "token"
 
     def test_empty_deserialize(self):
-        token_config_obj = aiohttp_config.TokenConfig.deserialize({})
+        token_config_obj = http_settings.TokenConfig.deserialize({})
 
         assert token_config_obj.token is None
 
@@ -148,12 +148,12 @@ class TestWebsocketConfig:
         test_websocket_config["initial_idle_since"] = datetime_obj.timestamp()
         mock_activity = mock.MagicMock(gateway.Activity)
         with _helpers.patch_marshal_attr(
-            aiohttp_config.GatewayConfig,
+            http_settings.GatewayConfig,
             "initial_activity",
             deserializer=gateway.Activity.deserialize,
             return_value=mock_activity,
         ) as patched_activity_deserializer:
-            websocket_config_obj = aiohttp_config.GatewayConfig.deserialize(test_websocket_config)
+            websocket_config_obj = http_settings.GatewayConfig.deserialize(test_websocket_config)
             patched_activity_deserializer.assert_called_once_with({"name": "test", "url": "some_url", "type": 0})
         assert websocket_config_obj.gateway_use_compression is False
         assert websocket_config_obj.gateway_version == 6
@@ -162,23 +162,23 @@ class TestWebsocketConfig:
         assert websocket_config_obj.initial_idle_since == datetime_obj
         assert websocket_config_obj.intents == intents.Intent.GUILD_MESSAGES | intents.Intent.GUILDS
         assert websocket_config_obj.large_threshold == 1000
-        assert websocket_config_obj.debug is True
-        assert websocket_config_obj.allow_redirects is True
+        assert websocket_config_obj._debug is True
+        assert websocket_config_obj._allow_redirects is True
         assert websocket_config_obj.tcp_connector == aiohttp.TCPConnector
-        assert websocket_config_obj.proxy_headers == {"Some-Header": "headercontent"}
-        assert websocket_config_obj.proxy_auth == aiohttp.BasicAuth.decode(
+        assert websocket_config_obj._proxy_headers == {"Some-Header": "headercontent"}
+        assert websocket_config_obj._proxy_auth == aiohttp.BasicAuth.decode(
             "basic Tm90aGluZyB0byBzZWUgaGVyZSA6IGpvaW4gZGlzY29yZC5nZy9IS0dQRTlRIDopIH5kYXZmc2E="
         )
-        assert websocket_config_obj.proxy_url == "proxy_url"
+        assert websocket_config_obj._proxy_url == "_proxy_url"
         assert websocket_config_obj.request_timeout == 100
-        assert websocket_config_obj.ssl_context == ssl.SSLContext
-        assert websocket_config_obj.verify_ssl is False
+        assert websocket_config_obj._ssl_context == ssl.SSLContext
+        assert websocket_config_obj._verify_ssl is False
         assert websocket_config_obj.token == "token"
         assert websocket_config_obj.shard_ids == [5, 6, 7, 8, 9, 10]
         assert websocket_config_obj.shard_count == 17
 
     def test_empty_deserialize(self):
-        websocket_config_obj = aiohttp_config.GatewayConfig.deserialize({})
+        websocket_config_obj = http_settings.GatewayConfig.deserialize({})
 
         assert websocket_config_obj.gateway_use_compression is True
         assert websocket_config_obj.gateway_version == 6
@@ -187,15 +187,15 @@ class TestWebsocketConfig:
         assert websocket_config_obj.initial_idle_since is None
         assert websocket_config_obj.intents is None
         assert websocket_config_obj.large_threshold == 250
-        assert websocket_config_obj.debug is False
-        assert websocket_config_obj.allow_redirects is False
+        assert websocket_config_obj._debug is False
+        assert websocket_config_obj._allow_redirects is False
         assert websocket_config_obj.tcp_connector is None
-        assert websocket_config_obj.proxy_headers is None
-        assert websocket_config_obj.proxy_auth is None
-        assert websocket_config_obj.proxy_url is None
+        assert websocket_config_obj._proxy_headers is None
+        assert websocket_config_obj._proxy_auth is None
+        assert websocket_config_obj._proxy_url is None
         assert websocket_config_obj.request_timeout is None
-        assert websocket_config_obj.ssl_context is None
-        assert websocket_config_obj.verify_ssl is True
+        assert websocket_config_obj._ssl_context is None
+        assert websocket_config_obj._verify_ssl is True
         assert websocket_config_obj.token is None
         assert websocket_config_obj.shard_ids is None
         assert websocket_config_obj.shard_count is None
@@ -203,53 +203,53 @@ class TestWebsocketConfig:
 
 class TestParseShardInfo:
     def test__parse_shard_info_when_exclusive_range(self):
-        assert aiohttp_config._parse_shard_info("0..2") == [0, 1]
+        assert http_settings._parse_shard_info("0..2") == [0, 1]
 
     def test__parse_shard_info_when_inclusive_range(self):
-        assert aiohttp_config._parse_shard_info("0...2") == [0, 1, 2]
+        assert http_settings._parse_shard_info("0...2") == [0, 1, 2]
 
     def test__parse_shard_info_when_specific_id(self):
-        assert aiohttp_config._parse_shard_info(2) == [2]
+        assert http_settings._parse_shard_info(2) == [2]
 
     def test__parse_shard_info_when_list(self):
-        assert aiohttp_config._parse_shard_info([2, 5, 6]) == [2, 5, 6]
+        assert http_settings._parse_shard_info([2, 5, 6]) == [2, 5, 6]
 
     @_helpers.assert_raises(type_=ValueError)
     def test__parse_shard_info_when_invalid(self):
-        aiohttp_config._parse_shard_info("something invalid")
+        http_settings._parse_shard_info("something invalid")
 
 
 class TestRESTConfig:
     def test_deserialize(self, test_rest_config):
-        rest_config_obj = aiohttp_config.RESTConfig.deserialize(test_rest_config)
+        rest_config_obj = http_settings.RESTConfig.deserialize(test_rest_config)
 
         assert rest_config_obj.rest_version == 6
-        assert rest_config_obj.allow_redirects is True
+        assert rest_config_obj._allow_redirects is True
         assert rest_config_obj.tcp_connector == aiohttp.TCPConnector
-        assert rest_config_obj.proxy_headers == {"Some-Header": "headercontent"}
-        assert rest_config_obj.proxy_auth == aiohttp.BasicAuth.decode(
+        assert rest_config_obj._proxy_headers == {"Some-Header": "headercontent"}
+        assert rest_config_obj._proxy_auth == aiohttp.BasicAuth.decode(
             "basic Tm90aGluZyB0byBzZWUgaGVyZSA6IGpvaW4gZGlzY29yZC5nZy9IS0dQRTlRIDopIH5kYXZmc2E="
         )
-        assert rest_config_obj.proxy_url == "proxy_url"
+        assert rest_config_obj._proxy_url == "_proxy_url"
         assert rest_config_obj.request_timeout == 100
-        assert rest_config_obj.ssl_context == ssl.SSLContext
-        assert rest_config_obj.verify_ssl is False
+        assert rest_config_obj._ssl_context == ssl.SSLContext
+        assert rest_config_obj._verify_ssl is False
         assert rest_config_obj.token == "token"
         assert rest_config_obj.rest_url == "foobar"
         assert rest_config_obj.oauth2_url == "quxquxx"
 
     def test_empty_deserialize(self):
-        rest_config_obj = aiohttp_config.RESTConfig.deserialize({})
+        rest_config_obj = http_settings.RESTConfig.deserialize({})
 
         assert rest_config_obj.rest_version == 6
-        assert rest_config_obj.allow_redirects is False
+        assert rest_config_obj._allow_redirects is False
         assert rest_config_obj.tcp_connector is None
-        assert rest_config_obj.proxy_headers is None
-        assert rest_config_obj.proxy_auth is None
-        assert rest_config_obj.proxy_url is None
+        assert rest_config_obj._proxy_headers is None
+        assert rest_config_obj._proxy_auth is None
+        assert rest_config_obj._proxy_url is None
         assert rest_config_obj.request_timeout is None
-        assert rest_config_obj.ssl_context is None
-        assert rest_config_obj.verify_ssl is True
+        assert rest_config_obj._ssl_context is None
+        assert rest_config_obj._verify_ssl is True
         assert rest_config_obj.token is None
         assert rest_config_obj.rest_url == urls.REST_API_URL
         assert rest_config_obj.oauth2_url == urls.OAUTH2_API_URL
@@ -261,25 +261,25 @@ class TestBotConfig:
         test_bot_config["initial_idle_since"] = datetime_obj.timestamp()
         mock_activity = mock.MagicMock(gateway.Activity)
         with _helpers.patch_marshal_attr(
-            aiohttp_config.BotConfig,
+            http_settings.BotConfig,
             "initial_activity",
             deserializer=gateway.Activity.deserialize,
             return_value=mock_activity,
         ) as patched_activity_deserializer:
-            bot_config_obj = aiohttp_config.BotConfig.deserialize(test_bot_config)
+            bot_config_obj = http_settings.BotConfig.deserialize(test_bot_config)
             patched_activity_deserializer.assert_called_once_with({"name": "test", "url": "some_url", "type": 0})
 
         assert bot_config_obj.rest_version == 6
-        assert bot_config_obj.allow_redirects is True
+        assert bot_config_obj._allow_redirects is True
         assert bot_config_obj.tcp_connector == aiohttp.TCPConnector
-        assert bot_config_obj.proxy_headers == {"Some-Header": "headercontent"}
-        assert bot_config_obj.proxy_auth == aiohttp.BasicAuth.decode(
+        assert bot_config_obj._proxy_headers == {"Some-Header": "headercontent"}
+        assert bot_config_obj._proxy_auth == aiohttp.BasicAuth.decode(
             "basic Tm90aGluZyB0byBzZWUgaGVyZSA6IGpvaW4gZGlzY29yZC5nZy9IS0dQRTlRIDopIH5kYXZmc2E="
         )
-        assert bot_config_obj.proxy_url == "proxy_url"
+        assert bot_config_obj._proxy_url == "_proxy_url"
         assert bot_config_obj.request_timeout == 100
-        assert bot_config_obj.ssl_context == ssl.SSLContext
-        assert bot_config_obj.verify_ssl is False
+        assert bot_config_obj._ssl_context == ssl.SSLContext
+        assert bot_config_obj._verify_ssl is False
         assert bot_config_obj.token == "token"
         assert bot_config_obj.shard_ids == [5, 6, 7, 8, 9, 10]
         assert bot_config_obj.shard_count == 17
@@ -290,22 +290,22 @@ class TestBotConfig:
         assert bot_config_obj.initial_idle_since == datetime_obj
         assert bot_config_obj.intents == intents.Intent.GUILD_MESSAGES | intents.Intent.GUILDS
         assert bot_config_obj.large_threshold == 1000
-        assert bot_config_obj.debug is True
+        assert bot_config_obj._debug is True
         assert bot_config_obj.rest_url == "foobar"
         assert bot_config_obj.oauth2_url == "quxquxx"
 
     def test_empty_deserialize(self):
-        bot_config_obj = aiohttp_config.BotConfig.deserialize({})
+        bot_config_obj = http_settings.BotConfig.deserialize({})
 
         assert bot_config_obj.rest_version == 6
-        assert bot_config_obj.allow_redirects is False
+        assert bot_config_obj._allow_redirects is False
         assert bot_config_obj.tcp_connector is None
-        assert bot_config_obj.proxy_headers is None
-        assert bot_config_obj.proxy_auth is None
-        assert bot_config_obj.proxy_url is None
+        assert bot_config_obj._proxy_headers is None
+        assert bot_config_obj._proxy_auth is None
+        assert bot_config_obj._proxy_url is None
         assert bot_config_obj.request_timeout is None
-        assert bot_config_obj.ssl_context is None
-        assert bot_config_obj.verify_ssl is True
+        assert bot_config_obj._ssl_context is None
+        assert bot_config_obj._verify_ssl is True
         assert bot_config_obj.token is None
         assert bot_config_obj.shard_ids is None
         assert bot_config_obj.shard_count is None
@@ -316,6 +316,6 @@ class TestBotConfig:
         assert bot_config_obj.initial_idle_since is None
         assert bot_config_obj.intents is None
         assert bot_config_obj.large_threshold == 250
-        assert bot_config_obj.debug is False
+        assert bot_config_obj._debug is False
         assert bot_config_obj.rest_url == urls.REST_API_URL
         assert bot_config_obj.oauth2_url == urls.OAUTH2_API_URL

@@ -59,7 +59,7 @@ def completed_future(result=None, /):
 
 
 def wait(
-    aws: typing.Union[more_typing.Coroutine[more_typing.T_co], typing.Awaitable],
+    aws: typing.Collection[typing.Union[more_typing.Coroutine[more_typing.T_co], typing.Awaitable[more_typing.T_co]]],
     *,
     timeout=None,
     return_when=asyncio.ALL_COMPLETED,

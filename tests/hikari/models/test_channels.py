@@ -272,7 +272,7 @@ class TestGuildCategory:
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
-        assert channel_obj.permission_overwrites[4242]._zookeeper is mock_app
+        assert channel_obj.permission_overwrites[4242]._gateway_consumer is mock_app
         assert channel_obj.guild_id == 9876
         assert channel_obj.position == 3
         assert channel_obj.name == "Test"
@@ -289,7 +289,7 @@ class TestGuildTextChannel:
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
-        assert channel_obj.permission_overwrites[4242]._zookeeper is mock_app
+        assert channel_obj.permission_overwrites[4242]._gateway_consumer is mock_app
         assert channel_obj.guild_id == 567
         assert channel_obj.position == 6
         assert channel_obj.name == "general"
@@ -309,7 +309,7 @@ class TestGuildNewsChannel:
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
-        assert channel_obj.permission_overwrites[4242]._zookeeper is mock_app
+        assert channel_obj.permission_overwrites[4242]._gateway_consumer is mock_app
         assert channel_obj.guild_id == 123
         assert channel_obj.position == 0
         assert channel_obj.name == "Important Announcements"
@@ -328,7 +328,7 @@ class TestGuildStoreChannel:
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
-        assert channel_obj.permission_overwrites[4242]._zookeeper is mock_app
+        assert channel_obj.permission_overwrites[4242]._gateway_consumer is mock_app
         assert channel_obj.guild_id == 1234
         assert channel_obj.position == 2
         assert channel_obj.name == "Half Life 3"
@@ -345,7 +345,7 @@ class TestGuildVoiceChannell:
         assert channel_obj.permission_overwrites == {
             4242: channels.PermissionOverwrite.deserialize(test_permission_overwrite_payload)
         }
-        assert channel_obj.permission_overwrites[4242]._zookeeper is mock_app
+        assert channel_obj.permission_overwrites[4242]._gateway_consumer is mock_app
         assert channel_obj.guild_id == 789
         assert channel_obj.position == 4
         assert channel_obj.name == "Secret Developer Discussions"

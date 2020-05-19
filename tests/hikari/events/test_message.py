@@ -75,7 +75,7 @@ class TestMessageUpdateEvent:
             "filename": "nyaa.png",
             "size": 1024,
             "url": "heck.heck",
-            "proxy_url": "proxy.proxy?heck",
+            "_proxy_url": "proxy.proxy?heck",
             "height": 42,
             "width": 84,
         }
@@ -98,7 +98,7 @@ class TestMessageUpdateEvent:
 
     @pytest.fixture()
     def test_reference_payload(self):
-        return {"channel_id": "432341231231"}
+        return {"channel": "432341231231"}
 
     @pytest.fixture()
     def test_message_update_payload(
@@ -115,7 +115,7 @@ class TestMessageUpdateEvent:
     ):
         return {
             "id": "3939399393",
-            "channel_id": "93939393939",
+            "channel": "93939393939",
             "guild_id": "66557744883399",
             "author": test_user_payload,
             "member": test_member_payload,
@@ -256,9 +256,9 @@ class TestMessageUpdateEvent:
         assert message_update_payload.nonce == "6454345345345345"
 
     def test_partial_message_update(self):
-        message_update_obj = message.MessageUpdateEvent.deserialize({"id": "393939", "channel_id": "434949"})
+        message_update_obj = message.MessageUpdateEvent.deserialize({"id": "393939", "channel": "434949"})
         for key in message_update_obj.__slots__:
-            if key in ("id", "channel_id"):
+            if key in ("id", "channel"):
                 continue
             assert getattr(message_update_obj, key) is unset.UNSET
         assert message_update_obj.id == 393939
@@ -268,7 +268,7 @@ class TestMessageUpdateEvent:
 class TestMessageDeleteEvent:
     @pytest.fixture()
     def test_message_delete_payload(self):
-        return {"channel_id": "20202020", "id": "2929", "guild_id": "1010101"}
+        return {"channel": "20202020", "id": "2929", "guild_id": "1010101"}
 
     def test_deserialize(self, test_message_delete_payload):
         message_delete_obj = message.MessageDeleteEvent.deserialize(test_message_delete_payload)
@@ -280,7 +280,7 @@ class TestMessageDeleteEvent:
 class TestMessageDeleteBulkEvent:
     @pytest.fixture()
     def test_message_delete_bulk_payload(self):
-        return {"channel_id": "20202020", "ids": ["2929", "4394"], "guild_id": "1010101"}
+        return {"channel": "20202020", "ids": ["2929", "4394"], "guild_id": "1010101"}
 
     def test_deserialize(self, test_message_delete_bulk_payload):
         message_delete_bulk_obj = message.MessageDeleteBulkEvent.deserialize(test_message_delete_bulk_payload)
@@ -294,7 +294,7 @@ class TestMessageReactionAddEvent:
     def test_message_reaction_add_payload(self, test_member_payload, test_emoji_payload):
         return {
             "user_id": "9494949",
-            "channel_id": "4393939",
+            "channel": "4393939",
             "message_id": "2993993",
             "guild_id": "49494949",
             "member": test_member_payload,
@@ -338,7 +338,7 @@ class TestMessageReactionRemoveEvent:
     def test_message_reaction_remove_payload(self, test_emoji_payload):
         return {
             "user_id": "9494949",
-            "channel_id": "4393939",
+            "channel": "4393939",
             "message_id": "2993993",
             "guild_id": "49494949",
             "emoji": test_emoji_payload,
@@ -366,7 +366,7 @@ class TestMessageReactionRemoveEvent:
 class TestMessageReactionRemoveAllEvent:
     @pytest.fixture()
     def test_reaction_remove_all_payload(self):
-        return {"channel_id": "3493939", "message_id": "944949", "guild_id": "49494949"}
+        return {"channel": "3493939", "message_id": "944949", "guild_id": "49494949"}
 
     def test_deserialize(self, test_reaction_remove_all_payload):
         message_reaction_remove_all_obj = message.MessageReactionRemoveAllEvent.deserialize(
@@ -380,7 +380,7 @@ class TestMessageReactionRemoveAllEvent:
 class TestMessageReactionRemoveEmojiEvent:
     @pytest.fixture()
     def test_message_reaction_remove_emoji_payload(self, test_emoji_payload):
-        return {"channel_id": "4393939", "message_id": "2993993", "guild_id": "49494949", "emoji": test_emoji_payload}
+        return {"channel": "4393939", "message_id": "2993993", "guild_id": "49494949", "emoji": test_emoji_payload}
 
     def test_deserialize(self, test_message_reaction_remove_emoji_payload, test_emoji_payload):
         mock_emoji = mock.MagicMock(emojis.CustomEmoji)

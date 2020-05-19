@@ -91,7 +91,7 @@ class MessageUpdateEvent(base_events.HikariEvent, base_models.Unique, marshaller
     """Represents Message Update gateway events.
 
     !!! note
-        All fields on this model except `MessageUpdateEvent.channel_id` and
+        All fields on this model except `MessageUpdateEvent.channel` and
         `MessageUpdateEvent.id` may be set to `hikari.models.unset.UNSET` (a singleton)
         we have not received information about their state from Discord
         alongside field nullability.

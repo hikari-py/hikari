@@ -61,7 +61,7 @@ class _MessagePaginator(pagination.BufferedPaginatedResults[messages_.Message]):
     async def _next_chunk(self):
         kwargs = {
             self._direction: self._first_id,
-            "channel_id": self._channel_id,
+            "channel": self._channel_id,
             "limit": 100,
         }
 

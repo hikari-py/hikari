@@ -30,7 +30,7 @@ from ._about import __issue_tracker__
 from ._about import __license__
 from ._about import __url__
 from ._about import __version__
-from .aiohttp_config import *
+from .http_settings import *
 from .errors import *
 from .events import *
 from .gateway import *

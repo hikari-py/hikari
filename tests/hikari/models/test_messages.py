@@ -43,7 +43,7 @@ def test_attachment_payload():
         "filename": "IMG.jpg",
         "size": 660521,
         "url": "https://somewhere.com/attachments/123/456/IMG.jpg",
-        "proxy_url": "https://media.somewhere.com/attachments/123/456/IMG.jpg",
+        "_proxy_url": "https://media.somewhere.com/attachments/123/456/IMG.jpg",
         "width": 1844,
         "height": 2638,
     }
@@ -66,7 +66,7 @@ def test_message_activity_payload():
 
 @pytest.fixture
 def test_message_crosspost_payload():
-    return {"channel_id": "278325129692446722", "guild_id": "278325129692446720", "message_id": "306588351130107906"}
+    return {"channel": "278325129692446722", "guild_id": "278325129692446720", "message_id": "306588351130107906"}
 
 
 @pytest.fixture()
@@ -108,7 +108,7 @@ def test_message_payload(
 ):
     return {
         "id": "123",
-        "channel_id": "456",
+        "channel": "456",
         "guild_id": "678",
         "author": test_user_payload,
         "member": test_member_payload,
@@ -149,7 +149,7 @@ class TestAttachment:
         assert attachment_obj.filename == "IMG.jpg"
         assert attachment_obj.size == 660521
         assert attachment_obj.url == "https://somewhere.com/attachments/123/456/IMG.jpg"
-        assert attachment_obj.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
+        assert attachment_obj._proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment_obj.height == 2638
         assert attachment_obj.width == 1844
 
@@ -274,7 +274,7 @@ class TestMessage:
             message_obj = messages.Message.deserialize(test_message_payload, app=mock_app)
             patched_emoji_deserializer.assert_called_once_with(test_reaction_payload["emoji"], app=mock_app)
             assert message_obj.reactions == [messages.Reaction.deserialize(test_reaction_payload)]
-            assert message_obj.reactions[0]._zookeeper is mock_app
+            assert message_obj.reactions[0]._gateway_consumer is mock_app
             patched_application_deserializer.assert_called_once_with(test_application_payload, app=mock_app)
             patched_edited_timestamp_deserializer.assert_called_once_with("2020-04-21T21:20:16.510000+00:00")
             patched_timestamp_deserializer.assert_called_once_with("2020-03-21T21:20:16.510000+00:00")
@@ -295,17 +295,17 @@ class TestMessage:
         assert message_obj.role_mentions == {987}
         assert message_obj.channel_mentions == {456}
         assert message_obj.attachments == [messages.Attachment.deserialize(test_attachment_payload)]
-        assert message_obj.attachments[0]._zookeeper is mock_app
+        assert message_obj.attachments[0]._gateway_consumer is mock_app
         assert message_obj.embeds == [embeds.Embed.deserialize({})]
-        assert message_obj.embeds[0]._zookeeper is mock_app
+        assert message_obj.embeds[0]._gateway_consumer is mock_app
         assert message_obj.is_pinned is True
         assert message_obj.webhook_id == 1234
         assert message_obj.type == messages.MessageType.DEFAULT
         assert message_obj.activity == messages.MessageActivity.deserialize(test_message_activity_payload)
-        assert message_obj.activity._zookeeper is mock_app
+        assert message_obj.activity._gateway_consumer is mock_app
         assert message_obj.application == mock_app
         assert message_obj.message_reference == messages.MessageCrosspost.deserialize(test_message_crosspost_payload)
-        assert message_obj.message_reference._zookeeper is mock_app
+        assert message_obj.message_reference._gateway_consumer is mock_app
         assert message_obj.flags == messages.MessageFlag.IS_CROSSPOST
         assert message_obj.nonce == "171000788183678976"
 

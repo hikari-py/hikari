@@ -210,9 +210,9 @@ class TestApplication:
     def test_deserialize(self, application_information_payload, team_payload, owner_payload, mock_app):
         application_obj = applications.Application.deserialize(application_information_payload, app=mock_app)
         assert application_obj.team == applications.Team.deserialize(team_payload)
-        assert application_obj.team._zookeeper is mock_app
+        assert application_obj.team._gateway_consumer is mock_app
         assert application_obj.owner == applications.ApplicationOwner.deserialize(owner_payload)
-        assert application_obj.owner._zookeeper is mock_app
+        assert application_obj.owner._gateway_consumer is mock_app
         assert application_obj.id == 209333111222
         assert application_obj.name == "Dream Sweet in Sea Major"
         assert application_obj.icon_hash == "iwiwiwiwiw"

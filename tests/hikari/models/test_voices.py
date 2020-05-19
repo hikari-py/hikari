@@ -27,7 +27,7 @@ from hikari.models import voices
 def voice_state_payload():
     return {
         "guild_id": "929292929292992",
-        "channel_id": "157733188964188161",
+        "channel": "157733188964188161",
         "user_id": "80351110224678912",
         "session_id": "90326bd25d71d39b9ef95b299e3872ff",
         "deaf": True,

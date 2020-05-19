@@ -26,13 +26,13 @@ import typing
 
 from hikari import application
 from hikari import rest
-from hikari.gateway import client
+from .. import gateway
 from hikari.gateway import intent_aware_dispatchers
 from . import manager
 
 if typing.TYPE_CHECKING:
     from hikari import application
-    from hikari import aiohttp_config
+    from hikari import http_settings
 
 
 class StatelessBot(application.Application):
@@ -42,8 +42,8 @@ class StatelessBot(application.Application):
     """
 
     @staticmethod
-    def _create_shard(app: application.Application, shard_id: int, shard_count: int, url: str) -> client.GatewayClient:
-        return client.GatewayClient(app=app, shard_id=shard_id, shard_count=shard_count, url=url)
+    def _create_shard(app: application.Application, shard_id: int, shard_count: int, url: str) -> gateway.Gateway:
+        return gateway.Gateway(app=app, shard_id=shard_id, shard_count=shard_count, url=url)
 
     @staticmethod
     def _create_rest(app: application.Application) -> rest.RESTClient:
@@ -55,6 +55,6 @@ class StatelessBot(application.Application):
 
     @staticmethod
     def _create_event_dispatcher(
-        config: aiohttp_config.BotConfig,
+        config: http_settings.BotConfig,
     ) -> intent_aware_dispatchers.IntentAwareEventDispatcherImpl:
         return intent_aware_dispatchers.IntentAwareEventDispatcherImpl(config.intents)

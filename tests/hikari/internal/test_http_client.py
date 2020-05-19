@@ -45,30 +45,30 @@ def client(client_session):
 class TestInit:
     async def test_CFRayTracer_used_for_non_debug(self):
         async with http_client.HTTPClient(debug=False) as client:
-            assert len(client.tracers) == 1
-            assert isinstance(client.tracers[0], tracing.CFRayTracer)
+            assert len(client._tracers) == 1
+            assert isinstance(client._tracers[0], tracing.CFRayTracer)
 
     async def test_DebugTracer_used_for_debug(self):
         async with http_client.HTTPClient(debug=True) as client:
-            assert len(client.tracers) == 1
-            assert isinstance(client.tracers[0], tracing.DebugTracer)
+            assert len(client._tracers) == 1
+            assert isinstance(client._tracers[0], tracing.DebugTracer)
 
 
 @pytest.mark.asyncio
 class TestAcquireClientSession:
     async def test_acquire_creates_new_session_if_one_does_not_exist(self, client):
-        client.connector = mock.MagicMock()
-        client.trust_env = mock.MagicMock()
+        client._connector = mock.MagicMock()
+        client._trust_env = mock.MagicMock()
 
         _helpers.set_private_attr(client, "client_session", None)
         cs = client._acquire_client_session()
         assert _helpers.get_private_attr(client, "client_session") is cs
         aiohttp.ClientSession.assert_called_once_with(
-            connector=client.connector,
-            trust_env=client.trust_env,
+            connector=client._connector,
+            trust_env=client._trust_env,
             version=aiohttp.HttpVersion11,
             json_serialize=json.dumps,
-            trace_configs=[t.trace_config for t in client.tracers],
+            trace_configs=[t.trace_config for t in client._tracers],
         )
 
     async def test_acquire_repeated_calls_caches_client_session(self, client):
@@ -97,13 +97,13 @@ class TestClose:
 @pytest.mark.asyncio
 class TestPerformRequest:
     async def test_perform_request_form_data(self, client, client_session):
-        client.allow_redirects = mock.MagicMock()
-        client.proxy_url = mock.MagicMock()
-        client.proxy_auth = mock.MagicMock()
-        client.proxy_headers = mock.MagicMock()
-        client.verify_ssl = mock.MagicMock()
-        client.ssl_context = mock.MagicMock()
-        client.timeout = mock.MagicMock()
+        client._allow_redirects = mock.MagicMock()
+        client._proxy_url = mock.MagicMock()
+        client._proxy_auth = mock.MagicMock()
+        client._proxy_headers = mock.MagicMock()
+        client._verify_ssl = mock.MagicMock()
+        client._ssl_context = mock.MagicMock()
+        client._request_timeout = mock.MagicMock()
 
         form_data = aiohttp.FormData()
 
@@ -124,24 +124,24 @@ class TestPerformRequest:
             params={"foo": "bar"},
             headers={"X-Foo-Count": "122"},
             data=form_data,
-            allow_redirects=client.allow_redirects,
-            proxy=client.proxy_url,
-            proxy_auth=client.proxy_auth,
-            proxy_headers=client.proxy_headers,
-            verify_ssl=client.verify_ssl,
-            ssl_context=client.ssl_context,
-            timeout=client.timeout,
+            allow_redirects=client._allow_redirects,
+            proxy=client._proxy_url,
+            proxy_auth=client._proxy_auth,
+            proxy_headers=client._proxy_headers,
+            verify_ssl=client._verify_ssl,
+            ssl_context=client._ssl_context,
+            timeout=client._request_timeout,
             trace_request_ctx=trace_request_ctx,
         )
 
     async def test_perform_request_json(self, client, client_session):
-        client.allow_redirects = mock.MagicMock()
-        client.proxy_url = mock.MagicMock()
-        client.proxy_auth = mock.MagicMock()
-        client.proxy_headers = mock.MagicMock()
-        client.verify_ssl = mock.MagicMock()
-        client.ssl_context = mock.MagicMock()
-        client.timeout = mock.MagicMock()
+        client._allow_redirects = mock.MagicMock()
+        client._proxy_url = mock.MagicMock()
+        client._proxy_auth = mock.MagicMock()
+        client._proxy_headers = mock.MagicMock()
+        client._verify_ssl = mock.MagicMock()
+        client._ssl_context = mock.MagicMock()
+        client._request_timeout = mock.MagicMock()
 
         jsonified_body = b'{"hello": "world"}'
 
@@ -166,13 +166,13 @@ class TestPerformRequest:
             params={"foo": "bar"},
             headers={"X-Foo-Count": "122", "content-type": "application/json"},
             data=jsonified_body,
-            allow_redirects=client.allow_redirects,
-            proxy=client.proxy_url,
-            proxy_auth=client.proxy_auth,
-            proxy_headers=client.proxy_headers,
-            verify_ssl=client.verify_ssl,
-            ssl_context=client.ssl_context,
-            timeout=client.timeout,
+            allow_redirects=client._allow_redirects,
+            proxy=client._proxy_url,
+            proxy_auth=client._proxy_auth,
+            proxy_headers=client._proxy_headers,
+            verify_ssl=client._verify_ssl,
+            ssl_context=client._ssl_context,
+            timeout=client._request_timeout,
             trace_request_ctx=trace_request_ctx,
         )
 
@@ -180,18 +180,18 @@ class TestPerformRequest:
 @pytest.mark.asyncio
 class TestCreateWs:
     async def test_create_ws(self, client, client_session):
-        client.allow_redirects = mock.MagicMock()
-        client.proxy_url = mock.MagicMock()
-        client.proxy_auth = mock.MagicMock()
-        client.proxy_headers = mock.MagicMock()
-        client.verify_ssl = mock.MagicMock()
-        client.ssl_context = mock.MagicMock()
-        client.timeout = mock.MagicMock()
+        client._allow_redirects = mock.MagicMock()
+        client._proxy_url = mock.MagicMock()
+        client._proxy_auth = mock.MagicMock()
+        client._proxy_headers = mock.MagicMock()
+        client._verify_ssl = mock.MagicMock()
+        client._ssl_context = mock.MagicMock()
+        client._request_timeout = mock.MagicMock()
 
         expected_ws = mock.MagicMock()
         client_session.ws_connect = mock.AsyncMock(return_value=expected_ws)
 
-        actual_ws = await client._create_ws("foo://bar", compress=5, autoping=True, max_msg_size=3)
+        actual_ws = await client._create_ws("foo://bar", compress=5, auto_ping=True, max_msg_size=3)
 
         assert expected_ws is actual_ws
 
@@ -200,9 +200,9 @@ class TestCreateWs:
             compress=5,
             autoping=True,
             max_msg_size=3,
-            proxy=client.proxy_url,
-            proxy_auth=client.proxy_auth,
-            proxy_headers=client.proxy_headers,
-            verify_ssl=client.verify_ssl,
-            ssl_context=client.ssl_context,
+            proxy=client._proxy_url,
+            proxy_auth=client._proxy_auth,
+            proxy_headers=client._proxy_headers,
+            verify_ssl=client._verify_ssl,
+            ssl_context=client._ssl_context,
         )

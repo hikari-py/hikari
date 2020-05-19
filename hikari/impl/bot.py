@@ -39,7 +39,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_consumer as event_consumer_
-    from hikari import aiohttp_config
+    from hikari import http_settings
     from hikari.api import event_dispatcher
     from hikari.api import gateway_zookeeper
     from hikari.models import gateway
@@ -50,7 +50,7 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
     def __init__(
         self,
         *,
-        config: aiohttp_config.AIOHTTPConfig,
+        config: http_settings.HTTPSettings,
         debug: bool = False,
         gateway_url: str,
         gateway_version: int = 6,
@@ -62,12 +62,26 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
         large_threshold: int = 250,
         rest_version: int = 6,
         rest_url: str = urls.REST_API_URL,
-        shard_ids: typing.Set[int],
-        shard_count: int,
+        shard_ids: typing.Optional[typing.Set[int]],
+        shard_count: typing.Optional[int],
         token: str,
         use_compression: bool = True,
     ):
         self._logger = helpers.get_logger(self)
+
+        self._cache = cache_impl.CacheImpl()
+        self._event_manager = event_manager.EventManagerImpl()
+        self._entity_factory = entity_factory_impl.EntityFactoryImpl()
+
+        self._rest = rest_client_.RESTClient(
+            app=self,
+            config=config,
+            debug=debug,
+            token=token,
+            token_type="Bot",
+            rest_url=rest_url,
+            version=rest_version,
+        )
 
         super().__init__(
             config=config,
@@ -85,20 +99,6 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
             use_compression=use_compression,
             version=gateway_version,
         )
-
-        self._rest = rest_client_.RESTClient(
-            app=self,
-            config=config,
-            debug=debug,
-            token=token,
-            token_type="Bot",
-            rest_url=rest_url,
-            version=rest_version,
-        )
-
-        self._cache = cache_impl.CacheImpl()
-        self._event_manager = event_manager.EventManagerImpl()
-        self._entity_factory = entity_factory_impl.EntityFactoryImpl()
 
     @property
     def event_dispatcher(self) -> event_dispatcher.IEventDispatcher:

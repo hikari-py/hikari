@@ -123,7 +123,7 @@ class TestChannelPinsUpdateEvent:
     def test_chanel_pin_update_payload(self):
         return {
             "guild_id": "424242",
-            "channel_id": "29292929",
+            "channel": "29292929",
             "last_pin_timestamp": "2020-03-20T16:08:25.412000+00:00",
         }
 
@@ -145,7 +145,7 @@ class TestChannelPinsUpdateEvent:
 class TestWebhookUpdateEvent:
     @pytest.fixture()
     def test_webhook_update_payload(self):
-        return {"guild_id": "2929292", "channel_id": "94949494"}
+        return {"guild_id": "2929292", "channel": "94949494"}
 
     def test_deserialize(self, test_webhook_update_payload):
         webhook_update_obj = channel.WebhookUpdateEvent.deserialize(test_webhook_update_payload)
@@ -169,7 +169,7 @@ class TestTypingStartEvent:
     @pytest.fixture()
     def test_typing_start_event_payload(self, test_member_payload):
         return {
-            "channel_id": "123123123",
+            "channel": "123123123",
             "guild_id": "33333333",
             "user_id": "2020202",
             "timestamp": 1231231231,
@@ -206,7 +206,7 @@ class TestInviteCreateEvent:
     @pytest.fixture()
     def test_invite_create_payload(self, test_user_payload):
         return {
-            "channel_id": "939393",
+            "channel": "939393",
             "code": "owouwuowouwu",
             "created_at": "2019-05-17T06:26:56.936000+00:00",
             "guild_id": "45949",
@@ -269,7 +269,7 @@ class TestInviteCreateEvent:
 class TestInviteDeleteEvent:
     @pytest.fixture()
     def test_invite_delete_payload(self):
-        return {"channel_id": "393939", "code": "blahblahblah", "guild_id": "3834833"}
+        return {"channel": "393939", "code": "blahblahblah", "guild_id": "3834833"}
 
     def test_deserialize(self, test_invite_delete_payload):
         invite_delete_obj = channel.InviteDeleteEvent.deserialize(test_invite_delete_payload)

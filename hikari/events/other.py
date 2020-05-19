@@ -44,7 +44,7 @@ from hikari.models import users
 from . import base as base_events
 
 if typing.TYPE_CHECKING:
-    from hikari.gateway import client as gateway_client
+    from .. import gateway as gateway_client
     from hikari.internal import more_typing
 
 
@@ -92,7 +92,7 @@ class StoppedEvent(base_events.HikariEvent):
 class ConnectedEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Event invoked each time a shard connects."""
 
-    shard: gateway_client.GatewayClient
+    shard: gateway_client.Gateway
     """The shard that connected."""
 
 
@@ -100,7 +100,7 @@ class ConnectedEvent(base_events.HikariEvent, marshaller.Deserializable):
 class DisconnectedEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Event invoked each time a shard disconnects."""
 
-    shard: gateway_client.GatewayClient
+    shard: gateway_client.Gateway
     """The shard that disconnected."""
 
 
@@ -108,7 +108,7 @@ class DisconnectedEvent(base_events.HikariEvent, marshaller.Deserializable):
 class ResumedEvent(base_events.HikariEvent):
     """Represents a gateway Resume event."""
 
-    shard: gateway_client.GatewayClient
+    shard: gateway_client.Gateway
     """The shard that reconnected."""
 
 

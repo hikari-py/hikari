@@ -32,7 +32,7 @@ class TestDereferenceHandle:
 
     def test_dereference_handle_module_and_attribute(self):
         assert (
-            marshaller.dereference_handle("hikari.internal.codes#GatewayCloseCode.AUTHENTICATION_FAILED")
+            marshaller.dereference_handle("hikari.internal.codes#_GatewayCloseCode.AUTHENTICATION_FAILED")
             is codes.GatewayCloseCode.AUTHENTICATION_FAILED
         )
 

@@ -193,7 +193,7 @@ class TestMessagePinEntryInfo:
     @pytest.fixture()
     def test_message_pin_info_payload(self):
         return {
-            "channel_id": "123123123",
+            "channel": "123123123",
             "message_id": "69696969",
         }
 
@@ -222,7 +222,7 @@ class TestMemberPruneEntryInfo:
 class TestMessageDeleteEntryInfo:
     @pytest.fixture()
     def test_message_delete_info_payload(self):
-        return {"count": "42", "channel_id": "4206942069"}
+        return {"count": "42", "channel": "4206942069"}
 
     def test_deserialize(self, test_message_delete_info_payload, mock_app):
         message_delete_entry_info = audit_logs.MessageDeleteEntryInfo.deserialize(
@@ -258,7 +258,7 @@ class TestMemberDisconnectEntryInfo:
 class TestMemberMoveEntryInfo:
     @pytest.fixture()
     def test_member_move_info_payload(self):
-        return {"count": "42", "channel_id": "22222222"}
+        return {"count": "42", "channel": "22222222"}
 
     def test_deserialize(self, test_member_move_info_payload, mock_app):
         member_move_entry_info = audit_logs.MemberMoveEntryInfo.deserialize(test_member_move_info_payload, app=mock_app)
@@ -391,7 +391,7 @@ class TestAuditLog:
 
     @pytest.fixture()
     def test_webhook_payload(self):
-        return {"id": "424242", "type": 1, "channel_id": "2020202"}
+        return {"id": "424242", "type": 1, "channel": "2020202"}
 
     @pytest.fixture()
     def test_audit_log_payload(
@@ -432,7 +432,7 @@ class TestAuditLog:
         assert audit_log_obj.entries == {
             694026906592477214: audit_logs.AuditLogEntry.deserialize(test_audit_log_entry_payload)
         }
-        assert audit_log_obj.entries[694026906592477214]._zookeeper is mock_app
+        assert audit_log_obj.entries[694026906592477214]._gateway_consumer is mock_app
         assert audit_log_obj.webhooks == {424242: mock_webhook_obj}
         assert audit_log_obj.users == {92929292: mock_user_obj}
         assert audit_log_obj.integrations == {33590653072239123: mock_integration_obj}
@@ -441,7 +441,7 @@ class TestAuditLog:
 class TestAuditLogIterator:
     @pytest.mark.asyncio
     async def test__fill_when_entities_returned(self, mock_app):
-        mock_webhook_payload = {"id": "292393993", "channel_id": "43242"}
+        mock_webhook_payload = {"id": "292393993", "channel": "43242"}
         mock_webhook_obj = mock.MagicMock(webhooks.Webhook, id=292393993)
         mock_user_payload = {"id": "929292", "public_flags": "22222"}
         mock_user_obj = mock.MagicMock(users.User, id=929292)

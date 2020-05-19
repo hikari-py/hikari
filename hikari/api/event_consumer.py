@@ -22,12 +22,12 @@ __all__ = ["IEventConsumer"]
 
 import abc
 
-from hikari.gateway import client
+from hikari import gateway
 from hikari.internal import more_typing
 
 
 class IEventConsumer(abc.ABC):
     __slots__ = ()
 
-    async def consume_raw_event(self, shard: client.GatewayClient, event_name: str, payload: more_typing.JSONType):
+    async def consume_raw_event(self, shard: gateway.Gateway, event_name: str, payload: more_typing.JSONType):
         ...
