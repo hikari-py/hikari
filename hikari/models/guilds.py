@@ -1142,6 +1142,9 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
     This information may not be present, in which case, it will be `None`
     instead. This will be `None` for guilds that the bot is not a member in.
+
+    !!! deprecated
+        Use `is_widget_enabled` instead.
     """
 
     embed_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
@@ -1150,6 +1153,9 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     """The channel ID that the guild embed will generate an invite to.
 
     Will be `None` if invites are disabled for this guild's embed.
+
+    !!! deprecated
+        Use `widget_channel_id` instead.
     """
 
     verification_level: GuildVerificationLevel = marshaller.attrib(
@@ -1207,9 +1213,6 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     """Describes whether the guild widget is enabled or not.
 
     If this information is not present, this will be `None`.
-
-    This will only be provided for guilds that the application user is a member
-    of. For all other purposes, this should be ignored.
     """
 
     widget_channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
