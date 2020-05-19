@@ -47,7 +47,7 @@ def test_footer_payload():
 def test_image_payload():
     return {
         "url": "https://somewhere.com/image.png",
-        "proxy_url": "https://media.somewhere.com/image.png",
+        "_proxy_url": "https://media.somewhere.com/image.png",
         "height": 122,
         "width": 133,
     }
@@ -57,7 +57,7 @@ def test_image_payload():
 def test_thumbnail_payload():
     return {
         "url": "https://somewhere.com/thumbnail.png",
-        "proxy_url": "https://media.somewhere.com/thumbnail.png",
+        "_proxy_url": "https://media.somewhere.com/thumbnail.png",
         "height": 123,
         "width": 456,
     }
@@ -143,7 +143,7 @@ class TestEmbedImage:
         image_obj = embeds.EmbedImage.deserialize(test_image_payload, app=mock_app)
 
         assert image_obj.url == "https://somewhere.com/image.png"
-        assert image_obj.proxy_url == "https://media.somewhere.com/image.png"
+        assert image_obj._proxy_url == "https://media.somewhere.com/image.png"
         assert image_obj.height == 122
         assert image_obj.width == 133
 
@@ -161,7 +161,7 @@ class TestEmbedThumbnail:
         thumbnail_obj = embeds.EmbedThumbnail.deserialize(test_thumbnail_payload, app=mock_app)
 
         assert thumbnail_obj.url == "https://somewhere.com/thumbnail.png"
-        assert thumbnail_obj.proxy_url == "https://media.somewhere.com/thumbnail.png"
+        assert thumbnail_obj._proxy_url == "https://media.somewhere.com/thumbnail.png"
         assert thumbnail_obj.height == 123
         assert thumbnail_obj.width == 456
 
@@ -264,19 +264,19 @@ class TestEmbed:
         assert embed_obj.timestamp == mock_datetime
         assert embed_obj.color == colors.Color(14014915)
         assert embed_obj.footer == embeds.EmbedFooter.deserialize(test_footer_payload)
-        assert embed_obj.footer._zookeeper is mock_app
+        assert embed_obj.footer._gateway_consumer is mock_app
         assert embed_obj.image == embeds.EmbedImage.deserialize(test_image_payload)
-        assert embed_obj.image._zookeeper is mock_app
+        assert embed_obj.image._gateway_consumer is mock_app
         assert embed_obj.thumbnail == embeds.EmbedThumbnail.deserialize(test_thumbnail_payload)
-        assert embed_obj.thumbnail._zookeeper is mock_app
+        assert embed_obj.thumbnail._gateway_consumer is mock_app
         assert embed_obj.video == embeds.EmbedVideo.deserialize(test_video_payload)
-        assert embed_obj.video._zookeeper is mock_app
+        assert embed_obj.video._gateway_consumer is mock_app
         assert embed_obj.provider == embeds.EmbedProvider.deserialize(test_provider_payload)
-        assert embed_obj.provider._zookeeper is mock_app
+        assert embed_obj.provider._gateway_consumer is mock_app
         assert embed_obj.author == embeds.EmbedAuthor.deserialize(test_author_payload)
-        assert embed_obj.author._zookeeper is mock_app
+        assert embed_obj.author._gateway_consumer is mock_app
         assert embed_obj.fields == [embeds.EmbedField.deserialize(test_field_payload)]
-        assert embed_obj.fields[0]._zookeeper is mock_app
+        assert embed_obj.fields[0]._gateway_consumer is mock_app
 
     def test_serialize_full_embed(self):
         embed_obj = embeds.Embed(

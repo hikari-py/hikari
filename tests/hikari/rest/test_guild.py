@@ -1208,7 +1208,7 @@ class TestRESTGuildLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
     async def test_fetch_guild_embed(self, rest_guild_logic_impl, guild):
-        mock_embed_payload = {"enabled": True, "channel_id": "2020202"}
+        mock_embed_payload = {"enabled": True, "channel": "2020202"}
         mock_embed_obj = mock.MagicMock(guilds.GuildEmbed)
         rest_guild_logic_impl._session.get_guild_embed.return_value = mock_embed_payload
         with mock.patch.object(guilds.GuildEmbed, "deserialize", return_value=mock_embed_obj):
@@ -1220,7 +1220,7 @@ class TestRESTGuildLogic:
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("channel", 123123, channels.GuildChannel)
     async def test_update_guild_embed_with_optionnal(self, rest_guild_logic_impl, guild, channel):
-        mock_embed_payload = {"enabled": True, "channel_id": "2020202"}
+        mock_embed_payload = {"enabled": True, "channel": "2020202"}
         mock_embed_obj = mock.MagicMock(guilds.GuildEmbed)
         rest_guild_logic_impl._session.modify_guild_embed.return_value = mock_embed_payload
         with mock.patch.object(guilds.GuildEmbed, "deserialize", return_value=mock_embed_obj):
@@ -1236,7 +1236,7 @@ class TestRESTGuildLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
     async def test_update_guild_embed_without_optionnal(self, rest_guild_logic_impl, guild):
-        mock_embed_payload = {"enabled": True, "channel_id": "2020202"}
+        mock_embed_payload = {"enabled": True, "channel": "2020202"}
         mock_embed_obj = mock.MagicMock(guilds.GuildEmbed)
         rest_guild_logic_impl._session.modify_guild_embed.return_value = mock_embed_payload
         with mock.patch.object(guilds.GuildEmbed, "deserialize", return_value=mock_embed_obj):
@@ -1278,7 +1278,7 @@ class TestRESTGuildLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 115590097100865541, channels.GuildChannel)
     async def test_fetch_guild_webhooks(self, rest_guild_logic_impl, channel):
-        mock_webhook_payload = {"id": "29292929", "channel_id": "2292992"}
+        mock_webhook_payload = {"id": "29292929", "channel": "2292992"}
         mock_webhook_obj = mock.MagicMock(webhooks.Webhook)
         rest_guild_logic_impl._session.get_guild_webhooks.return_value = [mock_webhook_payload]
         with mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj):

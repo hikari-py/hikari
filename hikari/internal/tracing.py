@@ -48,7 +48,7 @@ class BaseTracer:
 
 
 class CFRayTracer(BaseTracer):
-    """Regular debug logging of requests to a Cloudflare resource.
+    """Regular _debug logging of requests to a Cloudflare resource.
 
     Logs information about endpoints being hit, response latency, and any
     Cloudflare rays in the response.
@@ -86,7 +86,7 @@ class CFRayTracer(BaseTracer):
 
 
 class DebugTracer(BaseTracer):
-    """Provides verbose debug logging of requests.
+    """Provides verbose _debug logging of requests.
 
     This logs several pieces of information during an AIOHTTP request such as
     request headers and body chunks, response headers, response body chunks,
@@ -96,7 +96,7 @@ class DebugTracer(BaseTracer):
 
     !!! warn
         This may log potentially sensitive information such as authorization
-        tokens, so ensure those are removed from debug logs before proceeding
+        tokens, so ensure those are removed from _debug logs before proceeding
         to send logs to anyone.
     """
 

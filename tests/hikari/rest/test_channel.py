@@ -89,7 +89,7 @@ class TestMessagePaginator:
         await pag._next_chunk()
 
         mock_session.get_channel_messages.assert_awaited_once_with(
-            **{direction: "12345", "channel_id": "55", "limit": 100}
+            **{direction: "12345", "channel": "55", "limit": 100}
         )
 
     @pytest.mark.parametrize("direction", ["before", "after", "around"])
@@ -807,7 +807,7 @@ class TestRESTChannel:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 115590097100865541, channels.PartialChannel)
     async def test_create_webhook_with_optionals(self, rest_channel_logic_impl, channel):
-        mock_webhook_payload = {"id": "29292929", "channel_id": "2292992"}
+        mock_webhook_payload = {"id": "29292929", "channel": "2292992"}
         mock_webhook_obj = mock.MagicMock(webhooks.Webhook)
         rest_channel_logic_impl._session.create_webhook.return_value = mock_webhook_payload
         mock_image_data = mock.MagicMock(bytes)
@@ -829,7 +829,7 @@ class TestRESTChannel:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 115590097100865541, channels.PartialChannel)
     async def test_create_webhook_without_optionals(self, rest_channel_logic_impl, channel):
-        mock_webhook_payload = {"id": "29292929", "channel_id": "2292992"}
+        mock_webhook_payload = {"id": "29292929", "channel": "2292992"}
         mock_webhook_obj = mock.MagicMock(webhooks.Webhook)
         rest_channel_logic_impl._session.create_webhook.return_value = mock_webhook_payload
         with mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj):
@@ -842,7 +842,7 @@ class TestRESTChannel:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("channel", 115590097100865541, channels.GuildChannel)
     async def test_fetch_channel_webhooks(self, rest_channel_logic_impl, channel):
-        mock_webhook_payload = {"id": "29292929", "channel_id": "2292992"}
+        mock_webhook_payload = {"id": "29292929", "channel": "2292992"}
         mock_webhook_obj = mock.MagicMock(webhooks.Webhook)
         rest_channel_logic_impl._session.get_channel_webhooks.return_value = [mock_webhook_payload]
         with mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj):

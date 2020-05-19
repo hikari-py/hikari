@@ -44,7 +44,7 @@ class TestWebhook:
             "id": "1234",
             "type": 1,
             "guild_id": "123",
-            "channel_id": "456",
+            "channel": "456",
             "user": test_user_payload,
             "name": "hikari webhook",
             "avatar": "bb71f469c158984e265093a81b3397fb",

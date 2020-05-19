@@ -58,9 +58,7 @@ if typing.TYPE_CHECKING:
 
 DISCORD_EPOCH: typing.Final[int] = 1_420_070_400
 ISO_8601_DATE_PART: typing.Final[typing.Pattern] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
-ISO_8601_TIME_PART: typing.Final[typing.Pattern] = re.compile(
-    r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I
-)
+ISO_8601_TIME_PART: typing.Final[typing.Pattern] = re.compile(r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I)
 ISO_8601_TZ_PART: typing.Final[typing.Pattern] = re.compile(r"([+-])(\d{2}):(\d{2})$")
 
 

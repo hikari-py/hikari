@@ -28,12 +28,11 @@ import signal
 import typing
 
 from hikari.api import base_app
-from hikari.models import gateway
 from hikari.models import guilds
 
 if typing.TYPE_CHECKING:
     from hikari.api import event_consumer
-    from hikari.gateway import client
+    from hikari import gateway
 
 
 class IGatewayZookeeper(base_app.IBaseApp, abc.ABC):
@@ -56,7 +55,7 @@ class IGatewayZookeeper(base_app.IBaseApp, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def gateway_shards(self) -> typing.Mapping[int, client.GatewayClient]:
+    def gateway_shards(self) -> typing.Mapping[int, gateway.Gateway]:
         """Mapping of each shard ID to the corresponding client for it."""
 
     @property

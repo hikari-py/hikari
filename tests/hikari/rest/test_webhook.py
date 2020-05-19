@@ -47,7 +47,7 @@ class TestRESTUserLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("webhook", 379953393319542784, webhooks.Webhook)
     async def test_fetch_webhook_with_webhook_token(self, rest_webhook_logic_impl, webhook):
-        mock_webhook_payload = {"id": "29292929", "channel_id": "2292992"}
+        mock_webhook_payload = {"id": "29292929", "channel": "2292992"}
         mock_webhook_obj = mock.MagicMock(webhooks.Webhook)
         rest_webhook_logic_impl._session.get_webhook.return_value = mock_webhook_payload
         with mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj):
@@ -63,7 +63,7 @@ class TestRESTUserLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("webhook", 379953393319542784, webhooks.Webhook)
     async def test_fetch_webhook_without_webhook_token(self, rest_webhook_logic_impl, webhook):
-        mock_webhook_payload = {"id": "29292929", "channel_id": "2292992"}
+        mock_webhook_payload = {"id": "29292929", "channel": "2292992"}
         mock_webhook_obj = mock.MagicMock(webhooks.Webhook)
         rest_webhook_logic_impl._session.get_webhook.return_value = mock_webhook_payload
         with mock.patch.object(webhooks.Webhook, "deserialize", return_value=mock_webhook_obj):

@@ -104,7 +104,7 @@ class TestShardConstructor:
     async def test_compression(self, compression, expected_url_query):
         url = "ws://baka-im-not-a-http-url:49620/locate/the/bloody/websocket?ayyyyy=lmao"
         client = connection.Shard(token="xxx", url=url, compression=compression)
-        scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(client._url)
+        scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(client.url)
         assert scheme == "ws"
         assert netloc == "baka-im-not-a-http-url:49620"
         assert path == "/locate/the/bloody/websocket"
@@ -121,7 +121,7 @@ class TestShardConstructor:
 
     async def test_init_connected_at_is_nan(self):
         client = connection.Shard(token="xxx", url="yyy")
-        assert math.isnan(client._connected_at)
+        assert math.isnan(client.connected_at)
 
 
 @pytest.mark.asyncio
@@ -133,7 +133,7 @@ class TestShardUptimeProperty:
     async def test_uptime(self, connected_at, now, expected_uptime):
         with mock.patch("time.perf_counter", return_value=now):
             client = connection.Shard(token="xxx", url="yyy")
-            client._connected_at = connected_at
+            client.connected_at = connected_at
             assert client.up_time == expected_uptime
 
 
@@ -142,7 +142,7 @@ class TestShardIsConnectedProperty:
     @pytest.mark.parametrize(["connected_at", "is_connected"], [(float("nan"), False), (15, True), (2500.0, True),])
     async def test_is_connected(self, connected_at, is_connected):
         client = connection.Shard(token="xxx", url="yyy")
-        client._connected_at = connected_at
+        client.connected_at = connected_at
         assert client.is_connected is is_connected
 
 
@@ -164,7 +164,7 @@ class TestGatewayReconnectCountProperty:
     async def test_value(self, disconnect_count, is_connected, expected_reconnect_count):
         client = connection.Shard(token="xxx", url="yyy")
         client.disconnect_count = disconnect_count
-        client._connected_at = 420 if is_connected else float("nan")
+        client.connected_at = 420 if is_connected else float("nan")
         assert client.reconnect_count == expected_reconnect_count
 
 
@@ -205,7 +205,7 @@ class TestConnect:
             yield
 
     async def test_RuntimeError_if_already_connected(self, client):
-        client._connected_at = 22.4  # makes client expect to be connected
+        client.connected_at = 22.4  # makes client expect to be connected
 
         try:
             with self.suppress_closure():
@@ -253,7 +253,7 @@ class TestConnect:
     async def test_session_opened_with_expected_kwargs(self, client):
         with self.suppress_closure():
             await client.connect()
-        client._create_ws.assert_awaited_once_with(client._url, compress=0, autoping=True, max_msg_size=0)
+        client._create_ws.assert_awaited_once_with(client.url, compress=0, auto_ping=True, max_msg_size=0)
 
     @_helpers.timeout_after(10.0)
     async def test_ws_closed_afterwards(self, client):
@@ -263,12 +263,12 @@ class TestConnect:
 
     @_helpers.timeout_after(10.0)
     async def test_disconnecting_unsets_connected_at(self, client):
-        assert math.isnan(client._connected_at)
+        assert math.isnan(client.connected_at)
 
         with mock.patch("time.perf_counter", return_value=420):
             with self.suppress_closure():
                 await client.connect()
-            assert math.isnan(client._connected_at)
+            assert math.isnan(client.connected_at)
 
     @_helpers.timeout_after(10.0)
     async def test_disconnecting_unsets_last_message_received(self, client):
@@ -330,7 +330,7 @@ class TestConnect:
             assert client._zlib is not None
             assert previous_zlib is not client._zlib
             previous_zlib = client._zlib
-            client._connected_at = float("nan")
+            client.connected_at = float("nan")
 
     @_helpers.timeout_after(10.0)
     async def test_hello(self, client):
@@ -521,7 +521,7 @@ class TestIdentify:
         client._intents = None
         client.session_id = None
         client._token = "aaaa"
-        client._large_threshold = 420
+        client.large_threshold = 420
         client.shard_id = 69
         client.shard_count = 96
 
@@ -546,7 +546,7 @@ class TestIdentify:
         client._intents = None
         client.session_id = None
         client._token = "aaaa"
-        client._large_threshold = 420
+        client.large_threshold = 420
         client.shard_id = 69
         client.shard_count = 96
 
@@ -572,7 +572,7 @@ class TestIdentify:
         client._intents = intents
         client.session_id = None
         client._token = "aaaa"
-        client._large_threshold = 420
+        client.large_threshold = 420
         client.shard_id = 69
         client.shard_count = 96
 
@@ -599,7 +599,7 @@ class TestIdentify:
         client._intents = intents
         client.session_id = None
         client._token = "aaaa"
-        client._large_threshold = 420
+        client.large_threshold = 420
         client.shard_id = 69
         client.shard_count = 96
 
@@ -902,12 +902,12 @@ class TestUpdateVoiceState:
         client = _helpers.mock_methods_on(client, except_=("update_voice_state",))
         return client
 
-    @pytest.mark.parametrize("channel_id", ["1234", None])
+    @pytest.mark.parametrize("channel", ["1234", None])
     async def test_sends_payload(self, client, channel_id):
         await client.update_voice_state("9987", channel_id, True, False)
         client._send.assert_awaited_once_with(
             {
                 "op": codes.GatewayOpcode.VOICE_STATE_UPDATE,
-                "d": {"guild_id": "9987", "channel_id": channel_id, "self_mute": True, "self_deaf": False,},
+                "d": {"guild_id": "9987", "channel": channel_id, "self_mute": True, "self_deaf": False,},
             }
         )

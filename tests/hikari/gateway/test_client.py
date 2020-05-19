@@ -24,11 +24,11 @@ import async_timeout
 import mock
 import pytest
 
-from hikari import aiohttp_config
+from hikari import http_settings
 from hikari import errors
 from hikari import application
 from hikari.gateway import consumers
-from hikari.gateway import client as high_level_shards
+from hikari import gateway as high_level_shards
 from hikari.gateway import connection as low_level_shards
 from hikari.gateway import gateway_state
 from hikari.internal import codes
@@ -74,7 +74,7 @@ def shard_client_obj(mock_app):
         session_id=None,
     )
     with mock.patch.object(low_level_shards, "Shard", return_value=mock_shard_connection):
-        return _helpers.unslot_class(high_level_shards.GatewayClient)(0, 1, mock_app, "some_url")
+        return _helpers.unslot_class(high_level_shards.Gateway)(0, 1, mock_app, "some_url")
 
 
 class TestShardClientImpl:
@@ -83,11 +83,11 @@ class TestShardClientImpl:
             def process_raw_event(self, _client, name, payload):
                 return "ASSERT TRUE"
 
-        shard_client_obj = high_level_shards.GatewayClient(
+        shard_client_obj = high_level_shards.Gateway(
             0,
             1,
             mock.MagicMock(
-                application.Application, config=aiohttp_config.GatewayConfig(), event_manager=DummyConsumer()
+                application.Application, config=http_settings.GatewayConfig(), event_manager=DummyConsumer()
             ),
             "some_url",
         )
@@ -98,10 +98,10 @@ class TestShardClientImpl:
         mock_shard_connection = mock.MagicMock(low_level_shards.Shard)
 
         with mock.patch.object(low_level_shards, "Shard", return_value=mock_shard_connection):
-            shard_client_obj = high_level_shards.GatewayClient(
+            shard_client_obj = high_level_shards.Gateway(
                 0,
                 1,
-                mock.MagicMock(application.Application, event_manager=None, config=aiohttp_config.GatewayConfig()),
+                mock.MagicMock(application.Application, event_manager=None, config=http_settings.GatewayConfig()),
                 "some_url",
             )
 

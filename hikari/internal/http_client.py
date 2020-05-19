@@ -29,7 +29,7 @@ import typing
 
 import aiohttp.typedefs
 
-from . import tracing
+from hikari.internal import tracing
 
 
 class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
@@ -48,17 +48,11 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
     allow_redirects : bool
         Whether to allow redirects or not. Defaults to `False`.
     connector : aiohttp.BaseConnector | None
-        Optional aiohttp connector info for making an HTTP connection
+        Optional aiohttp _connector info for making an HTTP connection
     debug : bool
         Defaults to `False`. If `True`, then a lot of contextual information
-        regarding low-level HTTP communication will be logged to the debug
+        regarding low-level HTTP communication will be logged to the _debug
         logger on this class.
-    json_deserialize : deserialization function
-        A custom JSON deserializer function to use. Defaults to `json.loads`.
-    json_serialize : serialization function
-        A custom JSON serializer function to use. Defaults to `json.dumps`.
-    proxy_headers : typing.Mapping[str, str] | None
-        Optional proxy headers to pass to HTTP requests.
     proxy_auth : aiohttp.BasicAuth | None
         Optional authorization to be used if using a proxy.
     proxy_url : str | None
@@ -70,7 +64,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         verification. If 1 it will ignore potentially malicious
         SSL certificates.
     timeout : float | None
-        The optional timeout for all HTTP requests.
+        The optional _request_timeout for all HTTP requests.
     trust_env : bool
         If `True`, and no proxy info is given, then `HTTP_PROXY` and
         `HTTPS_PROXY` will be used from the environment variables if present.
@@ -81,81 +75,61 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
     """
 
     __slots__ = (
-        "__client_session",
-        "allow_redirects",
-        "connector",
-        "debug",
         "logger",
-        "json_deserialize",
-        "json_serialize",
-        "proxy_auth",
-        "proxy_headers",
-        "proxy_url",
-        "ssl_context",
-        "timeout",
-        "tracers",
-        "trust_env",
-        "verify_ssl",
+        "__client_session",
+        "_allow_redirects",
+        "_connector",
+        "_debug",
+        "_json_deserialize",
+        "_json_serialize",
+        "_proxy_auth",
+        "_proxy_headers",
+        "_proxy_url",
+        "_ssl_context",
+        "_request_timeout",
+        "_tracers",
+        "_trust_env",
+        "_verify_ssl",
     )
 
-    GET: typing.Final[str] = "get"
-    POST: typing.Final[str] = "post"
-    PATCH: typing.Final[str] = "patch"
-    PUT: typing.Final[str] = "put"
-    HEAD: typing.Final[str] = "head"
-    DELETE: typing.Final[str] = "delete"
-    OPTIONS: typing.Final[str] = "options"
-
-    APPLICATION_JSON: typing.Final[str] = "application/json"
-    APPLICATION_X_WWW_FORM_URLENCODED: typing.Final[str] = "application/x-www-form-urlencoded"
-    APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
-
-    allow_redirects: bool
-    """`True` if HTTP redirects are enabled, or `False` otherwise."""
-
-    connector: typing.Optional[aiohttp.BaseConnector]
-    """The base connector for the `aiohttp.ClientSession`, if provided."""
-
-    debug: bool
-    """`True` if debug mode is enabled. `False` otherwise."""
+    _APPLICATION_JSON: typing.Final[str] = "application/json"
+    _APPLICATION_X_WWW_FORM_URLENCODED: typing.Final[str] = "application/x-www-form-urlencoded"
+    _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 
     logger: logging.Logger
     """The logger to use for this object."""
 
-    json_deserialize: typing.Callable[[typing.AnyStr], typing.Any]
-    """The JSON deserialization function.
+    _allow_redirects: bool
+    """`True` if HTTP redirects are enabled, or `False` otherwise."""
 
-    This consumes a JSON string and produces some object.
-    """
+    _connector: typing.Optional[aiohttp.BaseConnector]
+    """The base _connector for the `aiohttp.ClientSession`, if provided."""
 
-    json_serialize: typing.Callable[[typing.Any], typing.AnyStr]
-    """The JSON deserialization function.
+    _debug: bool
+    """`True` if _debug mode is enabled. `False` otherwise."""
 
-    This consumes an object and produces some JSON string.
-    """
-
-    proxy_auth: typing.Optional[aiohttp.BasicAuth]
+    _proxy_auth: typing.Optional[aiohttp.BasicAuth]
     """Proxy authorization to use."""
 
-    proxy_headers: typing.Optional[typing.Mapping[str, str]]
+    _proxy_headers: typing.Optional[typing.Mapping[str, str]]
     """A set of headers to provide to a proxy server."""
 
-    proxy_url: typing.Optional[str]
+    _proxy_url: typing.Optional[str]
     """An optional proxy URL to send requests to."""
 
-    ssl_context: typing.Optional[ssl.SSLContext]
+    _ssl_context: typing.Optional[ssl.SSLContext]
     """The custom SSL context to use."""
 
-    timeout: typing.Optional[float]
-    """The HTTP request timeout to abort requests after."""
+    _request_timeout: typing.Optional[float]
+    """The HTTP request _request_timeout to abort requests after."""
 
-    tracers: typing.List[tracing.BaseTracer]
-    """Request tracers.
+    _tracers: typing.List[tracing.BaseTracer]
+    """Request _tracers.
 
     These can be used to intercept HTTP request events on a low level.
     """
 
-    trust_env: bool
+    _trust_env: bool
     """Whether to take notice of proxy environment variables.
 
     If `True`, and no proxy info is given, then `HTTP_PROXY` and
@@ -165,7 +139,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
     If `False`, then this information is instead ignored.
     """
 
-    verify_ssl: bool
+    _verify_ssl: bool
     """Whether SSL certificates should be verified for each request.
 
     When this is `True` then an exception will be raised whenever invalid SSL
@@ -179,8 +153,6 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         allow_redirects: bool = False,
         connector: typing.Optional[aiohttp.BaseConnector] = None,
         debug: bool = False,
-        json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict] = json.loads,
-        json_serialize: typing.Callable[[typing.Dict], typing.AnyStr] = json.dumps,
         logger_name: typing.Optional[str] = None,
         proxy_auth: typing.Optional[aiohttp.BasicAuth] = None,
         proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = None,
@@ -195,19 +167,17 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         )
 
         self.__client_session = None
-        self.allow_redirects = allow_redirects
-        self.connector = connector
-        self.debug = debug
-        self.json_serialize = json_serialize
-        self.json_deserialize = json_deserialize
-        self.proxy_auth = proxy_auth
-        self.proxy_headers = proxy_headers
-        self.proxy_url = proxy_url
-        self.ssl_context: ssl.SSLContext = ssl_context
-        self.timeout = timeout
-        self.trust_env = trust_env
-        self.tracers = [(tracing.DebugTracer(self.logger) if debug else tracing.CFRayTracer(self.logger))]
-        self.verify_ssl = verify_ssl
+        self._allow_redirects = allow_redirects
+        self._connector = connector
+        self._debug = debug
+        self._proxy_auth = proxy_auth
+        self._proxy_headers = proxy_headers
+        self._proxy_url = proxy_url
+        self._ssl_context: ssl.SSLContext = ssl_context
+        self._request_timeout = timeout
+        self._trust_env = trust_env
+        self._tracers = [(tracing.DebugTracer(self.logger) if debug else tracing.CFRayTracer(self.logger))]
+        self._verify_ssl = verify_ssl
 
     async def __aenter__(self) -> HTTPClient:
         return self
@@ -231,19 +201,14 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         -------
         aiohttp.ClientSession
             The client session to use for requests.
-
-        !!! warn
-            This must only be accessed within an asyncio event loop, otherwise
-            there is a risk that the session will not have the correct event
-            loop; hence why this is private.
         """
         if self.__client_session is None:
             self.__client_session = aiohttp.ClientSession(
-                connector=self.connector,
-                trust_env=self.trust_env,
+                connector=self._connector,
+                trust_env=self._trust_env,
                 version=aiohttp.HttpVersion11,
-                json_serialize=self.json_serialize or json.dumps,
-                trace_configs=[t.trace_config for t in self.tracers],
+                json_serialize=json.dumps,
+                trace_configs=[t.trace_config for t in self._tracers],
             )
         return self.__client_session
 
@@ -280,8 +245,8 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
             The HTTP response.
         """
         if isinstance(body, (dict, list)):
-            body = bytes(self.json_serialize(body), "utf-8")
-            headers["content-type"] = self.APPLICATION_JSON
+            body = bytes(json.dumps(body), "utf-8")
+            headers["content-type"] = self._APPLICATION_JSON
 
         trace_request_ctx = types.SimpleNamespace()
         trace_request_ctx.request_body = body
@@ -292,18 +257,18 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
             params=query,
             headers=headers,
             data=body,
-            allow_redirects=self.allow_redirects,
-            proxy=self.proxy_url,
-            proxy_auth=self.proxy_auth,
-            proxy_headers=self.proxy_headers,
-            verify_ssl=self.verify_ssl,
-            ssl_context=self.ssl_context,
-            timeout=self.timeout,
+            allow_redirects=self._allow_redirects,
+            proxy=self._proxy_url,
+            proxy_auth=self._proxy_auth,
+            proxy_headers=self._proxy_headers,
+            verify_ssl=self._verify_ssl,
+            ssl_context=self._ssl_context,
+            timeout=self._request_timeout,
             trace_request_ctx=trace_request_ctx,
         )
 
     async def _create_ws(
-        self, url: str, *, compress: int = 0, autoping: bool = True, max_msg_size: int = 0
+        self, url: str, *, compress: int = 0, auto_ping: bool = True, max_msg_size: int = 0
     ) -> aiohttp.ClientWebSocketResponse:
         """Create a websocket.
 
@@ -314,7 +279,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         compress : int
             The compression type to use, as an int value. Use `0` to disable
             compression.
-        autoping : bool
+        auto_ping : bool
             If `True`, the client will manage automatically pinging/ponging
             in the background. If `False`, this will not occur.
         max_msg_size : int
@@ -330,11 +295,11 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         return await self._acquire_client_session().ws_connect(
             url=url,
             compress=compress,
-            autoping=autoping,
+            autoping=auto_ping,
             max_msg_size=max_msg_size,
-            proxy=self.proxy_url,
-            proxy_auth=self.proxy_auth,
-            proxy_headers=self.proxy_headers,
-            verify_ssl=self.verify_ssl,
-            ssl_context=self.ssl_context,
+            proxy=self._proxy_url,
+            proxy_auth=self._proxy_auth,
+            proxy_headers=self._proxy_headers,
+            verify_ssl=self._verify_ssl,
+            ssl_context=self._ssl_context,
         )

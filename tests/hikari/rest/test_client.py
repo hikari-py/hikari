@@ -21,7 +21,7 @@ import inspect
 import mock
 import pytest
 
-from hikari import aiohttp_config
+from hikari import http_settings
 from hikari import rest as high_level_rest
 from hikari import application
 from hikari.rest import channel
@@ -47,20 +47,20 @@ class TestRESTClient:
         ],
     )
     def test_init(self, token, token_type, expected_token):
-        mock_config = aiohttp_config.RESTConfig(token=token, token_type=token_type, trust_env=True)
+        mock_config = http_settings.RESTConfig(token=token, token_type=token_type, trust_env=True)
         mock_app = mock.MagicMock(application.Application, config=mock_config)
         mock_low_level_rest_clients = mock.MagicMock(low_level_rest.RESTSession)
         with mock.patch.object(low_level_rest, "RESTSession", return_value=mock_low_level_rest_clients) as patched_init:
             client = high_level_rest.RESTClient(mock_app)
             patched_init.assert_called_once_with(
-                allow_redirects=mock_config.allow_redirects,
+                allow_redirects=mock_config._allow_redirects,
                 base_url=mock_config.rest_url,
                 connector=mock_config.tcp_connector,
                 debug=False,
-                proxy_headers=mock_config.proxy_headers,
-                proxy_auth=mock_config.proxy_auth,
-                ssl_context=mock_config.ssl_context,
-                verify_ssl=mock_config.verify_ssl,
+                proxy_headers=mock_config._proxy_headers,
+                proxy_auth=mock_config._proxy_auth,
+                ssl_context=mock_config._ssl_context,
+                verify_ssl=mock_config._verify_ssl,
                 timeout=mock_config.request_timeout,
                 token=expected_token,
                 trust_env=True,

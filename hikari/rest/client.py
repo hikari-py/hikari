@@ -28,7 +28,7 @@ __all__ = ["RESTClient"]
 
 import typing
 
-from hikari import aiohttp_config
+from hikari import http_settings
 from hikari.api import rest_app
 from hikari.rest import channel
 from hikari.rest import gateway
@@ -78,7 +78,7 @@ class RESTClient(
         self,
         *,
         app: rest_app.IRESTApp,
-        config: aiohttp_config.AIOHTTPConfig,
+        config: http_settings.HTTPSettings,
         debug: bool,
         token: typing.Optional[str],
         token_type: typing.Optional[str],

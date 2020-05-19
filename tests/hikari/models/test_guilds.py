@@ -118,7 +118,7 @@ def test_member_payload(test_user_payload):
 @pytest.fixture
 def test_voice_state_payload():
     return {
-        "channel_id": "432123321",
+        "channel": "432123321",
         "user_id": "6543453",
         "session_id": "350a109226bd6f43c81f12c7c08de20a",
         "deaf": False,
@@ -276,7 +276,7 @@ def mock_app():
 class TestGuildEmbed:
     @pytest.fixture()
     def test_guild_embed_payload(self):
-        return {"channel_id": "123123123", "enabled": True}
+        return {"channel": "123123123", "enabled": True}
 
     def test_deserialize(self, test_guild_embed_payload, mock_app):
         guild_embed_obj = guilds.GuildEmbed.deserialize(test_guild_embed_payload, app=mock_app)
@@ -506,17 +506,17 @@ class TestPresenceActivity:
         assert presence_activity_obj.timestamps == guilds.ActivityTimestamps.deserialize(
             test_activity_timestamps_payload
         )
-        assert presence_activity_obj.timestamps._zookeeper is mock_app
+        assert presence_activity_obj.timestamps._gateway_consumer is mock_app
         assert presence_activity_obj.application_id == 40404040404040
         assert presence_activity_obj.details == "They are doing stuff"
         assert presence_activity_obj.state == "STATED"
         assert presence_activity_obj.emoji is mock_emoji
         assert presence_activity_obj.party == guilds.ActivityParty.deserialize(test_activity_party_payload)
-        assert presence_activity_obj.party._zookeeper is mock_app
+        assert presence_activity_obj.party._gateway_consumer is mock_app
         assert presence_activity_obj.assets == guilds.ActivityAssets.deserialize(test_activity_assets_payload)
-        assert presence_activity_obj.assets._zookeeper is mock_app
+        assert presence_activity_obj.assets._gateway_consumer is mock_app
         assert presence_activity_obj.secrets == guilds.ActivitySecret.deserialize(test_activity_secrets_payload)
-        assert presence_activity_obj.secrets._zookeeper is mock_app
+        assert presence_activity_obj.secrets._gateway_consumer is mock_app
         assert presence_activity_obj.is_instance is True
         assert presence_activity_obj.flags == guilds.ActivityFlag.INSTANCE | guilds.ActivityFlag.JOIN
 
@@ -548,7 +548,7 @@ class TestPresenceUser:
         presence_user_obj = guilds.PresenceUser.deserialize({"id": "115590097100865541"}, app=mock_app)
         assert presence_user_obj.id == 115590097100865541
         for attr in presence_user_obj.__slots__:
-            if attr not in ("id", "_zookeeper"):
+            if attr not in ("id", "_gateway_consumer"):
                 assert getattr(presence_user_obj, attr) is unset.UNSET
 
     @pytest.fixture()
@@ -656,16 +656,16 @@ class TestGuildMemberPresence:
             guild_member_presence_obj = guilds.GuildMemberPresence.deserialize(test_guild_member_presence, app=mock_app)
             patched_since_deserializer.assert_called_once_with("2015-04-26T06:26:56.936000+00:00")
         assert guild_member_presence_obj.user == guilds.PresenceUser.deserialize(test_user_payload)
-        assert guild_member_presence_obj.user._zookeeper is mock_app
+        assert guild_member_presence_obj.user._gateway_consumer is mock_app
         assert guild_member_presence_obj.role_ids == [49494949]
         assert guild_member_presence_obj.guild_id == 44004040
         assert guild_member_presence_obj.visible_status is guilds.PresenceStatus.DND
         assert guild_member_presence_obj.activities == [
             guilds.PresenceActivity.deserialize(test_presence_activity_payload)
         ]
-        assert guild_member_presence_obj.activities[0]._zookeeper is mock_app
+        assert guild_member_presence_obj.activities[0]._gateway_consumer is mock_app
         assert guild_member_presence_obj.client_status == guilds.ClientStatus.deserialize(test_client_status_payload)
-        assert guild_member_presence_obj.client_status._zookeeper is mock_app
+        assert guild_member_presence_obj.client_status._gateway_consumer is mock_app
         assert guild_member_presence_obj.premium_since is mock_since
         assert guild_member_presence_obj.nick == "Nick"
 
@@ -718,7 +718,7 @@ class TestPartialGuildIntegration:
         assert partial_guild_integration_obj.account == guilds.IntegrationAccount.deserialize(
             test_integration_account_payload
         )
-        assert partial_guild_integration_obj.account._zookeeper is mock_app
+        assert partial_guild_integration_obj.account._gateway_consumer is mock_app
 
 
 class TestGuildIntegration:
@@ -967,9 +967,9 @@ class TestGuild:
             channels.deserialize_channel.assert_called_once_with(test_channel_payload, app=mock_app)
             emojis.KnownCustomEmoji.deserialize.assert_called_once_with(test_emoji_payload, app=mock_app)
             assert guild_obj.members == {123456: guilds.GuildMember.deserialize(test_member_payload)}
-            assert guild_obj.members[123456]._zookeeper is mock_app
+            assert guild_obj.members[123456]._gateway_consumer is mock_app
         assert guild_obj.presences == {123456: guilds.GuildMemberPresence.deserialize(test_guild_member_presence)}
-        assert guild_obj.presences[123456]._zookeeper is mock_app
+        assert guild_obj.presences[123456]._gateway_consumer is mock_app
         assert guild_obj.splash_hash == "0ff0ff0ff"
         assert guild_obj.discovery_splash_hash == "famfamFAMFAMfam"
         assert guild_obj.owner_id == 6969696
@@ -985,7 +985,7 @@ class TestGuild:
         assert guild_obj.default_message_notifications is guilds.GuildMessageNotificationsLevel.ONLY_MENTIONS
         assert guild_obj.explicit_content_filter is guilds.GuildExplicitContentFilterLevel.ALL_MEMBERS
         assert guild_obj.roles == {41771983423143936: guilds.GuildRole.deserialize(test_roles_payload)}
-        assert guild_obj.roles[41771983423143936]._zookeeper is mock_app
+        assert guild_obj.roles[41771983423143936]._gateway_consumer is mock_app
         assert guild_obj.emojis == {41771983429993937: mock_emoji}
         assert guild_obj.mfa_level is guilds.GuildMFALevel.ELEVATED
         assert guild_obj.application_id == 39494949

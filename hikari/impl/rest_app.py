@@ -23,7 +23,7 @@ import logging
 import typing
 from concurrent import futures
 
-from hikari import aiohttp_config
+from hikari import http_settings
 from hikari.api import rest_app
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
@@ -39,7 +39,7 @@ if typing.TYPE_CHECKING:
 class RESTAppImpl(rest_app.IRESTApp):
     def __init__(
         self,
-        config: aiohttp_config.AIOHTTPConfig,
+        config: http_settings.HTTPSettings,
         debug: bool = False,
         token: typing.Optional[str] = None,
         token_type: typing.Optional[str] = None,

@@ -25,7 +25,7 @@ __all__ = ["CompiledRoute", "Route"]
 import re
 import typing
 
-DEFAULT_MAJOR_PARAMS: typing.Final[typing.Set[str]] = {"channel_id", "guild_id", "webhook_id"}
+DEFAULT_MAJOR_PARAMS: typing.Final[typing.Set[str]] = {"channel", "guild_id", "webhook_id"}
 HASH_SEPARATOR: typing.Final[str] = ";"
 
 
@@ -218,41 +218,41 @@ PUT = "PUT"
 POST = "POST"
 
 # Channels
-GET_CHANNEL = Route(GET, "/channels/{channel_id}")
-PATCH_CHANNEL = Route(PATCH, "/channels/{channel_id}")
-DELETE_CHANNEL = Route(DELETE, "/channels/{channel_id}")
+GET_CHANNEL = Route(GET, "/channels/{channel}")
+PATCH_CHANNEL = Route(PATCH, "/channels/{channel}")
+DELETE_CHANNEL = Route(DELETE, "/channels/{channel}")
 
-GET_CHANNEL_INVITES = Route(GET, "/channels/{channel_id}/invites")
-POST_CHANNEL_INVITES = Route(POST, "/channels/{channel_id}/invites")
+GET_CHANNEL_INVITES = Route(GET, "/channels/{channel}/invites")
+POST_CHANNEL_INVITES = Route(POST, "/channels/{channel}/invites")
 
-GET_CHANNEL_MESSAGE = Route(GET, "/channels/{channel_id}/messages/{message_id}")
-PATCH_CHANNEL_MESSAGE = Route(PATCH, "/channels/{channel_id}/messages/{message_id}")
-DELETE_CHANNEL_MESSAGE = Route(DELETE, "/channels/{channel_id}/messages/{message_id}")
+GET_CHANNEL_MESSAGE = Route(GET, "/channels/{channel}/messages/{message_id}")
+PATCH_CHANNEL_MESSAGE = Route(PATCH, "/channels/{channel}/messages/{message_id}")
+DELETE_CHANNEL_MESSAGE = Route(DELETE, "/channels/{channel}/messages/{message_id}")
 
-GET_CHANNEL_MESSAGES = Route(GET, "/channels/{channel_id}/messages")
-POST_CHANNEL_MESSAGES = Route(POST, "/channels/{channel_id}/messages")
+GET_CHANNEL_MESSAGES = Route(GET, "/channels/{channel}/messages")
+POST_CHANNEL_MESSAGES = Route(POST, "/channels/{channel}/messages")
 
-POST_DELETE_CHANNEL_MESSAGES_BULK = Route(POST, "/channels/{channel_id}/messages/bulk-delete")
+POST_DELETE_CHANNEL_MESSAGES_BULK = Route(POST, "/channels/{channel}/messages/bulk-delete")
 
-PATCH_CHANNEL_PERMISSIONS = Route(PATCH, "/channels/{channel_id}/permissions/{overwrite_id}")
-DELETE_CHANNEL_PERMISSIONS = Route(DELETE, "/channels/{channel_id}/permissions/{overwrite_id}")
+PATCH_CHANNEL_PERMISSIONS = Route(PATCH, "/channels/{channel}/permissions/{overwrite_id}")
+DELETE_CHANNEL_PERMISSIONS = Route(DELETE, "/channels/{channel}/permissions/{overwrite_id}")
 
-DELETE_CHANNEL_PIN = Route(DELETE, "/channels/{channel_id}/pins/{message_id}")
+DELETE_CHANNEL_PIN = Route(DELETE, "/channels/{channel}/pins/{message_id}")
 
-GET_CHANNEL_PINS = Route(GET, "/channels/{channel_id}/pins")
-PUT_CHANNEL_PINS = Route(PUT, "/channels/{channel_id}/pins/{message_id}")
+GET_CHANNEL_PINS = Route(GET, "/channels/{channel}/pins")
+PUT_CHANNEL_PINS = Route(PUT, "/channels/{channel}/pins/{message_id}")
 
-POST_CHANNEL_TYPING = Route(POST, "/channels/{channel_id}/typing")
+POST_CHANNEL_TYPING = Route(POST, "/channels/{channel}/typing")
 
-POST_CHANNEL_WEBHOOKS = Route(POST, "/channels/{channel_id}/webhooks")
-GET_CHANNEL_WEBHOOKS = Route(GET, "/channels/{channel_id}/webhooks")
+POST_CHANNEL_WEBHOOKS = Route(POST, "/channels/{channel}/webhooks")
+GET_CHANNEL_WEBHOOKS = Route(GET, "/channels/{channel}/webhooks")
 
 # Reactions
-DELETE_ALL_REACTIONS = Route(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions")
+DELETE_ALL_REACTIONS = Route(DELETE, "/channels/{channel}/messages/{message_id}/reactions")
 
-DELETE_REACTION_EMOJI = Route(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}")
-DELETE_REACTION_USER = Route(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{used_id}")
-GET_REACTIONS = Route(GET, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}")
+DELETE_REACTION_EMOJI = Route(DELETE, "/channels/{channel}/messages/{message_id}/reactions/{emoji}")
+DELETE_REACTION_USER = Route(DELETE, "/channels/{channel}/messages/{message_id}/reactions/{emoji}/{used_id}")
+GET_REACTIONS = Route(GET, "/channels/{channel}/messages/{message_id}/reactions/{emoji}")
 
 # Guilds
 GET_GUILD = Route(GET, "/guilds/{guild_id}")
@@ -342,8 +342,8 @@ PATCH_MY_GUILD_NICKNAME = Route(PATCH, "/guilds/{guild_id}/members/@me/nick")
 GET_MY_USER = Route(GET, "/users/@me")
 PATCH_MY_USER = Route(PATCH, "/users/@me")
 
-PUT_MY_REACTION = Route(PUT, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me")
-DELETE_MY_REACTION = Route(DELETE, "/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me")
+PUT_MY_REACTION = Route(PUT, "/channels/{channel}/messages/{message_id}/reactions/{emoji}/@me")
+DELETE_MY_REACTION = Route(DELETE, "/channels/{channel}/messages/{message_id}/reactions/{emoji}/@me")
 
 # Voice
 GET_VOICE_REGIONS = Route(GET, "/voice/regions")

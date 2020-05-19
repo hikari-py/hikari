@@ -29,7 +29,7 @@ In this module, we refer to a `hikari.rest.routes.CompiledRoute` as a definition
 of a route with specific major parameter values included (e.g.
 `POST /channels/123/messages`), and a `hikari.rest.routes.Route` as a
 definition of a route without specific parameter values included (e.g.
-`POST /channels/{channel_id}/messages`). We can compile a
+`POST /channels/{channel}/messages`). We can compile a
 `hikari.rest.routes.CompiledRoute` from a `hikari.rest.routes.Route`
 by providing the corresponding parameters as kwargs, as you may already know.
 

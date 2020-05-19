@@ -69,10 +69,10 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
     base_url : str
         The base URL and route for the discord API
     connector : aiohttp.BaseConnector | None
-        Optional aiohttp connector info for making an HTTP connection
+        Optional aiohttp _connector info for making an HTTP connection
     debug : bool
         Defaults to `False`. If `True`, then a lot of contextual information
-        regarding low-level HTTP communication will be logged to the debug
+        regarding low-level HTTP communication will be logged to the _debug
         logger on this class.
     json_deserialize : deserialization function
         A custom JSON deserializer function to use. Defaults to `json.loads`.
@@ -91,7 +91,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         verification. If 1 it will ignore potentially malicious
         SSL certificates.
     timeout : float | None
-        The optional timeout for all HTTP requests.
+        The optional _request_timeout for all HTTP requests.
     token : string | None
         The bot token for the client to use. You may start this with
         a prefix of either `Bot` or `Bearer` to force the token type, or
@@ -146,7 +146,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         Your mileage may vary (YMMV).
     """
 
-    verify_ssl: bool
+    _verify_ssl: bool
     """Whether SSL certificates should be verified for each request.
 
     When this is `True` then an exception will be raised whenever invalid SSL
@@ -180,8 +180,6 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
             allow_redirects=allow_redirects,
             connector=connector,
             debug=debug,
-            json_deserialize=json_deserialize,
-            json_serialize=json_serialize,
             proxy_auth=proxy_auth,
             proxy_headers=proxy_headers,
             proxy_url=proxy_url,
@@ -234,7 +232,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         headers = {} if headers is None else headers
 
         headers["x-ratelimit-precision"] = "millisecond"
-        headers["accept"] = self.APPLICATION_JSON
+        headers["accept"] = self._APPLICATION_JSON
 
         if self._token is not None and not suppress_authorization_header:
             headers["authorization"] = self._token
@@ -275,7 +273,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
 
         # Handle the response.
         if 200 <= response.status < 300:
-            if response.content_type == self.APPLICATION_JSON:
+            if response.content_type == self._APPLICATION_JSON:
                 # Only deserializing here stops Cloudflare shenanigans messing us around.
                 return self.json_deserialize(raw_body)
             raise errors.HTTPError(real_url, f"Expected JSON response but received {response.content_type}")
@@ -322,7 +320,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         )
 
         if response.status == http.HTTPStatus.TOO_MANY_REQUESTS:
-            body = await response.json() if response.content_type == self.APPLICATION_JSON else await response.read()
+            body = await response.json() if response.content_type == self._APPLICATION_JSON else await response.read()
 
             # We are being rate limited.
             if isinstance(body, dict):
@@ -702,13 +700,13 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         conversions.put_if_specified(json_payload, "embed", embed)
         conversions.put_if_specified(json_payload, "allowed_mentions", allowed_mentions)
 
-        form.add_field("payload_json", json.dumps(json_payload), content_type=self.APPLICATION_JSON)
+        form.add_field("payload_json", json.dumps(json_payload), content_type=self._APPLICATION_JSON)
 
         if files is ...:
             files = more_collections.EMPTY_SEQUENCE
 
         for i, file in enumerate(files):
-            form.add_field(f"file{i}", file, filename=file.filename, content_type=self.APPLICATION_OCTET_STREAM)
+            form.add_field(f"file{i}", file, filename=file.filename, content_type=self._APPLICATION_OCTET_STREAM)
 
         route = routes.POST_CHANNEL_MESSAGES.compile(channel_id=channel_id)
 
@@ -1521,7 +1519,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         afk_channel_id : str
             If specified, the new ID for the AFK voice channel.
         afk_timeout : int
-            If specified, the new AFK timeout period in seconds
+            If specified, the new AFK _request_timeout period in seconds
         icon : bytes
             If specified, the new guild icon image in bytes form.
         owner_id : str
@@ -1847,14 +1845,14 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
             to the end channel. This will also be raised if you're not in the
             guild.
         hikari.errors.BadRequest
-            If you pass `mute`, `deaf` or `channel_id` while the member is not connected to a voice channel.
+            If you pass `mute`, `deaf` or `channel` while the member is not connected to a voice channel.
         """
         payload = {}
         conversions.put_if_specified(payload, "nick", nick)
         conversions.put_if_specified(payload, "roles", roles)
         conversions.put_if_specified(payload, "mute", mute)
         conversions.put_if_specified(payload, "deaf", deaf)
-        conversions.put_if_specified(payload, "channel_id", channel_id)
+        conversions.put_if_specified(payload, "channel", channel_id)
         route = routes.PATCH_GUILD_MEMBER.compile(guild_id=guild_id, user_id=user_id)
         await self._request_json_response(route, body=payload, reason=reason)
 
@@ -2530,7 +2528,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
             If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
         payload = {}
-        conversions.put_if_specified(payload, "channel_id", channel_id)
+        conversions.put_if_specified(payload, "channel", channel_id)
         conversions.put_if_specified(payload, "enabled", enabled)
         route = routes.PATCH_GUILD_EMBED.compile(guild_id=guild_id)
         return await self._request_json_response(route, body=payload, reason=reason)
@@ -2967,7 +2965,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         """
         payload = {}
         conversions.put_if_specified(payload, "name", name)
-        conversions.put_if_specified(payload, "channel_id", channel_id)
+        conversions.put_if_specified(payload, "channel", channel_id)
         conversions.put_if_specified(payload, "avatar", avatar, conversions.image_bytes_to_image_data)
         if webhook_token is ...:
             route = routes.PATCH_WEBHOOK.compile(webhook_id=webhook_id)
