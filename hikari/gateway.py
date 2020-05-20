@@ -428,24 +428,15 @@ class Gateway(http_client.HTTPClient):
 
             poll_events_task = asyncio.create_task(self._poll_events(), name=f"gateway shard {self._shard_id} poll")
 
-            completed, pending = await more_asyncio.wait(
-                [heartbeat_task, poll_events_task], return_when=asyncio.FIRST_COMPLETED
-            )
-
-            for pending_task in pending:
-                pending_task.cancel()
-                with contextlib.suppress(Exception):
-                    # Clear any pending exception to prevent a nasty console message.
-                    await pending_task
+            await more_asyncio.wait([heartbeat_task, poll_events_task], return_when=asyncio.FIRST_COMPLETED)
 
             try:
-                await completed.pop()
+                if poll_events_task.done():
+                    raise poll_events_task.exception()
+                if heartbeat_task.done():
+                    raise heartbeat_task.exception()
             except asyncio.TimeoutError:
-                # If we get _request_timeout errors receiving stuff, propagate as a zombied connection. This
-                # is already done by the ping keepalive and heartbeat keepalive partially, but this
-                # is a second edge case.
                 raise _Zombie()
-
         finally:
             asyncio.create_task(
                 self._dispatch(self, "DISCONNECTED", {}), name=f"gateway shard {self._shard_id} dispatch DISCONNECTED"
