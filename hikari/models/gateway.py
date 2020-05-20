@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["Activity", "GatewayBot", "SessionStartLimit"]
+__all__ = ["GatewayBot", "SessionStartLimit"]
 
 import datetime
 import typing
@@ -73,29 +73,3 @@ class GatewayBot(bases.Entity, marshaller.Deserializable):
 
 def _undefined_type_default() -> typing.Literal[guilds.ActivityType.PLAYING]:
     return guilds.ActivityType.PLAYING
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class Activity(marshaller.Deserializable, marshaller.Serializable):
-    """An activity that the bot can set for one or more shards.
-
-    This will show the activity as the bot's presence.
-    """
-
-    name: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
-    """The activity name."""
-
-    url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_none=None, if_undefined=None, default=None, repr=True
-    )
-    """The activity URL. Only valid for `STREAMING` activities."""
-
-    type: guilds.ActivityType = marshaller.attrib(
-        deserializer=guilds.ActivityType,
-        serializer=int,
-        if_undefined=_undefined_type_default,
-        default=guilds.ActivityType.PLAYING,
-        repr=True,
-    )
-    """The activity type."""

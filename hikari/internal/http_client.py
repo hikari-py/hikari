@@ -192,7 +192,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         with contextlib.suppress(Exception):
             await self.__client_session.close()
             self.__client_session = None
-            self.logger.debug("closed %s", type(self).__qualname__)
+            self.logger.debug("closed client session")
 
     def _acquire_client_session(self) -> aiohttp.ClientSession:
         """Acquire a client session to make requests with.

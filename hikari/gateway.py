@@ -16,14 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Provides a facade around `hikari.gateway.connection.Shard`.
-
-This handles parsing and initializing the object from a configuration, as
-well as restarting it if it disconnects.
-
-Additional functions and coroutines are provided to update the presence on the
-shard using models defined in `hikari`.
-"""
+"""Single-shard implementation for the V6 and V7 gateway."""
 
 from __future__ import annotations
 
@@ -38,6 +31,7 @@ import urllib.parse
 import zlib
 
 import aiohttp
+import attr
 
 from hikari import errors
 from hikari import http_settings
@@ -48,6 +42,7 @@ from hikari.internal import ratelimits
 from hikari.internal import user_agents
 from hikari.models import bases
 from hikari.models import channels
+from hikari.models import guilds
 from hikari.models import unset
 from hikari.internal import more_typing
 
@@ -55,9 +50,24 @@ from hikari.internal import more_typing
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.models import gateway
-    from hikari.models import guilds
     from hikari.models import intents as intents_
+
+
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+class Activity:
+    """An activity that the bot can set for one or more shards.
+
+    This will show the activity as the bot's presence.
+    """
+
+    name: str = attr.ib()
+    """The activity name."""
+
+    url: typing.Optional[str] = attr.ib(default=None)
+    """The activity URL. Only valid for `STREAMING` activities."""
+
+    type: guilds.ActivityType = attr.ib(converter=guilds.ActivityType)
+    """The activity type."""
 
 
 @more_enums.must_be_unique
@@ -80,10 +90,6 @@ class _GatewayCloseCode(int, more_enums.Enum):
     INVALID_INTENT = 4013
     DISALLOWED_INTENT = 4014
 
-    def __str__(self) -> str:
-        name = self.name.replace("_", " ").title()
-        return f"{self.value} {name}"
-
 
 @more_enums.must_be_unique
 class _GatewayOpcode(int, more_enums.Enum):
@@ -101,13 +107,6 @@ class _GatewayOpcode(int, more_enums.Enum):
     HELLO = 10
     HEARTBEAT_ACK = 11
 
-    def __str__(self) -> str:
-        name = self.name.replace("_", " ").title()
-        return f"{self.value} {name}"
-
-
-RawDispatchT = typing.Callable[["Gateway", str, more_typing.JSONObject], more_typing.Coroutine[None]]
-
 
 class _Reconnect(RuntimeError):
     __slots__ = ()
@@ -117,35 +116,74 @@ class _Zombie(RuntimeError):
     __slots__ = ()
 
 
+@attr.s(auto_attribs=True, slots=True)
 class _InvalidSession(RuntimeError):
-    __slots__ = ("can_resume",)
+    can_resume: bool = False
 
-    def __init__(self, can_resume: bool) -> None:
-        self.can_resume = can_resume
+
+RawDispatchT = typing.Callable[["Gateway", str, more_typing.JSONObject], more_typing.Coroutine[None]]
 
 
 class Gateway(http_client.HTTPClient):
-    """Blah blah
+    """Implementation of a V6 and V7 compatible gateway.
+
+    Parameters
+    ----------
+    config : hikari.http_settings.HTTPSettings
+        The aiohttp settings to use for the client session.
+    debug : bool
+        If `True`, each sent and received payload is dumped to the logs. If
+        `False`, only the fact that data has been sent/received will be logged.
+    dispatch : coroutine function with signature `(Gateway, str, dict) -> None`
+        The dispatch coroutine to invoke each time an event is dispatched.
+        This is a tri-consumer that takes this gateway object as the first
+        parameter, the event name as the second parameter, and the JSON
+        event payload as a `dict` for the third parameter.
+    initial_activity : Activity | None
+        The initial activity to appear to have for this shard.
+    initial_idle_since : datetime.datetime | None
+        The datetime to appear to be idle since.
+    initial_is_afk : bool | None
+        Whether to appear to be AFK or not on login.
+    initial_status : hikari.models.guilds.PresenceStatus | None
+        The initial status to set on login for the shard.
+    intents : hikari.models.intents.Intent | None
+        Collection of intents to use, or `None` to not use intents at all.
+    large_threshold : int
+        The number of members to have in a guild for it to be considered large.
+    shard_id : int
+        The shard ID.
+    shard_count : int
+        The shard count.
+    token : str
+        The bot token to use.
+    url : str
+        The gateway URL to use. This should not contain a query-string or
+        fragments.
+    use_compression : bool
+        If `True`, then transport compression is enabled.
+    version : int
+        Gateway API version to use.
     """
 
     def __init__(
         self,
         *,
         config: http_settings.HTTPSettings,
+        debug: bool = False,
         dispatch: RawDispatchT,
-        debug: bool,
-        initial_activity: typing.Optional[gateway.Activity] = None,
+        initial_activity: typing.Optional[Activity] = None,
         initial_idle_since: typing.Optional[datetime.datetime] = None,
         initial_is_afk: typing.Optional[bool] = None,
         initial_status: typing.Optional[guilds.PresenceStatus] = None,
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
-        shard_id: int,
-        shard_count: int,
+        shard_id: int = 0,
+        shard_count: int = 1,
         token: str,
         url: str,
         use_compression: bool = True,
-        version: int,
+        version: int = 6,
     ) -> None:
         super().__init__(
             allow_redirects=config.allow_redirects,
@@ -161,17 +199,14 @@ class Gateway(http_client.HTTPClient):
             trust_env=config.trust_env,
         )
         self._activity = initial_activity
-        self._dead_event = asyncio.Event()
         self._dispatch = dispatch
+        self._handshake_event = asyncio.Event()
         self._heartbeat_task = None
         self._idle_since = initial_idle_since
         self._intents = intents
         self._is_afk = initial_is_afk
-        self._ready_event = asyncio.Event()
         self._request_close_event = asyncio.Event()
-        self._resumed_event = asyncio.Event()
         self._run_task = None
-        self._running = False
         self._seq = None
         self._session_id = None
         self._shard_id = shard_id
@@ -203,18 +238,135 @@ class Gateway(http_client.HTTPClient):
 
         self.url = urllib.parse.urlunparse((scheme, netloc, path, params, new_query, ""))
 
+    @property
+    def is_alive(self) -> bool:
+        """Return whether the shard is alive."""
+        return self._run_task is not None
+
+    async def start(self) -> None:
+        """Start the gateway and wait for the handshake to complete.
+
+        This will continue to keep the connection alive in the background once
+        the handshake succeeds.
+
+        If the handshake fails, this will raise the corresponding exception
+        immediately.
+        """
+        self._run_task = asyncio.create_task(self.run(), name=f"gateway shard {self._shard_id} runner")
+
+        wait_for_handshake = asyncio.create_task(
+            self._handshake_event.wait(), name=f"gateway shard {self._shard_id} wait for handshake"
+        )
+
+        await more_asyncio.wait(
+            [wait_for_handshake, self._run_task], return_when=asyncio.FIRST_COMPLETED,
+        )
+
+        if self._run_task.cancelled():
+            # Raise the corresponding exception.
+            self._run_task.result()
+
+        wait_for_handshake.cancel()
+
     async def close(self) -> None:
+        """Request that the shard shuts down, then wait for it to close."""
+        if self.is_alive is not None:
+            self.logger.warning("received signal to shut shard down")
+            await asyncio.shield(self._close())
+        else:
+            self.logger.debug("received signal to shut shard down, but I am not running anyway")
+
+    async def _close(self) -> None:
         self._request_close_event.set()
-        await self._dead_event.wait()
+        try:
+            await self.join()
+        finally:
+            await super().close()
+
+    async def join(self) -> None:
+        """Wait for the shard to shut down."""
+        if self._run_task is not None:
+            await self._run_task
+
+    async def run(self) -> None:
+        """Start the shard and wait for it to shut down."""
+        back_off = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
+        last_start = self._now()
+        do_not_back_off = True
+
+        while True:
+            try:
+                if not do_not_back_off and self._now() - last_start < 30:
+                    next_back_off = next(back_off)
+                    self.logger.info(
+                        "restarted within 30 seconds, will back off for %.2fs", next_back_off,
+                    )
+                    await asyncio.sleep(next_back_off)
+                else:
+                    back_off.reset()
+
+                last_start = self._now()
+                do_not_back_off = False
+
+                await self._run_once()
+
+                raise RuntimeError("This shouldn't be reached.")
+
+            except aiohttp.ClientConnectorError as ex:
+                self.logger.exception(
+                    "failed to connect to Discord to initialize a websocket connection", exc_info=ex,
+                )
+
+            except _Zombie:
+                self.logger.warning("entered a zombie state and will be restarted")
+
+            except _InvalidSession as ex:
+                if ex.can_resume:
+                    self.logger.warning("invalid session, so will attempt to resume")
+                else:
+                    self.logger.warning("invalid session, so will attempt to reconnect")
+                    self._seq = None
+                    self._session_id = None
+
+                do_not_back_off = True
+                await asyncio.sleep(5)
+
+            except _Reconnect:
+                self.logger.warning("instructed by Discord to reconnect")
+                do_not_back_off = True
+                await asyncio.sleep(5)
+
+            except errors.GatewayClientDisconnectedError:
+                self.logger.warning("unexpected connection close, will attempt to reconnect")
+
+            except errors.GatewayClientClosedError:
+                self.logger.warning("gateway client closed by user, will not attempt to restart")
+                return
 
     async def update_presence(
         self,
         *,
         idle_since: unset.MayBeUnset[typing.Optional[datetime.datetime]] = unset.UNSET,
         is_afk: unset.MayBeUnset[bool] = unset.UNSET,
-        activity: unset.MayBeUnset[typing.Optional[gateway.Activity]] = unset.UNSET,
+        activity: unset.MayBeUnset[typing.Optional[Activity]] = unset.UNSET,
         status: unset.MayBeUnset[guilds.PresenceStatus] = unset.UNSET,
     ) -> None:
+        """Update the presence of the shard user.
+
+        Parameters
+        ----------
+        idle_since : datetime.datetime | None | UNSET
+            The datetime that the user started being idle. If unset, this
+            will not be changed.
+        is_afk : bool | UNSET
+            If `True`, the user is marked as AFK. If `False`, the user is marked
+            as being active. If unset, this will not be changed.
+        activity : Activity | None | UNSET
+            The activity to appear to be playing. If unset, this will not be
+            changed.
+        status : hikari.models.guilds.PresenceStatus | UNSET
+            The web status to show. If unset, this will not be changed.
+        """
         payload = self._build_presence_payload(idle_since, is_afk, activity, status)
         await self._send_json({"op": _GatewayOpcode.PRESENCE_UPDATE, "d": payload})
         self._idle_since = idle_since if not unset.is_unset(idle_since) else self._idle_since
@@ -230,6 +382,23 @@ class Gateway(http_client.HTTPClient):
         self_mute: bool = False,
         self_deaf: bool = False,
     ) -> None:
+        """Update the voice state for this shard in a given guild.
+
+        Parameters
+        ----------
+        guild : hikari.models.guilds.PartialGuild | hikari.models.bases.Snowflake | int | str
+            The guild or guild ID to update the voice state for.
+        channel : hikari.models.channels.GuildVoiceChannel | hikari.models.bases.Snowflake | int | str | None
+            The channel or channel ID to update the voice state for. If `None`
+            then the bot will leave the voice channel that it is in for the
+            given guild.
+        self_mute : bool
+            If `True`, the bot will mute itself in that voice channel. If
+            `False`, then it will unmute itself.
+        self_deaf : bool
+            If `True`, the bot will deafen itself in that voice channel. If
+            `False`, then it will undeafen itself.
+        """
         payload = {
             "op": _GatewayOpcode.VOICE_STATE_UPDATE,
             "d": {
@@ -241,87 +410,24 @@ class Gateway(http_client.HTTPClient):
         }
         await self._send_json(payload)
 
-    async def run(self):
-        self._run_task = asyncio.Task.current_task()
-        self._dead_event.clear()
-
-        back_off = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
-        last_start = self._now()
-        do_not_back_off = True
-
-        try:
-            while True:
-                try:
-                    if not do_not_back_off and self._now() - last_start < 30:
-                        next_back_off = next(back_off)
-                        self.logger.info(
-                            "restarted within 30 seconds, will back off for %.2fs", next_back_off,
-                        )
-                        await asyncio.sleep(next_back_off)
-                    else:
-                        back_off.reset()
-
-                    last_start = self._now()
-                    do_not_back_off = False
-
-                    await self._run_once()
-
-                    raise RuntimeError("This shouldn't be reached.")
-
-                except aiohttp.ClientConnectorError as ex:
-                    self.logger.exception(
-                        "failed to connect to Discord to initialize a websocket connection", exc_info=ex,
-                    )
-
-                except _Zombie:
-                    self.logger.warning("entered a zombie state and will be restarted")
-
-                except _InvalidSession as ex:
-                    if ex.can_resume:
-                        self.logger.warning("invalid session, so will attempt to resume")
-                    else:
-                        self.logger.warning("invalid session, so will attempt to reconnect")
-                        self._seq = None
-                        self._session_id = None
-
-                    do_not_back_off = True
-                    await asyncio.sleep(5)
-
-                except _Reconnect:
-                    self.logger.warning("instructed by Discord to reconnect")
-                    do_not_back_off = True
-                    await asyncio.sleep(5)
-
-                except errors.GatewayClientDisconnectedError:
-                    self.logger.warning("unexpected connection close, will attempt to reconnect")
-
-                except errors.GatewayClientClosedError:
-                    self.logger.warning("gateway client closed by user, will not attempt to restart")
-                    return
-        finally:
-            self._dead_event.set()
-
     async def _run_once(self) -> None:
         try:
             self.logger.debug("creating websocket connection to %s", self.url)
             self._ws = await self._create_ws(self.url)
             self._zlib = zlib.decompressobj()
 
-            self._ready_event.clear()
-            self._resumed_event.clear()
+            self._handshake_event.clear()
             self._request_close_event.clear()
-            self._running = True
 
             await self._handshake()
 
             # We should ideally set this after HELLO, but it should be fine
             # here as well. If we don't heartbeat in time, something probably
             # went majorly wrong anyway.
-            heartbeat_task = asyncio.create_task(
-                self._maintain_heartbeat(), name=f"gateway shard {self._shard_id} heartbeat"
-            )
+            heartbeat_task = asyncio.create_task(self._pulse(), name=f"gateway shard {self._shard_id} heartbeat")
 
             poll_events_task = asyncio.create_task(self._poll_events(), name=f"gateway shard {self._shard_id} poll")
+
             completed, pending = await more_asyncio.wait(
                 [heartbeat_task, poll_events_task], return_when=asyncio.FIRST_COMPLETED
             )
@@ -330,46 +436,33 @@ class Gateway(http_client.HTTPClient):
                 pending_task.cancel()
                 with contextlib.suppress(Exception):
                     # Clear any pending exception to prevent a nasty console message.
-                    pending_task.result()
+                    await pending_task
 
-            ex = None
-            while len(completed) > 0 and ex is None:
-                ex = completed.pop().exception()
-
-            # If the heartbeat call closes normally, then we want to get the exception
-            # raised by the identify call if it raises anything. This prevents spammy
-            # exceptions being thrown if the client shuts down during the handshake,
-            # which becomes more and more likely when we consider bots may have many
-            # shards running, each taking min of 5s to start up after the first.
-            ex = None
-
-            while len(completed) > 0 and ex is None:
-                ex = completed.pop().exception()
-
-            if isinstance(ex, asyncio.TimeoutError):
+            try:
+                await completed.pop()
+            except asyncio.TimeoutError:
                 # If we get _request_timeout errors receiving stuff, propagate as a zombied connection. This
                 # is already done by the ping keepalive and heartbeat keepalive partially, but this
                 # is a second edge case.
                 raise _Zombie()
 
-            if ex is not None:
-                raise ex
         finally:
             asyncio.create_task(
-                self._dispatch(self, "DISCONNECTED", {}), name=f"shard {self._shard_id} dispatch DISCONNECTED"
+                self._dispatch(self, "DISCONNECTED", {}), name=f"gateway shard {self._shard_id} dispatch DISCONNECTED"
             )
-            self._running = False
 
     async def _handshake(self) -> None:
         # HELLO!
-        message = await self._recv_json()
+        message = await self._receive_json_payload()
         op = message["op"]
         if message["op"] != _GatewayOpcode.HELLO:
             raise errors.GatewayError(f"Expected HELLO opcode 10 but received {op}")
 
         self.heartbeat_interval = message["d"]["heartbeat_interval"] / 1_000.0
 
-        asyncio.create_task(self._dispatch(self, "CONNECTED", {}), name=f"shard {self._shard_id} dispatch CONNECTED")
+        asyncio.create_task(
+            self._dispatch(self, "CONNECTED", {}), name=f"gateway shard {self._shard_id} dispatch CONNECTED"
+        )
         self.logger.debug("received HELLO")
 
         if self._session_id is not None:
@@ -404,7 +497,7 @@ class Gateway(http_client.HTTPClient):
 
             await self._send_json(payload)
 
-    async def _maintain_heartbeat(self) -> None:
+    async def _pulse(self) -> None:
         while not self._request_close_event.is_set():
             time_since_message = self._now() - self.last_message_received
             if self.heartbeat_interval < time_since_message:
@@ -422,7 +515,7 @@ class Gateway(http_client.HTTPClient):
 
     async def _poll_events(self) -> None:
         while not self._request_close_event.is_set():
-            message = await self._recv_json()
+            message = await self._receive_json_payload()
 
             op = message["op"]
             data = message["d"]
@@ -433,12 +526,14 @@ class Gateway(http_client.HTTPClient):
                 if event == "READY":
                     self._session_id = data["session_id"]
                     self.logger.info("connection is ready [session:%s]", self._session_id)
-                    self._ready_event.set()
+                    self._handshake_event.set()
                 elif event == "RESUME":
                     self.logger.info("connection has resumed [session:%s, seq:%s]", self._session_id, self._seq)
-                    self._resumed_event.set()
+                    self._handshake_event.set()
 
-                asyncio.create_task(self._dispatch(self, event, data), name=f"shard {self._shard_id} dispatch {event}")
+                asyncio.create_task(
+                    self._dispatch(self, event, data), name=f"gateway shard {self._shard_id} dispatch {event}"
+                )
 
             elif op == _GatewayOpcode.HEARTBEAT:
                 self.logger.debug("received HEARTBEAT; sending HEARTBEAT ACK")
@@ -463,20 +558,23 @@ class Gateway(http_client.HTTPClient):
             else:
                 self.logger.debug("ignoring unrecognised opcode %s", op)
 
-    async def _recv_json(self) -> more_typing.JSONObject:
-        message = await self._recv_raw()
+    async def _receive_json_payload(self) -> more_typing.JSONObject:
+        message = await self._receive_raw()
 
         if message.type == aiohttp.WSMsgType.BINARY:
-            n, string = await self._recv_zlib_str(message.data)
-            self._log_pl_debug(string, "received %s zlib encoded packets", n)
+            n, string = await self._receive_zlib_message(message.data)
+            self._log_debug_payload(string, "received %s zlib encoded packets", n)
         elif message.type == aiohttp.WSMsgType.TEXT:
             string = message.data
-            self._log_pl_debug(string, "received text payload")
+            self._log_debug_payload(string, "received text payload")
         elif message.type == aiohttp.WSMsgType.CLOSE:
             close_code = self._ws.close_code
             self.logger.debug("connection closed with code %s", close_code)
 
-            reason = _GatewayCloseCode(close_code).name if close_code in _GatewayCloseCode else "unknown close code"
+            if close_code in _GatewayCloseCode.__members__.values():
+                reason = _GatewayCloseCode(close_code).name
+            else:
+                reason = f"unknown close code {close_code}"
 
             can_reconnect = close_code in (
                 _GatewayCloseCode.DECODE_ERROR,
@@ -501,13 +599,13 @@ class Gateway(http_client.HTTPClient):
 
         return json.loads(string)
 
-    async def _recv_zlib_str(self, first_packet: bytes) -> typing.Tuple[int, str]:
+    async def _receive_zlib_message(self, first_packet: bytes) -> typing.Tuple[int, str]:
         buff = bytearray(first_packet)
 
         packets = 1
 
         while not buff.endswith(b"\x00\x00\xff\xff"):
-            message = await self._recv_raw()
+            message = await self._receive_raw()
             if message.type != aiohttp.WSMsgType.BINARY:
                 raise errors.GatewayError(f"Expected a binary message but got {message.type}")
             buff.append(message.data)
@@ -515,7 +613,7 @@ class Gateway(http_client.HTTPClient):
 
         return packets, self._zlib.decompress(buff).decode("utf-8")
 
-    async def _recv_raw(self) -> aiohttp.WSMessage:
+    async def _receive_raw(self) -> aiohttp.WSMessage:
         packet = await self._ws.receive()
         self.last_message_received = self._now()
         return packet
@@ -523,14 +621,14 @@ class Gateway(http_client.HTTPClient):
     async def _send_json(self, payload: more_typing.JSONObject) -> None:
         await self.ratelimiter.acquire()
         message = json.dumps(payload)
-        self._log_pl_debug(message, "sending json payload")
+        self._log_debug_payload(message, "sending json payload")
         await self._ws.send_str(message)
 
     @staticmethod
     def _now() -> float:
         return time.perf_counter()
 
-    def _log_pl_debug(self, payload: str, message: str, *args: typing.Any) -> None:
+    def _log_debug_payload(self, payload: str, message: str, *args: typing.Any) -> None:
         message = f"{message} [seq:%s, session:%s, size:%s]"
         if self._debug:
             message = f"{message} with raw payload: %s"
@@ -545,7 +643,7 @@ class Gateway(http_client.HTTPClient):
         idle_since: unset.MayBeUnset[typing.Optional[datetime.datetime]] = unset.UNSET,
         is_afk: unset.MayBeUnset[bool] = unset.UNSET,
         status: unset.MayBeUnset[guilds.PresenceStatus] = unset.UNSET,
-        activity: unset.MayBeUnset[typing.Optional[gateway.Activity]] = unset.UNSET,
+        activity: unset.MayBeUnset[typing.Optional[Activity]] = unset.UNSET,
     ) -> more_typing.JSONObject:
         if unset.is_unset(idle_since):
             idle_since = self._idle_since
@@ -556,9 +654,20 @@ class Gateway(http_client.HTTPClient):
         if unset.is_unset(activity):
             activity = self._activity
 
+        activity = typing.cast(typing.Optional[Activity], activity)
+
+        if activity is None:
+            game = None
+        else:
+            game = {
+                "name": activity.name,
+                "url": activity.url,
+                "type": activity.type,
+            }
+
         return {
             "since": idle_since.timestamp() if idle_since is not None else None,
             "afk": is_afk if is_afk is not None else False,
             "status": status.value if status is not None else guilds.PresenceStatus.ONLINE.value,
-            "game": activity.serialize() if activity is not None else None,
+            "game": game,
         }
