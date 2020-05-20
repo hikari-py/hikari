@@ -22,8 +22,8 @@ import pytest
 
 from hikari import application
 from hikari.models import gateway as gateway_models
-from hikari.rest import gateway
-from hikari.rest import session
+from hikari.net.rest import gateway
+from hikari.net.rest import session
 
 
 class TestRESTReactionLogic:

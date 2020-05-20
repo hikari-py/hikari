@@ -21,9 +21,9 @@ import pytest
 
 from hikari import application
 from hikari.internal import ratelimits
-from hikari.rest import base
-from hikari.rest import buckets
-from hikari.rest import session
+from hikari.net.rest import base
+from hikari.net import buckets
+from hikari.net.rest import session
 
 
 @pytest.fixture()

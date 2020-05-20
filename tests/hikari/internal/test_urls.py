@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-from hikari.internal import urls
+from hikari.net import urls
 from tests.hikari import _helpers
 
 

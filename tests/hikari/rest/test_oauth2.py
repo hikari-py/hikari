@@ -22,8 +22,8 @@ import pytest
 
 from hikari import application
 from hikari.models import applications
-from hikari.rest import oauth2
-from hikari.rest import session
+from hikari.net.rest import oauth2
+from hikari.net.rest import session
 
 
 class TestRESTReactionLogic:

@@ -56,16 +56,16 @@ class CFRayTracer(BaseTracer):
 
     async def on_request_start(self, _, ctx, params):
         """Log an outbound request."""
-        ctx.identifier = f"uuid4:{uuid.uuid4()}"
+        ctx.identifier = f"request_id:{uuid.uuid4()}"
         ctx.start_time = time.perf_counter()
 
         self.logger.debug(
-            "[%s] %s %s [content-type:%s, accept:%s]",
-            ctx.identifier,
+            "%s %s [content-type:%s, accept:%s] [%s]",
             params.method,
             params.url,
             params.headers.get("content-type"),
             params.headers.get("accept"),
+            ctx.identifier,
         )
 
     async def on_request_end(self, _, ctx, params):
@@ -73,8 +73,7 @@ class CFRayTracer(BaseTracer):
         latency = round((time.perf_counter() - ctx.start_time) * 1_000, 1)
         response = params.response
         self.logger.debug(
-            "[%s] %s %s after %sms [content-type:%s, size:%s, cf-ray:%s, cf-request-id:%s]",
-            ctx.identifier,
+            "%s %s after %sms [content-type:%s, size:%s, cf-ray:%s, cf-request-id:%s] [%s]",
             response.status,
             response.reason,
             latency,
@@ -82,6 +81,7 @@ class CFRayTracer(BaseTracer):
             response.headers.get("content-length", 0),
             response.headers.get("cf-ray"),
             response.headers.get("cf-request-id"),
+            ctx.identifier,
         )
 
 
@@ -102,15 +102,15 @@ class DebugTracer(BaseTracer):
 
     async def on_request_start(self, _, ctx, params):
         """Log an outbound request."""
-        ctx.identifier = f"uuid4:{uuid.uuid4()}"
+        ctx.identifier = f"request_id:{uuid.uuid4()}"
         ctx.start_time = time.perf_counter()
 
         self.logger.debug(
-            "[%s] %s %s\n  request headers: %s\n  request body: %s",
-            ctx.identifier,
+            "%s %s [%s]\n  request headers: %s\n  request body: %s",
             params.method,
             params.url,
-            params.headers,
+            ctx.identifier,
+            dict(params.headers),
             getattr(ctx.trace_request_ctx, "request_body", "<unknown>"),
         )
 
@@ -119,39 +119,39 @@ class DebugTracer(BaseTracer):
         latency = round((time.perf_counter() - ctx.start_time) * 1_000, 2)
         response = params.response
         self.logger.debug(
-            "[%s] %s %s %s after %sms\n  response headers: %s\n  response body: %s",
-            ctx.identifier,
+            "%s %s %s after %sms [%s]\n  response headers: %s\n  response body: %s",
             response.real_url,
             response.status,
             response.reason,
             latency,
-            response.raw_headers,
-            await response.read(),
+            ctx.identifier,
+            dict(response.headers),
+            await response.read() if "content-type" in response.headers else "<no content>",
         )
 
     async def on_request_exception(self, _, ctx, params):
         """Log an error while making a request."""
-        self.logger.debug("[%s] encountered exception", ctx.identifier, exc_info=params.exception)
+        self.logger.debug("encountered exception [%s]", ctx.identifier, exc_info=params.exception)
 
     async def on_connection_queued_start(self, _, ctx, __):
         """Log when we have to wait for a new connection in the pool."""
-        self.logger.debug("[%s] is waiting for a connection", ctx.identifier)
+        self.logger.debug("is waiting for a connection [%s]", ctx.identifier)
 
     async def on_connection_reuseconn(self, _, ctx, __):
         """Log when we re-use an existing connection in the pool."""
-        self.logger.debug("[%s] has acquired an existing connection", ctx.identifier)
+        self.logger.debug("has acquired an existing connection [%s]", ctx.identifier)
 
     async def on_connection_create_end(self, _, ctx, __):
         """Log when we create a new connection in the pool."""
-        self.logger.debug("[%s] has created a new connection", ctx.identifier)
+        self.logger.debug("has created a new connection [%s]", ctx.identifier)
 
     async def on_dns_cache_hit(self, _, ctx, params):
         """Log when we reuse the DNS cache and do not have to look up an IP."""
-        self.logger.debug("[%s] has retrieved the IP of %s from the DNS cache", ctx.identifier, params.host)
+        self.logger.debug("has retrieved the IP of %s from the DNS cache [%s]", params.host, ctx.identifier)
 
     async def on_dns_cache_miss(self, _, ctx, params):
         """Log when we have to query a DNS server for an IP address."""
-        self.logger.debug("[%s] will perform DNS lookup of new host %s", ctx.identifier, params.host)
+        self.logger.debug("will perform DNS lookup of new host %s  [%s]", params.host, ctx.identifier)
 
     # noinspection PyMethodMayBeStatic
     async def on_dns_resolvehost_start(self, _, ctx, __):
@@ -161,4 +161,4 @@ class DebugTracer(BaseTracer):
     async def on_dns_resolvehost_end(self, _, ctx, params):
         """Log how long a DNS lookup of an IP took to perform."""
         latency = round((time.perf_counter() - ctx.dns_start_time) * 1_000, 2)
-        self.logger.debug("[%s] DNS lookup of host %s took %sms", ctx.identifier, params.host, latency)
+        self.logger.debug("DNS lookup of host %s took %sms [%s]", params.host, latency, ctx.identifier)

@@ -25,13 +25,11 @@ import signal
 import time
 import typing
 
-from hikari.api import event_dispatcher
-from hikari.api import gateway_zookeeper
+from hikari import event_dispatcher
+from hikari import gateway_zookeeper
 from hikari.events import other
-from hikari import gateway
 from hikari.internal import conversions
-from hikari.internal import more_asyncio
-from hikari.internal import more_typing
+from hikari.net import gateway
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -62,6 +60,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
         version: int,
     ) -> None:
         self._aiohttp_config = config
+        self._request_close_event = asyncio.Event()
         self._url = url
         self._shard_count = shard_count
         self._shards = {
@@ -96,6 +95,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
 
     async def start(self) -> None:
         self._running = True
+        self._request_close_event.clear()
         self.logger.info("starting %s", conversions.pluralize(len(self._shards), "shard"))
 
         start_time = time.perf_counter()
@@ -103,7 +103,14 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
         for i, shard_id in enumerate(self._shards):
             if i > 0:
                 self.logger.info("waiting for 5 seconds until next shard can start")
-                await asyncio.sleep(5)
+
+                try:
+                    await asyncio.wait_for(self._request_close_event.wait(), timeout=5)
+                    # If this passes, the bot got shut down while sharding.
+                    return
+                except asyncio.TimeoutError:
+                    # Continue, no close occurred.
+                    pass
 
             shard_obj = self._shards[shard_id]
             await shard_obj.start()
@@ -116,13 +123,34 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
             await self.event_dispatcher.dispatch(other.StartedEvent())
 
     async def join(self) -> None:
-        await asyncio.gather(*(shard_obj.join() for shard_obj in self._shards.values()))
+        if self._running:
+            await asyncio.gather(*(shard_obj.join() for shard_obj in self._shards.values()))
 
-    def close(self) -> more_typing.Future[None]:
+    async def close(self) -> None:
         if self._running:
             # This way if we cancel the stopping task, we still shut down properly.
-            return asyncio.shield(self._close())
-        return more_asyncio.completed_future()
+            self._request_close_event.set()
+            self._running = False
+            self.logger.info("stopping %s shard(s)", len(self._shards))
+            start_time = time.perf_counter()
+
+            has_event_dispatcher = hasattr(self, "event_dispatcher") and isinstance(
+                self.event_dispatcher, event_dispatcher.IEventDispatcher
+            )
+
+            try:
+                if has_event_dispatcher:
+                    # noinspection PyUnresolvedReferences
+                    await self.event_dispatcher.dispatch(other.StoppingEvent())
+
+                await asyncio.gather(*(shard_obj.close() for shard_obj in self._shards.values()))
+            finally:
+                finish_time = time.perf_counter()
+                self.logger.info("stopped %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
+
+                if has_event_dispatcher:
+                    # noinspection PyUnresolvedReferences
+                    await self.event_dispatcher.dispatch(other.StoppedEvent())
 
     def run(self):
         loop = asyncio.get_event_loop()
@@ -151,29 +179,6 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
             with contextlib.suppress(NotImplementedError):
                 # Not implemented on Windows
                 loop.remove_signal_handler(signal.SIGTERM)
-
-    async def _close(self):
-        self._running = False
-        self.logger.info("stopping %s shard(s)", len(self._shards))
-        start_time = time.perf_counter()
-
-        has_event_dispatcher = hasattr(self, "event_dispatcher") and isinstance(
-            self.event_dispatcher, event_dispatcher.IEventDispatcher
-        )
-
-        try:
-            if has_event_dispatcher:
-                # noinspection PyUnresolvedReferences
-                await self.event_dispatcher.dispatch(other.StoppingEvent())
-
-            await more_asyncio.wait(shard_obj.close() for shard_obj in self._shards.values())
-        finally:
-            finish_time = time.perf_counter()
-            self.logger.info("stopped %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
-
-            if has_event_dispatcher:
-                # noinspection PyUnresolvedReferences
-                await self.event_dispatcher.dispatch(other.StoppedEvent())
 
     async def update_presence(
         self,

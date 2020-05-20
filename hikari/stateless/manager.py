@@ -29,8 +29,8 @@ from hikari.events import other
 
 # pylint: disable=too-many-public-methods
 from hikari.events import voice
-from hikari.gateway import dispatchers
-from hikari.gateway import event_managers
+from hikari.net.gateway import dispatchers
+from hikari.net.gateway import event_managers
 
 
 class StatelessEventManagerImpl(event_managers.EventManager[dispatchers.EventDispatcher]):

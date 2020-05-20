@@ -21,9 +21,12 @@ from __future__ import annotations
 __all__ = ["IRESTApp"]
 
 import abc
+import typing
 
-from hikari.api import base_app
-from hikari.rest import client
+from hikari import base_app
+
+if typing.TYPE_CHECKING:
+    from hikari.net import rest
 
 
 class IRESTApp(base_app.IBaseApp, abc.ABC):
@@ -38,5 +41,9 @@ class IRESTApp(base_app.IBaseApp, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def rest(self) -> client.RESTClient:
+    def rest(self) -> rest.REST:
         """REST API."""
+
+    @abc.abstractmethod
+    async def close(self) -> None:
+        """Close any open resources safely."""

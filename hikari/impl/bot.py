@@ -19,30 +19,32 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import logging
 import typing
 from concurrent import futures
 
-from hikari.api import bot
+from hikari import bot
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
 from hikari.internal import helpers
-from hikari.internal import urls
 from hikari.models import guilds
-from hikari.rest import client as rest_client_
+from hikari.net import gateway
+from hikari.net import rest
+from hikari.net import urls
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import cache as cache_
-    from hikari.api import entity_factory as entity_factory_
-    from hikari.api import event_consumer as event_consumer_
+    from hikari import cache as cache_
+    from hikari import entity_factory as entity_factory_
+    from hikari import event_consumer as event_consumer_
     from hikari import http_settings
-    from hikari.api import event_dispatcher
-    from hikari.api import gateway_zookeeper
-    from hikari.models import gateway
+    from hikari import event_dispatcher
+    from hikari import gateway_zookeeper
     from hikari.models import intents as intents_
 
 
@@ -73,14 +75,8 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
         self._event_manager = event_manager.EventManagerImpl()
         self._entity_factory = entity_factory_impl.EntityFactoryImpl()
 
-        self._rest = rest_client_.RESTClient(
-            app=self,
-            config=config,
-            debug=debug,
-            token=token,
-            token_type="Bot",
-            rest_url=rest_url,
-            version=rest_version,
+        self._rest = rest.REST(
+            app=self, config=config, debug=debug, token=token, token_type="Bot", url=rest_url, version=rest_version,
         )
 
         super().__init__(
@@ -122,9 +118,13 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
         return None
 
     @property
-    def rest(self) -> rest_client_.RESTClient:
+    def rest(self) -> rest.REST:
         return self._rest
 
     @property
     def event_consumer(self) -> event_consumer_.IEventConsumer:
         return self._event_manager
+
+    async def close(self) -> None:
+        await super().close()
+        await self._rest.close()

@@ -24,16 +24,16 @@ import typing
 from concurrent import futures
 
 from hikari import http_settings
-from hikari.api import rest_app
+from hikari import rest_app
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.internal import helpers
-from hikari.internal import urls
-from hikari.rest import client as rest_client_
+from hikari.net import rest as rest_
+from hikari.net import urls
 
 if typing.TYPE_CHECKING:
-    from hikari.api import cache as cache_
-    from hikari.api import entity_factory as entity_factory_
+    from hikari import cache as cache_
+    from hikari import entity_factory as entity_factory_
 
 
 class RESTAppImpl(rest_app.IRESTApp):
@@ -47,14 +47,8 @@ class RESTAppImpl(rest_app.IRESTApp):
         version: int = 6,
     ) -> None:
         self._logger = helpers.get_logger(self)
-        self._rest = rest_client_.RESTClient(
-            app=self,
-            config=config,
-            debug=debug,
-            token=token,
-            token_type=token_type,
-            rest_url=rest_url,
-            version=version,
+        self._rest = rest_.REST(
+            app=self, config=config, debug=debug, token=token, token_type=token_type, url=rest_url, version=version,
         )
         self._cache = cache_impl.CacheImpl()
         self._entity_factory = entity_factory_impl.EntityFactoryImpl()
@@ -63,16 +57,13 @@ class RESTAppImpl(rest_app.IRESTApp):
     def logger(self) -> logging.Logger:
         return self._logger
 
-    async def close(self) -> None:
-        await self._rest.close()
-
     @property
     def thread_pool(self) -> typing.Optional[futures.ThreadPoolExecutor]:
         # XXX: fixme
         return None
 
     @property
-    def rest(self) -> rest_client_.RESTClient:
+    def rest(self) -> rest_.REST:
         return self._rest
 
     @property
@@ -82,3 +73,6 @@ class RESTAppImpl(rest_app.IRESTApp):
     @property
     def entity_factory(self) -> entity_factory_.IEntityFactory:
         return self._entity_factory
+
+    async def close(self) -> None:
+        await self._rest.close()

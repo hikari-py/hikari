@@ -62,7 +62,6 @@ import attr
 from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import more_enums
-from hikari.internal import urls
 from . import bases
 from . import channels as channels_
 from . import colors
@@ -70,6 +69,7 @@ from . import emojis as emojis_
 from . import permissions as permissions_
 from . import unset
 from . import users
+from ..net import urls
 
 if typing.TYPE_CHECKING:
     from hikari.internal import more_typing

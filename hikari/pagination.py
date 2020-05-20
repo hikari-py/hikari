@@ -24,7 +24,7 @@ import datetime
 import typing
 
 from hikari.internal import more_collections
-from . import bases
+from hikari.models import bases
 
 _T = typing.TypeVar("_T")
 

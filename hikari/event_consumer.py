@@ -18,31 +18,16 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
-__all__ = ["IGatewayDispatcher"]
+__all__ = ["IEventConsumer"]
 
 import abc
-import typing
 
-from hikari.api import base_app
-
-if typing.TYPE_CHECKING:
-    from hikari.api import event_dispatcher
+from hikari.internal import more_typing
+from hikari.net import gateway
 
 
-class IGatewayDispatcher(base_app.IBaseApp, abc.ABC):
-    """Component specialization that supports dispatching of events.
-
-    These events are expected to be instances of
-    `hikari.events.base.HikariEvent`.
-
-    This may be combined with `IGatewayZookeeper` for most single-process
-    bots, or may be a specific component for large distributed applications
-    that consume events from a message queue, for example.
-    """
-
+class IEventConsumer(abc.ABC):
     __slots__ = ()
 
-    @property
-    @abc.abstractmethod
-    def event_dispatcher(self) -> event_dispatcher.IEventDispatcher:
-        """Event dispatcher and waiter."""
+    async def consume_raw_event(self, shard: gateway.Gateway, event_name: str, payload: more_typing.JSONType):
+        ...

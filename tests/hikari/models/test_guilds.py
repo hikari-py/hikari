@@ -24,7 +24,7 @@ import pytest
 
 from hikari import application
 from hikari.internal import conversions
-from hikari.internal import urls
+from hikari.net import urls
 from hikari.models import channels
 from hikari.models import colors
 from hikari.models import emojis

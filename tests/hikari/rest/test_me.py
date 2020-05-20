@@ -29,8 +29,8 @@ from hikari.models import channels
 from hikari.models import files
 from hikari.models import guilds
 from hikari.models import users
-from hikari.rest import me
-from hikari.rest import session
+from hikari.net.rest import me
+from hikari.net.rest import session
 from tests.hikari import _helpers
 
 

@@ -21,8 +21,8 @@ import pytest
 
 from hikari import application
 from hikari.models import voices
-from hikari.rest import voice
-from hikari.rest import session
+from hikari.net.rest import voice
+from hikari.net.rest import session
 
 
 class TestRESTUserLogic:

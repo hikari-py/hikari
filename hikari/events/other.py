@@ -44,7 +44,7 @@ from hikari.models import users
 from . import base as base_events
 
 if typing.TYPE_CHECKING:
-    from .. import gateway as gateway_client
+    from ..net import gateway as gateway_client
     from hikari.internal import more_typing
 
 

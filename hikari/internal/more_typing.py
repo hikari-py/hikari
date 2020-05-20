@@ -32,11 +32,14 @@ __all__ = [
     "Coroutine",
     "Future",
     "Task",
+    "TimeSpanT",
 ]
 
 # Hide any imports; this encourages any uses of this to use the typing module
 # for regular stuff rather than relying on it being in here as well.
 # pylint: disable=ungrouped-imports
+import datetime as _datetime
+
 from typing import Any as _Any
 from typing import AnyStr as _AnyStr
 from typing import Coroutine as _Coroutine
@@ -199,4 +202,5 @@ class Task(_Protocol[T_contra]):
         ...
 
 
-# pylint:enable=unused-variable
+TimeSpanT = _Union[float, int, _datetime.timedelta]
+"""A measurement of time."""

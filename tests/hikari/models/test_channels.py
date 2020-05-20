@@ -26,7 +26,7 @@ from hikari.models import channels
 from hikari.models import permissions
 from hikari.models import users
 from hikari import application
-from hikari.internal import urls
+from hikari.net import urls
 
 
 @pytest.fixture()

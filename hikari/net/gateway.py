@@ -23,7 +23,6 @@ from __future__ import annotations
 __all__ = ["Gateway"]
 
 import asyncio
-import contextlib
 import json
 import time
 import typing
@@ -35,17 +34,15 @@ import attr
 
 from hikari import errors
 from hikari import http_settings
-from hikari.internal import http_client
-from hikari.internal import more_asyncio
 from hikari.internal import more_enums
+from hikari.internal import more_typing
 from hikari.internal import ratelimits
-from hikari.internal import user_agents
 from hikari.models import bases
 from hikari.models import channels
 from hikari.models import guilds
 from hikari.models import unset
-from hikari.internal import more_typing
-
+from hikari.net import http_client
+from hikari.net import user_agents
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -74,7 +71,20 @@ class Activity:
 class _GatewayCloseCode(int, more_enums.Enum):
     """Reasons for closing a gateway connection."""
 
-    NORMAL_CLOSURE = 1000
+    RFC_6455_NORMAL_CLOSURE = 1000
+    RFC_6455_GOING_AWAY = 1001
+    RFC_6455_PROTOCOL_ERROR = 1002
+    RFC_6455_TYPE_ERROR = 1003
+    RFC_6455_ENCODING_ERROR = 1007
+    RFC_6455_POLICY_VIOLATION = 1008
+    RFC_6455_TOO_BIG = 1009
+    RFC_6455_UNEXPECTED_CONDITION = 1011
+
+    # Discord seems to invalidate sessions if I send a 1xxx, which is useless
+    # for invalid session and reconnect messages where I want to be able to
+    # resume.
+    DO_NOT_INVALIDATE_SESSION = 3000
+
     UNKNOWN_ERROR = 4000
     UNKNOWN_OPCODE = 4001
     DECODE_ERROR = 4002
@@ -241,7 +251,7 @@ class Gateway(http_client.HTTPClient):
     @property
     def is_alive(self) -> bool:
         """Return whether the shard is alive."""
-        return self._run_task is not None
+        return self._run_task is not None and not self._run_task.done()
 
     async def start(self) -> None:
         """Start the gateway and wait for the handshake to complete.
@@ -252,36 +262,28 @@ class Gateway(http_client.HTTPClient):
         If the handshake fails, this will raise the corresponding exception
         immediately.
         """
-        self._run_task = asyncio.create_task(self.run(), name=f"gateway shard {self._shard_id} runner")
+        task = asyncio.create_task(self.run(), name=f"gateway shard {self._shard_id} starter")
 
-        wait_for_handshake = asyncio.create_task(
+        handshake_waiter = asyncio.create_task(
             self._handshake_event.wait(), name=f"gateway shard {self._shard_id} wait for handshake"
         )
 
-        await more_asyncio.wait(
-            [wait_for_handshake, self._run_task], return_when=asyncio.FIRST_COMPLETED,
-        )
+        await asyncio.wait([handshake_waiter, task], return_when=asyncio.FIRST_COMPLETED)
 
-        if self._run_task.cancelled():
-            # Raise the corresponding exception.
-            self._run_task.result()
-
-        wait_for_handshake.cancel()
+        if not handshake_waiter.done():
+            handshake_waiter.cancel()
 
     async def close(self) -> None:
         """Request that the shard shuts down, then wait for it to close."""
-        if self.is_alive is not None:
-            self.logger.warning("received signal to shut shard down")
-            await asyncio.shield(self._close())
+        if self.is_alive:
+            self.logger.debug("received signal to shut shard down, will proceed to close runners")
+            self._request_close_event.set()
+            try:
+                await self.join()
+            finally:
+                await super().close()
         else:
             self.logger.debug("received signal to shut shard down, but I am not running anyway")
-
-    async def _close(self) -> None:
-        self._request_close_event.set()
-        try:
-            await self.join()
-        finally:
-            await super().close()
 
     async def join(self) -> None:
         """Wait for the shard to shut down."""
@@ -290,6 +292,12 @@ class Gateway(http_client.HTTPClient):
 
     async def run(self) -> None:
         """Start the shard and wait for it to shut down."""
+        self._run_task = asyncio.Task.current_task()
+        self._run_task.set_name(f"gateway shard {self._shard_id} runner")
+
+        # Clear the reference when we die.
+        self._run_task.add_done_callback(lambda _: setattr(self, "_run_task", None))
+
         back_off = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         last_start = self._now()
         do_not_back_off = True
@@ -309,8 +317,7 @@ class Gateway(http_client.HTTPClient):
                 do_not_back_off = False
 
                 await self._run_once()
-
-                raise RuntimeError("This shouldn't be reached.")
+                raise RuntimeError("This shouldn't be reached unless an expected condition is never met")
 
             except aiohttp.ClientConnectorError as ex:
                 self.logger.exception(
@@ -319,12 +326,15 @@ class Gateway(http_client.HTTPClient):
 
             except _Zombie:
                 self.logger.warning("entered a zombie state and will be restarted")
+                # No need to shut down, the socket is dead anyway.
 
             except _InvalidSession as ex:
                 if ex.can_resume:
-                    self.logger.warning("invalid session, so will attempt to resume")
+                    self.logger.warning("invalid session, so will attempt to resume session %s", self._session_id)
+                    await self._close_ws(_GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
                 else:
-                    self.logger.warning("invalid session, so will attempt to reconnect")
+                    self.logger.warning("invalid session, so will attempt to reconnect with new session")
+                    await self._close_ws(_GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
                     self._seq = None
                     self._session_id = None
 
@@ -332,24 +342,32 @@ class Gateway(http_client.HTTPClient):
                 await asyncio.sleep(5)
 
             except _Reconnect:
-                self.logger.warning("instructed by Discord to reconnect")
+                self.logger.warning("instructed by Discord to reconnect and resume session %s", self._session_id)
                 do_not_back_off = True
+                await self._close_ws(_GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "reconnecting")
                 await asyncio.sleep(5)
 
             except errors.GatewayClientDisconnectedError:
                 self.logger.warning("unexpected connection close, will attempt to reconnect")
+                # No need to shut down, the socket is dead anyway.
 
             except errors.GatewayClientClosedError:
                 self.logger.warning("gateway client closed by user, will not attempt to restart")
+                await self._close_ws(_GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "user shut down application")
                 return
+
+            except Exception as ex:
+                self.logger.critical("unexpected exception occurred, shard will now die", exc_info=ex)
+                await self._close_ws(_GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
+                raise
 
     async def update_presence(
         self,
         *,
-        idle_since: unset.MayBeUnset[typing.Optional[datetime.datetime]] = unset.UNSET,
-        is_afk: unset.MayBeUnset[bool] = unset.UNSET,
-        activity: unset.MayBeUnset[typing.Optional[Activity]] = unset.UNSET,
-        status: unset.MayBeUnset[guilds.PresenceStatus] = unset.UNSET,
+        idle_since: typing.Union[unset.Unset, typing.Optional[datetime.datetime]] = unset.UNSET,
+        is_afk: typing.Union[unset.Unset, bool] = unset.UNSET,
+        activity: typing.Union[unset.Unset, typing.Optional[Activity]] = unset.UNSET,
+        status: typing.Union[unset.Unset, guilds.PresenceStatus] = unset.UNSET,
     ) -> None:
         """Update the presence of the shard user.
 
@@ -410,6 +428,10 @@ class Gateway(http_client.HTTPClient):
         }
         await self._send_json(payload)
 
+    async def _close_ws(self, code: _GatewayCloseCode, message: str):
+        self.logger.debug("sending close frame with code %s and message %r", code.value, message)
+        await self._ws.close(code=code, message=bytes(message, "utf-8"))
+
     async def _run_once(self) -> None:
         try:
             self.logger.debug("creating websocket connection to %s", self.url)
@@ -428,15 +450,18 @@ class Gateway(http_client.HTTPClient):
 
             poll_events_task = asyncio.create_task(self._poll_events(), name=f"gateway shard {self._shard_id} poll")
 
-            await more_asyncio.wait([heartbeat_task, poll_events_task], return_when=asyncio.FIRST_COMPLETED)
-
             try:
-                if poll_events_task.done():
-                    raise poll_events_task.exception()
-                if heartbeat_task.done():
-                    raise heartbeat_task.exception()
+                _, pending = await asyncio.wait([heartbeat_task, poll_events_task], return_when=asyncio.FIRST_COMPLETED)
+                for future in pending:
+                    future.cancel()
+
+                await asyncio.gather(*pending, return_exceptions=True)
+
             except asyncio.TimeoutError:
                 raise _Zombie()
+            else:
+                raise errors.GatewayClientClosedError()
+
         finally:
             asyncio.create_task(
                 self._dispatch(self, "DISCONNECTED", {}), name=f"gateway shard {self._shard_id} dispatch DISCONNECTED"
@@ -536,14 +561,10 @@ class Gateway(http_client.HTTPClient):
 
             elif op == _GatewayOpcode.RECONNECT:
                 self.logger.debug("RECONNECT")
-
-                # 4000 close code allows us to resume without the session being invalided
-                await self._ws.close(code=4000, message=b"processing RECONNECT")
                 raise _Reconnect()
 
             elif op == _GatewayOpcode.INVALID_SESSION:
                 self.logger.debug("INVALID SESSION [resume:%s]", data)
-                await self._ws.close(code=4000, message=b"processing INVALID SESSION")
                 raise _InvalidSession(data)
 
             else:
@@ -631,10 +652,10 @@ class Gateway(http_client.HTTPClient):
 
     def _build_presence_payload(
         self,
-        idle_since: unset.MayBeUnset[typing.Optional[datetime.datetime]] = unset.UNSET,
-        is_afk: unset.MayBeUnset[bool] = unset.UNSET,
-        status: unset.MayBeUnset[guilds.PresenceStatus] = unset.UNSET,
-        activity: unset.MayBeUnset[typing.Optional[Activity]] = unset.UNSET,
+        idle_since: typing.Union[unset.Unset, typing.Optional[datetime.datetime]] = unset.UNSET,
+        is_afk: typing.Union[unset.Unset, bool] = unset.UNSET,
+        status: typing.Union[unset.Unset, guilds.PresenceStatus] = unset.UNSET,
+        activity: typing.Union[unset.Unset, typing.Optional[Activity]] = unset.UNSET,
     ) -> more_typing.JSONObject:
         if unset.is_unset(idle_since):
             idle_since = self._idle_since

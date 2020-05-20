@@ -18,16 +18,22 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
-__all__ = ["IEventConsumer"]
+__all__ = ["IBot"]
 
 import abc
 
-from hikari import gateway
-from hikari.internal import more_typing
+from hikari import gateway_dispatcher
+from hikari import gateway_zookeeper
+from hikari import rest_app
 
 
-class IEventConsumer(abc.ABC):
+class IBot(rest_app.IRESTApp, gateway_zookeeper.IGatewayZookeeper, gateway_dispatcher.IGatewayDispatcher, abc.ABC):
+    """Component for single-process bots.
+
+    Bots are components that have access to a REST API, an event dispatcher,
+    and an event consumer.
+
+    Additionally, bots will contain a collection of Gateway client objects.
+    """
+
     __slots__ = ()
-
-    async def consume_raw_event(self, shard: gateway.Gateway, event_name: str, payload: more_typing.JSONType):
-        ...

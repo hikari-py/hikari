@@ -29,7 +29,7 @@ from hikari.internal import helpers
 from hikari.models import bases
 from hikari.models import messages as messages_
 from hikari.models import webhooks
-from hikari.rest import base
+from hikari.net.rest import base
 
 if typing.TYPE_CHECKING:
     from hikari.models import channels as channels_

@@ -24,7 +24,7 @@ import mock
 import pytest
 
 from hikari import http_settings
-from hikari.internal import urls
+from hikari.net import urls
 from hikari.models import gateway
 from hikari.models import guilds
 from hikari.models import intents

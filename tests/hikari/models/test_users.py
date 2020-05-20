@@ -19,11 +19,11 @@
 import mock
 import pytest
 
-from hikari import rest
+from hikari.net import rest
 from hikari import application
 from hikari.models import bases
 from hikari.models import users
-from hikari.internal import urls
+from hikari.net import urls
 
 
 @pytest.fixture()

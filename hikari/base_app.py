@@ -27,8 +27,8 @@ import typing
 from concurrent import futures
 
 if typing.TYPE_CHECKING:
-    from hikari.api import cache as cache_
-    from hikari.api import entity_factory as entity_factory_
+    from hikari import cache as cache_
+    from hikari import entity_factory as entity_factory_
 
 
 class IBaseApp(abc.ABC):

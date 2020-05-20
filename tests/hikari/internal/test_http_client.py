@@ -23,7 +23,8 @@ import aiohttp
 import mock
 import pytest
 
-from hikari.internal import http_client, tracing
+from hikari.net import tracing
+from hikari.net import http_client
 from tests.hikari import _helpers
 
 

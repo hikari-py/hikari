@@ -36,8 +36,8 @@ from hikari.models import permissions
 from hikari.models import users
 from hikari.models import voices
 from hikari.models import webhooks
-from hikari.rest import guild as _guild
-from hikari.rest import session
+from hikari.net.rest import guild as _guild
+from hikari.net.rest import session
 from tests.hikari import _helpers
 
 

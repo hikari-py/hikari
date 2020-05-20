@@ -24,8 +24,8 @@ import mock
 import pytest
 
 from hikari.internal import ratelimits
-from hikari.rest import buckets
-from hikari.rest import routes
+from hikari.net import buckets
+from hikari.net import routes
 from tests.hikari import _helpers
 
 

@@ -30,12 +30,12 @@ import pytest
 
 from hikari import errors
 from hikari.internal import conversions
-from hikari.internal import http_client
+from hikari.net import http_client
 from hikari.internal import ratelimits
 from hikari.models import files
-from hikari.rest import buckets
-from hikari.rest import session
-from hikari.rest import routes
+from hikari.net import buckets
+from hikari.net.rest import session
+from hikari.net import routes
 from tests.hikari import _helpers
 
 

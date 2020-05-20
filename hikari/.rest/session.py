@@ -37,13 +37,13 @@ import aiohttp.typedefs
 
 from hikari import errors
 from hikari.internal import conversions
-from hikari.internal import http_client
 from hikari.internal import more_collections
 from hikari.internal import ratelimits
-from hikari.internal import urls
-from hikari.internal import user_agents
-from hikari.rest import buckets
-from hikari.rest import routes
+from hikari.net import buckets
+from hikari.net import http_client
+from hikari.net import routes
+from hikari.net import urls
+from hikari.net import user_agents
 
 if typing.TYPE_CHECKING:
     import ssl
@@ -164,8 +164,6 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         allow_redirects: bool = False,
         connector: typing.Optional[aiohttp.BaseConnector] = None,
         debug: bool = False,
-        json_deserialize: typing.Callable[[typing.AnyStr], typing.Dict] = json.loads,
-        json_serialize: typing.Callable[[typing.Dict], typing.AnyStr] = json.dumps,
         proxy_auth: typing.Optional[aiohttp.BasicAuth] = None,
         proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = None,
         proxy_url: typing.Optional[str] = None,

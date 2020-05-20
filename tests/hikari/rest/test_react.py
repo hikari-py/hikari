@@ -28,8 +28,8 @@ from hikari.models import channels
 from hikari.models import emojis
 from hikari.models import messages
 from hikari.models import users
-from hikari.rest import react
-from hikari.rest import session
+from hikari.net.rest import react
+from hikari.net.rest import session
 from tests.hikari import _helpers
 
 

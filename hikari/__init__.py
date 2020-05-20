@@ -20,6 +20,8 @@
 
 from __future__ import annotations
 
+from hikari.net.gateway import *
+from hikari.net.rest import *
 from ._about import __author__
 from ._about import __ci__
 from ._about import __copyright__
@@ -30,11 +32,9 @@ from ._about import __issue_tracker__
 from ._about import __license__
 from ._about import __url__
 from ._about import __version__
-from .http_settings import *
 from .errors import *
 from .events import *
-from .gateway import *
+from .http_settings import *
 from .models import *
-from .rest import *
 
 __all__ = []

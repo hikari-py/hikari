@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-from hikari.api import entity_factory
+from hikari import entity_factory
 
 
 class EntityFactoryImpl(entity_factory.IEntityFactory):

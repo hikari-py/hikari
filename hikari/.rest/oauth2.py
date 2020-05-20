@@ -25,7 +25,7 @@ __all__ = ["RESTOAuth2Component"]
 import abc
 
 from hikari.models import applications
-from hikari.rest import base
+from hikari.net.rest import base
 
 
 class RESTOAuth2Component(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method

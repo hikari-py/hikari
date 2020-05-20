@@ -25,10 +25,10 @@ __all__ = ["StatelessBot"]
 import typing
 
 from hikari import application
-from hikari import rest
-from .. import gateway
-from hikari.gateway import intent_aware_dispatchers
+from hikari.net.gateway import intent_aware_dispatchers
 from . import manager
+from ..net import gateway
+from ..net import rest
 
 if typing.TYPE_CHECKING:
     from hikari import application

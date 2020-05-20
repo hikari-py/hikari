@@ -16,24 +16,3 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-from __future__ import annotations
-
-__all__ = ["IBot"]
-
-import abc
-
-from hikari.api import gateway_dispatcher
-from hikari.api import gateway_zookeeper
-from hikari.api import rest_app
-
-
-class IBot(rest_app.IRESTApp, gateway_zookeeper.IGatewayZookeeper, gateway_dispatcher.IGatewayDispatcher, abc.ABC):
-    """Component for single-process bots.
-
-    Bots are components that have access to a REST API, an event dispatcher,
-    and an event consumer.
-
-    Additionally, bots will contain a collection of Gateway client objects.
-    """
-
-    __slots__ = ()
