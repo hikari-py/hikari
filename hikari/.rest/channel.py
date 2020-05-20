@@ -26,14 +26,14 @@ import abc
 import datetime
 import typing
 
+from hikari import pagination
 from hikari.internal import helpers
 from hikari.models import bases
 from hikari.models import channels as channels_
 from hikari.models import invites
 from hikari.models import messages as messages_
-from hikari.models import pagination
 from hikari.models import webhooks
-from hikari.rest import base
+from hikari.net.rest import base
 
 if typing.TYPE_CHECKING:
     from hikari.models import embeds as embeds_

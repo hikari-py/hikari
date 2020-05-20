@@ -22,19 +22,19 @@ import mock
 import pytest
 
 from hikari import http_settings
-from hikari import rest as high_level_rest
+from hikari.net import rest as high_level_rest
 from hikari import application
-from hikari.rest import channel
-from hikari.rest import gateway
-from hikari.rest import guild
-from hikari.rest import invite
-from hikari.rest import me
-from hikari.rest import oauth2
-from hikari.rest import react
-from hikari.rest import session as low_level_rest
-from hikari.rest import user
-from hikari.rest import voice
-from hikari.rest import webhook
+from hikari.net.rest import channel
+from hikari.net.rest import gateway
+from hikari.net.rest import guild
+from hikari.net.rest import invite
+from hikari.net.rest import me
+from hikari.net.rest import oauth2
+from hikari.net.rest import react
+from hikari.net.rest import session as low_level_rest
+from hikari.net.rest import user
+from hikari.net.rest import voice
+from hikari.net.rest import webhook
 
 
 class TestRESTClient:

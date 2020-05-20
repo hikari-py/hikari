@@ -25,7 +25,7 @@ from hikari.events import guild
 from hikari.events import message
 from hikari.events import other
 from hikari.events import voice
-from hikari import gateway
+from hikari.net import gateway
 from hikari.stateless import manager
 
 

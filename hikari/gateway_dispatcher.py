@@ -16,11 +16,33 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Components used for interacting with Discord's RESTful api."""
-
 from __future__ import annotations
 
-from .client import *
-from .session import *
+__all__ = ["IGatewayDispatcher"]
 
-__all__ = client.__all__ + session.__all__
+import abc
+import typing
+
+from hikari import base_app
+
+if typing.TYPE_CHECKING:
+    from hikari import event_dispatcher
+
+
+class IGatewayDispatcher(base_app.IBaseApp, abc.ABC):
+    """Component specialization that supports dispatching of events.
+
+    These events are expected to be instances of
+    `hikari.events.base.HikariEvent`.
+
+    This may be combined with `IGatewayZookeeper` for most single-process
+    bots, or may be a specific component for large distributed applications
+    that consume events from a message queue, for example.
+    """
+
+    __slots__ = ()
+
+    @property
+    @abc.abstractmethod
+    def event_dispatcher(self) -> event_dispatcher.IEventDispatcher:
+        """Event dispatcher and waiter."""

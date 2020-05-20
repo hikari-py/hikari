@@ -27,7 +27,7 @@ import typing
 
 from hikari.models import bases
 from hikari.models import users
-from hikari.rest import base
+from hikari.net.rest import base
 
 
 class RESTUserComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method

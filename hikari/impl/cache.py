@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import typing
 
-from hikari.api import cache
+from hikari import cache
 from hikari.internal import more_typing
 from hikari.models import applications
 from hikari.models import audit_logs

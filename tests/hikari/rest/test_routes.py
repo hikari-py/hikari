@@ -19,7 +19,7 @@
 import mock
 import pytest
 
-from hikari.rest import routes
+from hikari.net import routes
 
 
 class TestCompiledRoute:

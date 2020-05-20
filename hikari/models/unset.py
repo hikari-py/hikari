@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["Unset", "UNSET", "MayBeUnset"]
+__all__ = ["Unset", "UNSET", "is_unset"]
 
 import typing
 
@@ -48,7 +48,6 @@ class Unset(meta.Singleton):
 
 
 T = typing.TypeVar("T", contravariant=True)
-MayBeUnset = typing.Union[T, Unset]
 
 UNSET: typing.Final[Unset] = Unset()
 """A global instance of `Unset`."""

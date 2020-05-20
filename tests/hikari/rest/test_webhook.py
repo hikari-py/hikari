@@ -27,8 +27,8 @@ from hikari.models import embeds
 from hikari.models import files
 from hikari.models import messages
 from hikari.models import webhooks
-from hikari.rest import session
-from hikari.rest import webhook
+from hikari.net.rest import session
+from hikari.net.rest import webhook
 from tests.hikari import _helpers
 
 

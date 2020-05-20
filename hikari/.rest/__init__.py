@@ -16,18 +16,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""ABCs that describe the core Hikari API for writing Discord applications."""
+"""Components used for interacting with Discord's RESTful api."""
 
 from __future__ import annotations
-
-__all__ = []
-
-from . import base_app
-from . import bot
-from . import cache
-from . import entity_factory
-from . import event_consumer
-from . import event_dispatcher
-from . import gateway_dispatcher
-from . import gateway_zookeeper
-from . import rest_app

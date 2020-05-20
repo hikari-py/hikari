@@ -25,7 +25,7 @@ __all__ = ["RESTGatewayComponent"]
 import abc
 
 from hikari.models import gateway
-from hikari.rest import base
+from hikari.net.rest import base
 
 
 class RESTGatewayComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=abstract-method

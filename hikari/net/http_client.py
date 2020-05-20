@@ -29,7 +29,7 @@ import typing
 
 import aiohttp.typedefs
 
-from hikari.internal import tracing
+from hikari.net import tracing
 
 
 class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes

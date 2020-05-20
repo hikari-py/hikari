@@ -45,10 +45,10 @@ from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import more_collections
 from hikari.internal import more_enums
-from hikari.internal import urls
 from . import bases
 from . import permissions
 from . import users
+from ..net import urls
 
 if typing.TYPE_CHECKING:
     from hikari.internal import more_typing

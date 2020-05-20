@@ -127,4 +127,5 @@ class Unique(Entity, typing.SupportsInt, abc.ABC):
         return int(self.id)
 
 
-T = typing.TypeVar("T", bound=Unique)
+UniqueObjectT = typing.Union[Unique, Snowflake, int, str]
+"""A unique object."""

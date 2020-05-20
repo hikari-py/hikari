@@ -20,7 +20,7 @@ import mock
 import pytest
 
 from hikari import application
-from hikari.internal import urls
+from hikari.net import urls
 from hikari.models import applications
 from hikari.models import guilds
 from hikari.models import users

@@ -27,10 +27,10 @@ import pytest
 from hikari import http_settings
 from hikari import errors
 from hikari import application
-from hikari.gateway import consumers
-from hikari import gateway as high_level_shards
-from hikari.gateway import connection as low_level_shards
-from hikari.gateway import gateway_state
+from hikari.net.gateway import consumers
+from hikari.net import gateway as high_level_shards
+from hikari.net.gateway import connection as low_level_shards
+from hikari.net.gateway import gateway_state
 from hikari.internal import codes
 from hikari.internal import more_asyncio
 from hikari.models import guilds

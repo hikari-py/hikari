@@ -21,8 +21,8 @@ import pytest
 
 from hikari import application
 from hikari.models import users
-from hikari.rest import session
-from hikari.rest import user
+from hikari.net.rest import session
+from hikari.net.rest import user
 from tests.hikari import _helpers
 
 

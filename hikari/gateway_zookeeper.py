@@ -24,12 +24,12 @@ import abc
 import datetime
 import typing
 
-from hikari.api import base_app
+from hikari import base_app
 from hikari.models import guilds
 
 if typing.TYPE_CHECKING:
-    from hikari.api import event_consumer
-    from hikari import gateway
+    from hikari import event_consumer
+    from hikari.net import gateway
 
 
 class IGatewayZookeeper(base_app.IBaseApp, abc.ABC):

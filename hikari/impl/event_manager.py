@@ -18,8 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import typing
 
-from hikari.api import event_consumer
-from hikari.api import event_dispatcher
+from hikari import event_consumer
+from hikari import event_dispatcher
 from hikari.events import base
 from hikari.internal import more_asyncio
 from hikari.internal import more_typing

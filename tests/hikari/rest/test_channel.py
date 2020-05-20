@@ -35,8 +35,8 @@ from hikari.models import invites
 from hikari.models import messages
 from hikari.models import users
 from hikari.models import webhooks
-from hikari.rest import channel
-from hikari.rest import session
+from hikari.net.rest import channel
+from hikari.net.rest import session
 from tests.hikari import _helpers
 
 
