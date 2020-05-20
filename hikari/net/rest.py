@@ -229,10 +229,12 @@ class REST(http_client.HTTPClient):
     async def fetch_channel(
         self, channel: typing.Union[channels.PartialChannel, bases.Snowflake, int],
     ) -> channels.PartialChannel:
-        response = await self._request(routes.GET_CHANNEL.compile(channel_id=str(int(channel))))
-        raise NotImplementedError
+        response = await self._request(routes.GET_CHANNEL.compile(channel_id=conversions.cast_to_str_id(channel)))
 
-    async def update_channel(
+        # TODO: implement serialization.
+        return NotImplemented
+
+    async def edit_channel(
         self,
         channel: typing.Union[channels.PartialChannel, bases.Snowflake, int],
         *,
@@ -248,28 +250,22 @@ class REST(http_client.HTTPClient):
         reason: typing.Union[unset.Unset, str] = unset.UNSET,
     ) -> channels.PartialChannel:
         payload = {}
-        if not unset.is_unset(name):
-            payload["name"] = name
-        if not unset.is_unset(position):
-            payload["position"] = position
-        if not unset.is_unset(topic):
-            payload["topic"] = topic
-        if not unset.is_unset(nsfw):
-            payload["nsfw"] = nsfw
-        if not unset.is_unset(bitrate):
-            payload["bitrate"] = bitrate
-        if not unset.is_unset(user_limit):
-            payload["user_limit"] = user_limit
-        if not unset.is_unset(rate_limit_per_user):
-            payload["rate_limit_per_user"] = rate_limit_per_user
-        if not unset.is_unset("permission_overwrites"):
-            # TODO: json serialize
-            payload["permission_overwrites"] = permission_overwrites
-        if not unset.is_unset(parent_category):
-            payload["parent_id"] = str(int(parent_category))
+        conversions.put_if_specified(payload, "name", name)
+        conversions.put_if_specified(payload, "position", position)
+        conversions.put_if_specified(payload, "topic", topic)
+        conversions.put_if_specified(payload, "nsfw", nsfw)
+        conversions.put_if_specified(payload, "bitrate", bitrate)
+        conversions.put_if_specified(payload, "user_limit", user_limit)
+        conversions.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user)
+        conversions.put_if_specified(payload, "parent_id", parent_category, conversions.cast_to_str_id)
+
+        if not unset.is_unset(permission_overwrites):
+            # TODO: implement serialization
+            raise NotImplementedError()
 
         response = await self._request(
             routes.PATCH_CHANNEL.compile(channel_id=str(int(channel))), body=payload, reason=reason,
         )
 
-        raise NotImplementedError
+        # TODO: implement deserialization.
+        return NotImplemented

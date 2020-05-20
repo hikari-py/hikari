@@ -45,6 +45,8 @@ import operator
 import re
 import typing
 
+from hikari.models import unset
+
 if typing.TYPE_CHECKING:
     import enum
 
@@ -115,7 +117,7 @@ def put_if_specified(
     type_after : typing.Callable[[`input type`], `output type`] | None
         Type to apply to the value when added.
     """
-    if value is not ...:
+    if value is not unset.UNSET:
         if type_after:
             mapping[key] = type_after(value)
         else:
@@ -312,42 +314,5 @@ def resolve_signature(func: typing.Callable) -> inspect.Signature:
     return signature
 
 
-def dereference_int_flag(
-    int_flag_type: typing.Type[IntFlagT],
-    raw_value: typing.Union[RawIntFlagValueT, typing.Collection[RawIntFlagValueT]],
-) -> IntFlagT:
-    """Cast to the provided `enum.IntFlag` type.
-
-    This supports resolving bitfield integers as well as decoding a sequence
-    of case insensitive flag names into one combined value.
-
-    Parameters
-    ----------
-    int_flag_type : typing.Type[enum.IntFlag]
-        The type of the int flag to check.
-    raw_value : Castable Value
-        The raw value to convert.
-
-
-    !!! note
-        Types that are a `Castable Value` include:
-        - `str`
-        - `int`
-        - `typing.SupportsInt`
-        - `typing.Collection`[`Castable Value`]
-
-        When a collection is passed, values will be combined using functional
-        reduction via the `operator.or_` operator.
-
-    Returns
-    -------
-    enum.IntFlag
-        The cast value as a flag.
-    """
-    if isinstance(raw_value, str) and raw_value.isdigit():
-        raw_value = int(raw_value)
-
-    if not isinstance(raw_value, int):
-        raw_value = functools.reduce(operator.or_, (int_flag_type[name.upper()] for name in raw_value))
-
-    return int_flag_type(raw_value)
+def cast_to_str_id(value: typing.Union[typing.SupportsInt, int]) -> str:
+    return str(int(value))
