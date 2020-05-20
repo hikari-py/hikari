@@ -20,6 +20,8 @@ from __future__ import annotations
 
 import abc
 import asyncio
+import contextlib
+import signal
 import time
 import typing
 
@@ -28,6 +30,8 @@ from hikari.api import gateway_zookeeper
 from hikari.events import other
 from hikari import gateway
 from hikari.internal import conversions
+from hikari.internal import more_asyncio
+from hikari.internal import more_typing
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -80,6 +84,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
             )
             for shard_id in shard_ids
         }
+        self._running = False
 
     @property
     def gateway_shards(self) -> typing.Mapping[int, gateway.Gateway]:
@@ -90,17 +95,18 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
         return self._shard_count
 
     async def start(self) -> None:
+        self._running = True
         self.logger.info("starting %s", conversions.pluralize(len(self._shards), "shard"))
 
         start_time = time.perf_counter()
 
         for i, shard_id in enumerate(self._shards):
             if i > 0:
-                self.logger.info("idling for 5 seconds to avoid an invalid session")
+                self.logger.info("waiting for 5 seconds until next shard can start")
                 await asyncio.sleep(5)
 
             shard_obj = self._shards[shard_id]
-            await shard_obj.run()
+            await shard_obj.start()
 
         finish_time = time.perf_counter()
 
@@ -112,7 +118,42 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
     async def join(self) -> None:
         await asyncio.gather(*(shard_obj.join() for shard_obj in self._shards.values()))
 
-    async def close(self) -> None:
+    def close(self) -> more_typing.Future[None]:
+        if self._running:
+            # This way if we cancel the stopping task, we still shut down properly.
+            return asyncio.shield(self._close())
+        return more_asyncio.completed_future()
+
+    def run(self):
+        loop = asyncio.get_event_loop()
+
+        def sigterm_handler(*_):
+            raise KeyboardInterrupt()
+
+        try:
+            with contextlib.suppress(NotImplementedError):
+                # Not implemented on Windows
+                loop.add_signal_handler(signal.SIGTERM, sigterm_handler)
+
+            loop.run_until_complete(self.start())
+            loop.run_until_complete(self.join())
+
+            self.logger.info("client has shut down")
+
+        except KeyboardInterrupt:
+            self.logger.info("received signal to shut down client")
+            loop.run_until_complete(self.close())
+            # Apparently you have to alias except clauses or you get an
+            # UnboundLocalError.
+            raise
+        finally:
+            loop.run_until_complete(self.close())
+            with contextlib.suppress(NotImplementedError):
+                # Not implemented on Windows
+                loop.remove_signal_handler(signal.SIGTERM)
+
+    async def _close(self):
+        self._running = False
         self.logger.info("stopping %s shard(s)", len(self._shards))
         start_time = time.perf_counter()
 
@@ -125,7 +166,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
                 # noinspection PyUnresolvedReferences
                 await self.event_dispatcher.dispatch(other.StoppingEvent())
 
-            await asyncio.gather(*(shard_obj.close() for shard_obj in self._shards.values()))
+            await more_asyncio.wait(shard_obj.close() for shard_obj in self._shards.values())
         finally:
             finish_time = time.perf_counter()
             self.logger.info("stopped %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
@@ -146,6 +187,6 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
             *(
                 s.update_presence(status=status, activity=activity, idle_since=idle_since, is_afk=is_afk)
                 for s in self._shards.values()
-                if s.connection_state in (status.ShardState.WAITING_FOR_READY, status.ShardState.READY)
+                if s.is_alive
             )
         )

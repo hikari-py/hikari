@@ -21,10 +21,7 @@ from __future__ import annotations
 __all__ = ["IGatewayZookeeper"]
 
 import abc
-import asyncio
-import contextlib
 import datetime
-import signal
 import typing
 
 from hikari.api import base_app
@@ -108,6 +105,7 @@ class IGatewayZookeeper(base_app.IBaseApp, abc.ABC):
             or `False` otherwise.
         """
 
+    @abc.abstractmethod
     def run(self) -> None:
         """Execute this component on an event loop.
 
@@ -118,34 +116,3 @@ class IGatewayZookeeper(base_app.IBaseApp, abc.ABC):
         This enables the client to be run immediately without having to
         set up the `asyncio` event loop manually first.
         """
-        loop = asyncio.get_event_loop()
-
-        def sigterm_handler(*_):
-            raise KeyboardInterrupt()
-
-        ex = None
-
-        try:
-            with contextlib.suppress(NotImplementedError):
-                # Not implemented on Windows
-                loop.add_signal_handler(signal.SIGTERM, sigterm_handler)
-
-            loop.run_until_complete(self.start())
-            loop.run_until_complete(self.join())
-
-            self.logger.info("client has shut down")
-
-        except KeyboardInterrupt as _ex:
-            self.logger.info("received signal to shut down client")
-            loop.run_until_complete(self.close())
-            # Apparently you have to alias except clauses or you get an
-            # UnboundLocalError.
-            ex = _ex
-        finally:
-            loop.run_until_complete(self.close())
-            with contextlib.suppress(NotImplementedError):
-                # Not implemented on Windows
-                loop.remove_signal_handler(signal.SIGTERM)
-
-        if ex:
-            raise ex from ex
