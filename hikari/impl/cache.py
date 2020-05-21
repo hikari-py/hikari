@@ -99,18 +99,16 @@ class CacheImpl(cache.ICache):
     async def delete_member(self, guild_id: int, user_id: int) -> typing.Optional[guilds.GuildMember]:
         pass
 
-    async def create_role(self, payload: more_typing.JSONObject, can_cache: bool = False) -> guilds.PartialGuildRole:
+    async def create_role(self, payload: more_typing.JSONObject, can_cache: bool = False) -> guilds.PartialRole:
         pass
 
-    async def update_role(
-        self, role: guilds.PartialGuildRole, payload: more_typing.JSONObject
-    ) -> guilds.PartialGuildRole:
+    async def update_role(self, role: guilds.PartialRole, payload: more_typing.JSONObject) -> guilds.PartialRole:
         pass
 
-    async def get_role(self, guild_id: int, role_id: int) -> typing.Optional[guilds.PartialGuildRole]:
+    async def get_role(self, guild_id: int, role_id: int) -> typing.Optional[guilds.PartialRole]:
         pass
 
-    async def delete_role(self, guild_id: int, role_id: int) -> typing.Optional[guilds.PartialGuildRole]:
+    async def delete_role(self, guild_id: int, role_id: int) -> typing.Optional[guilds.PartialRole]:
         pass
 
     async def create_presence(

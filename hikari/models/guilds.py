@@ -30,7 +30,7 @@ __all__ = [
     "ClientStatus",
     "Guild",
     "GuildEmbed",
-    "GuildRole",
+    "Role",
     "GuildFeature",
     "GuildSystemChannelFlag",
     "GuildMessageNotificationsLevel",
@@ -47,7 +47,7 @@ __all__ = [
     "IntegrationExpireBehaviour",
     "PartialGuild",
     "PartialGuildIntegration",
-    "PartialGuildRole",
+    "PartialRole",
     "PresenceActivity",
     "PresenceStatus",
     "PresenceUser",
@@ -285,7 +285,7 @@ class GuildMember(bases.Entity, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class PartialGuildRole(bases.Unique, marshaller.Deserializable):
+class PartialRole(bases.Unique, marshaller.Deserializable):
     """Represents a partial guild bound Role object."""
 
     name: str = marshaller.attrib(deserializer=str, serializer=str, eq=False, hash=False, repr=True)
@@ -294,7 +294,7 @@ class PartialGuildRole(bases.Unique, marshaller.Deserializable):
 
 @marshaller.marshallable()
 @attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class GuildRole(PartialGuildRole, marshaller.Serializable):
+class Role(PartialRole, marshaller.Serializable):
     """Represents a guild bound Role object."""
 
     color: colors.Color = marshaller.attrib(
@@ -1048,10 +1048,8 @@ def _deserialize_afk_timeout(payload: int) -> datetime.timedelta:
     return datetime.timedelta(seconds=payload)
 
 
-def _deserialize_roles(
-    payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Mapping[bases.Snowflake, GuildRole]:
-    return {bases.Snowflake(role["id"]): GuildRole.deserialize(role, **kwargs) for role in payload}
+def _deserialize_roles(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Mapping[bases.Snowflake, Role]:
+    return {bases.Snowflake(role["id"]): Role.deserialize(role, **kwargs) for role in payload}
 
 
 def _deserialize_members(
@@ -1173,7 +1171,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     )
     """The setting for the explicit content filter in this guild."""
 
-    roles: typing.Mapping[bases.Snowflake, GuildRole] = marshaller.attrib(
+    roles: typing.Mapping[bases.Snowflake, Role] = marshaller.attrib(
         deserializer=_deserialize_roles, inherit_kwargs=True, eq=False, hash=False,
     )
     """The roles in this guild, represented as a mapping of ID to role object."""

@@ -133,8 +133,8 @@ def _deserialize_seconds_timedelta(seconds: typing.Union[str, int]) -> datetime.
 
 def _deserialize_partial_roles(
     payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Mapping[bases.Snowflake, guilds.GuildRole]:
-    return {bases.Snowflake(role["id"]): guilds.PartialGuildRole.deserialize(role, **kwargs) for role in payload}
+) -> typing.Mapping[bases.Snowflake, guilds.Role]:
+    return {bases.Snowflake(role["id"]): guilds.PartialRole.deserialize(role, **kwargs) for role in payload}
 
 
 def _deserialize_day_timedelta(days: typing.Union[str, int]) -> datetime.timedelta:

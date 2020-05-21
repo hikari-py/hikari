@@ -25,7 +25,7 @@ __all__ = ["CompiledRoute", "Route"]
 import re
 import typing
 
-DEFAULT_MAJOR_PARAMS: typing.Final[typing.Set[str]] = {"channel", "guild_id", "webhook_id"}
+DEFAULT_MAJOR_PARAMS: typing.Final[typing.Set[str]] = {"channel", "guild", "webhook"}
 HASH_SEPARATOR: typing.Final[str] = ";"
 
 
@@ -225,22 +225,22 @@ DELETE_CHANNEL = Route(DELETE, "/channels/{channel}")
 GET_CHANNEL_INVITES = Route(GET, "/channels/{channel}/invites")
 POST_CHANNEL_INVITES = Route(POST, "/channels/{channel}/invites")
 
-GET_CHANNEL_MESSAGE = Route(GET, "/channels/{channel}/messages/{message_id}")
-PATCH_CHANNEL_MESSAGE = Route(PATCH, "/channels/{channel}/messages/{message_id}")
-DELETE_CHANNEL_MESSAGE = Route(DELETE, "/channels/{channel}/messages/{message_id}")
+GET_CHANNEL_MESSAGE = Route(GET, "/channels/{channel}/messages/{message}")
+PATCH_CHANNEL_MESSAGE = Route(PATCH, "/channels/{channel}/messages/{message}")
+DELETE_CHANNEL_MESSAGE = Route(DELETE, "/channels/{channel}/messages/{message}")
 
 GET_CHANNEL_MESSAGES = Route(GET, "/channels/{channel}/messages")
 POST_CHANNEL_MESSAGES = Route(POST, "/channels/{channel}/messages")
 
 POST_DELETE_CHANNEL_MESSAGES_BULK = Route(POST, "/channels/{channel}/messages/bulk-delete")
 
-PATCH_CHANNEL_PERMISSIONS = Route(PATCH, "/channels/{channel}/permissions/{overwrite_id}")
-DELETE_CHANNEL_PERMISSIONS = Route(DELETE, "/channels/{channel}/permissions/{overwrite_id}")
+PATCH_CHANNEL_PERMISSIONS = Route(PATCH, "/channels/{channel}/permissions/{overwrite}")
+DELETE_CHANNEL_PERMISSIONS = Route(DELETE, "/channels/{channel}/permissions/{overwrite}")
 
-DELETE_CHANNEL_PIN = Route(DELETE, "/channels/{channel}/pins/{message_id}")
+DELETE_CHANNEL_PIN = Route(DELETE, "/channels/{channel}/pins/{message}")
 
 GET_CHANNEL_PINS = Route(GET, "/channels/{channel}/pins")
-PUT_CHANNEL_PINS = Route(PUT, "/channels/{channel}/pins/{message_id}")
+PUT_CHANNEL_PINS = Route(PUT, "/channels/{channel}/pins/{message}")
 
 POST_CHANNEL_TYPING = Route(POST, "/channels/{channel}/typing")
 
@@ -248,88 +248,88 @@ POST_CHANNEL_WEBHOOKS = Route(POST, "/channels/{channel}/webhooks")
 GET_CHANNEL_WEBHOOKS = Route(GET, "/channels/{channel}/webhooks")
 
 # Reactions
-DELETE_ALL_REACTIONS = Route(DELETE, "/channels/{channel}/messages/{message_id}/reactions")
+DELETE_ALL_REACTIONS = Route(DELETE, "/channels/{channel}/messages/{message}/reactions")
 
-DELETE_REACTION_EMOJI = Route(DELETE, "/channels/{channel}/messages/{message_id}/reactions/{emoji}")
-DELETE_REACTION_USER = Route(DELETE, "/channels/{channel}/messages/{message_id}/reactions/{emoji}/{used_id}")
-GET_REACTIONS = Route(GET, "/channels/{channel}/messages/{message_id}/reactions/{emoji}")
+DELETE_REACTION_EMOJI = Route(DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}")
+DELETE_REACTION_USER = Route(DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/{used}")
+GET_REACTIONS = Route(GET, "/channels/{channel}/messages/{message}/reactions/{emoji}")
 
 # Guilds
-GET_GUILD = Route(GET, "/guilds/{guild_id}")
-PATCH_GUILD = Route(PATCH, "/guilds/{guild_id}")
-DELETE_GUILD = Route(DELETE, "/guilds/{guild_id}")
+GET_GUILD = Route(GET, "/guilds/{guild}")
+PATCH_GUILD = Route(PATCH, "/guilds/{guild}")
+DELETE_GUILD = Route(DELETE, "/guilds/{guild}")
 
 POST_GUILDS = Route(POST, "/guilds")
 
-GET_GUILD_AUDIT_LOGS = Route(GET, "/guilds/{guild_id}/audit-logs")
+GET_GUILD_AUDIT_LOGS = Route(GET, "/guilds/{guild}/audit-logs")
 
-GET_GUILD_BAN = Route(GET, "/guilds/{guild_id}/bans/{user_id}")
-PUT_GUILD_BAN = Route(PUT, "/guilds/{guild_id}/bans/{user_id}")
-DELETE_GUILD_BAN = Route(DELETE, "/guilds/{guild_id}/bans/{user_id}")
+GET_GUILD_BAN = Route(GET, "/guilds/{guild}/bans/{user}")
+PUT_GUILD_BAN = Route(PUT, "/guilds/{guild}/bans/{user}")
+DELETE_GUILD_BAN = Route(DELETE, "/guilds/{guild}/bans/{user}")
 
-GET_GUILD_BANS = Route(GET, "/guilds/{guild_id}/bans")
+GET_GUILD_BANS = Route(GET, "/guilds/{guild}/bans")
 
-GET_GUILD_CHANNELS = Route(GET, "/guilds/{guild_id}/channels")
-POST_GUILD_CHANNELS = Route(POST, "/guilds/{guild_id}/channels")
-PATCH_GUILD_CHANNELS = Route(PATCH, "/guilds/{guild_id}/channels")
+GET_GUILD_CHANNELS = Route(GET, "/guilds/{guild}/channels")
+POST_GUILD_CHANNELS = Route(POST, "/guilds/{guild}/channels")
+PATCH_GUILD_CHANNELS = Route(PATCH, "/guilds/{guild}/channels")
 
-GET_GUILD_EMBED = Route(GET, "/guilds/{guild_id}/embed")
-PATCH_GUILD_EMBED = Route(PATCH, "/guilds/{guild_id}/embed")
+GET_GUILD_EMBED = Route(GET, "/guilds/{guild}/embed")
+PATCH_GUILD_EMBED = Route(PATCH, "/guilds/{guild}/embed")
 
-GET_GUILD_EMOJI = Route(GET, "/guilds/{guild_id}/emojis/{emoji_id}")
-PATCH_GUILD_EMOJI = Route(PATCH, "/guilds/{guild_id}/emojis/{emoji_id}")
-DELETE_GUILD_EMOJI = Route(DELETE, "/guilds/{guild_id}/emojis/{emoji_id}")
+GET_GUILD_EMOJI = Route(GET, "/guilds/{guild}/emojis/{emoji}")
+PATCH_GUILD_EMOJI = Route(PATCH, "/guilds/{guild}/emojis/{emoji}")
+DELETE_GUILD_EMOJI = Route(DELETE, "/guilds/{guild}/emojis/{emoji}")
 
-GET_GUILD_EMOJIS = Route(GET, "/guilds/{guild_id}/emojis")
-POST_GUILD_EMOJIS = Route(POST, "/guilds/{guild_id}/emojis")
+GET_GUILD_EMOJIS = Route(GET, "/guilds/{guild}/emojis")
+POST_GUILD_EMOJIS = Route(POST, "/guilds/{guild}/emojis")
 
-PATCH_GUILD_INTEGRATION = Route(PATCH, "/guilds/{guild_id}/integrations/{integration_id}")
-DELETE_GUILD_INTEGRATION = Route(DELETE, "/guilds/{guild_id}/integrations/{integration_id}")
+PATCH_GUILD_INTEGRATION = Route(PATCH, "/guilds/{guild}/integrations/{integration}")
+DELETE_GUILD_INTEGRATION = Route(DELETE, "/guilds/{guild}/integrations/{integration}")
 
-GET_GUILD_INTEGRATIONS = Route(GET, "/guilds/{guild_id}/integrations")
+GET_GUILD_INTEGRATIONS = Route(GET, "/guilds/{guild}/integrations")
 
-POST_GUILD_INTEGRATION_SYNC = Route(POST, "/guilds/{guild_id}/integrations/{integration_id}")
+POST_GUILD_INTEGRATION_SYNC = Route(POST, "/guilds/{guild}/integrations/{integration}")
 
-GET_GUILD_INVITES = Route(GET, "/guilds/{guild_id}/invites")
+GET_GUILD_INVITES = Route(GET, "/guilds/{guild}/invites")
 
-GET_GUILD_MEMBERS = Route(GET, "/guilds/{guild_id}/members")
+GET_GUILD_MEMBERS = Route(GET, "/guilds/{guild}/members")
 
-GET_GUILD_MEMBER = Route(GET, "/guilds/{guild_id}/members/{user_id}")
-PATCH_GUILD_MEMBER = Route(PATCH, "/guilds/{guild_id}/members/{user_id}")
-DELETE_GUILD_MEMBER = Route(DELETE, "/guilds/{guild_id}/members/{user_id}")
+GET_GUILD_MEMBER = Route(GET, "/guilds/{guild}/members/{user}")
+PATCH_GUILD_MEMBER = Route(PATCH, "/guilds/{guild}/members/{user}")
+DELETE_GUILD_MEMBER = Route(DELETE, "/guilds/{guild}/members/{user}")
 
-PUT_GUILD_MEMBER_ROLE = Route(PUT, "/guilds/{guild_id}/members/{user_id}/roles/{role_id}")
-DELETE_GUILD_MEMBER_ROLE = Route(DELETE, "/guilds/{guild_id}/members/{user_id}/roles/{role_id}")
+PUT_GUILD_MEMBER_ROLE = Route(PUT, "/guilds/{guild}/members/{user}/roles/{role}")
+DELETE_GUILD_MEMBER_ROLE = Route(DELETE, "/guilds/{guild}/members/{user}/roles/{role}")
 
-GET_GUILD_PREVIEW = Route(GET, "/guilds/{guild_id}/preview")
+GET_GUILD_PREVIEW = Route(GET, "/guilds/{guild}/preview")
 
-GET_GUILD_PRUNE = Route(GET, "/guilds/{guild_id}/prune")
-POST_GUILD_PRUNE = Route(POST, "/guilds/{guild_id}/prune")
+GET_GUILD_PRUNE = Route(GET, "/guilds/{guild}/prune")
+POST_GUILD_PRUNE = Route(POST, "/guilds/{guild}/prune")
 
-PATCH_GUILD_ROLE = Route(PATCH, "/guilds/{guild_id}/roles/{role_id}")
-DELETE_GUILD_ROLE = Route(DELETE, "/guilds/{guild_id}/roles/{role_id}")
+PATCH_GUILD_ROLE = Route(PATCH, "/guilds/{guild}/roles/{role}")
+DELETE_GUILD_ROLE = Route(DELETE, "/guilds/{guild}/roles/{role}")
 
-GET_GUILD_ROLES = Route(GET, "/guilds/{guild_id}/roles")
-POST_GUILD_ROLES = Route(POST, "/guilds/{guild_id}/roles")
-PATCH_GUILD_ROLES = Route(PATCH, "/guilds/{guild_id}/roles")
+GET_GUILD_ROLES = Route(GET, "/guilds/{guild}/roles")
+POST_GUILD_ROLES = Route(POST, "/guilds/{guild}/roles")
+PATCH_GUILD_ROLES = Route(PATCH, "/guilds/{guild}/roles")
 
-GET_GUILD_VANITY_URL = Route(GET, "/guilds/{guild_id}/vanity-url")
+GET_GUILD_VANITY_URL = Route(GET, "/guilds/{guild}/vanity-url")
 
-GET_GUILD_VOICE_REGIONS = Route(GET, "/guilds/{guild_id}/regions")
+GET_GUILD_VOICE_REGIONS = Route(GET, "/guilds/{guild}/regions")
 
-GET_GUILD_WEBHOOKS = Route(GET, "/guilds/{guild_id}/webhooks")
+GET_GUILD_WEBHOOKS = Route(GET, "/guilds/{guild}/webhooks")
 
-GET_GUILD_WIDGET_IMAGE = Route(GET, "/guilds/{guild_id}/widget.png")
+GET_GUILD_WIDGET_IMAGE = Route(GET, "/guilds/{guild}/widget.png")
 
 # Invites
 GET_INVITE = Route(GET, "/invites/{invite_code}")
 DELETE_INVITE = Route(DELETE, "/invites/{invite_code}")
 
 # Users
-GET_USER = Route(GET, "/users/{user_id}")
+GET_USER = Route(GET, "/users/{user}")
 
 # @me
-DELETE_MY_GUILD = Route(DELETE, "/users/@me/guilds/{guild_id}")
+DELETE_MY_GUILD = Route(DELETE, "/users/@me/guilds/{guild}")
 
 GET_MY_CONNECTIONS = Route(GET, "/users/@me/connections")  # OAuth2 only
 
@@ -337,30 +337,30 @@ POST_MY_CHANNELS = Route(POST, "/users/@me/channels")
 
 GET_MY_GUILDS = Route(GET, "/users/@me/guilds")
 
-PATCH_MY_GUILD_NICKNAME = Route(PATCH, "/guilds/{guild_id}/members/@me/nick")
+PATCH_MY_GUILD_NICKNAME = Route(PATCH, "/guilds/{guild}/members/@me/nick")
 
 GET_MY_USER = Route(GET, "/users/@me")
 PATCH_MY_USER = Route(PATCH, "/users/@me")
 
-PUT_MY_REACTION = Route(PUT, "/channels/{channel}/messages/{message_id}/reactions/{emoji}/@me")
-DELETE_MY_REACTION = Route(DELETE, "/channels/{channel}/messages/{message_id}/reactions/{emoji}/@me")
+PUT_MY_REACTION = Route(PUT, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me")
+DELETE_MY_REACTION = Route(DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me")
 
 # Voice
 GET_VOICE_REGIONS = Route(GET, "/voice/regions")
 
 # Webhooks
-GET_WEBHOOK = Route(GET, "/webhooks/{webhook_id}")
-PATCH_WEBHOOK = Route(PATCH, "/webhooks/{webhook_id}")
-POST_WEBHOOK = Route(POST, "/webhooks/{webhook_id}")
-DELETE_WEBHOOK = Route(DELETE, "/webhooks/{webhook_id}")
+GET_WEBHOOK = Route(GET, "/webhooks/{webhook}")
+PATCH_WEBHOOK = Route(PATCH, "/webhooks/{webhook}")
+POST_WEBHOOK = Route(POST, "/webhooks/{webhook}")
+DELETE_WEBHOOK = Route(DELETE, "/webhooks/{webhook}")
 
-GET_WEBHOOK_WITH_TOKEN = Route(GET, "/webhooks/{webhook_id}/{webhook_token}")
-PATCH_WEBHOOK_WITH_TOKEN = Route(PATCH, "/webhooks/{webhook_id}/{webhook_token}")
-DELETE_WEBHOOK_WITH_TOKEN = Route(DELETE, "/webhooks/{webhook_id}/{webhook_token}")
-POST_WEBHOOK_WITH_TOKEN = Route(POST, "/webhooks/{webhook_id}/{webhook_token}")
+GET_WEBHOOK_WITH_TOKEN = Route(GET, "/webhooks/{webhook}/{token}")
+PATCH_WEBHOOK_WITH_TOKEN = Route(PATCH, "/webhooks/{webhook}/{token}")
+DELETE_WEBHOOK_WITH_TOKEN = Route(DELETE, "/webhooks/{webhook}/{token}")
+POST_WEBHOOK_WITH_TOKEN = Route(POST, "/webhooks/{webhook}/{token}")
 
-POST_WEBHOOK_WITH_TOKEN_GITHUB = Route(POST, "/webhooks/{webhook_id}/{webhook_token}/github")
-POST_WEBHOOK_WITH_TOKEN_SLACK = Route(POST, "/webhooks/{webhook_id}/{webhook_token}/slack")
+POST_WEBHOOK_WITH_TOKEN_GITHUB = Route(POST, "/webhooks/{webhook}/{token}/github")
+POST_WEBHOOK_WITH_TOKEN_SLACK = Route(POST, "/webhooks/{webhook}/{token}/slack")
 
 # OAuth2 API
 GET_MY_APPLICATION = Route(GET, "/oauth2/applications/@me")

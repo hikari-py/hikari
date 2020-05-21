@@ -449,7 +449,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
         ] = True,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.Role]], bool
         ] = True,
     ) -> messages_.Message:
         """Create a message in the given channel.
@@ -479,7 +479,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions : typing.Collection[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str] | bool
+        role_mentions : typing.Collection[hikari.models.guilds.Role | hikari.models.bases.Snowflake | int | str] | bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -541,7 +541,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
         ] = False,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.Role]], bool
         ] = False,
     ) -> more_typing.Coroutine[messages_.Message]:
         """Create a message in the given channel with mention safety.
@@ -576,7 +576,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
         ] = True,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.Role]], bool
         ] = True,
     ) -> messages_.Message:
         """Update the given message.
@@ -604,7 +604,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions : typing.Collection[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str] | bool
+        role_mentions : typing.Collection[hikari.models.guilds.Role | hikari.models.bases.Snowflake | int | str] | bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -659,7 +659,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
             typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
         ] = False,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.Role]], bool
         ] = False,
     ) -> more_typing.Coroutine[messages_.Message]:
         """Update a message in the given channel with mention safety.
@@ -744,7 +744,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
     async def update_channel_overwrite(  # pylint: disable=line-too-long
         self,
         channel: typing.Union[bases.Snowflake, int, str, channels_.PartialChannel],
-        overwrite: typing.Union[channels_.PermissionOverwrite, users.User, guilds.GuildRole, bases.Snowflake, int],
+        overwrite: typing.Union[channels_.PermissionOverwrite, users.User, guilds.Role, bases.Snowflake, int],
         target_type: typing.Union[channels_.PermissionOverwriteType, str],
         *,
         allow: typing.Union[permissions_.Permission, int] = ...,
@@ -757,7 +757,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         ----------
         channel : hikari.models.channels.PartialChannel | hikari.models.bases.Snowflake | int | str
             The object or ID of the channel to edit permissions for.
-        overwrite : hikari.models.channels.PermissionOverwrite | hikari.models.guilds.GuildRole | hikari.models.users.User | hikari.models.bases.Snowflake | int
+        overwrite : hikari.models.channels.PermissionOverwrite | hikari.models.guilds.Role | hikari.models.users.User | hikari.models.bases.Snowflake | int
             The object or ID of the target member or role to create/edit the
             overwrite for.
         target_type : hikari.models.channels.PermissionOverwriteType | int
@@ -898,7 +898,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
     async def delete_channel_overwrite(  # pylint: disable=line-too-long
         self,
         channel: typing.Union[bases.Snowflake, int, str, channels_.PartialChannel],
-        overwrite: typing.Union[channels_.PermissionOverwrite, guilds.GuildRole, users.User, bases.Snowflake, int],
+        overwrite: typing.Union[channels_.PermissionOverwrite, guilds.Role, users.User, bases.Snowflake, int],
     ) -> None:
         """Delete a channel permission overwrite for a user or a role.
 
@@ -906,7 +906,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
         ----------
         channel : hikari.models.channels.PartialChannel | hikari.models.bases.Snowflake | int | str
             The object or ID of the channel to delete the overwrite from.
-        overwrite : hikari.models.channels.PermissionOverwrite | hikari.models.guilds.GuildRole | hikari.models.users.User| hikari.models.bases.Snowflake | int
+        overwrite : hikari.models.channels.PermissionOverwrite | hikari.models.guilds.Role | hikari.models.users.User| hikari.models.bases.Snowflake | int
             The ID of the entity this overwrite targets.
 
         Raises

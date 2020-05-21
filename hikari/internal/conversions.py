@@ -25,7 +25,6 @@ __all__ = [
     "try_cast",
     "try_cast_or_defer_unary_operator",
     "put_if_specified",
-    "image_bytes_to_image_data",
     "parse_http_date",
     "parse_iso_8601_ts",
     "discord_epoch_to_datetime",
@@ -33,15 +32,14 @@ __all__ = [
     "pluralize",
     "resolve_signature",
     "EMPTY",
+    "cast_to_str_id",
+    "timespan_as_int",
 ]
 
-import base64
 import contextlib
 import datetime
 import email.utils
-import functools
 import inspect
-import operator
 import re
 import typing
 
@@ -122,47 +120,6 @@ def put_if_specified(
             mapping[key] = type_after(value)
         else:
             mapping[key] = value
-
-
-def image_bytes_to_image_data(img_bytes: typing.Optional[bytes] = None, /) -> typing.Optional[str]:
-    """Encode image bytes into an image data string.
-
-    Parameters
-    ----------
-    img_bytes : bytes | None
-        The image bytes.
-
-    Raises
-    ------
-    ValueError
-        If the image type passed is not supported.
-
-    Returns
-    -------
-    str | None
-        The `image_bytes` given encoded into an image data string or
-        `None`.
-
-    !!! note
-        Supported image types: `.png`, `.jpeg`, `.jfif`, `.gif`, `.webp`
-    """
-    if img_bytes is None:
-        return None
-
-    if img_bytes[:8] == b"\211PNG\r\n\032\n":
-        img_type = "image/png"
-    elif img_bytes[6:10] in (b"Exif", b"JFIF"):
-        img_type = "image/jpeg"
-    elif img_bytes[:6] in (b"GIF87a", b"GIF89a"):
-        img_type = "image/gif"
-    elif img_bytes.startswith(b"RIFF") and img_bytes[8:12] == b"WEBP":
-        img_type = "image/webp"
-    else:
-        raise ValueError("Unsupported image type passed")
-
-    image_data = base64.b64encode(img_bytes).decode()
-
-    return f"data:{img_type};base64,{image_data}"
 
 
 def parse_http_date(date_str: str, /) -> datetime.datetime:
@@ -315,4 +272,35 @@ def resolve_signature(func: typing.Callable) -> inspect.Signature:
 
 
 def cast_to_str_id(value: typing.Union[typing.SupportsInt, int]) -> str:
+    """Cast the given object to an int and return the result as a string.
+
+    Parameters
+    ----------
+    value : typing.SupportsInt | int
+        A value that can be cast to an `int`.
+
+    Returns
+    -------
+    str
+        The string representation of the integer value.
+    """
     return str(int(value))
+
+
+def timespan_as_int(value: typing.Union[int, datetime.timedelta, float]) -> int:
+    """Cast the given timespan in seconds to an integer value.
+
+    Parameters
+    ----------
+    value : int | float | datetime.timedelta
+        The number of seconds.
+
+    Returns
+    -------
+    int
+        The integer number of seconds. Fractions are discarded. Negative values
+        are removed.
+    """
+    if isinstance(value, datetime.timedelta):
+        value = value.total_seconds()
+    return int(max(0, value))
