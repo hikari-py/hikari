@@ -24,6 +24,7 @@ __all__ = ["IEntityFactory"]
 import abc
 import typing
 
+
 if typing.TYPE_CHECKING:
     from hikari.internal import more_typing
     from hikari.models import applications
@@ -225,7 +226,6 @@ class IEntityFactory(abc.ABC):
     # MESSAGES #
     ############
 
-    @abc.abstractmethod
     def deserialize_message(self, payload: more_typing.JSONObject) -> messages.Message:
         ...
 

@@ -52,11 +52,11 @@ def test__deserialize_partial_roles(mock_app):
         {"id": "24", "name": "roleA", "hoisted": True},
         {"id": "48", "name": "roleA", "hoisted": True},
     ]
-    mock_role_objs = [mock.MagicMock(guilds.PartialGuildRole, id=24), mock.MagicMock(guilds.PartialGuildRole, id=48)]
-    with mock.patch.object(guilds.PartialGuildRole, "deserialize", side_effect=mock_role_objs):
+    mock_role_objs = [mock.MagicMock(guilds.PartialRole, id=24), mock.MagicMock(guilds.PartialRole, id=48)]
+    with mock.patch.object(guilds.PartialRole, "deserialize", side_effect=mock_role_objs):
         result = audit_logs._deserialize_partial_roles(test_role_payloads, app=mock_app)
         assert result == {24: mock_role_objs[0], 48: mock_role_objs[1]}
-        guilds.PartialGuildRole.deserialize.assert_has_calls(
+        guilds.PartialRole.deserialize.assert_has_calls(
             [mock.call(test_role_payloads[0], app=mock_app), mock.call(test_role_payloads[1], app=mock_app),]
         )
 
@@ -68,8 +68,8 @@ def test__deserialize_day_timedelta():
 def test__deserialize_overwrites(mock_app):
     test_overwrite_payloads = [{"id": "24", "allow": 21, "deny": 0}, {"id": "48", "deny": 42, "allow": 0}]
     mock_overwrite_objs = [
-        mock.MagicMock(guilds.PartialGuildRole, id=24),
-        mock.MagicMock(guilds.PartialGuildRole, id=48),
+        mock.MagicMock(guilds.PartialRole, id=24),
+        mock.MagicMock(guilds.PartialRole, id=48),
     ]
     with mock.patch.object(channels.PermissionOverwrite, "deserialize", side_effect=mock_overwrite_objs):
         result = audit_logs._deserialize_overwrites(test_overwrite_payloads, app=mock_app)
@@ -107,9 +107,9 @@ def test_audit_log_change_payload():
 class TestAuditLogChange:
     def test_deserialize_with_known_component_less_converter_and_values(self, mock_app):
         test_audit_log_change_payload = {"key": "rate_limit_per_user", "old_value": "0", "new_value": "60"}
-        mock_role_zero = mock.MagicMock(guilds.PartialGuildRole, id=123123123312312)
-        mock_role_one = mock.MagicMock(guilds.PartialGuildRole, id=568651298858074123)
-        with mock.patch.object(guilds.PartialGuildRole, "deserialize", side_effect=[mock_role_zero, mock_role_one]):
+        mock_role_zero = mock.MagicMock(guilds.PartialRole, id=123123123312312)
+        mock_role_one = mock.MagicMock(guilds.PartialRole, id=568651298858074123)
+        with mock.patch.object(guilds.PartialRole, "deserialize", side_effect=[mock_role_zero, mock_role_one]):
             audit_log_change_obj = audit_logs.AuditLogChange.deserialize(test_audit_log_change_payload, app=mock_app)
         assert audit_log_change_obj._app is mock_app
         assert audit_log_change_obj.key is audit_logs.AuditLogChangeKey.RATE_LIMIT_PER_USER
@@ -117,11 +117,11 @@ class TestAuditLogChange:
         assert audit_log_change_obj.new_value == datetime.timedelta(seconds=60)
 
     def test_deserialize_with_known_component_full_converter_and_values(self, test_audit_log_change_payload, mock_app):
-        mock_role_zero = mock.MagicMock(guilds.PartialGuildRole, id=123123123312312)
-        mock_role_one = mock.MagicMock(guilds.PartialGuildRole, id=568651298858074123)
-        with mock.patch.object(guilds.PartialGuildRole, "deserialize", side_effect=[mock_role_zero, mock_role_one]):
+        mock_role_zero = mock.MagicMock(guilds.PartialRole, id=123123123312312)
+        mock_role_one = mock.MagicMock(guilds.PartialRole, id=568651298858074123)
+        with mock.patch.object(guilds.PartialRole, "deserialize", side_effect=[mock_role_zero, mock_role_one]):
             audit_log_change_obj = audit_logs.AuditLogChange.deserialize(test_audit_log_change_payload, app=mock_app)
-            guilds.PartialGuildRole.deserialize.assert_has_calls(
+            guilds.PartialRole.deserialize.assert_has_calls(
                 [
                     mock.call({"id": "123123123312312", "name": "aRole"}, app=mock_app),
                     mock.call({"id": "568651298858074123", "name": "Casual"}, app=mock_app),
@@ -136,9 +136,9 @@ class TestAuditLogChange:
         self, test_audit_log_change_payload, mock_app
     ):
         test_audit_log_change_payload = {"key": "$add"}
-        with mock.patch.object(guilds.PartialGuildRole, "deserialize"):
+        with mock.patch.object(guilds.PartialRole, "deserialize"):
             audit_log_change_obj = audit_logs.AuditLogChange.deserialize(test_audit_log_change_payload, app=mock_app)
-            guilds.PartialGuildRole.deserialize.assert_not_called()
+            guilds.PartialRole.deserialize.assert_not_called()
         assert audit_log_change_obj._app is mock_app
         assert audit_log_change_obj.key is audit_logs.AuditLogChangeKey.ADD_ROLE_TO_MEMBER
         assert audit_log_change_obj.old_value is None
@@ -148,9 +148,9 @@ class TestAuditLogChange:
         self, test_audit_log_change_payload, mock_app
     ):
         test_audit_log_change_payload = {"key": "rate_limit_per_user"}
-        with mock.patch.object(guilds.PartialGuildRole, "deserialize"):
+        with mock.patch.object(guilds.PartialRole, "deserialize"):
             audit_log_change_obj = audit_logs.AuditLogChange.deserialize(test_audit_log_change_payload, app=mock_app)
-            guilds.PartialGuildRole.deserialize.assert_not_called()
+            guilds.PartialRole.deserialize.assert_not_called()
         assert audit_log_change_obj._app is mock_app
         assert audit_log_change_obj.key is audit_logs.AuditLogChangeKey.RATE_LIMIT_PER_USER
         assert audit_log_change_obj.old_value is None

@@ -654,7 +654,7 @@ class TestRESTChannel:
     @pytest.mark.parametrize(
         "target",
         [
-            mock.MagicMock(guilds.GuildRole, id=bases.Snowflake(9999), __int__=guilds.GuildRole.__int__),
+            mock.MagicMock(guilds.Role, id=bases.Snowflake(9999), __int__=guilds.Role.__int__),
             mock.MagicMock(users.User, id=bases.Snowflake(9999), __int__=users.User.__int__),
         ],
     )
@@ -751,7 +751,7 @@ class TestRESTChannel:
     @pytest.mark.parametrize(
         "target",
         [
-            mock.MagicMock(guilds.GuildRole, id=bases.Snowflake(123123123), __int__=guilds.GuildRole.__int__),
+            mock.MagicMock(guilds.Role, id=bases.Snowflake(123123123), __int__=guilds.Role.__int__),
             mock.MagicMock(users.User, id=bases.Snowflake(123123123), __int__=users.User.__int__),
         ],
     )

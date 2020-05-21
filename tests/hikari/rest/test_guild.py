@@ -337,7 +337,7 @@ class TestRESTGuildLogic:
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 93443949, guilds.Guild)
-    @_helpers.parametrize_valid_id_formats_for_models("role", 537340989808050216, guilds.GuildRole)
+    @_helpers.parametrize_valid_id_formats_for_models("role", 537340989808050216, guilds.Role)
     async def test_create_guild_emoji_with_optionals(self, rest_guild_logic_impl, guild, role):
         mock_emoji_payload = {"id": "229292929", "animated": True}
         mock_emoji_obj = mock.MagicMock(emojis.KnownCustomEmoji)
@@ -404,7 +404,7 @@ class TestRESTGuildLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 93443949, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("emoji", 4123321, emojis.KnownCustomEmoji)
-    @_helpers.parametrize_valid_id_formats_for_models("role", 123123123, guilds.GuildRole)
+    @_helpers.parametrize_valid_id_formats_for_models("role", 123123123, guilds.Role)
     async def test_update_guild_emoji_with_optionals(self, rest_guild_logic_impl, guild, emoji, role):
         mock_emoji_payload = {"id": "202020", "name": "Nyaa", "animated": True}
         mock_emoji_obj = mock.MagicMock(emojis.KnownCustomEmoji)
@@ -441,7 +441,7 @@ class TestRESTGuildLogic:
         mock_image_obj = mock.MagicMock(files.BaseStream)
         mock_image_obj.read = mock.AsyncMock(return_value=mock_image_data)
         mock_role_payload = {"permissions": 123123}
-        mock_role_obj = mock.MagicMock(guilds.GuildRole)
+        mock_role_obj = mock.MagicMock(guilds.Role)
         mock_role_obj.serialize = mock.MagicMock(return_value=mock_role_payload)
         mock_channel_payload = {"type": 2, "name": "aChannel"}
         mock_channel_obj = mock.MagicMock(channels.GuildChannelBuilder)
@@ -730,7 +730,7 @@ class TestRESTGuildLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 229292992, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("user", 1010101010, users.User)
-    @_helpers.parametrize_valid_id_formats_for_models("role", 11100010, guilds.GuildRole)
+    @_helpers.parametrize_valid_id_formats_for_models("role", 11100010, guilds.Role)
     @_helpers.parametrize_valid_id_formats_for_models("channel", 33333333, channels.GuildVoiceChannel)
     async def test_update_member_with_optionals(self, rest_guild_logic_impl, guild, user, role, channel):
         rest_guild_logic_impl._session.modify_guild_member.return_value = ...
@@ -797,7 +797,7 @@ class TestRESTGuildLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 123123123, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("user", 4444444, users.User)
-    @_helpers.parametrize_valid_id_formats_for_models("role", 101010101, guilds.GuildRole)
+    @_helpers.parametrize_valid_id_formats_for_models("role", 101010101, guilds.Role)
     async def test_add_role_to_member_with_reason(self, rest_guild_logic_impl, guild, user, role):
         rest_guild_logic_impl._session.add_guild_member_role.return_value = ...
         assert await rest_guild_logic_impl.add_role_to_member(guild, user, role, reason="Get role'd") is None
@@ -808,7 +808,7 @@ class TestRESTGuildLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 123123123, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("user", 4444444, users.User)
-    @_helpers.parametrize_valid_id_formats_for_models("role", 101010101, guilds.GuildRole)
+    @_helpers.parametrize_valid_id_formats_for_models("role", 101010101, guilds.Role)
     async def test_add_role_to_member_without_reason(self, rest_guild_logic_impl, guild, user, role):
         rest_guild_logic_impl._session.add_guild_member_role.return_value = ...
         assert await rest_guild_logic_impl.add_role_to_member(guild, user, role) is None
@@ -819,7 +819,7 @@ class TestRESTGuildLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 123123123, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("user", 4444444, users.User)
-    @_helpers.parametrize_valid_id_formats_for_models("role", 101010101, guilds.GuildRole)
+    @_helpers.parametrize_valid_id_formats_for_models("role", 101010101, guilds.Role)
     async def test_remove_role_from_member_with_reason(self, rest_guild_logic_impl, guild, user, role):
         rest_guild_logic_impl._session.remove_guild_member_role.return_value = ...
         assert await rest_guild_logic_impl.remove_role_from_member(guild, user, role, reason="Get role'd") is None
@@ -830,7 +830,7 @@ class TestRESTGuildLogic:
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 123123123, guilds.Guild)
     @_helpers.parametrize_valid_id_formats_for_models("user", 4444444, users.User)
-    @_helpers.parametrize_valid_id_formats_for_models("role", 101010101, guilds.GuildRole)
+    @_helpers.parametrize_valid_id_formats_for_models("role", 101010101, guilds.Role)
     async def test_remove_role_from_member_without_reason(self, rest_guild_logic_impl, guild, user, role):
         rest_guild_logic_impl._session.remove_guild_member_role.return_value = ...
         assert await rest_guild_logic_impl.remove_role_from_member(guild, user, role) is None
@@ -932,20 +932,20 @@ class TestRESTGuildLogic:
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
     async def test_fetch_roles(self, rest_guild_logic_impl, guild):
         mock_role_payload = {"id": "33030", "permissions": 333, "name": "ROlE"}
-        mock_role_obj = mock.MagicMock(guilds.GuildRole, id=33030)
+        mock_role_obj = mock.MagicMock(guilds.Role, id=33030)
         rest_guild_logic_impl._session.get_guild_roles.return_value = [mock_role_payload]
-        with mock.patch.object(guilds.GuildRole, "deserialize", return_value=mock_role_obj):
+        with mock.patch.object(guilds.Role, "deserialize", return_value=mock_role_obj):
             assert await rest_guild_logic_impl.fetch_roles(guild) == {33030: mock_role_obj}
             rest_guild_logic_impl._session.get_guild_roles.assert_called_once_with(guild_id="574921006817476608")
-            guilds.GuildRole.deserialize.assert_called_once_with(mock_role_payload, app=rest_guild_logic_impl._app)
+            guilds.Role.deserialize.assert_called_once_with(mock_role_payload, app=rest_guild_logic_impl._app)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
     async def test_create_role_with_optionals(self, rest_guild_logic_impl, guild):
         mock_role_payload = {"id": "033030", "permissions": 333, "name": "ROlE"}
-        mock_role_obj = mock.MagicMock(guilds.GuildRole)
+        mock_role_obj = mock.MagicMock(guilds.Role)
         rest_guild_logic_impl._session.create_guild_role.return_value = mock_role_payload
-        with mock.patch.object(guilds.GuildRole, "deserialize", return_value=mock_role_obj):
+        with mock.patch.object(guilds.Role, "deserialize", return_value=mock_role_obj):
             result = await rest_guild_logic_impl.create_role(
                 guild,
                 name="Roleington",
@@ -965,15 +965,15 @@ class TestRESTGuildLogic:
                 mentionable=False,
                 reason="And then there was a role.",
             )
-            guilds.GuildRole.deserialize.assert_called_once_with(mock_role_payload, app=rest_guild_logic_impl._app)
+            guilds.Role.deserialize.assert_called_once_with(mock_role_payload, app=rest_guild_logic_impl._app)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
     async def test_create_role_without_optionals(self, rest_guild_logic_impl, guild):
         mock_role_payload = {"id": "033030", "permissions": 333, "name": "ROlE"}
-        mock_role_obj = mock.MagicMock(guilds.GuildRole)
+        mock_role_obj = mock.MagicMock(guilds.Role)
         rest_guild_logic_impl._session.create_guild_role.return_value = mock_role_payload
-        with mock.patch.object(guilds.GuildRole, "deserialize", return_value=mock_role_obj):
+        with mock.patch.object(guilds.Role, "deserialize", return_value=mock_role_obj):
             result = await rest_guild_logic_impl.create_role(guild)
             assert result is mock_role_obj
             rest_guild_logic_impl._session.create_guild_role.assert_called_once_with(
@@ -985,32 +985,32 @@ class TestRESTGuildLogic:
                 mentionable=...,
                 reason=...,
             )
-            guilds.GuildRole.deserialize.assert_called_once_with(mock_role_payload, app=rest_guild_logic_impl._app)
+            guilds.Role.deserialize.assert_called_once_with(mock_role_payload, app=rest_guild_logic_impl._app)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
-    @_helpers.parametrize_valid_id_formats_for_models("role", 123123, guilds.GuildRole)
-    @_helpers.parametrize_valid_id_formats_for_models("additional_role", 123456, guilds.GuildRole)
+    @_helpers.parametrize_valid_id_formats_for_models("role", 123123, guilds.Role)
+    @_helpers.parametrize_valid_id_formats_for_models("additional_role", 123456, guilds.Role)
     async def test_reposition_roles(self, rest_guild_logic_impl, guild, role, additional_role):
         mock_role_payload = {"id": "033030", "permissions": 333, "name": "ROlE"}
-        mock_role_obj = mock.MagicMock(guilds.GuildRole)
+        mock_role_obj = mock.MagicMock(guilds.Role)
         rest_guild_logic_impl._session.modify_guild_role_positions.return_value = [mock_role_payload]
-        with mock.patch.object(guilds.GuildRole, "deserialize", return_value=mock_role_obj):
+        with mock.patch.object(guilds.Role, "deserialize", return_value=mock_role_obj):
             result = await rest_guild_logic_impl.reposition_roles(guild, (1, role), (2, additional_role))
             assert result == [mock_role_obj]
             rest_guild_logic_impl._session.modify_guild_role_positions.assert_called_once_with(
                 "574921006817476608", ("123123", 1), ("123456", 2)
             )
-            guilds.GuildRole.deserialize.assert_called_once_with(mock_role_payload, app=rest_guild_logic_impl._app)
+            guilds.Role.deserialize.assert_called_once_with(mock_role_payload, app=rest_guild_logic_impl._app)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
-    @_helpers.parametrize_valid_id_formats_for_models("role", 123123, guilds.GuildRole)
+    @_helpers.parametrize_valid_id_formats_for_models("role", 123123, guilds.Role)
     async def test_update_role_with_optionals(self, rest_guild_logic_impl, guild, role):
         mock_role_payload = {"id": "033030", "permissions": 333, "name": "ROlE"}
-        mock_role_obj = mock.MagicMock(guilds.GuildRole)
+        mock_role_obj = mock.MagicMock(guilds.Role)
         rest_guild_logic_impl._session.modify_guild_role.return_value = mock_role_payload
-        with mock.patch.object(guilds.GuildRole, "deserialize", return_value=mock_role_obj):
+        with mock.patch.object(guilds.Role, "deserialize", return_value=mock_role_obj):
             result = await rest_guild_logic_impl.update_role(
                 guild,
                 role,
@@ -1032,16 +1032,16 @@ class TestRESTGuildLogic:
                 mentionable=False,
                 reason="Why not?",
             )
-            guilds.GuildRole.deserialize.assert_called_once_with(mock_role_payload, app=rest_guild_logic_impl._app)
+            guilds.Role.deserialize.assert_called_once_with(mock_role_payload, app=rest_guild_logic_impl._app)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
-    @_helpers.parametrize_valid_id_formats_for_models("role", 123123, guilds.GuildRole)
+    @_helpers.parametrize_valid_id_formats_for_models("role", 123123, guilds.Role)
     async def test_update_role_without_optionals(self, rest_guild_logic_impl, guild, role):
         mock_role_payload = {"id": "033030", "permissions": 333, "name": "ROlE"}
-        mock_role_obj = mock.MagicMock(guilds.GuildRole)
+        mock_role_obj = mock.MagicMock(guilds.Role)
         rest_guild_logic_impl._session.modify_guild_role.return_value = mock_role_payload
-        with mock.patch.object(guilds.GuildRole, "deserialize", return_value=mock_role_obj):
+        with mock.patch.object(guilds.Role, "deserialize", return_value=mock_role_obj):
             assert await rest_guild_logic_impl.update_role(guild, role) is mock_role_obj
             rest_guild_logic_impl._session.modify_guild_role.assert_called_once_with(
                 guild_id="574921006817476608",
@@ -1053,11 +1053,11 @@ class TestRESTGuildLogic:
                 mentionable=...,
                 reason=...,
             )
-            guilds.GuildRole.deserialize.assert_called_once_with(mock_role_payload, app=rest_guild_logic_impl._app)
+            guilds.Role.deserialize.assert_called_once_with(mock_role_payload, app=rest_guild_logic_impl._app)
 
     @pytest.mark.asyncio
     @_helpers.parametrize_valid_id_formats_for_models("guild", 574921006817476608, guilds.Guild)
-    @_helpers.parametrize_valid_id_formats_for_models("role", 123123, guilds.GuildRole)
+    @_helpers.parametrize_valid_id_formats_for_models("role", 123123, guilds.Role)
     async def test_delete_role(self, rest_guild_logic_impl, guild, role):
         rest_guild_logic_impl._session.delete_guild_role.return_value = ...
         assert await rest_guild_logic_impl.delete_role(guild, role) is None

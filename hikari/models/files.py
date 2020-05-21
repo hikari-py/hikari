@@ -56,11 +56,13 @@ __all__ = ["BaseStream", "ByteStream", "WebResourceStream", "FileStream"]
 
 import abc
 import asyncio
+import base64
 import concurrent.futures
 import functools
 import http
 import inspect
 import io
+import math
 import os
 import typing
 
@@ -111,12 +113,65 @@ class BaseStream(abc.ABC, typing.AsyncIterable[bytes]):
     def __repr__(self) -> str:
         return f"{type(self).__name__}(filename={self.filename!r})"
 
-    async def read(self) -> bytes:
-        """Return the entire contents of the data stream."""
-        data = io.BytesIO()
+    async def fetch_data_uri(self) -> str:
+        """Generate a data URI for the given resource.
+
+        This will only work for select image types that Discord supports.
+
+        Returns
+        -------
+        str
+            A base-64 encoded data URI.
+
+        Raises
+        ------
+        TypeError
+            If the data format is not
+        """
+        buff = await self.read(20)
+
+        if buff[:8] == b"\211PNG\r\n\032\n":
+            img_type = "image/png"
+        elif buff[6:10] in (b"Exif", b"JFIF"):
+            img_type = "image/jpeg"
+        elif buff[:6] in (b"GIF87a", b"GIF89a"):
+            img_type = "image/gif"
+        elif buff.startswith(b"RIFF") and buff[8:12] == b"WEBP":
+            img_type = "image/webp"
+        else:
+            raise TypeError("Unsupported image type passed")
+
+        image_data = base64.b64encode(buff).decode()
+
+        return f"data:{img_type};base64,{image_data}"
+
+    async def read(self, count: int = -1) -> bytes:
+        """Read from the data stream.
+
+        Parameters
+        ----------
+        count : int
+            The max number of bytes to read. If unspecified, the entire file
+            will be read. If the count is larger than the number of bytes in
+            the entire stream, then the entire stream will be returned.
+
+        Returns
+        -------
+        bytes
+            The bytes that were read.
+        """
+        if count == -1:
+            count = float("inf")
+
+        data = bytearray()
         async for chunk in self:
-            data.write(chunk)
-        return data.getvalue()
+            if len(data) >= count:
+                break
+
+            data.extend(chunk)
+
+        count = len(data) if math.isinf(count) else count
+        return data[:count]
 
 
 class ByteStream(BaseStream):

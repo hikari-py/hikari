@@ -72,7 +72,7 @@ def test_generate_allowed_mentions(kwargs, expected_result):
     assert helpers.generate_allowed_mentions(**kwargs) == expected_result
 
 
-@_helpers.parametrize_valid_id_formats_for_models("role", 3, guilds.GuildRole)
+@_helpers.parametrize_valid_id_formats_for_models("role", 3, guilds.Role)
 def test_generate_allowed_mentions_removes_duplicate_role_ids(role):
     result = helpers.generate_allowed_mentions(
         role_mentions=["1", "2", "1", "3", "5", "7", "2", role], user_mentions=True, mentions_everyone=True
@@ -88,7 +88,7 @@ def test_generate_allowed_mentions_removes_duplicate_user_ids(user):
     assert result == {"users": ["1", "2", "3", "5", "7"], "parse": ["everyone", "roles"]}
 
 
-@_helpers.parametrize_valid_id_formats_for_models("role", 190007233919057920, guilds.GuildRole)
+@_helpers.parametrize_valid_id_formats_for_models("role", 190007233919057920, guilds.Role)
 def test_generate_allowed_mentions_handles_all_role_formats(role):
     result = helpers.generate_allowed_mentions(role_mentions=[role], user_mentions=True, mentions_everyone=True)
     assert result == {"roles": ["190007233919057920"], "parse": ["everyone", "users"]}

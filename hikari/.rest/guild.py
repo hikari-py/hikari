@@ -262,11 +262,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     async def create_guild_emoji(
         self,
-        guild: typing.Union[bases.Snowflake, int, str, guilds.GuildRole],
+        guild: typing.Union[bases.Snowflake, int, str, guilds.Role],
         name: str,
         image: files.BaseStream,
         *,
-        roles: typing.Sequence[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]] = ...,
+        roles: typing.Sequence[typing.Union[bases.Snowflake, int, str, guilds.Role]] = ...,
         reason: str = ...,
     ) -> emojis.KnownCustomEmoji:
         """Create a new emoji for a given guild.
@@ -279,7 +279,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             The new emoji's name.
         image : hikari.models.files.BaseStream
             The `128x128` image data.
-        roles : typing.Sequence[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str]
+        roles : typing.Sequence[hikari.models.guilds.Role | hikari.models.bases.Snowflake | int | str]
             If specified, a list of role objects or IDs for which the emoji
             will be whitelisted. If empty, all roles are whitelisted.
         reason : str
@@ -323,7 +323,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         emoji: typing.Union[bases.Snowflake, int, str, emojis.KnownCustomEmoji],
         *,
         name: str = ...,
-        roles: typing.Sequence[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]] = ...,
+        roles: typing.Sequence[typing.Union[bases.Snowflake, int, str, guilds.Role]] = ...,
         reason: str = ...,
     ) -> emojis.KnownCustomEmoji:
         """Edits an emoji of a given guild.
@@ -337,7 +337,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         name : str
             If specified, a new emoji name string. Keep unspecified to leave the
             name unchanged.
-        roles : typing.Sequence[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str]
+        roles : typing.Sequence[hikari.models.guilds.Role | hikari.models.bases.Snowflake | int | str]
             If specified, a list of objects or IDs for the new whitelisted
             roles. Set to an empty list to whitelist all roles.
             Keep unspecified to leave the same roles already set.
@@ -411,7 +411,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         verification_level: typing.Union[guilds.GuildVerificationLevel, int] = ...,
         default_message_notifications: typing.Union[guilds.GuildMessageNotificationsLevel, int] = ...,
         explicit_content_filter: typing.Union[guilds.GuildExplicitContentFilterLevel, int] = ...,
-        roles: typing.Sequence[guilds.GuildRole] = ...,
+        roles: typing.Sequence[guilds.Role] = ...,
         channels: typing.Sequence[channels_.GuildChannelBuilder] = ...,
     ) -> guilds.Guild:
         """Create a new guild.
@@ -438,7 +438,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         explicit_content_filter : hikari.models.guilds.GuildExplicitContentFilterLevel | int
             If specified, the explicit content filter. Passing a raw int for
             this may lead to unexpected behaviour.
-        roles : typing.Sequence[hikari.models.guilds.GuildRole]
+        roles : typing.Sequence[hikari.models.guilds.Role]
             If specified, an array of role objects to be created alongside the
             guild. First element changes the `@everyone` role.
         channels : typing.Sequence[hikari.models.channels.GuildChannelBuilder]
@@ -898,7 +898,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
         user: typing.Union[bases.Snowflake, int, str, users.User],
         nickname: typing.Optional[str] = ...,
-        roles: typing.Sequence[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]] = ...,
+        roles: typing.Sequence[typing.Union[bases.Snowflake, int, str, guilds.Role]] = ...,
         mute: bool = ...,
         deaf: bool = ...,
         voice_channel: typing.Optional[typing.Union[bases.Snowflake, int, str, channels_.GuildVoiceChannel]] = ...,
@@ -915,7 +915,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         nickname : str | None
             If specified, the new nickname string. Setting it to `None`
             explicitly will clear the nickname.
-        roles : typing.Sequence[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str]
+        roles : typing.Sequence[hikari.models.guilds.Role | hikari.models.bases.Snowflake | int | str]
             If specified, a list of role IDs the member should have.
         mute : bool
             If specified, whether the user should be muted in the voice channel
@@ -1005,7 +1005,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         self,
         guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
         user: typing.Union[bases.Snowflake, int, str, users.User],
-        role: typing.Union[bases.Snowflake, int, str, guilds.GuildRole],
+        role: typing.Union[bases.Snowflake, int, str, guilds.Role],
         *,
         reason: str = ...,
     ) -> None:
@@ -1017,7 +1017,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             The object or ID of the guild the member belongs to.
         user : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             The object or ID of the member you want to add the role to.
-        role : hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str
+        role : hikari.models.guilds.Role | hikari.models.bases.Snowflake | int | str
             The object or ID of the role you want to add.
         reason : str
             If specified, the audit log reason explaining why the operation
@@ -1044,7 +1044,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         self,
         guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
         user: typing.Union[bases.Snowflake, int, str, users.User],
-        role: typing.Union[bases.Snowflake, int, str, guilds.GuildRole],
+        role: typing.Union[bases.Snowflake, int, str, guilds.Role],
         *,
         reason: str = ...,
     ) -> None:
@@ -1056,7 +1056,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             The object or ID of the guild the member belongs to.
         user : hikari.models.users.User | hikari.models.bases.Snowflake | int | str
             The object or ID of the member you want to remove the role from.
-        role : hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str
+        role : hikari.models.guilds.Role | hikari.models.bases.Snowflake | int | str
             The object or ID of the role you want to remove.
         reason : str
             If specified, the audit log reason explaining why the operation
@@ -1259,7 +1259,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     async def fetch_roles(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
-    ) -> typing.Mapping[bases.Snowflake, guilds.GuildRole]:
+    ) -> typing.Mapping[bases.Snowflake, guilds.Role]:
         """Get the roles for a given guild.
 
         Parameters
@@ -1269,7 +1269,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        typing.Mapping[hikari.models.bases.Snowflake, hikari.models.guilds.GuildRole]
+        typing.Mapping[hikari.models.bases.Snowflake, hikari.models.guilds.Role]
             A list of role objects.
 
         Raises
@@ -1285,7 +1285,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_roles(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return {bases.Snowflake(role["id"]): guilds.GuildRole.deserialize(role, app=self._app) for role in payload}
+        return {bases.Snowflake(role["id"]): guilds.Role.deserialize(role, app=self._app) for role in payload}
 
     async def create_role(
         self,
@@ -1297,7 +1297,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         hoist: bool = ...,
         mentionable: bool = ...,
         reason: str = ...,
-    ) -> guilds.GuildRole:
+    ) -> guilds.Role:
         """Create a new role for a given guild.
 
         Parameters
@@ -1322,7 +1322,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        hikari.models.guilds.GuildRole
+        hikari.models.guilds.Role
             The newly created role object.
 
         Raises
@@ -1346,21 +1346,21 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             mentionable=mentionable,
             reason=reason,
         )
-        return guilds.GuildRole.deserialize(payload, app=self._app)
+        return guilds.Role.deserialize(payload, app=self._app)
 
     async def reposition_roles(
         self,
         guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
-        role: typing.Tuple[int, typing.Union[bases.Snowflake, int, str, guilds.GuildRole]],
-        *additional_roles: typing.Tuple[int, typing.Union[bases.Snowflake, int, str, guilds.GuildRole]],
-    ) -> typing.Sequence[guilds.GuildRole]:
+        role: typing.Tuple[int, typing.Union[bases.Snowflake, int, str, guilds.Role]],
+        *additional_roles: typing.Tuple[int, typing.Union[bases.Snowflake, int, str, guilds.Role]],
+    ) -> typing.Sequence[guilds.Role]:
         """Edits the position of two or more roles in a given guild.
 
         Parameters
         ----------
         guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The ID of the guild the roles belong to.
-        role : typing.Tuple[int, hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str]
+        role : typing.Tuple[int, hikari.models.guilds.Role | hikari.models.bases.Snowflake | int | str]
             The first role to move. This is a tuple of the integer position and
             the role object or ID.
         *additional_roles : typing.Tuple[int, thikari.guilds.GuildRole | hikari.models.bases.Snowflake | int | str]
@@ -1369,7 +1369,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        typing.Sequence[hikari.models.guilds.GuildRole]
+        typing.Sequence[hikari.models.guilds.Role]
             A list of all the guild roles.
 
         Raises
@@ -1391,12 +1391,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
                 for position, channel in [role, *additional_roles]
             ],
         )
-        return [guilds.GuildRole.deserialize(role, app=self._app) for role in payload]
+        return [guilds.Role.deserialize(role, app=self._app) for role in payload]
 
     async def update_role(
         self,
         guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
-        role: typing.Union[bases.Snowflake, int, str, guilds.GuildRole],
+        role: typing.Union[bases.Snowflake, int, str, guilds.Role],
         *,
         name: str = ...,
         permissions: typing.Union[permissions_.Permission, int] = ...,
@@ -1404,14 +1404,14 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         hoist: bool = ...,
         mentionable: bool = ...,
         reason: str = ...,
-    ) -> guilds.GuildRole:
+    ) -> guilds.Role:
         """Edits a role in a given guild.
 
         Parameters
         ----------
         guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild the role belong to.
-        role : hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str
+        role : hikari.models.guilds.Role | hikari.models.bases.Snowflake | int | str
             The object or ID of the role you want to edit.
         name : str
             If specified, the new role's name string.
@@ -1431,7 +1431,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        hikari.models.guilds.GuildRole
+        hikari.models.guilds.Role
             The edited role object.
 
         Raises
@@ -1456,12 +1456,12 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             mentionable=mentionable,
             reason=reason,
         )
-        return guilds.GuildRole.deserialize(payload, app=self._app)
+        return guilds.Role.deserialize(payload, app=self._app)
 
     async def delete_role(
         self,
         guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
-        role: typing.Union[bases.Snowflake, int, str, guilds.GuildRole],
+        role: typing.Union[bases.Snowflake, int, str, guilds.Role],
     ) -> None:
         """Delete a role from a given guild.
 
@@ -1469,7 +1469,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         ----------
         guild : hikari.models.guilds.Guild | hikari.models.bases.Snowflake | int | str
             The object or ID of the guild you want to remove the role from.
-        role : hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str
+        role : hikari.models.guilds.Role | hikari.models.bases.Snowflake | int | str
             The object or ID of the role you want to delete.
 
         Raises

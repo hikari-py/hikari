@@ -203,9 +203,9 @@ def test_guild_role_create_update_payload(test_guild_payload):
 
 class TestGuildRoleCreateEvent:
     def test_deserialize(self, test_guild_role_create_update_payload, test_guild_payload):
-        mock_role = mock.MagicMock(guilds.GuildRole)
+        mock_role = mock.MagicMock(guilds.Role)
         with _helpers.patch_marshal_attr(
-            guild.GuildRoleCreateEvent, "role", deserializer=guilds.GuildRole.deserialize, return_value=mock_role
+            guild.GuildRoleCreateEvent, "role", deserializer=guilds.Role.deserialize, return_value=mock_role
         ) as patched_role_deserializer:
             guild_role_create_obj = guild.GuildRoleCreateEvent.deserialize(test_guild_role_create_update_payload)
             patched_role_deserializer.assert_called_once_with(test_guild_payload)
@@ -219,9 +219,9 @@ class TestGuildRoleUpdateEvent:
         return {"guild_id": "69240", "role": test_guild_payload}
 
     def test_deserialize(self, test_guild_role_create_update_payload, test_guild_payload):
-        mock_role = mock.MagicMock(guilds.GuildRole)
+        mock_role = mock.MagicMock(guilds.Role)
         with _helpers.patch_marshal_attr(
-            guild.GuildRoleUpdateEvent, "role", deserializer=guilds.GuildRole.deserialize, return_value=mock_role
+            guild.GuildRoleUpdateEvent, "role", deserializer=guilds.Role.deserialize, return_value=mock_role
         ) as patched_role_deserializer:
             guild_role_create_obj = guild.GuildRoleUpdateEvent.deserialize(test_guild_role_create_update_payload)
             patched_role_deserializer.assert_called_once_with(test_guild_payload)
