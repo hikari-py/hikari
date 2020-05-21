@@ -32,11 +32,13 @@ import aiohttp
 from hikari import base_app
 from hikari import errors
 from hikari import http_settings
+from hikari import pagination
 from hikari.internal import conversions
 from hikari.internal import more_typing
 from hikari.internal import ratelimits
 from hikari.models import bases
 from hikari.models import channels
+from hikari.models import messages
 from hikari.models import unset
 from hikari.net import buckets
 from hikari.net import http_client
@@ -45,6 +47,36 @@ from hikari.net import routes
 
 class _RateLimited(RuntimeError):
     __slots__ = ()
+
+
+class _MessagePaginator(pagination.BufferedPaginatedResults[messages.Message]):
+    __slots__ = ("_app", "_request_call", "_direction", "_first_id", "_route")
+
+    def __init__(
+        self,
+        app: base_app.IBaseApp,
+        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
+        channel_id: str,
+        direction: str,
+        first_id: str,
+    ) -> None:
+        self._app = app
+        self._request_call = request_call
+        self._direction = direction
+        self._first_id = first_id
+        self._route = routes.GET_CHANNEL_MESSAGES.compile(channel_id)
+
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[messages.Message, typing.Any, None]]:
+        chunk = await self._request_call(self._route, query={self._direction: self._first_id, "limit": 100})
+
+        if not chunk:
+            return None
+        if self._direction == "after":
+            chunk.reverse()
+
+        self._first_id = chunk[-1]["id"]
+
+        return (self._app.entity_factory.deserialize_message(m) for m in chunk)
 
 
 class REST(http_client.HTTPClient):
@@ -120,11 +152,17 @@ class REST(http_client.HTTPClient):
         while True:
             try:
                 # Moved to a separate method to keep branch counts down.
-                return await self._request_once(compiled_route, headers, body, query)
+                return await self._request_once(compiled_route=compiled_route, headers=headers, body=body, query=query)
             except _RateLimited:
                 pass
 
-    async def _request_once(self, compiled_route, headers, body, query):
+    async def _request_once(
+        self,
+        compiled_route: routes.CompiledRoute,
+        headers: more_typing.Headers,
+        body: typing.Optional[typing.Union[aiohttp.FormData, more_typing.JSONType]],
+        query: typing.Optional[typing.Dict[str, str]],
+    ):
         url = compiled_route.create_url(self._url)
 
         # Wait for any ratelimits to finish.
@@ -176,11 +214,13 @@ class REST(http_client.HTTPClient):
 
         raise cls(real_url, status, response.headers, raw_body)
 
-    async def _handle_rate_limits_for_response(self, compiled_route, response):
-        # Worth noting there is some bug on V6 that ratelimits me immediately if I have an invalid token.
+    async def _handle_rate_limits_for_response(
+        self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse
+    ) -> None:
+        # Worth noting there is some bug on V6 that rate limits me immediately if I have an invalid token.
         # https://github.com/discord/discord-api-docs/issues/1569
 
-        # Handle ratelimiting.
+        # Handle rate limiting.
         resp_headers = response.headers
         limit = int(resp_headers.get("x-ratelimit-limit", "1"))
         remaining = int(resp_headers.get("x-ratelimit-remaining", "1"))
@@ -211,7 +251,7 @@ class REST(http_client.HTTPClient):
                     )
                 else:
                     self.logger.warning(
-                        "you are being rate-limited on bucket %s for route %s - trying again after %ss",
+                        "you are being rate-limited on bucket %s for _route %s - trying again after %ss",
                         bucket,
                         compiled_route,
                         reset,
@@ -223,20 +263,19 @@ class REST(http_client.HTTPClient):
             # I hope we don't though.
             raise errors.HTTPError(
                 str(response.real_url),
-                f"We were ratelimited but did not understand the response. Perhaps Cloudflare did this? {body!r}",
+                f"We were rate limited but did not understand the response. Perhaps Cloudflare did this? {body!r}",
             )
 
     async def fetch_channel(
-        self, channel: typing.Union[channels.PartialChannel, bases.Snowflake, int],
+        self, channel: typing.Union[channels.PartialChannel, bases.Snowflake, int], /,
     ) -> channels.PartialChannel:
         response = await self._request(routes.GET_CHANNEL.compile(channel_id=conversions.cast_to_str_id(channel)))
-
-        # TODO: implement serialization.
-        return NotImplemented
+        return self._app.entity_factory.deserialize_channel(response)
 
     async def edit_channel(
         self,
         channel: typing.Union[channels.PartialChannel, bases.Snowflake, int],
+        /,
         *,
         name: typing.Union[unset.Unset, str] = unset.UNSET,
         position: typing.Union[unset.Unset, int] = unset.UNSET,
@@ -260,12 +299,75 @@ class REST(http_client.HTTPClient):
         conversions.put_if_specified(payload, "parent_id", parent_category, conversions.cast_to_str_id)
 
         if not unset.is_unset(permission_overwrites):
-            # TODO: implement serialization
-            raise NotImplementedError()
+            payload["permission_overwrites"] = [
+                self._app.entity_factory.serialize_permission_overwrite(p) for p in permission_overwrites
+            ]
 
         response = await self._request(
-            routes.PATCH_CHANNEL.compile(channel_id=str(int(channel))), body=payload, reason=reason,
+            routes.PATCH_CHANNEL.compile(channel_id=conversions.cast_to_str_id(channel)), body=payload, reason=reason,
         )
 
-        # TODO: implement deserialization.
-        return NotImplemented
+        return self._app.entity_factory.deserialize_channel(response)
+
+    async def delete_channel(self, channel: typing.Union[channels.PartialChannel, bases.Snowflake, int]) -> None:
+        await self._request(routes.DELETE_CHANNEL.compile(channel_id=conversions.cast_to_str_id(channel)))
+
+    @typing.overload
+    async def fetch_messages(
+        self, channel: typing.Union[channels.PartialChannel, bases.UniqueObjectT], /
+    ) -> pagination.PaginatedResults[messages.Message]:
+        ...
+
+    @typing.overload
+    async def fetch_messages(
+        self,
+        channel: typing.Union[channels.PartialChannel, bases.UniqueObjectT],
+        /,
+        *,
+        before: typing.Union[datetime.datetime, bases.UniqueObjectT],
+    ) -> pagination.PaginatedResults[messages.Message]:
+        ...
+
+    @typing.overload
+    async def fetch_messages(
+        self,
+        channel: typing.Union[channels.PartialChannel, bases.UniqueObjectT],
+        /,
+        *,
+        around: typing.Union[datetime.datetime, bases.UniqueObjectT],
+    ) -> pagination.PaginatedResults[messages.Message]:
+        ...
+
+    @typing.overload
+    async def fetch_messages(
+        self,
+        channel: typing.Union[channels.PartialChannel, bases.UniqueObjectT],
+        /,
+        *,
+        after: typing.Union[datetime.datetime, bases.UniqueObjectT],
+    ) -> pagination.PaginatedResults[messages.Message]:
+        ...
+
+    def fetch_messages(
+        self,
+        channel: typing.Union[channels.PartialChannel, bases.UniqueObjectT],
+        /,
+        **kwargs: typing.Optional[typing.Union[datetime.datetime, bases.UniqueObjectT]],
+    ) -> pagination.PaginatedResults[messages.Message]:
+        if len(kwargs) == 1 and any(direction in kwargs for direction in ("before", "after", "around")):
+            direction, timestamp = kwargs.popitem()
+        elif not kwargs:
+            direction, timestamp = "before", bases.Snowflake.max()
+        else:
+            raise TypeError(f"Expected no kwargs, or one of 'before', 'after', 'around', received: {kwargs}")
+
+        if isinstance(timestamp, datetime.datetime):
+            timestamp = bases.Snowflake.from_datetime(timestamp)
+
+        return _MessagePaginator(
+            self._app,
+            self._request,
+            conversions.cast_to_str_id(channel),
+            direction,
+            conversions.cast_to_str_id(timestamp),
+        )

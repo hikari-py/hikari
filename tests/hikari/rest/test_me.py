@@ -65,7 +65,7 @@ class TestGuildPaginator:
         assert pag._app is mock_app
         assert pag._session is mock_session
 
-    @pytest.mark.parametrize(["newest_first", "direction"], [(True, "before"), (False, "after"),])
+    @pytest.mark.parametrize(["newest_first", "_direction"], [(True, "before"), (False, "after"),])
     @pytest.mark.asyncio
     async def test_next_chunk_performs_correct_api_call(
         self, mock_session, mock_app, newest_first, direction, ownguild_cls
