@@ -366,7 +366,7 @@ class RESTChannelComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=
 
         !!! note
             The `around` parameter is not documented clearly by Discord.
-            The actual number of messages returned by this, and the direction
+            The actual number of messages returned by this, and the _direction
             (e.g. older/newer/both) is not overly intuitive. Thus, this
             specific functionality may be deprecated in the future in favour
             of a cleaner Python API until a time comes where this information is

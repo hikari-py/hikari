@@ -55,7 +55,7 @@ class TestMessagePaginator:
         with mock.patch.object(messages, "Message") as message_cls:
             yield message_cls
 
-    @pytest.mark.parametrize("direction", ["before", "after", "around"])
+    @pytest.mark.parametrize("_direction", ["before", "after", "around"])
     def test_init_first_id_is_date(self, mock_session, mock_app, direction):
         date = datetime.datetime(2015, 11, 15, 23, 13, 46, 709000, tzinfo=datetime.timezone.utc)
         expected_id = 115590097100865536
@@ -67,7 +67,7 @@ class TestMessagePaginator:
         assert pag._session is mock_session
         assert pag._app is mock_app
 
-    @pytest.mark.parametrize("direction", ["before", "after", "around"])
+    @pytest.mark.parametrize("_direction", ["before", "after", "around"])
     def test_init_first_id_is_id(self, mock_session, mock_app, direction):
         expected_id = 115590097100865536
         channel_id = 1234567
@@ -78,7 +78,7 @@ class TestMessagePaginator:
         assert pag._session is mock_session
         assert pag._app is mock_app
 
-    @pytest.mark.parametrize("direction", ["before", "after", "around"])
+    @pytest.mark.parametrize("_direction", ["before", "after", "around"])
     async def test_next_chunk_makes_api_call(self, mock_session, mock_app, message_cls, direction):
         channel_obj = mock.MagicMock(__int__=lambda _: 55)
 
@@ -92,7 +92,7 @@ class TestMessagePaginator:
             **{direction: "12345", "channel": "55", "limit": 100}
         )
 
-    @pytest.mark.parametrize("direction", ["before", "after", "around"])
+    @pytest.mark.parametrize("_direction", ["before", "after", "around"])
     async def test_next_chunk_empty_response_returns_None(self, mock_session, mock_app, message_cls, direction):
         channel_obj = mock.MagicMock(__int__=lambda _: 55)
 
@@ -103,7 +103,7 @@ class TestMessagePaginator:
 
         assert await pag._next_chunk() is None
 
-    @pytest.mark.parametrize(["direction", "expect_reverse"], [("before", False), ("after", True), ("around", False)])
+    @pytest.mark.parametrize(["_direction", "expect_reverse"], [("before", False), ("after", True), ("around", False)])
     async def test_next_chunk_updates_first_id(self, mock_session, mock_app, message_cls, expect_reverse, direction):
         return_payload = [
             {"id": "1234", ...: ...},
@@ -123,7 +123,7 @@ class TestMessagePaginator:
 
         assert pag._first_id == "1234" if expect_reverse else "512"
 
-    @pytest.mark.parametrize(["direction", "expect_reverse"], [("before", False), ("after", True), ("around", False)])
+    @pytest.mark.parametrize(["_direction", "expect_reverse"], [("before", False), ("after", True), ("around", False)])
     async def test_next_chunk_returns_generator(self, mock_session, mock_app, message_cls, expect_reverse, direction):
         return_payload = [
             {"id": "1234", ...: ...},
@@ -276,7 +276,7 @@ class TestRESTChannel:
         rest_channel_logic_impl._session.delete_close_channel.assert_called_once_with(channel_id="55555")
 
     @pytest.mark.parametrize(
-        ("direction", "expected_direction", "first", "expected_first"),
+        ("_direction", "expected_direction", "first", "expected_first"),
         [
             [None, "before", None, bases.Snowflake.max()],
             ["before", "before", "1234", "1234"],

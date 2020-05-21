@@ -39,7 +39,7 @@ UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 class RESTBucket(ratelimits.WindowedBurstRateLimiter):
     """Represents a rate limit for an RESTSession endpoint.
 
-    Component to represent an active rate limit bucket on a specific RESTSession route
+    Component to represent an active rate limit bucket on a specific RESTSession _route
     with a specific major parameter combo.
 
     This is somewhat similar to the `WindowedBurstRateLimiter` in how it
@@ -61,7 +61,7 @@ class RESTBucket(ratelimits.WindowedBurstRateLimiter):
     __slots__ = ("compiled_route",)
 
     compiled_route: typing.Final[routes.CompiledRoute]
-    """The compiled route that this rate limit is covering."""
+    """The compiled _route that this rate limit is covering."""
 
     def __init__(self, name: str, compiled_route: routes.CompiledRoute) -> None:
         super().__init__(name, 1, 1)
@@ -145,7 +145,7 @@ class RESTBucketManager:
 
     real_hashes_to_buckets: typing.Final[typing.MutableMapping[str, RESTBucket]]
     """Maps full bucket hashes (`X-RateLimit-Bucket` appended with a hash of
-    major parameters used in that compiled route) to their corresponding rate
+    major parameters used in that compiled _route) to their corresponding rate
     limiters.
     """
 
@@ -213,7 +213,7 @@ class RESTBucketManager:
         """The garbage collector loop.
 
         This is designed to run in the background and manage removing unused
-        route references from the rate-limiter collection to save memory.
+        _route references from the rate-limiter collection to save memory.
 
         This will run forever until `RESTBucketManager. closed_event` is set.
         This will invoke `RESTBucketManager.do_gc_pass` periodically.
@@ -301,12 +301,12 @@ class RESTBucketManager:
         self.logger.debug("purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
 
     def acquire(self, compiled_route: routes.CompiledRoute) -> more_typing.Future[None]:
-        """Acquire a bucket for the given route.
+        """Acquire a bucket for the given _route.
 
         Parameters
         ----------
         compiled_route : hikari.rest.routes.CompiledRoute
-            The route to get the bucket for.
+            The _route to get the bucket for.
 
         Returns
         -------
@@ -356,7 +356,7 @@ class RESTBucketManager:
         Parameters
         ----------
         compiled_route : hikari.rest.routes.CompiledRoute
-            The compiled route to get the bucket for.
+            The compiled _route to get the bucket for.
         bucket_header : str, optional
             The `X-RateLimit-Bucket` header that was provided in the response,
             or `None` if not present.
