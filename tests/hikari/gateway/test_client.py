@@ -338,11 +338,6 @@ class TestShardClientImplStart:
         "error",
         [
             aiohttp.ClientConnectorError(mock.MagicMock(), mock.MagicMock()),
-            errors.GatewayZombiedError(),
-            errors.GatewayInvalidSessionError(False),
-            errors.GatewayInvalidSessionError(True),
-            errors.GatewayMustReconnectError(),
-            errors.GatewayNetworkError(),
         ],
     )
     @pytest.mark.asyncio
