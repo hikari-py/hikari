@@ -29,6 +29,7 @@ import typing
 
 import aiohttp.typedefs
 
+from hikari.models import unset
 from hikari.net import tracing
 
 
@@ -95,6 +96,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
     _APPLICATION_JSON: typing.Final[str] = "application/json"
     _APPLICATION_X_WWW_FORM_URLENCODED: typing.Final[str] = "application/x-www-form-urlencoded"
     _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
+    _MULTIPART_FORM_DATA: typing.Final[str] = "multipart/form-data"
 
     logger: logging.Logger
     """The logger to use for this object."""
@@ -245,8 +247,13 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
             The HTTP response.
         """
         if isinstance(body, (dict, list)):
-            body = bytes(json.dumps(body), "utf-8")
-            headers["content-type"] = self._APPLICATION_JSON
+            kwargs = {"json": body}
+
+        elif isinstance(body, aiohttp.FormData):
+            kwargs = {"data": body}
+
+        else:
+            kwargs = {}
 
         trace_request_ctx = types.SimpleNamespace()
         trace_request_ctx.request_body = body
@@ -256,7 +263,6 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
             url=url,
             params=query,
             headers=headers,
-            data=body,
             allow_redirects=self._allow_redirects,
             proxy=self._proxy_url,
             proxy_auth=self._proxy_auth,
@@ -265,6 +271,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
             ssl_context=self._ssl_context,
             timeout=self._request_timeout,
             trace_request_ctx=trace_request_ctx,
+            **kwargs,
         )
 
     async def _create_ws(

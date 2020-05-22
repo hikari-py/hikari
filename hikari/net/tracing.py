@@ -22,11 +22,12 @@ from __future__ import annotations
 __all__ = ["BaseTracer", "CFRayTracer", "DebugTracer"]
 
 import functools
+import io
 import logging
 import time
 import uuid
 
-import aiohttp
+import aiohttp.abc
 
 
 class BaseTracer:
@@ -85,6 +86,17 @@ class CFRayTracer(BaseTracer):
         )
 
 
+class _ByteStreamWriter(io.BytesIO, aiohttp.abc.AbstractStreamWriter):
+    async def write(self, data) -> None:
+        io.BytesIO.write(self, data)
+
+    write_eof = NotImplemented
+    drain = NotImplemented
+    enable_compression = NotImplemented
+    enable_chunking = NotImplemented
+    write_headers = NotImplemented
+
+
 class DebugTracer(BaseTracer):
     """Provides verbose _debug logging of requests.
 
@@ -100,10 +112,31 @@ class DebugTracer(BaseTracer):
         to send logs to anyone.
     """
 
+    @staticmethod
+    async def _format_body(body):
+        if isinstance(body, aiohttp.FormData):
+            # We have to either copy the internal multipart writer, or we have
+            # to make a dummy second instance and read from that. I am putting
+            # my bets on the second option, simply because it reduces the
+            # risk of screwing up the original payload in some weird edge case.
+            # These objects have stateful stuff somewhere by the looks.
+            copy_of_data = aiohttp.FormData()
+            setattr(copy_of_data, "_fields", getattr(copy_of_data, "_fields"))
+            byte_writer = _ByteStreamWriter()
+            await copy_of_data().write(byte_writer)
+            return repr(byte_writer.read())
+        return repr(body)
+
     async def on_request_start(self, _, ctx, params):
         """Log an outbound request."""
         ctx.identifier = f"request_id:{uuid.uuid4()}"
         ctx.start_time = time.perf_counter()
+
+        body = (
+            await self._format_body(ctx.trace_request_ctx.request_body)
+            if hasattr(ctx.trace_request_ctx, "request_body")
+            else "<???>"
+        )
 
         self.logger.debug(
             "%s %s [%s]\n  request headers: %s\n  request body: %s",
@@ -111,7 +144,7 @@ class DebugTracer(BaseTracer):
             params.url,
             ctx.identifier,
             dict(params.headers),
-            getattr(ctx.trace_request_ctx, "request_body", "<unknown>"),
+            body,
         )
 
     async def on_request_end(self, _, ctx, params):
@@ -126,7 +159,7 @@ class DebugTracer(BaseTracer):
             latency,
             ctx.identifier,
             dict(response.headers),
-            await response.read() if "content-type" in response.headers else "<no content>",
+            await self._format_body(await response.read()) if "content-type" in response.headers else "<no content>",
         )
 
     async def on_request_exception(self, _, ctx, params):

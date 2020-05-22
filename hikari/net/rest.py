@@ -40,7 +40,7 @@ from hikari.internal import more_typing
 from hikari.internal import ratelimits
 from hikari.models import bases
 from hikari.models import channels
-from hikari.models import embeds
+from hikari.models import embeds as embeds_
 from hikari.models import emojis
 from hikari.models import files
 from hikari.models import guilds
@@ -164,7 +164,7 @@ class REST(http_client.HTTPClient):
         query: typing.Union[unset.Unset, typing.Mapping[str, str]] = unset.UNSET,
         body: typing.Union[unset.Unset, aiohttp.FormData, more_typing.JSONType] = unset.UNSET,
         reason: typing.Union[unset.Unset, str] = unset.UNSET,
-        suppress_authorization_header: bool = False,
+        no_auth: bool = False,
     ) -> typing.Optional[more_typing.JSONObject, more_typing.JSONArray, bytes, str]:
         # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
         # of JSON response. If an error occurs, the response body is returned in the
@@ -181,8 +181,11 @@ class REST(http_client.HTTPClient):
         headers["x-ratelimit-precision"] = "millisecond"
         headers["accept"] = self._APPLICATION_JSON
 
-        if self._token is not None and not suppress_authorization_header:
+        if self._token is not None and not no_auth:
             headers["authorization"] = self._token
+
+        if unset.is_unset(body):
+            body = None
 
         if not unset.is_unset(reason):
             headers["x-audit-log-reason"] = reason
@@ -353,6 +356,17 @@ class REST(http_client.HTTPClient):
         # As a note, discord will also treat an empty `allowed_mentions` object as if it wasn't passed at all, so we
         # want to use empty lists for blacklisting elements rather than just not including blacklisted elements.
         return allowed_mentions
+
+    def _build_message_creation_form(
+        self, payload: typing.Dict[str, typing.Any], attachments: typing.Sequence[files.BaseStream],
+    ) -> aiohttp.FormData:
+        form = aiohttp.FormData()
+        form.add_field("payload_json", json.dumps(payload), content_type=self._APPLICATION_JSON)
+        for i, attachment in enumerate(attachments):
+            form.add_field(
+                f"file{i}", attachment, filename=attachment.filename, content_type=self._APPLICATION_OCTET_STREAM
+            )
+        return form
 
     async def fetch_channel(
         self, channel: typing.Union[channels.PartialChannel, bases.Snowflake, int], /,
@@ -605,7 +619,7 @@ class REST(http_client.HTTPClient):
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         text: typing.Union[unset.Unset, typing.Any] = unset.UNSET,
         *,
-        embed: typing.Union[unset.Unset, embeds.Embed] = unset.UNSET,
+        embed: typing.Union[unset.Unset, embeds_.Embed] = unset.UNSET,
         attachments: typing.Union[unset.Unset, typing.Sequence[files.BaseStream]] = unset.UNSET,
         tts: typing.Union[unset.Unset, bool] = unset.UNSET,
         nonce: typing.Union[unset.Unset, str] = unset.UNSET,
@@ -615,26 +629,20 @@ class REST(http_client.HTTPClient):
     ) -> messages.Message:
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=conversions.cast_to_str_id(channel))
 
-        payload = {}
+        payload = {"allowed_mentions": self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions)}
         conversions.put_if_specified(payload, "content", text, str)
         conversions.put_if_specified(payload, "embed", embed, self._app.entity_factory.serialize_embed)
         conversions.put_if_specified(payload, "nonce", nonce)
         conversions.put_if_specified(payload, "tts", tts)
 
-        payload["mentions"] = self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions)
+        attachments = [] if unset.is_unset(attachments) else [a for a in attachments]
 
-        if (unset.is_unset(embed) or not embed.assets_to_upload) and attachments is unset.UNSET:
-            response = await self._request(route, body=payload)
-        else:
-            form = aiohttp.FormData()
-            form.add_field("payload_json", json.dumps(payload), content_type=self._APPLICATION_JSON)
-            file_list = [*attachments]
-            if embed is not None and embed.assets_to_upload:
-                file_list.extend(embed.assets_to_upload)
-            for i, file in enumerate(file_list):
-                form.add_field(f"file{i}", file, content_type=self._APPLICATION_OCTET_STREAM)
+        if not unset.is_unset(embed):
+            attachments.extend(embed.assets_to_upload)
 
-            response = await self._request(route, body=form)
+        response = await self._request(
+            route, body=self._build_message_creation_form(payload, attachments) if attachments else payload
+        )
 
         return self._app.entity_factory.deserialize_message(response)
 
@@ -644,7 +652,7 @@ class REST(http_client.HTTPClient):
         message: typing.Union[messages.Message, bases.UniqueObjectT],
         text: typing.Union[unset.Unset, typing.Any] = unset.UNSET,
         *,
-        embed: typing.Union[unset.Unset, embeds.Embed] = unset.UNSET,
+        embed: typing.Union[unset.Unset, embeds_.Embed] = unset.UNSET,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObjectT]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObjectT, guilds.Role]], bool] = True,
@@ -657,7 +665,7 @@ class REST(http_client.HTTPClient):
         conversions.put_if_specified(payload, "content", text, str)
         conversions.put_if_specified(payload, "embed", embed, self._app.entity_factory.serialize_embed)
         conversions.put_if_specified(payload, "flags", flags)
-        payload["mentions"] = self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions)
+        payload["allowed_mentions"] = self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions)
         response = await self._request(route, body=payload)
         return self._app.entity_factory.deserialize_message(response)
 
@@ -752,7 +760,8 @@ class REST(http_client.HTTPClient):
         reason: typing.Union[unset.Unset, str] = unset.UNSET,
     ) -> webhooks.Webhook:
         payload = {"name": name}
-        conversions.put_if_specified(payload, "avatar", await avatar.fetch_data_uri())
+        if not unset.is_unset(avatar):
+            payload["avatar"] = await avatar.fetch_data_uri()
         route = routes.POST_WEBHOOK.compile(channel=conversions.cast_to_str_id(channel))
         response = await self._request(route, body=payload, reason=reason)
         return self._app.entity_factory.deserialize_webhook(response)
@@ -784,6 +793,91 @@ class REST(http_client.HTTPClient):
         route = routes.GET_GUILD_WEBHOOKS.compile(channel=conversions.cast_to_str_id(guild))
         response = await self._request(route)
         return {bases.Snowflake(w["id"]): self._app.entity_factory.deserialize_webhook(w) for w in response}
+
+    async def edit_webhook(
+        self,
+        webhook: typing.Union[webhooks.Webhook, bases.UniqueObjectT],
+        /,
+        *,
+        token: typing.Union[unset.Unset, str] = unset.UNSET,
+        name: typing.Union[unset.Unset, str] = unset.UNSET,
+        avatar: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET,
+        channel: typing.Union[unset.Unset, channels.TextChannel, bases.UniqueObjectT] = unset.UNSET,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> webhooks.Webhook:
+        payload = {}
+        conversions.put_if_specified(payload, "name", name)
+        conversions.put_if_specified(payload, "channel", channel, conversions.cast_to_str_id)
+        if not unset.is_unset(avatar):
+            payload["avatar"] = await avatar.fetch_data_uri()
+
+        if unset.is_unset(token):
+            route = routes.PATCH_WEBHOOK.compile(webhook=conversions.cast_to_str_id(webhook))
+        else:
+            route = routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook=conversions.cast_to_str_id(webhook), token=token)
+
+        response = await self._request(route, body=payload, reason=reason)
+        return self._app.entity_factory.deserialize_webhook(response)
+
+    async def delete_webhook(
+        self,
+        webhook: typing.Union[webhooks.Webhook, bases.UniqueObjectT],
+        /,
+        *,
+        token: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> None:
+        if unset.is_unset(token):
+            route = routes.DELETE_WEBHOOK.compile(webhook=conversions.cast_to_str_id(webhook))
+        else:
+            route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=conversions.cast_to_str_id(webhook), token=token)
+        await self._request(route)
+
+    async def execute_embed(
+        self,
+        webhook: typing.Union[webhooks.Webhook, bases.UniqueObjectT],
+        text: typing.Union[unset.Unset, typing.Any] = unset.UNSET,
+        *,
+        token: typing.Union[unset.Unset, str] = unset.UNSET,
+        username: typing.Union[unset.Unset, str] = unset.UNSET,
+        avatar_url: typing.Union[unset.Unset, str] = unset.UNSET,
+        embeds: typing.Union[unset.Unset, typing.Sequence[embeds_.Embed]] = unset.UNSET,
+        attachments: typing.Union[unset.Unset, typing.Sequence[files.BaseStream]] = unset.UNSET,
+        tts: typing.Union[unset.Unset, bool] = unset.UNSET,
+        wait: typing.Union[unset.Unset, bool] = unset.UNSET,
+        mentions_everyone: bool = False,
+        user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObjectT]], bool] = True,
+        role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObjectT, guilds.Role]], bool] = True,
+    ) -> messages.Message:
+        if unset.is_unset(token):
+            route = routes.POST_WEBHOOK.compile(webhook=conversions.cast_to_str_id(webhook))
+            no_auth = False
+        else:
+            route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=conversions.cast_to_str_id(webhook), token=token)
+            no_auth = True
+
+        attachments = [] if unset.is_unset(attachments) else [a for a in attachments]
+        serialized_embeds = []
+
+        if not unset.is_unset(embeds):
+            for embed in embeds:
+                attachments.extend(embed.assets_to_upload)
+                serialized_embeds.append(self._app.entity_factory.serialize_embed(embed))
+
+        payload = {"mentions": self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions)}
+        conversions.put_if_specified(payload, "content", text, str)
+        conversions.put_if_specified(payload, "embeds", serialized_embeds)
+        conversions.put_if_specified(payload, "username", username)
+        conversions.put_if_specified(payload, "avatar_url", avatar_url)
+        conversions.put_if_specified(payload, "tts", tts)
+        conversions.put_if_specified(payload, "wait", wait)
+
+        response = await self._request(
+            route,
+            body=self._build_message_creation_form(payload, attachments) if attachments else payload,
+            no_auth=no_auth,
+        )
+
+        return self._app.entity_factory.deserialize_message(response)
 
     # Keep this last, then it doesn't cause problems with the imports.
     def typing(
