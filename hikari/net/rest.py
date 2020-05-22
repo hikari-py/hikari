@@ -132,7 +132,7 @@ class REST(http_client.HTTPClient):
     ) -> None:
         super().__init__(
             allow_redirects=config.allow_redirects,
-            connector=config.tcp_connector,
+            connector=config.tcp_connector_factory() if config.tcp_connector_factory else None,
             debug=debug,
             logger_name=f"{type(self).__module__}.{type(self).__qualname__}",
             proxy_auth=config.proxy_auth,
