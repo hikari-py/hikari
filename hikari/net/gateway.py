@@ -123,14 +123,6 @@ class _Reconnect(RuntimeError):
     __slots__ = ()
 
 
-class _Zombie(RuntimeError):
-    __slots__ = ()
-
-
-class _ClientClosed(RuntimeError):
-    __slots__ = ()
-
-
 class _SocketClosed(RuntimeError):
     __slots__ = ()
 
