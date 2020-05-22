@@ -513,7 +513,7 @@ class Gateway(http_client.HTTPClient):
                         time_since_heartbeat_sent,
                     )
                     self._zombied = True
-                    await self._close_ws(_GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "zombie connection")
+                    await self._close_ws(_GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "zombie connection")
                     return
 
                 self.logger.debug(
