@@ -60,8 +60,11 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
         version: int,
     ) -> None:
         self._aiohttp_config = config
+
+        # This is a little hacky workaround to boost performance. We force
+
+        self._gather_task = None
         self._request_close_event = asyncio.Event()
-        self._url = url
         self._shard_count = shard_count
         self._shards = {
             shard_id: gateway.Gateway(
@@ -83,7 +86,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
             )
             for shard_id in shard_ids
         }
-        self._running = False
+        self._tasks = {}
 
     @property
     def gateway_shards(self) -> typing.Mapping[int, gateway.Gateway]:
@@ -94,45 +97,71 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
         return self._shard_count
 
     async def start(self) -> None:
-        self._running = True
+        self._tasks.clear()
+        self._gather_task = None
+
         self._request_close_event.clear()
         self.logger.info("starting %s", conversions.pluralize(len(self._shards), "shard"))
 
         start_time = time.perf_counter()
 
-        for i, shard_id in enumerate(self._shards):
-            if i > 0:
-                self.logger.info("waiting for 5 seconds until next shard can start")
+        try:
+            for i, shard_id in enumerate(self._shards):
+                if self._request_close_event.is_set():
+                    break
 
-                try:
-                    await asyncio.wait_for(self._request_close_event.wait(), timeout=5)
-                    # If this passes, the bot got shut down while sharding.
-                    return
-                except asyncio.TimeoutError:
-                    # Continue, no close occurred.
-                    pass
+                if i > 0:
+                    self.logger.info("waiting for 5 seconds until next shard can start")
 
-            shard_obj = self._shards[shard_id]
-            await shard_obj.start()
+                    completed, _ = await asyncio.wait(
+                        self._tasks.values(), timeout=5, return_when=asyncio.FIRST_COMPLETED
+                    )
+
+                    if completed:
+                        raise completed.pop().exception()
+
+                shard_obj = self._shards[shard_id]
+                self._tasks[shard_id] = await shard_obj.start()
+        finally:
+            if len(self._tasks) != len(self._shards):
+                self.logger.warning(
+                    "application aborted midway through initialization, will begin shutting down %s shard(s)",
+                    len(self._tasks),
+                )
+                await self._abort()
+                return
 
         finish_time = time.perf_counter()
-
+        self._gather_task = asyncio.create_task(
+            self._gather(), name=f"shard zookeeper for {len(self._shards)} shard(s)"
+        )
         self.logger.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
 
         if hasattr(self, "event_dispatcher") and isinstance(self.event_dispatcher, event_dispatcher.IEventDispatcher):
             await self.event_dispatcher.dispatch(other.StartedEvent())
 
     async def join(self) -> None:
-        if self._running:
-            await asyncio.gather(*(shard_obj.join() for shard_obj in self._shards.values()))
+        if self._gather_task is not None:
+            await self._gather_task
+
+    async def _abort(self):
+        for shard_id in self._tasks:
+            await self._shards[shard_id].close()
+        await asyncio.gather(*self._tasks.values(), return_exceptions=True)
+
+    async def _gather(self):
+        try:
+            await asyncio.gather(*self._tasks.values())
+        finally:
+            self.logger.debug("gather failed, shutting down shard(s)")
+            await self.close()
 
     async def close(self) -> None:
-        if self._running:
+        if self._tasks:
             # This way if we cancel the stopping task, we still shut down properly.
             self._request_close_event.set()
-            self._running = False
-            self.logger.info("stopping %s shard(s)", len(self._shards))
-            start_time = time.perf_counter()
+
+            self.logger.info("stopping %s shard(s)", len(self._tasks))
 
             has_event_dispatcher = hasattr(self, "event_dispatcher") and isinstance(
                 self.event_dispatcher, event_dispatcher.IEventDispatcher
@@ -143,42 +172,40 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
                     # noinspection PyUnresolvedReferences
                     await self.event_dispatcher.dispatch(other.StoppingEvent())
 
-                await asyncio.gather(*(shard_obj.close() for shard_obj in self._shards.values()))
+                await self._abort()
             finally:
-                finish_time = time.perf_counter()
-                self.logger.info("stopped %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
+                self._tasks.clear()
 
                 if has_event_dispatcher:
                     # noinspection PyUnresolvedReferences
                     await self.event_dispatcher.dispatch(other.StoppedEvent())
 
+    async def _run(self):
+        await self.start()
+        await self.join()
+
     def run(self):
         loop = asyncio.get_event_loop()
 
         def sigterm_handler(*_):
-            raise KeyboardInterrupt()
+            loop.create_task(self.close())
 
         try:
             with contextlib.suppress(NotImplementedError):
                 # Not implemented on Windows
                 loop.add_signal_handler(signal.SIGTERM, sigterm_handler)
 
-            loop.run_until_complete(self.start())
-            loop.run_until_complete(self.join())
-
-            self.logger.info("client has shut down")
+            loop.run_until_complete(self._run())
 
         except KeyboardInterrupt:
             self.logger.info("received signal to shut down client")
-            loop.run_until_complete(self.close())
-            # Apparently you have to alias except clauses or you get an
-            # UnboundLocalError.
             raise
         finally:
             loop.run_until_complete(self.close())
             with contextlib.suppress(NotImplementedError):
                 # Not implemented on Windows
                 loop.remove_signal_handler(signal.SIGTERM)
+            self.logger.info("client has shut down")
 
     async def update_presence(
         self,

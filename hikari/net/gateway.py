@@ -24,6 +24,7 @@ __all__ = ["Gateway"]
 
 import asyncio
 import json
+import math
 import time
 import typing
 import urllib.parse
@@ -126,6 +127,14 @@ class _Zombie(RuntimeError):
     __slots__ = ()
 
 
+class _ClientClosed(RuntimeError):
+    __slots__ = ()
+
+
+class _SocketClosed(RuntimeError):
+    __slots__ = ()
+
+
 @attr.s(auto_attribs=True, slots=True)
 class _InvalidSession(RuntimeError):
     can_resume: bool = False
@@ -197,7 +206,7 @@ class Gateway(http_client.HTTPClient):
     ) -> None:
         super().__init__(
             allow_redirects=config.allow_redirects,
-            connector=config.tcp_connector,
+            connector=config.tcp_connector_factory() if config.tcp_connector_factory else None,
             debug=debug,
             logger_name=f"{type(self).__module__}.{type(self).__qualname__}.{shard_id}",
             proxy_auth=config.proxy_auth,
@@ -209,14 +218,14 @@ class Gateway(http_client.HTTPClient):
             trust_env=config.trust_env,
         )
         self._activity = initial_activity
+        self._backoff = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         self._dispatch = dispatch
         self._handshake_event = asyncio.Event()
-        self._heartbeat_task = None
         self._idle_since = initial_idle_since
         self._intents = intents
         self._is_afk = initial_is_afk
+        self._last_run_started_at = float("nan")
         self._request_close_event = asyncio.Event()
-        self._run_task = None
         self._seq = None
         self._session_id = None
         self._shard_id = shard_id
@@ -227,9 +236,9 @@ class Gateway(http_client.HTTPClient):
         self._version = version
         self._ws = None
         self._zlib = None
+        self._zombied = False
 
         self.connected_at = float("nan")
-        self.disconnect_count = 0
         self.heartbeat_interval = float("nan")
         self.heartbeat_latency = float("nan")
         self.last_heartbeat_sent = float("nan")
@@ -251,115 +260,138 @@ class Gateway(http_client.HTTPClient):
     @property
     def is_alive(self) -> bool:
         """Return whether the shard is alive."""
-        return self._run_task is not None and not self._run_task.done()
+        return not math.isnan(self.connected_at)
 
-    async def start(self) -> None:
-        """Start the gateway and wait for the handshake to complete.
+    async def start(self) -> more_typing.Task[None]:
+        """Start the shard, wait for it to become ready.
 
-        This will continue to keep the connection alive in the background once
-        the handshake succeeds.
-
-        If the handshake fails, this will raise the corresponding exception
-        immediately.
+        Returns
+        -------
+        asyncio.Task
+            The task containing the shard running logic. Awaiting this will
+            wait until the shard has shut down before returning.
         """
-        task = asyncio.create_task(self.run(), name=f"gateway shard {self._shard_id} starter")
-
-        handshake_waiter = asyncio.create_task(
-            self._handshake_event.wait(), name=f"gateway shard {self._shard_id} wait for handshake"
-        )
-
-        await asyncio.wait([handshake_waiter, task], return_when=asyncio.FIRST_COMPLETED)
-
-        if not handshake_waiter.done():
-            handshake_waiter.cancel()
+        run_task = asyncio.create_task(self._run(), name=f"shard {self._shard_id} keep-alive")
+        await self._handshake_event.wait()
+        return run_task
 
     async def close(self) -> None:
-        """Request that the shard shuts down, then wait for it to close."""
-        if self.is_alive:
-            self.logger.debug("received signal to shut shard down, will proceed to close runners")
+        """Close the websocket."""
+        if not self._request_close_event.is_set():
+            if self.is_alive:
+                self.logger.info("received request to shut down shard")
+            else:
+                self.logger.debug("shard marked as closed before it was able to start")
             self._request_close_event.set()
-            try:
-                await self.join()
-            finally:
-                await super().close()
-        else:
-            self.logger.debug("received signal to shut shard down, but I am not running anyway")
 
-    async def join(self) -> None:
-        """Wait for the shard to shut down."""
-        if self._run_task is not None:
-            await self._run_task
-
-    async def run(self) -> None:
-        """Start the shard and wait for it to shut down."""
-        self._run_task = asyncio.Task.current_task()
-        self._run_task.set_name(f"gateway shard {self._shard_id} runner")
-
-        # Clear the reference when we die.
-        self._run_task.add_done_callback(lambda _: setattr(self, "_run_task", None))
-
-        back_off = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
-        last_start = self._now()
-        do_not_back_off = True
-
-        while True:
-            try:
-                if not do_not_back_off and self._now() - last_start < 30:
-                    next_back_off = next(back_off)
-                    self.logger.info(
-                        "restarted within 30 seconds, will back off for %.2fs", next_back_off,
-                    )
-                    await asyncio.sleep(next_back_off)
-                else:
-                    back_off.reset()
-
-                last_start = self._now()
-                do_not_back_off = False
-
-                await self._run_once()
-                raise RuntimeError("This shouldn't be reached unless an expected condition is never met")
-
-            except aiohttp.ClientConnectorError as ex:
-                self.logger.exception(
-                    "failed to connect to Discord to initialize a websocket connection", exc_info=ex,
-                )
-
-            except _Zombie:
-                self.logger.warning("entered a zombie state and will be restarted")
-                # No need to shut down, the socket is dead anyway.
-
-            except _InvalidSession as ex:
-                if ex.can_resume:
-                    self.logger.warning("invalid session, so will attempt to resume session %s", self._session_id)
-                    await self._close_ws(_GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
-                else:
-                    self.logger.warning("invalid session, so will attempt to reconnect with new session")
-                    await self._close_ws(_GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
-                    self._seq = None
-                    self._session_id = None
-
-                do_not_back_off = True
-                await asyncio.sleep(5)
-
-            except _Reconnect:
-                self.logger.warning("instructed by Discord to reconnect and resume session %s", self._session_id)
-                do_not_back_off = True
-                await self._close_ws(_GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "reconnecting")
-                await asyncio.sleep(5)
-
-            except errors.GatewayClientDisconnectedError:
-                self.logger.warning("unexpected connection close, will attempt to reconnect")
-                # No need to shut down, the socket is dead anyway.
-
-            except errors.GatewayClientClosedError:
+            if self._ws is not None:
                 self.logger.warning("gateway client closed by user, will not attempt to restart")
                 await self._close_ws(_GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "user shut down application")
-                return
 
-            except Exception as ex:
-                self.logger.critical("unexpected exception occurred, shard will now die", exc_info=ex)
-                await self._close_ws(_GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
-                raise
+    async def _run(self) -> None:
+        """Start the shard and wait for it to shut down."""
+        try:
+            # This may be set if we are stuck in a reconnect loop.
+            while not self._request_close_event.is_set() and await self._run_once():
+                pass
+
+            # Allow zookeepers to stop gathering tasks for each shard.
+            raise errors.GatewayClientClosedError()
+        finally:
+            # This is set to ensure that the `start' waiter does not deadlock if
+            # we cannot connect successfully. It is a hack, but it works.
+            self._handshake_event.set()
+            await super().close()
+
+    async def _run_once(self) -> bool:
+        # returns `True` if we can reconnect, or `False` otherwise.
+        self._request_close_event.clear()
+
+        if self._now() - self._last_run_started_at < 30:
+            # Interrupt sleep immediately if a request to close is fired.
+            wait_task = asyncio.create_task(self._request_close_event.wait())
+            try:
+                backoff = next(self._backoff)
+                self.logger.debug("backing off for %ss", backoff)
+                await asyncio.wait_for(wait_task, timeout=backoff)
+            except asyncio.TimeoutError:
+                pass
+
+        # Do this after; it prevents backing off on the first try.
+        self._last_run_started_at = self._now()
+
+        try:
+            self.logger.debug("creating websocket connection to %s", self.url)
+            self._ws = await self._create_ws(self.url)
+            self.connected_at = self._now()
+
+            self._zlib = zlib.decompressobj()
+
+            self._handshake_event.clear()
+            self._request_close_event.clear()
+
+            await self._handshake()
+
+            # Technically we are connected after the hello, but this ensures we can send and receive
+            # before firing that event.
+            asyncio.create_task(self._dispatch(self, "CONNECTED", {}), name=f"shard {self._shard_id} CONNECTED")
+
+            # We should ideally set this after HELLO, but it should be fine
+            # here as well. If we don't heartbeat in time, something probably
+            # went majorly wrong anyway.
+            heartbeat = asyncio.create_task(self._pulse(), name=f"shard {self._shard_id} heartbeat")
+
+            try:
+                await self._poll_events()
+            finally:
+                heartbeat.cancel()
+
+            return False
+
+        except aiohttp.ClientConnectorError as ex:
+            self.logger.error(
+                "failed to connect to Discord because %s.%s: %s", type(ex).__module__, type(ex).__qualname__, str(ex),
+            )
+
+        except _InvalidSession as ex:
+            if ex.can_resume:
+                self.logger.warning("invalid session, so will attempt to resume session %s", self._session_id)
+                await self._close_ws(_GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
+            else:
+                self.logger.warning("invalid session, so will attempt to reconnect with new session")
+                await self._close_ws(_GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
+                self._seq = None
+                self._session_id = None
+
+        except _Reconnect:
+            self.logger.warning("instructed by Discord to reconnect and resume session %s", self._session_id)
+            self._backoff.reset()
+            await self._close_ws(_GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "reconnecting")
+
+        except _SocketClosed:
+            # The socket has already closed, so no need to close it again.
+            if not self._zombied and not self._request_close_event.is_set():
+                # This will occur due to a network issue such as a network adapter going down.
+                self.logger.warning("unexpected socket closure, will attempt to reconnect")
+            else:
+                self._backoff.reset()
+            return not self._request_close_event.is_set()
+
+        except Exception as ex:
+            self.logger.error("unexpected exception occurred, shard will now die", exc_info=ex)
+            await self._close_ws(_GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
+            raise
+
+        finally:
+            if not math.isnan(self.connected_at):
+                # Only dispatch this if we actually connected before we failed!
+                asyncio.create_task(
+                    self._dispatch(self, "DISCONNECTED", {}), name=f"shard {self._shard_id} DISCONNECTED"
+                )
+
+            self.connected_at = float("nan")
+
+        return True
 
     async def update_presence(
         self,
@@ -432,41 +464,6 @@ class Gateway(http_client.HTTPClient):
         self.logger.debug("sending close frame with code %s and message %r", code.value, message)
         await self._ws.close(code=code, message=bytes(message, "utf-8"))
 
-    async def _run_once(self) -> None:
-        try:
-            self.logger.debug("creating websocket connection to %s", self.url)
-            self._ws = await self._create_ws(self.url)
-            self._zlib = zlib.decompressobj()
-
-            self._handshake_event.clear()
-            self._request_close_event.clear()
-
-            await self._handshake()
-
-            # We should ideally set this after HELLO, but it should be fine
-            # here as well. If we don't heartbeat in time, something probably
-            # went majorly wrong anyway.
-            heartbeat_task = asyncio.create_task(self._pulse(), name=f"gateway shard {self._shard_id} heartbeat")
-
-            poll_events_task = asyncio.create_task(self._poll_events(), name=f"gateway shard {self._shard_id} poll")
-
-            try:
-                _, pending = await asyncio.wait([heartbeat_task, poll_events_task], return_when=asyncio.FIRST_COMPLETED)
-                for future in pending:
-                    future.cancel()
-
-                await asyncio.gather(*pending, return_exceptions=True)
-
-            except asyncio.TimeoutError:
-                raise _Zombie()
-            else:
-                raise errors.GatewayClientClosedError()
-
-        finally:
-            asyncio.create_task(
-                self._dispatch(self, "DISCONNECTED", {}), name=f"gateway shard {self._shard_id} dispatch DISCONNECTED"
-            )
-
     async def _handshake(self) -> None:
         # HELLO!
         message = await self._receive_json_payload()
@@ -476,9 +473,6 @@ class Gateway(http_client.HTTPClient):
 
         self.heartbeat_interval = message["d"]["heartbeat_interval"] / 1_000.0
 
-        asyncio.create_task(
-            self._dispatch(self, "CONNECTED", {}), name=f"gateway shard {self._shard_id} dispatch CONNECTED"
-        )
         self.logger.debug("received HELLO")
 
         if self._session_id is not None:
@@ -514,20 +508,36 @@ class Gateway(http_client.HTTPClient):
             await self._send_json(payload)
 
     async def _pulse(self) -> None:
-        while not self._request_close_event.is_set():
-            time_since_message = self._now() - self.last_message_received
-            if self.heartbeat_interval < time_since_message:
-                self.logger.error("connection is a zombie, haven't received any message for %ss", time_since_message)
-                raise _Zombie()
+        try:
+            while not self._request_close_event.is_set():
+                now = self._now()
+                time_since_message = now - self.last_message_received
+                time_since_heartbeat_sent = now - self.last_heartbeat_sent
 
-            self.logger.debug("preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, self.heartbeat_interval)
-            await self._send_json({"op": _GatewayOpcode.HEARTBEAT, "d": self._seq})
-            self.last_heartbeat_sent = self._now()
+                if self.heartbeat_interval < time_since_message:
+                    self.logger.error(
+                        "connection is a zombie, haven't received any message for %ss, last heartbeat sent %ss ago",
+                        time_since_message,
+                        time_since_heartbeat_sent,
+                    )
+                    self._zombied = True
+                    await self._close_ws(_GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "zombie connection")
+                    return
 
-            try:
-                await asyncio.wait_for(self._request_close_event.wait(), timeout=self.heartbeat_interval)
-            except asyncio.TimeoutError:
-                pass
+                self.logger.debug(
+                    "preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, self.heartbeat_interval
+                )
+                await self._send_json({"op": _GatewayOpcode.HEARTBEAT, "d": self._seq})
+                self.last_heartbeat_sent = self._now()
+
+                try:
+                    await asyncio.wait_for(self._request_close_event.wait(), timeout=self.heartbeat_interval)
+                except asyncio.TimeoutError:
+                    pass
+
+        except asyncio.CancelledError:
+            # This happens if the poll task has stopped. It isn't a problem we need to report.
+            pass
 
     async def _poll_events(self) -> None:
         while not self._request_close_event.is_set():
@@ -547,9 +557,7 @@ class Gateway(http_client.HTTPClient):
                     self.logger.info("connection has resumed [session:%s, seq:%s]", self._session_id, self._seq)
                     self._handshake_event.set()
 
-                asyncio.create_task(
-                    self._dispatch(self, event, data), name=f"gateway shard {self._shard_id} dispatch {event}"
-                )
+                asyncio.create_task(self._dispatch(self, event, data), name=f"shard {self._shard_id} {event}")
 
             elif op == _GatewayOpcode.HEARTBEAT:
                 self.logger.debug("received HEARTBEAT; sending HEARTBEAT ACK")
@@ -597,12 +605,9 @@ class Gateway(http_client.HTTPClient):
             )
 
             raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect, False, True)
+
         elif message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
-            if self._request_close_event.is_set():
-                self.logger.debug("user has requested the gateway to close")
-                raise errors.GatewayClientClosedError()
-            self.logger.debug("connection has been closed unexpectedly, probably a network issue")
-            raise errors.GatewayClientDisconnectedError()
+            raise _SocketClosed()
         else:
             # Assume exception for now.
             ex = self._ws.exception()

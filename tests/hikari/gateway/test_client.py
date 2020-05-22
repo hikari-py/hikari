@@ -342,7 +342,7 @@ class TestShardClientImplStart:
             errors.GatewayInvalidSessionError(False),
             errors.GatewayInvalidSessionError(True),
             errors.GatewayMustReconnectError(),
-            errors.GatewayClientDisconnectedError(),
+            errors.GatewayNetworkError(),
         ],
     )
     @pytest.mark.asyncio

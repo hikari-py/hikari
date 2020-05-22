@@ -193,8 +193,8 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         """Close the client safely."""
         with contextlib.suppress(Exception):
             await self.__client_session.close()
+            self.logger.debug("closed client session object %r", self.__client_session)
             self.__client_session = None
-            self.logger.debug("closed client session")
 
     def _acquire_client_session(self) -> aiohttp.ClientSession:
         """Acquire a client session to make requests with.
@@ -212,6 +212,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
                 json_serialize=json.dumps,
                 trace_configs=[t.trace_config for t in self._tracers],
             )
+            self.logger.debug("acquired new client session object %r", self.__client_session)
         return self.__client_session
 
     async def _perform_request(
