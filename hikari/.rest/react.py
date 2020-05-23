@@ -37,7 +37,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import emojis
 
 
-class _ReactionPaginator(pagination.BufferedPaginatedResults[messages_.Reaction]):
+class _ReactionPaginator(pagination.BufferedLazyIterator[messages_.Reaction]):
     __slots__ = ("_app", "_channel_id", "_message_id", "_first_id", "_emoji", "_session")
 
     def __init__(self, app, channel, message, emoji, users_after, session) -> None:
@@ -212,7 +212,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
         message: typing.Union[bases.Snowflake, int, str, messages_.Message],
         emoji: typing.Union[emojis.Emoji, str],
         after: typing.Optional[typing.Union[datetime.datetime, bases.Unique, bases.Snowflake, int, str]] = None,
-    ) -> pagination.PaginatedResults[users.User]:
+    ) -> pagination.LazyIterator[users.User]:
         """Get an async iterator of the users who reacted to a message.
 
         This returns the users created after a given user object/ID or from the
@@ -245,7 +245,7 @@ class RESTReactionComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable
 
         Returns
         -------
-        hikari.models.pagination.PaginatedResults[hikari.models.users.User]
+        hikari.models.pagination.LazyIterator[hikari.models.users.User]
             An async iterator of user objects.
 
         Raises

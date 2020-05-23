@@ -45,7 +45,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import users
 
 
-class _MemberPaginator(pagination.BufferedPaginatedResults[guilds.GuildMember]):
+class _MemberPaginator(pagination.BufferedLazyIterator[guilds.GuildMember]):
     __slots__ = ("_app", "_guild_id", "_first_id", "_session")
 
     def __init__(self, app, guild, created_after, session):
@@ -862,7 +862,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     def fetch_members(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
-    ) -> pagination.PaginatedResults[guilds.GuildMember]:
+    ) -> pagination.LazyIterator[guilds.GuildMember]:
         """Get an async iterator of all the members in a given guild.
 
         Parameters
@@ -878,7 +878,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        hikari.models.pagination.PaginatedResults[[hikari.models.guilds.GuildMember]
+        hikari.models.pagination.LazyIterator[[hikari.models.guilds.GuildMember]
             An async iterator of member objects.
 
         Raises

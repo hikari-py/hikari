@@ -37,6 +37,7 @@ from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.internal import more_typing
 from hikari.internal import ratelimits
+from hikari.models import applications
 from hikari.models import bases
 from hikari.models import channels
 from hikari.models import embeds as embeds_
@@ -500,7 +501,7 @@ class REST(http_client.HTTPClient):
     @typing.overload
     def fetch_messages(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
-    ) -> pagination.PaginatedResults[messages.Message]:
+    ) -> pagination.LazyIterator[messages.Message]:
         ...
 
     @typing.overload
@@ -510,7 +511,7 @@ class REST(http_client.HTTPClient):
         /,
         *,
         before: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> pagination.PaginatedResults[messages.Message]:
+    ) -> pagination.LazyIterator[messages.Message]:
         ...
 
     @typing.overload
@@ -520,7 +521,7 @@ class REST(http_client.HTTPClient):
         /,
         *,
         around: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> pagination.PaginatedResults[messages.Message]:
+    ) -> pagination.LazyIterator[messages.Message]:
         ...
 
     @typing.overload
@@ -530,7 +531,7 @@ class REST(http_client.HTTPClient):
         /,
         *,
         after: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> pagination.PaginatedResults[messages.Message]:
+    ) -> pagination.LazyIterator[messages.Message]:
         ...
 
     def fetch_messages(
@@ -538,7 +539,7 @@ class REST(http_client.HTTPClient):
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         /,
         **kwargs: typing.Optional[typing.Union[datetime.datetime, bases.UniqueObjectT]],
-    ) -> pagination.PaginatedResults[messages.Message]:
+    ) -> pagination.LazyIterator[messages.Message]:
         if len(kwargs) == 1 and any(direction in kwargs for direction in ("before", "after", "around")):
             direction, timestamp = kwargs.popitem()
         elif not kwargs:
@@ -711,8 +712,8 @@ class REST(http_client.HTTPClient):
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         message: typing.Union[messages.Message, bases.UniqueObjectT],
         emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
-    ) -> pagination.PaginatedResults[users.User]:
-        return rest_utils.ReactionPaginator(
+    ) -> pagination.LazyIterator[users.User]:
+        return rest_utils.ReactorPaginator(
             app=self._app,
             request_call=self._request,
             channel_id=conversions.cast_to_str_id(channel),
@@ -865,4 +866,50 @@ class REST(http_client.HTTPClient):
 
     async def delete_invite(self, invite: typing.Union[invites.Invite, str]) -> None:
         route = routes.DELETE_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
-        response = await self._request(route)
+        await self._request(route)
+
+    async def fetch_my_user(self) -> users.MyUser:
+        response = await self._request(routes.GET_MY_USER.compile())
+        return self._app.entity_factory.deserialize_my_user(response)
+
+    async def edit_my_user(
+        self,
+        *,
+        username: typing.Union[unset.Unset, str] = unset.UNSET,
+        avatar: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET,
+    ) -> users.MyUser:
+        payload = {}
+        conversions.put_if_specified(payload, "username", username)
+        if not unset.is_unset(username):
+            payload["avatar"] = await avatar.read()
+        route = routes.PATCH_MY_USER.compile()
+        response = await self._request(route, body=payload)
+        return self._app.entity_factory.deserialize_my_user(response)
+
+    async def fetch_my_connections(self) -> typing.Sequence[applications.OwnConnection]:
+        response = await self._request(routes.GET_MY_CONNECTIONS.compile())
+        return [self._app.entity_factory.deserialize_own_connection(c) for c in response]
+
+    def fetch_my_guilds(
+        self,
+        *,
+        newest_first: bool = False,
+        start_at: typing.Union[unset.Unset, guilds.PartialGuild, bases.UniqueObjectT, datetime.datetime] = unset.UNSET,
+    ) -> pagination.LazyIterator[applications.OwnGuild]:
+        if unset.is_unset(start_at):
+            start_at = bases.Snowflake.max() if newest_first else bases.Snowflake.min()
+        elif isinstance(start_at, datetime.datetime):
+            start_at = bases.Snowflake.from_datetime(start_at)
+
+        return rest_utils.OwnGuildPaginator(
+            self._app, self._request, newest_first, conversions.cast_to_str_id(start_at)
+        )
+
+    async def leave_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT]) -> None:
+        route = routes.DELETE_MY_GUILD.compile(guild=conversions.cast_to_str_id(guild))
+        await self._request(route)
+
+    async def create_dm_channel(self, user: typing.Union[users.User, bases.UniqueObjectT]) -> channels.DMChannel:
+        route = routes.POST_MY_CHANNELS.compile()
+        response = await self._request(route, body={"recipient_id": conversions.cast_to_str_id(user)})
+        return self._app.entity_factory.deserialize_dm_channel(response)

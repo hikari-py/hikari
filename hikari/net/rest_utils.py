@@ -32,24 +32,25 @@ import typing
 
 from hikari import pagination
 from hikari.internal import conversions
+from hikari.models import applications
 from hikari.models import bases
+from hikari.models import channels
+from hikari.models import messages
+from hikari.models import users
 from hikari.net import routes
-
 
 if typing.TYPE_CHECKING:
     from hikari import base_app
     from hikari.internal import more_typing
-    from hikari.models import channels
-    from hikari.models import messages
 
 
-class MessagePaginator(pagination.BufferedPaginatedResults[messages.Message]):
+class MessagePaginator(pagination.BufferedLazyIterator[messages.Message]):
     __slots__ = ("_app", "_request_call", "_direction", "_first_id", "_route")
 
     def __init__(
         self,
         app: base_app.IBaseApp,
-        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
+        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
         channel_id: str,
         direction: str,
         first_id: str,
@@ -70,17 +71,16 @@ class MessagePaginator(pagination.BufferedPaginatedResults[messages.Message]):
             chunk.reverse()
 
         self._first_id = chunk[-1]["id"]
-
         return (self._app.entity_factory.deserialize_message(m) for m in chunk)
 
 
-class ReactionPaginator(pagination.BufferedPaginatedResults[messages.Reaction]):
+class ReactorPaginator(pagination.BufferedLazyIterator[users.User]):
     __slots__ = ("_app", "_first_id", "_route", "_request_call")
 
     def __init__(
         self,
         app: base_app.IBaseApp,
-        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
+        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
         channel_id: str,
         message_id: str,
         emoji: str,
@@ -91,15 +91,43 @@ class ReactionPaginator(pagination.BufferedPaginatedResults[messages.Reaction]):
         self._first_id = bases.Snowflake.min()
         self._route = routes.GET_REACTIONS.compile(channel_id=channel_id, message_id=message_id, emoji=emoji)
 
-    async def _next_chunk(self):
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[users.User, typing.Any, None]]:
         chunk = await self._request_call(self._route, query={"after": self._first_id, "limit": 100})
 
         if not chunk:
             return None
 
         self._first_id = chunk[-1]["id"]
-
         return (self._app.entity_factory.deserialize_user(u) for u in chunk)
+
+
+class OwnGuildPaginator(pagination.BufferedLazyIterator[applications.OwnGuild]):
+    __slots__ = ("_app", "_request_call", "_route", "_newest_first", "_first_id")
+
+    def __init__(
+        self,
+        app: base_app.IBaseApp,
+        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
+        newest_first: bool,
+        first_id: str,
+    ) -> None:
+        super().__init__()
+        self._app = app
+        self._newest_first = newest_first
+        self._request_call = request_call
+        self._first_id = first_id
+        self._route = routes.GET_MY_GUILDS.compile()
+
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[applications.OwnGuild, typing.Any, None]]:
+        kwargs = {"before" if self._newest_first else "after": self._first_id, "limit": 100}
+
+        chunk = await self._request_call(self._route, query=kwargs)
+
+        if not chunk:
+            return None
+
+        self._first_id = chunk[-1]["id"]
+        return (self._app.entity_factory.deserialize_own_guild(g) for g in chunk)
 
 
 class TypingIndicator:
@@ -108,7 +136,7 @@ class TypingIndicator:
     def __init__(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        request_call=typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
+        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
     ) -> None:
         self._channel = conversions.cast_to_str_id(channel)
         self._request_call = request_call
@@ -118,7 +146,7 @@ class TypingIndicator:
         route = routes.POST_CHANNEL_TYPING.compile(channel=self._channel)
         yield from self._request_call(route).__await__()
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> None:
         if self._task is not None:
             raise TypeError("cannot enter a typing indicator context more than once.")
         self._task = asyncio.create_task(self._keep_typing(), name=f"repeatedly trigger typing in {self._channel}")
