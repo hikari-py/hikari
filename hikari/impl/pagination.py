@@ -30,7 +30,7 @@ from hikari.models import messages
 from hikari.models import users
 
 
-class GuildPaginator(pagination.BufferedPaginatedResults[guilds.Guild]):
+class GuildPaginator(pagination.BufferedLazyIterator[guilds.Guild]):
     __slots__ = ("_app", "_newest_first", "_first_id", "_request_partial")
 
     def __init__(self, app, newest_first, first_item, request_partial):
@@ -55,7 +55,7 @@ class GuildPaginator(pagination.BufferedPaginatedResults[guilds.Guild]):
         return (applications.OwnGuild.deserialize(g, app=self._app) for g in chunk)
 
 
-class MemberPaginator(pagination.BufferedPaginatedResults[guilds.GuildMember]):
+class MemberPaginator(pagination.BufferedLazyIterator[guilds.GuildMember]):
     __slots__ = ("_app", "_guild_id", "_first_id", "_request_partial")
 
     def __init__(self, app, guild, created_after, request_partial):
@@ -76,7 +76,7 @@ class MemberPaginator(pagination.BufferedPaginatedResults[guilds.GuildMember]):
         return (guilds.GuildMember.deserialize(m, app=self._app) for m in chunk)
 
 
-class MessagePaginator(pagination.BufferedPaginatedResults[messages.Message]):
+class MessagePaginator(pagination.BufferedLazyIterator[messages.Message]):
     __slots__ = ("_app", "_channel_id", "_direction", "_first_id", "_request_partial")
 
     def __init__(self, app, channel, direction, first, request_partial) -> None:
@@ -108,7 +108,7 @@ class MessagePaginator(pagination.BufferedPaginatedResults[messages.Message]):
         return (messages.Message.deserialize(m, app=self._app) for m in chunk)
 
 
-class ReactionPaginator(pagination.BufferedPaginatedResults[messages.Reaction]):
+class ReactionPaginator(pagination.BufferedLazyIterator[messages.Reaction]):
     __slots__ = ("_app", "_channel_id", "_message_id", "_first_id", "_emoji", "_request_partial")
 
     def __init__(self, app, channel, message, emoji, users_after, request_partial) -> None:

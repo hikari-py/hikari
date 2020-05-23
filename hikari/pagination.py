@@ -20,16 +20,14 @@
 from __future__ import annotations
 
 import abc
-import datetime
 import typing
 
 from hikari.internal import more_collections
-from hikari.models import bases
 
 _T = typing.TypeVar("_T")
 
 
-class PaginatedResults(typing.Generic[_T], abc.ABC):
+class LazyIterator(typing.Generic[_T], abc.ABC):
     """A set of results that are fetched asynchronously from the API as needed.
 
     This is a `typing.AsyncIterable` and `typing.AsyncIterator` with several
@@ -79,7 +77,7 @@ class PaginatedResults(typing.Generic[_T], abc.ABC):
 
     __slots__ = ()
 
-    def enumerate(self, *, start: int = 0) -> PaginatedResults[typing.Tuple[int, _T]]:
+    def enumerate(self, *, start: int = 0) -> LazyIterator[typing.Tuple[int, _T]]:
         """Enumerate the paginated results lazily.
 
         This behaves as an asyncio-friendly version of `builtins.enumerate`
@@ -117,13 +115,13 @@ class PaginatedResults(typing.Generic[_T], abc.ABC):
 
         Returns
         -------
-        PaginatedResults[typing.Tuple[int, T]]
+        LazyIterator[typing.Tuple[int, T]]
             A paginated results view that asynchronously yields an increasing
             counter in a tuple with each result, lazily.
         """
-        return _EnumeratedPaginatedResults(self, start=start)
+        return _EnumeratedLazyIterator(self, start=start)
 
-    def limit(self, limit: int) -> PaginatedResults[_T]:
+    def limit(self, limit: int) -> LazyIterator[_T]:
         """Limit the number of items you receive from this async iterator.
 
         Parameters
@@ -139,16 +137,16 @@ class PaginatedResults(typing.Generic[_T], abc.ABC):
 
         Returns
         -------
-        PaginatedResults[T]
+        LazyIterator[T]
             A paginated results view that asynchronously yields a maximum
             of the given number of items before completing.
         """
-        return _LimitedPaginatedResults(self, limit)
+        return _LimitedLazyIterator(self, limit)
 
     def _complete(self) -> typing.NoReturn:
         raise StopAsyncIteration("No more items exist in this paginator. It has been exhausted.") from None
 
-    def __aiter__(self) -> PaginatedResults[_T]:
+    def __aiter__(self) -> LazyIterator[_T]:
         # We are our own iterator.
         return self
 
@@ -166,10 +164,10 @@ class PaginatedResults(typing.Generic[_T], abc.ABC):
 _EnumeratedT = typing.Tuple[int, _T]
 
 
-class _EnumeratedPaginatedResults(typing.Generic[_T], PaginatedResults[_EnumeratedT]):
+class _EnumeratedLazyIterator(typing.Generic[_T], LazyIterator[_EnumeratedT]):
     __slots__ = ("_i", "_paginator")
 
-    def __init__(self, paginator: PaginatedResults[_T], *, start: int) -> None:
+    def __init__(self, paginator: LazyIterator[_T], *, start: int) -> None:
         self._i = start
         self._paginator = paginator
 
@@ -179,10 +177,10 @@ class _EnumeratedPaginatedResults(typing.Generic[_T], PaginatedResults[_Enumerat
         return pair
 
 
-class _LimitedPaginatedResults(typing.Generic[_T], PaginatedResults[_T]):
+class _LimitedLazyIterator(typing.Generic[_T], LazyIterator[_T]):
     __slots__ = ("_paginator", "_count", "_limit")
 
-    def __init__(self, paginator: PaginatedResults[_T], limit: int) -> None:
+    def __init__(self, paginator: LazyIterator[_T], limit: int) -> None:
         if limit <= 0:
             raise ValueError("limit must be positive and non-zero")
         self._paginator = paginator
@@ -198,7 +196,7 @@ class _LimitedPaginatedResults(typing.Generic[_T], PaginatedResults[_T]):
         return next_item
 
 
-class BufferedPaginatedResults(typing.Generic[_T], PaginatedResults[_T]):
+class BufferedLazyIterator(typing.Generic[_T], LazyIterator[_T]):
     """A buffered paginator implementation that handles chunked responses."""
 
     __slots__ = ("_buffer",)
