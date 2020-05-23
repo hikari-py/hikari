@@ -421,7 +421,7 @@ class Message(bases.Unique, marshaller.Deserializable):
             typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
         ] = True,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.Role]], bool
         ] = True,
     ) -> Message:
         """Edit this message.
@@ -442,7 +442,7 @@ class Message(bases.Unique, marshaller.Deserializable):
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str] | bool
+        role_mentions: typing.Collection[hikari.models.guilds.Role | hikari.models.bases.Snowflake | int | str] | bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -492,7 +492,7 @@ class Message(bases.Unique, marshaller.Deserializable):
             typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
         ] = False,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.Role]], bool
         ] = False,
     ) -> Message:
         """Edit this message.
@@ -521,7 +521,7 @@ class Message(bases.Unique, marshaller.Deserializable):
             typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
         ] = True,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.Role]], bool
         ] = True,
         nonce: str = ...,
         tts: bool = ...,
@@ -551,7 +551,7 @@ class Message(bases.Unique, marshaller.Deserializable):
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str] | bool
+        role_mentions: typing.Collection[hikari.models.guilds.Role | hikari.models.bases.Snowflake | int | str] | bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -604,7 +604,7 @@ class Message(bases.Unique, marshaller.Deserializable):
             typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
         ] = False,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.Role]], bool
         ] = False,
         nonce: str = ...,
         tts: bool = ...,

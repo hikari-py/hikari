@@ -41,6 +41,9 @@ class Unset(meta.Singleton):
     def __repr__(self) -> str:
         return type(self).__name__.upper()
 
+    def __iter__(self) -> typing.Iterator[None]:
+        yield from ()
+
     __str__ = __repr__
 
     def __init_subclass__(cls, **kwargs: typing.Any) -> typing.NoReturn:

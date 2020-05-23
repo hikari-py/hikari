@@ -25,6 +25,7 @@ __all__ = [
     "PermissionOverwrite",
     "PermissionOverwriteType",
     "PartialChannel",
+    "TextChannel",
     "DMChannel",
     "GroupDMChannel",
     "GuildCategory",
@@ -147,6 +148,11 @@ def register_channel_type(
     return decorator
 
 
+class TextChannel:
+    # This is a mixin, do not add slotted fields.
+    __slots__ = ()
+
+
 @marshaller.marshallable()
 @attr.s(eq=True, hash=True, kw_only=True, slots=True)
 class PartialChannel(bases.Unique, marshaller.Deserializable):
@@ -171,7 +177,7 @@ def _deserialize_recipients(payload: more_typing.JSONArray, **kwargs: typing.Any
 @register_channel_type(ChannelType.DM)
 @marshaller.marshallable()
 @attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class DMChannel(PartialChannel):
+class DMChannel(PartialChannel, TextChannel):
     """Represents a DM channel."""
 
     last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
@@ -299,7 +305,7 @@ def _deserialize_rate_limit_per_user(payload: int) -> datetime.timedelta:
 @register_channel_type(ChannelType.GUILD_TEXT)
 @marshaller.marshallable()
 @attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class GuildTextChannel(GuildChannel):
+class GuildTextChannel(GuildChannel, TextChannel):
     """Represents a guild text channel."""
 
     topic: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False)
@@ -337,7 +343,7 @@ class GuildTextChannel(GuildChannel):
 @register_channel_type(ChannelType.GUILD_NEWS)
 @marshaller.marshallable()
 @attr.s(eq=True, hash=True, slots=True, kw_only=True)
-class GuildNewsChannel(GuildChannel):
+class GuildNewsChannel(GuildChannel, TextChannel):
     """Represents an news channel."""
 
     topic: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False)

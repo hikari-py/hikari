@@ -239,7 +239,7 @@ class GuildRoleCreateEvent(base_events.HikariEvent, marshaller.Deserializable):
     guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the guild where this role was created."""
 
-    role: guilds.GuildRole = marshaller.attrib(deserializer=guilds.GuildRole.deserialize, inherit_kwargs=True)
+    role: guilds.Role = marshaller.attrib(deserializer=guilds.Role.deserialize, inherit_kwargs=True)
     """The object of the role that was created."""
 
 
@@ -254,9 +254,7 @@ class GuildRoleUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the guild where this role was updated."""
 
-    role: guilds.GuildRole = marshaller.attrib(
-        deserializer=guilds.GuildRole.deserialize, inherit_kwargs=True, repr=True
-    )
+    role: guilds.Role = marshaller.attrib(deserializer=guilds.Role.deserialize, inherit_kwargs=True, repr=True)
     """The updated role object."""
 
 

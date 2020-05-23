@@ -43,6 +43,7 @@ import datetime as _datetime
 from typing import Any as _Any
 from typing import AnyStr as _AnyStr
 from typing import Coroutine as _Coroutine
+from typing import Generator as _Generator
 from typing import Mapping as _Mapping
 from typing import Optional as _Optional
 from typing import Protocol as _Protocol
@@ -198,7 +199,7 @@ class Task(_Protocol[T_contra]):
     def set_name(self, value: str, /) -> None:
         """See `asyncio.Task.set_name`."""
 
-    def __await__(self) -> Coroutine[T_contra]:
+    def __await__(self) -> _Generator[T_contra, _Any, None]:
         ...
 
 
