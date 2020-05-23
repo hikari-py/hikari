@@ -22,11 +22,9 @@ from __future__ import annotations
 __all__ = ["REST"]
 
 import asyncio
-import contextlib
 import datetime
 import http
 import json
-import types
 import typing
 
 import aiohttp
@@ -39,115 +37,29 @@ from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.internal import more_typing
 from hikari.internal import ratelimits
+from hikari.models import applications
 from hikari.models import bases
 from hikari.models import channels
 from hikari.models import embeds as embeds_
 from hikari.models import emojis
 from hikari.models import files
+from hikari.models import gateway
 from hikari.models import guilds
 from hikari.models import invites
 from hikari.models import messages
 from hikari.models import permissions
 from hikari.models import unset
 from hikari.models import users
+from hikari.models import voices
 from hikari.models import webhooks
 from hikari.net import buckets
 from hikari.net import http_client
+from hikari.net import rest_utils
 from hikari.net import routes
 
 
 class _RateLimited(RuntimeError):
     __slots__ = ()
-
-
-class _MessagePaginator(pagination.BufferedPaginatedResults[messages.Message]):
-    __slots__ = ("_app", "_request_call", "_direction", "_first_id", "_route")
-
-    def __init__(
-        self,
-        app: base_app.IBaseApp,
-        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
-        channel_id: str,
-        direction: str,
-        first_id: str,
-    ) -> None:
-        super().__init__()
-        self._app = app
-        self._request_call = request_call
-        self._direction = direction
-        self._first_id = first_id
-        self._route = routes.GET_CHANNEL_MESSAGES.compile(channel=channel_id)
-
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[messages.Message, typing.Any, None]]:
-        chunk = await self._request_call(self._route, query={self._direction: self._first_id, "limit": 100})
-
-        if not chunk:
-            return None
-        if self._direction == "after":
-            chunk.reverse()
-
-        self._first_id = chunk[-1]["id"]
-
-        return (self._app.entity_factory.deserialize_message(m) for m in chunk)
-
-
-class _ReactionPaginator(pagination.BufferedPaginatedResults[messages.Reaction]):
-    __slots__ = ("_app", "_first_id", "_route", "_request_call")
-
-    def __init__(
-        self,
-        app: base_app.IBaseApp,
-        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
-        channel_id: str,
-        message_id: str,
-        emoji: str,
-    ) -> None:
-        super().__init__()
-        self._app = app
-        self._request_call = request_call
-        self._first_id = bases.Snowflake.min()
-        self._route = routes.GET_REACTIONS.compile(channel_id=channel_id, message_id=message_id, emoji=emoji)
-
-    async def _next_chunk(self):
-        chunk = await self._request_call(self._route, query={"after": self._first_id, "limit": 100})
-
-        if not chunk:
-            return None
-
-        self._first_id = chunk[-1]["id"]
-
-        return (users.User.deserialize(u, app=self._app) for u in chunk)
-
-
-class _TypingIndicator:
-    __slots__ = ("_channel", "_request_call", "_task")
-
-    def __init__(
-        self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        request_call=typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
-    ) -> None:
-        self._channel = conversions.cast_to_str_id(channel)
-        self._request_call = request_call
-        self._task = None
-
-    def __await__(self) -> typing.Generator[None, typing.Any, None]:
-        route = routes.POST_CHANNEL_TYPING.compile(channel=self._channel)
-        yield from self._request_call(route).__await__()
-
-    async def __aenter__(self):
-        if self._task is not None:
-            raise TypeError("cannot enter a typing indicator context more than once.")
-        self._task = asyncio.create_task(self._keep_typing(), name=f"repeatedly trigger typing in {self._channel}")
-
-    async def __aexit__(self, ex_t: typing.Type[Exception], ex_v: Exception, exc_tb: types.TracebackType) -> None:
-        self._task.cancel()
-        # Prevent reusing this object by not setting it back to None.
-        self._task = NotImplemented
-
-    async def _keep_typing(self) -> None:
-        with contextlib.suppress(asyncio.CancelledError):
-            await asyncio.gather(self, asyncio.sleep(9.9), return_exceptions=True)
 
 
 class REST(http_client.HTTPClient):
@@ -555,8 +467,10 @@ class REST(http_client.HTTPClient):
     ) -> typing.AsyncContextManager[None]:
         ...
 
-    def trigger_typing(self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT]) -> _TypingIndicator:
-        return _TypingIndicator(channel, self._request)
+    def trigger_typing(
+        self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT]
+    ) -> rest_utils.TypingIndicator:
+        return rest_utils.TypingIndicator(channel, self._request)
 
     async def fetch_pins(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
@@ -588,7 +502,7 @@ class REST(http_client.HTTPClient):
     @typing.overload
     def fetch_messages(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
-    ) -> pagination.PaginatedResults[messages.Message]:
+    ) -> pagination.LazyIterator[messages.Message]:
         ...
 
     @typing.overload
@@ -598,7 +512,7 @@ class REST(http_client.HTTPClient):
         /,
         *,
         before: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> pagination.PaginatedResults[messages.Message]:
+    ) -> pagination.LazyIterator[messages.Message]:
         ...
 
     @typing.overload
@@ -608,7 +522,7 @@ class REST(http_client.HTTPClient):
         /,
         *,
         around: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> pagination.PaginatedResults[messages.Message]:
+    ) -> pagination.LazyIterator[messages.Message]:
         ...
 
     @typing.overload
@@ -618,7 +532,7 @@ class REST(http_client.HTTPClient):
         /,
         *,
         after: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> pagination.PaginatedResults[messages.Message]:
+    ) -> pagination.LazyIterator[messages.Message]:
         ...
 
     def fetch_messages(
@@ -626,7 +540,7 @@ class REST(http_client.HTTPClient):
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         /,
         **kwargs: typing.Optional[typing.Union[datetime.datetime, bases.UniqueObjectT]],
-    ) -> pagination.PaginatedResults[messages.Message]:
+    ) -> pagination.LazyIterator[messages.Message]:
         if len(kwargs) == 1 and any(direction in kwargs for direction in ("before", "after", "around")):
             direction, timestamp = kwargs.popitem()
         elif not kwargs:
@@ -637,7 +551,7 @@ class REST(http_client.HTTPClient):
         if isinstance(timestamp, datetime.datetime):
             timestamp = bases.Snowflake.from_datetime(timestamp)
 
-        return _MessagePaginator(
+        return rest_utils.MessagePaginator(
             self._app,
             self._request,
             conversions.cast_to_str_id(channel),
@@ -794,6 +708,20 @@ class REST(http_client.HTTPClient):
         route = routes.DELETE_ALL_REACTIONS.compile(channel=channel, message=message)
         await self._request(route)
 
+    def fetch_reactions_for_emoji(
+        self,
+        channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
+        message: typing.Union[messages.Message, bases.UniqueObjectT],
+        emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
+    ) -> pagination.LazyIterator[users.User]:
+        return rest_utils.ReactorPaginator(
+            app=self._app,
+            request_call=self._request,
+            channel_id=conversions.cast_to_str_id(channel),
+            message_id=conversions.cast_to_str_id(message),
+            emoji=emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji),
+        )
+
     async def create_webhook(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
@@ -921,3 +849,113 @@ class REST(http_client.HTTPClient):
         )
 
         return self._app.entity_factory.deserialize_message(response)
+
+    async def fetch_gateway_url(self) -> str:
+        # This doesn't need authorization.
+        response = await self._request(routes.GET_GATEWAY.compile(), no_auth=True)
+        return response["url"]
+
+    async def fetch_recommended_gateway_settings(self) -> gateway.GatewayBot:
+        response = await self._request(routes.GET_GATEWAY_BOT.compile())
+        return self._app.entity_factory.deserialize_gateway_bot(response)
+
+    async def fetch_invite(self, invite: typing.Union[invites.Invite, str]) -> invites.Invite:
+        route = routes.GET_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
+        payload = {"with_counts": True}
+        response = await self._request(route, body=payload)
+        return self._app.entity_factory.deserialize_invite(response)
+
+    async def delete_invite(self, invite: typing.Union[invites.Invite, str]) -> None:
+        route = routes.DELETE_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
+        await self._request(route)
+
+    async def fetch_my_user(self) -> users.MyUser:
+        response = await self._request(routes.GET_MY_USER.compile())
+        return self._app.entity_factory.deserialize_my_user(response)
+
+    async def edit_my_user(
+        self,
+        *,
+        username: typing.Union[unset.Unset, str] = unset.UNSET,
+        avatar: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET,
+    ) -> users.MyUser:
+        payload = {}
+        conversions.put_if_specified(payload, "username", username)
+        if not unset.is_unset(username):
+            payload["avatar"] = await avatar.read()
+        route = routes.PATCH_MY_USER.compile()
+        response = await self._request(route, body=payload)
+        return self._app.entity_factory.deserialize_my_user(response)
+
+    async def fetch_my_connections(self) -> typing.Sequence[applications.OwnConnection]:
+        response = await self._request(routes.GET_MY_CONNECTIONS.compile())
+        return [self._app.entity_factory.deserialize_own_connection(c) for c in response]
+
+    def fetch_my_guilds(
+        self,
+        *,
+        newest_first: bool = False,
+        start_at: typing.Union[unset.Unset, guilds.PartialGuild, bases.UniqueObjectT, datetime.datetime] = unset.UNSET,
+    ) -> pagination.LazyIterator[applications.OwnGuild]:
+        if unset.is_unset(start_at):
+            start_at = bases.Snowflake.max() if newest_first else bases.Snowflake.min()
+        elif isinstance(start_at, datetime.datetime):
+            start_at = bases.Snowflake.from_datetime(start_at)
+
+        return rest_utils.OwnGuildPaginator(
+            self._app, self._request, newest_first, conversions.cast_to_str_id(start_at)
+        )
+
+    async def leave_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT]) -> None:
+        route = routes.DELETE_MY_GUILD.compile(guild=conversions.cast_to_str_id(guild))
+        await self._request(route)
+
+    async def create_dm_channel(self, user: typing.Union[users.User, bases.UniqueObjectT]) -> channels.DMChannel:
+        route = routes.POST_MY_CHANNELS.compile()
+        response = await self._request(route, body={"recipient_id": conversions.cast_to_str_id(user)})
+        return self._app.entity_factory.deserialize_dm_channel(response)
+
+    async def fetch_application(self) -> applications.Application:
+        response = await self._request(routes.GET_MY_APPLICATION.compile())
+        return self._app.entity_factory.deserialize_application(response)
+
+    async def add_user_to_guild(
+        self,
+        access_token: str,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        user: typing.Union[users.User, bases.UniqueObjectT],
+        *,
+        nickname: typing.Union[unset.Unset, str] = unset.UNSET,
+        roles: typing.Union[
+            unset.Unset, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
+        ] = unset.UNSET,
+        mute: typing.Union[unset.Unset, bool] = unset.UNSET,
+        deaf: typing.Union[unset.Unset, bool] = unset.UNSET,
+    ) -> typing.Optional[guilds.GuildMember]:
+        route = routes.PUT_GUILD_MEMBER.compile(
+            guild=conversions.cast_to_str_id(guild), user=conversions.cast_to_str_id(user),
+        )
+
+        payload = {"access_token": access_token}
+        conversions.put_if_specified(payload, "nick", nickname)
+        conversions.put_if_specified(payload, "roles", roles, lambda rs: [conversions.cast_to_str_id(r) for r in rs])
+        conversions.put_if_specified(payload, "mute", mute)
+        conversions.put_if_specified(payload, "deaf", deaf)
+
+        response = await self._request(route, body=payload)
+
+        if response is None:
+            # User already is in the guild.
+            return None
+        else:
+            return self._app.entity_factory.deserialize_guild_member(payload)
+
+    async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:
+        route = routes.GET_VOICE_REGIONS.compile()
+        response = await self._request(route)
+        return [self._app.entity_factory.deserialize_voice_region(r) for r in response]
+
+    async def fetch_user(self, user: typing.Union[users.User, bases.UniqueObjectT]) -> users.User:
+        route = routes.GET_USER.compile(user=conversions.cast_to_str_id(user))
+        response = await self._request(route)
+        return self._app.entity_factory.deserialize_user(response)
