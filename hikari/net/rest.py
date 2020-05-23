@@ -954,3 +954,8 @@ class REST(http_client.HTTPClient):
         route = routes.GET_VOICE_REGIONS.compile()
         response = await self._request(route)
         return [self._app.entity_factory.deserialize_voice_region(r) for r in response]
+
+    async def fetch_user(self, user: typing.Union[users.User, bases.UniqueObjectT]) -> users.User:
+        route = routes.GET_USER.compile(user=conversions.cast_to_str_id(user))
+        response = await self._request(route)
+        return self._app.entity_factory.deserialize_user(response)
