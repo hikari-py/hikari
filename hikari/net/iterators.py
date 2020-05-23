@@ -16,13 +16,22 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Async iterator extensions for paginated data."""
+"""Lazy iterators for data that requires repeated API calls to retrieve."""
 from __future__ import annotations
 
 import abc
 import typing
 
+from hikari import base_app
 from hikari.internal import more_collections
+from hikari.internal import more_typing
+from hikari.models import applications
+from hikari.models import bases
+from hikari.models import guilds
+from hikari.models import messages
+from hikari.models import users
+from hikari.net import routes
+
 
 _T = typing.TypeVar("_T")
 
@@ -224,3 +233,97 @@ class BufferedLazyIterator(typing.Generic[_T], LazyIterator[_T]):
                 self._complete()
             else:
                 return next(self._buffer)
+
+
+class MessageIterator(BufferedLazyIterator[messages.Message]):
+    """Implementation of an iterator for message history."""
+
+    __slots__ = ("_app", "_request_call", "_direction", "_first_id", "_route")
+
+    def __init__(
+        self,
+        app: base_app.IBaseApp,
+        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
+        channel_id: str,
+        direction: str,
+        first_id: str,
+    ) -> None:
+        super().__init__()
+        self._app = app
+        self._request_call = request_call
+        self._direction = direction
+        self._first_id = first_id
+        self._route = routes.GET_CHANNEL_MESSAGES.compile(channel=channel_id)
+
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[messages.Message, typing.Any, None]]:
+        chunk = await self._request_call(self._route, query={self._direction: self._first_id, "limit": 100})
+
+        if not chunk:
+            return None
+        if self._direction == "after":
+            chunk.reverse()
+
+        self._first_id = chunk[-1]["id"]
+        return (self._app.entity_factory.deserialize_message(m) for m in chunk)
+
+
+class ReactorIterator(BufferedLazyIterator[users.User]):
+    """Implementation of an iterator for message reactions."""
+
+    __slots__ = ("_app", "_first_id", "_route", "_request_call")
+
+    def __init__(
+        self,
+        app: base_app.IBaseApp,
+        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
+        channel_id: str,
+        message_id: str,
+        emoji: str,
+    ) -> None:
+        super().__init__()
+        self._app = app
+        self._request_call = request_call
+        self._first_id = bases.Snowflake.min()
+        self._route = routes.GET_REACTIONS.compile(channel_id=channel_id, message_id=message_id, emoji=emoji)
+
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[users.User, typing.Any, None]]:
+        chunk = await self._request_call(self._route, query={"after": self._first_id, "limit": 100})
+
+        if not chunk:
+            return None
+
+        self._first_id = chunk[-1]["id"]
+        return (self._app.entity_factory.deserialize_user(u) for u in chunk)
+
+
+class OwnGuildIterator(BufferedLazyIterator[applications.OwnGuild]):
+    __slots__ = ("_app", "_request_call", "_route", "_newest_first", "_first_id")
+
+    def __init__(
+        self,
+        app: base_app.IBaseApp,
+        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
+        newest_first: bool,
+        first_id: str,
+    ) -> None:
+        super().__init__()
+        self._app = app
+        self._newest_first = newest_first
+        self._request_call = request_call
+        self._first_id = first_id
+        self._route = routes.GET_MY_GUILDS.compile()
+
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[applications.OwnGuild, typing.Any, None]]:
+        kwargs = {"before" if self._newest_first else "after": self._first_id, "limit": 100}
+
+        chunk = await self._request_call(self._route, query=kwargs)
+
+        if not chunk:
+            return None
+
+        self._first_id = chunk[-1]["id"]
+        return (self._app.entity_factory.deserialize_own_guild(g) for g in chunk)
+
+
+class MemberIterator(BufferedLazyIterator[guilds.GuildMember]):
+    __slots__ = ()

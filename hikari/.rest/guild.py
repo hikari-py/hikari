@@ -27,7 +27,7 @@ import datetime
 import functools
 import typing
 
-from hikari import pagination
+from hikari.net import iterators
 from hikari.models import audit_logs
 from hikari.models import bases
 from hikari.models import channels as channels_
@@ -45,7 +45,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import users
 
 
-class _MemberPaginator(pagination.BufferedLazyIterator[guilds.GuildMember]):
+class _MemberPaginator(iterators.BufferedLazyIterator[guilds.GuildMember]):
     __slots__ = ("_app", "_guild_id", "_first_id", "_session")
 
     def __init__(self, app, guild, created_after, session):
@@ -862,7 +862,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     def fetch_members(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild],
-    ) -> pagination.LazyIterator[guilds.GuildMember]:
+    ) -> iterators.LazyIterator[guilds.GuildMember]:
         """Get an async iterator of all the members in a given guild.
 
         Parameters
