@@ -144,20 +144,16 @@ class TestPerformRequest:
         client._ssl_context = mock.MagicMock()
         client._request_timeout = mock.MagicMock()
 
-        jsonified_body = b'{"hello": "world"}'
+        req = {"hello": "world"}
 
         trace_request_ctx = types.SimpleNamespace()
-        trace_request_ctx.request_body = jsonified_body
+        trace_request_ctx.request_body = req
 
         expected_response = mock.MagicMock()
         client_session.request = mock.AsyncMock(return_value=expected_response)
 
         actual_response = await client._perform_request(
-            method="POST",
-            url="http://foo.bar",
-            headers={"X-Foo-Count": "122"},
-            body={"hello": "world"},
-            query={"foo": "bar"},
+            method="POST", url="http://foo.bar", headers={"X-Foo-Count": "122"}, body=req, query={"foo": "bar"},
         )
 
         assert expected_response is actual_response
@@ -165,8 +161,8 @@ class TestPerformRequest:
             method="POST",
             url="http://foo.bar",
             params={"foo": "bar"},
-            headers={"X-Foo-Count": "122", "content-type": "application/json"},
-            data=jsonified_body,
+            headers={"X-Foo-Count": "122"},
+            json=req,
             allow_redirects=client._allow_redirects,
             proxy=client._proxy_url,
             proxy_auth=client._proxy_auth,
