@@ -913,3 +913,40 @@ class REST(http_client.HTTPClient):
         route = routes.POST_MY_CHANNELS.compile()
         response = await self._request(route, body={"recipient_id": conversions.cast_to_str_id(user)})
         return self._app.entity_factory.deserialize_dm_channel(response)
+
+    async def fetch_application(self) -> applications.Application:
+        response = await self._request(routes.GET_MY_APPLICATION.compile())
+        return self._app.entity_factory.deserialize_application(response)
+
+    async def add_user_to_guild(
+        self,
+        access_token: str,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        user: typing.Union[users.User, bases.UniqueObjectT],
+        *,
+        nickname: typing.Union[unset.Unset, str] = unset.UNSET,
+        roles: typing.Union[
+            unset.Unset,
+            typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
+        ] = unset.UNSET,
+        mute: typing.Union[unset.Unset, bool] = unset.UNSET,
+        deaf: typing.Union[unset.Unset, bool] = unset.UNSET,
+    ) -> typing.Optional[guilds.GuildMember]:
+        route = routes.PUT_GUILD_MEMBER.compile(
+            guild=conversions.cast_to_str_id(guild),
+            user=conversions.cast_to_str_id(user),
+        )
+
+        payload = {"access_token": access_token}
+        conversions.put_if_specified(payload, "nick", nickname)
+        conversions.put_if_specified(payload, "roles", roles, lambda rs: [conversions.cast_to_str_id(r) for r in rs])
+        conversions.put_if_specified(payload, "mute", mute)
+        conversions.put_if_specified(payload, "deaf", deaf)
+
+        response = await self._request(route, body=payload)
+
+        if response is None:
+            # User already is in the guild.
+            return None
+        else:
+            return self._app.entity_factory.deserialize_guild_member(payload)
