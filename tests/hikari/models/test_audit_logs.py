@@ -308,7 +308,7 @@ def test_audit_log_option_payload():
 @pytest.fixture()
 def test_audit_log_entry_payload(test_audit_log_change_payload, test_audit_log_option_payload):
     return {
-        "action_type": 14,
+        "event_type": 14,
         "changes": [test_audit_log_change_payload],
         "id": "694026906592477214",
         "options": test_audit_log_option_payload,
@@ -352,7 +352,7 @@ class TestAuditLogEntry:
     def test_deserialize_with_options_and_target_id_and_unknown_type(
         self, test_audit_log_entry_payload, test_audit_log_option_payload, test_audit_log_change_payload, mock_app,
     ):
-        test_audit_log_entry_payload["action_type"] = 123123123
+        test_audit_log_entry_payload["event_type"] = 123123123
         audit_log_entry_obj = audit_logs.AuditLogEntry.deserialize(test_audit_log_entry_payload, app=mock_app)
         assert audit_log_entry_obj.changes == [audit_logs.AuditLogChange.deserialize(test_audit_log_change_payload)]
         assert audit_log_entry_obj.options == audit_logs.UnrecognisedAuditLogEntryInfo.deserialize(
@@ -369,7 +369,7 @@ class TestAuditLogEntry:
     ):
         del test_audit_log_entry_payload["options"]
         del test_audit_log_entry_payload["target_id"]
-        test_audit_log_entry_payload["action_type"] = 123123123
+        test_audit_log_entry_payload["event_type"] = 123123123
         audit_log_entry_obj = audit_logs.AuditLogEntry.deserialize(test_audit_log_entry_payload, app=mock_app)
         assert audit_log_entry_obj.changes == [audit_logs.AuditLogChange.deserialize(test_audit_log_change_payload)]
         assert audit_log_entry_obj.options is None
