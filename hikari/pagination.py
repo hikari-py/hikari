@@ -155,42 +155,6 @@ class PaginatedResults(typing.Generic[_T], abc.ABC):
     async def _fetch_all(self) -> typing.Sequence[_T]:
         return [item async for item in self]
 
-    @staticmethod
-    def _prepare_first_id(value, if_none=bases.Snowflake.min()) -> str:
-        """Prepare the given first ID type passed by the user.
-
-        Given an object with an ID, a datetime, an int, a snowflake, or a string
-        type, convert the element to the string ID snowflake it represents
-        that can be passed to the underlying RESTSession API safely.
-
-        Parameters
-        ----------
-        value
-            The element to prepare.
-        if_none
-            The value to use if the `value` is `None`. Defaults to a snowflake
-            of `0`.
-
-        Returns
-        -------
-        str
-            The string ID.
-        """
-        if value is None:
-            value = if_none
-
-        if isinstance(value, datetime.datetime):
-            value = str(int(bases.Snowflake.from_datetime(value)))
-
-        if isinstance(value, (int, bases.Snowflake)):
-            return str(value)
-        if isinstance(value, bases.Unique):
-            return str(value.id)
-        if isinstance(value, str):
-            return value
-
-        raise TypeError("expected object with ID, datetime, snowflake, or None")
-
     def __await__(self):
         return self._fetch_all().__await__()
 

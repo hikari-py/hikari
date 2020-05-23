@@ -67,7 +67,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
     allow_redirects : bool
         Whether to allow redirects or not. Defaults to `False`.
     base_url : str
-        The base URL and route for the discord API
+        The base URL and _route for the discord API
     connector : aiohttp.BaseConnector | None
         Optional aiohttp _connector info for making an HTTP connection
     debug : bool
@@ -125,7 +125,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
     """
 
     bucket_ratelimiters: buckets.RESTBucketManager
-    """The per-route ratelimit manager.
+    """The per-_route ratelimit manager.
 
     This handles tracking any ratelimits for routes that have recently been used
     or are in active use, as well as keeping memory usage to a minimum where
@@ -331,7 +331,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
                     )
                 else:
                     self.logger.warning(
-                        "you are being rate-limited on bucket %s for route %s - trying again after %ss",
+                        "you are being rate-limited on bucket %s for _route %s - trying again after %ss",
                         bucket,
                         compiled_route,
                         reset,

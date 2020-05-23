@@ -61,9 +61,9 @@ class HTTPSettings:
     ssl_context: typing.Optional[ssl.SSLContext] = None
     """The optional SSL context to use."""
 
-    tcp_connector: typing.Optional[aiohttp.TCPConnector] = None
-    """This may otherwise be `None` to use the default settings provided by
-    `aiohttp`.
+    tcp_connector_factory: typing.Optional[typing.Callable[[], aiohttp.TCPConnector]] = None
+    """An optional TCP connector factory to use. A connector will be created
+    for each component (each shard, and each REST instance).
     """
 
     trust_env: bool = False

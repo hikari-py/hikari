@@ -334,7 +334,7 @@ class TestPartialGuildRole:
         }
 
     def test_deserialize(self, test_partial_guild_role_payload, mock_app):
-        partial_guild_role_obj = guilds.PartialGuildRole.deserialize(test_partial_guild_role_payload, app=mock_app)
+        partial_guild_role_obj = guilds.PartialRole.deserialize(test_partial_guild_role_payload, app=mock_app)
         assert partial_guild_role_obj.name == "WE DEM BOYZZ!!!!!!"
 
 
@@ -353,7 +353,7 @@ class TestGuildRole:
         }
 
     def test_deserialize(self, test_guild_role_payload, mock_app):
-        guild_role_obj = guilds.GuildRole.deserialize(test_guild_role_payload, app=mock_app)
+        guild_role_obj = guilds.Role.deserialize(test_guild_role_payload, app=mock_app)
         assert guild_role_obj.color == 3_447_003
         assert guild_role_obj.is_hoisted is True
         assert guild_role_obj.position == 0
@@ -362,7 +362,7 @@ class TestGuildRole:
         assert guild_role_obj.is_mentionable is False
 
     def test_serialize_full_role(self):
-        guild_role_obj = guilds.GuildRole(
+        guild_role_obj = guilds.Role(
             name="aRole",
             color=colors.Color(444),
             is_hoisted=True,
@@ -382,7 +382,7 @@ class TestGuildRole:
         }
 
     def test_serialize_partial_role(self):
-        guild_role_obj = guilds.GuildRole(name="aRole", id=123)
+        guild_role_obj = guilds.Role(name="aRole", id=123)
         assert guild_role_obj.serialize() == {
             "name": "aRole",
             "color": 0,
@@ -984,7 +984,7 @@ class TestGuild:
         assert guild_obj.verification_level is guilds.GuildVerificationLevel.VERY_HIGH
         assert guild_obj.default_message_notifications is guilds.GuildMessageNotificationsLevel.ONLY_MENTIONS
         assert guild_obj.explicit_content_filter is guilds.GuildExplicitContentFilterLevel.ALL_MEMBERS
-        assert guild_obj.roles == {41771983423143936: guilds.GuildRole.deserialize(test_roles_payload)}
+        assert guild_obj.roles == {41771983423143936: guilds.Role.deserialize(test_roles_payload)}
         assert guild_obj.roles[41771983423143936]._gateway_consumer is mock_app
         assert guild_obj.emojis == {41771983429993937: mock_emoji}
         assert guild_obj.mfa_level is guilds.GuildMFALevel.ELEVATED

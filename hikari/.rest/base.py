@@ -75,7 +75,7 @@ class BaseRESTComponent(abc.ABC, metaclass=meta.UniqueFunctionMeta):
 
     @property
     def route_ratelimit_queue_size(self) -> int:
-        """Count of API waiting for a route-specific ratelimit to release.
+        """Count of API waiting for a _route-specific ratelimit to release.
 
         If this is non-zero, then you are being ratelimited somewhere.
         """

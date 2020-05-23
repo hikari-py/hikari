@@ -51,7 +51,7 @@ def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]
     Parameters
     ----------
     *route_parts : str
-        The string route parts that will be used to form the link.
+        The string _route parts that will be used to form the link.
     format_ : str
         The format to use for the wanted cdn entity, will usually be one of
         `webp`, `png`, `jpeg`, `jpg` or `gif` (which will be invalid
