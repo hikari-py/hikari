@@ -50,6 +50,7 @@ from hikari.models import messages
 from hikari.models import permissions
 from hikari.models import unset
 from hikari.models import users
+from hikari.models import voices
 from hikari.models import webhooks
 from hikari.net import buckets
 from hikari.net import http_client
@@ -926,15 +927,13 @@ class REST(http_client.HTTPClient):
         *,
         nickname: typing.Union[unset.Unset, str] = unset.UNSET,
         roles: typing.Union[
-            unset.Unset,
-            typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
+            unset.Unset, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
         ] = unset.UNSET,
         mute: typing.Union[unset.Unset, bool] = unset.UNSET,
         deaf: typing.Union[unset.Unset, bool] = unset.UNSET,
     ) -> typing.Optional[guilds.GuildMember]:
         route = routes.PUT_GUILD_MEMBER.compile(
-            guild=conversions.cast_to_str_id(guild),
-            user=conversions.cast_to_str_id(user),
+            guild=conversions.cast_to_str_id(guild), user=conversions.cast_to_str_id(user),
         )
 
         payload = {"access_token": access_token}
@@ -950,3 +949,8 @@ class REST(http_client.HTTPClient):
             return None
         else:
             return self._app.entity_factory.deserialize_guild_member(payload)
+
+    async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:
+        route = routes.GET_VOICE_REGIONS.compile()
+        response = await self._request(route)
+        return [self._app.entity_factory.deserialize_voice_region(r) for r in response]
