@@ -466,8 +466,7 @@ class REST(http_client.HTTPClient):
         ...
 
     def trigger_typing(
-        self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObjectT]
+        self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT]
     ) -> rest_utils.TypingIndicator:
         return rest_utils.TypingIndicator(channel, self._request)
 
@@ -711,7 +710,7 @@ class REST(http_client.HTTPClient):
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         message: typing.Union[messages.Message, bases.UniqueObjectT],
-        emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji]
+        emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
     ) -> pagination.PaginatedResults[users.User]:
         return rest_utils.ReactionPaginator(
             app=self._app,
@@ -857,3 +856,13 @@ class REST(http_client.HTTPClient):
     async def fetch_recommended_gateway_settings(self) -> gateway.GatewayBot:
         response = await self._request(routes.GET_GATEWAY_BOT.compile())
         return self._app.entity_factory.deserialize_gateway_bot(response)
+
+    async def fetch_invite(self, invite: typing.Union[invites.Invite, str]) -> invites.Invite:
+        route = routes.GET_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
+        payload = {"with_counts": True}
+        response = await self._request(route, body=payload)
+        return self._app.entity_factory.deserialize_invite(response)
+
+    async def delete_invite(self, invite: typing.Union[invites.Invite, str]) -> None:
+        route = routes.DELETE_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
+        response = await self._request(route)
