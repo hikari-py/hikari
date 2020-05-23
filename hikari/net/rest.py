@@ -26,6 +26,7 @@ import contextlib
 import datetime
 import http
 import json
+import types
 import typing
 
 import aiohttp
@@ -116,6 +117,37 @@ class _ReactionPaginator(pagination.BufferedPaginatedResults[messages.Reaction])
         self._first_id = chunk[-1]["id"]
 
         return (users.User.deserialize(u, app=self._app) for u in chunk)
+
+
+class _TypingIndicator:
+    __slots__ = ("_channel", "_request_call", "_task")
+
+    def __init__(
+        self,
+        channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
+        request_call=typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
+    ) -> None:
+        self._channel = conversions.cast_to_str_id(channel)
+        self._request_call = request_call
+        self._task = None
+
+    def __await__(self) -> typing.Generator[None, typing.Any, None]:
+        route = routes.POST_CHANNEL_TYPING.compile(channel=self._channel)
+        yield from self._request_call(route).__await__()
+
+    async def __aenter__(self):
+        if self._task is not None:
+            raise TypeError("cannot enter a typing indicator context more than once.")
+        self._task = asyncio.create_task(self._keep_typing(), name=f"repeatedly trigger typing in {self._channel}")
+
+    async def __aexit__(self, ex_t: typing.Type[Exception], ex_v: Exception, exc_tb: types.TracebackType) -> None:
+        self._task.cancel()
+        # Prevent reusing this object by not setting it back to None.
+        self._task = NotImplemented
+
+    async def _keep_typing(self) -> None:
+        with contextlib.suppress(asyncio.CancelledError):
+            await asyncio.gather(self, asyncio.sleep(9.9), return_exceptions=True)
 
 
 class REST(http_client.HTTPClient):
@@ -411,7 +443,7 @@ class REST(http_client.HTTPClient):
 
         return self._app.entity_factory.deserialize_channel(response)
 
-    async def delete_channel(self, channel: typing.Union[channels.PartialChannel, bases.Snowflake, int]) -> None:
+    async def delete_channel(self, channel: typing.Union[channels.PartialChannel, bases.Snowflake, int], /) -> None:
         await self._request(routes.DELETE_CHANNEL.compile(channel=conversions.cast_to_str_id(channel)))
 
     @typing.overload
@@ -481,7 +513,7 @@ class REST(http_client.HTTPClient):
         await self._request(route)
 
     async def fetch_channel_invites(
-        self, channel: typing.Union[channels.GuildChannel, bases.UniqueObjectT]
+        self, channel: typing.Union[channels.GuildChannel, bases.UniqueObjectT], /
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         route = routes.GET_CHANNEL_INVITES.compile(channel=conversions.cast_to_str_id(channel))
         response = await self._request(route)
@@ -511,9 +543,20 @@ class REST(http_client.HTTPClient):
         response = await self._request(route, body=payload, reason=reason)
         return self._app.entity_factory.deserialize_invite_with_metadata(response)
 
-    async def trigger_typing(self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /) -> None:
-        route = routes.POST_CHANNEL_TYPING.compile(channel=conversions.cast_to_str_id(channel))
-        await self._request(route)
+    @typing.overload
+    def trigger_typing(
+        self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
+    ) -> more_typing.Coroutine[None]:
+        ...
+
+    @typing.overload
+    def trigger_typing(
+        self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
+    ) -> typing.AsyncContextManager[None]:
+        ...
+
+    def trigger_typing(self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT]) -> _TypingIndicator:
+        return _TypingIndicator(channel, self._request)
 
     async def fetch_pins(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
@@ -878,26 +921,3 @@ class REST(http_client.HTTPClient):
         )
 
         return self._app.entity_factory.deserialize_message(response)
-
-    # Keep this last, then it doesn't cause problems with the imports.
-    def typing(
-        self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
-    ) -> contextlib.AbstractAsyncContextManager:
-        async def keep_typing():
-            with contextlib.suppress(asyncio.CancelledError):
-                while True:
-                    # Use gather so that if the API call takes more than 10s, we don't spam the API
-                    # as something is not working properly somewhere, but at the same time do not
-                    # take into account the API call time before waiting the 10s, as this stops
-                    # the indicator showing up consistently.
-                    await asyncio.gather(self.trigger_typing(channel), asyncio.sleep(9.9))
-
-        @contextlib.asynccontextmanager
-        async def typing_context():
-            task = asyncio.create_task(keep_typing(), name=f"typing in {channel} continuously")
-            try:
-                yield
-            finally:
-                task.cancel()
-
-        return typing_context()
