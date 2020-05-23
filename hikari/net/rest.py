@@ -53,101 +53,12 @@ from hikari.models import users
 from hikari.models import webhooks
 from hikari.net import buckets
 from hikari.net import http_client
+from hikari.net import rest_utils
 from hikari.net import routes
 
 
 class _RateLimited(RuntimeError):
     __slots__ = ()
-
-
-class _MessagePaginator(pagination.BufferedPaginatedResults[messages.Message]):
-    __slots__ = ("_app", "_request_call", "_direction", "_first_id", "_route")
-
-    def __init__(
-        self,
-        app: base_app.IBaseApp,
-        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
-        channel_id: str,
-        direction: str,
-        first_id: str,
-    ) -> None:
-        super().__init__()
-        self._app = app
-        self._request_call = request_call
-        self._direction = direction
-        self._first_id = first_id
-        self._route = routes.GET_CHANNEL_MESSAGES.compile(channel=channel_id)
-
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[messages.Message, typing.Any, None]]:
-        chunk = await self._request_call(self._route, query={self._direction: self._first_id, "limit": 100})
-
-        if not chunk:
-            return None
-        if self._direction == "after":
-            chunk.reverse()
-
-        self._first_id = chunk[-1]["id"]
-
-        return (self._app.entity_factory.deserialize_message(m) for m in chunk)
-
-
-class _ReactionPaginator(pagination.BufferedPaginatedResults[messages.Reaction]):
-    __slots__ = ("_app", "_first_id", "_route", "_request_call")
-
-    def __init__(
-        self,
-        app: base_app.IBaseApp,
-        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
-        channel_id: str,
-        message_id: str,
-        emoji: str,
-    ) -> None:
-        super().__init__()
-        self._app = app
-        self._request_call = request_call
-        self._first_id = bases.Snowflake.min()
-        self._route = routes.GET_REACTIONS.compile(channel_id=channel_id, message_id=message_id, emoji=emoji)
-
-    async def _next_chunk(self):
-        chunk = await self._request_call(self._route, query={"after": self._first_id, "limit": 100})
-
-        if not chunk:
-            return None
-
-        self._first_id = chunk[-1]["id"]
-
-        return (users.User.deserialize(u, app=self._app) for u in chunk)
-
-
-class _TypingIndicator:
-    __slots__ = ("_channel", "_request_call", "_task")
-
-    def __init__(
-        self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        request_call=typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
-    ) -> None:
-        self._channel = conversions.cast_to_str_id(channel)
-        self._request_call = request_call
-        self._task = None
-
-    def __await__(self) -> typing.Generator[None, typing.Any, None]:
-        route = routes.POST_CHANNEL_TYPING.compile(channel=self._channel)
-        yield from self._request_call(route).__await__()
-
-    async def __aenter__(self):
-        if self._task is not None:
-            raise TypeError("cannot enter a typing indicator context more than once.")
-        self._task = asyncio.create_task(self._keep_typing(), name=f"repeatedly trigger typing in {self._channel}")
-
-    async def __aexit__(self, ex_t: typing.Type[Exception], ex_v: Exception, exc_tb: types.TracebackType) -> None:
-        self._task.cancel()
-        # Prevent reusing this object by not setting it back to None.
-        self._task = NotImplemented
-
-    async def _keep_typing(self) -> None:
-        with contextlib.suppress(asyncio.CancelledError):
-            await asyncio.gather(self, asyncio.sleep(9.9), return_exceptions=True)
 
 
 class REST(http_client.HTTPClient):
@@ -555,8 +466,11 @@ class REST(http_client.HTTPClient):
     ) -> typing.AsyncContextManager[None]:
         ...
 
-    def trigger_typing(self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT]) -> _TypingIndicator:
-        return _TypingIndicator(channel, self._request)
+    def trigger_typing(
+        self,
+        channel: typing.Union[channels.TextChannel, bases.UniqueObjectT]
+    ) -> rest_utils.TypingIndicator:
+        return rest_utils.TypingIndicator(channel, self._request)
 
     async def fetch_pins(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
@@ -637,7 +551,7 @@ class REST(http_client.HTTPClient):
         if isinstance(timestamp, datetime.datetime):
             timestamp = bases.Snowflake.from_datetime(timestamp)
 
-        return _MessagePaginator(
+        return rest_utils.MessagePaginator(
             self._app,
             self._request,
             conversions.cast_to_str_id(channel),
@@ -793,6 +707,20 @@ class REST(http_client.HTTPClient):
         message = conversions.cast_to_str_id(message)
         route = routes.DELETE_ALL_REACTIONS.compile(channel=channel, message=message)
         await self._request(route)
+
+    def fetch_reactions_for_emoji(
+        self,
+        channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
+        message: typing.Union[messages.Message, bases.UniqueObjectT],
+        emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji]
+    ) -> pagination.PaginatedResults[users.User]:
+        return rest_utils.ReactionPaginator(
+            app=self._app,
+            request_call=self._request,
+            channel_id=conversions.cast_to_str_id(channel),
+            message_id=conversions.cast_to_str_id(message),
+            emoji=emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji),
+        )
 
     async def create_webhook(
         self,
