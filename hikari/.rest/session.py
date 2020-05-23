@@ -409,7 +409,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         """
         query = {}
         conversions.put_if_specified(query, "user_id", user_id)
-        conversions.put_if_specified(query, "action_type", action_type)
+        conversions.put_if_specified(query, "event_type", action_type)
         conversions.put_if_specified(query, "limit", limit)
         conversions.put_if_specified(query, "before", before)
         route = routes.GET_GUILD_AUDIT_LOGS.compile(guild_id=guild_id)

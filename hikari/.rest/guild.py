@@ -45,7 +45,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import users
 
 
-class _MemberPaginator(iterators.BufferedLazyIterator[guilds.GuildMember]):
+class _MemberPaginator(iterators._BufferedLazyIterator[guilds.GuildMember]):
     __slots__ = ("_app", "_guild_id", "_first_id", "_session")
 
     def __init__(self, app, guild, created_after, session):

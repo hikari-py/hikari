@@ -67,7 +67,7 @@ class IEntityFactory(abc.ABC):
     ##############
 
     @abc.abstractmethod
-    def deserialize_audit_log_entry(self, payload: more_typing.JSONObject) -> audit_logs.AuditLogEntry:
+    def deserialize_audit_log(self, payload: more_typing.JSONObject) -> audit_logs.AuditLog:
         ...
 
     ############
@@ -175,7 +175,7 @@ class IEntityFactory(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def deserialize_guild_role(self, payload: more_typing.JSONObject) -> guilds.GuildRole:
+    def deserialize_guild_role(self, payload: more_typing.JSONObject) -> guilds.Role:
         ...
 
     @abc.abstractmethod
