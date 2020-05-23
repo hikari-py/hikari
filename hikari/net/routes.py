@@ -296,6 +296,7 @@ GET_GUILD_MEMBERS = Route(GET, "/guilds/{guild}/members")
 
 GET_GUILD_MEMBER = Route(GET, "/guilds/{guild}/members/{user}")
 PATCH_GUILD_MEMBER = Route(PATCH, "/guilds/{guild}/members/{user}")
+PUT_GUILD_MEMBER = Route(PUT, "/guilds/{guild}/members/{user}")
 DELETE_GUILD_MEMBER = Route(DELETE, "/guilds/{guild}/members/{user}")
 
 PUT_GUILD_MEMBER_ROLE = Route(PUT, "/guilds/{guild}/members/{user}/roles/{role}")
