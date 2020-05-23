@@ -22,11 +22,9 @@ from __future__ import annotations
 __all__ = ["REST"]
 
 import asyncio
-import contextlib
 import datetime
 import http
 import json
-import types
 import typing
 
 import aiohttp
@@ -44,6 +42,7 @@ from hikari.models import channels
 from hikari.models import embeds as embeds_
 from hikari.models import emojis
 from hikari.models import files
+from hikari.models import gateway
 from hikari.models import guilds
 from hikari.models import invites
 from hikari.models import messages
@@ -849,3 +848,12 @@ class REST(http_client.HTTPClient):
         )
 
         return self._app.entity_factory.deserialize_message(response)
+
+    async def fetch_gateway_url(self) -> str:
+        # This doesn't need authorization.
+        response = await self._request(routes.GET_GATEWAY.compile(), no_auth=True)
+        return response["url"]
+
+    async def fetch_recommended_gateway_settings(self) -> gateway.GatewayBot:
+        response = await self._request(routes.GET_GATEWAY_BOT.compile())
+        return self._app.entity_factory.deserialize_gateway_bot(response)
