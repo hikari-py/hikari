@@ -32,7 +32,7 @@ import aiohttp
 from hikari import base_app
 from hikari import errors
 from hikari import http_settings
-from hikari import pagination
+from hikari.net import iterators
 from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.internal import more_typing
@@ -502,7 +502,7 @@ class REST(http_client.HTTPClient):
     @typing.overload
     def fetch_messages(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
-    ) -> pagination.LazyIterator[messages.Message]:
+    ) -> iterators.LazyIterator[messages.Message]:
         ...
 
     @typing.overload
@@ -512,7 +512,7 @@ class REST(http_client.HTTPClient):
         /,
         *,
         before: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> pagination.LazyIterator[messages.Message]:
+    ) -> iterators.LazyIterator[messages.Message]:
         ...
 
     @typing.overload
@@ -522,7 +522,7 @@ class REST(http_client.HTTPClient):
         /,
         *,
         around: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> pagination.LazyIterator[messages.Message]:
+    ) -> iterators.LazyIterator[messages.Message]:
         ...
 
     @typing.overload
@@ -532,7 +532,7 @@ class REST(http_client.HTTPClient):
         /,
         *,
         after: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> pagination.LazyIterator[messages.Message]:
+    ) -> iterators.LazyIterator[messages.Message]:
         ...
 
     def fetch_messages(
@@ -540,7 +540,7 @@ class REST(http_client.HTTPClient):
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         /,
         **kwargs: typing.Optional[typing.Union[datetime.datetime, bases.UniqueObjectT]],
-    ) -> pagination.LazyIterator[messages.Message]:
+    ) -> iterators.LazyIterator[messages.Message]:
         if len(kwargs) == 1 and any(direction in kwargs for direction in ("before", "after", "around")):
             direction, timestamp = kwargs.popitem()
         elif not kwargs:
@@ -551,7 +551,7 @@ class REST(http_client.HTTPClient):
         if isinstance(timestamp, datetime.datetime):
             timestamp = bases.Snowflake.from_datetime(timestamp)
 
-        return rest_utils.MessagePaginator(
+        return iterators.MessageIterator(
             self._app,
             self._request,
             conversions.cast_to_str_id(channel),
@@ -713,8 +713,8 @@ class REST(http_client.HTTPClient):
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         message: typing.Union[messages.Message, bases.UniqueObjectT],
         emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
-    ) -> pagination.LazyIterator[users.User]:
-        return rest_utils.ReactorPaginator(
+    ) -> iterators.LazyIterator[users.User]:
+        return iterators.ReactorIterator(
             app=self._app,
             request_call=self._request,
             channel_id=conversions.cast_to_str_id(channel),
@@ -896,15 +896,13 @@ class REST(http_client.HTTPClient):
         *,
         newest_first: bool = False,
         start_at: typing.Union[unset.Unset, guilds.PartialGuild, bases.UniqueObjectT, datetime.datetime] = unset.UNSET,
-    ) -> pagination.LazyIterator[applications.OwnGuild]:
+    ) -> iterators.LazyIterator[applications.OwnGuild]:
         if unset.is_unset(start_at):
             start_at = bases.Snowflake.max() if newest_first else bases.Snowflake.min()
         elif isinstance(start_at, datetime.datetime):
             start_at = bases.Snowflake.from_datetime(start_at)
 
-        return rest_utils.OwnGuildPaginator(
-            self._app, self._request, newest_first, conversions.cast_to_str_id(start_at)
-        )
+        return iterators.OwnGuildIterator(self._app, self._request, newest_first, conversions.cast_to_str_id(start_at))
 
     async def leave_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT]) -> None:
         route = routes.DELETE_MY_GUILD.compile(guild=conversions.cast_to_str_id(guild))
