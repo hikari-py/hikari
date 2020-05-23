@@ -46,7 +46,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_application(self, payload: more_typing.JSONObject) -> applications:
         pass
 
-    def deserialize_audit_log_entry(self, payload: more_typing.JSONObject) -> audit_logs.AuditLogEntry:
+    def deserialize_audit_log(self, payload: more_typing.JSONObject) -> audit_logs.AuditLog:
         pass
 
     def deserialize_permission_overwrite(self, payload: more_typing.JSONObject) -> channels.PermissionOverwrite:
@@ -113,7 +113,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ) -> guilds.GuildMember:
         pass
 
-    def deserialize_guild_role(self, payload: more_typing.JSONObject) -> guilds.GuildRole:
+    def deserialize_guild_role(self, payload: more_typing.JSONObject) -> guilds.Role:
         pass
 
     def deserialize_guild_member_presence(self, payload: more_typing.JSONObject) -> guilds.GuildMemberPresence:

@@ -29,10 +29,11 @@ import typing
 
 import aiohttp
 
-from hikari import base_app
 from hikari import errors
 from hikari import http_settings
-from hikari import pagination
+from hikari import rest_app
+from hikari.models import audit_logs
+from hikari.net import iterators
 from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.internal import more_typing
@@ -66,7 +67,7 @@ class REST(http_client.HTTPClient):
     def __init__(
         self,
         *,
-        app: base_app.IBaseApp,
+        app: rest_app.IRESTApp,
         config: http_settings.HTTPSettings,
         debug: bool = False,
         token: typing.Optional[str],
@@ -94,11 +95,6 @@ class REST(http_client.HTTPClient):
         self._app = app
         self._token = f"{token_type.title()} {token}" if token is not None else None
         self._url = url.format(self)
-
-    async def close(self) -> None:
-        """Close the REST client."""
-        await super().close()
-        self.buckets.close()
 
     async def _request(
         self,
@@ -312,6 +308,11 @@ class REST(http_client.HTTPClient):
             )
         return form
 
+    async def close(self) -> None:
+        """Close the REST client."""
+        await super().close()
+        self.buckets.close()
+
     async def fetch_channel(
         self, channel: typing.Union[channels.PartialChannel, bases.Snowflake, int], /,
     ) -> channels.PartialChannel:
@@ -455,20 +456,8 @@ class REST(http_client.HTTPClient):
         response = await self._request(route, body=payload, reason=reason)
         return self._app.entity_factory.deserialize_invite_with_metadata(response)
 
-    @typing.overload
     def trigger_typing(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
-    ) -> more_typing.Coroutine[None]:
-        ...
-
-    @typing.overload
-    def trigger_typing(
-        self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
-    ) -> typing.AsyncContextManager[None]:
-        ...
-
-    def trigger_typing(
-        self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT]
     ) -> rest_utils.TypingIndicator:
         return rest_utils.TypingIndicator(channel, self._request)
 
@@ -502,7 +491,7 @@ class REST(http_client.HTTPClient):
     @typing.overload
     def fetch_messages(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
-    ) -> pagination.LazyIterator[messages.Message]:
+    ) -> iterators.LazyIterator[messages.Message]:
         ...
 
     @typing.overload
@@ -512,7 +501,7 @@ class REST(http_client.HTTPClient):
         /,
         *,
         before: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> pagination.LazyIterator[messages.Message]:
+    ) -> iterators.LazyIterator[messages.Message]:
         ...
 
     @typing.overload
@@ -522,7 +511,7 @@ class REST(http_client.HTTPClient):
         /,
         *,
         around: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> pagination.LazyIterator[messages.Message]:
+    ) -> iterators.LazyIterator[messages.Message]:
         ...
 
     @typing.overload
@@ -532,7 +521,7 @@ class REST(http_client.HTTPClient):
         /,
         *,
         after: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> pagination.LazyIterator[messages.Message]:
+    ) -> iterators.LazyIterator[messages.Message]:
         ...
 
     def fetch_messages(
@@ -540,7 +529,7 @@ class REST(http_client.HTTPClient):
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         /,
         **kwargs: typing.Optional[typing.Union[datetime.datetime, bases.UniqueObjectT]],
-    ) -> pagination.LazyIterator[messages.Message]:
+    ) -> iterators.LazyIterator[messages.Message]:
         if len(kwargs) == 1 and any(direction in kwargs for direction in ("before", "after", "around")):
             direction, timestamp = kwargs.popitem()
         elif not kwargs:
@@ -551,7 +540,7 @@ class REST(http_client.HTTPClient):
         if isinstance(timestamp, datetime.datetime):
             timestamp = bases.Snowflake.from_datetime(timestamp)
 
-        return rest_utils.MessagePaginator(
+        return iterators.MessageIterator(
             self._app,
             self._request,
             conversions.cast_to_str_id(channel),
@@ -563,7 +552,6 @@ class REST(http_client.HTTPClient):
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         message: typing.Union[messages.Message, bases.UniqueObjectT],
-        /,
     ) -> messages.Message:
         route = routes.GET_CHANNEL_MESSAGE.compile(
             channel=conversions.cast_to_str_id(channel), message=conversions.cast_to_str_id(message),
@@ -713,8 +701,8 @@ class REST(http_client.HTTPClient):
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         message: typing.Union[messages.Message, bases.UniqueObjectT],
         emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
-    ) -> pagination.LazyIterator[users.User]:
-        return rest_utils.ReactorPaginator(
+    ) -> iterators.LazyIterator[users.User]:
+        return iterators.ReactorIterator(
             app=self._app,
             request_call=self._request,
             channel_id=conversions.cast_to_str_id(channel),
@@ -896,21 +884,19 @@ class REST(http_client.HTTPClient):
         *,
         newest_first: bool = False,
         start_at: typing.Union[unset.Unset, guilds.PartialGuild, bases.UniqueObjectT, datetime.datetime] = unset.UNSET,
-    ) -> pagination.LazyIterator[applications.OwnGuild]:
+    ) -> iterators.LazyIterator[applications.OwnGuild]:
         if unset.is_unset(start_at):
             start_at = bases.Snowflake.max() if newest_first else bases.Snowflake.min()
         elif isinstance(start_at, datetime.datetime):
             start_at = bases.Snowflake.from_datetime(start_at)
 
-        return rest_utils.OwnGuildPaginator(
-            self._app, self._request, newest_first, conversions.cast_to_str_id(start_at)
-        )
+        return iterators.OwnGuildIterator(self._app, self._request, newest_first, conversions.cast_to_str_id(start_at))
 
-    async def leave_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT]) -> None:
+    async def leave_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], /) -> None:
         route = routes.DELETE_MY_GUILD.compile(guild=conversions.cast_to_str_id(guild))
         await self._request(route)
 
-    async def create_dm_channel(self, user: typing.Union[users.User, bases.UniqueObjectT]) -> channels.DMChannel:
+    async def create_dm_channel(self, user: typing.Union[users.User, bases.UniqueObjectT], /) -> channels.DMChannel:
         route = routes.POST_MY_CHANNELS.compile()
         response = await self._request(route, body={"recipient_id": conversions.cast_to_str_id(user)})
         return self._app.entity_factory.deserialize_dm_channel(response)
@@ -959,3 +945,24 @@ class REST(http_client.HTTPClient):
         route = routes.GET_USER.compile(user=conversions.cast_to_str_id(user))
         response = await self._request(route)
         return self._app.entity_factory.deserialize_user(response)
+
+    def fetch_guild_audit_log(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        *,
+        before: typing.Union[unset.Unset, datetime.datetime, bases.UniqueObjectT] = unset.UNSET,
+        user: typing.Union[unset.Unset, users.User, bases.UniqueObjectT] = unset.UNSET,
+        event_type: typing.Union[unset.Unset, audit_logs.AuditLogEventType] = unset.UNSET,
+    ) -> iterators.LazyIterator[audit_logs.AuditLog]:
+        guild = conversions.cast_to_str_id(guild)
+        user = unset.UNSET if unset.is_unset(user) else conversions.cast_to_str_id(user)
+        event_type = unset.UNSET if unset.is_unset(event_type) else int(event_type)
+
+        if unset.is_unset(before):
+            before = bases.Snowflake.max()
+        elif isinstance(before, datetime.datetime):
+            before = bases.Snowflake.from_datetime(before)
+
+        before = conversions.cast_to_str_id(before)
+
+        return iterators.AuditLogIterator(self._app, self._request, guild, before, user, event_type,)

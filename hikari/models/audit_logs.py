@@ -448,7 +448,7 @@ class AuditLogEntry(bases.Unique, marshaller.Deserializable):
     """The type of action this entry represents."""
 
     options: typing.Optional[BaseAuditLogEntryInfo] = attr.attrib(eq=False, hash=False, repr=False)
-    """Extra information about this entry. Only be provided for certain `action_type`."""
+    """Extra information about this entry. Only be provided for certain `event_type`."""
 
     reason: typing.Optional[str] = attr.attrib(eq=False, hash=False, repr=False)
     """The reason for this change, if set (between 0-512 characters)."""
@@ -456,7 +456,7 @@ class AuditLogEntry(bases.Unique, marshaller.Deserializable):
     @classmethod
     def deserialize(cls, payload: more_typing.JSONObject, **kwargs: typing.Any) -> AuditLogEntry:
         """Deserialize this model from a raw payload."""
-        action_type = conversions.try_cast(payload["action_type"], AuditLogEventType, payload["action_type"])
+        action_type = conversions.try_cast(payload["event_type"], AuditLogEventType, payload["event_type"])
         if target_id := payload.get("target_id"):
             target_id = bases.Snowflake(target_id)
 
@@ -507,7 +507,7 @@ def _deserialize_webhooks(
     return {bases.Snowflake(webhook["id"]): webhooks_.Webhook.deserialize(webhook, **kwargs) for webhook in payload}
 
 
-# TODO: can we remove this? it is used by a seemingly duplicated endpoint that can just use the iterator.
+# TODO: make this support looking like a list of entries...
 @marshaller.marshallable()
 @attr.s(eq=True, repr=False, kw_only=True, slots=True)
 class AuditLog(bases.Entity, marshaller.Deserializable):
@@ -532,114 +532,3 @@ class AuditLog(bases.Entity, marshaller.Deserializable):
         deserializer=_deserialize_webhooks, inherit_kwargs=True,
     )
     """A mapping of the objects of webhooks found in this audit log."""
-
-
-class AuditLogIterator(typing.AsyncIterator[AuditLogEntry]):
-    """An async iterator used for iterating through a guild's audit log entries.
-
-    This returns the audit log entries created before a given entry object/ID or
-    from the newest audit log entry to the oldest.
-
-    Parameters
-    ----------
-    app : hikari.components.application.Application
-        The `hikari.components.application.Application` that this should pass through
-        to the generated entities.
-    request : typing.Callable[..., typing.Coroutine[typing.Any, typing.Any, typing.Any]]
-        The prepared session bound partial function that this iterator should
-        use for making Get Guild Audit Log requests.
-    limit : int
-        If specified, the limit to how many entries this iterator should return
-        else unlimited.
-    before : str
-        If specified, an entry ID to specify where this iterator's returned
-        audit log entries should start.
-
-    Yields
-    ------
-    AuditLogEntry
-        The entries found in this audit log.
-
-    !!! note
-        This iterator's attributes `AuditLogIterator.integrations`,
-        `AuditLogIterator.users` and `AuditLogIterator.webhooks` will be filled
-        up as this iterator makes requests to the Get Guild Audit Log endpoint
-        with the relevant objects for entities referenced by returned entries.
-    """
-
-    __slots__ = (
-        "_buffer",
-        "_app",
-        "_front",
-        "_limit",
-        "_request",
-        "integrations",
-        "users",
-        "webhooks",
-    )
-
-    integrations: typing.MutableMapping[bases.Snowflake, guilds.GuildIntegration]
-    """A mapping of the partial integrations objects found in this log so far."""
-
-    users: typing.MutableMapping[bases.Snowflake, users_.User]
-    """A mapping of the objects of users found in this audit log so far."""
-
-    webhooks: typing.MutableMapping[bases.Snowflake, webhooks_.Webhook]
-    """A mapping of the objects of webhooks found in this audit log so far."""
-
-    def __init__(
-        self,
-        app: application.Application,
-        request: typing.Callable[..., more_typing.Coroutine[typing.Any]],
-        before: typing.Optional[str] = str(bases.Snowflake.max()),
-        limit: typing.Optional[int] = None,
-    ) -> None:
-        self._app = app
-        self._limit = limit
-        self._buffer = []
-        self._request = request
-        self._front = before
-        self.users = {}
-        self.webhooks = {}
-        self.integrations = {}
-
-    def __aiter__(self) -> AuditLogIterator:
-        return self
-
-    async def __anext__(self) -> AuditLogEntry:
-        if not self._buffer and self._limit != 0:
-            await self._fill()
-        try:
-            entry = AuditLogEntry.deserialize(self._buffer.pop(), app=self._app)
-            self._front = str(entry.id)
-            return entry
-        except IndexError:
-            raise StopAsyncIteration
-
-    async def _fill(self) -> None:
-        """Retrieve entries before `_front` and add to `_buffer`."""
-        payload = await self._request(
-            before=self._front, limit=100 if self._limit is None or self._limit > 100 else self._limit,
-        )
-        if self._limit is not None:
-            self._limit -= len(payload["audit_log_entries"])
-
-        # Once the resources has been exhausted, discord will return empty lists.
-        payload["audit_log_entries"].reverse()
-        self._buffer.extend(payload["audit_log_entries"])
-        if users := payload.get("users"):
-            self.users = copy.copy(self.users)
-            self.users.update({bases.Snowflake(u["id"]): users_.User.deserialize(u, app=self._app) for u in users})
-        if webhooks := payload.get("webhooks"):
-            self.webhooks = copy.copy(self.webhooks)
-            self.webhooks.update(
-                {bases.Snowflake(w["id"]): webhooks_.Webhook.deserialize(w, app=self._app) for w in webhooks}
-            )
-        if integrations := payload.get("integrations"):
-            self.integrations = copy.copy(self.integrations)
-            self.integrations.update(
-                {
-                    bases.Snowflake(i["id"]): guilds.PartialGuildIntegration.deserialize(i, app=self._app)
-                    for i in integrations
-                }
-            )
