@@ -211,7 +211,7 @@ class REST(http_client.HTTPClient):
         bucket = resp_headers.get("x-ratelimit-bucket", "None")
         reset = float(resp_headers.get("x-ratelimit-reset", "0"))
         reset_date = datetime.datetime.fromtimestamp(reset, tz=datetime.timezone.utc)
-        now_date = conversions.parse_http_date(resp_headers["date"])
+        now_date = conversions.rfc7231_datetime_string_to_datetime(resp_headers["date"])
         self.buckets.update_rate_limits(
             compiled_route=compiled_route,
             bucket_header=bucket,
@@ -316,7 +316,7 @@ class REST(http_client.HTTPClient):
     async def fetch_channel(
         self, channel: typing.Union[channels.PartialChannel, bases.Snowflake, int], /,
     ) -> channels.PartialChannel:
-        response = await self._request(routes.GET_CHANNEL.compile(channel=conversions.cast_to_str_id(channel)))
+        response = await self._request(routes.GET_CHANNEL.compile(channel=conversions.value_to_snowflake(channel)))
         return self._app.entity_factory.deserialize_channel(response)
 
     async def edit_channel(
@@ -343,7 +343,7 @@ class REST(http_client.HTTPClient):
         conversions.put_if_specified(payload, "bitrate", bitrate)
         conversions.put_if_specified(payload, "user_limit", user_limit)
         conversions.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user)
-        conversions.put_if_specified(payload, "parent_id", parent_category, conversions.cast_to_str_id)
+        conversions.put_if_specified(payload, "parent_id", parent_category, conversions.value_to_snowflake)
 
         if not unset.is_unset(permission_overwrites):
             payload["permission_overwrites"] = [
@@ -351,13 +351,13 @@ class REST(http_client.HTTPClient):
             ]
 
         response = await self._request(
-            routes.PATCH_CHANNEL.compile(channel=conversions.cast_to_str_id(channel)), body=payload, reason=reason,
+            routes.PATCH_CHANNEL.compile(channel=conversions.value_to_snowflake(channel)), body=payload, reason=reason,
         )
 
         return self._app.entity_factory.deserialize_channel(response)
 
     async def delete_channel(self, channel: typing.Union[channels.PartialChannel, bases.Snowflake, int], /) -> None:
-        await self._request(routes.DELETE_CHANNEL.compile(channel=conversions.cast_to_str_id(channel)))
+        await self._request(routes.DELETE_CHANNEL.compile(channel=conversions.value_to_snowflake(channel)))
 
     @typing.overload
     async def edit_channel_permissions(
@@ -410,7 +410,7 @@ class REST(http_client.HTTPClient):
         conversions.put_if_specified(payload, "allow", allow)
         conversions.put_if_specified(payload, "deny", deny)
         route = routes.PATCH_CHANNEL_PERMISSIONS.compile(
-            channel=conversions.cast_to_str_id(channel), overwrite=conversions.cast_to_str_id(target),
+            channel=conversions.value_to_snowflake(channel), overwrite=conversions.value_to_snowflake(target),
         )
 
         await self._request(route, body=payload, reason=reason)
@@ -421,16 +421,16 @@ class REST(http_client.HTTPClient):
         target: typing.Union[channels.PermissionOverwrite, guilds.Role, users.User, bases.UniqueObjectT],
     ) -> None:
         route = routes.DELETE_CHANNEL_PERMISSIONS.compile(
-            channel=conversions.cast_to_str_id(channel), overwrite=conversions.cast_to_str_id(target),
+            channel=conversions.value_to_snowflake(channel), overwrite=conversions.value_to_snowflake(target),
         )
         await self._request(route)
 
     async def fetch_channel_invites(
         self, channel: typing.Union[channels.GuildChannel, bases.UniqueObjectT], /
     ) -> typing.Sequence[invites.InviteWithMetadata]:
-        route = routes.GET_CHANNEL_INVITES.compile(channel=conversions.cast_to_str_id(channel))
+        route = routes.GET_CHANNEL_INVITES.compile(channel=conversions.value_to_snowflake(channel))
         response = await self._request(route)
-        return [self._app.entity_factory.deserialize_invite_with_metadata(i) for i in response]
+        return conversions.json_to_sequence(response, self._app.entity_factory.deserialize_invite_with_metadata)
 
     async def create_invite(
         self,
@@ -446,13 +446,13 @@ class REST(http_client.HTTPClient):
         reason: typing.Union[unset.Unset, str] = unset.UNSET,
     ) -> invites.InviteWithMetadata:
         payload = {}
-        conversions.put_if_specified(payload, "max_age", max_age, conversions.timespan_as_int)
+        conversions.put_if_specified(payload, "max_age", max_age, conversions.timespan_to_int)
         conversions.put_if_specified(payload, "max_uses", max_uses)
         conversions.put_if_specified(payload, "temporary", temporary)
         conversions.put_if_specified(payload, "unique", unique),
-        conversions.put_if_specified(payload, "target_user", target_user, conversions.cast_to_str_id)
+        conversions.put_if_specified(payload, "target_user", target_user, conversions.value_to_snowflake)
         conversions.put_if_specified(payload, "target_user_type", target_user_type)
-        route = routes.POST_CHANNEL_INVITES.compile(channel=conversions.cast_to_str_id(channel))
+        route = routes.POST_CHANNEL_INVITES.compile(channel=conversions.value_to_snowflake(channel))
         response = await self._request(route, body=payload, reason=reason)
         return self._app.entity_factory.deserialize_invite_with_metadata(response)
 
@@ -464,9 +464,9 @@ class REST(http_client.HTTPClient):
     async def fetch_pins(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
     ) -> typing.Mapping[bases.Snowflake, messages.Message]:
-        route = routes.GET_CHANNEL_PINS.compile(channel=conversions.cast_to_str_id(channel))
+        route = routes.GET_CHANNEL_PINS.compile(channel=conversions.value_to_snowflake(channel))
         response = await self._request(route)
-        return {bases.Snowflake(m["id"]): self._app.entity_factory.deserialize_message(m) for m in response}
+        return conversions.json_to_snowflake_map(response, self._app.entity_factory.deserialize_message)
 
     async def create_pinned_message(
         self,
@@ -474,7 +474,7 @@ class REST(http_client.HTTPClient):
         message: typing.Union[messages.Message, bases.UniqueObjectT],
     ) -> None:
         route = routes.PUT_CHANNEL_PINS.compile(
-            channel=conversions.cast_to_str_id(channel), message=conversions.cast_to_str_id(message),
+            channel=conversions.value_to_snowflake(channel), message=conversions.value_to_snowflake(message),
         )
         await self._request(route)
 
@@ -484,7 +484,7 @@ class REST(http_client.HTTPClient):
         message: typing.Union[messages.Message, bases.UniqueObjectT],
     ) -> None:
         route = routes.DELETE_CHANNEL_PIN.compile(
-            channel=conversions.cast_to_str_id(channel), message=conversions.cast_to_str_id(message),
+            channel=conversions.value_to_snowflake(channel), message=conversions.value_to_snowflake(message),
         )
         await self._request(route)
 
@@ -543,9 +543,9 @@ class REST(http_client.HTTPClient):
         return iterators.MessageIterator(
             self._app,
             self._request,
-            conversions.cast_to_str_id(channel),
+            conversions.value_to_snowflake(channel),
             direction,
-            conversions.cast_to_str_id(timestamp),
+            conversions.value_to_snowflake(timestamp),
         )
 
     async def fetch_message(
@@ -554,7 +554,7 @@ class REST(http_client.HTTPClient):
         message: typing.Union[messages.Message, bases.UniqueObjectT],
     ) -> messages.Message:
         route = routes.GET_CHANNEL_MESSAGE.compile(
-            channel=conversions.cast_to_str_id(channel), message=conversions.cast_to_str_id(message),
+            channel=conversions.value_to_snowflake(channel), message=conversions.value_to_snowflake(message),
         )
         response = await self._request(route)
         return self._app.entity_factory.deserialize_message(response)
@@ -572,7 +572,7 @@ class REST(http_client.HTTPClient):
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObjectT]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObjectT, guilds.Role]], bool] = True,
     ) -> messages.Message:
-        route = routes.POST_CHANNEL_MESSAGES.compile(channel=conversions.cast_to_str_id(channel))
+        route = routes.POST_CHANNEL_MESSAGES.compile(channel=conversions.value_to_snowflake(channel))
 
         payload = {"allowed_mentions": self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions)}
         conversions.put_if_specified(payload, "content", text, str)
@@ -604,7 +604,7 @@ class REST(http_client.HTTPClient):
         flags: typing.Union[unset.Unset, messages.MessageFlag] = unset.UNSET,
     ) -> messages.Message:
         route = routes.PATCH_CHANNEL_MESSAGE.compile(
-            channel=conversions.cast_to_str_id(channel), message=conversions.cast_to_str_id(message),
+            channel=conversions.value_to_snowflake(channel), message=conversions.value_to_snowflake(message),
         )
         payload = {}
         conversions.put_if_specified(payload, "content", text, str)
@@ -620,7 +620,7 @@ class REST(http_client.HTTPClient):
         message: typing.Union[messages.Message, bases.UniqueObjectT],
     ) -> None:
         route = routes.DELETE_CHANNEL_MESSAGE.compile(
-            channel=conversions.cast_to_str_id(channel), message=conversions.cast_to_str_id(message),
+            channel=conversions.value_to_snowflake(channel), message=conversions.value_to_snowflake(message),
         )
         await self._request(route)
 
@@ -630,8 +630,8 @@ class REST(http_client.HTTPClient):
         *messages_to_delete: typing.Union[messages.Message, bases.UniqueObjectT],
     ) -> None:
         if 2 <= len(messages_to_delete) <= 100:
-            route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=conversions.cast_to_str_id(channel))
-            payload = {"messages": [conversions.cast_to_str_id(m) for m in messages_to_delete]}
+            route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=conversions.value_to_snowflake(channel))
+            payload = {"messages": [conversions.value_to_snowflake(m) for m in messages_to_delete]}
             await self._request(route, body=payload)
         else:
             raise TypeError("Must delete a minimum of 2 messages and a maximum of 100")
@@ -643,8 +643,8 @@ class REST(http_client.HTTPClient):
         emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
     ) -> None:
         emoji = emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji)
-        channel = conversions.cast_to_str_id(channel)
-        message = conversions.cast_to_str_id(message)
+        channel = conversions.value_to_snowflake(channel)
+        message = conversions.value_to_snowflake(message)
         route = routes.PUT_MY_REACTION.compile(channel=channel, message=message, emoji=emoji)
         await self._request(route)
 
@@ -655,8 +655,8 @@ class REST(http_client.HTTPClient):
         emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
     ) -> None:
         emoji = emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji)
-        channel = conversions.cast_to_str_id(channel)
-        message = conversions.cast_to_str_id(message)
+        channel = conversions.value_to_snowflake(channel)
+        message = conversions.value_to_snowflake(message)
         route = routes.DELETE_MY_REACTION.compile(channel=channel, message=message, emoji=emoji)
         await self._request(route)
 
@@ -667,8 +667,8 @@ class REST(http_client.HTTPClient):
         emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
     ) -> None:
         emoji = emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji)
-        channel = conversions.cast_to_str_id(channel)
-        message = conversions.cast_to_str_id(message)
+        channel = conversions.value_to_snowflake(channel)
+        message = conversions.value_to_snowflake(message)
         route = routes.DELETE_REACTION_EMOJI.compile(channel=channel, message=message, emoji=emoji)
         await self._request(route)
 
@@ -680,9 +680,9 @@ class REST(http_client.HTTPClient):
         user: typing.Union[users.User, bases.UniqueObjectT],
     ) -> None:
         emoji = emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji)
-        channel = conversions.cast_to_str_id(channel)
-        message = conversions.cast_to_str_id(message)
-        user = conversions.cast_to_str_id(user)
+        channel = conversions.value_to_snowflake(channel)
+        message = conversions.value_to_snowflake(message)
+        user = conversions.value_to_snowflake(user)
         route = routes.DELETE_REACTION_USER.compile(channel=channel, message=message, emoji=emoji, user=user)
         await self._request(route)
 
@@ -691,8 +691,8 @@ class REST(http_client.HTTPClient):
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         message: typing.Union[messages.Message, bases.UniqueObjectT],
     ) -> None:
-        channel = conversions.cast_to_str_id(channel)
-        message = conversions.cast_to_str_id(message)
+        channel = conversions.value_to_snowflake(channel)
+        message = conversions.value_to_snowflake(message)
         route = routes.DELETE_ALL_REACTIONS.compile(channel=channel, message=message)
         await self._request(route)
 
@@ -705,8 +705,8 @@ class REST(http_client.HTTPClient):
         return iterators.ReactorIterator(
             app=self._app,
             request_call=self._request,
-            channel_id=conversions.cast_to_str_id(channel),
-            message_id=conversions.cast_to_str_id(message),
+            channel_id=conversions.value_to_snowflake(channel),
+            message_id=conversions.value_to_snowflake(message),
             emoji=emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji),
         )
 
@@ -721,7 +721,7 @@ class REST(http_client.HTTPClient):
         payload = {"name": name}
         if not unset.is_unset(avatar):
             payload["avatar"] = await avatar.fetch_data_uri()
-        route = routes.POST_WEBHOOK.compile(channel=conversions.cast_to_str_id(channel))
+        route = routes.POST_WEBHOOK.compile(channel=conversions.value_to_snowflake(channel))
         response = await self._request(route, body=payload, reason=reason)
         return self._app.entity_factory.deserialize_webhook(response)
 
@@ -733,25 +733,25 @@ class REST(http_client.HTTPClient):
         token: typing.Union[unset.Unset, str] = unset.UNSET,
     ) -> webhooks.Webhook:
         if unset.is_unset(token):
-            route = routes.GET_WEBHOOK.compile(webhook=conversions.cast_to_str_id(webhook))
+            route = routes.GET_WEBHOOK.compile(webhook=conversions.value_to_snowflake(webhook))
         else:
-            route = routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=conversions.cast_to_str_id(webhook), token=token)
+            route = routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=conversions.value_to_snowflake(webhook), token=token)
         response = await self._request(route)
         return self._app.entity_factory.deserialize_webhook(response)
 
     async def fetch_channel_webhooks(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
     ) -> typing.Mapping[bases.Snowflake, webhooks.Webhook]:
-        route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=conversions.cast_to_str_id(channel))
+        route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=conversions.value_to_snowflake(channel))
         response = await self._request(route)
-        return {bases.Snowflake(w["id"]): self._app.entity_factory.deserialize_webhook(w) for w in response}
+        return conversions.json_to_snowflake_map(response, self._app.entity_factory.deserialize_webhook)
 
     async def fetch_guild_webhooks(
         self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], /
     ) -> typing.Mapping[bases.Snowflake, webhooks.Webhook]:
-        route = routes.GET_GUILD_WEBHOOKS.compile(channel=conversions.cast_to_str_id(guild))
+        route = routes.GET_GUILD_WEBHOOKS.compile(channel=conversions.value_to_snowflake(guild))
         response = await self._request(route)
-        return {bases.Snowflake(w["id"]): self._app.entity_factory.deserialize_webhook(w) for w in response}
+        return conversions.json_to_snowflake_map(response, self._app.entity_factory.deserialize_webhook)
 
     async def edit_webhook(
         self,
@@ -766,14 +766,16 @@ class REST(http_client.HTTPClient):
     ) -> webhooks.Webhook:
         payload = {}
         conversions.put_if_specified(payload, "name", name)
-        conversions.put_if_specified(payload, "channel", channel, conversions.cast_to_str_id)
+        conversions.put_if_specified(payload, "channel", channel, conversions.value_to_snowflake)
         if not unset.is_unset(avatar):
             payload["avatar"] = await avatar.fetch_data_uri()
 
         if unset.is_unset(token):
-            route = routes.PATCH_WEBHOOK.compile(webhook=conversions.cast_to_str_id(webhook))
+            route = routes.PATCH_WEBHOOK.compile(webhook=conversions.value_to_snowflake(webhook))
         else:
-            route = routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook=conversions.cast_to_str_id(webhook), token=token)
+            route = routes.PATCH_WEBHOOK_WITH_TOKEN.compile(
+                webhook=conversions.value_to_snowflake(webhook), token=token
+            )
 
         response = await self._request(route, body=payload, reason=reason)
         return self._app.entity_factory.deserialize_webhook(response)
@@ -786,9 +788,11 @@ class REST(http_client.HTTPClient):
         token: typing.Union[unset.Unset, str] = unset.UNSET,
     ) -> None:
         if unset.is_unset(token):
-            route = routes.DELETE_WEBHOOK.compile(webhook=conversions.cast_to_str_id(webhook))
+            route = routes.DELETE_WEBHOOK.compile(webhook=conversions.value_to_snowflake(webhook))
         else:
-            route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=conversions.cast_to_str_id(webhook), token=token)
+            route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(
+                webhook=conversions.value_to_snowflake(webhook), token=token
+            )
         await self._request(route)
 
     async def execute_embed(
@@ -808,10 +812,10 @@ class REST(http_client.HTTPClient):
         role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObjectT, guilds.Role]], bool] = True,
     ) -> messages.Message:
         if unset.is_unset(token):
-            route = routes.POST_WEBHOOK.compile(webhook=conversions.cast_to_str_id(webhook))
+            route = routes.POST_WEBHOOK.compile(webhook=conversions.value_to_snowflake(webhook))
             no_auth = False
         else:
-            route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=conversions.cast_to_str_id(webhook), token=token)
+            route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=conversions.value_to_snowflake(webhook), token=token)
             no_auth = True
 
         attachments = [] if unset.is_unset(attachments) else [a for a in attachments]
@@ -890,15 +894,17 @@ class REST(http_client.HTTPClient):
         elif isinstance(start_at, datetime.datetime):
             start_at = bases.Snowflake.from_datetime(start_at)
 
-        return iterators.OwnGuildIterator(self._app, self._request, newest_first, conversions.cast_to_str_id(start_at))
+        return iterators.OwnGuildIterator(
+            self._app, self._request, newest_first, conversions.value_to_snowflake(start_at)
+        )
 
     async def leave_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], /) -> None:
-        route = routes.DELETE_MY_GUILD.compile(guild=conversions.cast_to_str_id(guild))
+        route = routes.DELETE_MY_GUILD.compile(guild=conversions.value_to_snowflake(guild))
         await self._request(route)
 
     async def create_dm_channel(self, user: typing.Union[users.User, bases.UniqueObjectT], /) -> channels.DMChannel:
         route = routes.POST_MY_CHANNELS.compile()
-        response = await self._request(route, body={"recipient_id": conversions.cast_to_str_id(user)})
+        response = await self._request(route, body={"recipient_id": conversions.value_to_snowflake(user)})
         return self._app.entity_factory.deserialize_dm_channel(response)
 
     async def fetch_application(self) -> applications.Application:
@@ -919,12 +925,14 @@ class REST(http_client.HTTPClient):
         deaf: typing.Union[unset.Unset, bool] = unset.UNSET,
     ) -> typing.Optional[guilds.GuildMember]:
         route = routes.PUT_GUILD_MEMBER.compile(
-            guild=conversions.cast_to_str_id(guild), user=conversions.cast_to_str_id(user),
+            guild=conversions.value_to_snowflake(guild), user=conversions.value_to_snowflake(user),
         )
 
         payload = {"access_token": access_token}
         conversions.put_if_specified(payload, "nick", nickname)
-        conversions.put_if_specified(payload, "roles", roles, lambda rs: [conversions.cast_to_str_id(r) for r in rs])
+        conversions.put_if_specified(
+            payload, "roles", roles, lambda rs: [conversions.value_to_snowflake(r) for r in rs]
+        )
         conversions.put_if_specified(payload, "mute", mute)
         conversions.put_if_specified(payload, "deaf", deaf)
 
@@ -939,10 +947,10 @@ class REST(http_client.HTTPClient):
     async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:
         route = routes.GET_VOICE_REGIONS.compile()
         response = await self._request(route)
-        return [self._app.entity_factory.deserialize_voice_region(r) for r in response]
+        return conversions.json_to_snowflake_map(response, self._app.entity_factory.deserialize_voice_region)
 
     async def fetch_user(self, user: typing.Union[users.User, bases.UniqueObjectT]) -> users.User:
-        route = routes.GET_USER.compile(user=conversions.cast_to_str_id(user))
+        route = routes.GET_USER.compile(user=conversions.value_to_snowflake(user))
         response = await self._request(route)
         return self._app.entity_factory.deserialize_user(response)
 
@@ -954,8 +962,8 @@ class REST(http_client.HTTPClient):
         user: typing.Union[unset.Unset, users.User, bases.UniqueObjectT] = unset.UNSET,
         event_type: typing.Union[unset.Unset, audit_logs.AuditLogEventType] = unset.UNSET,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
-        guild = conversions.cast_to_str_id(guild)
-        user = unset.UNSET if unset.is_unset(user) else conversions.cast_to_str_id(user)
+        guild = conversions.value_to_snowflake(guild)
+        user = unset.UNSET if unset.is_unset(user) else conversions.value_to_snowflake(user)
         event_type = unset.UNSET if unset.is_unset(event_type) else int(event_type)
 
         if unset.is_unset(before):
@@ -963,6 +971,17 @@ class REST(http_client.HTTPClient):
         elif isinstance(before, datetime.datetime):
             before = bases.Snowflake.from_datetime(before)
 
-        before = conversions.cast_to_str_id(before)
+        before = conversions.value_to_snowflake(before)
 
         return iterators.AuditLogIterator(self._app, self._request, guild, before, user, event_type,)
+
+    async def fetch_guild_emoji(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        emoji: typing.Union[emojis.KnownCustomEmoji, bases.UniqueObjectT],
+    ) -> emojis.KnownCustomEmoji:
+        route = routes.GET_GUILD_EMOJI.compile(
+            guild=conversions.value_to_snowflake(guild), emoji=conversions.value_to_snowflake(emoji),
+        )
+        response = await self._request(route)
+        return self._app.entity_factory.deserialize_known_custom_emoji(response)

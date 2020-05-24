@@ -27,20 +27,12 @@ import inspect
 import typing
 
 if typing.TYPE_CHECKING:
-    from . import more_typing
+    from hikari.internal import more_typing
+
+    _T_contra = typing.TypeVar("_T_contra", contravariant=True)
 
 
-@typing.overload
-def completed_future() -> more_typing.Future[None]:
-    """Return a completed future with no result."""
-
-
-@typing.overload
-def completed_future(result: more_typing.T_contra, /) -> more_typing.Future[more_typing.T_contra]:
-    """Return a completed future with the given value as the result."""
-
-
-def completed_future(result=None, /):
+def completed_future(result: _T_contra = None, /) -> more_typing.Future[_T_contra]:
     """Create a future on the current running loop that is completed, then return it.
 
     Parameters
@@ -56,28 +48,6 @@ def completed_future(result=None, /):
     future = asyncio.get_event_loop().create_future()
     future.set_result(result)
     return future
-
-
-def wait(
-    aws: typing.Iterable[typing.Union[more_typing.Coroutine[more_typing.T_co], typing.Awaitable[more_typing.T_co]]],
-    *,
-    timeout=None,
-    return_when=asyncio.ALL_COMPLETED,
-) -> more_typing.Coroutine[
-    typing.Tuple[typing.Set[more_typing.Future[more_typing.T_co]], typing.Set[more_typing.Future[more_typing.T_co]]]
-]:
-    """Run awaitable objects in the aws set concurrently.
-
-    This blocks until the condition specified by `return_value`.
-
-    Returns
-    -------
-    typing.Tuple with two typing.Set of futures
-        The coroutine returned by `asyncio.wait` of two sets of
-        Tasks/Futures (done, pending).
-    """
-    # noinspection PyTypeChecker
-    return asyncio.wait([asyncio.ensure_future(f) for f in aws], timeout=timeout, return_when=return_when)
 
 
 # On Python3.8.2, there appears to be a bug with the typing module:
@@ -99,12 +69,9 @@ def wait(
 
 def is_async_iterator(obj: typing.Any) -> bool:
     """Determine if the object is an async iterator or not."""
-    return hasattr(obj, "__anext__") and asyncio.iscoroutinefunction(obj.__anext__)
+    return asyncio.iscoroutinefunction(getattr(obj, "__anext__", None))
 
 
 def is_async_iterable(obj: typing.Any) -> bool:
     """Determine if the object is an async iterable or not."""
-    if not hasattr(obj, "__aiter__"):
-        return False
-    # These could be async generators, or they could be something different.
-    return inspect.isfunction(obj.__aiter__) or inspect.ismethod(obj.__aiter__)
+    return inspect.isfunction(obj.__aiter__) or inspect.ismethod(getattr(obj, "__aiter__", None))

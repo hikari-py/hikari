@@ -80,21 +80,6 @@ class TestCompletedFuture:
         assert more_asyncio.completed_future(...).result() is ...
 
 
-@pytest.mark.asyncio
-async def test_wait():
-    mock_futures = ([mock.MagicMock(asyncio.Future)], [mock.MagicMock(asyncio.Future)])
-    mock_awaitable = _helpers.AwaitableMock()
-    mock_future = mock.MagicMock(asyncio.Future)
-    stack = contextlib.ExitStack()
-    stack.enter_context(mock.patch.object(asyncio, "wait", return_value=mock_futures))
-    stack.enter_context(mock.patch.object(asyncio, "ensure_future", return_value=mock_future))
-    with stack:
-        result = await more_asyncio.wait([mock_awaitable], timeout=42, return_when=asyncio.FIRST_COMPLETED)
-        assert result == mock_futures
-        asyncio.wait.assert_called_once_with([mock_future], timeout=42, return_when=asyncio.FIRST_COMPLETED)
-        asyncio.ensure_future.assert_called_once_with(mock_awaitable)
-
-
 class TestIsAsyncIterator:
     def test_on_inst(self):
         class AsyncIterator:

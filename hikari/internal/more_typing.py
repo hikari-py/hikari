@@ -47,11 +47,12 @@ from typing import Generator as _Generator
 from typing import Mapping as _Mapping
 from typing import Optional as _Optional
 from typing import Protocol as _Protocol
-from typing import runtime_checkable as runtime_checkable
+from typing import runtime_checkable
 from typing import Sequence as _Sequence
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
+
 
 if _TYPE_CHECKING:
     import asyncio
@@ -63,9 +64,9 @@ if _TYPE_CHECKING:
 
 # pylint: enable=ungrouped-imports
 
-T_contra = _TypeVar("T_contra", contravariant=True)
+_T_contra = _TypeVar("_T_contra", contravariant=True)
 # noinspection PyShadowingBuiltins
-T_co = _TypeVar("T_co", covariant=True)
+_T_co = _TypeVar("_T_co", covariant=True)
 
 ##########################
 # HTTP TYPE HINT HELPERS #
@@ -92,13 +93,13 @@ NullableJSONArray = _Optional[JSONArray]
 """A sequence produced from a JSON array that may or may not be present."""
 
 Headers = _Mapping[str, _Union[_Sequence[str], str]]
-"""HTTP headers."""
+"""HTTP headers with case insensitive strings."""
 
 #############################
 # ASYNCIO TYPE HINT HELPERS #
 #############################
 
-Coroutine = _Coroutine[_Any, _Any, T_co]
+Coroutine = _Coroutine[_Any, _Any, _T_co]
 """A coroutine object.
 
 This is awaitable but MUST be awaited somewhere to be completed correctly.
@@ -106,16 +107,16 @@ This is awaitable but MUST be awaited somewhere to be completed correctly.
 
 
 @runtime_checkable
-class Future(_Protocol[T_contra]):
+class Future(_Protocol[_T_contra]):
     """Typed protocol representation of an `asyncio.Future`.
 
     You should consult the documentation for `asyncio.Future` for usage.
     """
 
-    def result(self) -> T_contra:
+    def result(self) -> _T_contra:
         """See `asyncio.Future.result`."""
 
-    def set_result(self, result: T_contra, /) -> None:
+    def set_result(self, result: _T_contra, /) -> None:
         """See `asyncio.Future.set_result`."""
 
     def set_exception(self, exception: Exception, /) -> None:
@@ -128,11 +129,11 @@ class Future(_Protocol[T_contra]):
         """See `asyncio.Future.cancelled`."""
 
     def add_done_callback(
-        self, callback: _Callable[[Future[T_contra]], None], /, *, context: _Optional[contextvars.Context],
+        self, callback: _Callable[[Future[_T_contra]], None], /, *, context: _Optional[contextvars.Context],
     ) -> None:
         """See `asyncio.Future.add_done_callback`."""
 
-    def remove_done_callback(self, callback: _Callable[[Future[T_contra]], None], /) -> None:
+    def remove_done_callback(self, callback: _Callable[[Future[_T_contra]], None], /) -> None:
         """See `asyncio.Future.remove_done_callback`."""
 
     def cancel(self) -> bool:
@@ -144,21 +145,21 @@ class Future(_Protocol[T_contra]):
     def get_loop(self) -> asyncio.AbstractEventLoop:
         """See `asyncio.Future.get_loop`."""
 
-    def __await__(self) -> Coroutine[T_contra]:
+    def __await__(self) -> _Generator[_T_contra, None, _Any]:
         ...
 
 
 @runtime_checkable
-class Task(_Protocol[T_contra]):
+class Task(_Protocol[_T_contra]):
     """Typed protocol representation of an `asyncio.Task`.
 
     You should consult the documentation for `asyncio.Task` for usage.
     """
 
-    def result(self) -> T_contra:
+    def result(self) -> _T_contra:
         """See`asyncio.Future.result`."""
 
-    def set_result(self, result: T_contra, /) -> None:
+    def set_result(self, result: _T_contra, /) -> None:
         """See `asyncio.Future.set_result`."""
 
     def set_exception(self, exception: Exception, /) -> None:
@@ -171,11 +172,11 @@ class Task(_Protocol[T_contra]):
         """See `asyncio.Future.cancelled`."""
 
     def add_done_callback(
-        self, callback: _Callable[[Future[T_contra]], None], /, *, context: _Optional[contextvars.Context],
+        self, callback: _Callable[[Future[_T_contra]], None], /, *, context: _Optional[contextvars.Context],
     ) -> None:
         """See `asyncio.Future.add_done_callback`."""
 
-    def remove_done_callback(self, callback: _Callable[[Future[T_contra]], None], /) -> None:
+    def remove_done_callback(self, callback: _Callable[[Future[_T_contra]], None], /) -> None:
         """See `asyncio.Future.remove_done_callback`."""
 
     def cancel(self) -> bool:
@@ -199,7 +200,7 @@ class Task(_Protocol[T_contra]):
     def set_name(self, value: str, /) -> None:
         """See `asyncio.Task.set_name`."""
 
-    def __await__(self) -> _Generator[T_contra, _Any, None]:
+    def __await__(self) -> _Generator[_T_contra, None, _Any]:
         ...
 
 

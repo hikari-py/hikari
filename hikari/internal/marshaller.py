@@ -478,8 +478,8 @@ class Deserializable:
 
     @classmethod
     def deserialize(
-        cls: typing.Type[more_typing.T_contra], payload: more_typing.JSONType, **kwargs
-    ) -> more_typing.T_contra:
+        cls: typing.Type[more_typing._T_contra], payload: more_typing.JSONType, **kwargs
+    ) -> more_typing._T_contra:
         """Deserialize the given payload into the object.
 
         Parameters
@@ -495,6 +495,6 @@ class Serializable:
 
     __slots__ = ()
 
-    def serialize(self: more_typing.T_contra) -> more_typing.JSONType:
+    def serialize(self: more_typing._T_contra) -> more_typing.JSONType:
         """Serialize this instance into a naive value."""
         return HIKARI_ENTITY_MARSHALLER.serialize(self)

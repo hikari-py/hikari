@@ -307,7 +307,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         bucket = resp_headers.get("x-ratelimit-bucket", "None")
         reset = float(resp_headers.get("x-ratelimit-reset", "0"))
         reset_date = datetime.datetime.fromtimestamp(reset, tz=datetime.timezone.utc)
-        now_date = conversions.parse_http_date(resp_headers["date"])
+        now_date = conversions.rfc7231_datetime_string_to_datetime(resp_headers["date"])
         self.bucket_ratelimiters.update_rate_limits(
             compiled_route=compiled_route,
             bucket_header=bucket,

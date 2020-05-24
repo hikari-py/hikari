@@ -265,11 +265,18 @@ class GuildMember(bases.Entity, marshaller.Deserializable):
     )
     """A sequence of the IDs of the member's current roles."""
 
-    joined_at: datetime.datetime = marshaller.attrib(deserializer=conversions.parse_iso_8601_ts, eq=False, hash=False)
+    joined_at: datetime.datetime = marshaller.attrib(
+        deserializer=conversions.iso8601_datetime_string_to_datetime, eq=False, hash=False
+    )
     """The datetime of when this member joined the guild they belong to."""
 
     premium_since: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None, default=None, eq=False, hash=False
+        deserializer=conversions.iso8601_datetime_string_to_datetime,
+        if_none=None,
+        if_undefined=None,
+        default=None,
+        eq=False,
+        hash=False,
     )
     """The datetime of when this member started "boosting" this guild.
 
@@ -748,7 +755,12 @@ class GuildMemberPresence(bases.Entity, marshaller.Deserializable):
     """An object of the target user's client statuses."""
 
     premium_since: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_undefined=None, if_none=None, default=None, eq=False, hash=False,
+        deserializer=conversions.iso8601_datetime_string_to_datetime,
+        if_undefined=None,
+        if_none=None,
+        default=None,
+        eq=False,
+        hash=False,
     )
     """The datetime of when this member started "boosting" this guild.
 
@@ -851,7 +863,11 @@ class GuildIntegration(bases.Unique, marshaller.Deserializable):
     """The user this integration belongs to."""
 
     last_synced_at: datetime.datetime = marshaller.attrib(
-        raw_name="synced_at", deserializer=conversions.parse_iso_8601_ts, if_none=None, eq=False, hash=False
+        raw_name="synced_at",
+        deserializer=conversions.iso8601_datetime_string_to_datetime,
+        if_none=None,
+        eq=False,
+        hash=False,
     )
     """The datetime of when this integration's subscribers were last synced."""
 
@@ -1245,7 +1261,11 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     """
 
     joined_at: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_undefined=None, default=None, eq=False, hash=False
+        deserializer=conversions.iso8601_datetime_string_to_datetime,
+        if_undefined=None,
+        default=None,
+        eq=False,
+        hash=False,
     )
     """The date and time that the bot user joined this guild.
 
