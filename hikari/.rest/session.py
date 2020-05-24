@@ -307,7 +307,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         bucket = resp_headers.get("x-ratelimit-bucket", "None")
         reset = float(resp_headers.get("x-ratelimit-reset", "0"))
         reset_date = datetime.datetime.fromtimestamp(reset, tz=datetime.timezone.utc)
-        now_date = conversions.parse_http_date(resp_headers["date"])
+        now_date = conversions.rfc7231_datetime_string_to_datetime(resp_headers["date"])
         self.bucket_ratelimiters.update_rate_limits(
             compiled_route=compiled_route,
             bucket_header=bucket,
@@ -1417,8 +1417,8 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         """
         payload = {"name": name}
         conversions.put_if_specified(payload, "region", region)
-        conversions.put_if_specified(payload, "verification_level", verification_level)
-        conversions.put_if_specified(payload, "default_message_notifications", default_message_notifications)
+        conversions.put_if_specified(payload, "verification", verification_level)
+        conversions.put_if_specified(payload, "notifications", default_message_notifications)
         conversions.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
         conversions.put_if_specified(payload, "roles", roles)
         conversions.put_if_specified(payload, "channels", channels)
@@ -1545,8 +1545,8 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         payload = {}
         conversions.put_if_specified(payload, "name", name)
         conversions.put_if_specified(payload, "region", region)
-        conversions.put_if_specified(payload, "verification_level", verification_level)
-        conversions.put_if_specified(payload, "default_message_notifications", default_message_notifications)
+        conversions.put_if_specified(payload, "verification", verification_level)
+        conversions.put_if_specified(payload, "notifications", default_message_notifications)
         conversions.put_if_specified(payload, "explicit_content_filter", explicit_content_filter)
         conversions.put_if_specified(payload, "afk_channel_id", afk_channel_id)
         conversions.put_if_specified(payload, "afk_timeout", afk_timeout)
@@ -2492,7 +2492,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         hikari.errors.Forbidden
             If you either lack the `MANAGE_GUILD` permission or are not in the guild.
         """
-        route = routes.GET_GUILD_EMBED.compile(guild_id=guild_id)
+        route = routes.GET_GUILD_WIDGET.compile(guild_id=guild_id)
         return await self._request_json_response(route)
 
     async def modify_guild_embed(
@@ -2528,7 +2528,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
         payload = {}
         conversions.put_if_specified(payload, "channel", channel_id)
         conversions.put_if_specified(payload, "enabled", enabled)
-        route = routes.PATCH_GUILD_EMBED.compile(guild_id=guild_id)
+        route = routes.PATCH_GUILD_WIDGET.compile(guild_id=guild_id)
         return await self._request_json_response(route, body=payload, reason=reason)
 
     async def get_guild_vanity_url(self, guild_id: str) -> more_typing.JSONObject:

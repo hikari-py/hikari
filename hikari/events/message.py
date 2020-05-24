@@ -123,12 +123,15 @@ class MessageUpdateEvent(base_events.HikariEvent, base_models.Unique, marshaller
     """The content of the message."""
 
     timestamp: typing.Union[datetime.datetime, unset.Unset] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_undefined=unset.Unset, default=unset.UNSET
+        deserializer=conversions.iso8601_datetime_string_to_datetime, if_undefined=unset.Unset, default=unset.UNSET
     )
     """The timestamp that the message was sent at."""
 
     edited_timestamp: typing.Union[datetime.datetime, unset.Unset, None] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=unset.Unset, default=unset.UNSET
+        deserializer=conversions.iso8601_datetime_string_to_datetime,
+        if_none=None,
+        if_undefined=unset.Unset,
+        default=unset.UNSET,
     )
     """The timestamp that the message was last edited at.
 

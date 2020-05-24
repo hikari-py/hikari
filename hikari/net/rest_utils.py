@@ -30,8 +30,16 @@ import contextlib
 import types
 import typing
 
+import attr
+
+from hikari import rest_app
 from hikari.internal import conversions
 from hikari.models import bases
+from hikari.models import colors
+from hikari.models import files
+from hikari.models import guilds
+from hikari.models import permissions as permissions_
+from hikari.models import unset
 from hikari.net import routes
 
 if typing.TYPE_CHECKING:
@@ -54,7 +62,7 @@ class TypingIndicator:
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
     ) -> None:
-        self._channel = conversions.cast_to_str_id(channel)
+        self._channel = conversions.value_to_snowflake(channel)
         self._request_call = request_call
         self._task = None
 
@@ -75,3 +83,141 @@ class TypingIndicator:
     async def _keep_typing(self) -> None:
         with contextlib.suppress(asyncio.CancelledError):
             await asyncio.gather(self, asyncio.sleep(9.9), return_exceptions=True)
+
+
+@attr.s(auto_attribs=True, kw_only=True, slots=True)
+class GuildBuilder:
+    _app: rest_app.IRESTApp
+    _categories: typing.MutableSet[int] = attr.ib(factory=set)
+    _channels: typing.MutableSequence[more_typing.JSONObject] = attr.ib(factory=list)
+    _counter: int = 0
+    _name: typing.Union[unset.Unset, str]
+    _request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]]
+    _roles: typing.MutableSequence[more_typing.JSONObject] = attr.ib(factory=list)
+    default_message_notifications: typing.Union[unset.Unset, guilds.GuildMessageNotificationsLevel] = unset.UNSET
+    explicit_content_filter_level: typing.Union[unset.Unset, guilds.GuildExplicitContentFilterLevel] = unset.UNSET
+    icon: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET
+    region: typing.Union[unset.Unset, str] = unset.UNSET
+    verification_level: typing.Union[unset.Unset, guilds.GuildVerificationLevel] = unset.UNSET
+
+    @property
+    def name(self) -> str:
+        # Read-only!
+        return self._name
+
+    def __await__(self) -> typing.Generator[guilds.Guild, None, typing.Any]:
+        yield from self.create().__await__()
+
+    async def create(self) -> guilds.Guild:
+        route = routes.POST_GUILDS.compile()
+        payload = {
+            "name": self.name,
+            "icon": None if unset.is_unset(self.icon) else await self.icon.read(),
+            "roles": self._roles,
+            "channels": self._channels,
+        }
+        conversions.put_if_specified(payload, "region", self.region)
+        conversions.put_if_specified(payload, "verification_level", self.verification_level)
+        conversions.put_if_specified(payload, "default_message_notifications", self.default_message_notifications)
+        conversions.put_if_specified(payload, "explicit_content_filter", self.explicit_content_filter_level)
+
+        response = await self._request_call(route, body=payload)
+        return self._app.entity_factory.deserialize_guild(response)
+
+    def add_role(
+        self,
+        name: str,
+        /,
+        *,
+        color: typing.Union[unset.Unset, colors.Color] = unset.UNSET,
+        colour: typing.Union[unset.Unset, colors.Color] = unset.UNSET,
+        hoisted: typing.Union[unset.Unset, bool] = unset.UNSET,
+        mentionable: typing.Union[unset.Unset, bool] = unset.UNSET,
+        permissions: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
+        position: typing.Union[unset.Unset, int] = unset.UNSET,
+    ) -> None:
+        payload = {"name": name}
+        conversions.put_if_specified(payload, "color", color)
+        conversions.put_if_specified(payload, "color", colour)
+        conversions.put_if_specified(payload, "hoisted", hoisted)
+        conversions.put_if_specified(payload, "mentionable", mentionable)
+        conversions.put_if_specified(payload, "permissions", permissions)
+        conversions.put_if_specified(payload, "position", position)
+        self._roles.append(payload)
+
+    def add_category(
+        self,
+        name: str,
+        /,
+        *,
+        position: typing.Union[unset.Unset, int] = unset.UNSET,
+        permission_overwrites: typing.Union[unset.Unset, typing.Collection[channels.PermissionOverwrite]] = unset.UNSET,
+        nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
+    ) -> int:
+        identifier = self._counter
+        self._categories.add(identifier)
+        self._counter += 1
+        payload = {
+            "id": str(identifier),
+            "type": channels.ChannelType.GUILD_CATEGORY,
+            "name": name
+        }
+        conversions.put_if_specified(payload, "position", position)
+        conversions.put_if_specified(payload, "permission_overwrites", permission_overwrites)
+        conversions.put_if_specified(payload, "nsfw", nsfw)
+        self._channels.append(payload)
+        return identifier
+
+    def add_text_channel(
+        self,
+        name: str,
+        /,
+        *,
+        parent_id: int = unset.UNSET,
+        topic: typing.Union[unset.Unset, str] = unset.UNSET,
+        rate_limit_per_user: typing.Union[unset.Unset, more_typing.TimeSpanT] = unset.UNSET,
+        position: typing.Union[unset.Unset, int] = unset.UNSET,
+        permission_overwrites: typing.Union[unset.Unset, typing.Collection[channels.PermissionOverwrite]] = unset.UNSET,
+        nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
+    ) -> None:
+        if not unset.is_unset(parent_id) and parent_id not in self._categories:
+            raise ValueError(f"ID {parent_id} is not a category in this guild builder.")
+
+        payload = {"type": channels.ChannelType.GUILD_TEXT, "name": name}
+        conversions.put_if_specified(payload, "topic", topic)
+        conversions.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user, conversions.timespan_to_int)
+        conversions.put_if_specified(payload, "position", position)
+        conversions.put_if_specified(payload, "nsfw", nsfw)
+
+        if not unset.is_unset(permission_overwrites):
+            overwrites = [self._app.entity_factory.serialize_permission_overwrite(o) for o in permission_overwrites]
+            payload["permission_overwrites"] = overwrites
+
+        self._channels.append(payload)
+
+    def add_voice_channel(
+        self,
+        name: str,
+        /,
+        *,
+        parent_id: int = unset.UNSET,
+        bitrate: typing.Union[unset.Unset, int] = unset.UNSET,
+        position: typing.Union[unset.Unset, int] = unset.UNSET,
+        permission_overwrites: typing.Union[unset.Unset, typing.Collection[channels.PermissionOverwrite]] = unset.UNSET,
+        nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
+        user_limit: typing.Union[unset.Unset, int] = unset.UNSET,
+    ) -> None:
+        if not unset.is_unset(parent_id) and parent_id not in self._categories:
+            raise ValueError(f"ID {parent_id} is not a category in this guild builder.")
+
+        payload = {"type": channels.ChannelType.GUILD_VOICE, "name": name}
+        conversions.put_if_specified(payload, "bitrate", bitrate)
+        conversions.put_if_specified(payload, "position", position)
+        conversions.put_if_specified(payload, "nsfw", nsfw)
+        conversions.put_if_specified(payload, "user_limit", user_limit)
+
+        if not unset.is_unset(permission_overwrites):
+            overwrites = [self._app.entity_factory.serialize_permission_overwrite(o) for o in permission_overwrites]
+            payload["permission_overwrites"] = overwrites
+
+        self._channels.append(payload)

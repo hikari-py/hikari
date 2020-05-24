@@ -155,7 +155,7 @@ class BaseChannelEvent(base_events.HikariEvent, base_models.Unique, marshaller.D
     """The ID of this channels's parent category within guild, if set."""
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_undefined=None, default=None
+        deserializer=conversions.iso8601_datetime_string_to_datetime, if_undefined=None, default=None
     )
     """The datetime of when the last message was pinned in this channel."""
 
@@ -207,7 +207,7 @@ class ChannelPinsUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
     """The ID of the channel where the message was pinned or unpinned."""
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_undefined=None, default=None, repr=True
+        deserializer=conversions.iso8601_datetime_string_to_datetime, if_undefined=None, default=None, repr=True
     )
     """The datetime of when the most recent message was pinned in this channel.
 
@@ -290,7 +290,7 @@ class InviteCreateEvent(base_events.HikariEvent, marshaller.Deserializable):
     code: str = marshaller.attrib(deserializer=str, repr=True)
     """The code that identifies this invite."""
 
-    created_at: datetime.datetime = marshaller.attrib(deserializer=conversions.parse_iso_8601_ts)
+    created_at: datetime.datetime = marshaller.attrib(deserializer=conversions.iso8601_datetime_string_to_datetime)
     """The datetime of when this invite was created."""
 
     guild_id: typing.Optional[base_models.Snowflake] = marshaller.attrib(

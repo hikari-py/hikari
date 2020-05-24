@@ -331,7 +331,12 @@ class GuildTextChannel(GuildChannel, TextChannel):
     """
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None, default=None, eq=False, hash=False
+        deserializer=conversions.iso8601_datetime_string_to_datetime,
+        if_none=None,
+        if_undefined=None,
+        default=None,
+        eq=False,
+        hash=False,
     )
     """The timestamp of the last-pinned message.
 
@@ -359,7 +364,12 @@ class GuildNewsChannel(GuildChannel, TextChannel):
     """
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None, default=None, eq=False, hash=False
+        deserializer=conversions.iso8601_datetime_string_to_datetime,
+        if_none=None,
+        if_undefined=None,
+        default=None,
+        eq=False,
+        hash=False,
     )
     """The timestamp of the last-pinned message.
 

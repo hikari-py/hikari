@@ -283,7 +283,7 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
     """The URL of the embed."""
 
     timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts,
+        deserializer=conversions.iso8601_datetime_string_to_datetime,
         serializer=_serialize_timestamp,
         if_undefined=None,
         default=None,
