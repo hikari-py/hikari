@@ -140,6 +140,9 @@ class GuildBuilder:
         permissions: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
         position: typing.Union[unset.Unset, int] = unset.UNSET,
     ) -> bases.Snowflake:
+        if len(self._roles) == 0 and name != "@everyone":
+            raise ValueError("First role must always be the @everyone role")
+
         snowflake = self._new_snowflake()
         payload = {"id": str(snowflake), "name": name}
         conversions.put_if_specified(payload, "color", color)
