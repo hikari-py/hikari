@@ -100,7 +100,7 @@ def test_image_bytes_to_image_data_when_unsupported_image_type_raises_value_erro
 
 def test_parse_iso_8601_date_with_negative_timezone():
     string = "2019-10-10T05:22:33.023456-02:30"
-    date = conversions.parse_iso_8601_ts(string)
+    date = conversions.iso8601_datetime_string_to_datetime(string)
     assert date.year == 2019
     assert date.month == 10
     assert date.day == 10
@@ -114,7 +114,7 @@ def test_parse_iso_8601_date_with_negative_timezone():
 
 def test_parse_iso_8601_date_with_positive_timezone():
     string = "2019-10-10T05:22:33.023456+02:30"
-    date = conversions.parse_iso_8601_ts(string)
+    date = conversions.iso8601_datetime_string_to_datetime(string)
     assert date.year == 2019
     assert date.month == 10
     assert date.day == 10
@@ -128,7 +128,7 @@ def test_parse_iso_8601_date_with_positive_timezone():
 
 def test_parse_iso_8601_date_with_zulu():
     string = "2019-10-10T05:22:33.023456Z"
-    date = conversions.parse_iso_8601_ts(string)
+    date = conversions.iso8601_datetime_string_to_datetime(string)
     assert date.year == 2019
     assert date.month == 10
     assert date.day == 10
@@ -142,7 +142,7 @@ def test_parse_iso_8601_date_with_zulu():
 
 def test_parse_iso_8601_date_with_milliseconds_instead_of_microseconds():
     string = "2019-10-10T05:22:33.023Z"
-    date = conversions.parse_iso_8601_ts(string)
+    date = conversions.iso8601_datetime_string_to_datetime(string)
     assert date.year == 2019
     assert date.month == 10
     assert date.day == 10
@@ -154,7 +154,7 @@ def test_parse_iso_8601_date_with_milliseconds_instead_of_microseconds():
 
 def test_parse_iso_8601_date_with_no_fraction():
     string = "2019-10-10T05:22:33Z"
-    date = conversions.parse_iso_8601_ts(string)
+    date = conversions.iso8601_datetime_string_to_datetime(string)
     assert date.year == 2019
     assert date.month == 10
     assert date.day == 10
@@ -167,7 +167,7 @@ def test_parse_iso_8601_date_with_no_fraction():
 def test_parse_http_date():
     rfc_timestamp = "Mon, 03 Jun 2019 17:54:26 GMT"
     expected_timestamp = datetime.datetime(2019, 6, 3, 17, 54, 26, tzinfo=datetime.timezone.utc)
-    assert conversions.parse_http_date(rfc_timestamp) == expected_timestamp
+    assert conversions.rfc7231_datetime_string_to_datetime(rfc_timestamp) == expected_timestamp
 
 
 def test_parse_discord_epoch_to_datetime():

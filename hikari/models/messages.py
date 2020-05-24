@@ -285,12 +285,12 @@ class Message(bases.Unique, marshaller.Deserializable):
     """The content of the message."""
 
     timestamp: datetime.datetime = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, eq=False, hash=False, repr=True
+        deserializer=conversions.iso8601_datetime_string_to_datetime, eq=False, hash=False, repr=True
     )
     """The timestamp that the message was sent at."""
 
     edited_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, eq=False, hash=False
+        deserializer=conversions.iso8601_datetime_string_to_datetime, if_none=None, eq=False, hash=False
     )
     """The timestamp that the message was last edited at.
 

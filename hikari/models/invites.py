@@ -254,7 +254,9 @@ class InviteWithMetadata(Invite):
     is_temporary: bool = marshaller.attrib(raw_name="temporary", deserializer=bool, eq=False, hash=False, repr=True)
     """Whether this invite grants temporary membership."""
 
-    created_at: datetime.datetime = marshaller.attrib(deserializer=conversions.parse_iso_8601_ts, eq=False, hash=False)
+    created_at: datetime.datetime = marshaller.attrib(
+        deserializer=conversions.iso8601_datetime_string_to_datetime, eq=False, hash=False
+    )
     """When this invite was created."""
 
     @property

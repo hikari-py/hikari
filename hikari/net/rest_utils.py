@@ -54,7 +54,7 @@ class TypingIndicator:
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
     ) -> None:
-        self._channel = conversions.cast_to_str_id(channel)
+        self._channel = conversions.value_to_snowflake(channel)
         self._request_call = request_call
         self._task = None
 
