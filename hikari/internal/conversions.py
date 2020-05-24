@@ -33,7 +33,7 @@ __all__ = [
     "EMPTY",
     "value_to_snowflake",
     "json_to_snowflake_map",
-    "json_to_sequence",
+    "json_to_collection",
     "timespan_to_int",
 ]
 
@@ -53,6 +53,7 @@ if typing.TYPE_CHECKING:
     _T_co = typing.TypeVar("_T_co", covariant=True)
     _T_contra = typing.TypeVar("_T_contra", contravariant=True)
     _Unique_contra = typing.TypeVar("_Unique_contra", bound=bases.Unique, contravariant=True)
+    _CollectionImpl_contra = typing.TypeVar("_CollectionImpl_contra", bound=typing.Collection, contravariant=True)
 
 
 DISCORD_EPOCH: typing.Final[int] = 1_420_070_400
@@ -271,10 +272,12 @@ def json_to_snowflake_map(
     return {item.id: item for item in items}
 
 
-def json_to_sequence(
-    payload: more_typing.JSONArray, cast: typing.Callable[[more_typing.JSONType], _T_contra]
-) -> typing.Sequence[_T_contra]:
-    return [cast(obj) for obj in payload]
+def json_to_collection(
+    payload: more_typing.JSONArray,
+    cast: typing.Callable[[more_typing.JSONType], _T_contra],
+    collection_type: typing.Type[_CollectionImpl_contra] = list,
+) -> _CollectionImpl_contra[_T_contra]:
+    return collection_type(cast(obj) for obj in payload)
 
 
 def timespan_to_int(value: typing.Union[more_typing.TimeSpanT]) -> int:

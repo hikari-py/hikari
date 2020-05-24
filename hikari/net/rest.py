@@ -430,7 +430,7 @@ class REST(http_client.HTTPClient):
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         route = routes.GET_CHANNEL_INVITES.compile(channel=conversions.value_to_snowflake(channel))
         response = await self._request(route)
-        return conversions.json_to_sequence(response, self._app.entity_factory.deserialize_invite_with_metadata)
+        return conversions.json_to_collection(response, self._app.entity_factory.deserialize_invite_with_metadata)
 
     async def create_invite(
         self,
@@ -957,6 +957,7 @@ class REST(http_client.HTTPClient):
     def fetch_guild_audit_log(
         self,
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        /,
         *,
         before: typing.Union[unset.Unset, datetime.datetime, bases.UniqueObjectT] = unset.UNSET,
         user: typing.Union[unset.Unset, users.User, bases.UniqueObjectT] = unset.UNSET,
@@ -978,10 +979,78 @@ class REST(http_client.HTTPClient):
     async def fetch_guild_emoji(
         self,
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
-        emoji: typing.Union[emojis.KnownCustomEmoji, bases.UniqueObjectT],
+        # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
+        emoji: typing.Union[emojis.KnownCustomEmoji, str],
     ) -> emojis.KnownCustomEmoji:
         route = routes.GET_GUILD_EMOJI.compile(
-            guild=conversions.value_to_snowflake(guild), emoji=conversions.value_to_snowflake(emoji),
+            guild=conversions.value_to_snowflake(guild),
+            emoji=emoji.url_name if isinstance(emoji, emojis.Emoji) else emoji,
         )
         response = await self._request(route)
         return self._app.entity_factory.deserialize_known_custom_emoji(response)
+
+    async def fetch_guild_emojis(
+        self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], /
+    ) -> typing.Set[emojis.KnownCustomEmoji]:
+        route = routes.GET_GUILD_EMOJIS.compile(guild=conversions.value_to_snowflake(guild))
+        response = await self._request(route)
+        return conversions.json_to_collection(response, self._app.entity_factory.deserialize_known_custom_emoji, set)
+
+    async def create_guild_emoji(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        name: str,
+        image: files.BaseStream,
+        *,
+        roles: typing.Union[
+            unset.Unset, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
+        ] = unset.UNSET,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> emojis.KnownCustomEmoji:
+        payload = {"name": name, "image": await image.read()}
+        conversions.put_if_specified(
+            payload, "roles", roles, lambda seq: [conversions.value_to_snowflake(r) for r in seq]
+        )
+        route = routes.POST_GUILD_EMOJIS.compile(guild=conversions.value_to_snowflake(guild))
+        response = await self._request(route, body=payload, reason=reason)
+        return self._app.entity_factory.deserialize_known_custom_emoji(response)
+
+    async def edit_guild_emoji(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
+        emoji: typing.Union[emojis.KnownCustomEmoji, str],
+        *,
+        name: typing.Union[unset.Unset, str] = unset.UNSET,
+        roles: typing.Union[
+            unset.Unset, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
+        ] = unset.UNSET,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> emojis.KnownCustomEmoji:
+        payload = {}
+        conversions.put_if_specified(payload, "name", name)
+        conversions.put_if_specified(
+            payload, "roles", roles, lambda seq: [conversions.value_to_snowflake(r) for r in seq]
+        )
+        route = routes.PATCH_GUILD_EMOJI.compile(
+            guild=conversions.value_to_snowflake(guild),
+            emoji=emoji.url_name if isinstance(emoji, emojis.Emoji) else emoji,
+        )
+        response = await self._request(route, body=payload, reason=reason)
+        return self._app.entity_factory.deserialize_known_custom_emoji(response)
+
+    async def delete_guild_emoji(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
+        emoji: typing.Union[emojis.KnownCustomEmoji, str],
+        # Reason is not currently supported for some reason. See
+    ) -> None:
+        route = routes.DELETE_GUILD_EMOJI.compile(
+            guild=conversions.value_to_snowflake(guild),
+            emoji=emoji.url_name if isinstance(emoji, emojis.Emoji) else emoji
+        )
+        await self._request(route)
+
+    def create_guild(self, name: str) -> rest_utils.GuildBuilder:
+        return rest_utils.GuildBuilder(app=self._app, name=name, request_call=self._request)
