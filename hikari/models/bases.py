@@ -84,12 +84,7 @@ class Snowflake(int):
     @classmethod
     def from_datetime(cls, date: datetime.datetime) -> Snowflake:
         """Get a snowflake object from a datetime object."""
-        return cls.from_timestamp(date.timestamp())
-
-    @classmethod
-    def from_timestamp(cls, timestamp: float) -> Snowflake:
-        """Get a snowflake object from a UNIX timestamp."""
-        return cls(int((timestamp - conversions.DISCORD_EPOCH) * 1000) << 22)
+        return cls.from_data(date, 0, 0, 0)
 
     @classmethod
     def min(cls) -> Snowflake:
@@ -104,6 +99,16 @@ class Snowflake(int):
         if not hasattr(cls, "___MAX___"):
             cls.___MAX___ = Snowflake((1 << 63) - 1)
         return cls.___MAX___
+
+    @classmethod
+    def from_data(cls, timestamp: datetime.datetime, worker_id: int, process_id: int, increment: int) -> Snowflake:
+        """Convert the pieces of info that comprise an ID into a Snowflake."""
+        return cls(
+            (conversions.datetime_to_discord_epoch(timestamp) << 22)
+            | (worker_id << 17)
+            | (process_id << 12)
+            | increment
+        )
 
 
 @marshaller.marshallable()

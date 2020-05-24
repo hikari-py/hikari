@@ -27,6 +27,7 @@ __all__ = []
 
 import asyncio
 import contextlib
+import datetime
 import types
 import typing
 
@@ -85,10 +86,13 @@ class TypingIndicator:
             await asyncio.gather(self, asyncio.sleep(9.9), return_exceptions=True)
 
 
+class DummyID(int):
+    __slots__ = ()
+
+
 @attr.s(auto_attribs=True, kw_only=True, slots=True)
 class GuildBuilder:
     _app: rest_app.IRESTApp
-    _categories: typing.MutableSet[int] = attr.ib(factory=set)
     _channels: typing.MutableSequence[more_typing.JSONObject] = attr.ib(factory=list)
     _counter: int = 0
     _name: typing.Union[unset.Unset, str]
@@ -135,8 +139,9 @@ class GuildBuilder:
         mentionable: typing.Union[unset.Unset, bool] = unset.UNSET,
         permissions: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
         position: typing.Union[unset.Unset, int] = unset.UNSET,
-    ) -> None:
-        payload = {"name": name}
+    ) -> bases.Snowflake:
+        snowflake = self._new_snowflake()
+        payload = {"id": str(snowflake), "name": name}
         conversions.put_if_specified(payload, "color", color)
         conversions.put_if_specified(payload, "color", colour)
         conversions.put_if_specified(payload, "hoisted", hoisted)
@@ -144,6 +149,7 @@ class GuildBuilder:
         conversions.put_if_specified(payload, "permissions", permissions)
         conversions.put_if_specified(payload, "position", position)
         self._roles.append(payload)
+        return snowflake
 
     def add_category(
         self,
@@ -153,71 +159,74 @@ class GuildBuilder:
         position: typing.Union[unset.Unset, int] = unset.UNSET,
         permission_overwrites: typing.Union[unset.Unset, typing.Collection[channels.PermissionOverwrite]] = unset.UNSET,
         nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
-    ) -> int:
-        identifier = self._counter
-        self._categories.add(identifier)
-        self._counter += 1
-        payload = {
-            "id": str(identifier),
-            "type": channels.ChannelType.GUILD_CATEGORY,
-            "name": name
-        }
+    ) -> bases.Snowflake:
+        snowflake = self._new_snowflake()
+        payload = {"id": str(snowflake), "type": channels.ChannelType.GUILD_CATEGORY, "name": name}
         conversions.put_if_specified(payload, "position", position)
-        conversions.put_if_specified(payload, "permission_overwrites", permission_overwrites)
         conversions.put_if_specified(payload, "nsfw", nsfw)
+
+        if not unset.is_unset(permission_overwrites):
+            overwrites = [self._app.entity_factory.serialize_permission_overwrite(o) for o in permission_overwrites]
+            payload["permission_overwrites"] = overwrites
+
         self._channels.append(payload)
-        return identifier
+        return snowflake
 
     def add_text_channel(
         self,
         name: str,
         /,
         *,
-        parent_id: int = unset.UNSET,
+        parent_id: bases.Snowflake = unset.UNSET,
         topic: typing.Union[unset.Unset, str] = unset.UNSET,
         rate_limit_per_user: typing.Union[unset.Unset, more_typing.TimeSpanT] = unset.UNSET,
         position: typing.Union[unset.Unset, int] = unset.UNSET,
         permission_overwrites: typing.Union[unset.Unset, typing.Collection[channels.PermissionOverwrite]] = unset.UNSET,
         nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
-    ) -> None:
-        if not unset.is_unset(parent_id) and parent_id not in self._categories:
-            raise ValueError(f"ID {parent_id} is not a category in this guild builder.")
-
-        payload = {"type": channels.ChannelType.GUILD_TEXT, "name": name}
+    ) -> bases.Snowflake:
+        snowflake = self._new_snowflake()
+        payload = {"id": str(snowflake), "type": channels.ChannelType.GUILD_TEXT, "name": name}
         conversions.put_if_specified(payload, "topic", topic)
         conversions.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user, conversions.timespan_to_int)
         conversions.put_if_specified(payload, "position", position)
         conversions.put_if_specified(payload, "nsfw", nsfw)
+        conversions.put_if_specified(payload, "parent_id", parent_id, str)
 
         if not unset.is_unset(permission_overwrites):
             overwrites = [self._app.entity_factory.serialize_permission_overwrite(o) for o in permission_overwrites]
             payload["permission_overwrites"] = overwrites
 
         self._channels.append(payload)
+        return snowflake
 
     def add_voice_channel(
         self,
         name: str,
         /,
         *,
-        parent_id: int = unset.UNSET,
+        parent_id: bases.Snowflake = unset.UNSET,
         bitrate: typing.Union[unset.Unset, int] = unset.UNSET,
         position: typing.Union[unset.Unset, int] = unset.UNSET,
         permission_overwrites: typing.Union[unset.Unset, typing.Collection[channels.PermissionOverwrite]] = unset.UNSET,
         nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
         user_limit: typing.Union[unset.Unset, int] = unset.UNSET,
-    ) -> None:
-        if not unset.is_unset(parent_id) and parent_id not in self._categories:
-            raise ValueError(f"ID {parent_id} is not a category in this guild builder.")
-
-        payload = {"type": channels.ChannelType.GUILD_VOICE, "name": name}
+    ) -> bases.Snowflake:
+        snowflake = self._new_snowflake()
+        payload = {"id": str(snowflake), "type": channels.ChannelType.GUILD_VOICE, "name": name}
         conversions.put_if_specified(payload, "bitrate", bitrate)
         conversions.put_if_specified(payload, "position", position)
         conversions.put_if_specified(payload, "nsfw", nsfw)
         conversions.put_if_specified(payload, "user_limit", user_limit)
+        conversions.put_if_specified(payload, "parent_id", parent_id, str)
 
         if not unset.is_unset(permission_overwrites):
             overwrites = [self._app.entity_factory.serialize_permission_overwrite(o) for o in permission_overwrites]
             payload["permission_overwrites"] = overwrites
 
         self._channels.append(payload)
+        return snowflake
+
+    def _new_snowflake(self) -> bases.Snowflake:
+        value = self._counter
+        self._counter += 1
+        return bases.Snowflake.from_data(datetime.datetime.now(tz=datetime.timezone.utc), 0, 0, value,)
