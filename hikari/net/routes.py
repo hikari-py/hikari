@@ -273,8 +273,8 @@ GET_GUILD_CHANNELS = Route(GET, "/guilds/{guild}/channels")
 POST_GUILD_CHANNELS = Route(POST, "/guilds/{guild}/channels")
 PATCH_GUILD_CHANNELS = Route(PATCH, "/guilds/{guild}/channels")
 
-GET_GUILD_EMBED = Route(GET, "/guilds/{guild}/embed")
-PATCH_GUILD_EMBED = Route(PATCH, "/guilds/{guild}/embed")
+GET_GUILD_WIDGET = Route(GET, "/guilds/{guild}/widget")
+PATCH_GUILD_WIDGET = Route(PATCH, "/guilds/{guild}/widget")
 
 GET_GUILD_EMOJI = Route(GET, "/guilds/{guild}/emojis/{emoji}")
 PATCH_GUILD_EMOJI = Route(PATCH, "/guilds/{guild}/emojis/{emoji}")

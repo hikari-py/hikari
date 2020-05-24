@@ -205,7 +205,10 @@ class GuildMemberUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
     """
 
     premium_since: typing.Union[None, datetime.datetime, unset.Unset] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=unset.Unset, default=unset.UNSET
+        deserializer=conversions.iso8601_datetime_string_to_datetime,
+        if_none=None,
+        if_undefined=unset.Unset,
+        default=unset.UNSET,
     )
     """The datetime of when this member started "boosting" this guild.
 

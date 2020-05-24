@@ -21,22 +21,22 @@
 from __future__ import annotations
 
 __all__ = [
-    "nullable_cast",
     "try_cast",
     "try_cast_or_defer_unary_operator",
     "put_if_specified",
-    "parse_http_date",
-    "parse_iso_8601_ts",
+    "rfc7231_datetime_string_to_datetime",
+    "iso8601_datetime_string_to_datetime",
     "discord_epoch_to_datetime",
     "unix_epoch_to_datetime",
     "pluralize",
     "resolve_signature",
     "EMPTY",
-    "cast_to_str_id",
-    "timespan_as_int",
+    "value_to_snowflake",
+    "json_to_snowflake_map",
+    "json_to_collection",
+    "timespan_to_int",
 ]
 
-import contextlib
 import datetime
 import email.utils
 import inspect
@@ -46,15 +46,15 @@ import typing
 from hikari.models import unset
 
 if typing.TYPE_CHECKING:
-    import enum
+    from hikari.internal import more_typing
+    from hikari.models import bases
 
-    IntFlagT = typing.TypeVar("IntFlagT", bound=enum.IntFlag)
-    RawIntFlagValueT = typing.Union[typing.AnyStr, typing.SupportsInt, int]
-    CastInputT = typing.TypeVar("CastInputT")
-    CastOutputT = typing.TypeVar("CastOutputT")
-    DefaultT = typing.TypeVar("DefaultT")
-    TypeCastT = typing.Callable[[CastInputT], CastOutputT]
-    ResultT = typing.Union[CastOutputT, DefaultT]
+    _T = typing.TypeVar("_T")
+    _T_co = typing.TypeVar("_T_co", covariant=True)
+    _T_contra = typing.TypeVar("_T_contra", contravariant=True)
+    _Unique_contra = typing.TypeVar("_Unique_contra", bound=bases.Unique, contravariant=True)
+    _CollectionImpl_contra = typing.TypeVar("_CollectionImpl_contra", bound=typing.Collection, contravariant=True)
+
 
 DISCORD_EPOCH: typing.Final[int] = 1_420_070_400
 ISO_8601_DATE_PART: typing.Final[typing.Pattern] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
@@ -62,44 +62,21 @@ ISO_8601_TIME_PART: typing.Final[typing.Pattern] = re.compile(r"T(\d{2}):(\d{2})
 ISO_8601_TZ_PART: typing.Final[typing.Pattern] = re.compile(r"([+-])(\d{2}):(\d{2})$")
 
 
-def nullable_cast(value: CastInputT, cast: TypeCastT, /) -> ResultT:
-    """Attempt to cast the given `value` with the given `cast`.
-
-    This will only succeed if `value` is not `None`. If it is `None`, then
-    `None` is returned instead.
-    """
-    if value is None:
-        return None
-    return cast(value)
+#: TODO: remove
+def try_cast(value, cast, default, /):
+    return NotImplemented
 
 
-def try_cast(value: CastInputT, cast: TypeCastT, default: DefaultT = None, /) -> ResultT:
-    """Try to cast the given value to the given cast.
-
-    If it throws a `Exception` or derivative, it will return `default`
-    instead of the cast value instead.
-    """
-    with contextlib.suppress(Exception):
-        return cast(value)
-    return default
-
-
-def try_cast_or_defer_unary_operator(type_: typing.Type, /):
-    """Return a unary operator that will try to cast the given input to the type provided.
-
-    Parameters
-    ----------
-    type_ : typing.Callable[..., `output type`]
-        The type to cast to.
-    """
-    return lambda data: try_cast(data, type_, data)
+#: TODO: remove
+def try_cast_or_defer_unary_operator(type_, /):
+    return NotImplemented
 
 
 def put_if_specified(
     mapping: typing.Dict[typing.Hashable, typing.Any],
     key: typing.Hashable,
     value: typing.Any,
-    type_after: typing.Optional[TypeCastT] = None,
+    cast: typing.Optional[typing.Callable[[_T], _T_co]] = None,
     /,
 ) -> None:
     """Add a value to the mapping under the given key as long as the value is not `...`.
@@ -112,17 +89,18 @@ def put_if_specified(
         The key to add the value under.
     value : typing.Any
         The value to add.
-    type_after : typing.Callable[[`input type`], `output type`] | None
-        Type to apply to the value when added.
+    cast : typing.Callable[[`input type`], `output type`] | None
+        Optional cast to apply to the value when before inserting it into the
+        mapping.
     """
     if value is not unset.UNSET:
-        if type_after:
-            mapping[key] = type_after(value)
+        if cast:
+            mapping[key] = cast(value)
         else:
             mapping[key] = value
 
 
-def parse_http_date(date_str: str, /) -> datetime.datetime:
+def rfc7231_datetime_string_to_datetime(date_str: str, /) -> datetime.datetime:
     """Return the HTTP date as a datetime object.
 
     Parameters
@@ -144,7 +122,7 @@ def parse_http_date(date_str: str, /) -> datetime.datetime:
     return email.utils.parsedate_to_datetime(date_str).replace(tzinfo=datetime.timezone.utc)
 
 
-def parse_iso_8601_ts(date_string: str, /) -> datetime.datetime:
+def iso8601_datetime_string_to_datetime(date_string: str, /) -> datetime.datetime:
     """Parse an ISO 8601 date string into a `datetime.datetime` object.
 
     Parameters
@@ -271,7 +249,7 @@ def resolve_signature(func: typing.Callable) -> inspect.Signature:
     return signature
 
 
-def cast_to_str_id(value: typing.Union[typing.SupportsInt, int]) -> str:
+def value_to_snowflake(value: typing.Union[typing.SupportsInt, int]) -> str:
     """Cast the given object to an int and return the result as a string.
 
     Parameters
@@ -287,7 +265,22 @@ def cast_to_str_id(value: typing.Union[typing.SupportsInt, int]) -> str:
     return str(int(value))
 
 
-def timespan_as_int(value: typing.Union[int, datetime.timedelta, float]) -> int:
+def json_to_snowflake_map(
+    payload: more_typing.JSONArray, cast: typing.Callable[[more_typing.JSONType], _Unique_contra]
+) -> typing.Mapping[bases.Snowflake, _Unique_contra]:
+    items = (cast(obj) for obj in payload)
+    return {item.id: item for item in items}
+
+
+def json_to_collection(
+    payload: more_typing.JSONArray,
+    cast: typing.Callable[[more_typing.JSONType], _T_contra],
+    collection_type: typing.Type[_CollectionImpl_contra] = list,
+) -> _CollectionImpl_contra[_T_contra]:
+    return collection_type(cast(obj) for obj in payload)
+
+
+def timespan_to_int(value: typing.Union[more_typing.TimeSpanT]) -> int:
     """Cast the given timespan in seconds to an integer value.
 
     Parameters
