@@ -947,7 +947,7 @@ class REST(http_client.HTTPClient):
     async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:
         route = routes.GET_VOICE_REGIONS.compile()
         response = await self._request(route)
-        return conversions.json_to_snowflake_map(response, self._app.entity_factory.deserialize_voice_region)
+        return conversions.json_to_collection(response, self._app.entity_factory.deserialize_voice_region)
 
     async def fetch_user(self, user: typing.Union[users.User, bases.UniqueObjectT]) -> users.User:
         route = routes.GET_USER.compile(user=conversions.value_to_snowflake(user))
@@ -1054,3 +1054,48 @@ class REST(http_client.HTTPClient):
 
     def create_guild(self, name: str) -> rest_utils.GuildBuilder:
         return rest_utils.GuildBuilder(app=self._app, name=name, request_call=self._request)
+
+    async def fetch_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT]) -> guilds.Guild:
+        route = routes.GET_GUILD.compile(guild=conversions.value_to_snowflake(guild))
+        response = await self._request(route)
+        return self._app.entity_factory.deserialize_guild(response)
+
+    async def fetch_guild_preview(
+        self, guild: typing.Union[guilds.PartialGuild, bases.UniqueObjectT]
+    ) -> guilds.GuildPreview:
+        route = routes.GET_GUILD_PREVIEW.compile(guild=conversions.value_to_snowflake(guild))
+        response = await self._request(route)
+        return self._app.entity_factory.deserialize_guild_preview(response)
+
+    edit_guild = NotImplemented
+    fetch_guild_channel = NotImplemented
+    fetch_guild_channels = NotImplemented
+    create_guild_channel = NotImplemented
+    reposition_guild_channels = NotImplemented
+    fetch_member = NotImplemented
+    fetch_members = NotImplemented
+    edit_member = NotImplemented
+    edit_my_nickname = NotImplemented
+    add_role_to_member = NotImplemented
+    remove_role_from_member = NotImplemented
+    kick_member = NotImplemented
+    create_ban = NotImplemented
+    delete_ban = NotImplemented
+    fetch_ban = NotImplemented
+    fetch_bans = NotImplemented
+    fetch_roles = NotImplemented
+    create_role = NotImplemented
+    reposition_roles = NotImplemented
+    edit_role = NotImplemented
+    delete_role = NotImplemented
+    estimate_guild_prune_count = NotImplemented
+    begin_guild_prune = NotImplemented
+    fetch_guild_voice_regions = NotImplemented
+    fetch_guild_invites = NotImplemented
+    fetch_guild_integrations = NotImplemented
+    edit_guild_integration = NotImplemented
+    delete_guild_integration = NotImplemented
+    sync_guild_integration = NotImplemented
+    fetch_guild_widget = NotImplemented
+    edit_guild_widget = NotImplemented
+    fetch_guild_vanity_url = NotImplemented
