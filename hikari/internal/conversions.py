@@ -27,6 +27,7 @@ __all__ = [
     "rfc7231_datetime_string_to_datetime",
     "iso8601_datetime_string_to_datetime",
     "discord_epoch_to_datetime",
+    "datetime_to_discord_epoch",
     "unix_epoch_to_datetime",
     "pluralize",
     "resolve_signature",
@@ -173,7 +174,23 @@ def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
     datetime.datetime
         Number of seconds since 1/1/1970 within a datetime object (UTC).
     """
-    return datetime.datetime.fromtimestamp(epoch / 1000 + DISCORD_EPOCH, datetime.timezone.utc)
+    return datetime.datetime.fromtimestamp(epoch / 1_000 + DISCORD_EPOCH, datetime.timezone.utc)
+
+
+def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
+    """Parse a `datetime.datetime` object into an integer discord epoch..
+
+    Parameters
+    ----------
+    timestamp : datetime.datetime
+        Number of seconds since 1/1/1970 within a datetime object (UTC).
+
+    Returns
+    -------
+    int
+        Number of milliseconds since 1/1/2015 (UTC)
+    """
+    return int((timestamp.timestamp() - DISCORD_EPOCH) * 1_000)
 
 
 def unix_epoch_to_datetime(epoch: int, /) -> datetime.datetime:

@@ -1048,7 +1048,7 @@ class REST(http_client.HTTPClient):
     ) -> None:
         route = routes.DELETE_GUILD_EMOJI.compile(
             guild=conversions.value_to_snowflake(guild),
-            emoji=emoji.url_name if isinstance(emoji, emojis.Emoji) else emoji
+            emoji=emoji.url_name if isinstance(emoji, emojis.Emoji) else emoji,
         )
         await self._request(route)
 
