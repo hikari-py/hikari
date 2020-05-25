@@ -345,12 +345,12 @@ class MemberIterator(_BufferedLazyIterator[guilds.GuildMember]):
         self._first_id = bases.Snowflake.min()
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.GuildMember, typing.Any, None]]:
-        chunk = await self._request_call(self._route, query={"after": self._first_id})
+        chunk = await self._request_call(self._route, query={"after": self._first_id, "limit": 100})
 
         if not chunk:
             return None
 
-        self._first_id = chunk[-1]["id"]
+        self._first_id = chunk[-1]["user"]["id"]
 
         return (self._app.entity_factory.deserialize_guild_member(m) for m in chunk)
 

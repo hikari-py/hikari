@@ -175,7 +175,7 @@ class IEntityFactory(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def deserialize_guild_role(self, payload: more_typing.JSONObject) -> guilds.Role:
+    def deserialize_role(self, payload: more_typing.JSONObject) -> guilds.Role:
         ...
 
     @abc.abstractmethod
