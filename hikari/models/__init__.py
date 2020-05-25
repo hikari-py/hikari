@@ -35,7 +35,6 @@ from .intents import *
 from .invites import *
 from .messages import *
 from .permissions import *
-from .unset import *
 from .users import *
 from .voices import *
 from .webhooks import *
@@ -56,7 +55,6 @@ __all__ = (
     + invites.__all__
     + messages.__all__
     + permissions.__all__
-    + unset.__all__
     + users.__all__
     + voices.__all__
     + webhooks.__all__

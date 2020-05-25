@@ -40,7 +40,7 @@ from hikari.models import colors
 from hikari.models import files
 from hikari.models import guilds
 from hikari.models import permissions as permissions_
-from hikari.models import unset
+from hikari.internal import unset
 from hikari.net import routes
 
 if typing.TYPE_CHECKING:

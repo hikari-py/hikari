@@ -33,7 +33,7 @@ from hikari.models import audit_logs
 from hikari.models import bases
 from hikari.models import guilds
 from hikari.models import messages
-from hikari.models import unset
+from hikari.internal import unset
 from hikari.models import users
 from hikari.net import routes
 

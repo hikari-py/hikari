@@ -44,7 +44,7 @@ import inspect
 import re
 import typing
 
-from hikari.models import unset
+from hikari.internal import unset
 
 if typing.TYPE_CHECKING:
     from hikari.internal import more_typing

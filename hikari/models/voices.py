@@ -108,3 +108,6 @@ class VoiceRegion(bases.Entity, marshaller.Deserializable):
 
     is_custom: bool = marshaller.attrib(raw_name="custom", deserializer=bool, eq=False, hash=False)
     """Whether this region is custom (e.g. used for events)."""
+
+    def __str__(self) -> str:
+        return self.id

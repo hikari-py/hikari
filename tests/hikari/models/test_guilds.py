@@ -30,7 +30,7 @@ from hikari.models import colors
 from hikari.models import emojis
 from hikari.models import guilds
 from hikari.models import permissions
-from hikari.models import unset
+from hikari.internal import unset
 from hikari.models import users
 from tests.hikari import _helpers
 
