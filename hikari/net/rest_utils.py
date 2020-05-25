@@ -35,12 +35,12 @@ import attr
 
 from hikari import rest_app
 from hikari.internal import conversions
+from hikari.internal import unset
 from hikari.models import bases
 from hikari.models import colors
 from hikari.models import files
 from hikari.models import guilds
 from hikari.models import permissions as permissions_
-from hikari.internal import unset
 from hikari.net import routes
 
 if typing.TYPE_CHECKING:
@@ -84,10 +84,6 @@ class TypingIndicator:
     async def _keep_typing(self) -> None:
         with contextlib.suppress(asyncio.CancelledError):
             await asyncio.gather(self, asyncio.sleep(9.9), return_exceptions=True)
-
-
-class DummyID(int):
-    __slots__ = ()
 
 
 @attr.s(auto_attribs=True, kw_only=True, slots=True)

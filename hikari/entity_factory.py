@@ -24,7 +24,6 @@ __all__ = ["IEntityFactory"]
 import abc
 import typing
 
-
 if typing.TYPE_CHECKING:
     from hikari.internal import more_typing
     from hikari.models import applications

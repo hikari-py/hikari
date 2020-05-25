@@ -30,12 +30,11 @@ from hikari._about import __issue_tracker__
 from hikari._about import __license__
 from hikari._about import __url__
 from hikari._about import __version__
-
 from hikari.errors import *
 from hikari.events import *
 from hikari.http_settings import *
+from hikari.impl import *
 from hikari.models import *
 from hikari.net import *
-from hikari.impl import *
 
 __all__ = []

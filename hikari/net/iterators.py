@@ -28,12 +28,12 @@ from hikari import rest_app
 from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.internal import more_typing
+from hikari.internal import unset
 from hikari.models import applications
 from hikari.models import audit_logs
 from hikari.models import bases
 from hikari.models import guilds
 from hikari.models import messages
-from hikari.internal import unset
 from hikari.models import users
 from hikari.net import routes
 

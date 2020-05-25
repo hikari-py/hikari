@@ -67,8 +67,8 @@ from . import channels as channels_
 from . import colors
 from . import emojis as emojis_
 from . import permissions as permissions_
-from ..internal import unset
 from . import users
+from ..internal import unset
 from ..net import urls
 
 if typing.TYPE_CHECKING:

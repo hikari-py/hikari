@@ -22,12 +22,12 @@ __all__ = []
 
 import datetime
 
-from hikari.net import iterators
 from hikari.models import applications
 from hikari.models import bases
 from hikari.models import guilds
 from hikari.models import messages
 from hikari.models import users
+from hikari.net import iterators
 
 
 class GuildPaginator(iterators._BufferedLazyIterator[guilds.Guild]):
