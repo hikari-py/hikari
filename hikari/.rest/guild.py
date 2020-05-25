@@ -1736,7 +1736,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         hikari.errors.Forbidden
             If you lack the `MANAGE_GUILD` permission or are not in the guild.
         """
-        await self._session.delete_guild_integration(
+        await self._session.delete_integration(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             integration_id=str(integration.id if isinstance(integration, bases.Unique) else int(integration)),
             reason=reason,
@@ -1773,7 +1773,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
     async def fetch_guild_embed(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
-    ) -> guilds.GuildEmbed:
+    ) -> guilds.GuildWidget:
         """Get the embed for a given guild.
 
         Parameters
@@ -1783,7 +1783,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        hikari.models.guilds.GuildEmbed
+        hikari.models.guilds.GuildWidget
             A guild embed object.
 
         Raises
@@ -1800,7 +1800,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_embed(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return guilds.GuildEmbed.deserialize(payload, app=self._app)
+        return guilds.GuildWidget.deserialize(payload, app=self._app)
 
     async def update_guild_embed(
         self,
@@ -1809,7 +1809,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         channel: typing.Union[bases.Snowflake, int, str, channels_.GuildChannel] = ...,
         enabled: bool = ...,
         reason: str = ...,
-    ) -> guilds.GuildEmbed:
+    ) -> guilds.GuildWidget:
         """Edits the embed for a given guild.
 
         Parameters
@@ -1828,7 +1828,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        hikari.models.guilds.GuildEmbed
+        hikari.models.guilds.GuildWidget
             The updated embed object.
 
         Raises
@@ -1850,11 +1850,11 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             enabled=enabled,
             reason=reason,
         )
-        return guilds.GuildEmbed.deserialize(payload, app=self._app)
+        return guilds.GuildWidget.deserialize(payload, app=self._app)
 
     async def fetch_guild_vanity_url(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild]
-    ) -> invites.VanityUrl:
+    ) -> invites.VanityURL:
         """
         Get the vanity URL for a given guild.
 
@@ -1865,7 +1865,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
 
         Returns
         -------
-        hikari.models.invites.VanityUrl
+        hikari.models.invites.VanityURL
             A partial invite object containing the vanity URL in the `code`
             field.
 
@@ -1883,7 +1883,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
         payload = await self._session.get_guild_vanity_url(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild))
         )
-        return invites.VanityUrl.deserialize(payload, app=self._app)
+        return invites.VanityURL.deserialize(payload, app=self._app)
 
     def format_guild_widget_image(
         self, guild: typing.Union[bases.Snowflake, int, str, guilds.Guild], *, style: str = ...

@@ -1472,21 +1472,160 @@ class REST(http_client.HTTPClient):
         positions: typing.Mapping[int, typing.Union[guilds.Role, bases.UniqueObjectT]],
     ) -> None:
         route = routes.POST_GUILD_ROLES.compile(guild=conversions.value_to_snowflake(guild))
-        payload = [
-            {"id": conversions.value_to_snowflake(role), "position": pos} for pos, role in positions.items()
-        ]
+        payload = [{"id": conversions.value_to_snowflake(role), "position": pos} for pos, role in positions.items()]
         await self._request(route, body=payload)
 
-    edit_role = NotImplemented
-    delete_role = NotImplemented
-    estimate_guild_prune_count = NotImplemented
-    begin_guild_prune = NotImplemented
-    fetch_guild_voice_regions = NotImplemented
-    fetch_guild_invites = NotImplemented
-    fetch_guild_integrations = NotImplemented
-    edit_guild_integration = NotImplemented
-    delete_guild_integration = NotImplemented
-    sync_guild_integration = NotImplemented
-    fetch_guild_widget = NotImplemented
-    edit_guild_widget = NotImplemented
-    fetch_guild_vanity_url = NotImplemented
+    async def edit_role(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        role: typing.Union[guilds.Role, bases.UniqueObjectT],
+        *,
+        name: typing.Union[unset.Unset, str] = unset.UNSET,
+        permissions: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
+        color: typing.Union[unset.Unset, colors.Color] = unset.UNSET,
+        colour: typing.Union[unset.Unset, colors.Color] = unset.UNSET,
+        hoist: typing.Union[unset.Unset, bool] = unset.UNSET,
+        mentionable: typing.Union[unset.Unset, bool] = unset.UNSET,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> guilds.Role:
+        if not unset.count_unset_objects(color, colour):
+            raise TypeError("Can not specify 'color' and 'colour' together.")
+
+        route = routes.PATCH_GUILD_ROLE.compile(
+            guild=conversions.value_to_snowflake(guild), role=conversions.value_to_snowflake(role),
+        )
+
+        payload = {}
+        conversions.put_if_specified(payload, "name", name)
+        conversions.put_if_specified(payload, "permissions", permissions)
+        conversions.put_if_specified(payload, "color", color)
+        conversions.put_if_specified(payload, "color", colour)
+        conversions.put_if_specified(payload, "hoist", hoist)
+        conversions.put_if_specified(payload, "mentionable", mentionable)
+
+        response = await self._request(route, body=payload, reason=reason)
+        return self._app.entity_factory.deserialize_role(response)
+
+    async def delete_role(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        role: typing.Union[guilds.Role, bases.UniqueObjectT],
+    ) -> None:
+        route = routes.DELETE_GUILD_ROLE.compile(
+            guild=conversions.value_to_snowflake(guild), role=conversions.value_to_snowflake(role),
+        )
+        await self._request(route)
+
+    async def estimate_guild_prune_count(
+        self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], days: int,
+    ) -> int:
+        route = routes.GET_GUILD_PRUNE.compile(guild=conversions.value_to_snowflake(guild))
+        payload = {"days": str(days)}
+        response = await self._request(route, query=payload)
+        return int(response["pruned"])
+
+    async def begin_guild_prune(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        days: int,
+        *,
+        reason: typing.Union[unset.Unset, str],
+    ) -> int:
+        route = routes.POST_GUILD_PRUNE.compile(guild=conversions.value_to_snowflake(guild))
+        payload = {"compute_prune_count": "true", "days": str(days)}
+        response = await self._request(route, query=payload, reason=reason)
+        return int(response["pruned"])
+
+    async def fetch_guild_voice_regions(
+        self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], /
+    ) -> typing.Sequence[voices.VoiceRegion]:
+        route = routes.GET_GUILD_VOICE_REGIONS.compile(guild=conversions.value_to_snowflake(guild))
+        response = await self._request(route)
+        return [self._app.entity_factory.deserialize_voice_region(r) for r in response]
+
+    async def fetch_guild_invites(
+        self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], /
+    ) -> typing.Sequence[invites.InviteWithMetadata]:
+        route = routes.GET_GUILD_INVITES.compile(guild=conversions.value_to_snowflake(guild))
+        response = await self._request(route)
+        return [self._app.entity_factory.deserialize_invite_with_metadata(r) for r in response]
+
+    async def fetch_integrations(
+        self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], /
+    ) -> typing.Sequence[guilds.GuildIntegration]:
+        route = routes.GET_GUILD_INTEGRATIONS.compile(guild=conversions.value_to_snowflake(guild))
+        response = await self._request(route)
+        return [self._app.entity_factory.deserialize_guild_integration(i) for i in response]
+
+    async def edit_integration(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        integration: typing.Union[guilds.GuildIntegration, bases.UniqueObjectT],
+        *,
+        expire_behaviour: typing.Union[unset.Unset, guilds.IntegrationExpireBehaviour] = unset.UNSET,
+        expire_grace_period: typing.Union[unset.Unset, more_typing.TimeSpanT] = unset.UNSET,
+        enable_emojis: typing.Union[unset.Unset, bool] = unset.UNSET,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> None:
+        route = routes.PATCH_GUILD_INTEGRATION.compile(
+            guild=conversions.value_to_snowflake(guild), integration=conversions.value_to_snowflake(integration),
+        )
+        payload = {}
+        conversions.put_if_specified(payload, "expire_behaviour", expire_behaviour)
+        conversions.put_if_specified(payload, "expire_grace_period", expire_grace_period, conversions.timespan_to_int)
+        # Inconsistent naming in the API itself, so I have changed the name.
+        conversions.put_if_specified(payload, "enable_emoticons", enable_emojis)
+        await self._request(route, body=payload, reason=reason)
+
+    async def delete_integration(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        integration: typing.Union[guilds.GuildIntegration, bases.UniqueObjectT],
+        *,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> None:
+        route = routes.DELETE_GUILD_INTEGRATION.compile(
+            guild=conversions.value_to_snowflake(guild), integration=conversions.value_to_snowflake(integration),
+        )
+        await self._request(route, reason=reason)
+
+    async def sync_integration(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        integration: typing.Union[guilds.GuildIntegration, bases.UniqueObjectT],
+    ) -> None:
+        route = routes.POST_GUILD_INTEGRATION_SYNC.compile(
+            guild=conversions.value_to_snowflake(guild), integration=conversions.value_to_snowflake(integration),
+        )
+        await self._request(route)
+
+    async def fetch_widget(self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], /) -> guilds.GuildWidget:
+        route = routes.GET_GUILD_WIDGET.compile(guild=conversions.value_to_snowflake(guild))
+        response = await self._request(route)
+        return self._app.entity_factory.deserialize_guild_widget(response)
+
+    async def edit_widget(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        /,
+        *,
+        channel: typing.Union[unset.Unset, channels.GuildChannel, bases.UniqueObjectT, None] = unset.UNSET,
+        enabled: typing.Union[unset.Unset, bool] = unset.UNSET,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> guilds.GuildWidget:
+        route = routes.PATCH_GUILD_WIDGET.compile(guild=conversions.value_to_snowflake(guild))
+
+        payload = {}
+        conversions.put_if_specified(payload, "enabled", enabled)
+        if channel is None:
+            payload["channel"] = None
+        elif not unset.is_unset(channel):
+            payload["channel"] = conversions.value_to_snowflake(channel)
+
+        response = await self._request(route, body=payload, reason=reason)
+        return self._app.entity_factory.deserialize_guild_widget(response)
+
+    async def fetch_vanity_url(self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], /) -> invites.VanityURL:
+        route = routes.GET_GUILD_VANITY_URL.compile(guild=conversions.value_to_snowflake(guild))
+        response = await self._request(route)
+        return self._app.entity_factory.deserialize_vanity_url(response)

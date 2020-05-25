@@ -169,7 +169,7 @@ class TestVanityUrl:
         return {"code": "iamacode", "uses": 42}
 
     def test_deserialize(self, vanity_url_payload, mock_app):
-        vanity_url_obj = invites.VanityUrl.deserialize(vanity_url_payload, app=mock_app)
+        vanity_url_obj = invites.VanityURL.deserialize(vanity_url_payload, app=mock_app)
         assert vanity_url_obj.code == "iamacode"
         assert vanity_url_obj.uses == 42
 

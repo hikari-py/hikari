@@ -105,7 +105,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_gateway_bot(self, payload: more_typing.JSONObject) -> gateway.GatewayBot:
         pass
 
-    def deserialize_guild_embed(self, payload: more_typing.JSONObject) -> guilds.GuildEmbed:
+    def deserialize_guild_widget(self, payload: more_typing.JSONObject) -> guilds.GuildWidget:
         pass
 
     def deserialize_guild_member(
@@ -137,7 +137,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_guild(self, payload: more_typing.JSONObject) -> guilds.Guild:
         pass
 
-    def deserialize_vanity_url(self, payload: more_typing.JSONObject) -> invites.VanityUrl:
+    def deserialize_vanity_url(self, payload: more_typing.JSONObject) -> invites.VanityURL:
         pass
 
     def deserialize_invite(self, payload: more_typing.JSONObject) -> invites.Invite:
