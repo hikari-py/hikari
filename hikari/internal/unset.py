@@ -69,3 +69,7 @@ def is_unset(obj: typing.Any) -> typing.Literal[False]:
 def is_unset(obj):
     """Return `True` if the object is an `Unset` value."""
     return isinstance(obj, Unset)
+
+
+def count_unset_objects(obj1: typing.Any, obj2: typing.Any, *objs: typing.Any) -> int:
+    return sum(is_unset(o) for o in (obj1, obj2, *objs))

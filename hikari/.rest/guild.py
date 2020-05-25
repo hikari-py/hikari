@@ -306,7 +306,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        payload = await self._session.create_guild_emoji(
+        payload = await self._session.create_emoji(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             name=name,
             image=await image.read(),
@@ -397,7 +397,7 @@ class RESTGuildComponent(base.BaseRESTComponent, abc.ABC):  # pylint: disable=ab
             If you either lack the `MANAGE_EMOJIS` permission or aren't a
             member of said guild.
         """
-        await self._session.delete_guild_emoji(
+        await self._session.delete_emoji(
             guild_id=str(guild.id if isinstance(guild, bases.Unique) else int(guild)),
             emoji_id=str(emoji.id if isinstance(emoji, bases.Unique) else int(emoji)),
         )
