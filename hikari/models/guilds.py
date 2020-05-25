@@ -29,7 +29,7 @@ __all__ = [
     "ActivityParty",
     "ClientStatus",
     "Guild",
-    "GuildEmbed",
+    "GuildWidget",
     "Role",
     "GuildFeature",
     "GuildSystemChannelFlag",
@@ -217,7 +217,7 @@ class GuildVerificationLevel(int, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class GuildEmbed(bases.Entity, marshaller.Deserializable):
+class GuildWidget(bases.Entity, marshaller.Deserializable):
     """Represents a guild embed."""
 
     channel_id: typing.Optional[bases.Snowflake] = marshaller.attrib(

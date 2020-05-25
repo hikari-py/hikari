@@ -279,7 +279,7 @@ class TestGuildEmbed:
         return {"channel": "123123123", "enabled": True}
 
     def test_deserialize(self, test_guild_embed_payload, mock_app):
-        guild_embed_obj = guilds.GuildEmbed.deserialize(test_guild_embed_payload, app=mock_app)
+        guild_embed_obj = guilds.GuildWidget.deserialize(test_guild_embed_payload, app=mock_app)
         assert guild_embed_obj.channel_id == 123123123
         assert guild_embed_obj.is_enabled is True
 

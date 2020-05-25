@@ -165,7 +165,7 @@ class IEntityFactory(abc.ABC):
     ##########
 
     @abc.abstractmethod
-    def deserialize_guild_embed(self, payload: more_typing.JSONObject) -> guilds.GuildEmbed:
+    def deserialize_guild_widget(self, payload: more_typing.JSONObject) -> guilds.GuildWidget:
         ...
 
     @abc.abstractmethod
@@ -211,7 +211,7 @@ class IEntityFactory(abc.ABC):
     ###########
 
     @abc.abstractmethod
-    def deserialize_vanity_url(self, payload: more_typing.JSONObject) -> invites.VanityUrl:
+    def deserialize_vanity_url(self, payload: more_typing.JSONObject) -> invites.VanityURL:
         ...
 
     @abc.abstractmethod

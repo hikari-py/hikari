@@ -2578,7 +2578,7 @@ class RESTSession(http_client.HTTPClient):  # pylint: disable=too-many-public-me
             this to be valid.
         """
         query = "" if style is ... else f"?style={style}"
-        route = routes.GET_GUILD_WIDGET_IMAGE.compile(guild_id=guild_id)
+        route = routes.GET_GUILD_BANNER_IMAGE.compile(guild_id=guild_id)
         return route.create_url(self.base_url) + query
 
     async def get_invite(self, invite_code: str, *, with_counts: bool = ...) -> more_typing.JSONObject:
