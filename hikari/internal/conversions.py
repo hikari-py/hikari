@@ -56,7 +56,6 @@ if typing.TYPE_CHECKING:
     _Unique_contra = typing.TypeVar("_Unique_contra", bound=bases.Unique, contravariant=True)
     _CollectionImpl_contra = typing.TypeVar("_CollectionImpl_contra", bound=typing.Collection, contravariant=True)
 
-
 DISCORD_EPOCH: typing.Final[int] = 1_420_070_400
 ISO_8601_DATE_PART: typing.Final[typing.Pattern] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
 ISO_8601_TIME_PART: typing.Final[typing.Pattern] = re.compile(r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I)

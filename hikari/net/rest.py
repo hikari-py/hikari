@@ -37,8 +37,6 @@ from hikari.internal import more_collections
 from hikari.internal import more_typing
 from hikari.internal import ratelimits
 from hikari.internal import unset
-from hikari.models import audit_logs
-from hikari.models import colors
 from hikari.net import buckets
 from hikari.net import http_client
 from hikari.net import iterators
@@ -47,8 +45,10 @@ from hikari.net import routes
 
 if typing.TYPE_CHECKING:
     from hikari.models import applications
+    from hikari.models import audit_logs
     from hikari.models import bases
     from hikari.models import channels
+    from hikari.models import colors
     from hikari.models import embeds as embeds_
     from hikari.models import emojis
     from hikari.models import files
@@ -62,11 +62,10 @@ if typing.TYPE_CHECKING:
     from hikari.models import webhooks
 
 
-class _RateLimited(RuntimeError):
-    __slots__ = ()
-
-
 class REST(http_client.HTTPClient):
+    class _RateLimited(RuntimeError):
+        __slots__ = ()
+
     def __init__(
         self,
         *,
@@ -140,7 +139,7 @@ class REST(http_client.HTTPClient):
             try:
                 # Moved to a separate method to keep branch counts down.
                 return await self._request_once(compiled_route=compiled_route, headers=headers, body=body, query=query)
-            except _RateLimited:
+            except self._RateLimited:
                 pass
 
     async def _request_once(
@@ -244,7 +243,7 @@ class REST(http_client.HTTPClient):
                         reset,
                     )
 
-                raise _RateLimited()
+                raise self._RateLimited()
 
             # We might find out Cloudflare causes this scenario to occur.
             # I hope we don't though.
