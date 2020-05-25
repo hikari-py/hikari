@@ -38,25 +38,27 @@ from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.internal import more_typing
 from hikari.internal import ratelimits
-from hikari.models import applications
-from hikari.models import bases
-from hikari.models import channels
-from hikari.models import embeds as embeds_
-from hikari.models import emojis
-from hikari.models import files
-from hikari.models import gateway
-from hikari.models import guilds
-from hikari.models import invites
-from hikari.models import messages
-from hikari.models import permissions
-from hikari.models import unset
-from hikari.models import users
-from hikari.models import voices
-from hikari.models import webhooks
+from hikari.internal import unset
 from hikari.net import buckets
 from hikari.net import http_client
 from hikari.net import rest_utils
 from hikari.net import routes
+
+if typing.TYPE_CHECKING:
+    from hikari.models import applications
+    from hikari.models import bases
+    from hikari.models import channels
+    from hikari.models import embeds as embeds_
+    from hikari.models import emojis
+    from hikari.models import files
+    from hikari.models import gateway
+    from hikari.models import guilds
+    from hikari.models import invites
+    from hikari.models import messages
+    from hikari.models import permissions
+    from hikari.models import users
+    from hikari.models import voices
+    from hikari.models import webhooks
 
 
 class _RateLimited(RuntimeError):
@@ -463,10 +465,10 @@ class REST(http_client.HTTPClient):
 
     async def fetch_pins(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
-    ) -> typing.Mapping[bases.Snowflake, messages.Message]:
+    ) -> typing.Sequence[messages.Message]:
         route = routes.GET_CHANNEL_PINS.compile(channel=conversions.value_to_snowflake(channel))
         response = await self._request(route)
-        return conversions.json_to_snowflake_map(response, self._app.entity_factory.deserialize_message)
+        return conversions.json_to_collection(response, self._app.entity_factory.deserialize_message)
 
     async def create_pinned_message(
         self,
@@ -741,17 +743,17 @@ class REST(http_client.HTTPClient):
 
     async def fetch_channel_webhooks(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
-    ) -> typing.Mapping[bases.Snowflake, webhooks.Webhook]:
+    ) -> typing.Sequence[webhooks.Webhook]:
         route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=conversions.value_to_snowflake(channel))
         response = await self._request(route)
-        return conversions.json_to_snowflake_map(response, self._app.entity_factory.deserialize_webhook)
+        return conversions.json_to_collection(response, self._app.entity_factory.deserialize_webhook)
 
     async def fetch_guild_webhooks(
         self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], /
-    ) -> typing.Mapping[bases.Snowflake, webhooks.Webhook]:
+    ) -> typing.Sequence[webhooks.Webhook]:
         route = routes.GET_GUILD_WEBHOOKS.compile(channel=conversions.value_to_snowflake(guild))
         response = await self._request(route)
-        return conversions.json_to_snowflake_map(response, self._app.entity_factory.deserialize_webhook)
+        return conversions.json_to_collection(response, self._app.entity_factory.deserialize_webhook)
 
     async def edit_webhook(
         self,
@@ -917,7 +919,7 @@ class REST(http_client.HTTPClient):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         user: typing.Union[users.User, bases.UniqueObjectT],
         *,
-        nickname: typing.Union[unset.Unset, str] = unset.UNSET,
+        nick: typing.Union[unset.Unset, str] = unset.UNSET,
         roles: typing.Union[
             unset.Unset, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
         ] = unset.UNSET,
@@ -929,7 +931,7 @@ class REST(http_client.HTTPClient):
         )
 
         payload = {"access_token": access_token}
-        conversions.put_if_specified(payload, "nick", nickname)
+        conversions.put_if_specified(payload, "nick", nick)
         conversions.put_if_specified(
             payload, "roles", roles, lambda rs: [conversions.value_to_snowflake(r) for r in rs]
         )
@@ -1052,38 +1054,371 @@ class REST(http_client.HTTPClient):
         )
         await self._request(route)
 
-    def create_guild(self, name: str) -> rest_utils.GuildBuilder:
+    def create_guild(self, name: str, /) -> rest_utils.GuildBuilder:
         return rest_utils.GuildBuilder(app=self._app, name=name, request_call=self._request)
 
-    async def fetch_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT]) -> guilds.Guild:
+    async def fetch_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], /) -> guilds.Guild:
         route = routes.GET_GUILD.compile(guild=conversions.value_to_snowflake(guild))
         response = await self._request(route)
         return self._app.entity_factory.deserialize_guild(response)
 
     async def fetch_guild_preview(
-        self, guild: typing.Union[guilds.PartialGuild, bases.UniqueObjectT]
+        self, guild: typing.Union[guilds.PartialGuild, bases.UniqueObjectT], /
     ) -> guilds.GuildPreview:
         route = routes.GET_GUILD_PREVIEW.compile(guild=conversions.value_to_snowflake(guild))
         response = await self._request(route)
         return self._app.entity_factory.deserialize_guild_preview(response)
 
-    edit_guild = NotImplemented
-    fetch_guild_channel = NotImplemented
-    fetch_guild_channels = NotImplemented
-    create_guild_channel = NotImplemented
-    reposition_guild_channels = NotImplemented
-    fetch_member = NotImplemented
-    fetch_members = NotImplemented
-    edit_member = NotImplemented
-    edit_my_nickname = NotImplemented
-    add_role_to_member = NotImplemented
-    remove_role_from_member = NotImplemented
-    kick_member = NotImplemented
-    create_ban = NotImplemented
-    delete_ban = NotImplemented
-    fetch_ban = NotImplemented
-    fetch_bans = NotImplemented
-    fetch_roles = NotImplemented
+    async def edit_guild(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        /,
+        *,
+        name: typing.Union[unset.Unset, str] = unset.UNSET,
+        region: typing.Union[unset.Unset, voices.VoiceRegion, str] = unset.UNSET,
+        verification_level: typing.Union[unset.Unset, guilds.GuildVerificationLevel] = unset.UNSET,
+        default_message_notifications: typing.Union[unset.Unset, guilds.GuildMessageNotificationsLevel] = unset.UNSET,
+        explicit_content_filter_level: typing.Union[unset.Unset, guilds.GuildExplicitContentFilterLevel] = unset.UNSET,
+        afk_channel: typing.Union[unset.Unset, channels.GuildVoiceChannel, bases.UniqueObjectT] = unset.UNSET,
+        afk_timeout: typing.Union[unset.Unset, more_typing.TimeSpanT] = unset.UNSET,
+        icon: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET,
+        owner: typing.Union[unset.Unset, users.User, bases.UniqueObjectT] = unset.UNSET,
+        splash: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET,
+        system_channel: typing.Union[unset.Unset, channels.GuildTextChannel] = unset.UNSET,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> guilds.Guild:
+        route = routes.PATCH_GUILD.compile(guild=conversions.value_to_snowflake(guild))
+        payload = {}
+        conversions.put_if_specified(payload, "name", name)
+        conversions.put_if_specified(payload, "region", region, str)
+        conversions.put_if_specified(payload, "verification", verification_level)
+        conversions.put_if_specified(payload, "notifications", default_message_notifications)
+        conversions.put_if_specified(payload, "explicit_content_filter", explicit_content_filter_level)
+        conversions.put_if_specified(payload, "afk_channel_id", afk_channel, conversions.value_to_snowflake)
+        conversions.put_if_specified(payload, "afk_timeout", afk_timeout, conversions.timespan_to_int)
+        conversions.put_if_specified(payload, "owner_id", owner, conversions.value_to_snowflake)
+        conversions.put_if_specified(payload, "system_channel_id", system_channel, conversions.value_to_snowflake)
+
+        if not unset.is_unset(icon):
+            payload["icon"] = await icon.read()
+
+        if not unset.is_unset(splash):
+            payload["splash"] = await splash.read()
+
+        response = await self._request(route, body=payload, reason=reason)
+        return self._app.entity_factory.deserialize_guild(response)
+
+    async def delete_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT]) -> None:
+        route = routes.DELETE_GUILD.compile(guild=conversions.value_to_snowflake(guild))
+        await self._request(route)
+
+    async def fetch_guild_channels(
+        self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT]
+    ) -> typing.Sequence[channels.GuildChannel]:
+        route = routes.GET_GUILD_CHANNELS.compile(guild=conversions.value_to_snowflake(guild))
+        response = await self._request(route)
+        channel_sequence = [self._app.entity_factory.deserialize_channel(c) for c in response]
+        # Will always be guild channels unless Discord messes up severely on something!
+        return typing.cast(typing.Sequence[channels.GuildChannel], channel_sequence)
+
+    async def create_guild_text_channel(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        name: str,
+        *,
+        position: typing.Union[int, unset.Unset] = unset.UNSET,
+        topic: typing.Union[str, unset.Unset] = unset.UNSET,
+        nsfw: typing.Union[bool, unset.Unset] = unset.UNSET,
+        rate_limit_per_user: typing.Union[int, unset.Unset] = unset.UNSET,
+        permission_overwrites: typing.Union[typing.Sequence[channels.PermissionOverwrite], unset.Unset] = unset.UNSET,
+        category: typing.Union[channels.GuildCategory, bases.UniqueObjectT, unset.Unset] = unset.UNSET,
+        reason: typing.Union[str, unset.Unset] = unset.UNSET,
+    ) -> channels.GuildTextChannel:
+        channel = await self._create_guild_channel(
+            guild,
+            name,
+            channels.ChannelType.GUILD_TEXT,
+            position=position,
+            topic=topic,
+            nsfw=nsfw,
+            rate_limit_per_user=rate_limit_per_user,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            reason=reason,
+        )
+        return typing.cast(channels.GuildTextChannel, channel)
+
+    async def create_guild_news_channel(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        name: str,
+        *,
+        position: typing.Union[int, unset.Unset] = unset.UNSET,
+        topic: typing.Union[str, unset.Unset] = unset.UNSET,
+        nsfw: typing.Union[bool, unset.Unset] = unset.UNSET,
+        rate_limit_per_user: typing.Union[int, unset.Unset] = unset.UNSET,
+        permission_overwrites: typing.Union[typing.Sequence[channels.PermissionOverwrite], unset.Unset] = unset.UNSET,
+        category: typing.Union[channels.GuildCategory, bases.UniqueObjectT, unset.Unset] = unset.UNSET,
+        reason: typing.Union[str, unset.Unset] = unset.UNSET,
+    ) -> channels.GuildNewsChannel:
+        channel = await self._create_guild_channel(
+            guild,
+            name,
+            channels.ChannelType.GUILD_NEWS,
+            position=position,
+            topic=topic,
+            nsfw=nsfw,
+            rate_limit_per_user=rate_limit_per_user,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            reason=reason,
+        )
+        return typing.cast(channels.GuildNewsChannel, channel)
+
+    async def create_guild_voice_channel(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        name: str,
+        *,
+        position: typing.Union[int, unset.Unset] = unset.UNSET,
+        nsfw: typing.Union[bool, unset.Unset] = unset.UNSET,
+        user_limit: typing.Union[int, unset.Unset] = unset.UNSET,
+        bitrate: typing.Union[int, unset.Unset] = unset.UNSET,
+        permission_overwrites: typing.Union[typing.Sequence[channels.PermissionOverwrite], unset.Unset] = unset.UNSET,
+        category: typing.Union[channels.GuildCategory, bases.UniqueObjectT, unset.Unset] = unset.UNSET,
+        reason: typing.Union[str, unset.Unset] = unset.UNSET,
+    ) -> channels.GuildVoiceChannel:
+        channel = await self._create_guild_channel(
+            guild,
+            name,
+            channels.ChannelType.GUILD_VOICE,
+            position=position,
+            nsfw=nsfw,
+            user_limit=user_limit,
+            bitrate=bitrate,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            reason=reason,
+        )
+        return typing.cast(channels.GuildVoiceChannel, channel)
+
+    async def create_guild_category(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        name: str,
+        *,
+        position: typing.Union[int, unset.Unset] = unset.UNSET,
+        nsfw: typing.Union[bool, unset.Unset] = unset.UNSET,
+        permission_overwrites: typing.Union[typing.Sequence[channels.PermissionOverwrite], unset.Unset] = unset.UNSET,
+        reason: typing.Union[str, unset.Unset] = unset.UNSET,
+    ) -> channels.GuildCategory:
+        channel = await self._create_guild_channel(
+            guild,
+            name,
+            channels.ChannelType.GUILD_CATEGORY,
+            position=position,
+            nsfw=nsfw,
+            permission_overwrites=permission_overwrites,
+            reason=reason,
+        )
+        return typing.cast(channels.GuildCategory, channel)
+
+    async def _create_guild_channel(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        name: str,
+        type_: channels.ChannelType,
+        *,
+        position: typing.Union[int, unset.Unset] = unset.UNSET,
+        topic: typing.Union[str, unset.Unset] = unset.UNSET,
+        nsfw: typing.Union[bool, unset.Unset] = unset.UNSET,
+        bitrate: typing.Union[int, unset.Unset] = unset.UNSET,
+        user_limit: typing.Union[int, unset.Unset] = unset.UNSET,
+        rate_limit_per_user: typing.Union[int, unset.Unset] = unset.UNSET,
+        permission_overwrites: typing.Union[typing.Sequence[channels.PermissionOverwrite], unset.Unset] = unset.UNSET,
+        category: typing.Union[channels.GuildCategory, bases.UniqueObjectT, unset.Unset] = unset.UNSET,
+        reason: typing.Union[str, unset.Unset] = unset.UNSET,
+    ) -> channels.GuildChannel:
+        route = routes.POST_GUILD_CHANNELS.compile(guild=conversions.value_to_snowflake(guild))
+        payload = {"type": type_, "name": name}
+        conversions.put_if_specified(payload, "position", position)
+        conversions.put_if_specified(payload, "topic", topic)
+        conversions.put_if_specified(payload, "nsfw", nsfw)
+        conversions.put_if_specified(payload, "bitrate", bitrate)
+        conversions.put_if_specified(payload, "user_limit", user_limit)
+        conversions.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user)
+        conversions.put_if_specified(payload, "category", category, conversions.value_to_snowflake)
+
+        if not unset.is_unset(permission_overwrites):
+            payload["permission_overwrites"] = [
+                self._app.entity_factory.serialize_permission_overwrite(o) for o in permission_overwrites
+            ]
+
+        response = await self._request(route, body=payload, reason=reason)
+        channel = self._app.entity_factory.deserialize_channel(response)
+        return typing.cast(channels.GuildChannel, channel)
+
+    async def reposition_guild_channels(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        positions: typing.Mapping[int, typing.Union[channels.GuildChannel, bases.UniqueObjectT]],
+    ) -> None:
+        route = routes.POST_GUILD_CHANNELS.compile(guild=conversions.value_to_snowflake(guild))
+        payload = [
+            {"id": conversions.value_to_snowflake(channel), "position": pos} for pos, channel in positions.items()
+        ]
+        await self._request(route, body=payload)
+
+    async def fetch_member(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        user: typing.Union[users.User, bases.UniqueObjectT],
+    ) -> guilds.GuildMember:
+        route = routes.GET_GUILD_MEMBER.compile(
+            guild=conversions.value_to_snowflake(guild), user=conversions.value_to_snowflake(user)
+        )
+        response = await self._request(route)
+        return self._app.entity_factory.deserialize_guild_member(response)
+
+    def fetch_members(
+        self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+    ) -> iterators.LazyIterator[guilds.GuildMember]:
+        return iterators.MemberIterator(self._app, self._request, conversions.value_to_snowflake(guild))
+
+    async def edit_member(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        user: typing.Union[users.User, bases.UniqueObjectT],
+        *,
+        nick: typing.Union[unset.Unset, str] = unset.UNSET,
+        roles: typing.Union[
+            unset.Unset, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
+        ] = unset.UNSET,
+        mute: typing.Union[unset.Unset, bool] = unset.UNSET,
+        deaf: typing.Union[unset.Unset, bool] = unset.UNSET,
+        voice_channel: typing.Union[unset.Unset, channels.GuildVoiceChannel, bases.UniqueObjectT, None] = unset.UNSET,
+        reason: typing.Union[str, unset.Unset] = unset.UNSET,
+    ) -> None:
+        route = routes.PATCH_GUILD_MEMBER.compile(
+            guild=conversions.value_to_snowflake(guild), user=conversions.value_to_snowflake(user)
+        )
+        payload = {}
+        conversions.put_if_specified(payload, "nick", nick)
+        conversions.put_if_specified(payload, "mute", mute)
+        conversions.put_if_specified(payload, "deaf", deaf)
+
+        if voice_channel is None:
+            payload["channel_id"] = None
+        elif not unset.is_unset(voice_channel):
+            payload["channel_id"] = conversions.value_to_snowflake(voice_channel)
+
+        if not unset.is_unset(roles):
+            payload["roles"] = [conversions.value_to_snowflake(r) for r in roles]
+
+        await self._request(route, body=payload, reason=reason)
+
+    async def edit_my_nick(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        nick: typing.Optional[str],
+        *,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> None:
+        route = routes.PATCH_MY_GUILD_NICKNAME.compile(guild=conversions.value_to_snowflake(guild))
+        payload = {"nick": nick}
+        await self._request(route, body=payload, reason=reason)
+
+    async def add_role_to_member(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        user: typing.Union[users.User, bases.UniqueObjectT],
+        role: typing.Union[guilds.Role, bases.UniqueObjectT],
+        *,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> None:
+        route = routes.PUT_GUILD_MEMBER_ROLE.compile(
+            guild=conversions.value_to_snowflake(guild),
+            user=conversions.value_to_snowflake(user),
+            role=conversions.value_to_snowflake(role),
+        )
+        await self._request(route, reason=reason)
+
+    async def remove_role_from_member(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        user: typing.Union[users.User, bases.UniqueObjectT],
+        role: typing.Union[guilds.Role, bases.UniqueObjectT],
+        *,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> None:
+        route = routes.DELETE_GUILD_MEMBER_ROLE.compile(
+            guild=conversions.value_to_snowflake(guild),
+            user=conversions.value_to_snowflake(user),
+            role=conversions.value_to_snowflake(role),
+        )
+        await self._request(route, reason=reason)
+
+    async def kick_member(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        user: typing.Union[users.User, bases.UniqueObjectT],
+        *,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> None:
+        route = routes.DELETE_GUILD_MEMBER.compile(
+            guild=conversions.value_to_snowflake(guild), user=conversions.value_to_snowflake(user),
+        )
+        await self._request(route, reason=reason)
+
+    async def ban_user(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        user: typing.Union[users.User, bases.UniqueObjectT],
+        *,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> None:
+        route = routes.PUT_GUILD_BAN.compile(
+            guild=conversions.value_to_snowflake(guild), user=conversions.value_to_snowflake(user),
+        )
+        await self._request(route, reason=reason)
+
+    async def unban_user(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        user: typing.Union[users.User, bases.UniqueObjectT],
+        *,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> None:
+        route = routes.DELETE_GUILD_BAN.compile(
+            guild=conversions.value_to_snowflake(guild), user=conversions.value_to_snowflake(user),
+        )
+        await self._request(route, reason=reason)
+
+    async def fetch_ban(
+        self,
+        guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
+        user: typing.Union[users.User, bases.UniqueObjectT],
+    ) -> guilds.GuildMemberBan:
+        route = routes.GET_GUILD_BAN.compile(
+            guild=conversions.value_to_snowflake(guild), user=conversions.value_to_snowflake(user),
+        )
+        response = await self._request(route)
+        return self._app.entity_factory.deserialize_guild_member_ban(response)
+
+    async def fetch_bans(
+        self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], /
+    ) -> typing.Sequence[guilds.GuildMemberBan]:
+        route = routes.GET_GUILD_BANS.compile(guild=conversions.value_to_snowflake(guild))
+        response = await self._request(route)
+        return [self._app.entity_factory.deserialize_guild_member_ban(b) for b in response]
+
+    async def fetch_roles(
+        self, guild: typing.Union[guilds.Guild, bases.UniqueObjectT], /
+    ) -> typing.Sequence[guilds.Role]:
+        route = routes.GET_GUILD_ROLES.compile(guild=conversions.value_to_snowflake(guild))
+        response = await self._request(route)
+        return [self._app.entity_factory.deserialize_guild_role(r) for r in response]
+
     create_role = NotImplemented
     reposition_roles = NotImplemented
     edit_role = NotImplemented

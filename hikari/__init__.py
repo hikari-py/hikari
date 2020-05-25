@@ -20,21 +20,22 @@
 
 from __future__ import annotations
 
-from hikari.net.gateway import *
-from hikari.net.rest import *
-from ._about import __author__
-from ._about import __ci__
-from ._about import __copyright__
-from ._about import __discord_invite__
-from ._about import __docs__
-from ._about import __email__
-from ._about import __issue_tracker__
-from ._about import __license__
-from ._about import __url__
-from ._about import __version__
-from .errors import *
-from .events import *
-from .http_settings import *
-from .models import *
+from hikari._about import __author__
+from hikari._about import __ci__
+from hikari._about import __copyright__
+from hikari._about import __discord_invite__
+from hikari._about import __docs__
+from hikari._about import __email__
+from hikari._about import __issue_tracker__
+from hikari._about import __license__
+from hikari._about import __url__
+from hikari._about import __version__
+
+from hikari.errors import *
+from hikari.events import *
+from hikari.http_settings import *
+from hikari.models import *
+from hikari.net import *
+from hikari.impl import *
 
 __all__ = []

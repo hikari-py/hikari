@@ -67,7 +67,7 @@ from . import channels as channels_
 from . import colors
 from . import emojis as emojis_
 from . import permissions as permissions_
-from . import unset
+from ..internal import unset
 from . import users
 from ..net import urls
 

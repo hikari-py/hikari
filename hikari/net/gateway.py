@@ -41,7 +41,7 @@ from hikari.internal import ratelimits
 from hikari.models import bases
 from hikari.models import channels
 from hikari.models import guilds
-from hikari.models import unset
+from hikari.internal import unset
 from hikari.net import http_client
 from hikari.net import user_agents
 

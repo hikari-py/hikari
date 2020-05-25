@@ -44,7 +44,7 @@ from hikari.models import emojis
 from hikari.models import guilds
 from hikari.models import intents
 from hikari.models import messages
-from hikari.models import unset
+from ..internal import unset
 from hikari.models import users
 from . import base as base_events
 
