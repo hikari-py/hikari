@@ -28,12 +28,12 @@ from hikari import rest_app
 from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.internal import more_typing
+from hikari.internal import unset
 from hikari.models import applications
 from hikari.models import audit_logs
 from hikari.models import bases
 from hikari.models import guilds
 from hikari.models import messages
-from hikari.models import unset
 from hikari.models import users
 from hikari.net import routes
 
@@ -345,12 +345,12 @@ class MemberIterator(_BufferedLazyIterator[guilds.GuildMember]):
         self._first_id = bases.Snowflake.min()
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.GuildMember, typing.Any, None]]:
-        chunk = await self._request_call(self._route, query={"after": self._first_id})
+        chunk = await self._request_call(self._route, query={"after": self._first_id, "limit": 100})
 
         if not chunk:
             return None
 
-        self._first_id = chunk[-1]["id"]
+        self._first_id = chunk[-1]["user"]["id"]
 
         return (self._app.entity_factory.deserialize_guild_member(m) for m in chunk)
 

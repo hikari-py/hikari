@@ -50,9 +50,9 @@ from hikari.models import bases as base_models
 from hikari.models import emojis as emojis_models
 from hikari.models import guilds
 from hikari.models import intents
-from hikari.models import unset
 from hikari.models import users
 from . import base as base_events
+from ..internal import unset
 
 if typing.TYPE_CHECKING:
     import datetime

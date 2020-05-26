@@ -26,7 +26,6 @@ __all__ = [
     "AuditLogChangeKey",
     "AuditLogEntry",
     "AuditLogEventType",
-    "AuditLogIterator",
     "BaseAuditLogEntryInfo",
     "ChannelOverwriteEntryInfo",
     "get_entry_info_entity",
@@ -40,7 +39,6 @@ __all__ = [
 ]
 
 import abc
-import copy
 import datetime
 import typing
 
@@ -59,7 +57,6 @@ from . import users as users_
 from . import webhooks as webhooks_
 
 if typing.TYPE_CHECKING:
-    from hikari import application
     from hikari.internal import more_typing
 
 
