@@ -72,4 +72,5 @@ def is_unset(obj):
 
 
 def count_unset_objects(obj1: typing.Any, obj2: typing.Any, *objs: typing.Any) -> int:
+    """Count the number of objects that are unset in the provided parameters."""
     return sum(is_unset(o) for o in (obj1, obj2, *objs))
