@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["TargetUserType", "VanityUrl", "InviteGuild", "Invite", "InviteWithMetadata"]
+__all__ = ["TargetUserType", "VanityURL", "InviteGuild", "Invite", "InviteWithMetadata"]
 
 import datetime
 import typing
@@ -47,7 +47,7 @@ class TargetUserType(int, more_enums.Enum):
 
 @marshaller.marshallable()
 @attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class VanityUrl(bases.Entity, marshaller.Deserializable):
+class VanityURL(bases.Entity, marshaller.Deserializable):
     """A special case invite object, that represents a guild's vanity url."""
 
     code: str = marshaller.attrib(deserializer=str, eq=True, hash=True, repr=True)

@@ -38,10 +38,10 @@ from hikari import http_settings
 from hikari.internal import more_enums
 from hikari.internal import more_typing
 from hikari.internal import ratelimits
+from hikari.internal import unset
 from hikari.models import bases
 from hikari.models import channels
 from hikari.models import guilds
-from hikari.models import unset
 from hikari.net import http_client
 from hikari.net import user_agents
 
@@ -66,70 +66,6 @@ class Activity:
 
     type: guilds.ActivityType = attr.ib(converter=guilds.ActivityType)
     """The activity type."""
-
-
-@more_enums.must_be_unique
-class _GatewayCloseCode(int, more_enums.Enum):
-    """Reasons for closing a gateway connection."""
-
-    RFC_6455_NORMAL_CLOSURE = 1000
-    RFC_6455_GOING_AWAY = 1001
-    RFC_6455_PROTOCOL_ERROR = 1002
-    RFC_6455_TYPE_ERROR = 1003
-    RFC_6455_ENCODING_ERROR = 1007
-    RFC_6455_POLICY_VIOLATION = 1008
-    RFC_6455_TOO_BIG = 1009
-    RFC_6455_UNEXPECTED_CONDITION = 1011
-
-    # Discord seems to invalidate sessions if I send a 1xxx, which is useless
-    # for invalid session and reconnect messages where I want to be able to
-    # resume.
-    DO_NOT_INVALIDATE_SESSION = 3000
-
-    UNKNOWN_ERROR = 4000
-    UNKNOWN_OPCODE = 4001
-    DECODE_ERROR = 4002
-    NOT_AUTHENTICATED = 4003
-    AUTHENTICATION_FAILED = 4004
-    ALREADY_AUTHENTICATED = 4005
-    INVALID_SEQ = 4007
-    RATE_LIMITED = 4008
-    SESSION_TIMEOUT = 4009
-    INVALID_SHARD = 4010
-    SHARDING_REQUIRED = 4011
-    INVALID_VERSION = 4012
-    INVALID_INTENT = 4013
-    DISALLOWED_INTENT = 4014
-
-
-@more_enums.must_be_unique
-class _GatewayOpcode(int, more_enums.Enum):
-    """Opcodes that the gateway uses internally."""
-
-    DISPATCH = 0
-    HEARTBEAT = 1
-    IDENTIFY = 2
-    PRESENCE_UPDATE = 3
-    VOICE_STATE_UPDATE = 4
-    RESUME = 6
-    RECONNECT = 7
-    REQUEST_GUILD_MEMBERS = 8
-    INVALID_SESSION = 9
-    HELLO = 10
-    HEARTBEAT_ACK = 11
-
-
-class _Reconnect(RuntimeError):
-    __slots__ = ()
-
-
-class _SocketClosed(RuntimeError):
-    __slots__ = ()
-
-
-@attr.s(auto_attribs=True, slots=True)
-class _InvalidSession(RuntimeError):
-    can_resume: bool = False
 
 
 RawDispatchT = typing.Callable[["Gateway", str, more_typing.JSONObject], more_typing.Coroutine[None]]
@@ -176,6 +112,65 @@ class Gateway(http_client.HTTPClient):
     version : int
         Gateway API version to use.
     """
+
+    @more_enums.must_be_unique
+    class _GatewayCloseCode(int, more_enums.Enum):
+        """Reasons for closing a gateway connection."""
+
+        RFC_6455_NORMAL_CLOSURE = 1000
+        RFC_6455_GOING_AWAY = 1001
+        RFC_6455_PROTOCOL_ERROR = 1002
+        RFC_6455_TYPE_ERROR = 1003
+        RFC_6455_ENCODING_ERROR = 1007
+        RFC_6455_POLICY_VIOLATION = 1008
+        RFC_6455_TOO_BIG = 1009
+        RFC_6455_UNEXPECTED_CONDITION = 1011
+
+        # Discord seems to invalidate sessions if I send a 1xxx, which is useless
+        # for invalid session and reconnect messages where I want to be able to
+        # resume.
+        DO_NOT_INVALIDATE_SESSION = 3000
+
+        UNKNOWN_ERROR = 4000
+        UNKNOWN_OPCODE = 4001
+        DECODE_ERROR = 4002
+        NOT_AUTHENTICATED = 4003
+        AUTHENTICATION_FAILED = 4004
+        ALREADY_AUTHENTICATED = 4005
+        INVALID_SEQ = 4007
+        RATE_LIMITED = 4008
+        SESSION_TIMEOUT = 4009
+        INVALID_SHARD = 4010
+        SHARDING_REQUIRED = 4011
+        INVALID_VERSION = 4012
+        INVALID_INTENT = 4013
+        DISALLOWED_INTENT = 4014
+
+    @more_enums.must_be_unique
+    class _GatewayOpcode(int, more_enums.Enum):
+        """Opcodes that the gateway uses internally."""
+
+        DISPATCH = 0
+        HEARTBEAT = 1
+        IDENTIFY = 2
+        PRESENCE_UPDATE = 3
+        VOICE_STATE_UPDATE = 4
+        RESUME = 6
+        RECONNECT = 7
+        REQUEST_GUILD_MEMBERS = 8
+        INVALID_SESSION = 9
+        HELLO = 10
+        HEARTBEAT_ACK = 11
+
+    class _Reconnect(RuntimeError):
+        __slots__ = ()
+
+    class _SocketClosed(RuntimeError):
+        __slots__ = ()
+
+    @attr.s(auto_attribs=True, slots=True)
+    class _InvalidSession(RuntimeError):
+        can_resume: bool = False
 
     def __init__(
         self,
@@ -278,7 +273,7 @@ class Gateway(http_client.HTTPClient):
 
             if self._ws is not None:
                 self.logger.warning("gateway client closed by user, will not attempt to restart")
-                await self._close_ws(_GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "user shut down application")
+                await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "user shut down application")
 
     async def _run(self) -> None:
         """Start the shard and wait for it to shut down."""
@@ -345,22 +340,22 @@ class Gateway(http_client.HTTPClient):
                 "failed to connect to Discord because %s.%s: %s", type(ex).__module__, type(ex).__qualname__, str(ex),
             )
 
-        except _InvalidSession as ex:
+        except self._InvalidSession as ex:
             if ex.can_resume:
                 self.logger.warning("invalid session, so will attempt to resume session %s", self._session_id)
-                await self._close_ws(_GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
+                await self._close_ws(self._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
             else:
                 self.logger.warning("invalid session, so will attempt to reconnect with new session")
-                await self._close_ws(_GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
+                await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
                 self._seq = None
                 self._session_id = None
 
-        except _Reconnect:
+        except self._Reconnect:
             self.logger.warning("instructed by Discord to reconnect and resume session %s", self._session_id)
             self._backoff.reset()
-            await self._close_ws(_GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "reconnecting")
+            await self._close_ws(self._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "reconnecting")
 
-        except _SocketClosed:
+        except self._SocketClosed:
             # The socket has already closed, so no need to close it again.
             if not self._zombied and not self._request_close_event.is_set():
                 # This will occur due to a network issue such as a network adapter going down.
@@ -371,7 +366,7 @@ class Gateway(http_client.HTTPClient):
 
         except Exception as ex:
             self.logger.error("unexpected exception occurred, shard will now die", exc_info=ex)
-            await self._close_ws(_GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
+            await self._close_ws(self._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
             raise
 
         finally:
@@ -410,7 +405,7 @@ class Gateway(http_client.HTTPClient):
             The web status to show. If unset, this will not be changed.
         """
         payload = self._build_presence_payload(idle_since, is_afk, activity, status)
-        await self._send_json({"op": _GatewayOpcode.PRESENCE_UPDATE, "d": payload})
+        await self._send_json({"op": self._GatewayOpcode.PRESENCE_UPDATE, "d": payload})
         self._idle_since = idle_since if not unset.is_unset(idle_since) else self._idle_since
         self._is_afk = is_afk if not unset.is_unset(is_afk) else self._is_afk
         self._activity = activity if not unset.is_unset(activity) else self._activity
@@ -442,7 +437,7 @@ class Gateway(http_client.HTTPClient):
             `False`, then it will undeafen itself.
         """
         payload = {
-            "op": _GatewayOpcode.VOICE_STATE_UPDATE,
+            "op": self._GatewayOpcode.VOICE_STATE_UPDATE,
             "d": {
                 "guild_id": str(int(guild)),
                 "channel": str(int(channel)) if channel is not None else None,
@@ -460,7 +455,7 @@ class Gateway(http_client.HTTPClient):
         # HELLO!
         message = await self._receive_json_payload()
         op = message["op"]
-        if message["op"] != _GatewayOpcode.HELLO:
+        if message["op"] != self._GatewayOpcode.HELLO:
             raise errors.GatewayError(f"Expected HELLO opcode 10 but received {op}")
 
         self.heartbeat_interval = message["d"]["heartbeat_interval"] / 1_000.0
@@ -471,7 +466,7 @@ class Gateway(http_client.HTTPClient):
             # RESUME!
             await self._send_json(
                 {
-                    "op": _GatewayOpcode.RESUME,
+                    "op": self._GatewayOpcode.RESUME,
                     "d": {"token": self._token, "seq": self._seq, "session_id": self._session_id},
                 }
             )
@@ -480,7 +475,7 @@ class Gateway(http_client.HTTPClient):
             # IDENTIFY!
             # noinspection PyArgumentList
             payload = {
-                "op": _GatewayOpcode.IDENTIFY,
+                "op": self._GatewayOpcode.IDENTIFY,
                 "d": {
                     "token": self._token,
                     "compress": False,
@@ -513,13 +508,13 @@ class Gateway(http_client.HTTPClient):
                         time_since_heartbeat_sent,
                     )
                     self._zombied = True
-                    await self._close_ws(_GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "zombie connection")
+                    await self._close_ws(self._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "zombie connection")
                     return
 
                 self.logger.debug(
                     "preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, self.heartbeat_interval
                 )
-                await self._send_json({"op": _GatewayOpcode.HEARTBEAT, "d": self._seq})
+                await self._send_json({"op": self._GatewayOpcode.HEARTBEAT, "d": self._seq})
                 self.last_heartbeat_sent = self._now()
 
                 try:
@@ -538,7 +533,7 @@ class Gateway(http_client.HTTPClient):
             op = message["op"]
             data = message["d"]
 
-            if op == _GatewayOpcode.DISPATCH:
+            if op == self._GatewayOpcode.DISPATCH:
                 event = message["t"]
                 self._seq = message["s"]
                 if event == "READY":
@@ -551,21 +546,21 @@ class Gateway(http_client.HTTPClient):
 
                 asyncio.create_task(self._dispatch(self, event, data), name=f"shard {self._shard_id} {event}")
 
-            elif op == _GatewayOpcode.HEARTBEAT:
+            elif op == self._GatewayOpcode.HEARTBEAT:
                 self.logger.debug("received HEARTBEAT; sending HEARTBEAT ACK")
-                await self._send_json({"op": _GatewayOpcode.HEARTBEAT_ACK})
+                await self._send_json({"op": self._GatewayOpcode.HEARTBEAT_ACK})
 
-            elif op == _GatewayOpcode.HEARTBEAT_ACK:
+            elif op == self._GatewayOpcode.HEARTBEAT_ACK:
                 self.heartbeat_latency = self._now() - self.last_heartbeat_sent
                 self.logger.debug("received HEARTBEAT ACK [latency:%ss]", self.heartbeat_latency)
 
-            elif op == _GatewayOpcode.RECONNECT:
+            elif op == self._GatewayOpcode.RECONNECT:
                 self.logger.debug("RECONNECT")
-                raise _Reconnect()
+                raise self._Reconnect()
 
-            elif op == _GatewayOpcode.INVALID_SESSION:
+            elif op == self._GatewayOpcode.INVALID_SESSION:
                 self.logger.debug("INVALID SESSION [resume:%s]", data)
-                raise _InvalidSession(data)
+                raise self._InvalidSession(data)
 
             else:
                 self.logger.debug("ignoring unrecognised opcode %s", op)
@@ -583,23 +578,23 @@ class Gateway(http_client.HTTPClient):
             close_code = self._ws.close_code
             self.logger.debug("connection closed with code %s", close_code)
 
-            if close_code in _GatewayCloseCode.__members__.values():
-                reason = _GatewayCloseCode(close_code).name
+            if close_code in self._GatewayCloseCode.__members__.values():
+                reason = self._GatewayCloseCode(close_code).name
             else:
                 reason = f"unknown close code {close_code}"
 
             can_reconnect = close_code in (
-                _GatewayCloseCode.DECODE_ERROR,
-                _GatewayCloseCode.INVALID_SEQ,
-                _GatewayCloseCode.UNKNOWN_ERROR,
-                _GatewayCloseCode.SESSION_TIMEOUT,
-                _GatewayCloseCode.RATE_LIMITED,
+                self._GatewayCloseCode.DECODE_ERROR,
+                self._GatewayCloseCode.INVALID_SEQ,
+                self._GatewayCloseCode.UNKNOWN_ERROR,
+                self._GatewayCloseCode.SESSION_TIMEOUT,
+                self._GatewayCloseCode.RATE_LIMITED,
             )
 
             raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect, False, True)
 
         elif message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
-            raise _SocketClosed()
+            raise self._SocketClosed()
         else:
             # Assume exception for now.
             ex = self._ws.exception()

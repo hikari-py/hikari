@@ -30,7 +30,7 @@ from hikari.models import colors
 from hikari.models import emojis
 from hikari.models import guilds
 from hikari.models import permissions
-from hikari.models import unset
+from hikari.internal import unset
 from hikari.models import users
 from tests.hikari import _helpers
 
@@ -252,10 +252,10 @@ def test_guild_payload(
         "premium_subscription_count": 1,
         "premium_tier": 2,
         "presences": [test_guild_member_presence],
-        "public_updates_channel_id": "33333333",
+        "public_updates_channel": "33333333",
         "region": "eu-central",
         "roles": [test_roles_payload],
-        "rules_channel_id": "42042069",
+        "rules_channel": "42042069",
         "splash": "0ff0ff0ff",
         "system_channel_flags": 3,
         "system_channel_id": "19216801",
@@ -279,7 +279,7 @@ class TestGuildEmbed:
         return {"channel": "123123123", "enabled": True}
 
     def test_deserialize(self, test_guild_embed_payload, mock_app):
-        guild_embed_obj = guilds.GuildEmbed.deserialize(test_guild_embed_payload, app=mock_app)
+        guild_embed_obj = guilds.GuildWidget.deserialize(test_guild_embed_payload, app=mock_app)
         assert guild_embed_obj.channel_id == 123123123
         assert guild_embed_obj.is_enabled is True
 

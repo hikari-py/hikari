@@ -320,7 +320,7 @@ GET_GUILD_VOICE_REGIONS = Route(GET, "/guilds/{guild}/regions")
 
 GET_GUILD_WEBHOOKS = Route(GET, "/guilds/{guild}/webhooks")
 
-GET_GUILD_WIDGET_IMAGE = Route(GET, "/guilds/{guild}/widget.png")
+GET_GUILD_BANNER_IMAGE = Route(GET, "/guilds/{guild}/widget.png")
 
 # Invites
 GET_INVITE = Route(GET, "/invites/{invite_code}")

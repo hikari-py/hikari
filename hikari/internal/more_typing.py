@@ -53,7 +53,6 @@ from typing import TYPE_CHECKING as _TYPE_CHECKING
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
-
 if _TYPE_CHECKING:
     import asyncio
     import contextvars

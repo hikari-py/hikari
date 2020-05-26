@@ -29,7 +29,6 @@ import typing
 
 import aiohttp.typedefs
 
-from hikari.models import unset
 from hikari.net import tracing
 
 
