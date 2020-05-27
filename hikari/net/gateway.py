@@ -69,9 +69,6 @@ class Activity:
     """The activity type."""
 
 
-RawDispatchT = typing.Callable[["Gateway", str, more_typing.JSONObject], more_typing.Coroutine[None]]
-
-
 class Gateway(http_client.HTTPClient):
     """Implementation of a V6 and V7 compatible gateway.
 
@@ -116,8 +113,6 @@ class Gateway(http_client.HTTPClient):
 
     @more_enums.must_be_unique
     class _GatewayCloseCode(int, more_enums.Enum):
-        """Reasons for closing a gateway connection."""
-
         RFC_6455_NORMAL_CLOSURE = 1000
         RFC_6455_GOING_AWAY = 1001
         RFC_6455_PROTOCOL_ERROR = 1002
@@ -149,8 +144,6 @@ class Gateway(http_client.HTTPClient):
 
     @more_enums.must_be_unique
     class _GatewayOpcode(int, more_enums.Enum):
-        """Opcodes that the gateway uses internally."""
-
         DISPATCH = 0
         HEARTBEAT = 1
         IDENTIFY = 2
@@ -172,6 +165,8 @@ class Gateway(http_client.HTTPClient):
     @attr.s(auto_attribs=True, slots=True)
     class _InvalidSession(RuntimeError):
         can_resume: bool = False
+
+    RawDispatchT = typing.Callable[["Gateway", str, more_typing.JSONObject], more_typing.Coroutine[None]]
 
     def __init__(
         self,
@@ -215,7 +210,6 @@ class Gateway(http_client.HTTPClient):
         self._last_run_started_at = float("nan")
         self._request_close_event = asyncio.Event()
         self._seq = None
-        self._session_id = None
         self._shard_id = shard_id
         self._shard_count = shard_count
         self._status = initial_status
@@ -233,6 +227,7 @@ class Gateway(http_client.HTTPClient):
         self.last_message_received = float("nan")
         self.large_threshold = large_threshold
         self.ratelimiter = ratelimits.WindowedBurstRateLimiter(str(shard_id), 60.0, 120)
+        self.session_id = None
 
         scheme, netloc, path, params, _, _ = urllib.parse.urlparse(url, allow_fragments=True)
 
@@ -289,6 +284,7 @@ class Gateway(http_client.HTTPClient):
             # This is set to ensure that the `start' waiter does not deadlock if
             # we cannot connect successfully. It is a hack, but it works.
             self._handshake_event.set()
+            # Close the aiohttp client session.
             await super().close()
 
     async def _run_once(self) -> bool:
@@ -297,11 +293,14 @@ class Gateway(http_client.HTTPClient):
 
         if self._now() - self._last_run_started_at < 30:
             # Interrupt sleep immediately if a request to close is fired.
-            wait_task = asyncio.create_task(self._request_close_event.wait())
+            wait_task = asyncio.create_task(
+                self._request_close_event.wait(), name=f"gateway client {self._shard_id} backing off"
+            )
             try:
                 backoff = next(self._backoff)
                 self.logger.debug("backing off for %ss", backoff)
                 await asyncio.wait_for(wait_task, timeout=backoff)
+                return False
             except asyncio.TimeoutError:
                 pass
 
@@ -343,16 +342,16 @@ class Gateway(http_client.HTTPClient):
 
         except self._InvalidSession as ex:
             if ex.can_resume:
-                self.logger.warning("invalid session, so will attempt to resume session %s", self._session_id)
+                self.logger.warning("invalid session, so will attempt to resume session %s", self.session_id)
                 await self._close_ws(self._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
             else:
                 self.logger.warning("invalid session, so will attempt to reconnect with new session")
                 await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
                 self._seq = None
-                self._session_id = None
+                self.session_id = None
 
         except self._Reconnect:
-            self.logger.warning("instructed by Discord to reconnect and resume session %s", self._session_id)
+            self.logger.warning("instructed by Discord to reconnect and resume session %s", self.session_id)
             self._backoff.reset()
             await self._close_ws(self._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "reconnecting")
 
@@ -441,7 +440,7 @@ class Gateway(http_client.HTTPClient):
             "op": self._GatewayOpcode.VOICE_STATE_UPDATE,
             "d": {
                 "guild_id": str(int(guild)),
-                "channel": str(int(channel)) if channel is not None else None,
+                "channel_id": str(int(channel)) if channel is not None else None,
                 "self_mute": self_mute,
                 "self_deaf": self_deaf,
             },
@@ -450,25 +449,28 @@ class Gateway(http_client.HTTPClient):
 
     async def _close_ws(self, code: int, message: str):
         self.logger.debug("sending close frame with code %s and message %r", int(code), message)
-        await self._ws.close(code=code, message=bytes(message, "utf-8"))
+        # None if the websocket errored on initialziation.
+        if self._ws is not None:
+            await self._ws.close(code=code, message=bytes(message, "utf-8"))
 
     async def _handshake(self) -> None:
         # HELLO!
         message = await self._receive_json_payload()
         op = message["op"]
         if message["op"] != self._GatewayOpcode.HELLO:
-            raise errors.GatewayError(f"Expected HELLO opcode 10 but received {op}")
+            await self._close_ws(self._GatewayCloseCode.RFC_6455_POLICY_VIOLATION.value, "did not receive HELLO")
+            raise errors.GatewayError(f"Expected HELLO opcode {self._GatewayOpcode.HELLO.value} but received {op}")
 
         self.heartbeat_interval = message["d"]["heartbeat_interval"] / 1_000.0
 
-        self.logger.debug("received HELLO")
+        self.logger.debug("received HELLO, heartbeat interval is %s", self.heartbeat_interval)
 
-        if self._session_id is not None:
+        if self.session_id is not None:
             # RESUME!
             await self._send_json(
                 {
                     "op": self._GatewayOpcode.RESUME,
-                    "d": {"token": self._token, "seq": self._seq, "session_id": self._session_id},
+                    "d": {"token": self._token, "seq": self._seq, "session_id": self.session_id},
                 }
             )
 
@@ -538,11 +540,11 @@ class Gateway(http_client.HTTPClient):
                 event = message["t"]
                 self._seq = message["s"]
                 if event == "READY":
-                    self._session_id = data["session_id"]
-                    self.logger.info("connection is ready [session:%s]", self._session_id)
+                    self.session_id = data["session_id"]
+                    self.logger.info("connection is ready [session:%s]", self.session_id)
                     self._handshake_event.set()
                 elif event == "RESUME":
-                    self.logger.info("connection has resumed [session:%s, seq:%s]", self._session_id, self._seq)
+                    self.logger.info("connection has resumed [session:%s, seq:%s]", self.session_id, self._seq)
                     self._handshake_event.set()
 
                 asyncio.create_task(self._dispatch(self, event, data), name=f"shard {self._shard_id} {event}")
@@ -637,9 +639,9 @@ class Gateway(http_client.HTTPClient):
         message = f"{message} [seq:%s, session:%s, size:%s]"
         if self._debug:
             message = f"{message} with raw payload: %s"
-            args = (*args, self._seq, self._session_id, len(payload), payload)
+            args = (*args, self._seq, self.session_id, len(payload), payload)
         else:
-            args = (*args, self._seq, self._session_id, len(payload))
+            args = (*args, self._seq, self.session_id, len(payload))
 
         self.logger.debug(message, *args)
 
