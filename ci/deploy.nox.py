@@ -21,7 +21,6 @@ import json
 import os
 import re
 import shlex
-import subprocess
 
 from distutils.version import LooseVersion
 
@@ -29,15 +28,9 @@ from ci import config
 from ci import nox
 
 
-def shell(arg, *args):
-    command = " ".join((arg, *args))
-    print("\033[35mnox > shell >\033[0m", command)
-    return subprocess.check_call(command, shell=True)
-
-
 def update_version_string(version):
     print("Updating version in version file to", version)
-    shell("sed", shlex.quote(f's|^__version__.*|__version__ = "{version}"|g'), "-i", config.VERSION_FILE)
+    nox.shell("sed", shlex.quote(f's|^__version__.*|__version__ = "{version}"|g'), "-i", config.VERSION_FILE)
 
 
 def increment_prod_to_next_dev(version):
@@ -101,38 +94,38 @@ def get_next_dev_version(version):
 
 def deploy_to_pypi() -> None:
     print("Performing PyPI deployment of current code")
-    shell("pip install -r requirements.txt twine")
-    shell("python", "setup.py", *config.DISTS)
+    nox.shell("pip install -r requirements.txt twine")
+    nox.shell("python", "setup.py", *config.DISTS)
     os.putenv("TWINE_USERNAME", os.environ["PYPI_USER"])
     os.putenv("TWINE_PASSWORD", os.environ["PYPI_PASS"])
     os.putenv("TWINE_REPOSITORY_URL", config.PYPI_REPO)
     dists = [os.path.join("dist", n) for n in os.listdir("dist")]
-    shell("twine", "upload", "--disable-progress-bar", "--skip-existing", *dists)
+    nox.shell("twine", "upload", "--disable-progress-bar", "--skip-existing", *dists)
 
 
 def deploy_to_git(next_version: str) -> None:
     print("Setting up the git repository ready to make automated changes")
-    shell("git config user.name", shlex.quote(config.CI_ROBOT_NAME))
-    shell("git config user.email", shlex.quote(config.CI_ROBOT_EMAIL))
-    shell(
+    nox.shell("git config user.name", shlex.quote(config.CI_ROBOT_NAME))
+    nox.shell("git config user.email", shlex.quote(config.CI_ROBOT_EMAIL))
+    nox.shell(
         "git remote set-url",
         config.REMOTE_NAME,
         "$(echo \"$CI_REPOSITORY_URL\" | perl -pe 's#.*@(.+?(\\:\\d+)?)/#git@\\1:#')",
     )
 
     print("Making deployment commit")
-    shell(
+    nox.shell(
         "git commit -am", shlex.quote(f"(ci) Deployed {next_version} to PyPI {config.SKIP_CI_PHRASE}"), "--allow-empty",
     )
 
     print("Tagging release")
-    shell("git tag", next_version)
+    nox.shell("git tag", next_version)
 
     print("Merging prod back into preprod")
-    shell("git checkout", config.PREPROD_BRANCH)
-    shell(f"git reset --hard {config.REMOTE_NAME}/{config.PREPROD_BRANCH}")
+    nox.shell("git checkout", config.PREPROD_BRANCH)
+    nox.shell(f"git reset --hard {config.REMOTE_NAME}/{config.PREPROD_BRANCH}")
 
-    shell(
+    nox.shell(
         f"git merge {config.PROD_BRANCH}",
         "--no-ff --strategy-option theirs --allow-unrelated-histories -m",
         shlex.quote(f"(ci) Merged {config.PROD_BRANCH} {next_version} into {config.PREPROD_BRANCH}"),
@@ -140,15 +133,15 @@ def deploy_to_git(next_version: str) -> None:
     update_version_string(increment_prod_to_next_dev(next_version))
 
     print("Making next dev commit on preprod")
-    shell(
+    nox.shell(
         "git commit -am", shlex.quote(f"(ci) Updated version for next development release {config.SKIP_DEPLOY_PHRASE}")
     )
-    shell("git push --atomic", config.REMOTE_NAME, config.PREPROD_BRANCH, config.PROD_BRANCH, next_version)
+    nox.shell("git push --atomic", config.REMOTE_NAME, config.PREPROD_BRANCH, config.PROD_BRANCH, next_version)
 
 
 def send_notification(version: str, title: str, description: str, color: str) -> None:
     print("Sending webhook to Discord")
-    shell(
+    nox.shell(
         "curl",
         "-X POST",
         "-H",
@@ -177,7 +170,7 @@ def send_notification(version: str, title: str, description: str, color: str) ->
 @nox.session()
 def deploy(session: nox.Session) -> None:
     """Perform a deployment. This will only work on the CI."""
-    shell("pip install requests")
+    nox.shell("pip install requests")
     commit_ref = os.getenv("CI_COMMIT_REF_NAME", *session.posargs[0:1])
     print("Commit ref is", commit_ref)
     current_version = get_current_version()

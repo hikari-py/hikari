@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import os
 import os as _os
 
 IS_CI = "CI" in _os.environ
@@ -68,3 +69,11 @@ DISTS = ["sdist", "bdist_wheel"]
 PYPI_REPO = "https://upload.pypi.org/legacy/"
 PYPI = "https://pypi.org/"
 PYPI_API = f"{PYPI}/pypi/{API_NAME}/json"
+
+# Docker stuff
+DOCKER_ENVS = [
+    "python:3.8.0",
+    "python:3.8.1",
+    "python:3.8.2",
+    "python:3.9-rc",
+]
