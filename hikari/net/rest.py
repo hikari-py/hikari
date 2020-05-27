@@ -32,6 +32,7 @@ import aiohttp
 from hikari import errors
 from hikari import http_settings
 from hikari import rest_app
+from hikari.internal import class_helpers
 from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.internal import more_typing
@@ -114,7 +115,7 @@ class REST(http_client.HTTPClient):
             allow_redirects=config.allow_redirects,
             connector=config.tcp_connector_factory() if config.tcp_connector_factory else None,
             debug=debug,
-            logger_name=f"{type(self).__module__}.{type(self).__qualname__}",
+            logger=class_helpers.get_logger(self),
             proxy_auth=config.proxy_auth,
             proxy_headers=config.proxy_headers,
             proxy_url=config.proxy_url,
@@ -380,7 +381,8 @@ class REST(http_client.HTTPClient):
         response = await self._request(route)
         return self._app.entity_factory.deserialize_channel(response)
 
-    _GuildChannelT = typing.TypeVar("_GuildChannelT", bound=channels.GuildChannel, contravariant=True)
+    if typing.TYPE_CHECKING:
+        _GuildChannelT = typing.TypeVar("_GuildChannelT", bound=channels.GuildChannel, contravariant=True)
 
     # This overload just tells any static type checker that if we input, say,
     # a GuildTextChannel, we should always expect a GuildTextChannel as the

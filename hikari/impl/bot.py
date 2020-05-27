@@ -28,7 +28,7 @@ from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
-from hikari.internal import helpers
+from hikari.internal import class_helpers
 from hikari.models import guilds
 from hikari.net import gateway
 from hikari.net import rest
@@ -67,7 +67,7 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
         token: str,
         use_compression: bool = True,
     ):
-        self._logger = helpers.get_logger(self)
+        self._logger = class_helpers.get_logger(self)
 
         self._cache = cache_impl.CacheImpl()
         self._event_manager = event_manager.EventManagerImpl()

@@ -22,32 +22,7 @@ import typing
 import pytest
 
 from hikari.internal import conversions
-
-
-@pytest.mark.parametrize(
-    ["value", "cast", "expect"],
-    [
-        ("22", int, 22),
-        (None, int, None),
-        ("22", lambda a: float(a) / 10 + 7, 9.2),
-        (None, lambda a: float(a) / 10 + 7, None),
-    ],
-)
-def test_nullable_cast(value, cast, expect):
-    assert conversions.nullable_cast(value, cast) == expect
-
-
-@pytest.mark.parametrize(
-    ["value", "cast", "default", "expect"],
-    [
-        ("hello", int, "dead", "dead"),
-        ("22", int, "dead", 22),
-        ("22", lambda n: n + 4, ..., ...),
-        (22, lambda n: n + 4, ..., 26),
-    ],
-)
-def test_try_cast(value, cast, default, expect):
-    assert conversions.try_cast(value, cast, default) == expect
+from hikari.internal import unset
 
 
 def test_put_if_specified_when_specified():
@@ -60,7 +35,7 @@ def test_put_if_specified_when_specified():
 
 def test_put_if_specified_when_unspecified():
     d = {}
-    conversions.put_if_specified(d, "bar", ...)
+    conversions.put_if_specified(d, "bar", unset.UNSET)
     assert d == {}
 
 
@@ -69,33 +44,6 @@ def test_put_if_specified_when_type_after_passed():
     conversions.put_if_specified(d, "foo", 69, str)
     conversions.put_if_specified(d, "bar", "69", int)
     assert d == {"foo": "69", "bar": 69}
-
-
-@pytest.mark.parametrize(
-    ["img_bytes", "expect"],
-    [
-        (b"\211PNG\r\n\032\n", "data:image/png;base64,iVBORw0KGgo="),
-        (b"      Exif", "data:image/jpeg;base64,ICAgICAgRXhpZg=="),
-        (b"      JFIF", "data:image/jpeg;base64,ICAgICAgSkZJRg=="),
-        (b"GIF87a", "data:image/gif;base64,R0lGODdh"),
-        (b"GIF89a", "data:image/gif;base64,R0lGODlh"),
-        (b"RIFF    WEBP", "data:image/webp;base64,UklGRiAgICBXRUJQ"),
-    ],
-)
-def test_image_bytes_to_image_data_img_types(img_bytes, expect):
-    assert conversions.image_bytes_to_image_data(img_bytes) == expect
-
-
-def test_image_bytes_to_image_data_when_None_returns_None():
-    assert conversions.image_bytes_to_image_data(None) is None
-
-
-def test_image_bytes_to_image_data_when_unsupported_image_type_raises_value_error():
-    try:
-        conversions.image_bytes_to_image_data(b"")
-        assert False
-    except ValueError:
-        assert True
 
 
 def test_parse_iso_8601_date_with_negative_timezone():
