@@ -150,11 +150,11 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
 
     def __init__(
         self,
+        logger: logging.Logger,
         *,
         allow_redirects: bool = False,
         connector: typing.Optional[aiohttp.BaseConnector] = None,
         debug: bool = False,
-        logger_name: typing.Optional[str] = None,
         proxy_auth: typing.Optional[aiohttp.BasicAuth] = None,
         proxy_headers: typing.Optional[aiohttp.typedefs.LooseHeaders] = None,
         proxy_url: typing.Optional[str] = None,
@@ -163,9 +163,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         timeout: typing.Optional[float] = None,
         trust_env: bool = False,
     ) -> None:
-        self.logger = logging.getLogger(
-            f"{type(self).__module__}.{type(self).__qualname__}" if logger_name is None else logger_name
-        )
+        self.logger = logger
 
         self.__client_session = None
         self._allow_redirects = allow_redirects

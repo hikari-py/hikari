@@ -74,4 +74,5 @@ def is_async_iterator(obj: typing.Any) -> bool:
 
 def is_async_iterable(obj: typing.Any) -> bool:
     """Determine if the object is an async iterable or not."""
-    return inspect.isfunction(obj.__aiter__) or inspect.ismethod(getattr(obj, "__aiter__", None))
+    attr = getattr(obj, "__aiter__", None)
+    return inspect.isfunction(attr) or inspect.ismethod(attr)

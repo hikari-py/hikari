@@ -19,7 +19,7 @@
 import mock
 import pytest
 
-from hikari import application
+from hikari import base_app
 from hikari.net import urls
 from hikari.models import applications
 from hikari.models import guilds
@@ -29,7 +29,7 @@ from tests.hikari import _helpers
 
 @pytest.fixture()
 def mock_app():
-    return mock.MagicMock(application.Application)
+    return mock.MagicMock(base_app.IBaseApp)
 
 
 @pytest.fixture()

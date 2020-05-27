@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Various functional types and metatypes."""
+"""Various metatypes and utilities for configuring classes."""
 
 from __future__ import annotations
 
@@ -24,9 +24,31 @@ __all__ = ["SingletonMeta", "Singleton"]
 
 import abc
 import inspect
+import logging
 import typing
 
-from . import more_collections
+from hikari.internal import more_collections
+
+
+def get_logger(cls: typing.Union[typing.Type, typing.Any], *additional_args: str) -> logging.Logger:
+    """Get an appropriately named logger for the given class or object.
+
+    Parameters
+    ----------
+    cls : typing.Type OR object
+        A type or instance of a type to make a logger in the name of.
+    *additional_args : str
+        Additional tokens to append onto the logger name, separated by `.`.
+        This is useful in some places to append info such as shard ID to each
+        logger to enable shard-specific logging, for example.
+
+    Returns
+    -------
+    logging.Logger
+        The logger to use.
+    """
+    cls = cls if isinstance(cls, type) else type(cls)
+    return logging.getLogger(".".join((cls.__module__, cls.__qualname__, *additional_args)))
 
 
 class SingletonMeta(type):
@@ -52,9 +74,7 @@ class SingletonMeta(type):
         thread safe.
     """
 
-    # pylint: disable=unsubscriptable-object
     ___instance_dict_t___ = more_collections.WeakKeyDictionary[typing.Type[typing.Any], typing.Any]
-    # pylint: enable=unsubscriptable-object
     ___instances___: ___instance_dict_t___ = more_collections.WeakKeyDictionary()
     __slots__ = ()
 
@@ -85,36 +105,3 @@ class Singleton(metaclass=SingletonMeta):
         Constructing instances of this class or derived classes may not be
         thread safe.
     """
-
-
-class UniqueFunctionMeta(abc.ABCMeta):
-    """Metaclass for mixins that are expected to provide unique function names.
-
-    If subclassing from two mixins that are derived from this type and both
-    mixins provide the same function, a type error is raised when the class is
-    defined.
-
-    !!! note
-        This metaclass derives from `abc.ABCMeta`, and thus is compatible with
-        abstract method conduit.
-    """
-
-    __slots__ = ()
-
-    @classmethod
-    def __prepare__(mcs, name, bases, **kwargs):
-        routines = {}
-
-        for base in bases:
-            for identifier, method in inspect.getmembers(base, inspect.isroutine):
-                if identifier.startswith("__"):
-                    continue
-
-                if identifier in routines and method != routines[identifier]:
-                    raise TypeError(
-                        f"Conflicting methods {routines[identifier].__qualname__} and {method.__qualname__} found."
-                    )
-
-                routines[identifier] = method
-
-        return super().__prepare__(name, bases, **kwargs)

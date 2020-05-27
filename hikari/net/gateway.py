@@ -35,6 +35,7 @@ import attr
 
 from hikari import errors
 from hikari import http_settings
+from hikari.internal import class_helpers
 from hikari.internal import more_enums
 from hikari.internal import more_typing
 from hikari.internal import ratelimits
@@ -195,7 +196,7 @@ class Gateway(http_client.HTTPClient):
             allow_redirects=config.allow_redirects,
             connector=config.tcp_connector_factory() if config.tcp_connector_factory else None,
             debug=debug,
-            logger_name=f"{type(self).__module__}.{type(self).__qualname__}.{shard_id}",
+            logger=class_helpers.get_logger(self, str(shard_id)),
             proxy_auth=config.proxy_auth,
             proxy_headers=config.proxy_headers,
             proxy_url=config.proxy_url,
@@ -447,8 +448,8 @@ class Gateway(http_client.HTTPClient):
         }
         await self._send_json(payload)
 
-    async def _close_ws(self, code: _GatewayCloseCode, message: str):
-        self.logger.debug("sending close frame with code %s and message %r", code.value, message)
+    async def _close_ws(self, code: int, message: str):
+        self.logger.debug("sending close frame with code %s and message %r", int(code), message)
         await self._ws.close(code=code, message=bytes(message, "utf-8"))
 
     async def _handshake(self) -> None:
