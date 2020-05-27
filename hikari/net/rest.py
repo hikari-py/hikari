@@ -55,7 +55,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import gateway
     from hikari.models import guilds
     from hikari.models import invites
-    from hikari.models import messages
+    from hikari.models import messages as messages_
     from hikari.models import permissions as permissions_
     from hikari.models import users
     from hikari.models import voices
@@ -63,6 +63,39 @@ if typing.TYPE_CHECKING:
 
 
 class REST(http_client.HTTPClient):
+    """Implementation of the V6 and V7-compatible Discord REST API.
+
+    This manages making HTTP/1.1 requests to the API and using the entity
+    factory within the passed application instance to deserialize JSON responses
+    to Pythonic data classes that are used throughout this library.
+
+    Parameters
+    ----------
+    app : hikari.rest_app.IRESTApp
+        The REST application containing all other application components
+        that Hikari uses.
+    config : hikari.http_settings.HTTPSettings
+        The AIOHTTP-specific configuration settings. This is used to configure
+        proxies, and specify TCP connectors to control the size of HTTP
+        connection pools, etc.
+    debug : bool
+        If `True`, this will enable logging of each payload sent and received,
+        as well as information such as DNS cache hits and misses, and other
+        information useful for debugging this application. These logs will
+        be written as DEBUG log entries. For most purposes, this should be
+        left `False`.
+    token : str
+        The bot or bearer token. If no token is to be used, this can be `None`.
+    token_type : str
+        The type of token in use. If no token is used, this can be ignored and
+        left to the default value. This can be `"Bot"` or `"Bearer"`.
+    url : str
+        The REST API base URL. This can contain format-string specifiers to
+        interpolate information such as API version in use.
+    version : int
+        The API version to use.
+    """
+
     class _RateLimited(RuntimeError):
         __slots__ = ()
 
@@ -311,20 +344,70 @@ class REST(http_client.HTTPClient):
         return form
 
     async def close(self) -> None:
-        """Close the REST client."""
+        """Close the REST client and any open HTTP connections."""
         await super().close()
         self.buckets.close()
 
     async def fetch_channel(
-        self, channel: typing.Union[channels.PartialChannel, bases.Snowflake, int], /,
+        self, channel: typing.Union[channels.PartialChannel, bases.UniqueObjectT], /,
     ) -> channels.PartialChannel:
+        """Fetch a channel.
+
+        Parameters
+        ----------
+        channel : hikari.models.channels.PartialChannel | hikari.models.bases.Snowflake | int | str
+            The channel object to fetch. This can be an existing reference to a
+            channel object (if you want a more up-to-date representation, or it
+            can be a snowflake representation of the channel ID.
+
+        Returns
+        -------
+        hikari.models.channels.PartialChannel
+            The resultant channel.
+
+        Raises
+        ------
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to access the channel.
+        hikari.errors.NotFound
+            If the channel is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
         route = routes.GET_CHANNEL.compile(channel=conversions.value_to_snowflake(channel))
         response = await self._request(route)
         return self._app.entity_factory.deserialize_channel(response)
 
+    _GuildChannelT = typing.TypeVar("_GuildChannelT", bound=channels.GuildChannel, contravariant=True)
+
+    # This overload just tells any static type checker that if we input, say,
+    # a GuildTextChannel, we should always expect a GuildTextChannel as the
+    # result. This only applies to actual Channel types... we cannot infer the
+    # result of calling this endpoint with a snowflake.
+    @typing.overload
     async def edit_channel(
         self,
-        channel: typing.Union[channels.PartialChannel, bases.Snowflake, int],
+        channel: _GuildChannelT,
+        /,
+        *,
+        name: typing.Union[unset.Unset, str] = unset.UNSET,
+        position: typing.Union[unset.Unset, int] = unset.UNSET,
+        topic: typing.Union[unset.Unset, str] = unset.UNSET,
+        nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
+        bitrate: typing.Union[unset.Unset, int] = unset.UNSET,
+        user_limit: typing.Union[unset.Unset, int] = unset.UNSET,
+        rate_limit_per_user: typing.Union[unset.Unset, more_typing.TimeSpanT] = unset.UNSET,
+        permission_overwrites: typing.Union[unset.Unset, typing.Sequence[channels.PermissionOverwrite]] = unset.UNSET,
+        parent_category: typing.Union[unset.Unset, channels.GuildCategory] = unset.UNSET,
+        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+    ) -> _GuildChannelT:
+        """Edit a guild channel, given an existing guild channel object."""
+
+    async def edit_channel(
+        self,
+        channel: typing.Union[channels.PartialChannel, bases.UniqueObjectT],
         /,
         *,
         name: typing.Union[unset.Unset, str] = unset.UNSET,
@@ -338,6 +421,38 @@ class REST(http_client.HTTPClient):
         parent_category: typing.Union[unset.Unset, channels.GuildCategory] = unset.UNSET,
         reason: typing.Union[unset.Unset, str] = unset.UNSET,
     ) -> channels.PartialChannel:
+        """Edit a channel.
+
+        Parameters
+        ----------
+        channel
+        name
+        position
+        topic
+        nsfw
+        bitrate
+        user_limit
+        rate_limit_per_user
+        permission_overwrites
+        parent_category
+        reason
+
+        Returns
+        -------
+
+        Raises
+        ------
+        hikari.errors.BadRequest
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to edit the channel
+        hikari.errors.NotFound
+            If the channel is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
         route = routes.PATCH_CHANNEL.compile(channel=conversions.value_to_snowflake(channel))
         payload = {}
         conversions.put_if_specified(payload, "name", name)
@@ -354,10 +469,28 @@ class REST(http_client.HTTPClient):
                 self._app.entity_factory.serialize_permission_overwrite(p) for p in permission_overwrites
             ]
 
-        response = await self._request(route, body=payload, reason=reason,)
+        response = await self._request(route, body=payload, reason=reason)
         return self._app.entity_factory.deserialize_channel(response)
 
-    async def delete_channel(self, channel: typing.Union[channels.PartialChannel, bases.Snowflake, int], /) -> None:
+    async def delete_channel(self, channel: typing.Union[channels.PartialChannel, bases.UniqueObjectT], /) -> None:
+        """Delete a channel in a guild, or close a DM.
+
+        Parameters
+        ----------
+        channel
+
+        Raises
+        ------
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to delete the channel in a guild.
+        hikari.errors.NotFound
+            If the channel is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+
+        """
         route = routes.DELETE_CHANNEL.compile(channel=conversions.value_to_snowflake(channel))
         await self._request(route)
 
@@ -371,7 +504,7 @@ class REST(http_client.HTTPClient):
         deny: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
         reason: typing.Union[unset.Unset, str] = unset.UNSET,
     ) -> None:
-        ...
+        """Edit permissions for a target entity."""
 
     @typing.overload
     async def edit_permission_overwrites(
@@ -384,7 +517,7 @@ class REST(http_client.HTTPClient):
         deny: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
         reason: typing.Union[unset.Unset, str] = unset.UNSET,
     ) -> None:
-        ...
+        """Edit permissions for a given entity ID and type."""
 
     async def edit_permission_overwrites(
         self,
@@ -396,6 +529,32 @@ class REST(http_client.HTTPClient):
         deny: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
         reason: typing.Union[unset.Unset, str] = unset.UNSET,
     ) -> None:
+        """Edit permissions for a specific entity in the given guild channel.
+
+        Parameters
+        ----------
+        channel
+        target
+        target_type
+        allow
+        deny
+        reason
+
+        Raises
+        ------
+        hikari.errors.BadRequest
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to edit the permission overwrites.
+        hikari.errors.NotFound
+            If the channel is not found or the target is not found if it is
+            a role.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
+
         if unset.is_unset(target_type):
             if isinstance(target, users.User):
                 target_type = channels.PermissionOverwriteType.MEMBER
@@ -422,6 +581,24 @@ class REST(http_client.HTTPClient):
         channel: typing.Union[channels.GuildChannel, bases.UniqueObjectT],
         target: typing.Union[channels.PermissionOverwrite, guilds.Role, users.User, bases.UniqueObjectT],
     ) -> None:
+        """Delete a custom permission for an entity in a given guild channel.
+
+        Parameters
+        ----------
+        channel
+        target
+
+        Raises
+        ------
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to delete the permission overwrite.
+        hikari.errors.NotFound
+            If the channel is not found or the target is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
         route = routes.DELETE_CHANNEL_PERMISSIONS.compile(
             channel=conversions.value_to_snowflake(channel), overwrite=conversions.value_to_snowflake(target),
         )
@@ -430,6 +607,26 @@ class REST(http_client.HTTPClient):
     async def fetch_channel_invites(
         self, channel: typing.Union[channels.GuildChannel, bases.UniqueObjectT], /
     ) -> typing.Sequence[invites.InviteWithMetadata]:
+        """Fetch all invites pointing to the given guild channel.
+
+        Parameters
+        ----------
+        channel
+
+        Returns
+        -------
+
+        Raises
+        ------
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to view the invites for the given channel.
+        hikari.errors.NotFound
+            If the channel is not found in any guilds you are a member of.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
         route = routes.GET_CHANNEL_INVITES.compile(channel=conversions.value_to_snowflake(channel))
         response = await self._request(route)
         return conversions.json_to_collection(response, self._app.entity_factory.deserialize_invite_with_metadata)
@@ -447,6 +644,36 @@ class REST(http_client.HTTPClient):
         target_user_type: typing.Union[unset.Unset, invites.TargetUserType] = unset.UNSET,
         reason: typing.Union[unset.Unset, str] = unset.UNSET,
     ) -> invites.InviteWithMetadata:
+        """Create an invite to the given guild channel.
+
+        Parameters
+        ----------
+        channel
+        max_age
+        max_uses
+        temporary
+        unique
+        target_user
+        target_user_type
+        reason
+
+        Returns
+        -------
+
+        Raises
+        ------
+        hikari.errors.BadRequest
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to create the given channel.
+        hikari.errors.NotFound
+            If the channel is not found, or if the target user does not exist,
+            if specified.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
         payload = {}
         conversions.put_if_specified(payload, "max_age", max_age, conversions.timespan_to_int)
         conversions.put_if_specified(payload, "max_uses", max_uses)
@@ -461,11 +688,58 @@ class REST(http_client.HTTPClient):
     def trigger_typing(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
     ) -> rest_utils.TypingIndicator:
+        """Trigger typing in a text channel.
+
+        Parameters
+        ----------
+        channel
+
+        Returns
+        -------
+
+        Raises
+        ------
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to read messages or send messages in the
+            text channel.
+        hikari.errors.NotFound
+            If the channel is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+
+        !!! note
+            The exceptions on this endpoint will only be raised once the result
+            is awaited or interacted with. Invoking this function itself will
+            not raise any of the above types.
+        """
         return rest_utils.TypingIndicator(channel, self._request)
 
     async def fetch_pins(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
-    ) -> typing.Sequence[messages.Message]:
+    ) -> typing.Sequence[messages_.Message]:
+        """Fetch the pinned messages in this text channel.
+
+        Parameters
+        ----------
+        channel
+
+        Returns
+        -------
+
+        Raises
+        ------
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to read messages or send messages in the
+            text channel.
+        hikari.errors.NotFound
+            If the channel is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
         route = routes.GET_CHANNEL_PINS.compile(channel=conversions.value_to_snowflake(channel))
         response = await self._request(route)
         return conversions.json_to_collection(response, self._app.entity_factory.deserialize_message)
@@ -473,8 +747,27 @@ class REST(http_client.HTTPClient):
     async def pin_message(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        message: typing.Union[messages.Message, bases.UniqueObjectT],
+        message: typing.Union[messages_.Message, bases.UniqueObjectT],
     ) -> None:
+        """Pin an existing message in the given text channel.
+
+        Parameters
+        ----------
+        channel
+        message
+
+        Raises
+        ------
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to pin messages in the given channel.
+        hikari.errors.NotFound
+            If the channel is not found, or if the message does not exist in
+            the given channel.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
         route = routes.PUT_CHANNEL_PINS.compile(
             channel=conversions.value_to_snowflake(channel), message=conversions.value_to_snowflake(message),
         )
@@ -483,8 +776,32 @@ class REST(http_client.HTTPClient):
     async def unpin_message(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        message: typing.Union[messages.Message, bases.UniqueObjectT],
+        message: typing.Union[messages_.Message, bases.UniqueObjectT],
     ) -> None:
+        """
+
+        Parameters
+        ----------
+        channel
+        message
+
+        Raises
+        ------
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions pin messages in the given channel.
+        hikari.errors.NotFound
+            If the channel is not found or the message is not a pinned message
+            in the given channel.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+
+        !!! note
+            The exceptions on this endpoint will only be raised once the result
+            is awaited or interacted with. Invoking this function itself will
+            not raise any of the above types.
+        """
         route = routes.DELETE_CHANNEL_PIN.compile(
             channel=conversions.value_to_snowflake(channel), message=conversions.value_to_snowflake(message),
         )
@@ -493,8 +810,8 @@ class REST(http_client.HTTPClient):
     @typing.overload
     def fetch_messages(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObjectT], /
-    ) -> iterators.LazyIterator[messages.Message]:
-        ...
+    ) -> iterators.LazyIterator[messages_.Message]:
+        """Fetch messages, newest first, sent in the given channel."""
 
     @typing.overload
     def fetch_messages(
@@ -503,8 +820,8 @@ class REST(http_client.HTTPClient):
         /,
         *,
         before: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> iterators.LazyIterator[messages.Message]:
-        ...
+    ) -> iterators.LazyIterator[messages_.Message]:
+        """Fetch messages, newest first, sent before a timestamp in the channel."""
 
     @typing.overload
     def fetch_messages(
@@ -513,8 +830,8 @@ class REST(http_client.HTTPClient):
         /,
         *,
         around: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> iterators.LazyIterator[messages.Message]:
-        ...
+    ) -> iterators.LazyIterator[messages_.Message]:
+        """Fetch messages sent around a given time in the channel."""
 
     @typing.overload
     def fetch_messages(
@@ -523,21 +840,60 @@ class REST(http_client.HTTPClient):
         /,
         *,
         after: typing.Union[datetime.datetime, bases.UniqueObjectT],
-    ) -> iterators.LazyIterator[messages.Message]:
-        ...
+    ) -> iterators.LazyIterator[messages_.Message]:
+        """Fetch messages, oldest first, sent after a timestamp in the channel."""
 
     def fetch_messages(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         /,
-        **kwargs: typing.Optional[typing.Union[datetime.datetime, bases.UniqueObjectT]],
-    ) -> iterators.LazyIterator[messages.Message]:
-        if len(kwargs) == 1 and any(direction in kwargs for direction in ("before", "after", "around")):
-            direction, timestamp = kwargs.popitem()
-        elif not kwargs:
-            direction, timestamp = "before", bases.Snowflake.max()
+        *,
+        before: typing.Union[unset.Unset, datetime.datetime, bases.UniqueObjectT] = unset.UNSET,
+        after: typing.Union[unset.Unset, datetime.datetime, bases.UniqueObjectT] = unset.UNSET,
+        around: typing.Union[unset.Unset, datetime.datetime, bases.UniqueObjectT] = unset.UNSET,
+    ) -> iterators.LazyIterator[messages_.Message]:
+        """Browse the message history for a given text channel.
+
+        Parameters
+        ----------
+        channel
+        before
+        after
+        around
+
+        Returns
+        -------
+
+        Raises
+        ------
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to read message history in the given
+            channel.
+        hikari.errors.NotFound
+            If the channel is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        TypeError
+            If you specify more than one of `before`, `after`, `about`.
+
+        !!! note
+            The exceptions on this endpoint (other than `TypeError`) will only
+            be raised once the result is awaited or interacted with. Invoking
+            this function itself will not raise anything (other than
+            `TypeError`).
+        """
+        if unset.count_unset_objects(before, after, around) < 2:
+            raise TypeError(f"Expected no kwargs, or maximum of one of 'before', 'after', 'around'")
+        elif not unset.is_unset(before):
+            direction, timestamp = "before", before
+        elif not unset.is_unset(after):
+            direction, timestamp = "after", after
+        elif not unset.is_unset(around):
+            direction, timestamp = "around", around
         else:
-            raise TypeError(f"Expected no kwargs, or one of 'before', 'after', 'around', received: {kwargs}")
+            direction, timestamp = "before", bases.Snowflake.max()
 
         if isinstance(timestamp, datetime.datetime):
             timestamp = bases.Snowflake.from_datetime(timestamp)
@@ -553,8 +909,31 @@ class REST(http_client.HTTPClient):
     async def fetch_message(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        message: typing.Union[messages.Message, bases.UniqueObjectT],
-    ) -> messages.Message:
+        message: typing.Union[messages_.Message, bases.UniqueObjectT],
+    ) -> messages_.Message:
+        """Fetch a specific message in the given text channel.
+
+        Parameters
+        ----------
+        channel
+        message
+
+        Returns
+        -------
+
+        Raises
+        ------
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to read message history in the given
+            channel.
+        hikari.errors.NotFound
+            If the channel is not found or the message is not found in the
+            given text channel.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
         route = routes.GET_CHANNEL_MESSAGE.compile(
             channel=conversions.value_to_snowflake(channel), message=conversions.value_to_snowflake(message),
         )
@@ -573,7 +952,48 @@ class REST(http_client.HTTPClient):
         mentions_everyone: bool = False,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObjectT]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObjectT, guilds.Role]], bool] = True,
-    ) -> messages.Message:
+    ) -> messages_.Message:
+        """Create a message in the given channel.
+
+        Parameters
+        ----------
+        channel
+        text
+        embed
+        attachments
+        tts
+        nonce
+        mentions_everyone
+        user_mentions
+        role_mentions
+
+        Returns
+        -------
+
+        Raises
+        ------
+        hikari.errors.BadRequest
+            This may be raised in several discrete situations, such as messages
+            being empty with no attachments or embeds; messages with more than
+            2000 characters in them, embeds that exceed one of the many embed
+            limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; users in `user_mentions` not being
+            mentioned in the message content; roles in `role_mentions` not
+            being mentioned in the message content.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to send messages in the given channel.
+        hikari.errors.NotFound
+            If the channel is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+
+        !!! warn
+            You are expected to make a connection to the gateway and identify
+            once before being able to use this endpoint for a bot.
+        """
+
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=conversions.value_to_snowflake(channel))
 
         payload = {"allowed_mentions": self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions)}
@@ -596,15 +1016,45 @@ class REST(http_client.HTTPClient):
     async def edit_message(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        message: typing.Union[messages.Message, bases.UniqueObjectT],
+        message: typing.Union[messages_.Message, bases.UniqueObjectT],
         text: typing.Union[unset.Unset, typing.Any] = unset.UNSET,
         *,
         embed: typing.Union[unset.Unset, embeds_.Embed] = unset.UNSET,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObjectT]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObjectT, guilds.Role]], bool] = True,
-        flags: typing.Union[unset.Unset, messages.MessageFlag] = unset.UNSET,
-    ) -> messages.Message:
+        flags: typing.Union[unset.Unset, messages_.MessageFlag] = unset.UNSET,
+    ) -> messages_.Message:
+        """Edit an existing message in a given channel.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        Raises
+        ------
+        hikari.errors.BadRequest
+            This may be raised in several discrete situations, such as messages
+            being empty with no embeds; messages with more than 2000 characters
+            in them, embeds that exceed one of the many embed
+            limits; invalid image URLs in embeds; users in `user_mentions` not
+            being mentioned in the message content; roles in `role_mentions` not
+            being mentioned in the message content.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to send messages in the given channel; if
+            you try to change the contents of another user's message; or if you
+            try to edit the flags on another user's message without the
+            permissions to manage messages_.
+        hikari.errors.NotFound
+            If the channel or message is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
+
         route = routes.PATCH_CHANNEL_MESSAGE.compile(
             channel=conversions.value_to_snowflake(channel), message=conversions.value_to_snowflake(message),
         )
@@ -619,8 +1069,27 @@ class REST(http_client.HTTPClient):
     async def delete_message(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        message: typing.Union[messages.Message, bases.UniqueObjectT],
+        message: typing.Union[messages_.Message, bases.UniqueObjectT],
     ) -> None:
+        """Delete a given message in a given channel.
+
+        Parameters
+        ----------
+        channel
+        message
+
+        Raises
+        ------
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack the permissions to manage messages, and the message is
+            not composed by your associated user.
+        hikari.errors.NotFound
+            If the channel or message is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
         route = routes.DELETE_CHANNEL_MESSAGE.compile(
             channel=conversions.value_to_snowflake(channel), message=conversions.value_to_snowflake(message),
         )
@@ -628,22 +1097,65 @@ class REST(http_client.HTTPClient):
 
     async def delete_messages(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        *messages_to_delete: typing.Union[messages.Message, bases.UniqueObjectT],
+        channel: typing.Union[channels.GuildTextChannel, bases.UniqueObjectT],
+        *messages: typing.Union[messages_.Message, bases.UniqueObjectT],
     ) -> None:
-        if 2 <= len(messages_to_delete) <= 100:
+        """Bulk-delete between 2 and 100 messages from the given guild channel.
+
+        Parameters
+        ----------
+        channel
+        *messages
+
+        Raises
+        ------
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack the permissions to manage messages, and the message is
+            not composed by your associated user.
+        hikari.errors.NotFound
+            If the channel or message is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        TypeError
+            If you do not provide between 2 and 100 messages (inclusive).
+        """
+        if 2 <= len(messages) <= 100:
             route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=conversions.value_to_snowflake(channel))
-            payload = {"messages": [conversions.value_to_snowflake(m) for m in messages_to_delete]}
+            payload = {"messages": [conversions.value_to_snowflake(m) for m in messages]}
             await self._request(route, body=payload)
         else:
             raise TypeError("Must delete a minimum of 2 messages and a maximum of 100")
 
-    async def create_reaction(
+    async def add_reaction(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        message: typing.Union[messages.Message, bases.UniqueObjectT],
+        message: typing.Union[messages_.Message, bases.UniqueObjectT],
         emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
     ) -> None:
+        """Add a reaction emoji to a message in a given channel.
+
+        Parameters
+        ----------
+        channel
+        message
+        emoji
+
+        Raises
+        ------
+        hikari.errors.BadRequest
+            If an invalid unicode emoji is given, or if the given custom emoji
+            does not exist.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to add reactions to messages.
+        hikari.errors.NotFound
+            If the channel or message is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
         route = routes.PUT_MY_REACTION.compile(
             emoji=emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji),
             channel=conversions.value_to_snowflake(channel),
@@ -654,9 +1166,29 @@ class REST(http_client.HTTPClient):
     async def delete_my_reaction(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        message: typing.Union[messages.Message, bases.UniqueObjectT],
+        message: typing.Union[messages_.Message, bases.UniqueObjectT],
         emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
     ) -> None:
+        """Delete a reaction that your application user created.
+
+        Parameters
+        ----------
+        channel
+        message
+        emoji
+
+        Raises
+        ------
+        hikari.errors.BadRequest
+            If an invalid unicode emoji is given, or if the given custom emoji
+            does not exist.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFound
+            If the channel or message is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
         route = routes.DELETE_MY_REACTION.compile(
             emoji=emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji),
             channel=conversions.value_to_snowflake(channel),
@@ -667,7 +1199,7 @@ class REST(http_client.HTTPClient):
     async def delete_all_reactions_for_emoji(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        message: typing.Union[messages.Message, bases.UniqueObjectT],
+        message: typing.Union[messages_.Message, bases.UniqueObjectT],
         emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
     ) -> None:
         route = routes.DELETE_REACTION_EMOJI.compile(
@@ -680,7 +1212,7 @@ class REST(http_client.HTTPClient):
     async def delete_reaction(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        message: typing.Union[messages.Message, bases.UniqueObjectT],
+        message: typing.Union[messages_.Message, bases.UniqueObjectT],
         emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
         user: typing.Union[users.User, bases.UniqueObjectT],
     ) -> None:
@@ -695,7 +1227,7 @@ class REST(http_client.HTTPClient):
     async def delete_all_reactions(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        message: typing.Union[messages.Message, bases.UniqueObjectT],
+        message: typing.Union[messages_.Message, bases.UniqueObjectT],
     ) -> None:
         route = routes.DELETE_ALL_REACTIONS.compile(
             channel=conversions.value_to_snowflake(channel), message=conversions.value_to_snowflake(message),
@@ -706,7 +1238,7 @@ class REST(http_client.HTTPClient):
     def fetch_reactions_for_emoji(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        message: typing.Union[messages.Message, bases.UniqueObjectT],
+        message: typing.Union[messages_.Message, bases.UniqueObjectT],
         emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
     ) -> iterators.LazyIterator[users.User]:
         return iterators.ReactorIterator(
@@ -817,7 +1349,7 @@ class REST(http_client.HTTPClient):
         mentions_everyone: bool = False,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObjectT]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObjectT, guilds.Role]], bool] = True,
-    ) -> messages.Message:
+    ) -> messages_.Message:
         if unset.is_unset(token):
             route = routes.POST_WEBHOOK.compile(webhook=conversions.value_to_snowflake(webhook))
             no_auth = False

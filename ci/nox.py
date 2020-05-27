@@ -19,6 +19,7 @@
 """Wrapper around nox to give default job kwargs."""
 import functools
 import os
+import subprocess
 from typing import Callable
 
 from nox.sessions import Session
@@ -46,3 +47,9 @@ def inherit_environment_vars(func):
             session.env[n] = v
         return func(session)
     return logic
+
+
+def shell(arg, *args):
+    command = " ".join((arg, *args))
+    print("\033[35mnox > shell >\033[0m", command)
+    return subprocess.check_call(command, shell=True)
