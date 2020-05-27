@@ -24,6 +24,7 @@ import abc
 
 from hikari import gateway_dispatcher
 from hikari import gateway_zookeeper
+from hikari import http_settings as http_settings_
 from hikari import rest_app
 
 
@@ -37,3 +38,8 @@ class IBot(rest_app.IRESTApp, gateway_zookeeper.IGatewayZookeeper, gateway_dispa
     """
 
     __slots__ = ()
+
+    @property
+    @abc.abstractmethod
+    def http_settings(self) -> http_settings_.HTTPSettings:
+        """The HTTP settings to use."""

@@ -40,7 +40,7 @@ if typing.TYPE_CHECKING:
     from hikari import cache as cache_
     from hikari import entity_factory as entity_factory_
     from hikari import event_consumer as event_consumer_
-    from hikari import http_settings
+    from hikari import http_settings as http_settings_
     from hikari import event_dispatcher
     from hikari import gateway_zookeeper
     from hikari.models import intents as intents_
@@ -50,7 +50,7 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
     def __init__(
         self,
         *,
-        config: http_settings.HTTPSettings,
+        config: http_settings_.HTTPSettings,
         debug: bool = False,
         gateway_url: str,
         gateway_version: int = 6,
@@ -70,6 +70,7 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
         self._logger = class_helpers.get_logger(self)
 
         self._cache = cache_impl.CacheImpl()
+        self._config = config
         self._event_manager = event_manager.EventManagerImpl()
         self._entity_factory = entity_factory_impl.EntityFactoryImpl()
 
@@ -122,6 +123,10 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
     @property
     def event_consumer(self) -> event_consumer_.IEventConsumer:
         return self._event_manager
+
+    @property
+    def http_settings(self) -> http_settings_.HTTPSettings:
+        return self._config
 
     async def close(self) -> None:
         await super().close()
