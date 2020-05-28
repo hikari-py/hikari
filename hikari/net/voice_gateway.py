@@ -250,16 +250,14 @@ class VoiceGateway(http_client.HTTPClient):
 
             if op == self._GatewayOpcode.READY:
                 self.logger.debug(
-                    "voice websocket is ready [session_id:%s, url:%s]",
-                    self._session_id,
-                    self._url,
+                    "voice websocket is ready [session_id:%s, url:%s]", self._session_id, self._url,
                 )
             elif op == self._GatewayOpcode.RESUMED:
                 self.logger.debug(
                     "voice websocket has resumed [session_id:%s, nonce:%s, url:%s]",
                     self._session_id,
                     self._nonce,
-                    self._url
+                    self._url,
                 )
             elif op == self._GatewayOpcode.HEARTBEAT:
                 self.logger.debug("received HEARTBEAT; sending HEARTBEAT ACK")

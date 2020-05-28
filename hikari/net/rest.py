@@ -29,9 +29,9 @@ import typing
 
 import aiohttp
 
+from hikari import component
 from hikari import errors
 from hikari import http_settings
-from hikari import rest_app
 from hikari.internal import class_helpers
 from hikari.internal import conversions
 from hikari.internal import more_collections
@@ -45,6 +45,8 @@ from hikari.net import rest_utils
 from hikari.net import routes
 
 if typing.TYPE_CHECKING:
+    from hikari import app as app_
+
     from hikari.models import applications
     from hikari.models import audit_logs
     from hikari.models import bases
@@ -63,7 +65,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import webhooks
 
 
-class REST(http_client.HTTPClient):
+class REST(http_client.HTTPClient, component.IComponent):
     """Implementation of the V6 and V7-compatible Discord REST API.
 
     This manages making HTTP/1.1 requests to the API and using the entity
@@ -103,7 +105,7 @@ class REST(http_client.HTTPClient):
     def __init__(
         self,
         *,
-        app: rest_app.IRESTApp,
+        app: app_.IRESTApp,
         config: http_settings.HTTPSettings,
         debug: bool = False,
         token: typing.Optional[str],
@@ -131,6 +133,10 @@ class REST(http_client.HTTPClient):
         self._app = app
         self._token = f"{token_type.title()} {token}" if token is not None else None
         self._url = url.format(self)
+
+    @property
+    def app(self) -> rest_app.IRESTApp:
+        return self._app
 
     async def _request(
         self,

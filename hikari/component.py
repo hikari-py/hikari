@@ -16,34 +16,21 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-from __future__ import annotations
+"""Defines a base interface for application components to derive from."""
 
-__all__ = ["IRESTApp"]
+from __future__ import annotations
 
 import abc
 import typing
 
-from hikari import base_app
-
 if typing.TYPE_CHECKING:
-    from hikari.net import rest
+    from hikari import app as app_
 
 
-class IRESTApp(base_app.IBaseApp, abc.ABC):
-    """Component specialization that is used for REST-only applications.
-
-    Examples may include web dashboards, or applications where no gateway
-    connection is required. As a result, no event conduit is provided by
-    these implementations.
-    """
-
+class IComponent(abc.ABC):
     __slots__ = ()
 
     @property
     @abc.abstractmethod
-    def rest(self) -> rest.REST:
-        """REST API."""
-
-    @abc.abstractmethod
-    async def close(self) -> None:
-        """Close any open resources safely."""
+    def app(self) -> app_.IApp:
+        """The owning application object."""

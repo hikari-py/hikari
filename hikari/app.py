@@ -16,23 +16,111 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Core interfaces for a Hikari application."""
 from __future__ import annotations
 
-__all__ = ["IGatewayZookeeper"]
+__all__ = ["IApp"]
 
 import abc
-import datetime
+import logging
 import typing
 
-from hikari import base_app
-from hikari.models import guilds
+from concurrent import futures
 
 if typing.TYPE_CHECKING:
-    from hikari import event_consumer
+    import datetime
+
+    from hikari import cache as cache_
+    from hikari import entity_factory as entity_factory_
+    from hikari import event_consumer as event_consumer_
+    from hikari import event_dispatcher as event_dispatcher_
+    from hikari.models import guilds
     from hikari.net import gateway
+    from hikari.net import rest as rest_
 
 
-class IGatewayZookeeper(base_app.IBaseApp, abc.ABC):
+class IApp(abc.ABC):
+    """Core components that any Hikari-based application will usually need."""
+
+    __slots__ = ()
+
+    @property
+    @abc.abstractmethod
+    def logger(self) -> logging.Logger:
+        """Logger for logging messages."""
+
+    @property
+    @abc.abstractmethod
+    def cache(self) -> cache_.ICache:
+        """Entity cache."""
+
+    @property
+    @abc.abstractmethod
+    def entity_factory(self) -> entity_factory_.IEntityFactory:
+        """Entity creator and updater facility."""
+
+    @property
+    @abc.abstractmethod
+    def thread_pool(self) -> typing.Optional[futures.ThreadPoolExecutor]:
+        """The optional library-wide thread-pool to utilise for file IO."""
+
+    @abc.abstractmethod
+    async def close(self) -> None:
+        """Safely shut down all resources."""
+
+
+class IRESTApp(IApp, abc.ABC):
+    """Component specialization that is used for REST-only applications.
+
+    Examples may include web dashboards, or applications where no gateway
+    connection is required. As a result, no event conduit is provided by
+    these implementations.
+    """
+
+    __slots__ = ()
+
+    @property
+    @abc.abstractmethod
+    def rest(self) -> rest_.REST:
+        """REST API."""
+
+
+class IGatewayConsumer(IApp, abc.ABC):
+    """Component specialization that supports consumption of raw events.
+
+    This may be combined with `IGatewayZookeeper` for most single-process
+    bots, or may be a specific component for large distributed applications
+    that consume events from a message queue, for example.
+    """
+
+    __slots__ = ()
+
+    @property
+    @abc.abstractmethod
+    def event_consumer(self) -> event_consumer_.IEventConsumer:
+        """Raw event consumer."""
+
+
+class IGatewayDispatcher(IApp, abc.ABC):
+    """Component specialization that supports dispatching of events.
+
+    These events are expected to be instances of
+    `hikari.events.base.HikariEvent`.
+
+    This may be combined with `IGatewayZookeeper` for most single-process
+    bots, or may be a specific component for large distributed applications
+    that consume events from a message queue, for example.
+    """
+
+    __slots__ = ()
+
+    @property
+    @abc.abstractmethod
+    def event_dispatcher(self) -> event_dispatcher_.IEventDispatcher:
+        """Event dispatcher and waiter."""
+
+
+class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
     """Component specialization that looks after a set of shards.
 
     These events will be produced by a low-level gateway implementation, and
@@ -47,17 +135,12 @@ class IGatewayZookeeper(base_app.IBaseApp, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def event_consumer(self) -> event_consumer.IEventConsumer:
-        """Raw event consumer."""
-
-    @property
-    @abc.abstractmethod
     def gateway_shards(self) -> typing.Mapping[int, gateway.Gateway]:
         """Mapping of each shard ID to the corresponding client for it."""
 
     @property
     @abc.abstractmethod
-    def shard_count(self) -> int:
+    def gateway_shard_count(self) -> int:
         """The number of shards in the entire distributed application."""
 
     @abc.abstractmethod

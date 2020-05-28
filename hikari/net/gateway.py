@@ -33,11 +33,12 @@ import zlib
 import aiohttp
 import attr
 
+
+from hikari import component
 from hikari import errors
 from hikari import http_settings
 from hikari.internal import class_helpers
 from hikari.internal import more_enums
-from hikari.internal import more_typing
 from hikari.internal import ratelimits
 from hikari.internal import unset
 from hikari.models import bases
@@ -49,7 +50,9 @@ from hikari.net import user_agents
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import app as app_
     from hikari.models import intents as intents_
+    from hikari.internal import more_typing
 
 
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)
@@ -69,21 +72,18 @@ class Activity:
     """The activity type."""
 
 
-class Gateway(http_client.HTTPClient):
+class Gateway(http_client.HTTPClient, component.IComponent):
     """Implementation of a V6 and V7 compatible gateway.
 
     Parameters
     ----------
+    app : hikari.gateway_dispatcher.IGatewayConsumer
+        The base application.
     config : hikari.http_settings.HTTPSettings
         The aiohttp settings to use for the client session.
     debug : bool
         If `True`, each sent and received payload is dumped to the logs. If
         `False`, only the fact that data has been sent/received will be logged.
-    dispatch : coroutine function with signature `(Gateway, str, dict) -> None`
-        The dispatch coroutine to invoke each time an event is dispatched.
-        This is a tri-consumer that takes this gateway object as the first
-        parameter, the event name as the second parameter, and the JSON
-        event payload as a `dict` for the third parameter.
     initial_activity : Activity | None
         The initial activity to appear to have for this shard.
     initial_idle_since : datetime.datetime | None
@@ -166,14 +166,12 @@ class Gateway(http_client.HTTPClient):
     class _InvalidSession(RuntimeError):
         can_resume: bool = False
 
-    RawDispatchT = typing.Callable[["Gateway", str, more_typing.JSONObject], more_typing.Coroutine[None]]
-
     def __init__(
         self,
         *,
+        app: app_.IGatewayConsumer,
         config: http_settings.HTTPSettings,
         debug: bool = False,
-        dispatch: RawDispatchT,
         initial_activity: typing.Optional[Activity] = None,
         initial_idle_since: typing.Optional[datetime.datetime] = None,
         initial_is_afk: typing.Optional[bool] = None,
@@ -201,8 +199,8 @@ class Gateway(http_client.HTTPClient):
             trust_env=config.trust_env,
         )
         self._activity = initial_activity
+        self._app = app
         self._backoff = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
-        self._dispatch = dispatch
         self._handshake_event = asyncio.Event()
         self._idle_since = initial_idle_since
         self._intents = intents
@@ -239,6 +237,10 @@ class Gateway(http_client.HTTPClient):
         new_query = urllib.parse.urlencode(new_query)
 
         self.url = urllib.parse.urlunparse((scheme, netloc, path, params, new_query, ""))
+
+    @property
+    def app(self) -> app_.IGatewayConsumer:
+        return self._app
 
     @property
     def is_alive(self) -> bool:
@@ -321,7 +323,7 @@ class Gateway(http_client.HTTPClient):
 
             # Technically we are connected after the hello, but this ensures we can send and receive
             # before firing that event.
-            asyncio.create_task(self._dispatch(self, "CONNECTED", {}), name=f"shard {self._shard_id} CONNECTED")
+            asyncio.create_task(self._dispatch("CONNECTED", {}), name=f"shard {self._shard_id} CONNECTED")
 
             # We should ideally set this after HELLO, but it should be fine
             # here as well. If we don't heartbeat in time, something probably
@@ -372,9 +374,7 @@ class Gateway(http_client.HTTPClient):
         finally:
             if not math.isnan(self.connected_at):
                 # Only dispatch this if we actually connected before we failed!
-                asyncio.create_task(
-                    self._dispatch(self, "DISCONNECTED", {}), name=f"shard {self._shard_id} DISCONNECTED"
-                )
+                asyncio.create_task(self._dispatch("DISCONNECTED", {}), name=f"shard {self._shard_id} DISCONNECTED")
 
             self.connected_at = float("nan")
 
@@ -547,7 +547,7 @@ class Gateway(http_client.HTTPClient):
                     self.logger.info("connection has resumed [session:%s, seq:%s]", self.session_id, self._seq)
                     self._handshake_event.set()
 
-                asyncio.create_task(self._dispatch(self, event, data), name=f"shard {self._shard_id} {event}")
+                asyncio.create_task(self._dispatch(event, data), name=f"shard {self._shard_id} {event}")
 
             elif op == self._GatewayOpcode.HEARTBEAT:
                 self.logger.debug("received HEARTBEAT; sending HEARTBEAT ACK")
@@ -630,6 +630,9 @@ class Gateway(http_client.HTTPClient):
         message = json.dumps(payload)
         self._log_debug_payload(message, "sending json payload")
         await self._ws.send_str(message)
+
+    def _dispatch(self, event_name: str, payload: more_typing.JSONType) -> typing.Coroutine[None]:
+        return self._app.event_consumer.consume_raw_event(self, event_name, payload)
 
     @staticmethod
     def _now() -> float:

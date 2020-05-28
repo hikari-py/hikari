@@ -22,13 +22,11 @@ __all__ = ["IBot"]
 
 import abc
 
-from hikari import gateway_dispatcher
-from hikari import gateway_zookeeper
+from hikari import app as app_
 from hikari import http_settings as http_settings_
-from hikari import rest_app
 
 
-class IBot(rest_app.IRESTApp, gateway_zookeeper.IGatewayZookeeper, gateway_dispatcher.IGatewayDispatcher, abc.ABC):
+class IBot(app_.IRESTApp, app_.IGatewayZookeeper, app_.IGatewayDispatcher, abc.ABC):
     """Component for single-process bots.
 
     Bots are components that have access to a REST API, an event dispatcher,

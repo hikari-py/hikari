@@ -42,7 +42,6 @@ if typing.TYPE_CHECKING:
     from hikari import event_consumer as event_consumer_
     from hikari import http_settings as http_settings_
     from hikari import event_dispatcher
-    from hikari import gateway_zookeeper
     from hikari.models import intents as intents_
 
 
@@ -69,10 +68,10 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
     ):
         self._logger = class_helpers.get_logger(self)
 
-        self._cache = cache_impl.CacheImpl()
+        self._cache = cache_impl.CacheImpl(app=self)
         self._config = config
-        self._event_manager = event_manager.EventManagerImpl()
-        self._entity_factory = entity_factory_impl.EntityFactoryImpl()
+        self._event_manager = event_manager.EventManagerImpl(app=self)
+        self._entity_factory = entity_factory_impl.EntityFactoryImpl(app=self)
 
         self._rest = rest.REST(
             app=self, config=config, debug=debug, token=token, token_type="Bot", url=rest_url, version=rest_version,

@@ -24,6 +24,8 @@ __all__ = ["IEntityFactory"]
 import abc
 import typing
 
+from hikari import component
+
 if typing.TYPE_CHECKING:
     from hikari.internal import more_typing
     from hikari.models import applications
@@ -40,8 +42,8 @@ if typing.TYPE_CHECKING:
     from hikari.models import webhooks
 
 
-class IEntityFactory(abc.ABC):
-    """Interface for an entity factory implementation."""
+class IEntityFactory(component.IComponent, abc.ABC):
+    """Component that will serialize and deserialize JSON payloads."""
 
     __slots__ = ()
 

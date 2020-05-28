@@ -33,7 +33,7 @@ import typing
 
 import attr
 
-from hikari import rest_app
+from hikari import app as app_
 from hikari.internal import conversions
 from hikari.internal import unset
 from hikari.models import bases
@@ -88,7 +88,7 @@ class TypingIndicator:
 
 @attr.s(auto_attribs=True, kw_only=True, slots=True)
 class GuildBuilder:
-    _app: rest_app.IRESTApp
+    _app: app_.IRESTApp
     _channels: typing.MutableSequence[more_typing.JSONObject] = attr.ib(factory=list)
     _counter: int = 0
     _name: typing.Union[unset.Unset, str]
