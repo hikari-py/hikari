@@ -136,12 +136,20 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
     @property
     @abc.abstractmethod
     def gateway_shards(self) -> typing.Mapping[int, gateway.Gateway]:
-        """Mapping of each shard ID to the corresponding client for it."""
+        """Mapping of each shard ID to the corresponding client for it.
+
+        If the shards have not started, and auto=sharding is in-place, then it
+        is acceptable for this to return an empty mapping.
+        """
 
     @property
     @abc.abstractmethod
     def gateway_shard_count(self) -> int:
-        """The number of shards in the entire distributed application."""
+        """The number of shards in the entire distributed application.
+
+        If the shards have not started, and auto=sharding is in-place, then it
+        is acceptable for this to return `0`.
+        """
 
     @abc.abstractmethod
     async def start(self) -> None:

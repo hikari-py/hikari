@@ -29,6 +29,7 @@ from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
 from hikari.internal import class_helpers
+from hikari.models import gateway as gateway_models
 from hikari.models import guilds
 from hikari.net import gateway
 from hikari.net import rest
@@ -51,7 +52,6 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
         *,
         config: http_settings_.HTTPSettings,
         debug: bool = False,
-        gateway_url: str,
         gateway_version: int = 6,
         initial_activity: typing.Optional[gateway.Activity] = None,
         initial_idle_since: typing.Optional[datetime.datetime] = None,
@@ -89,7 +89,6 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
             shard_ids=shard_ids,
             shard_count=shard_count,
             token=token,
-            url=gateway_url,
             use_compression=use_compression,
             version=gateway_version,
         )
@@ -130,3 +129,6 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
     async def close(self) -> None:
         await super().close()
         await self._rest.close()
+
+    async def _fetch_gateway_recommendations(self) -> gateway_models.GatewayBot:
+        return await self.rest.fetch_recommended_gateway_settings()

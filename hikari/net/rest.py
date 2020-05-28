@@ -128,6 +128,8 @@ class REST(http_client.HTTPClient, component.IComponent):
         )
         self.buckets = buckets.RESTBucketManager()
         self.global_rate_limit = ratelimits.ManualRateLimiter()
+        self._invalid_requests = 0
+        self._invalid_request_window = -float("inf")
         self.version = version
 
         self._app = app
@@ -135,7 +137,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         self._url = url.format(self)
 
     @property
-    def app(self) -> rest_app.IRESTApp:
+    def app(self) -> app_.IRESTApp:
         return self._app
 
     async def _request(

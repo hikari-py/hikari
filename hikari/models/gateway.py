@@ -23,53 +23,40 @@ from __future__ import annotations
 __all__ = ["GatewayBot", "SessionStartLimit"]
 
 import datetime
-import typing
 
 import attr
-
-from hikari.internal import marshaller
-from . import bases
-from . import guilds
 
 
 def _rest_after_deserializer(after: int) -> datetime.timedelta:
     return datetime.timedelta(milliseconds=after)
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class SessionStartLimit(bases.Entity, marshaller.Deserializable):
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class SessionStartLimit:
     """Used to represent information about the current session start limits."""
 
-    total: int = marshaller.attrib(deserializer=int, repr=True)
+    total: int = attr.ib(repr=True)
     """The total number of session starts the current bot is allowed."""
 
-    remaining: int = marshaller.attrib(deserializer=int, repr=True)
+    remaining: int = attr.ib(repr=True)
     """The remaining number of session starts this bot has."""
 
-    reset_after: datetime.timedelta = marshaller.attrib(deserializer=_rest_after_deserializer, repr=True)
+    reset_after: datetime.timedelta = attr.ib(repr=True)
     """When `SessionStartLimit.remaining` will reset for the current bot.
 
     After it resets it will be set to `SessionStartLimit.total`.
     """
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class GatewayBot(bases.Entity, marshaller.Deserializable):
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class GatewayBot:
     """Used to represent gateway information for the connected bot."""
 
-    url: str = marshaller.attrib(deserializer=str, repr=True)
+    url: str = attr.ib(repr=True)
     """The WSS URL that can be used for connecting to the gateway."""
 
-    shard_count: int = marshaller.attrib(raw_name="shards", deserializer=int, repr=True)
+    shard_count: int = attr.ib(repr=True)
     """The recommended number of shards to use when connecting to the gateway."""
 
-    session_start_limit: SessionStartLimit = marshaller.attrib(
-        deserializer=SessionStartLimit.deserialize, inherit_kwargs=True, repr=True
-    )
+    session_start_limit: SessionStartLimit = attr.ib(repr=True)
     """Information about the bot's current session start limit."""
-
-
-def _undefined_type_default() -> typing.Literal[guilds.ActivityType.PLAYING]:
-    return guilds.ActivityType.PLAYING

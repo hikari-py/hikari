@@ -22,9 +22,11 @@ from __future__ import annotations
 
 __all__ = ["EntityFactoryImpl"]
 
+import datetime
 import typing
 
 from hikari import entity_factory
+from hikari.models import gateway
 
 if typing.TYPE_CHECKING:
     from hikari import app as app_
@@ -34,7 +36,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import channels
     from hikari.models import embeds
     from hikari.models import emojis
-    from hikari.models import gateway
     from hikari.models import guilds
     from hikari.models import invites
     from hikari.models import users
@@ -116,7 +117,16 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         pass
 
     def deserialize_gateway_bot(self, payload: more_typing.JSONObject) -> gateway.GatewayBot:
-        pass
+        gateway_bot = gateway.GatewayBot()
+        gateway_bot.url = payload["url"]
+        gateway_bot.shard_count = int(payload["shards"])
+        session_start_limit_payload = payload["session_start_limit"]
+        session_start_limit = gateway.SessionStartLimit()
+        session_start_limit.total = int(session_start_limit_payload["total"])
+        session_start_limit.remaining = int(session_start_limit_payload["remaining"])
+        session_start_limit.reset_after = datetime.timedelta(milliseconds=session_start_limit_payload["reset_after"])
+        gateway_bot.session_start_limit = session_start_limit
+        return gateway_bot
 
     def deserialize_guild_widget(self, payload: more_typing.JSONObject) -> guilds.GuildWidget:
         pass
