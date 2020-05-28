@@ -27,6 +27,7 @@ from hikari import bot
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
+from hikari.impl import event_manager_core
 from hikari.impl import gateway_zookeeper
 from hikari.internal import class_helpers
 from hikari.models import gateway as gateway_models
