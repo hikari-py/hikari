@@ -53,7 +53,7 @@ class EventManagerImpl(event_dispatcher.IEventDispatcher, event_consumer.IEventC
 
     async def consume_raw_event(self, shard: gateway.Gateway, event_name: str, payload: more_typing.JSONType) -> None:
         try:
-            callback = getattr(self, "on_" + event_name.lower())
+            callback = getattr(self, "_on_" + event_name.lower())
             await callback(shard, payload)
         except AttributeError:
             self.logger.debug("ignoring unknown event %s", event_name)

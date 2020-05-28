@@ -23,10 +23,15 @@ __all__ = ["AbstractGatewayZookeeper"]
 import abc
 import asyncio
 import contextlib
+import datetime
+import inspect
+import os
+import platform
 import signal
 import time
 import typing
 
+from hikari import _about
 from hikari import app as app_
 from hikari import event_dispatcher
 from hikari.events import other
@@ -35,10 +40,8 @@ from hikari.internal import unset
 from hikari.net import gateway
 
 if typing.TYPE_CHECKING:
-    import datetime
-
     from hikari import http_settings
-    from hikari.models import gateway
+    from hikari.models import gateway as gateway_models
     from hikari.models import guilds
     from hikari.models import intents as intents_
 
@@ -58,35 +61,26 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         shard_ids: typing.Set[int],
         shard_count: int,
         token: str,
-        url: str,
         use_compression: bool,
         version: int,
     ) -> None:
         self._aiohttp_config = config
+        self._debug = debug
         self._gather_task = None
+        self._initial_activity = initial_activity
+        self._initial_idle_since = initial_idle_since
+        self._initial_is_afk = initial_is_afk
+        self._initial_status = initial_status
+        self._intents = intents
+        self._large_threshold = large_threshold
         self._request_close_event = asyncio.Event()
         self._shard_count = shard_count
-        self._shards = {
-            shard_id: gateway.Gateway(
-                app=self,
-                config=config,
-                debug=debug,
-                initial_activity=initial_activity,
-                initial_idle_since=initial_idle_since,
-                initial_is_afk=initial_is_afk,
-                initial_status=initial_status,
-                intents=intents,
-                large_threshold=large_threshold,
-                shard_id=shard_id,
-                shard_count=shard_count,
-                token=token,
-                url=url,
-                use_compression=use_compression,
-                version=version,
-            )
-            for shard_id in shard_ids
-        }
+        self._shard_ids = shard_ids
+        self._shards = {}
         self._tasks = {}
+        self._token = token
+        self._use_compression = use_compression
+        self._version = version
 
     @property
     def gateway_shards(self) -> typing.Mapping[int, gateway.Gateway]:
@@ -99,6 +93,8 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
     async def start(self) -> None:
         self._tasks.clear()
         self._gather_task = None
+
+        await self._init()
 
         self._request_close_event.clear()
         self.logger.info("starting %s", conversions.pluralize(len(self._shards), "shard"))
@@ -222,3 +218,55 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         )
 
         await asyncio.gather(*coros)
+
+    async def _init(self):
+        version = _about.__version__
+        path = os.path.abspath(os.path.dirname(inspect.getsourcefile(_about)))
+        py_impl = platform.python_implementation()
+        py_ver = platform.python_version()
+        py_compiler = platform.python_compiler()
+        self.logger.info(
+            "hikari v%s (installed in %s) (%s %s %s)", version, path, py_impl, py_ver, py_compiler,
+        )
+
+        gw_recs = await self._fetch_gateway_recommendations()
+
+        self.logger.info(
+            "you have sent an IDENTIFY %s time(s) before now, and have %s remaining. This will reset at %s.",
+            gw_recs.session_start_limit.total - gw_recs.session_start_limit.remaining,
+            gw_recs.session_start_limit.remaining,
+            datetime.datetime.now() + gw_recs.session_start_limit.reset_after,
+        )
+
+        self._shard_count = self._shard_count if self._shard_count else gw_recs.shard_count
+        self._shard_ids = self._shard_ids if self._shard_ids else range(self._shard_count)
+        url = gw_recs.url
+
+        self.logger.info("will connect shards to %s", url)
+
+        shard_clients: typing.Dict[int, gateway.Gateway] = {}
+        for shard_id in self._shard_ids:
+            shard = gateway.Gateway(
+                app=self,
+                config=self._aiohttp_config,
+                debug=self._debug,
+                initial_activity=self._initial_activity,
+                initial_idle_since=self._initial_idle_since,
+                initial_is_afk=self._initial_is_afk,
+                initial_status=self._initial_status,
+                intents=self._intents,
+                large_threshold=self._large_threshold,
+                shard_id=shard_id,
+                shard_count=self._shard_count,
+                token=self._token,
+                url=url,
+                use_compression=self._use_compression,
+                version=self._version,
+            )
+            shard_clients[shard_id] = shard
+
+        self._shards = shard_clients  # pylint: disable=attribute-defined-outside-init
+
+    @abc.abstractmethod
+    async def _fetch_gateway_recommendations(self) -> gateway_models.GatewayBot:
+        ...
