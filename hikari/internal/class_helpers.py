@@ -22,8 +22,6 @@ from __future__ import annotations
 
 __all__ = ["SingletonMeta", "Singleton"]
 
-import abc
-import inspect
 import logging
 import typing
 
@@ -74,9 +72,11 @@ class SingletonMeta(type):
         thread safe.
     """
 
-    ___instance_dict_t___ = more_collections.WeakKeyDictionary[typing.Type[typing.Any], typing.Any]
-    ___instances___: ___instance_dict_t___ = more_collections.WeakKeyDictionary()
     __slots__ = ()
+
+    ___instances___: typing.Final[
+        more_collections.WeakKeyDictionary[typing.Type[typing.Any], typing.Any]
+    ] = more_collections.WeakKeyDictionary()
 
     def __call__(cls):
         if cls not in SingletonMeta.___instances___:
@@ -105,3 +105,5 @@ class Singleton(metaclass=SingletonMeta):
         Constructing instances of this class or derived classes may not be
         thread safe.
     """
+
+    __slots__ = ()
