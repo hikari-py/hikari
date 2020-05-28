@@ -45,23 +45,9 @@ if typing.TYPE_CHECKING:
     from hikari import http_settings
 
 
-# At the time of writing, Discord treats the `Upgrade` header used when making
-# a websocket connection as being case sensitive, despite
-# https://tools.ietf.org/html/rfc6455#page-19,
-# https://tools.ietf.org/html/rfc6455#page-21 and
-# https://tools.ietf.org/html/rfc6455#page-56 implying otherwise.
-# AIOHTTP hard codes this value, annoyingly, and hard codes it to the
-# format "WebSocket". Discord's voice will only accept "websocket", so I have
-# to screw around by altering AIOHTTP just to make a voice connection until
-# someone reviews https://github.com/discord/discord-api-docs/issues/1689
-# sensibly.
-import aiohttp.hdrs as _hdrs
-
-setattr(_hdrs, "WEBSOCKET", "websocket")
-del _hdrs
-
-
 class VoiceGateway(http_client.HTTPClient):
+    """Implementation of the V4 Voice Gateway."""
+
     @more_enums.must_be_unique
     class _GatewayCloseCode(int, more_enums.Enum):
         """Reasons for closing a gateway connection."""
@@ -111,8 +97,6 @@ class VoiceGateway(http_client.HTTPClient):
     class _InvalidSession(RuntimeError):
         can_resume: bool = False
 
-    RawDispatchT = typing.Callable[["VoiceGateway", str, more_typing.JSONObject], more_typing.Coroutine[None]]
-
     def __init__(
         self,
         *,
@@ -150,6 +134,7 @@ class VoiceGateway(http_client.HTTPClient):
         self._last_run_started_at = float("nan")
         self._nonce = None
         self._request_close_event = asyncio.Event()
+        self._resumable = False
         self._server_id = conversions.value_to_snowflake(server_id)
         self._session_id = session_id
         self._token = token
@@ -257,7 +242,39 @@ class VoiceGateway(http_client.HTTPClient):
         return True
 
     async def _poll_events(self):
-        pass
+        while not self._request_close_event.is_set():
+            message = await self._receive_json_payload()
+
+            op = message["op"]
+            data = message["d"]
+
+            if op == self._GatewayOpcode.READY:
+                self.logger.debug(
+                    "voice websocket is ready [session_id:%s, url:%s]",
+                    self._session_id,
+                    self._url,
+                )
+            elif op == self._GatewayOpcode.RESUMED:
+                self.logger.debug(
+                    "voice websocket has resumed [session_id:%s, nonce:%s, url:%s]",
+                    self._session_id,
+                    self._nonce,
+                    self._url
+                )
+            elif op == self._GatewayOpcode.HEARTBEAT:
+                self.logger.debug("received HEARTBEAT; sending HEARTBEAT ACK")
+                await self._send_json({"op": self._GatewayOpcode.HEARTBEAT_ACK, "d": self._nonce})
+            elif op == self._GatewayOpcode.HEARTBEAT_ACK:
+                self.heartbeat_latency = self._now() - self.last_heartbeat_sent
+                self.logger.debug("received HEARTBEAT ACK [latency:%ss]", self.heartbeat_latency)
+            elif op == self._GatewayOpcode.SESSION_DESCRIPTION:
+                self.logger.debug("received session description data %s", data)
+            elif op == self._GatewayOpcode.SPEAKING:
+                self.logger.debug("someone is speaking with data %s", data)
+            elif op == self._GatewayOpcode.CLIENT_DISCONNECT:
+                self.logger.debug("a client has disconnected with data %s", data)
+            else:
+                self.logger.debug("ignoring unrecognised opcode %s", op)
 
     async def _pulse(self) -> None:
         try:
@@ -348,11 +365,10 @@ class VoiceGateway(http_client.HTTPClient):
                 reason = f"unknown close code {close_code}"
 
             can_reconnect = close_code in (
-                self._GatewayCloseCode.DECODE_ERROR,
-                self._GatewayCloseCode.INVALID_SEQ,
-                self._GatewayCloseCode.UNKNOWN_ERROR,
+                self._GatewayCloseCode.SESSION_NO_LONGER_VALID,
                 self._GatewayCloseCode.SESSION_TIMEOUT,
-                self._GatewayCloseCode.RATE_LIMITED,
+                self._GatewayCloseCode.DISCONNECTED,
+                self._GatewayCloseCode.VOICE_SERVER_CRASHED,
             )
 
             raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect, False, True)
