@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Utilities to handle cache management and object deserialization."""
+"""Utilities to handle cache management."""
 from __future__ import annotations
 
 __all__ = ["ICache"]
@@ -24,7 +24,10 @@ __all__ = ["ICache"]
 import abc
 import typing
 
+from hikari import component
+
 if typing.TYPE_CHECKING:
+    from hikari.internal import more_typing
     from hikari.models import applications
     from hikari.models import audit_logs
     from hikari.models import channels
@@ -36,11 +39,19 @@ if typing.TYPE_CHECKING:
     from hikari.models import messages
     from hikari.models import users
     from hikari.models import voices
-    from hikari.internal import more_typing
 
 
-class ICache(abc.ABC):
-    """Interface for a cache implementation."""
+class ICache(component.IComponent, abc.ABC):
+    """Component that implements entity caching facilities.
+
+    This will be used by the gateway and REST API to cache specific types of
+    objects that the application should attempt to remember for later, depending
+    on how this is implemented.
+
+    The implementation may choose to use a simple in-memory collection of
+    objects, or may decide to use a distributed system such as a Redis cache
+    for cross-process bots.
+    """
 
     __slots__ = ()
 

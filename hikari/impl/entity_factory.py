@@ -16,27 +16,40 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Basic implementation of an entity factory for general bots and REST apps."""
 
 from __future__ import annotations
+
+__all__ = ["EntityFactoryImpl"]
 
 import typing
 
 from hikari import entity_factory
-from hikari.internal import more_typing
-from hikari.models import applications
-from hikari.models import audit_logs
-from hikari.models import channels
-from hikari.models import embeds
-from hikari.models import emojis
-from hikari.models import gateway
-from hikari.models import guilds
-from hikari.models import invites
-from hikari.models import users
-from hikari.models import voices
-from hikari.models import webhooks
+
+if typing.TYPE_CHECKING:
+    from hikari import app as app_
+    from hikari.internal import more_typing
+    from hikari.models import applications
+    from hikari.models import audit_logs
+    from hikari.models import channels
+    from hikari.models import embeds
+    from hikari.models import emojis
+    from hikari.models import gateway
+    from hikari.models import guilds
+    from hikari.models import invites
+    from hikari.models import users
+    from hikari.models import voices
+    from hikari.models import webhooks
 
 
 class EntityFactoryImpl(entity_factory.IEntityFactory):
+    def __init__(self, app: app_.IApp) -> None:
+        self._app = app
+
+    @property
+    def app(self) -> app_.IApp:
+        return self._app
+
     def deserialize_own_connection(self, payload: more_typing.JSONObject) -> applications.OwnConnection:
         pass
 

@@ -16,24 +16,39 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+from __future__ import annotations
+
+__all__ = ["CacheImpl"]
+
 import typing
 
 from hikari import cache
-from hikari.internal import more_typing
-from hikari.models import applications
-from hikari.models import audit_logs
-from hikari.models import channels
-from hikari.models import embeds
-from hikari.models import emojis
-from hikari.models import gateway
-from hikari.models import guilds
-from hikari.models import invites
-from hikari.models import messages
-from hikari.models import users
-from hikari.models import voices
+
+
+if typing.TYPE_CHECKING:
+    from hikari import app as app_
+    from hikari.internal import more_typing
+    from hikari.models import applications
+    from hikari.models import audit_logs
+    from hikari.models import channels
+    from hikari.models import embeds
+    from hikari.models import emojis
+    from hikari.models import gateway
+    from hikari.models import guilds
+    from hikari.models import invites
+    from hikari.models import messages
+    from hikari.models import users
+    from hikari.models import voices
 
 
 class CacheImpl(cache.ICache):
+    def __init__(self, app: app_.IApp) -> None:
+        self._app = app
+
+    @property
+    def app(self) -> app_.IApp:
+        return self._app
+
     async def create_application(self, payload: more_typing.JSONObject) -> applications.Application:
         pass
 

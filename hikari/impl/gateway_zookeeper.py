@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
+__all__ = ["AbstractGatewayZookeeper"]
+
 import abc
 import asyncio
 import contextlib
@@ -25,10 +27,11 @@ import signal
 import time
 import typing
 
+from hikari import app as app_
 from hikari import event_dispatcher
-from hikari import gateway_zookeeper
 from hikari.events import other
 from hikari.internal import conversions
+from hikari.internal import unset
 from hikari.net import gateway
 
 if typing.TYPE_CHECKING:
@@ -40,7 +43,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import intents as intents_
 
 
-class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
+class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
     def __init__(
         self,
         *,
@@ -60,17 +63,14 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
         version: int,
     ) -> None:
         self._aiohttp_config = config
-
-        # This is a little hacky workaround to boost performance. We force
-
         self._gather_task = None
         self._request_close_event = asyncio.Event()
         self._shard_count = shard_count
         self._shards = {
             shard_id: gateway.Gateway(
+                app=self,
                 config=config,
                 debug=debug,
-                dispatch=self.event_consumer.consume_raw_event,
                 initial_activity=initial_activity,
                 initial_idle_since=initial_idle_since,
                 initial_is_afk=initial_is_afk,
@@ -93,7 +93,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
         return self._shards
 
     @property
-    def shard_count(self) -> int:
+    def gateway_shard_count(self) -> int:
         return self._shard_count
 
     async def start(self) -> None:
@@ -144,12 +144,12 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
         if self._gather_task is not None:
             await self._gather_task
 
-    async def _abort(self):
+    async def _abort(self) -> None:
         for shard_id in self._tasks:
             await self._shards[shard_id].close()
         await asyncio.gather(*self._tasks.values(), return_exceptions=True)
 
-    async def _gather(self):
+    async def _gather(self) -> None:
         try:
             await asyncio.gather(*self._tasks.values())
         finally:
@@ -180,11 +180,11 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
                     # noinspection PyUnresolvedReferences
                     await self.event_dispatcher.dispatch(other.StoppedEvent())
 
-    async def _run(self):
+    async def _run(self) -> None:
         await self.start()
         await self.join()
 
-    def run(self):
+    def run(self) -> None:
         loop = asyncio.get_event_loop()
 
         def sigterm_handler(*_):
@@ -210,15 +210,15 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeper, abc.ABC):
     async def update_presence(
         self,
         *,
-        status: guilds.PresenceStatus = ...,
-        activity: typing.Optional[gateway.Activity] = ...,
-        idle_since: typing.Optional[datetime.datetime] = ...,
-        is_afk: bool = ...,
+        status: typing.Union[unset.Unset, guilds.PresenceStatus] = unset.UNSET,
+        activity: typing.Union[unset.Unset, gateway.Activity, None] = unset.UNSET,
+        idle_since: typing.Union[unset.Unset, datetime.datetime] = unset.UNSET,
+        is_afk: typing.Union[unset.Unset, bool] = unset.UNSET,
     ) -> None:
-        await asyncio.gather(
-            *(
-                s.update_presence(status=status, activity=activity, idle_since=idle_since, is_afk=is_afk)
-                for s in self._shards.values()
-                if s.is_alive
-            )
+        coros = (
+            s.update_presence(status=status, activity=activity, idle_since=idle_since, is_afk=is_afk)
+            for s in self._shards.values()
+            if s.is_alive
         )
+
+        await asyncio.gather(*coros)

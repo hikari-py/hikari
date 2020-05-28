@@ -21,13 +21,36 @@ from __future__ import annotations
 __all__ = ["IEventConsumer"]
 
 import abc
+import typing
 
-from hikari.internal import more_typing
-from hikari.net import gateway
+from hikari import component
+
+if typing.TYPE_CHECKING:
+    from hikari.internal import more_typing
+    from hikari.net import gateway
 
 
-class IEventConsumer(abc.ABC):
+class IEventConsumer(component.IComponent, abc.ABC):
+    """Interface describing a component that can consume raw gateway events.
+
+    Implementations will usually want to combine this with a
+    `hikari.event_dispatcher.IEventDispatcher` for a basic in-memory single-app
+    event management system. You may in some cases implement this separately
+    if you are passing events onto a system such as a message queue.
+    """
+
     __slots__ = ()
 
-    async def consume_raw_event(self, shard: gateway.Gateway, event_name: str, payload: more_typing.JSONType):
-        ...
+    @abc.abstractmethod
+    async def consume_raw_event(self, shard: gateway.Gateway, event_name: str, payload: more_typing.JSONType) -> None:
+        """Process a raw event from a gateway shard and process it.
+
+        Parameters
+        ----------
+        shard : hikari.net.gateway.Gateway
+            The gateway shard that emitted the event.
+        event_name : str
+            The event name.
+        payload : Any
+            The payload provided with the event.
+        """

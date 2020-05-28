@@ -19,16 +19,17 @@
 
 from __future__ import annotations
 
+__all__ = ["RESTAppImpl"]
+
 import logging
 import typing
 from concurrent import futures
 
+from hikari import app as app_
 from hikari import http_settings
-from hikari import rest_app
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.internal import class_helpers
-from hikari.internal import helpers
 from hikari.net import rest as rest_
 from hikari.net import urls
 
@@ -37,7 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari import entity_factory as entity_factory_
 
 
-class RESTAppImpl(rest_app.IRESTApp):
+class RESTAppImpl(app_.IRESTApp):
     def __init__(
         self,
         config: http_settings.HTTPSettings,

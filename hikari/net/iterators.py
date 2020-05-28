@@ -24,7 +24,7 @@ __all__ = ["LazyIterator"]
 import abc
 import typing
 
-from hikari import rest_app
+from hikari import app as app_
 from hikari.internal import conversions
 from hikari.internal import more_collections
 from hikari.internal import more_typing
@@ -242,7 +242,7 @@ class MessageIterator(_BufferedLazyIterator[messages.Message]):
 
     def __init__(
         self,
-        app: rest_app.IRESTApp,
+        app: app_.IRESTApp,
         request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
         channel_id: str,
         direction: str,
@@ -274,7 +274,7 @@ class ReactorIterator(_BufferedLazyIterator[users.User]):
 
     def __init__(
         self,
-        app: rest_app.IRESTApp,
+        app: app_.IRESTApp,
         request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
         channel_id: str,
         message_id: str,
@@ -303,7 +303,7 @@ class OwnGuildIterator(_BufferedLazyIterator[applications.OwnGuild]):
 
     def __init__(
         self,
-        app: rest_app.IRESTApp,
+        app: app_.IRESTApp,
         request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
         newest_first: bool,
         first_id: str,
@@ -334,7 +334,7 @@ class MemberIterator(_BufferedLazyIterator[guilds.GuildMember]):
 
     def __init__(
         self,
-        app: rest_app.IRESTApp,
+        app: app_.IRESTApp,
         request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
         guild_id: str,
     ) -> None:
@@ -360,7 +360,7 @@ class AuditLogIterator(LazyIterator[audit_logs.AuditLog]):
 
     def __init__(
         self,
-        app: rest_app.IRESTApp,
+        app: app_.IRESTApp,
         request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
         guild_id: str,
         before: str,
