@@ -195,8 +195,9 @@ class HTTPErrorResponse(HTTPError):
         status: typing.Union[int, http.HTTPStatus],
         headers: aiohttp.typedefs.LooseHeaders,
         raw_body: typing.Any,
+        reason: typing.Optional[str] = None,
     ) -> None:
-        super().__init__(url, f"{status}: {raw_body}")
+        super().__init__(url, f"{status}: {raw_body}" if reason is None else reason)
         self.status = status
         self.headers = headers
         self.raw_body = raw_body

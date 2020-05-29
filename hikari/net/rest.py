@@ -211,15 +211,14 @@ class REST(http_client.HTTPClient, component.IComponent):
         if response.status == http.HTTPStatus.NO_CONTENT:
             return None
 
-        # Decode the body.
-        raw_body = await response.read()
-
         # Handle the response.
         if 200 <= response.status < 300:
             if response.content_type == self._APPLICATION_JSON:
                 # Only deserializing here stops Cloudflare shenanigans messing us around.
-                return json.loads(raw_body)
+                return await response.json()
             raise errors.HTTPError(real_url, f"Expected JSON response but received {response.content_type}")
+
+        raw_body = await response.read()
 
         if response.status == http.HTTPStatus.BAD_REQUEST:
             raise errors.BadRequest(real_url, response.headers, raw_body)
@@ -253,9 +252,65 @@ class REST(http_client.HTTPClient, component.IComponent):
         limit = int(resp_headers.get("x-ratelimit-limit", "1"))
         remaining = int(resp_headers.get("x-ratelimit-remaining", "1"))
         bucket = resp_headers.get("x-ratelimit-bucket", "None")
-        reset = float(resp_headers.get("x-ratelimit-reset", "0"))
-        reset_date = datetime.datetime.fromtimestamp(reset, tz=datetime.timezone.utc)
+        reset_at = float(resp_headers.get("x-ratelimit-reset", "0"))
         now_date = conversions.rfc7231_datetime_string_to_datetime(resp_headers["date"])
+
+        is_rate_limited = response.status == http.HTTPStatus.TOO_MANY_REQUESTS
+
+        if is_rate_limited:
+            if response.content_type != self._APPLICATION_JSON:
+                # We don't know exactly what this could imply. It is likely Cloudflare interfering
+                # but I'd rather we just give up than do something resulting in multiple failed
+                # requests repeatedly.
+                raise errors.HTTPErrorResponse(
+                    str(response.real_url),
+                    http.HTTPStatus.TOO_MANY_REQUESTS,
+                    response.headers,
+                    await response.read(),
+                    f"received rate limited response with unexpected response type {response.content_type}",
+                )
+
+            body = await response.json()
+
+            body_retry_after = float(body["retry_after"]) / 1_000
+
+            if body.get("global", False):
+                self.global_rate_limit.throttle(body_retry_after)
+
+                self.logger.warning("you are being rate-limited globally - trying again after %ss", body_retry_after)
+            else:
+                # Discord can do a messed up thing where the headers suggest we aren't rate limited,
+                # but we still get 429s with a different rate limit.
+                # If this occurs, we need to take the rate limit that is furthest in the future
+                # to avoid excessive 429ing everywhere repeatedly, causing an API ban,
+                # since our logic assumes the rate limit info they give us is actually
+                # remotely correct.
+                #
+                # At the time of writing, editing a channel more than twice per 10 minutes seems
+                # to trigger this, which makes me nervous that the info we are receiving isn't
+                # correct, but whatever... this is the best we can do.
+
+                header_reset_at = reset_at
+                body_retry_at = now_date.timestamp() + body_retry_after
+
+                # Pick the value that is the furthest in the future.
+                reset_at = max(body_retry_at, header_reset_at)
+
+                self.logger.warning(
+                    "you are being rate-limited on bucket %s for route %s - trying again after %ss "
+                    "(headers suggest %ss back-off finishing at %s; rate-limited response specifies %ss "
+                    "back-off finishing at %s)",
+                    bucket,
+                    compiled_route,
+                    reset_at,
+                    header_reset_at - now_date.timestamp(),
+                    header_reset_at,
+                    body_retry_after,
+                    body_retry_at,
+                )
+
+        reset_date = datetime.datetime.fromtimestamp(reset_at, tz=datetime.timezone.utc)
+
         self.buckets.update_rate_limits(
             compiled_route=compiled_route,
             bucket_header=bucket,
@@ -265,34 +320,8 @@ class REST(http_client.HTTPClient, component.IComponent):
             reset_at_header=reset_date,
         )
 
-        if response.status == http.HTTPStatus.TOO_MANY_REQUESTS:
-            body = await response.json() if response.content_type == self._APPLICATION_JSON else await response.read()
-
-            # We are being rate limited.
-            if isinstance(body, dict):
-                if body.get("global", False):
-                    retry_after = float(body["retry_after"]) / 1_000
-                    self.global_rate_limit.throttle(retry_after)
-
-                    self.logger.warning(
-                        "you are being rate-limited globally - trying again after %ss", retry_after,
-                    )
-                else:
-                    self.logger.warning(
-                        "you are being rate-limited on bucket %s for _route %s - trying again after %ss",
-                        bucket,
-                        compiled_route,
-                        reset,
-                    )
-
-                raise self._RateLimited()
-
-            # We might find out Cloudflare causes this scenario to occur.
-            # I hope we don't though.
-            raise errors.HTTPError(
-                str(response.real_url),
-                f"We were rate limited but did not understand the response. Perhaps Cloudflare did this? {body!r}",
-            )
+        if is_rate_limited:
+            raise self._RateLimited()
 
     @staticmethod
     def _generate_allowed_mentions(
