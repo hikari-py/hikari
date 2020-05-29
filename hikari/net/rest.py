@@ -253,6 +253,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         remaining = int(resp_headers.get("x-ratelimit-remaining", "1"))
         bucket = resp_headers.get("x-ratelimit-bucket", "None")
         reset_at = float(resp_headers.get("x-ratelimit-reset", "0"))
+        reset_date = datetime.datetime.fromtimestamp(reset_at, tz=datetime.timezone.utc)
         now_date = conversions.rfc7231_datetime_string_to_datetime(resp_headers["date"])
 
         is_rate_limited = response.status == http.HTTPStatus.TOO_MANY_REQUESTS
@@ -293,8 +294,9 @@ class REST(http_client.HTTPClient, component.IComponent):
                 header_reset_at = reset_at
                 body_retry_at = now_date.timestamp() + body_retry_after
 
-                # Pick the value that is the furthest in the future.
-                reset_at = max(body_retry_at, header_reset_at)
+                if body_retry_at > header_reset_at:
+                    reset_date = datetime.datetime.fromtimestamp(body_retry_at, tz=datetime.timezone.utc)
+
 
                 self.logger.warning(
                     "you are being rate-limited on bucket %s for route %s - trying again after %ss "
@@ -308,8 +310,6 @@ class REST(http_client.HTTPClient, component.IComponent):
                     body_retry_after,
                     body_retry_at,
                 )
-
-        reset_date = datetime.datetime.fromtimestamp(reset_at, tz=datetime.timezone.utc)
 
         self.buckets.update_rate_limits(
             compiled_route=compiled_route,
