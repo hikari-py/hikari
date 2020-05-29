@@ -34,10 +34,10 @@ __all__ = [
 import typing
 
 import attr
-
 from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import more_enums
+
 from . import applications
 from . import bases
 from . import channels

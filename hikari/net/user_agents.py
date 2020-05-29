@@ -31,10 +31,10 @@ __all__ = ["UserAgent"]
 
 import typing
 
-from hikari.internal import class_helpers
+from hikari.utilities import klass
 
 
-class UserAgent(metaclass=class_helpers.SingletonMeta):
+class UserAgent(metaclass=klass.SingletonMeta):
     """Platform version info.
 
     !!! note

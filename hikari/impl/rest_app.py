@@ -29,9 +29,9 @@ from hikari import app as app_
 from hikari import http_settings
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
-from hikari.internal import class_helpers
 from hikari.net import rest as rest_
 from hikari.net import urls
+from hikari.utilities import klass
 
 if typing.TYPE_CHECKING:
     from hikari import cache as cache_
@@ -48,7 +48,7 @@ class RESTAppImpl(app_.IRESTApp):
         rest_url: str = urls.REST_API_URL,
         version: int = 6,
     ) -> None:
-        self._logger = class_helpers.get_logger(self)
+        self._logger = klass.get_logger(self)
         self._rest = rest_.REST(
             app=self, config=config, debug=debug, token=token, token_type=token_type, url=rest_url, version=version,
         )

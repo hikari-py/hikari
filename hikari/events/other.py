@@ -37,7 +37,6 @@ import typing
 
 import attr
 
-from hikari.internal import marshaller
 from hikari.models import bases as base_models
 from hikari.models import guilds
 from hikari.models import users
@@ -45,7 +44,7 @@ from . import base as base_events
 
 if typing.TYPE_CHECKING:
     from ..net import gateway as gateway_client
-    from hikari.internal import more_typing
+    from hikari.utilities import more_typing
 
 
 # Synthetic event, is not deserialized, and is produced by the dispatcher.
@@ -120,7 +119,6 @@ def _deserialize_unavailable_guilds(
     }
 
 
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Represents the gateway Ready event.
@@ -128,15 +126,15 @@ class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
     This is received only when IDENTIFYing with the gateway.
     """
 
-    gateway_version: int = marshaller.attrib(raw_name="v", deserializer=int, repr=True)
+    gateway_version: int = attr.ib(raw_name="v", deserializer=int, repr=True)
     """The gateway version this is currently connected to."""
 
-    my_user: users.MyUser = marshaller.attrib(
+    my_user: users.MyUser = attr.ib(
         raw_name="user", deserializer=users.MyUser.deserialize, inherit_kwargs=True, repr=True
     )
     """The object of the current bot account this connection is for."""
 
-    unavailable_guilds: typing.Mapping[base_models.Snowflake, guilds.UnavailableGuild] = marshaller.attrib(
+    unavailable_guilds: typing.Mapping[base_models.Snowflake, guilds.UnavailableGuild] = attr.ib(
         raw_name="guilds", deserializer=_deserialize_unavailable_guilds, inherit_kwargs=True
     )
     """A mapping of the guilds this bot is currently in.
@@ -144,10 +142,10 @@ class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
     All guilds will start off "unavailable".
     """
 
-    session_id: str = marshaller.attrib(deserializer=str, repr=True)
+    session_id: str = attr.ib(deserializer=str, repr=True)
     """The id of the current gateway session, used for reconnecting."""
 
-    _shard_information: typing.Optional[typing.Tuple[int, int]] = marshaller.attrib(
+    _shard_information: typing.Optional[typing.Tuple[int, int]] = attr.ib(
         raw_name="shard", deserializer=tuple, if_undefined=None, default=None
     )
     """Information about the current shard, only provided when IDENTIFYing."""
@@ -169,7 +167,6 @@ class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
         return self._shard_information[1] if self._shard_information else None
 
 
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class MyUserUpdateEvent(base_events.HikariEvent, users.MyUser):
     """Used to represent User Update gateway events.

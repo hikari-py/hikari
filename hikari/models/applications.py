@@ -34,9 +34,9 @@ __all__ = [
 import typing
 
 import attr
-
 from hikari.internal import marshaller
 from hikari.internal import more_enums
+
 from . import bases
 from . import guilds
 from . import permissions

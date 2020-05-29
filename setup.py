@@ -62,7 +62,7 @@ name = "hikari"
 #     log.warn("!!!!!!!!!!!!!!!!!!!!EXPERIMENTAL!!!!!!!!!!!!!!!!!!!!")
 #     log.warn("HIKARI ACCELERATION SUPPORT IS ENABLED: YOUR MILEAGE MAY VARY :^)")
 #
-#     extensions = [Accelerator("hikari.internal.marshaller", ["hikari/internal/marshaller.cpp"], **cxx_compile_kwargs)]
+#     extensions = [Accelerator("hikari.utilities.marshaller", ["hikari.utilities/marshaller.cpp"], **cxx_compile_kwargs)]
 #
 #     cxx_spec = "c++17"
 #     compiler_type = ccompiler.get_default_compiler()

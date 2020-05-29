@@ -44,24 +44,22 @@ import typing
 
 import attr
 
-from hikari.internal import conversions
-from hikari.internal import marshaller
 from hikari.models import bases as base_models
 from hikari.models import emojis as emojis_models
 from hikari.models import guilds
 from hikari.models import intents
 from hikari.models import users
+from hikari.utilities import conversions
 from . import base as base_events
-from ..internal import unset
+from ..utilities import unset
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.internal import more_typing
+    from hikari.utilities import more_typing
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildCreateEvent(base_events.HikariEvent, guilds.Guild):
     """Used to represent Guild Create gateway events.
@@ -72,14 +70,12 @@ class GuildCreateEvent(base_events.HikariEvent, guilds.Guild):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildUpdateEvent(base_events.HikariEvent, guilds.Guild):
     """Used to represent Guild Update gateway events."""
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildLeaveEvent(base_events.HikariEvent, base_models.Unique, marshaller.Deserializable):
     """Fired when the current user leaves the guild or is kicked/banned from it.
@@ -90,7 +86,6 @@ class GuildLeaveEvent(base_events.HikariEvent, base_models.Unique, marshaller.De
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildUnavailableEvent(base_events.HikariEvent, base_models.Unique, marshaller.Deserializable):
     """Fired when a guild becomes temporarily unavailable due to an outage.
@@ -101,27 +96,24 @@ class GuildUnavailableEvent(base_events.HikariEvent, base_models.Unique, marshal
 
 
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class BaseGuildBanEvent(base_events.HikariEvent, marshaller.Deserializable, abc.ABC):
     """A base object that guild ban events will inherit from."""
 
-    guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    guild_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the guild this ban is in."""
 
-    user: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True, repr=True)
+    user: users.User = attr.ib(deserializer=users.User.deserialize, inherit_kwargs=True, repr=True)
     """The object of the user this ban targets."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildBanAddEvent(BaseGuildBanEvent):
     """Used to represent a Guild Ban Add gateway event."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildBanRemoveEvent(BaseGuildBanEvent):
     """Used to represent a Guild Ban Remove gateway event."""
@@ -137,37 +129,34 @@ def _deserialize_emojis(
 
 
 @base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildEmojisUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Represents a Guild Emoji Update gateway event."""
 
-    guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake)
+    guild_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake)
     """The ID of the guild this emoji was updated in."""
 
-    emojis: typing.Mapping[base_models.Snowflake, emojis_models.KnownCustomEmoji] = marshaller.attrib(
+    emojis: typing.Mapping[base_models.Snowflake, emojis_models.KnownCustomEmoji] = attr.ib(
         deserializer=_deserialize_emojis, inherit_kwargs=True, repr=True
     )
     """The updated mapping of emojis by their ID."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_INTEGRATIONS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildIntegrationsUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Guild Integration Update gateway events."""
 
-    guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    guild_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the guild the integration was updated in."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildMemberAddEvent(base_events.HikariEvent, guilds.GuildMember):
     """Used to represent a Guild Member Add gateway event."""
 
-    guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    guild_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the guild where this member was added."""
 
 
@@ -176,7 +165,6 @@ def _deserialize_role_ids(payload: more_typing.JSONArray) -> typing.Sequence[bas
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildMemberUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Member Update gateway event.
@@ -184,18 +172,18 @@ class GuildMemberUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
     Sent when a guild member or their inner user object is updated.
     """
 
-    guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    guild_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the guild this member was updated in."""
 
-    role_ids: typing.Sequence[base_models.Snowflake] = marshaller.attrib(
+    role_ids: typing.Sequence[base_models.Snowflake] = attr.ib(
         raw_name="roles", deserializer=_deserialize_role_ids,
     )
     """A sequence of the IDs of the member's current roles."""
 
-    user: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True, repr=True)
+    user: users.User = attr.ib(deserializer=users.User.deserialize, inherit_kwargs=True, repr=True)
     """The object of the user who was updated."""
 
-    nickname: typing.Union[None, str, unset.Unset] = marshaller.attrib(
+    nickname: typing.Union[None, str, unset.Unset] = attr.ib(
         raw_name="nick", deserializer=str, if_none=None, if_undefined=unset.Unset, default=unset.UNSET
     )
     """This member's nickname.
@@ -204,7 +192,7 @@ class GuildMemberUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
     `hikari.models.unset.UNSET` this hasn't been acted on.
     """
 
-    premium_since: typing.Union[None, datetime.datetime, unset.Unset] = marshaller.attrib(
+    premium_since: typing.Union[None, datetime.datetime, unset.Unset] = attr.ib(
         deserializer=conversions.iso8601_datetime_string_to_datetime,
         if_none=None,
         if_undefined=unset.Unset,
@@ -217,7 +205,6 @@ class GuildMemberUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildMemberRemoveEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Guild Member Remove gateway events.
@@ -226,56 +213,52 @@ class GuildMemberRemoveEvent(base_events.HikariEvent, marshaller.Deserializable)
     """
 
     # TODO: make GuildMember event into common base class.
-    guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    guild_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the guild this user was removed from."""
 
-    user: users.User = marshaller.attrib(deserializer=users.User.deserialize, inherit_kwargs=True, repr=True)
+    user: users.User = attr.ib(deserializer=users.User.deserialize, inherit_kwargs=True, repr=True)
     """The object of the user who was removed from this guild."""
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildRoleCreateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
 
-    guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    guild_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the guild where this role was created."""
 
-    role: guilds.Role = marshaller.attrib(deserializer=guilds.Role.deserialize, inherit_kwargs=True)
+    role: guilds.Role = attr.ib(deserializer=guilds.Role.deserialize, inherit_kwargs=True)
     """The object of the role that was created."""
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildRoleUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent a Guild Role Create gateway event."""
 
     # TODO: make any event with a guild ID into a custom base event.
     # https://pypi.org/project/stupid/ could this work around the multiple inheritance problem?
-    guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    guild_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the guild where this role was updated."""
 
-    role: guilds.Role = marshaller.attrib(deserializer=guilds.Role.deserialize, inherit_kwargs=True, repr=True)
+    role: guilds.Role = attr.ib(deserializer=guilds.Role.deserialize, inherit_kwargs=True, repr=True)
     """The updated role object."""
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class GuildRoleDeleteEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Represents a gateway Guild Role Delete Event."""
 
-    guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    guild_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the guild where this role is being deleted."""
 
-    role_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    role_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the role being deleted."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_PRESENCES)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class PresenceUpdateEvent(base_events.HikariEvent, guilds.GuildMemberPresence):
     """Used to represent Presence Update gateway events.
