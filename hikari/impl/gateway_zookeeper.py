@@ -35,9 +35,8 @@ from hikari import _about
 from hikari import app as app_
 from hikari import event_dispatcher
 from hikari.events import other
-from hikari.internal import conversions
-from hikari.internal import unset
 from hikari.net import gateway
+from hikari.utilities import unset
 
 if typing.TYPE_CHECKING:
     from hikari import http_settings
@@ -97,7 +96,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         await self._init()
 
         self._request_close_event.clear()
-        self.logger.info("starting %s", conversions.pluralize(len(self._shards), "shard"))
+        self.logger.info("starting %s shard(s)", len(self._shards))
 
         start_time = time.perf_counter()
 
@@ -221,6 +220,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
 
     async def _init(self):
         version = _about.__version__
+        # noinspection PyTypeChecker
         path = os.path.abspath(os.path.dirname(inspect.getsourcefile(_about)))
         py_impl = platform.python_implementation()
         py_ver = platform.python_version()

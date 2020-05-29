@@ -58,10 +58,10 @@ import datetime
 import typing
 
 import attr
-
 from hikari.internal import conversions
 from hikari.internal import marshaller
 from hikari.internal import more_enums
+
 from . import bases
 from . import channels as channels_
 from . import colors

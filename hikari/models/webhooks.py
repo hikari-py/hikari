@@ -25,9 +25,9 @@ __all__ = ["WebhookType", "Webhook"]
 import typing
 
 import attr
-
 from hikari.internal import marshaller
 from hikari.internal import more_enums
+
 from . import bases
 from . import users as users_
 from ..net import urls

@@ -38,18 +38,17 @@ import typing
 
 import attr
 
-from hikari.internal import conversions
-from hikari.internal import marshaller
 from hikari.models import bases as base_models
 from hikari.models import channels
 from hikari.models import guilds
 from hikari.models import intents
 from hikari.models import invites
 from hikari.models import users
+from hikari.utilities import conversions
 from . import base as base_events
 
 if typing.TYPE_CHECKING:
-    from hikari.internal import more_typing
+    from hikari.utilities import more_typing
 
 
 def _overwrite_deserializer(
@@ -72,20 +71,19 @@ def _recipients_deserializer(
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class BaseChannelEvent(base_events.HikariEvent, base_models.Unique, marshaller.Deserializable, abc.ABC):
     """A base object that Channel events will inherit from."""
 
-    type: channels.ChannelType = marshaller.attrib(deserializer=channels.ChannelType, repr=True)
+    type: channels.ChannelType = attr.ib(deserializer=channels.ChannelType, repr=True)
     """The channel's type."""
 
-    guild_id: typing.Optional[base_models.Snowflake] = marshaller.attrib(
+    guild_id: typing.Optional[base_models.Snowflake] = attr.ib(
         deserializer=base_models.Snowflake, if_undefined=None, default=None, repr=True
     )
     """The ID of the guild this channel is in, will be `None` for DMs."""
 
-    position: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
+    position: typing.Optional[int] = attr.ib(deserializer=int, if_undefined=None, default=None)
     """The sorting position of this channel.
 
     This will be relative to the `BaseChannelEvent.parent_id` if set.
@@ -93,32 +91,30 @@ class BaseChannelEvent(base_events.HikariEvent, base_models.Unique, marshaller.D
 
     permission_overwrites: typing.Optional[
         typing.Mapping[base_models.Snowflake, channels.PermissionOverwrite]
-    ] = marshaller.attrib(deserializer=_overwrite_deserializer, if_undefined=None, default=None, inherit_kwargs=True)
+    ] = attr.ib(deserializer=_overwrite_deserializer, if_undefined=None, default=None, inherit_kwargs=True)
     """An mapping of the set permission overwrites for this channel, if applicable."""
 
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None, repr=True)
+    name: typing.Optional[str] = attr.ib(deserializer=str, if_undefined=None, default=None, repr=True)
     """The name of this channel, if applicable."""
 
-    topic: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, if_none=None, default=None)
+    topic: typing.Optional[str] = attr.ib(deserializer=str, if_undefined=None, if_none=None, default=None)
     """The topic of this channel, if applicable and set."""
 
-    is_nsfw: typing.Optional[bool] = marshaller.attrib(
-        raw_name="nsfw", deserializer=bool, if_undefined=None, default=None
-    )
+    is_nsfw: typing.Optional[bool] = attr.ib(raw_name="nsfw", deserializer=bool, if_undefined=None, default=None)
     """Whether this channel is nsfw, will be `None` if not applicable."""
 
-    last_message_id: typing.Optional[base_models.Snowflake] = marshaller.attrib(
+    last_message_id: typing.Optional[base_models.Snowflake] = attr.ib(
         deserializer=base_models.Snowflake, if_none=None, if_undefined=None, default=None
     )
     """The ID of the last message sent, if it's a text type channel."""
 
-    bitrate: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
+    bitrate: typing.Optional[int] = attr.ib(deserializer=int, if_undefined=None, default=None)
     """The bitrate (in bits) of this channel, if it's a guild voice channel."""
 
-    user_limit: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
+    user_limit: typing.Optional[int] = attr.ib(deserializer=int, if_undefined=None, default=None)
     """The user limit for this channel if it's a guild voice channel."""
 
-    rate_limit_per_user: typing.Optional[datetime.timedelta] = marshaller.attrib(
+    rate_limit_per_user: typing.Optional[datetime.timedelta] = attr.ib(
         deserializer=_rate_limit_per_user_deserializer, if_undefined=None, default=None
     )
     """How long a user has to wait before sending another message in this channel.
@@ -126,22 +122,22 @@ class BaseChannelEvent(base_events.HikariEvent, base_models.Unique, marshaller.D
     This is only applicable to a guild text like channel.
     """
 
-    recipients: typing.Optional[typing.Mapping[base_models.Snowflake, users.User]] = marshaller.attrib(
+    recipients: typing.Optional[typing.Mapping[base_models.Snowflake, users.User]] = attr.ib(
         deserializer=_recipients_deserializer, if_undefined=None, default=None, inherit_kwargs=True,
     )
     """A mapping of this channel's recipient users, if it's a DM or group DM."""
 
-    icon_hash: typing.Optional[str] = marshaller.attrib(
+    icon_hash: typing.Optional[str] = attr.ib(
         raw_name="icon", deserializer=str, if_undefined=None, if_none=None, default=None
     )
     """The hash of this channel's icon, if it's a group DM channel and is set."""
 
-    owner_id: typing.Optional[base_models.Snowflake] = marshaller.attrib(
+    owner_id: typing.Optional[base_models.Snowflake] = attr.ib(
         deserializer=base_models.Snowflake, if_undefined=None, default=None
     )
     """The ID of this channel's creator, if it's a DM channel."""
 
-    application_id: typing.Optional[base_models.Snowflake] = marshaller.attrib(
+    application_id: typing.Optional[base_models.Snowflake] = attr.ib(
         deserializer=base_models.Snowflake, if_undefined=None, default=None
     )
     """The ID of the application that created the group DM.
@@ -149,19 +145,18 @@ class BaseChannelEvent(base_events.HikariEvent, base_models.Unique, marshaller.D
     This is only applicable to bot based group DMs.
     """
 
-    parent_id: typing.Optional[base_models.Snowflake] = marshaller.attrib(
+    parent_id: typing.Optional[base_models.Snowflake] = attr.ib(
         deserializer=base_models.Snowflake, if_undefined=None, if_none=None, default=None
     )
     """The ID of this channels's parent category within guild, if set."""
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(
         deserializer=conversions.iso8601_datetime_string_to_datetime, if_undefined=None, default=None
     )
     """The datetime of when the last message was pinned in this channel."""
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class ChannelCreateEvent(BaseChannelEvent):
     """Represents Channel Create gateway events.
@@ -172,21 +167,18 @@ class ChannelCreateEvent(BaseChannelEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class ChannelUpdateEvent(BaseChannelEvent):
     """Represents Channel Update gateway events."""
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class ChannelDeleteEvent(BaseChannelEvent):
     """Represents Channel Delete gateway events."""
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class ChannelPinsUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent the Channel Pins Update gateway event.
@@ -195,7 +187,7 @@ class ChannelPinsUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
     when a pinned message is deleted.
     """
 
-    guild_id: typing.Optional[base_models.Snowflake] = marshaller.attrib(
+    guild_id: typing.Optional[base_models.Snowflake] = attr.ib(
         deserializer=base_models.Snowflake, if_undefined=None, default=None, repr=True
     )
     """The ID of the guild where this event happened.
@@ -203,10 +195,10 @@ class ChannelPinsUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
     Will be `None` if this happened in a DM channel.
     """
 
-    channel_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    channel_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the channel where the message was pinned or unpinned."""
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(
         deserializer=conversions.iso8601_datetime_string_to_datetime, if_undefined=None, default=None, repr=True
     )
     """The datetime of when the most recent message was pinned in this channel.
@@ -216,7 +208,6 @@ class ChannelPinsUpdateEvent(base_events.HikariEvent, marshaller.Deserializable)
 
 
 @base_events.requires_intents(intents.Intent.GUILD_WEBHOOKS)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class WebhookUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent webhook update gateway events.
@@ -224,10 +215,10 @@ class WebhookUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
     Sent when a webhook is updated, created or deleted in a guild.
     """
 
-    guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    guild_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the guild this webhook is being updated in."""
 
-    channel_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    channel_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the channel this webhook is being updated in."""
 
 
@@ -236,7 +227,6 @@ def _timestamp_deserializer(date: str) -> datetime.datetime:
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_TYPING, intents.Intent.DIRECT_MESSAGE_TYPING)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class TypingStartEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent typing start gateway events.
@@ -244,10 +234,10 @@ class TypingStartEvent(base_events.HikariEvent, marshaller.Deserializable):
     Received when a user or bot starts "typing" in a channel.
     """
 
-    channel_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    channel_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the channel this typing event is occurring in."""
 
-    guild_id: typing.Optional[base_models.Snowflake] = marshaller.attrib(
+    guild_id: typing.Optional[base_models.Snowflake] = attr.ib(
         deserializer=base_models.Snowflake, if_undefined=None, default=None, repr=True
     )
     """The ID of the guild this typing event is occurring in.
@@ -255,13 +245,13 @@ class TypingStartEvent(base_events.HikariEvent, marshaller.Deserializable):
     Will be `None` if this event is happening in a DM channel.
     """
 
-    user_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    user_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the user who triggered this typing event."""
 
-    timestamp: datetime.datetime = marshaller.attrib(deserializer=_timestamp_deserializer)
+    timestamp: datetime.datetime = attr.ib(deserializer=_timestamp_deserializer)
     """The datetime of when this typing event started."""
 
-    member: typing.Optional[guilds.GuildMember] = marshaller.attrib(
+    member: typing.Optional[guilds.GuildMember] = attr.ib(
         deserializer=guilds.GuildMember.deserialize, if_undefined=None, default=None
     )
     """The member object of the user who triggered this typing event.
@@ -279,21 +269,20 @@ def _max_uses_deserializer(count: int) -> typing.Union[int, float]:
 
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class InviteCreateEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Represents a gateway Invite Create event."""
 
-    channel_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    channel_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the channel this invite targets."""
 
-    code: str = marshaller.attrib(deserializer=str, repr=True)
+    code: str = attr.ib(deserializer=str, repr=True)
     """The code that identifies this invite."""
 
-    created_at: datetime.datetime = marshaller.attrib(deserializer=conversions.iso8601_datetime_string_to_datetime)
+    created_at: datetime.datetime = attr.ib(deserializer=conversions.iso8601_datetime_string_to_datetime)
     """The datetime of when this invite was created."""
 
-    guild_id: typing.Optional[base_models.Snowflake] = marshaller.attrib(
+    guild_id: typing.Optional[base_models.Snowflake] = attr.ib(
         deserializer=base_models.Snowflake, if_undefined=None, default=None, repr=True
     )
     """The ID of the guild this invite was created in, if applicable.
@@ -301,42 +290,41 @@ class InviteCreateEvent(base_events.HikariEvent, marshaller.Deserializable):
     Will be `None` for group DM invites.
     """
 
-    inviter: typing.Optional[users.User] = marshaller.attrib(
+    inviter: typing.Optional[users.User] = attr.ib(
         deserializer=users.User.deserialize, if_undefined=None, default=None, inherit_kwargs=True
     )
     """The object of the user who created this invite, if applicable."""
 
-    max_age: typing.Optional[datetime.timedelta] = marshaller.attrib(deserializer=_max_age_deserializer,)
+    max_age: typing.Optional[datetime.timedelta] = attr.ib(deserializer=_max_age_deserializer,)
     """The timedelta of how long this invite will be valid for.
 
     If set to `None` then this is unlimited.
     """
 
-    max_uses: typing.Union[int, float] = marshaller.attrib(deserializer=_max_uses_deserializer)
+    max_uses: typing.Union[int, float] = attr.ib(deserializer=_max_uses_deserializer)
     """The limit for how many times this invite can be used before it expires.
 
     If set to infinity (`float("inf")`) then this is unlimited.
     """
 
-    target_user: typing.Optional[users.User] = marshaller.attrib(
+    target_user: typing.Optional[users.User] = attr.ib(
         deserializer=users.User.deserialize, if_undefined=None, default=None, inherit_kwargs=True
     )
     """The object of the user who this invite targets, if set."""
 
-    target_user_type: typing.Optional[invites.TargetUserType] = marshaller.attrib(
+    target_user_type: typing.Optional[invites.TargetUserType] = attr.ib(
         deserializer=invites.TargetUserType, if_undefined=None, default=None
     )
     """The type of user target this invite is, if applicable."""
 
-    is_temporary: bool = marshaller.attrib(raw_name="temporary", deserializer=bool)
+    is_temporary: bool = attr.ib(raw_name="temporary", deserializer=bool)
     """Whether this invite grants temporary membership."""
 
-    uses: int = marshaller.attrib(deserializer=int)
+    uses: int = attr.ib(deserializer=int)
     """The amount of times this invite has been used."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class InviteDeleteEvent(base_events.HikariEvent, marshaller.Deserializable):
     """Used to represent Invite Delete gateway events.
@@ -344,14 +332,14 @@ class InviteDeleteEvent(base_events.HikariEvent, marshaller.Deserializable):
     Sent when an invite is deleted for a channel we can access.
     """
 
-    channel_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    channel_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
     """The ID of the channel this ID was attached to."""
 
     # TODO: move common fields with InviteCreateEvent into base class.
-    code: str = marshaller.attrib(deserializer=str, repr=True)
+    code: str = attr.ib(deserializer=str, repr=True)
     """The code of this invite."""
 
-    guild_id: typing.Optional[base_models.Snowflake] = marshaller.attrib(
+    guild_id: typing.Optional[base_models.Snowflake] = attr.ib(
         deserializer=base_models.Snowflake, if_undefined=None, default=None, repr=True
     )
     """The ID of the guild this invite was deleted in.

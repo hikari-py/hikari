@@ -20,12 +20,10 @@
 
 from __future__ import annotations
 
-__all__ = ["SingletonMeta", "Singleton"]
+__all__ = ["get_logger", "SingletonMeta", "Singleton"]
 
 import logging
 import typing
-
-from hikari.internal import more_collections
 
 
 def get_logger(cls: typing.Union[typing.Type, typing.Any], *additional_args: str) -> logging.Logger:
@@ -74,9 +72,7 @@ class SingletonMeta(type):
 
     __slots__ = ()
 
-    ___instances___: typing.Final[
-        more_collections.WeakKeyDictionary[typing.Type[typing.Any], typing.Any]
-    ] = more_collections.WeakKeyDictionary()
+    ___instances___ = {}
 
     def __call__(cls):
         if cls not in SingletonMeta.___instances___:

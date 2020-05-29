@@ -34,17 +34,18 @@ import typing
 import attr
 
 from hikari import app as app_
-from hikari.internal import conversions
-from hikari.internal import unset
 from hikari.models import bases
 from hikari.models import colors
 from hikari.models import files
 from hikari.models import guilds
 from hikari.models import permissions as permissions_
 from hikari.net import routes
+from hikari.utilities import binding
+from hikari.utilities import date
+from hikari.utilities import snowflake as snowflake_
+from hikari.utilities import unset
 
 if typing.TYPE_CHECKING:
-    from hikari.internal import more_typing
     from hikari.models import channels
 
 
@@ -60,10 +61,10 @@ class TypingIndicator:
 
     def __init__(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
+        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
+        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, binding.JSONObject]],
     ) -> None:
-        self._channel = conversions.value_to_snowflake(channel)
+        self._channel = channel
         self._request_call = request_call
         self._task = None
 
@@ -89,11 +90,11 @@ class TypingIndicator:
 @attr.s(auto_attribs=True, kw_only=True, slots=True)
 class GuildBuilder:
     _app: app_.IRESTApp
-    _channels: typing.MutableSequence[more_typing.JSONObject] = attr.ib(factory=list)
+    _channels: typing.MutableSequence[binding.JSONObject] = attr.ib(factory=list)
     _counter: int = 0
     _name: typing.Union[unset.Unset, str]
-    _request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]]
-    _roles: typing.MutableSequence[more_typing.JSONObject] = attr.ib(factory=list)
+    _request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, binding.JSONObject]]
+    _roles: typing.MutableSequence[binding.JSONObject] = attr.ib(factory=list)
     default_message_notifications: typing.Union[unset.Unset, guilds.GuildMessageNotificationsLevel] = unset.UNSET
     explicit_content_filter_level: typing.Union[unset.Unset, guilds.GuildExplicitContentFilterLevel] = unset.UNSET
     icon: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET
@@ -110,16 +111,17 @@ class GuildBuilder:
 
     async def create(self) -> guilds.Guild:
         route = routes.POST_GUILDS.compile()
-        payload = {
-            "name": self.name,
-            "icon": None if unset.is_unset(self.icon) else await self.icon.read(),
-            "roles": self._roles,
-            "channels": self._channels,
-        }
-        conversions.put_if_specified(payload, "region", self.region)
-        conversions.put_if_specified(payload, "verification_level", self.verification_level)
-        conversions.put_if_specified(payload, "default_message_notifications", self.default_message_notifications)
-        conversions.put_if_specified(payload, "explicit_content_filter", self.explicit_content_filter_level)
+        payload = binding.JSONObjectBuilder()
+        payload.put("name", self.name)
+        payload.put_array("roles", self._roles)
+        payload.put_array("channels", self._channels)
+        payload.put("region", self.region)
+        payload.put("verification_level", self.verification_level)
+        payload.put("default_message_notifications", self.default_message_notifications)
+        payload.put("explicit_content_filter", self.explicit_content_filter_level)
+
+        if not unset.is_unset(self.icon):
+            payload.put("icon", await self.icon.fetch_data_uri())
 
         response = await self._request_call(route, body=payload)
         return self._app.entity_factory.deserialize_guild(response)
@@ -135,7 +137,7 @@ class GuildBuilder:
         mentionable: typing.Union[unset.Unset, bool] = unset.UNSET,
         permissions: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
         position: typing.Union[unset.Unset, int] = unset.UNSET,
-    ) -> bases.Snowflake:
+    ) -> snowflake_.Snowflake:
         if len(self._roles) == 0 and name != "@everyone":
             raise ValueError("First role must always be the @everyone role")
 
@@ -143,13 +145,15 @@ class GuildBuilder:
             raise TypeError("Cannot specify 'color' and 'colour' together.")
 
         snowflake = self._new_snowflake()
-        payload = {"id": str(snowflake), "name": name}
-        conversions.put_if_specified(payload, "color", color)
-        conversions.put_if_specified(payload, "color", colour)
-        conversions.put_if_specified(payload, "hoisted", hoisted)
-        conversions.put_if_specified(payload, "mentionable", mentionable)
-        conversions.put_if_specified(payload, "permissions", permissions)
-        conversions.put_if_specified(payload, "position", position)
+        payload = binding.JSONObjectBuilder()
+        payload.put_snowflake("id", snowflake)
+        payload.put("name", name)
+        payload.put("color", color)
+        payload.put("color", colour)
+        payload.put("hoisted", hoisted)
+        payload.put("mentionable", mentionable)
+        payload.put("permissions", permissions)
+        payload.put("position", position)
         self._roles.append(payload)
         return snowflake
 
@@ -161,15 +165,18 @@ class GuildBuilder:
         position: typing.Union[unset.Unset, int] = unset.UNSET,
         permission_overwrites: typing.Union[unset.Unset, typing.Collection[channels.PermissionOverwrite]] = unset.UNSET,
         nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
-    ) -> bases.Snowflake:
+    ) -> snowflake_.Snowflake:
         snowflake = self._new_snowflake()
-        payload = {"id": str(snowflake), "type": channels.ChannelType.GUILD_CATEGORY, "name": name}
-        conversions.put_if_specified(payload, "position", position)
-        conversions.put_if_specified(payload, "nsfw", nsfw)
+        payload = binding.JSONObjectBuilder()
+        payload.put_snowflake("id", snowflake)
+        payload.put("name", name)
+        payload.put("type", channels.ChannelType.GUILD_CATEGORY)
+        payload.put("position", position)
+        payload.put("nsfw", nsfw)
 
-        if not unset.is_unset(permission_overwrites):
-            overwrites = [self._app.entity_factory.serialize_permission_overwrite(o) for o in permission_overwrites]
-            payload["permission_overwrites"] = overwrites
+        payload.put_array(
+            "permission_overwrites", permission_overwrites, self._app.entity_factory.serialize_permission_overwrite
+        )
 
         self._channels.append(payload)
         return snowflake
@@ -179,24 +186,27 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        parent_id: bases.Snowflake = unset.UNSET,
+        parent_id: snowflake_.Snowflake = unset.UNSET,
         topic: typing.Union[unset.Unset, str] = unset.UNSET,
-        rate_limit_per_user: typing.Union[unset.Unset, more_typing.TimeSpanT] = unset.UNSET,
+        rate_limit_per_user: typing.Union[unset.Unset, date.TimeSpan] = unset.UNSET,
         position: typing.Union[unset.Unset, int] = unset.UNSET,
         permission_overwrites: typing.Union[unset.Unset, typing.Collection[channels.PermissionOverwrite]] = unset.UNSET,
         nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
-    ) -> bases.Snowflake:
+    ) -> snowflake_.Snowflake:
         snowflake = self._new_snowflake()
-        payload = {"id": str(snowflake), "type": channels.ChannelType.GUILD_TEXT, "name": name}
-        conversions.put_if_specified(payload, "topic", topic)
-        conversions.put_if_specified(payload, "rate_limit_per_user", rate_limit_per_user, conversions.timespan_to_int)
-        conversions.put_if_specified(payload, "position", position)
-        conversions.put_if_specified(payload, "nsfw", nsfw)
-        conversions.put_if_specified(payload, "parent_id", parent_id, str)
+        payload = binding.JSONObjectBuilder()
+        payload.put_snowflake("id", snowflake)
+        payload.put("name", name)
+        payload.put("type", channels.ChannelType.GUILD_TEXT)
+        payload.put("topic", topic)
+        payload.put("rate_limit_per_user", rate_limit_per_user, date.timespan_to_int)
+        payload.put("position", position)
+        payload.put("nsfw", nsfw)
+        payload.put_snowflake("parent_id", parent_id)
 
-        if not unset.is_unset(permission_overwrites):
-            overwrites = [self._app.entity_factory.serialize_permission_overwrite(o) for o in permission_overwrites]
-            payload["permission_overwrites"] = overwrites
+        payload.put_array(
+            "permission_overwrites", permission_overwrites, self._app.entity_factory.serialize_permission_overwrite
+        )
 
         self._channels.append(payload)
         return snowflake
@@ -206,29 +216,32 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        parent_id: bases.Snowflake = unset.UNSET,
+        parent_id: snowflake_.Snowflake = unset.UNSET,
         bitrate: typing.Union[unset.Unset, int] = unset.UNSET,
         position: typing.Union[unset.Unset, int] = unset.UNSET,
         permission_overwrites: typing.Union[unset.Unset, typing.Collection[channels.PermissionOverwrite]] = unset.UNSET,
         nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
         user_limit: typing.Union[unset.Unset, int] = unset.UNSET,
-    ) -> bases.Snowflake:
+    ) -> snowflake_.Snowflake:
         snowflake = self._new_snowflake()
-        payload = {"id": str(snowflake), "type": channels.ChannelType.GUILD_VOICE, "name": name}
-        conversions.put_if_specified(payload, "bitrate", bitrate)
-        conversions.put_if_specified(payload, "position", position)
-        conversions.put_if_specified(payload, "nsfw", nsfw)
-        conversions.put_if_specified(payload, "user_limit", user_limit)
-        conversions.put_if_specified(payload, "parent_id", parent_id, str)
+        payload = binding.JSONObjectBuilder()
+        payload.put_snowflake("id", snowflake)
+        payload.put("name", name)
+        payload.put("type", channels.ChannelType.GUILD_VOICE)
+        payload.put("bitrate", bitrate)
+        payload.put("position", position)
+        payload.put("nsfw", nsfw)
+        payload.put("user_limit", user_limit)
+        payload.put_snowflake("parent_id", parent_id)
 
-        if not unset.is_unset(permission_overwrites):
-            overwrites = [self._app.entity_factory.serialize_permission_overwrite(o) for o in permission_overwrites]
-            payload["permission_overwrites"] = overwrites
+        payload.put_array(
+            "permission_overwrites", permission_overwrites, self._app.entity_factory.serialize_permission_overwrite
+        )
 
         self._channels.append(payload)
         return snowflake
 
-    def _new_snowflake(self) -> bases.Snowflake:
+    def _new_snowflake(self) -> snowflake_.Snowflake:
         value = self._counter
         self._counter += 1
-        return bases.Snowflake.from_data(datetime.datetime.now(tz=datetime.timezone.utc), 0, 0, value,)
+        return snowflake_.Snowflake.from_data(datetime.datetime.now(tz=datetime.timezone.utc), 0, 0, value,)

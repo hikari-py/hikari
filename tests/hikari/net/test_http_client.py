@@ -23,8 +23,8 @@ import aiohttp
 import mock
 import pytest
 
-from hikari.net import tracing
 from hikari.net import http_client
+from hikari.net import tracing
 from tests.hikari import _helpers
 
 
@@ -38,19 +38,19 @@ def client_session():
 @pytest.fixture
 def client(client_session):
     assert client_session, "this param is needed, it ensures aiohttp is patched for the test"
-    client = http_client.HTTPClient()
+    client = http_client.HTTPClient(mock.MagicMock())
     yield client
 
 
 @pytest.mark.asyncio
 class TestInit:
     async def test_CFRayTracer_used_for_non_debug(self):
-        async with http_client.HTTPClient(debug=False) as client:
+        async with http_client.HTTPClient(debug=False, logger=mock.MagicMock()) as client:
             assert len(client._tracers) == 1
             assert isinstance(client._tracers[0], tracing.CFRayTracer)
 
     async def test_DebugTracer_used_for_debug(self):
-        async with http_client.HTTPClient(debug=True) as client:
+        async with http_client.HTTPClient(debug=True, logger=mock.MagicMock()) as client:
             assert len(client._tracers) == 1
             assert isinstance(client._tracers[0], tracing.DebugTracer)
 

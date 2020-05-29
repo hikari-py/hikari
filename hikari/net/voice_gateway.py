@@ -22,7 +22,7 @@ from __future__ import annotations
 __all__ = ["VoiceGateway"]
 
 import asyncio
-import json
+import enum
 import math
 import time
 import typing
@@ -32,13 +32,11 @@ import aiohttp
 import attr
 
 from hikari import errors
-from hikari.internal import class_helpers
-from hikari.internal import conversions
-from hikari.internal import more_enums
-from hikari.internal import more_typing
-from hikari.internal import ratelimits
 from hikari.models import bases
 from hikari.net import http_client
+from hikari.net import ratelimits
+from hikari.utilities import binding
+from hikari.utilities import klass
 
 if typing.TYPE_CHECKING:
     from hikari import bot
@@ -48,8 +46,8 @@ if typing.TYPE_CHECKING:
 class VoiceGateway(http_client.HTTPClient):
     """Implementation of the V4 Voice Gateway."""
 
-    @more_enums.must_be_unique
-    class _GatewayCloseCode(int, more_enums.Enum):
+    @enum.unique
+    class _GatewayCloseCode(enum.IntEnum):
         """Reasons for closing a gateway connection."""
 
         RFC_6455_NORMAL_CLOSURE = 1000
@@ -73,8 +71,8 @@ class VoiceGateway(http_client.HTTPClient):
         VOICE_SERVER_CRASHED = 4015
         UNKNOWN_ENCRYPTION_MODE = 4016
 
-    @more_enums.must_be_unique
-    class _GatewayOpcode(int, more_enums.Enum):
+    @enum.unique
+    class _GatewayOpcode(enum.IntEnum):
         IDENTIFY = 0
         SELECT_PROTOCOL = 1
         READY = 2
@@ -105,8 +103,8 @@ class VoiceGateway(http_client.HTTPClient):
         debug: bool = False,
         endpoint: str,
         session_id: str,
-        user_id: bases.UniqueObjectT,
-        server_id: bases.UniqueObjectT,
+        user_id: bases.UniqueObject,
+        server_id: bases.UniqueObject,
         token: str,
     ) -> None:
         super().__init__(
@@ -114,7 +112,7 @@ class VoiceGateway(http_client.HTTPClient):
             connector=config.tcp_connector_factory() if config.tcp_connector_factory else None,
             debug=debug,
             # Use the server ID to identify each websocket based on a server.
-            logger=class_helpers.get_logger(self, conversions.value_to_snowflake(server_id)),
+            logger=klass.get_logger(self, str(int(server_id))),
             proxy_auth=config.proxy_auth,
             proxy_headers=config.proxy_headers,
             proxy_url=config.proxy_url,
@@ -135,10 +133,10 @@ class VoiceGateway(http_client.HTTPClient):
         self._nonce = None
         self._request_close_event = asyncio.Event()
         self._resumable = False
-        self._server_id = conversions.value_to_snowflake(server_id)
+        self._server_id = str(int(server_id))
         self._session_id = session_id
         self._token = token
-        self._user_id = conversions.value_to_snowflake(user_id)
+        self._user_id = str(int(user_id))
         self._voice_ip = None
         self._voice_modes = []
         self._voice_port = None
@@ -345,13 +343,13 @@ class VoiceGateway(http_client.HTTPClient):
                 }
             )
 
-    async def _receive_json_payload(self) -> more_typing.JSONObject:
+    async def _receive_json_payload(self) -> binding.JSONObject:
         message = await self._ws.receive()
         self.last_message_received = self._now()
 
         if message.type == aiohttp.WSMsgType.TEXT:
             self._log_debug_payload(message.data, "received text payload")
-            return json.loads(message.data)
+            return binding.load_json(message.data)
 
         elif message.type == aiohttp.WSMsgType.CLOSE:
             close_code = self._ws.close_code
@@ -379,8 +377,8 @@ class VoiceGateway(http_client.HTTPClient):
             self.logger.debug("encountered unexpected error", exc_info=ex)
             raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
 
-    async def _send_json(self, payload: more_typing.JSONObject) -> None:
-        message = json.dumps(payload)
+    async def _send_json(self, payload: binding.JSONObject) -> None:
+        message = binding.dump_json(payload)
         self._log_debug_payload(message, "sending json payload")
         await self._ws.send_str(message)
 

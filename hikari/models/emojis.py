@@ -27,8 +27,8 @@ import typing
 import unicodedata
 
 import attr
-
 from hikari.internal import marshaller
+
 from . import bases
 from . import files
 from . import users

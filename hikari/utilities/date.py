@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,88 +16,27 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Basic transformation utilities."""
 
 from __future__ import annotations
 
 __all__ = [
-    "try_cast",
-    "try_cast_or_defer_unary_operator",
-    "put_if_specified",
     "rfc7231_datetime_string_to_datetime",
-    "iso8601_datetime_string_to_datetime",
-    "discord_epoch_to_datetime",
     "datetime_to_discord_epoch",
+    "discord_epoch_to_datetime",
     "unix_epoch_to_datetime",
-    "pluralize",
-    "resolve_signature",
-    "EMPTY",
-    "value_to_snowflake",
-    "json_to_snowflake_map",
-    "json_to_collection",
+    "TimeSpan",
     "timespan_to_int",
 ]
 
 import datetime
 import email.utils
-import inspect
 import re
 import typing
-
-from hikari.internal import unset
-
-if typing.TYPE_CHECKING:
-    from hikari.internal import more_typing
-    from hikari.models import bases
-
-    _T = typing.TypeVar("_T")
-    _T_co = typing.TypeVar("_T_co", covariant=True)
-    _T_contra = typing.TypeVar("_T_contra", contravariant=True)
-    _Unique_contra = typing.TypeVar("_Unique_contra", bound=bases.Unique, contravariant=True)
-    _CollectionImpl_contra = typing.TypeVar("_CollectionImpl_contra", bound=typing.Collection, contravariant=True)
 
 DISCORD_EPOCH: typing.Final[int] = 1_420_070_400
 ISO_8601_DATE_PART: typing.Final[typing.Pattern] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
 ISO_8601_TIME_PART: typing.Final[typing.Pattern] = re.compile(r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I)
 ISO_8601_TZ_PART: typing.Final[typing.Pattern] = re.compile(r"([+-])(\d{2}):(\d{2})$")
-
-
-#: TODO: remove
-def try_cast(value, cast, default, /):
-    return NotImplemented
-
-
-#: TODO: remove
-def try_cast_or_defer_unary_operator(type_, /):
-    return NotImplemented
-
-
-def put_if_specified(
-    mapping: typing.Dict[typing.Hashable, typing.Any],
-    key: typing.Hashable,
-    value: typing.Any,
-    cast: typing.Optional[typing.Callable[[_T], _T_co]] = None,
-    /,
-) -> None:
-    """Add a value to the mapping under the given key as long as the value is not `...`.
-
-    Parameters
-    ----------
-    mapping : typing.Dict[typing.Hashable, typing.Any]
-        The mapping to add to.
-    key : typing.Hashable
-        The key to add the value under.
-    value : typing.Any
-        The value to add.
-    cast : typing.Callable[[`input type`], `output type`] | None
-        Optional cast to apply to the value when before inserting it into the
-        mapping.
-    """
-    if value is not unset.UNSET:
-        if cast:
-            mapping[key] = cast(value)
-        else:
-            mapping[key] = value
 
 
 def rfc7231_datetime_string_to_datetime(date_str: str, /) -> datetime.datetime:
@@ -220,83 +159,11 @@ def unix_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
             return datetime.datetime.min
 
 
-def pluralize(count: int, name: str, suffix: str = "s") -> str:
-    """Pluralizes a word."""
-    return f"{count} {name + suffix}" if count - 1 else f"{count} {name}"
+TimeSpan = typing.Union[int, float, datetime.timedelta]
+"""A representation of time."""
 
 
-EMPTY: typing.Final[inspect.Parameter.empty] = inspect.Parameter.empty
-"""A singleton that empty annotations will be set to in `resolve_signature`."""
-
-
-def resolve_signature(func: typing.Callable) -> inspect.Signature:
-    """Get the `inspect.Signature` of `func` with resolved forward annotations.
-
-    Parameters
-    ----------
-    func : typing.Callable[[...], ...]
-        The function to get the resolved annotations from.
-
-    Returns
-    -------
-    typing.Signature
-        A `typing.Signature` object with all forward reference annotations
-        resolved.
-    """
-    signature = inspect.signature(func)
-    resolved_type_hints = None
-    parameters = []
-    for key, value in signature.parameters.items():
-        if isinstance(value.annotation, str):
-            if resolved_type_hints is None:
-                resolved_type_hints = typing.get_type_hints(func)
-            parameters.append(value.replace(annotation=resolved_type_hints[key]))
-        else:
-            parameters.append(value)
-    signature = signature.replace(parameters=parameters)
-
-    if isinstance(signature.return_annotation, str):
-        if resolved_type_hints is None:
-            return_annotation = typing.get_type_hints(func)["return"]
-        else:
-            return_annotation = resolved_type_hints["return"]
-        signature = signature.replace(return_annotation=return_annotation)
-
-    return signature
-
-
-def value_to_snowflake(value: typing.Union[typing.SupportsInt, int]) -> str:
-    """Cast the given object to an int and return the result as a string.
-
-    Parameters
-    ----------
-    value : typing.SupportsInt | int
-        A value that can be cast to an `int`.
-
-    Returns
-    -------
-    str
-        The string representation of the integer value.
-    """
-    return str(int(value))
-
-
-def json_to_snowflake_map(
-    payload: more_typing.JSONArray, cast: typing.Callable[[more_typing.JSONType], _Unique_contra]
-) -> typing.Mapping[bases.Snowflake, _Unique_contra]:
-    items = (cast(obj) for obj in payload)
-    return {item.id: item for item in items}
-
-
-def json_to_collection(
-    payload: more_typing.JSONArray,
-    cast: typing.Callable[[more_typing.JSONType], _T_contra],
-    collection_type: typing.Type[_CollectionImpl_contra] = list,
-) -> _CollectionImpl_contra[_T_contra]:
-    return collection_type(cast(obj) for obj in payload)
-
-
-def timespan_to_int(value: typing.Union[more_typing.TimeSpanT]) -> int:
+def timespan_to_int(value: typing.Union[TimeSpan], /) -> int:
     """Cast the given timespan in seconds to an integer value.
 
     Parameters

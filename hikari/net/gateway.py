@@ -23,7 +23,7 @@ from __future__ import annotations
 __all__ = ["Gateway"]
 
 import asyncio
-import json
+import enum
 import math
 import time
 import typing
@@ -33,26 +33,25 @@ import zlib
 import aiohttp
 import attr
 
-
 from hikari import component
 from hikari import errors
 from hikari import http_settings
-from hikari.internal import class_helpers
-from hikari.internal import more_enums
-from hikari.internal import ratelimits
-from hikari.internal import unset
-from hikari.models import bases
-from hikari.models import channels
-from hikari.models import guilds
 from hikari.net import http_client
+from hikari.net import ratelimits
 from hikari.net import user_agents
+from hikari.utilities import binding
+from hikari.utilities import klass
+from hikari.utilities import snowflake
+from hikari.utilities import unset
 
 if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import app as app_
+    from hikari.utilities import aio
+    from hikari.models import channels
+    from hikari.models import guilds
     from hikari.models import intents as intents_
-    from hikari.internal import more_typing
 
 
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)
@@ -111,8 +110,8 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         Gateway API version to use.
     """
 
-    @more_enums.must_be_unique
-    class _GatewayCloseCode(int, more_enums.Enum):
+    @enum.unique
+    class _GatewayCloseCode(enum.IntEnum):
         RFC_6455_NORMAL_CLOSURE = 1000
         RFC_6455_GOING_AWAY = 1001
         RFC_6455_PROTOCOL_ERROR = 1002
@@ -142,8 +141,8 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         INVALID_INTENT = 4013
         DISALLOWED_INTENT = 4014
 
-    @more_enums.must_be_unique
-    class _GatewayOpcode(int, more_enums.Enum):
+    @enum.unique
+    class _GatewayOpcode(enum.IntEnum):
         DISPATCH = 0
         HEARTBEAT = 1
         IDENTIFY = 2
@@ -189,7 +188,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             allow_redirects=config.allow_redirects,
             connector=config.tcp_connector_factory() if config.tcp_connector_factory else None,
             debug=debug,
-            logger=class_helpers.get_logger(self, str(shard_id)),
+            logger=klass.get_logger(self, str(shard_id)),
             proxy_auth=config.proxy_auth,
             proxy_headers=config.proxy_headers,
             proxy_url=config.proxy_url,
@@ -247,7 +246,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         """Return whether the shard is alive."""
         return not math.isnan(self.connected_at)
 
-    async def start(self) -> more_typing.Task[None]:
+    async def start(self) -> aio.Task[None]:
         """Start the shard, wait for it to become ready.
 
         Returns
@@ -413,8 +412,8 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
     async def update_voice_state(
         self,
-        guild: typing.Union[guilds.PartialGuild, bases.Snowflake, int, str],
-        channel: typing.Union[channels.GuildVoiceChannel, bases.Snowflake, int, str, None],
+        guild: typing.Union[guilds.PartialGuild, snowflake.Snowflake, int, str],
+        channel: typing.Union[channels.GuildVoiceChannel, snowflake.Snowflake, int, str, None],
         *,
         self_mute: bool = False,
         self_deaf: bool = False,
@@ -449,7 +448,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
     async def _close_ws(self, code: int, message: str):
         self.logger.debug("sending close frame with code %s and message %r", int(code), message)
-        # None if the websocket errored on initialziation.
+        # None if the websocket error'ed on initialization.
         if self._ws is not None:
             await self._ws.close(code=code, message=bytes(message, "utf-8"))
 
@@ -568,7 +567,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             else:
                 self.logger.debug("ignoring unrecognised opcode %s", op)
 
-    async def _receive_json_payload(self) -> more_typing.JSONObject:
+    async def _receive_json_payload(self) -> binding.JSONObject:
         message = await self._receive_raw()
 
         if message.type == aiohttp.WSMsgType.BINARY:
@@ -604,7 +603,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             self.logger.debug("encountered unexpected error", exc_info=ex)
             raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
 
-        return json.loads(string)
+        return binding.load_json(string)
 
     async def _receive_zlib_message(self, first_packet: bytes) -> typing.Tuple[int, str]:
         buff = bytearray(first_packet)
@@ -625,13 +624,13 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self.last_message_received = self._now()
         return packet
 
-    async def _send_json(self, payload: more_typing.JSONObject) -> None:
+    async def _send_json(self, payload: binding.JSONObject) -> None:
         await self.ratelimiter.acquire()
-        message = json.dumps(payload)
+        message = binding.dump_json(payload)
         self._log_debug_payload(message, "sending json payload")
         await self._ws.send_str(message)
 
-    def _dispatch(self, event_name: str, payload: more_typing.JSONType) -> typing.Coroutine[None]:
+    def _dispatch(self, event_name: str, payload: binding.JSONObject) -> typing.Coroutine[None, typing.Any, None]:
         return self._app.event_consumer.consume_raw_event(self, event_name, payload)
 
     @staticmethod
@@ -654,7 +653,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         is_afk: typing.Union[unset.Unset, bool] = unset.UNSET,
         status: typing.Union[unset.Unset, guilds.PresenceStatus] = unset.UNSET,
         activity: typing.Union[unset.Unset, typing.Optional[Activity]] = unset.UNSET,
-    ) -> more_typing.JSONObject:
+    ) -> binding.JSONObject:
         if unset.is_unset(idle_since):
             idle_since = self._idle_since
         if unset.is_unset(is_afk):

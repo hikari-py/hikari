@@ -25,19 +25,21 @@ import abc
 import typing
 
 from hikari import app as app_
-from hikari.internal import conversions
-from hikari.internal import more_collections
-from hikari.internal import more_typing
-from hikari.internal import unset
 from hikari.models import applications
 from hikari.models import audit_logs
-from hikari.models import bases
 from hikari.models import guilds
 from hikari.models import messages
 from hikari.models import users
 from hikari.net import routes
+from hikari.utilities import binding
+from hikari.utilities import snowflake
+from hikari.utilities import unset
 
 _T = typing.TypeVar("_T")
+
+
+def _empty_generator():
+    yield from ()
 
 
 class LazyIterator(typing.Generic[_T], abc.ABC):
@@ -213,7 +215,7 @@ class _BufferedLazyIterator(typing.Generic[_T], LazyIterator[_T]):
     __slots__ = ("_buffer",)
 
     def __init__(self) -> None:
-        self._buffer = (_ for _ in more_collections.EMPTY_COLLECTION)
+        self._buffer = _empty_generator()
 
     @abc.abstractmethod
     async def _next_chunk(self) -> typing.Optional[typing.Generator[typing.Any, None, _T]]:
@@ -243,10 +245,10 @@ class MessageIterator(_BufferedLazyIterator[messages.Message]):
     def __init__(
         self,
         app: app_.IRESTApp,
-        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
-        channel_id: str,
+        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, binding.JSONArray]],
+        channel_id: typing.Union[typing.SupportsInt, int],
         direction: str,
-        first_id: str,
+        first_id: typing.Union[typing.SupportsInt, int],
     ) -> None:
         super().__init__()
         self._app = app
@@ -256,7 +258,10 @@ class MessageIterator(_BufferedLazyIterator[messages.Message]):
         self._route = routes.GET_CHANNEL_MESSAGES.compile(channel=channel_id)
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[messages.Message, typing.Any, None]]:
-        chunk = await self._request_call(self._route, query={self._direction: self._first_id, "limit": 100})
+        query = binding.StringMapBuilder()
+        query.put(self._direction, self._first_id)
+        query.put("limit", 100)
+        chunk = await self._request_call(self._route, query)
 
         if not chunk:
             return None
@@ -275,19 +280,22 @@ class ReactorIterator(_BufferedLazyIterator[users.User]):
     def __init__(
         self,
         app: app_.IRESTApp,
-        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
-        channel_id: str,
-        message_id: str,
+        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, binding.JSONArray]],
+        channel_id: typing.Union[typing.SupportsInt, int],
+        message_id: typing.Union[typing.SupportsInt, int],
         emoji: str,
     ) -> None:
         super().__init__()
         self._app = app
         self._request_call = request_call
-        self._first_id = bases.Snowflake.min()
-        self._route = routes.GET_REACTIONS.compile(channel_id=channel_id, message_id=message_id, emoji=emoji)
+        self._first_id = snowflake.Snowflake.min()
+        self._route = routes.GET_REACTIONS.compile(channel=channel_id, message=message_id, emoji=emoji)
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[users.User, typing.Any, None]]:
-        chunk = await self._request_call(self._route, query={"after": self._first_id, "limit": 100})
+        query = binding.StringMapBuilder()
+        query.put("after", self._first_id)
+        query.put("limit", 100)
+        chunk = await self._request_call(self._route, query=query)
 
         if not chunk:
             return None
@@ -304,9 +312,9 @@ class OwnGuildIterator(_BufferedLazyIterator[applications.OwnGuild]):
     def __init__(
         self,
         app: app_.IRESTApp,
-        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
+        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, binding.JSONArray]],
         newest_first: bool,
-        first_id: str,
+        first_id: typing.Union[typing.SupportsInt, int],
     ) -> None:
         super().__init__()
         self._app = app
@@ -316,9 +324,11 @@ class OwnGuildIterator(_BufferedLazyIterator[applications.OwnGuild]):
         self._route = routes.GET_MY_GUILDS.compile()
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[applications.OwnGuild, typing.Any, None]]:
-        kwargs = {"before" if self._newest_first else "after": self._first_id, "limit": 100}
+        query = binding.StringMapBuilder()
+        query.put("before" if self._newest_first else "after", self._first_id)
+        query.put("limit", 100)
 
-        chunk = await self._request_call(self._route, query=kwargs)
+        chunk = await self._request_call(self._route, query=query)
 
         if not chunk:
             return None
@@ -335,21 +345,25 @@ class MemberIterator(_BufferedLazyIterator[guilds.GuildMember]):
     def __init__(
         self,
         app: app_.IRESTApp,
-        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONArray]],
-        guild_id: str,
+        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, binding.JSONArray]],
+        guild_id: typing.Union[typing.SupportsInt, int],
     ) -> None:
         super().__init__()
         self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild_id)
         self._request_call = request_call
         self._app = app
-        self._first_id = bases.Snowflake.min()
+        self._first_id = snowflake.Snowflake.min()
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.GuildMember, typing.Any, None]]:
-        chunk = await self._request_call(self._route, query={"after": self._first_id, "limit": 100})
+        query = binding.StringMapBuilder()
+        query.put("after", self._first_id)
+        query.put("limit", 100)
+        chunk = await self._request_call(self._route, query=query)
 
         if not chunk:
             return None
 
+        # noinspection PyTypeChecker
         self._first_id = chunk[-1]["user"]["id"]
 
         return (self._app.entity_factory.deserialize_guild_member(m) for m in chunk)
@@ -361,10 +375,10 @@ class AuditLogIterator(LazyIterator[audit_logs.AuditLog]):
     def __init__(
         self,
         app: app_.IRESTApp,
-        request_call: typing.Callable[..., more_typing.Coroutine[more_typing.JSONObject]],
-        guild_id: str,
-        before: str,
-        user_id: typing.Optional[str, unset.Unset],
+        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, binding.JSONObject]],
+        guild_id: typing.Union[typing.SupportsInt, int],
+        before: typing.Union[typing.SupportsInt, int],
+        user_id: typing.Union[typing.SupportsInt, int, unset.Unset],
         action_type: typing.Union[int, unset.Unset],
     ) -> None:
         self._action_type = action_type
@@ -375,9 +389,10 @@ class AuditLogIterator(LazyIterator[audit_logs.AuditLog]):
         self._user_id = user_id
 
     async def __anext__(self) -> audit_logs.AuditLog:
-        query = {"limit": 100}
-        conversions.put_if_specified(query, "user_id", self._user_id)
-        conversions.put_if_specified(query, "event_type", self._action_type)
+        query = binding.StringMapBuilder()
+        query.put("limit", 100)
+        query.put("user_id", self._user_id)
+        query.put("event_type", self._action_type)
         response = await self._request_call(self._route, query=query)
 
         if not response["entries"]:

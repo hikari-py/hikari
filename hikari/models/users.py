@@ -25,9 +25,9 @@ __all__ = ["User", "MyUser", "UserFlag", "PremiumType"]
 import typing
 
 import attr
-
 from hikari.internal import marshaller
 from hikari.internal import more_enums
+
 from . import bases
 from ..net import urls
 
