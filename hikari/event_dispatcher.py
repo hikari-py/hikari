@@ -33,6 +33,9 @@ if typing.TYPE_CHECKING:
 
     _EventT = typing.TypeVar("_EventT", bound=base.HikariEvent, covariant=True)
     _PredicateT = typing.Callable[[_EventT], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
+    _SyncCallbackT = typing.Callable[[_EventT], None]
+    _AsyncCallbackT = typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]]
+    _CallbackT = typing.Union[_SyncCallbackT, _AsyncCallbackT]
 
 
 class IEventDispatcher(component.IComponent, abc.ABC):
@@ -102,7 +105,7 @@ class IEventDispatcher(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def listen(
         self, event_type: typing.Union[undefined.Undefined, typing.Type[_EventT]] = undefined.Undefined(),
-    ) -> None:
+    ) -> typing.Callable[[_CallbackT], _CallbackT]:
         """Generate a decorator to subscribe a callback to an event type.
 
         This is a second-order decorator.
@@ -132,7 +135,7 @@ class IEventDispatcher(component.IComponent, abc.ABC):
         event_type : typing.Type[hikari.events.bases.HikariEvent]
             The event type to listen for. This will listen for subclasses of
             this type additionally.
-        predicate :
+        predicate
             A function or coroutine taking the event as the single parameter.
             This should return `True` if the event is one you want to return,
             or `False` if the event should not be returned.
