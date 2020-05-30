@@ -142,7 +142,7 @@ class CacheImpl(cache.ICache):
     async def create_guild_ban(self, payload: binding.JSONObject) -> guilds.GuildMemberBan:
         pass
 
-    async def create_guild_integration(self, payload: binding.JSONObject) -> guilds.PartialGuildIntegration:
+    async def create_guild_integration(self, payload: binding.JSONObject) -> guilds.PartialIntegration:
         pass
 
     async def create_guild(self, payload: binding.JSONObject, can_cache: bool = False) -> guilds.PartialGuild:

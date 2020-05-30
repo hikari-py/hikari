@@ -209,7 +209,7 @@ class ICache(component.IComponent, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def create_guild_integration(self, payload: binding.JSONObject) -> guilds.PartialGuildIntegration:
+    async def create_guild_integration(self, payload: binding.JSONObject) -> guilds.PartialIntegration:
         ...
 
     @abc.abstractmethod

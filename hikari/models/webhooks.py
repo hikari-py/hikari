@@ -22,14 +22,12 @@ from __future__ import annotations
 
 __all__ = ["WebhookType", "Webhook"]
 
+import enum
 import typing
 
 import attr
-from hikari.internal import marshaller
-from hikari.internal import more_enums
 
 from . import bases
-from . import users as users_
 from ..net import urls
 
 if typing.TYPE_CHECKING:
@@ -38,10 +36,11 @@ if typing.TYPE_CHECKING:
     from . import files as files_
     from . import guilds as guilds_
     from . import messages as messages_
+    from . import users as users_
 
 
-@more_enums.must_be_unique
-class WebhookType(int, more_enums.Enum):
+@enum.unique
+class WebhookType(int, enum.Enum):
     """Types of webhook."""
 
     INCOMING = 1
@@ -51,9 +50,8 @@ class WebhookType(int, more_enums.Enum):
     """Channel Follower webhook."""
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class Webhook(bases.Unique, marshaller.Deserializable):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class Webhook(bases.Entity, bases.Unique):
     """Represents a webhook object on Discord.
 
     This is an endpoint that can have messages sent to it using standard
@@ -61,26 +59,17 @@ class Webhook(bases.Unique, marshaller.Deserializable):
     send informational messages to specific channels.
     """
 
-    type: WebhookType = marshaller.attrib(deserializer=WebhookType, eq=False, hash=False, repr=True)
+    type: WebhookType = attr.ib(eq=False, hash=False, repr=True)
     """The type of the webhook."""
 
-    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False, repr=True
-    )
+    guild_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The guild ID of the webhook."""
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, eq=False, hash=False, repr=True)
+    channel_id: bases.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The channel ID this webhook is for."""
 
-    author: typing.Optional[users_.User] = marshaller.attrib(
-        raw_name="user",
-        deserializer=users_.User.deserialize,
-        if_undefined=None,
-        inherit_kwargs=True,
-        default=None,
-        eq=False,
-        hash=False,
-        repr=True,
+    author: typing.Optional[users_.User] = attr.ib(
+        eq=False, hash=False, repr=True,
     )
     """The user that created the webhook
 
@@ -89,17 +78,13 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         than the webhook's token.
     """
 
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False, repr=True)
+    name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The name of the webhook."""
 
-    avatar_hash: typing.Optional[str] = marshaller.attrib(
-        raw_name="avatar", deserializer=str, if_none=None, eq=False, hash=False
-    )
+    avatar_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The avatar hash of the webhook."""
 
-    token: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, if_undefined=None, default=None, eq=False, hash=False
-    )
+    token: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The token for the webhook.
 
     !!! info

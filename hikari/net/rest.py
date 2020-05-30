@@ -305,24 +305,24 @@ class REST(http_client.HTTPClient, component.IComponent):
         if user_mentions is True:
             parsed_mentions.append("users")
 
-        # This covers both `False` and an array of IDs/objs by using `user_mentions or EMPTY_SEQUENCE`, where a
+        # This covers both `False` and an array of IDs/objs by using `user_mentions or a empty sequence`, where a
         # resultant empty list will mean that all user mentions are blacklisted.
         else:
             allowed_mentions["users"] = list(
                 # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
-                dict.fromkeys(str(int(m)) for m in user_mentions)
+                dict.fromkeys(str(int(m)) for m in user_mentions or ())
             )
             if len(allowed_mentions["users"]) > 100:
                 raise ValueError("Only up to 100 users can be provided.")
         if role_mentions is True:
             parsed_mentions.append("roles")
 
-        # This covers both `False` and an array of IDs/objs by using `user_mentions or EMPTY_SEQUENCE`, where a
+        # This covers both `False` and an array of IDs/objs by using `user_mentions or a empty sequence`, where a
         # resultant empty list will mean that all role mentions are blacklisted.
         else:
             allowed_mentions["roles"] = list(
                 # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
-                dict.fromkeys(str(int(m)) for m in role_mentions)
+                dict.fromkeys(str(int(m)) for m in role_mentions or ())
             )
             if len(allowed_mentions["roles"]) > 100:
                 raise ValueError("Only up to 100 roles can be provided.")
@@ -2026,15 +2026,15 @@ class REST(http_client.HTTPClient, component.IComponent):
 
     async def fetch_integrations(
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
-    ) -> typing.Sequence[guilds.GuildIntegration]:
+    ) -> typing.Sequence[guilds.Integration]:
         route = routes.GET_GUILD_INTEGRATIONS.compile(guild=guild)
         response = await self._request(route)
-        return binding.cast_json_array(response, self._app.entity_factory.deserialize_guild_integration)
+        return binding.cast_json_array(response, self._app.entity_factory.deserialize_integration)
 
     async def edit_integration(
         self,
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        integration: typing.Union[guilds.GuildIntegration, bases.UniqueObject],
+        integration: typing.Union[guilds.Integration, bases.UniqueObject],
         *,
         expire_behaviour: typing.Union[unset.Unset, guilds.IntegrationExpireBehaviour] = unset.UNSET,
         expire_grace_period: typing.Union[unset.Unset, date.TimeSpan] = unset.UNSET,
@@ -2052,7 +2052,7 @@ class REST(http_client.HTTPClient, component.IComponent):
     async def delete_integration(
         self,
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        integration: typing.Union[guilds.GuildIntegration, bases.UniqueObject],
+        integration: typing.Union[guilds.Integration, bases.UniqueObject],
         *,
         reason: typing.Union[unset.Unset, str] = unset.UNSET,
     ) -> None:
@@ -2062,7 +2062,7 @@ class REST(http_client.HTTPClient, component.IComponent):
     async def sync_integration(
         self,
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        integration: typing.Union[guilds.GuildIntegration, bases.UniqueObject],
+        integration: typing.Union[guilds.Integration, bases.UniqueObject],
     ) -> None:
         route = routes.POST_GUILD_INTEGRATION_SYNC.compile(guild=guild, integration=integration)
         await self._request(route)
