@@ -142,8 +142,8 @@
     }
     /* Make TOC lists have 2+ columns when viewport is wide enough.
        Assuming ~20-character identifiers and ~30% wide sidebar. */
-    @media (min-width: 200ex) { #index .two-column { column-count: 2 } }
-    @media (min-width: 300ex) { #index .two-column { column-count: 3 } }
+    @media (min-width: 300ex) { #index .two-column { column-count: 2 } }
+    @media (min-width: 500ex) { #index .two-column { column-count: 3 } }
   dl {
     margin-bottom: 2em;
   }
@@ -275,7 +275,7 @@
 </%def>
 
 <%def name="desktop()" filter="minify_css">
-  @media screen and (min-width: 700px) {
+  @media screen and (min-width: 1100px) {
     #sidebar {
       width: 30%;
       height: 100vh;

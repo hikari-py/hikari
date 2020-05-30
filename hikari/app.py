@@ -19,7 +19,7 @@
 """Contains the core interfaces for a Hikari application."""
 from __future__ import annotations
 
-__all__ = ["IApp", "IRESTApp", "IGatewayConsumer", "IGatewayDispatcher", "IGatewayZookeeper"]
+__all__ = ["IApp", "IRESTApp", "IGatewayConsumer", "IGatewayDispatcher", "IGatewayZookeeper", "IBot"]
 
 import abc
 import functools
@@ -126,8 +126,9 @@ class IGatewayDispatcher(IApp, abc.ABC):
 
         # ...instead of having to do this...
 
-        >>> @bot.listen()
+        >>> @bot.listen(hikari.MessageCreateEvent)
         >>> async def on_message(event: hikari.MessageCreateEvent) -> None: ...
+
     """
 
     __slots__ = ()
