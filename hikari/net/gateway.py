@@ -35,40 +35,24 @@ import attr
 
 from hikari import component
 from hikari import errors
-from hikari import http_settings
-from hikari.models import guilds
 from hikari.net import http_client
 from hikari.net import ratelimits
 from hikari.net import user_agents
 from hikari.utilities import data_binding
 from hikari.utilities import klass
-from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import app as app_
-    from hikari.utilities import aio
+    from hikari import http_settings
     from hikari.models import channels
+    from hikari.models import guilds
     from hikari.models import intents as intents_
-
-
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class Activity:
-    """An activity that the bot can set for one or more shards.
-
-    This will show the activity as the bot's presence.
-    """
-
-    name: str = attr.ib()
-    """The activity name."""
-
-    url: typing.Optional[str] = attr.ib(default=None)
-    """The activity URL. Only valid for `STREAMING` activities."""
-
-    type: guilds.ActivityType = attr.ib(converter=guilds.ActivityType)
-    """The activity type."""
+    from hikari.models import presences
+    from hikari.utilities import snowflake
+    from hikari.utilities import aio
 
 
 class Gateway(http_client.HTTPClient, component.IComponent):
@@ -83,13 +67,13 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     debug : bool
         If `True`, each sent and received payload is dumped to the logs. If
         `False`, only the fact that data has been sent/received will be logged.
-    initial_activity : Activity | None
+    initial_activity : hikari.presences.OwnActivity | None
         The initial activity to appear to have for this shard.
     initial_idle_since : datetime.datetime | None
         The datetime to appear to be idle since.
     initial_is_afk : bool | None
         Whether to appear to be AFK or not on login.
-    initial_status : hikari.models.guilds.PresenceStatus | None
+    initial_status : hikari.models.presences.PresenceStatus | None
         The initial status to set on login for the shard.
     intents : hikari.models.intents.Intent | None
         Collection of intents to use, or `None` to not use intents at all.
@@ -171,10 +155,10 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         app: app_.IGatewayConsumer,
         config: http_settings.HTTPSettings,
         debug: bool = False,
-        initial_activity: typing.Optional[Activity] = None,
+        initial_activity: typing.Optional[presences.OwnActivity] = None,
         initial_idle_since: typing.Optional[datetime.datetime] = None,
         initial_is_afk: typing.Optional[bool] = None,
-        initial_status: typing.Optional[guilds.PresenceStatus] = None,
+        initial_status: typing.Optional[presences.PresenceStatus] = None,
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
         shard_id: int = 0,
@@ -384,24 +368,24 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         *,
         idle_since: typing.Union[undefined.Undefined, typing.Optional[datetime.datetime]] = undefined.Undefined(),
         is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        activity: typing.Union[undefined.Undefined, typing.Optional[Activity]] = undefined.Undefined(),
-        status: typing.Union[undefined.Undefined, guilds.PresenceStatus] = undefined.Undefined(),
+        activity: typing.Union[undefined.Undefined, typing.Optional[presences.OwnActivity]] = undefined.Undefined(),
+        status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
     ) -> None:
         """Update the presence of the shard user.
 
         Parameters
         ----------
-        idle_since : datetime.datetime | None | UNSET
-            The datetime that the user started being idle. If unset, this
+        idle_since : datetime.datetime | None | hikari.utilities.undefined.Undefined
+            The datetime that the user started being idle. If undefined, this
             will not be changed.
-        is_afk : bool | UNSET
+        is_afk : bool | hikari.utilities.undefined.Undefined
             If `True`, the user is marked as AFK. If `False`, the user is marked
-            as being active. If unset, this will not be changed.
-        activity : Activity | None | UNSET
-            The activity to appear to be playing. If unset, this will not be
+            as being active. If undefined, this will not be changed.
+        activity : hikari.models.presences.OwnActivity | None | hikari.utilities.undefined.Undefined
+            The activity to appear to be playing. If undefined, this will not be
             changed.
-        status : hikari.models.guilds.PresenceStatus | UNSET
-            The web status to show. If unset, this will not be changed.
+        status : hikari.models.presences.PresenceStatus | hikari.utilities.undefined.Undefined
+            The web status to show. If undefined, this will not be changed.
         """
         payload = self._build_presence_payload(idle_since, is_afk, activity, status)
         await self._send_json({"op": self._GatewayOpcode.PRESENCE_UPDATE, "d": payload})
@@ -422,9 +406,9 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        guild : hikari.models.guilds.PartialGuild | hikari.models.bases.Snowflake | int | str
+        guild : hikari.models.guilds.PartialGuild | hikari.utilities.snowflake.Snowflake | int | str
             The guild or guild ID to update the voice state for.
-        channel : hikari.models.channels.GuildVoiceChannel | hikari.models.bases.Snowflake | int | str | None
+        channel : hikari.models.channels.GuildVoiceChannel | hikari.utilities.Snowflake | int | str | None
             The channel or channel ID to update the voice state for. If `None`
             then the bot will leave the voice channel that it is in for the
             given guild.
@@ -651,8 +635,8 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self,
         idle_since: typing.Union[undefined.Undefined, typing.Optional[datetime.datetime]] = undefined.Undefined(),
         is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        status: typing.Union[undefined.Undefined, guilds.PresenceStatus] = undefined.Undefined(),
-        activity: typing.Union[undefined.Undefined, typing.Optional[Activity]] = undefined.Undefined(),
+        status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
+        activity: typing.Union[undefined.Undefined, typing.Optional[presences.OwnActivity]] = undefined.Undefined(),
     ) -> data_binding.JSONObject:
         if isinstance(idle_since, undefined.Undefined):
             idle_since = self._idle_since
@@ -663,7 +647,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         if isinstance(activity, undefined.Undefined):
             activity = self._activity
 
-        activity = typing.cast(typing.Optional[Activity], activity)
+        activity = typing.cast(typing.Optional[presences.OwnActivity], activity)
 
         if activity is None:
             game = None
@@ -677,6 +661,6 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         return {
             "since": idle_since.timestamp() if idle_since is not None else None,
             "afk": is_afk if is_afk is not None else False,
-            "status": status.value if status is not None else guilds.PresenceStatus.ONLINE.value,
+            "status": status.value if status is not None else presences.PresenceStatus.ONLINE.value,
             "game": game,
         }

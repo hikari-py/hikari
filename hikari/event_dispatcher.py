@@ -109,9 +109,9 @@ class IEventDispatcher(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        event_type : hikari.utilities.unset.Undefined OR typing.Type[hikari.events.bases.HikariEvent]
+        event_type : hikari.utilities.undefined.Undefined OR typing.Type[hikari.events.bases.HikariEvent]
             The event type to subscribe to. The implementation may allow this
-            to be unset. If this is the case, the event type will be inferred
+            to be undefined. If this is the case, the event type will be inferred
             instead from the type hints on the function signature.
 
         Returns

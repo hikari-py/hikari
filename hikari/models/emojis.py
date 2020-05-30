@@ -34,6 +34,7 @@ from hikari.net import urls
 
 if typing.TYPE_CHECKING:
     from hikari.models import users
+    from hikari.utilities import snowflake
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -243,7 +244,7 @@ class KnownCustomEmoji(CustomEmoji):
     _are_ part of. Ass a result, it contains a lot more information with it.
     """
 
-    role_ids: typing.Set[bases.Snowflake] = attr.ib(
+    role_ids: typing.Set[snowflake.Snowflake] = attr.ib(
         eq=False, hash=False,
     )
     """The IDs of the roles that are whitelisted to use this emoji.

@@ -45,6 +45,7 @@ from hikari.models import guilds
 from hikari.models import intents
 from hikari.models import invites
 from hikari.models import users
+from hikari.utilities import snowflake
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
@@ -55,7 +56,7 @@ class BaseChannelEvent(base_events.HikariEvent, base_models.Unique, abc.ABC):
     type: channels.ChannelType = attr.ib(repr=True)
     """The channel's type."""
 
-    guild_id: typing.Optional[base_models.Snowflake] = attr.ib(repr=True)
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild this channel is in, will be `None` for DMs."""
 
     position: typing.Optional[int] = attr.ib()
@@ -65,7 +66,7 @@ class BaseChannelEvent(base_events.HikariEvent, base_models.Unique, abc.ABC):
     """
 
     permission_overwrites: typing.Optional[
-        typing.Mapping[base_models.Snowflake, channels.PermissionOverwrite]
+        typing.Mapping[snowflake.Snowflake, channels.PermissionOverwrite]
     ] = attr.ib()
     """An mapping of the set permission overwrites for this channel, if applicable."""
 
@@ -78,7 +79,7 @@ class BaseChannelEvent(base_events.HikariEvent, base_models.Unique, abc.ABC):
     is_nsfw: typing.Optional[bool] = attr.ib()
     """Whether this channel is nsfw, will be `None` if not applicable."""
 
-    last_message_id: typing.Optional[base_models.Snowflake] = attr.ib()
+    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib()
     """The ID of the last message sent, if it's a text type channel."""
 
     bitrate: typing.Optional[int] = attr.ib()
@@ -93,22 +94,22 @@ class BaseChannelEvent(base_events.HikariEvent, base_models.Unique, abc.ABC):
     This is only applicable to a guild text like channel.
     """
 
-    recipients: typing.Optional[typing.Mapping[base_models.Snowflake, users.User]] = attr.ib()
+    recipients: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = attr.ib()
     """A mapping of this channel's recipient users, if it's a DM or group DM."""
 
     icon_hash: typing.Optional[str] = attr.ib()
     """The hash of this channel's icon, if it's a group DM channel and is set."""
 
-    owner_id: typing.Optional[base_models.Snowflake] = attr.ib()
+    owner_id: typing.Optional[snowflake.Snowflake] = attr.ib()
     """The ID of this channel's creator, if it's a DM channel."""
 
-    application_id: typing.Optional[base_models.Snowflake] = attr.ib()
+    application_id: typing.Optional[snowflake.Snowflake] = attr.ib()
     """The ID of the application that created the group DM.
 
     This is only applicable to bot based group DMs.
     """
 
-    parent_id: typing.Optional[base_models.Snowflake] = attr.ib()
+    parent_id: typing.Optional[snowflake.Snowflake] = attr.ib()
     """The ID of this channels's parent category within guild, if set."""
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib()
@@ -146,13 +147,13 @@ class ChannelPinsUpdateEvent(base_events.HikariEvent):
     when a pinned message is deleted.
     """
 
-    guild_id: typing.Optional[base_models.Snowflake] = attr.ib()
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib()
     """The ID of the guild where this event happened.
 
     Will be `None` if this happened in a DM channel.
     """
 
-    channel_id: base_models.Snowflake = attr.ib(repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel where the message was pinned or unpinned."""
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(repr=True)
@@ -170,10 +171,10 @@ class WebhookUpdateEvent(base_events.HikariEvent):
     Sent when a webhook is updated, created or deleted in a guild.
     """
 
-    guild_id: base_models.Snowflake = attr.ib(repr=True)
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this webhook is being updated in."""
 
-    channel_id: base_models.Snowflake = attr.ib(repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel this webhook is being updated in."""
 
 
@@ -185,22 +186,22 @@ class TypingStartEvent(base_events.HikariEvent):
     Received when a user or bot starts "typing" in a channel.
     """
 
-    channel_id: base_models.Snowflake = attr.ib(repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel this typing event is occurring in."""
 
-    guild_id: typing.Optional[base_models.Snowflake] = attr.ib(repr=True)
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild this typing event is occurring in.
 
     Will be `None` if this event is happening in a DM channel.
     """
 
-    user_id: base_models.Snowflake = attr.ib(repr=True)
+    user_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the user who triggered this typing event."""
 
     timestamp: datetime.datetime = attr.ib()
     """The datetime of when this typing event started."""
 
-    member: typing.Optional[guilds.GuildMember] = attr.ib()
+    member: typing.Optional[guilds.Member] = attr.ib()
     """The member object of the user who triggered this typing event.
 
     Will be `None` if this was triggered in a DM.
@@ -212,7 +213,7 @@ class TypingStartEvent(base_events.HikariEvent):
 class InviteCreateEvent(base_events.HikariEvent):
     """Represents a gateway Invite Create event."""
 
-    channel_id: base_models.Snowflake = attr.ib(repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel this invite targets."""
 
     code: str = attr.ib(repr=True)
@@ -221,7 +222,7 @@ class InviteCreateEvent(base_events.HikariEvent):
     created_at: datetime.datetime = attr.ib()
     """The datetime of when this invite was created."""
 
-    guild_id: typing.Optional[base_models.Snowflake] = attr.ib(repr=True)
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild this invite was created in, if applicable.
 
     Will be `None` for group DM invites.
@@ -263,14 +264,14 @@ class InviteDeleteEvent(base_events.HikariEvent):
     Sent when an invite is deleted for a channel we can access.
     """
 
-    channel_id: base_models.Snowflake = attr.ib(repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel this ID was attached to."""
 
     # TODO: move common fields with InviteCreateEvent into base class.
     code: str = attr.ib(repr=True)
     """The code of this invite."""
 
-    guild_id: typing.Optional[base_models.Snowflake] = attr.ib(repr=True)
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild this invite was deleted in.
 
     This will be `None` if this invite belonged to a DM channel.

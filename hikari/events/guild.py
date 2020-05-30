@@ -49,8 +49,10 @@ from hikari.models import bases as base_models
 from hikari.models import emojis as emojis_models
 from hikari.models import guilds
 from hikari.models import intents
+from hikari.models import presences
 from hikari.models import users
 from hikari.utilities import undefined
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -97,7 +99,7 @@ class GuildUnavailableEvent(base_events.HikariEvent, base_models.Unique):
 class BaseGuildBanEvent(base_events.HikariEvent, abc.ABC):
     """A base object that guild ban events will inherit from."""
 
-    guild_id: base_models.Snowflake = attr.ib(repr=True)
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this ban is in."""
 
     user: users.User = attr.ib(repr=True)
@@ -121,10 +123,10 @@ class GuildBanRemoveEvent(BaseGuildBanEvent):
 class GuildEmojisUpdateEvent(base_events.HikariEvent):
     """Represents a Guild Emoji Update gateway event."""
 
-    guild_id: base_models.Snowflake = attr.ib()
+    guild_id: snowflake.Snowflake = attr.ib()
     """The ID of the guild this emoji was updated in."""
 
-    emojis: typing.Mapping[base_models.Snowflake, emojis_models.KnownCustomEmoji] = attr.ib(repr=True)
+    emojis: typing.Mapping[snowflake.Snowflake, emojis_models.KnownCustomEmoji] = attr.ib(repr=True)
     """The updated mapping of emojis by their ID."""
 
 
@@ -133,16 +135,16 @@ class GuildEmojisUpdateEvent(base_events.HikariEvent):
 class GuildIntegrationsUpdateEvent(base_events.HikariEvent):
     """Used to represent Guild Integration Update gateway events."""
 
-    guild_id: base_models.Snowflake = attr.ib(repr=True)
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild the integration was updated in."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildMemberAddEvent(base_events.HikariEvent, guilds.GuildMember):
+class GuildMemberAddEvent(base_events.HikariEvent, guilds.Member):
     """Used to represent a Guild Member Add gateway event."""
 
-    guild_id: base_models.Snowflake = attr.ib(repr=True)
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild where this member was added."""
 
 
@@ -154,10 +156,10 @@ class GuildMemberUpdateEvent(base_events.HikariEvent):
     Sent when a guild member or their inner user object is updated.
     """
 
-    guild_id: base_models.Snowflake = attr.ib(repr=True)
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this member was updated in."""
 
-    role_ids: typing.Sequence[base_models.Snowflake] = attr.ib()
+    role_ids: typing.Sequence[snowflake.Snowflake] = attr.ib()
     """A sequence of the IDs of the member's current roles."""
 
     user: users.User = attr.ib(repr=True)
@@ -167,7 +169,7 @@ class GuildMemberUpdateEvent(base_events.HikariEvent):
     """This member's nickname.
 
     When set to `None`, this has been removed and when set to
-    `hikari.models.unset.UNSET` this hasn't been acted on.
+    `hikari.models.undefined.Undefined` this hasn't been acted on.
     """
 
     premium_since: typing.Union[None, datetime.datetime, undefined.Undefined] = attr.ib()
@@ -186,7 +188,7 @@ class GuildMemberRemoveEvent(base_events.HikariEvent):
     """
 
     # TODO: make GuildMember event into common base class.
-    guild_id: base_models.Snowflake = attr.ib(repr=True)
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this user was removed from."""
 
     user: users.User = attr.ib(repr=True)
@@ -198,7 +200,7 @@ class GuildMemberRemoveEvent(base_events.HikariEvent):
 class GuildRoleCreateEvent(base_events.HikariEvent):
     """Used to represent a Guild Role Create gateway event."""
 
-    guild_id: base_models.Snowflake = attr.ib(repr=True)
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild where this role was created."""
 
     role: guilds.Role = attr.ib()
@@ -212,7 +214,7 @@ class GuildRoleUpdateEvent(base_events.HikariEvent):
 
     # TODO: make any event with a guild ID into a custom base event.
     # https://pypi.org/project/stupid/ could this work around the multiple inheritance problem?
-    guild_id: base_models.Snowflake = attr.ib(repr=True)
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild where this role was updated."""
 
     role: guilds.Role = attr.ib(repr=True)
@@ -224,16 +226,16 @@ class GuildRoleUpdateEvent(base_events.HikariEvent):
 class GuildRoleDeleteEvent(base_events.HikariEvent):
     """Represents a gateway Guild Role Delete Event."""
 
-    guild_id: base_models.Snowflake = attr.ib(repr=True)
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild where this role is being deleted."""
 
-    role_id: base_models.Snowflake = attr.ib(repr=True)
+    role_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the role being deleted."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_PRESENCES)
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class PresenceUpdateEvent(base_events.HikariEvent, guilds.GuildMemberPresence):
+class PresenceUpdateEvent(base_events.HikariEvent, presences.MemberPresence):
     """Used to represent Presence Update gateway events.
 
     Sent when a guild member changes their presence.

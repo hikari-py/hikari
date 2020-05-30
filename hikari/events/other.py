@@ -38,9 +38,9 @@ import typing
 import attr
 
 from hikari.events import base as base_events
-from hikari.models import bases as base_models
 from hikari.models import guilds
 from hikari.models import users
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     from hikari.net import gateway as gateway_client
@@ -123,7 +123,7 @@ class ReadyEvent(base_events.HikariEvent):
     my_user: users.MyUser = attr.ib(repr=True)
     """The object of the current bot account this connection is for."""
 
-    unavailable_guilds: typing.Mapping[base_models.Snowflake, guilds.UnavailableGuild] = attr.ib()
+    unavailable_guilds: typing.Mapping[snowflake.Snowflake, guilds.UnavailableGuild] = attr.ib()
     """A mapping of the guilds this bot is currently in.
 
     All guilds will start off "unavailable".

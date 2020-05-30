@@ -35,4 +35,4 @@ class IComponent(abc.ABC):
     @property
     @abc.abstractmethod
     def app(self) -> app_.IApp:
-        """The owning application object."""
+        """Application that owns this component."""

@@ -28,17 +28,10 @@ __all__ = []
 import asyncio
 import contextlib
 import datetime
-import types
 import typing
 
 import attr
 
-from hikari import app as app_
-from hikari.models import bases
-from hikari.models import colors
-from hikari.models import files
-from hikari.models import guilds
-from hikari.models import permissions as permissions_
 from hikari.net import routes
 from hikari.utilities import data_binding
 from hikari.utilities import date
@@ -46,7 +39,15 @@ from hikari.utilities import snowflake as snowflake_
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
+    import types
+
+    from hikari import app as app_
+    from hikari.models import bases
     from hikari.models import channels
+    from hikari.models import colors
+    from hikari.models import files
+    from hikari.models import guilds
+    from hikari.models import permissions as permissions_
 
 
 class TypingIndicator:

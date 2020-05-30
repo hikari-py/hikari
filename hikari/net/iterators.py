@@ -337,7 +337,7 @@ class OwnGuildIterator(_BufferedLazyIterator[applications.OwnGuild]):
         return (self._app.entity_factory.deserialize_own_guild(g) for g in chunk)
 
 
-class MemberIterator(_BufferedLazyIterator[guilds.GuildMember]):
+class MemberIterator(_BufferedLazyIterator[guilds.Member]):
     """Implementation of an iterator for retrieving members in a guild."""
 
     __slots__ = ("_app", "_request_call", "_route", "_first_id")
@@ -354,7 +354,7 @@ class MemberIterator(_BufferedLazyIterator[guilds.GuildMember]):
         self._app = app
         self._first_id = snowflake.Snowflake.min()
 
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.GuildMember, typing.Any, None]]:
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.Member, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
         query.put("after", self._first_id)
         query.put("limit", 100)
@@ -366,7 +366,7 @@ class MemberIterator(_BufferedLazyIterator[guilds.GuildMember]):
         # noinspection PyTypeChecker
         self._first_id = chunk[-1]["user"]["id"]
 
-        return (self._app.entity_factory.deserialize_guild_member(m) for m in chunk)
+        return (self._app.entity_factory.deserialize_member(m) for m in chunk)
 
 
 class AuditLogIterator(LazyIterator[audit_logs.AuditLog]):
