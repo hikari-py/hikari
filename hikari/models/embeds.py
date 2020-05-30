@@ -273,7 +273,7 @@ class Embed:
     author: typing.Optional[EmbedAuthor] = attr.ib(default=None,)
     """The author of the embed."""
 
-    fields: typing.Sequence[EmbedField] = attr.ib(factory=list)
+    fields: typing.MutableSequence[EmbedField] = attr.ib(factory=list)
     """The fields of the embed."""
 
     _assets_to_upload = attr.attrib(factory=list)
