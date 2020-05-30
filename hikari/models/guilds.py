@@ -21,13 +21,6 @@
 from __future__ import annotations
 
 __all__ = [
-    "ActivityAssets",
-    "ActivityFlag",
-    "ActivitySecret",
-    "ActivityTimestamps",
-    "ActivityType",
-    "ActivityParty",
-    "ClientStatus",
     "Guild",
     "GuildWidget",
     "Role",
@@ -39,8 +32,7 @@ __all__ = [
     "GuildVerificationLevel",
     "GuildPremiumTier",
     "GuildPreview",
-    "GuildMember",
-    "GuildMemberPresence",
+    "Member",
     "Integration",
     "GuildMemberBan",
     "IntegrationAccount",
@@ -48,9 +40,6 @@ __all__ = [
     "PartialGuild",
     "PartialIntegration",
     "PartialRole",
-    "PresenceActivity",
-    "PresenceStatus",
-    "PresenceUser",
     "UnavailableGuild",
 ]
 
@@ -62,7 +51,6 @@ import attr
 from hikari.models import bases
 from hikari.models import users
 from hikari.net import urls
-from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -71,6 +59,8 @@ if typing.TYPE_CHECKING:
     from hikari.models import colors
     from hikari.models import emojis as emojis_
     from hikari.models import permissions as permissions_
+    from hikari.models import presences
+    from hikari.utilities import snowflake
 
 
 @enum.unique
@@ -217,7 +207,7 @@ class GuildVerificationLevel(int, enum.Enum):
 class GuildWidget(bases.Entity):
     """Represents a guild embed."""
 
-    channel_id: typing.Optional[bases.Snowflake] = attr.ib(repr=True)
+    channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the channel the invite for this embed targets, if enabled."""
 
     is_enabled: bool = attr.ib(repr=True)
@@ -225,10 +215,10 @@ class GuildWidget(bases.Entity):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class GuildMember(bases.Entity):
+class Member(bases.Entity):
     """Used to represent a guild bound member."""
 
-    # TODO: make GuildMember delegate to user and implement a common base class
+    # TODO: make Member delegate to user and implement a common base class
     # this allows members and users to be used interchangeably.
     user: users.User = attr.ib(eq=True, hash=True, repr=True)
     """This member's user object.
@@ -241,7 +231,7 @@ class GuildMember(bases.Entity):
     )
     """This member's nickname, if set."""
 
-    role_ids: typing.Set[bases.Snowflake] = attr.ib(
+    role_ids: typing.Set[snowflake.Snowflake] = attr.ib(
         eq=False, hash=False,
     )
     """A sequence of the IDs of the member's current roles."""
@@ -305,355 +295,6 @@ class Role(PartialRole):
 
 
 @enum.unique
-class ActivityType(int, enum.Enum):
-    """The activity type."""
-
-    PLAYING = 0
-    """Shows up as `Playing <name>`"""
-
-    STREAMING = 1
-
-    LISTENING = 2
-    """Shows up as `Listening to <name>`."""
-
-    WATCHING = 3
-    """Shows up as `Watching <name>`.
-
-    !!! note
-        this is not officially documented, so will be likely removed in the near
-        future.
-    """
-
-    CUSTOM = 4
-    """A custom status.
-
-    To set an emoji with the status, place a unicode emoji or Discord emoji
-    (`:smiley:`) as the first part of the status activity name.
-    """
-
-
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class ActivityTimestamps:
-    """The datetimes for the start and/or end of an activity session."""
-
-    start: typing.Optional[datetime.datetime] = attr.ib(repr=True)
-    """When this activity's session was started, if applicable."""
-
-    end: typing.Optional[datetime.datetime] = attr.ib(repr=True)
-    """When this activity's session will end, if applicable."""
-
-
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class ActivityParty:
-    """Used to represent activity groups of users."""
-
-    id: typing.Optional[str] = attr.ib(eq=True, hash=True, repr=True)
-    """The string id of this party instance, if set."""
-
-    current_size: typing.Optional[int] = attr.ib(eq=False, hash=False)
-    """Current size of this party, if applicable."""
-
-    max_size: typing.Optional[int] = attr.ib(eq=False, hash=False)
-    """Maximum size of this party, if applicable."""
-
-
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class ActivityAssets:
-    """Used to represent possible assets for an activity."""
-
-    large_image: typing.Optional[str] = attr.ib()
-    """The ID of the asset's large image, if set."""
-
-    large_text: typing.Optional[str] = attr.ib()
-    """The text that'll appear when hovering over the large image, if set."""
-
-    small_image: typing.Optional[str] = attr.ib()
-    """The ID of the asset's small image, if set."""
-
-    small_text: typing.Optional[str] = attr.ib()
-    """The text that'll appear when hovering over the small image, if set."""
-
-
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class ActivitySecret:
-    """The secrets used for interacting with an activity party."""
-
-    join: typing.Optional[str] = attr.ib()
-    """The secret used for joining a party, if applicable."""
-
-    spectate: typing.Optional[str] = attr.ib()
-    """The secret used for spectating a party, if applicable."""
-
-    match: typing.Optional[str] = attr.ib()
-    """The secret used for joining a party, if applicable."""
-
-
-@enum.unique
-class ActivityFlag(enum.IntFlag):
-    """Flags that describe what an activity includes.
-
-    This can be more than one using bitwise-combinations.
-    """
-
-    INSTANCE = 1 << 0
-    """Instance"""
-
-    JOIN = 1 << 1
-    """Join"""
-
-    SPECTATE = 1 << 2
-    """Spectate"""
-
-    JOIN_REQUEST = 1 << 3
-    """Join Request"""
-
-    SYNC = 1 << 4
-    """Sync"""
-
-    PLAY = 1 << 5
-    """Play"""
-
-
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class PresenceActivity:
-    """Represents an activity that will be attached to a member's presence."""
-
-    name: str = attr.ib(repr=True)
-    """The activity's name."""
-
-    type: ActivityType = attr.ib(repr=True)
-    """The activity's type."""
-
-    url: typing.Optional[str] = attr.ib()
-    """The URL for a `STREAM` type activity, if applicable."""
-
-    created_at: datetime.datetime = attr.ib()
-    """When this activity was added to the user's session."""
-
-    timestamps: typing.Optional[ActivityTimestamps] = attr.ib()
-    """The timestamps for when this activity's current state will start and
-    end, if applicable.
-    """
-
-    application_id: typing.Optional[bases.Snowflake] = attr.ib()
-    """The ID of the application this activity is for, if applicable."""
-
-    details: typing.Optional[str] = attr.ib()
-    """The text that describes what the activity's target is doing, if set."""
-
-    state: typing.Optional[str] = attr.ib()
-    """The current status of this activity's target, if set."""
-
-    emoji: typing.Union[None, emojis_.UnicodeEmoji, emojis_.CustomEmoji] = attr.ib()
-    """The emoji of this activity, if it is a custom status and set."""
-
-    party: typing.Optional[ActivityParty] = attr.ib()
-    """Information about the party associated with this activity, if set."""
-
-    assets: typing.Optional[ActivityAssets] = attr.ib()
-    """Images and their hover over text for the activity."""
-
-    secrets: typing.Optional[ActivitySecret] = attr.ib()
-    """Secrets for Rich Presence joining and spectating."""
-
-    is_instance: typing.Optional[bool] = attr.ib()
-    """Whether this activity is an instanced game session."""
-
-    flags: ActivityFlag = attr.ib()
-    """Flags that describe what the activity includes."""
-
-
-class PresenceStatus(str, enum.Enum):
-    """The status of a member."""
-
-    ONLINE = "online"
-    """Online/green."""
-
-    IDLE = "idle"
-    """Idle/yellow."""
-
-    DND = "dnd"
-    """Do not disturb/red."""
-
-    DO_NOT_DISTURB = DND
-    """An alias for `PresenceStatus.DND`"""
-
-    OFFLINE = "offline"
-    """Offline or invisible/grey."""
-
-
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class ClientStatus:
-    """The client statuses for this member."""
-
-    desktop: PresenceStatus = attr.ib(repr=True)
-    """The status of the target user's desktop session."""
-
-    mobile: PresenceStatus = attr.ib(repr=True)
-    """The status of the target user's mobile session."""
-
-    web: PresenceStatus = attr.ib(repr=True)
-    """The status of the target user's web session."""
-
-
-# TODO: should this be an event instead?
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class PresenceUser(users.User):
-    """A user representation specifically used for presence updates.
-
-    !!! warning
-        Every attribute except `PresenceUser.id` may be as `hikari.models.unset.UNSET`
-        unless it is specifically being modified for this update.
-    """
-
-    discriminator: typing.Union[str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=True)
-    """This user's discriminator."""
-
-    username: typing.Union[str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=True)
-    """This user's username."""
-
-    avatar_hash: typing.Union[None, str, undefined.Undefined] = attr.ib(
-        eq=False, hash=False, repr=True,
-    )
-    """This user's avatar hash, if set."""
-
-    is_bot: typing.Union[bool, undefined.Undefined] = attr.ib(
-        eq=False, hash=False, repr=True,
-    )
-    """Whether this user is a bot account."""
-
-    is_system: typing.Union[bool, undefined.Undefined] = attr.ib(
-        eq=False, hash=False,
-    )
-    """Whether this user is a system account."""
-
-    flags: typing.Union[users.UserFlag, undefined.Undefined] = attr.ib(eq=False, hash=False)
-    """The public flags for this user."""
-
-    @property
-    def avatar_url(self) -> typing.Union[str, undefined.Undefined]:
-        """URL for this user's avatar if the relevant info is available.
-
-        !!! note
-            This will be `hikari.models.unset.UNSET` if both `PresenceUser.avatar_hash`
-            and `PresenceUser.discriminator` are `hikari.models.unset.UNSET`.
-        """
-        return self.format_avatar_url()
-
-    def format_avatar_url(
-        self, *, format_: typing.Optional[str] = None, size: int = 4096
-    ) -> typing.Union[str, undefined.Undefined]:
-        """Generate the avatar URL for this user's avatar if available.
-
-        Parameters
-        ----------
-        format_ : str
-            The format to use for this URL, defaults to `png` or `gif`.
-            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when animated).
-            Will be ignored for default avatars which can only be `png`.
-        size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
-            Will be ignored for default avatars.
-
-        Returns
-        -------
-        hikari.models.unset.UNSET | str
-            The string URL of the user's custom avatar if
-            either `PresenceUser.avatar_hash` is set or their default avatar if
-            `PresenceUser.discriminator` is set, else `hikari.models.unset.UNSET`.
-
-        Raises
-        ------
-        ValueError
-            If `size` is not a power of two or not between 16 and 4096.
-        """
-        if self.discriminator is not undefined.Undefined() or self.avatar_hash is not undefined.Undefined():
-            return super().format_avatar_url(format_=format_, size=size)
-        return undefined.Undefined()
-
-    @property
-    def default_avatar_index(self) -> typing.Union[int, undefined.Undefined]:
-        """Integer representation of this user's default avatar.
-
-        !!! note
-            This will be `hikari.models.unset.UNSET` if `PresenceUser.discriminator` is
-            `hikari.models.unset.UNSET`.
-        """
-        if self.discriminator is not undefined.Undefined():
-            return super().default_avatar_index
-        return undefined.Undefined()
-
-    @property
-    def default_avatar_url(self) -> typing.Union[str, undefined.Undefined]:
-        """URL for this user's default avatar.
-
-        !!! note
-            This will be `hikari.models.unset.UNSET` if `PresenceUser.discriminator` is
-            `hikari.models.unset.UNSET`.
-        """
-        if self.discriminator is not undefined.Undefined():
-            return super().default_avatar_url
-        return undefined.Undefined()
-
-
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class GuildMemberPresence(bases.Entity):
-    """Used to represent a guild member's presence."""
-
-    user: PresenceUser = attr.ib(eq=True, hash=True, repr=True)
-    """The object of the user who this presence is for.
-
-    !!! info
-        Only `PresenceUser.id` is guaranteed for this partial object,
-        with other attributes only being included when when they are being
-        changed in an event.
-    """
-
-    role_ids: typing.Optional[typing.Sequence[bases.Snowflake]] = attr.ib(
-        eq=False, hash=False,
-    )
-    """The ids of the user's current roles in the guild this presence belongs to.
-
-    !!! info
-        If this is `None` then this information wasn't provided and is unknown.
-    """
-
-    guild_id: typing.Optional[bases.Snowflake] = attr.ib(eq=True, hash=True, repr=True)
-    """The ID of the guild this presence belongs to.
-
-    This will be `None` when received in an array of members attached to a guild
-    object (e.g on Guild Create).
-    """
-
-    visible_status: PresenceStatus = attr.ib(eq=False, hash=False, repr=True)
-    """This user's current status being displayed by the client."""
-
-    activities: typing.Sequence[PresenceActivity] = attr.ib(eq=False, hash=False)
-    """An array of the user's activities, with the top one will being
-    prioritised by the client.
-    """
-
-    client_status: ClientStatus = attr.ib(
-        eq=False, hash=False,
-    )
-    """An object of the target user's client statuses."""
-
-    premium_since: typing.Optional[datetime.datetime] = attr.ib(
-        eq=False, hash=False,
-    )
-    """The datetime of when this member started "boosting" this guild.
-
-    This will be `None` if they aren't boosting.
-    """
-
-    nickname: typing.Optional[str] = attr.ib(
-        eq=False, hash=False, repr=True,
-    )
-    """This member's nickname, if set."""
-
-
-@enum.unique
 class IntegrationExpireBehaviour(int, enum.Enum):
     """Behavior for expiring integration subscribers."""
 
@@ -699,7 +340,7 @@ class Integration(PartialIntegration):
     is_syncing: bool = attr.ib(eq=False, hash=False)
     """Whether this integration is syncing subscribers/emojis."""
 
-    role_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    role_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the managed role used for this integration's subscribers."""
 
     is_emojis_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False)
@@ -813,7 +454,7 @@ class GuildPreview(PartialGuild):
     )
     """The hash of the discovery splash for the guild, if there is one."""
 
-    emojis: typing.Mapping[bases.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(
+    emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(
         eq=False, hash=False,
     )
     """The mapping of IDs to the emojis this guild provides."""
@@ -909,7 +550,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     discovery_splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The hash of the discovery splash for the guild, if there is one."""
 
-    owner_id: bases.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    owner_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the owner of this guild."""
 
     my_permissions: permissions_.Permission = attr.ib(
@@ -927,7 +568,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     region: str = attr.ib(eq=False, hash=False)
     """The voice region for the guild."""
 
-    afk_channel_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    afk_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID for the channel that AFK voice users get sent to.
 
     If `None`, then no AFK channel is set up for this guild.
@@ -950,7 +591,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
         Use `is_widget_enabled` instead.
     """
 
-    embed_channel_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    embed_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The channel ID that the guild embed will generate an invite to.
 
     Will be `None` if invites are disabled for this guild's embed.
@@ -968,18 +609,18 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     explicit_content_filter: GuildExplicitContentFilterLevel = attr.ib(eq=False, hash=False)
     """The setting for the explicit content filter in this guild."""
 
-    roles: typing.Mapping[bases.Snowflake, Role] = attr.ib(
+    roles: typing.Mapping[snowflake.Snowflake, Role] = attr.ib(
         eq=False, hash=False,
     )
     """The roles in this guild, represented as a mapping of ID to role object."""
 
-    emojis: typing.Mapping[bases.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(eq=False, hash=False)
+    emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(eq=False, hash=False)
     """A mapping of IDs to the objects of the emojis this guild provides."""
 
     mfa_level: GuildMFALevel = attr.ib(eq=False, hash=False)
     """The required MFA level for users wishing to participate in this guild."""
 
-    application_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the application that created this guild.
 
     This will always be `None` for guilds that weren't created by a bot.
@@ -1002,14 +643,14 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     If this information is not present, this will be `None`.
     """
 
-    widget_channel_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    widget_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The channel ID that the widget's generated invite will send the user to.
 
     If this information is unavailable or this isn't enabled for the guild then
     this will be `None`.
     """
 
-    system_channel_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    system_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the system channel or `None` if it is not enabled.
 
     Welcome messages and Nitro boost messages may be sent to this channel.
@@ -1018,7 +659,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     system_channel_flags: GuildSystemChannelFlag = attr.ib(eq=False, hash=False)
     """Flags for the guild system channel to describe which notifications are suppressed."""
 
-    rules_channel_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    rules_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the channel where guilds with the `GuildFeature.PUBLIC`
     `features` display rules and guidelines.
 
@@ -1052,7 +693,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     `None`.
     """
 
-    members: typing.Optional[typing.Mapping[bases.Snowflake, GuildMember]] = attr.ib(eq=False, hash=False)
+    members: typing.Optional[typing.Mapping[snowflake.Snowflake, Member]] = attr.ib(eq=False, hash=False)
     """A mapping of ID to the corresponding guild members in this guild.
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
@@ -1071,7 +712,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     query the members using the appropriate API call instead.
     """
 
-    channels: typing.Optional[typing.Mapping[bases.Snowflake, channels_.GuildChannel]] = attr.ib(
+    channels: typing.Optional[typing.Mapping[snowflake.Snowflake, channels_.GuildChannel]] = attr.ib(
         eq=False, hash=False,
     )
     """A mapping of ID to the corresponding guild channels in this guild.
@@ -1090,7 +731,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     appropriate API call to retrieve this information.
     """
 
-    presences: typing.Optional[typing.Mapping[bases.Snowflake, GuildMemberPresence]] = attr.ib(
+    presences: typing.Optional[typing.Mapping[snowflake.Snowflake, presences.MemberPresence]] = attr.ib(
         eq=False, hash=False,
     )
     """A mapping of member ID to the corresponding presence information for
@@ -1165,7 +806,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     for this guild and will otherwise default to `en-US`.
     """
 
-    public_updates_channel_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    public_updates_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The channel ID of the channel where admins and moderators receive notices
     from Discord.
 

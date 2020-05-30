@@ -19,6 +19,8 @@
 """Base functionality for any HTTP-based network component."""
 from __future__ import annotations
 
+__all__ = ["HTTPClient"]
+
 import abc
 import contextlib
 import json

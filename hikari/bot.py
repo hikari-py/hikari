@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Contains the interface which describes the components for single-process bots."""
 from __future__ import annotations
 
 __all__ = ["IBot"]
@@ -43,4 +44,4 @@ class IBot(app_.IRESTApp, app_.IGatewayZookeeper, app_.IGatewayDispatcher, abc.A
     @property
     @abc.abstractmethod
     def http_settings(self) -> http_settings_.HTTPSettings:
-        """The HTTP settings to use."""
+        """HTTP settings to use."""

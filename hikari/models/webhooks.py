@@ -29,6 +29,7 @@ import attr
 
 from hikari.models import bases
 from hikari.net import urls
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     from hikari.models import channels as channels_
@@ -62,10 +63,10 @@ class Webhook(bases.Entity, bases.Unique):
     type: WebhookType = attr.ib(eq=False, hash=False, repr=True)
     """The type of the webhook."""
 
-    guild_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The guild ID of the webhook."""
 
-    channel_id: bases.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The channel ID this webhook is for."""
 
     author: typing.Optional[users_.User] = attr.ib(
@@ -104,10 +105,10 @@ class Webhook(bases.Entity, bases.Unique):
         embeds: typing.Sequence[embeds_.Embed] = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, users_.User]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users_.User]], bool
         ] = True,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds_.Role]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds_.Role]], bool
         ] = True,
     ) -> typing.Optional[messages_.Message]:
         """Execute the webhook to create a message.
@@ -135,11 +136,11 @@ class Webhook(bases.Entity, bases.Unique):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.bases.Snowflake | int | str] | bool
+        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.snowflake.Snowflake | int | str] | bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role | hikari.models.bases.Snowflake | int | str] | bool
+        role_mentions: typing.Collection[hikari.models.guilds.Role | hikari.models.snowflake.Snowflake | int | str] | bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -196,10 +197,10 @@ class Webhook(bases.Entity, bases.Unique):
         embeds: typing.Sequence[embeds_.Embed] = ...,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, users_.User]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users_.User]], bool
         ] = False,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds_.Role]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds_.Role]], bool
         ] = False,
     ) -> typing.Optional[messages_.Message]:
         """Execute the webhook to create a message with mention safety.
@@ -261,7 +262,7 @@ class Webhook(bases.Entity, bases.Unique):
         *,
         name: str = ...,
         avatar: typing.Optional[files_.BaseStream] = ...,
-        channel: typing.Union[bases.Snowflake, int, str, channels_.GuildChannel] = ...,
+        channel: typing.Union[snowflake.Snowflake, int, str, channels_.GuildChannel] = ...,
         reason: str = ...,
         use_token: typing.Optional[bool] = None,
     ) -> Webhook:
@@ -274,7 +275,7 @@ class Webhook(bases.Entity, bases.Unique):
         avatar : hikari.models.files.BaseStream | None
             If specified, the new avatar image. If `None`, then
             it is removed.
-        channel : hikari.models.channels.GuildChannel | hikari.models.bases.Snowflake | int
+        channel : hikari.models.channels.GuildChannel | hikari.models.snowflake.Snowflake | int
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
         reason : str

@@ -16,6 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Basic implementation of a cache for general bots and gateway apps."""
+
 from __future__ import annotations
 
 __all__ = ["CacheImpl"]
@@ -103,16 +105,16 @@ class CacheImpl(cache.ICache):
     async def create_gateway_bot(self, payload: data_binding.JSONObject) -> gateway.GatewayBot:
         pass
 
-    async def create_member(self, payload: data_binding.JSONObject, can_cache: bool = False) -> guilds.GuildMember:
+    async def create_member(self, payload: data_binding.JSONObject, can_cache: bool = False) -> guilds.Member:
         pass
 
-    async def update_member(self, member: guilds.GuildMember, payload: data_binding.JSONObject) -> guilds.GuildMember:
+    async def update_member(self, member: guilds.Member, payload: data_binding.JSONObject) -> guilds.Member:
         pass
 
-    async def get_member(self, guild_id: int, user_id: int) -> typing.Optional[guilds.GuildMember]:
+    async def get_member(self, guild_id: int, user_id: int) -> typing.Optional[guilds.Member]:
         pass
 
-    async def delete_member(self, guild_id: int, user_id: int) -> typing.Optional[guilds.GuildMember]:
+    async def delete_member(self, guild_id: int, user_id: int) -> typing.Optional[guilds.Member]:
         pass
 
     async def create_role(self, payload: data_binding.JSONObject, can_cache: bool = False) -> guilds.PartialRole:
@@ -127,26 +129,24 @@ class CacheImpl(cache.ICache):
     async def delete_role(self, guild_id: int, role_id: int) -> typing.Optional[guilds.PartialRole]:
         pass
 
-    async def create_presence(
-        self, payload: data_binding.JSONObject, can_cache: bool = False
-    ) -> guilds.GuildMemberPresence:
+    async def create_presence(self, payload: data_binding.JSONObject, can_cache: bool = False) -> guilds.MemberPresence:
         pass
 
     async def update_presence(
-        self, role: guilds.GuildMemberPresence, payload: data_binding.JSONObject
-    ) -> guilds.GuildMemberPresence:
+        self, role: guilds.MemberPresence, payload: data_binding.JSONObject
+    ) -> guilds.MemberPresence:
         pass
 
-    async def get_presence(self, guild_id: int, user_id: int) -> typing.Optional[guilds.GuildMemberPresence]:
+    async def get_presence(self, guild_id: int, user_id: int) -> typing.Optional[guilds.MemberPresence]:
         pass
 
-    async def delete_presence(self, guild_id: int, user_id: int) -> typing.Optional[guilds.GuildMemberPresence]:
+    async def delete_presence(self, guild_id: int, user_id: int) -> typing.Optional[guilds.MemberPresence]:
         pass
 
     async def create_guild_ban(self, payload: data_binding.JSONObject) -> guilds.GuildMemberBan:
         pass
 
-    async def create_guild_integration(self, payload: data_binding.JSONObject) -> guilds.PartialIntegration:
+    async def create_integration(self, payload: data_binding.JSONObject) -> guilds.PartialIntegration:
         pass
 
     async def create_guild(self, payload: data_binding.JSONObject, can_cache: bool = False) -> guilds.PartialGuild:

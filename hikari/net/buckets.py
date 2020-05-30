@@ -20,6 +20,8 @@
 
 from __future__ import annotations
 
+__all__ = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
+
 import asyncio
 import datetime
 import logging
