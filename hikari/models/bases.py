@@ -26,22 +26,26 @@ import abc
 import typing
 
 import attr
-from hikari.internal import conversions
-from hikari.internal import marshaller
+
+from hikari.utilities import date as date_
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import application
+    from hikari import app as app_
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=False)
 class Entity(abc.ABC):
     """The base for any entity used in this API."""
 
-    _app: typing.Optional[application.Application] = attr.attrib(default=None, repr=False, eq=False, hash=False)
+    _app: typing.Optional[app_.IApp] = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
+
+    def set_app(self, app: app_.IApp) -> None:
+        if hasattr(self, "_app"):
+            raise AttributeError("Protected attribute '_app' cannot be overwritten.")
+        self._app = app
 
 
 class Snowflake(int):
@@ -63,7 +67,7 @@ class Snowflake(int):
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
         epoch = self >> 22
-        return conversions.discord_epoch_to_datetime(epoch)
+        return date_.discord_epoch_to_datetime(epoch)
 
     @property
     def internal_worker_id(self) -> int:
@@ -103,23 +107,19 @@ class Snowflake(int):
     def from_data(cls, timestamp: datetime.datetime, worker_id: int, process_id: int, increment: int) -> Snowflake:
         """Convert the pieces of info that comprise an ID into a Snowflake."""
         return cls(
-            (conversions.datetime_to_discord_epoch(timestamp) << 22)
-            | (worker_id << 17)
-            | (process_id << 12)
-            | increment
+            (date_.datetime_to_discord_epoch(timestamp) << 22) | (worker_id << 17) | (process_id << 12) | increment
         )
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class Unique(Entity, typing.SupportsInt, abc.ABC):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=False)
+class Unique(typing.SupportsInt):
     """A base for an entity that has an integer ID of some sort.
 
     Casting an object of this type to an `int` will produce the
     integer ID of the object.
     """
 
-    id: Snowflake = marshaller.attrib(hash=True, eq=True, repr=True, deserializer=Snowflake, serializer=str)
+    id: Snowflake = attr.ib(converter=Snowflake, hash=True, eq=True, repr=True)
     """The ID of this entity."""
 
     @property
@@ -131,5 +131,7 @@ class Unique(Entity, typing.SupportsInt, abc.ABC):
         return int(self.id)
 
 
-UniqueObjectT = typing.Union[Unique, Snowflake, int, str]
+UniqueT = typing.TypeVar("UniqueT", bound=Unique)
 """A unique object."""
+UniqueLikeT = typing.Union[UniqueT, Snowflake, int, str]
+"""A representation of a unique entity."""
