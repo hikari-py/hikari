@@ -28,12 +28,12 @@ import unicodedata
 
 import attr
 
-from . import bases
-from . import files
-from ..net import urls
+from hikari.models import bases
+from hikari.models import files
+from hikari.net import urls
 
 if typing.TYPE_CHECKING:
-    from . import users
+    from hikari.models import users
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

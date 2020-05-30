@@ -37,13 +37,13 @@ import typing
 
 import attr
 
+from hikari.events import base as base_events
 from hikari.models import bases as base_models
 from hikari.models import guilds
 from hikari.models import users
-from . import base as base_events
 
 if typing.TYPE_CHECKING:
-    from ..net import gateway as gateway_client
+    from hikari.net import gateway as gateway_client
 
 
 # Synthetic event, is not deserialized, and is produced by the dispatcher.

@@ -41,14 +41,14 @@ import typing
 
 import attr
 
-from . import bases
-from . import permissions
-from ..net import urls
+from hikari.models import bases
+from hikari.models import permissions
+from hikari.net import urls
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from . import users
+    from hikari.models import users
 
 
 @enum.unique

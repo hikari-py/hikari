@@ -35,6 +35,7 @@ import typing
 
 import attr
 
+from hikari.events import base as base_events
 from hikari.models import applications
 from hikari.models import bases as base_models
 from hikari.models import embeds as embed_models
@@ -43,8 +44,7 @@ from hikari.models import guilds
 from hikari.models import intents
 from hikari.models import messages
 from hikari.models import users
-from . import base as base_events
-from ..utilities import undefined
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime

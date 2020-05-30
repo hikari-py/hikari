@@ -108,7 +108,7 @@ class BaseStream(abc.ABC, typing.AsyncIterable[bytes]):
     @property
     @abc.abstractmethod
     def filename(self) -> str:
-        """Ffilename for the file object."""
+        """Filename for the file object."""
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(filename={self.filename!r})"
@@ -116,7 +116,11 @@ class BaseStream(abc.ABC, typing.AsyncIterable[bytes]):
     async def fetch_data_uri(self) -> str:
         """Generate a data URI for the given resource.
 
-        This will only work for select image types that Discord supports.
+        This will only work for select image types that Discord supports,
+        currently.
+
+        The type is resolved by reading the first 20 bytes of the resource
+        asynchronously.
 
         Returns
         -------
@@ -126,7 +130,7 @@ class BaseStream(abc.ABC, typing.AsyncIterable[bytes]):
         Raises
         ------
         TypeError
-            If the data format is not
+            If the data format is not supported.
         """
         buff = await self.read(20)
 

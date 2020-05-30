@@ -43,15 +43,15 @@ import typing
 
 import attr
 
-from . import bases
-from . import colors
-from . import guilds
-from . import permissions
-from . import users as users_
-from . import webhooks as webhooks_
+from hikari.models import bases
+from hikari.models import colors
+from hikari.models import guilds
+from hikari.models import permissions
+from hikari.models import users as users_
+from hikari.models import webhooks as webhooks_
 
 if typing.TYPE_CHECKING:
-    from . import channels
+    from hikari.models import channels
 
 
 class AuditLogChangeKey(str, enum.Enum):

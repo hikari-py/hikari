@@ -36,13 +36,13 @@ import typing
 
 import attr
 
-from . import bases
-from . import guilds
-from ..net import urls
+from hikari.models import bases
+from hikari.models import guilds
+from hikari.net import urls
 
 if typing.TYPE_CHECKING:
-    from . import permissions as permissions_
-    from . import users
+    from hikari.models import permissions as permissions_
+    from hikari.models import users
 
 
 @enum.unique

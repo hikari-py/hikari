@@ -27,8 +27,8 @@ import typing
 
 import attr
 
-from . import bases
-from ..net import urls
+from hikari.models import bases
+from hikari.net import urls
 
 
 @enum.unique
