@@ -30,7 +30,7 @@ if typing.TYPE_CHECKING:
     import contextvars
     import types
 
-    _T_contra = typing.TypeVar("_T_contra", contravariant=True)
+_T_contra = typing.TypeVar("_T_contra", contravariant=True)
 
 
 def completed_future(result: _T_contra = None, /) -> Future[_T_contra]:

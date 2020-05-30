@@ -22,18 +22,17 @@ from __future__ import annotations
 
 __all__ = ["User", "MyUser", "UserFlag", "PremiumType"]
 
+import enum
 import typing
 
 import attr
-from hikari.internal import marshaller
-from hikari.internal import more_enums
 
 from . import bases
 from ..net import urls
 
 
-@more_enums.must_be_unique
-class UserFlag(more_enums.IntFlag):
+@enum.unique
+class UserFlag(enum.IntFlag):
     """The known user flags that represent account badges."""
 
     NONE = 0
@@ -79,8 +78,8 @@ class UserFlag(more_enums.IntFlag):
     """Verified Bot Developer"""
 
 
-@more_enums.must_be_unique
-class PremiumType(int, more_enums.Enum):
+@enum.unique
+class PremiumType(int, enum.Enum):
     """The types of Nitro."""
 
     NONE = 0
@@ -93,42 +92,27 @@ class PremiumType(int, more_enums.Enum):
     """Premium including all perks (e.g. 2 server boosts)."""
 
 
-@marshaller.marshallable()
-@attr.s(
-    eq=True, hash=True, kw_only=True, slots=True,
-)
-class User(bases.Unique, marshaller.Deserializable):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class User(bases.Entity, bases.Unique):
     """Represents a user."""
 
-    discriminator: str = marshaller.attrib(deserializer=str, eq=False, hash=False, repr=True)
+    discriminator: str = attr.ib(eq=False, hash=False, repr=True)
     """This user's discriminator."""
 
-    username: str = marshaller.attrib(deserializer=str, eq=False, hash=False, repr=True)
+    username: str = attr.ib(eq=False, hash=False, repr=True)
     """This user's username."""
 
-    avatar_hash: typing.Optional[str] = marshaller.attrib(
-        raw_name="avatar", deserializer=str, if_none=None, eq=False, hash=False
-    )
+    avatar_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """This user's avatar hash, if set."""
 
-    is_bot: bool = marshaller.attrib(
-        raw_name="bot", deserializer=bool, if_undefined=False, default=False, eq=False, hash=False
-    )
+    is_bot: bool = attr.ib(eq=False, hash=False)
     """Whether this user is a bot account."""
 
-    is_system: bool = marshaller.attrib(
-        raw_name="system", deserializer=bool, if_undefined=False, default=False, eq=False, hash=False
-    )
+    is_system: bool = attr.ib(eq=False, hash=False)
     """Whether this user is a system account."""
 
-    flags: typing.Optional[UserFlag] = marshaller.attrib(
-        raw_name="public_flags", deserializer=UserFlag, if_undefined=None, default=None, eq=False, hash=False
-    )
-    """The public flags for this user.
-
-    !!! info
-        This will be `None` if it's a webhook user.
-    """
+    flags: UserFlag = attr.ib(eq=False, hash=False)
+    """The public flags for this user."""
 
     async def fetch_self(self) -> User:
         """Get this user's up-to-date object.
@@ -195,43 +179,34 @@ class User(bases.Unique, marshaller.Deserializable):
         return urls.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class MyUser(User):
     """Represents a user with extended oauth2 information."""
 
-    is_mfa_enabled: bool = marshaller.attrib(raw_name="mfa_enabled", deserializer=bool, eq=False, hash=False)
+    is_mfa_enabled: bool = attr.ib(eq=False, hash=False)
     """Whether the user's account has 2fa enabled."""
 
-    locale: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, if_none=None, if_undefined=None, default=None, eq=False, hash=False
-    )
+    locale: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The user's set language. This is not provided by the `READY` event."""
 
-    is_verified: typing.Optional[bool] = marshaller.attrib(
-        raw_name="verified", deserializer=bool, if_undefined=None, default=None, eq=False, hash=False
-    )
+    is_verified: typing.Optional[bool] = attr.ib(eq=False, hash=False)
     """Whether the email for this user's account has been verified.
 
     Will be `None` if retrieved through the oauth2 flow without the `email`
     scope.
     """
 
-    email: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, if_undefined=None, if_none=None, default=None, eq=False, hash=False
-    )
+    email: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The user's set email.
 
     Will be `None` if retrieved through the oauth2 flow without the `email`
     scope and for bot users.
     """
 
-    flags: UserFlag = marshaller.attrib(deserializer=UserFlag, eq=False, hash=False)
+    flags: UserFlag = attr.ib(eq=False, hash=False)
     """This user account's flags."""
 
-    premium_type: typing.Optional[PremiumType] = marshaller.attrib(
-        deserializer=PremiumType, if_undefined=None, default=None, eq=False, hash=False
-    )
+    premium_type: typing.Optional[PremiumType] = attr.ib(eq=False, hash=False)
     """The type of Nitro Subscription this user account had.
 
     This will always be `None` for bots.

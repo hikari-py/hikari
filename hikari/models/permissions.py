@@ -22,11 +22,11 @@ from __future__ import annotations
 
 __all__ = ["Permission"]
 
-from hikari.internal import more_enums
+import enum
 
 
-@more_enums.must_be_unique
-class Permission(more_enums.IntFlag):
+@enum.unique
+class Permission(enum.IntFlag):
     """Represents the permissions available in a given channel or guild.
 
     This is an int-flag enum. This means that you can **combine multiple
