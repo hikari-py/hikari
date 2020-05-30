@@ -44,7 +44,6 @@ from . import base as base_events
 
 if typing.TYPE_CHECKING:
     from ..net import gateway as gateway_client
-    from hikari.utilities import more_typing
 
 
 # Synthetic event, is not deserialized, and is produced by the dispatcher.
@@ -88,7 +87,7 @@ class StoppedEvent(base_events.HikariEvent):
 
 
 @attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
-class ConnectedEvent(base_events.HikariEvent, marshaller.Deserializable):
+class ConnectedEvent(base_events.HikariEvent):
     """Event invoked each time a shard connects."""
 
     shard: gateway_client.Gateway
@@ -96,7 +95,7 @@ class ConnectedEvent(base_events.HikariEvent, marshaller.Deserializable):
 
 
 @attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
-class DisconnectedEvent(base_events.HikariEvent, marshaller.Deserializable):
+class DisconnectedEvent(base_events.HikariEvent):
     """Event invoked each time a shard disconnects."""
 
     shard: gateway_client.Gateway
@@ -111,43 +110,29 @@ class ResumedEvent(base_events.HikariEvent):
     """The shard that reconnected."""
 
 
-def _deserialize_unavailable_guilds(
-    payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Mapping[base_models.Snowflake, guilds.UnavailableGuild]:
-    return {
-        base_models.Snowflake(guild["id"]): guilds.UnavailableGuild.deserialize(guild, **kwargs) for guild in payload
-    }
-
-
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class ReadyEvent(base_events.HikariEvent, marshaller.Deserializable):
+class ReadyEvent(base_events.HikariEvent):
     """Represents the gateway Ready event.
 
     This is received only when IDENTIFYing with the gateway.
     """
 
-    gateway_version: int = attr.ib(raw_name="v", deserializer=int, repr=True)
+    gateway_version: int = attr.ib(repr=True)
     """The gateway version this is currently connected to."""
 
-    my_user: users.MyUser = attr.ib(
-        raw_name="user", deserializer=users.MyUser.deserialize, inherit_kwargs=True, repr=True
-    )
+    my_user: users.MyUser = attr.ib(repr=True)
     """The object of the current bot account this connection is for."""
 
-    unavailable_guilds: typing.Mapping[base_models.Snowflake, guilds.UnavailableGuild] = attr.ib(
-        raw_name="guilds", deserializer=_deserialize_unavailable_guilds, inherit_kwargs=True
-    )
+    unavailable_guilds: typing.Mapping[base_models.Snowflake, guilds.UnavailableGuild] = attr.ib()
     """A mapping of the guilds this bot is currently in.
 
     All guilds will start off "unavailable".
     """
 
-    session_id: str = attr.ib(deserializer=str, repr=True)
+    session_id: str = attr.ib(repr=True)
     """The id of the current gateway session, used for reconnecting."""
 
-    _shard_information: typing.Optional[typing.Tuple[int, int]] = attr.ib(
-        raw_name="shard", deserializer=tuple, if_undefined=None, default=None
-    )
+    _shard_information: typing.Optional[typing.Tuple[int, int]] = attr.ib()
     """Information about the current shard, only provided when IDENTIFYing."""
 
     @property

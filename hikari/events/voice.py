@@ -40,18 +40,18 @@ class VoiceStateUpdateEvent(base_events.HikariEvent, voices.VoiceState):
 
 
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class VoiceServerUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
+class VoiceServerUpdateEvent(base_events.HikariEvent):
     """Used to represent voice server update gateway events.
 
     Sent when initially connecting to voice and when the current voice instance
     falls over to a new server.
     """
 
-    token: str = attr.ib(deserializer=str)
+    token: str = attr.ib()
     """The voice connection's string token."""
 
-    guild_id: base_models.Snowflake = attr.ib(deserializer=base_models.Snowflake, repr=True)
+    guild_id: base_models.Snowflake = attr.ib(repr=True)
     """The ID of the guild this voice server update is for."""
 
-    endpoint: str = attr.ib(deserializer=str, repr=True)
+    endpoint: str = attr.ib(repr=True)
     """The URI for this voice server host."""

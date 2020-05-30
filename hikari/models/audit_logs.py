@@ -21,14 +21,12 @@
 from __future__ import annotations
 
 __all__ = [
-    "AuditLog",
     "AuditLogChange",
     "AuditLogChangeKey",
     "AuditLogEntry",
     "AuditLogEventType",
     "BaseAuditLogEntryInfo",
     "ChannelOverwriteEntryInfo",
-    "get_entry_info_entity",
     "MemberDisconnectEntryInfo",
     "MemberMoveEntryInfo",
     "MemberPruneEntryInfo",
@@ -40,16 +38,12 @@ __all__ = [
 
 import abc
 import datetime
+import enum
 import typing
 
 import attr
-from hikari.internal import conversions
-from hikari.internal import marshaller
-from hikari.internal import more_collections
-from hikari.internal import more_enums
 
 from . import bases
-from . import channels
 from . import colors
 from . import guilds
 from . import permissions
@@ -57,10 +51,10 @@ from . import users as users_
 from . import webhooks as webhooks_
 
 if typing.TYPE_CHECKING:
-    from hikari.internal import more_typing
+    from . import channels
 
 
-class AuditLogChangeKey(str, more_enums.Enum):
+class AuditLogChangeKey(str, enum.Enum):
     """Commonly known and documented keys for audit log change objects.
 
     Others may exist. These should be expected to default to the raw string
@@ -128,23 +122,8 @@ def _deserialize_seconds_timedelta(seconds: typing.Union[str, int]) -> datetime.
     return datetime.timedelta(seconds=int(seconds))
 
 
-def _deserialize_partial_roles(
-    payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Mapping[bases.Snowflake, guilds.Role]:
-    return {bases.Snowflake(role["id"]): guilds.PartialRole.deserialize(role, **kwargs) for role in payload}
-
-
 def _deserialize_day_timedelta(days: typing.Union[str, int]) -> datetime.timedelta:
     return datetime.timedelta(days=int(days))
-
-
-def _deserialize_overwrites(
-    payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Mapping[bases.Snowflake, channels.PermissionOverwrite]:
-    return {
-        bases.Snowflake(overwrite["id"]): channels.PermissionOverwrite.deserialize(overwrite, **kwargs)
-        for overwrite in payload
-    }
 
 
 def _deserialize_max_uses(age: int) -> typing.Union[int, float]:
@@ -186,46 +165,23 @@ AUDIT_LOG_ENTRY_CONVERTERS = {
     AuditLogChangeKey.SYSTEM_CHANNEL_ID: bases.Snowflake,
 }
 
-COMPONENT_BOUND_AUDIT_LOG_ENTRY_CONVERTERS = {
-    AuditLogChangeKey.ADD_ROLE_TO_MEMBER: _deserialize_partial_roles,
-    AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: _deserialize_partial_roles,
-    AuditLogChangeKey.PERMISSION_OVERWRITES: _deserialize_overwrites,
-}
 
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class AuditLogChange(bases.Entity, marshaller.Deserializable):
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class AuditLogChange:
     """Represents a change made to an audit log entry's target entity."""
 
-    new_value: typing.Optional[typing.Any] = attr.attrib(repr=True)
+    new_value: typing.Optional[typing.Any] = attr.ib(repr=True)
     """The new value of the key, if something was added or changed."""
 
-    old_value: typing.Optional[typing.Any] = attr.attrib(repr=True)
+    old_value: typing.Optional[typing.Any] = attr.ib(repr=True)
     """The old value of the key, if something was removed or changed."""
 
-    key: typing.Union[AuditLogChangeKey, str] = attr.attrib(repr=True)
+    key: typing.Union[AuditLogChangeKey, str] = attr.ib(repr=True)
     """The name of the audit log change's key."""
 
-    @classmethod
-    def deserialize(cls, payload: typing.Mapping[str, str], **kwargs: typing.Any) -> AuditLogChange:
-        """Deserialize this model from a raw payload."""
-        key = conversions.try_cast(payload["key"], AuditLogChangeKey, payload["key"])
-        new_value = payload.get("new_value")
-        old_value = payload.get("old_value")
-        if value_converter := AUDIT_LOG_ENTRY_CONVERTERS.get(key):
-            new_value = value_converter(new_value) if new_value is not None else None
-            old_value = value_converter(old_value) if old_value is not None else None
-        elif value_converter := COMPONENT_BOUND_AUDIT_LOG_ENTRY_CONVERTERS.get(key):
-            new_value = value_converter(new_value, **kwargs) if new_value is not None else None
-            old_value = value_converter(old_value, **kwargs) if old_value is not None else None
 
-        # noinspection PyArgumentList
-        return cls(key=key, new_value=new_value, old_value=old_value, **kwargs)
-
-
-@more_enums.must_be_unique
-class AuditLogEventType(int, more_enums.Enum):
+@enum.unique
+class AuditLogEventType(int, enum.Enum):
     """The type of event that occurred."""
 
     GUILD_UPDATE = 1
@@ -265,50 +221,12 @@ class AuditLogEventType(int, more_enums.Enum):
     INTEGRATION_DELETE = 82
 
 
-# Ignore docstring not starting in an imperative mood
-def register_audit_log_entry_info(
-    type_: AuditLogEventType, *additional_types: AuditLogEventType
-) -> typing.Callable[[typing.Type[BaseAuditLogEntryInfo]], typing.Type[BaseAuditLogEntryInfo]]:  # noqa: D401
-    """Generates a decorator for defined audit log entry info entities.
-
-    Allows them to be associated with given entry type(s).
-
-    Parameters
-    ----------
-    type_ : AuditLogEventType
-        An entry types to associate the entity with.
-    *additional_types : AuditLogEventType
-        Extra entry types to associate the entity with.
-
-    Returns
-    -------
-    decorator(T) -> T
-        The decorator to decorate the class with.
-    """
-
-    def decorator(cls):
-        mapping = getattr(register_audit_log_entry_info, "types", {})
-        for t in [type_, *additional_types]:
-            mapping[t] = cls
-        setattr(register_audit_log_entry_info, "types", mapping)
-        return cls
-
-    return decorator
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class BaseAuditLogEntryInfo(bases.Entity, marshaller.Deserializable, abc.ABC):
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class BaseAuditLogEntryInfo(abc.ABC):
     """A base object that all audit log entry info objects will inherit from."""
 
 
-@register_audit_log_entry_info(
-    AuditLogEventType.CHANNEL_OVERWRITE_CREATE,
-    AuditLogEventType.CHANNEL_OVERWRITE_UPDATE,
-    AuditLogEventType.CHANNEL_OVERWRITE_DELETE,
-)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, bases.Unique):
     """Represents the extra information for overwrite related audit log entries.
 
@@ -316,79 +234,67 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, bases.Unique):
     entries.
     """
 
-    type: channels.PermissionOverwriteType = marshaller.attrib(deserializer=channels.PermissionOverwriteType)
+    type: channels.PermissionOverwriteType = attr.ib(repr=True)
     """The type of entity this overwrite targets."""
 
-    role_name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None, repr=True)
+    role_name: typing.Optional[str] = attr.ib(repr=True)
     """The name of the role this overwrite targets, if it targets a role."""
 
 
-@register_audit_log_entry_info(AuditLogEventType.MESSAGE_PIN, AuditLogEventType.MESSAGE_UNPIN)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The extra information for message pin related audit log entries.
 
     Will be attached to the message pin and message unpin audit log entries.
     """
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
+    channel_id: bases.Snowflake = attr.ib(repr=True)
     """The ID of the text based channel where a pinned message is being targeted."""
 
-    message_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
+    message_id: bases.Snowflake = attr.ib(repr=True)
     """The ID of the message that's being pinned or unpinned."""
 
 
-@register_audit_log_entry_info(AuditLogEventType.MEMBER_PRUNE)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
     """Represents the extra information attached to guild prune log entries."""
 
-    delete_member_days: datetime.timedelta = marshaller.attrib(deserializer=_deserialize_day_timedelta, repr=True)
+    delete_member_days: datetime.timedelta = attr.ib(repr=True)
     """The timedelta of how many days members were pruned for inactivity based on."""
 
-    members_removed: int = marshaller.attrib(deserializer=int, repr=True)
+    members_removed: int = attr.ib(repr=True)
     """The number of members who were removed by this prune."""
 
 
-@register_audit_log_entry_info(AuditLogEventType.MESSAGE_BULK_DELETE)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
     """Represents extra information for the message bulk delete audit entry."""
 
-    count: int = marshaller.attrib(deserializer=int, repr=True)
+    count: int = attr.ib(repr=True)
     """The amount of messages that were deleted."""
 
 
-@register_audit_log_entry_info(AuditLogEventType.MESSAGE_DELETE)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     """Represents extra information attached to the message delete audit entry."""
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
+    channel_id: bases.Snowflake = attr.ib(repr=True)
     """The guild text based channel where these message(s) were deleted."""
 
 
-@register_audit_log_entry_info(AuditLogEventType.MEMBER_DISCONNECT)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
     """Represents extra information for the voice chat member disconnect entry."""
 
-    count: int = marshaller.attrib(deserializer=int, repr=True)
+    count: int = attr.ib(repr=True)
     """The amount of members who were disconnected from voice in this entry."""
 
 
-@register_audit_log_entry_info(AuditLogEventType.MEMBER_MOVE)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     """Represents extra information for the voice chat based member move entry."""
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
+    channel_id: bases.Snowflake = attr.ib(repr=True)
     """The amount of members who were disconnected from voice in this entry."""
 
 
@@ -403,129 +309,46 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
     def __init__(self, payload: typing.Mapping[str, str]) -> None:
         self.__dict__.update(payload)
 
-    @classmethod
-    def deserialize(cls, payload: typing.Mapping[str, str], **_) -> UnrecognisedAuditLogEntryInfo:
-        return cls(payload)
 
-
-def get_entry_info_entity(type_: int) -> typing.Type[BaseAuditLogEntryInfo]:
-    """Get the entity that's registered for an entry's options.
-
-    Parameters
-    ----------
-    type_ : int
-        The identifier for this entry type.
-
-    Returns
-    -------
-    typing.Type[BaseAuditLogEntryInfo]
-        The associated options entity. If not implemented then this will be
-        `UnrecognisedAuditLogEntryInfo`.
-    """
-    types = getattr(register_audit_log_entry_info, "types", more_collections.EMPTY_DICT)
-    entry_type = types.get(type_)
-    return entry_type if entry_type is not None else UnrecognisedAuditLogEntryInfo
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class AuditLogEntry(bases.Unique, marshaller.Deserializable):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class AuditLogEntry(bases.Entity, bases.Unique):
     """Represents an entry in a guild's audit log."""
 
-    target_id: typing.Optional[bases.Snowflake] = attr.attrib(eq=False, hash=False)
+    target_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the entity affected by this change, if applicable."""
 
-    changes: typing.Sequence[AuditLogChange] = attr.attrib(eq=False, hash=False, repr=False)
+    changes: typing.Sequence[AuditLogChange] = attr.ib(eq=False, hash=False, repr=False)
     """A sequence of the changes made to `AuditLogEntry.target_id`."""
 
-    user_id: bases.Snowflake = attr.attrib(eq=False, hash=False)
+    user_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the user who made this change."""
 
-    action_type: typing.Union[AuditLogEventType, str] = attr.attrib(eq=False, hash=False)
+    action_type: typing.Union[AuditLogEventType, str] = attr.ib(eq=False, hash=False)
     """The type of action this entry represents."""
 
-    options: typing.Optional[BaseAuditLogEntryInfo] = attr.attrib(eq=False, hash=False, repr=False)
+    options: typing.Optional[BaseAuditLogEntryInfo] = attr.ib(eq=False, hash=False, repr=False)
     """Extra information about this entry. Only be provided for certain `event_type`."""
 
-    reason: typing.Optional[str] = attr.attrib(eq=False, hash=False, repr=False)
+    reason: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The reason for this change, if set (between 0-512 characters)."""
-
-    @classmethod
-    def deserialize(cls, payload: more_typing.JSONObject, **kwargs: typing.Any) -> AuditLogEntry:
-        """Deserialize this model from a raw payload."""
-        action_type = conversions.try_cast(payload["event_type"], AuditLogEventType, payload["event_type"])
-        if target_id := payload.get("target_id"):
-            target_id = bases.Snowflake(target_id)
-
-        if (options := payload.get("options")) is not None:
-            option_converter = get_entry_info_entity(action_type)
-            options = option_converter.deserialize(options, **kwargs)
-
-        # noinspection PyArgumentList
-        return cls(
-            target_id=target_id,
-            changes=[
-                AuditLogChange.deserialize(payload, **kwargs)
-                for payload in payload.get("changes", more_collections.EMPTY_SEQUENCE)
-            ],
-            user_id=bases.Snowflake(payload["user_id"]),
-            id=bases.Snowflake(payload["id"]),
-            action_type=action_type,
-            options=options,
-            reason=payload.get("reason"),
-            **kwargs,
-        )
-
-
-def _deserialize_entries(
-    payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Mapping[bases.Snowflake, AuditLogEntry]:
-    return {bases.Snowflake(entry["id"]): AuditLogEntry.deserialize(entry, **kwargs) for entry in payload}
-
-
-def _deserialize_integrations(
-    payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Mapping[bases.Snowflake, guilds.GuildIntegration]:
-    return {
-        bases.Snowflake(integration["id"]): guilds.PartialGuildIntegration.deserialize(integration, **kwargs)
-        for integration in payload
-    }
-
-
-def _deserialize_users(
-    payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Mapping[bases.Snowflake, users_.User]:
-    return {bases.Snowflake(user["id"]): users_.User.deserialize(user, **kwargs) for user in payload}
-
-
-def _deserialize_webhooks(
-    payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Mapping[bases.Snowflake, webhooks_.Webhook]:
-    return {bases.Snowflake(webhook["id"]): webhooks_.Webhook.deserialize(webhook, **kwargs) for webhook in payload}
 
 
 # TODO: make this support looking like a list of entries...
-@marshaller.marshallable()
-@attr.s(eq=True, repr=False, kw_only=True, slots=True)
-class AuditLog(bases.Entity, marshaller.Deserializable):
+@attr.s(eq=True, hash=False, init=False, kw_only=True, repr=False, slots=True)
+class AuditLog:
     """Represents a guilds audit log."""
 
-    entries: typing.Mapping[bases.Snowflake, AuditLogEntry] = marshaller.attrib(
-        raw_name="audit_log_entries", deserializer=_deserialize_entries, inherit_kwargs=True,
-    )
+    entries: typing.Mapping[bases.Snowflake, AuditLogEntry] = attr.ib()
     """A sequence of the audit log's entries."""
 
-    integrations: typing.Mapping[bases.Snowflake, guilds.GuildIntegration] = marshaller.attrib(
-        deserializer=_deserialize_integrations, inherit_kwargs=True,
-    )
+    integrations: typing.Mapping[bases.Snowflake, guilds.Integration] = attr.ib()
     """A mapping of the partial objects of integrations found in this audit log."""
 
-    users: typing.Mapping[bases.Snowflake, users_.User] = marshaller.attrib(
-        deserializer=_deserialize_users, inherit_kwargs=True
-    )
+    users: typing.Mapping[bases.Snowflake, users_.User] = attr.ib()
     """A mapping of the objects of users found in this audit log."""
 
-    webhooks: typing.Mapping[bases.Snowflake, webhooks_.Webhook] = marshaller.attrib(
-        deserializer=_deserialize_webhooks, inherit_kwargs=True,
-    )
+    webhooks: typing.Mapping[bases.Snowflake, webhooks_.Webhook] = attr.ib()
     """A mapping of the objects of webhooks found in this audit log."""
+
+    def __iter__(self) -> typing.Iterable[AuditLogEntry]:
+        return self.entries.values()
