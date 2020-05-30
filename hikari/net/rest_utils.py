@@ -40,7 +40,7 @@ from hikari.models import files
 from hikari.models import guilds
 from hikari.models import permissions as permissions_
 from hikari.net import routes
-from hikari.utilities import binding
+from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import snowflake as snowflake_
 from hikari.utilities import undefined
@@ -62,7 +62,7 @@ class TypingIndicator:
     def __init__(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, binding.JSONObject]],
+        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, data_binding.JSONObject]],
     ) -> None:
         self._channel = channel
         self._request_call = request_call
@@ -90,11 +90,11 @@ class TypingIndicator:
 @attr.s(auto_attribs=True, kw_only=True, slots=True)
 class GuildBuilder:
     _app: app_.IRESTApp
-    _channels: typing.MutableSequence[binding.JSONObject] = attr.ib(factory=list)
+    _channels: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list)
     _counter: int = 0
     _name: typing.Union[undefined.Undefined, str]
-    _request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, binding.JSONObject]]
-    _roles: typing.MutableSequence[binding.JSONObject] = attr.ib(factory=list)
+    _request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, data_binding.JSONObject]]
+    _roles: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list)
     default_message_notifications: typing.Union[
         undefined.Undefined, guilds.GuildMessageNotificationsLevel
     ] = undefined.Undefined()
@@ -115,7 +115,7 @@ class GuildBuilder:
 
     async def create(self) -> guilds.Guild:
         route = routes.POST_GUILDS.compile()
-        payload = binding.JSONObjectBuilder()
+        payload = data_binding.JSONObjectBuilder()
         payload.put("name", self.name)
         payload.put_array("roles", self._roles)
         payload.put_array("channels", self._channels)
@@ -149,7 +149,7 @@ class GuildBuilder:
             raise TypeError("Cannot specify 'color' and 'colour' together.")
 
         snowflake = self._new_snowflake()
-        payload = binding.JSONObjectBuilder()
+        payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake)
         payload.put("name", name)
         payload.put("color", color)
@@ -173,7 +173,7 @@ class GuildBuilder:
         nsfw: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> snowflake_.Snowflake:
         snowflake = self._new_snowflake()
-        payload = binding.JSONObjectBuilder()
+        payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake)
         payload.put("name", name)
         payload.put("type", channels.ChannelType.GUILD_CATEGORY)
@@ -202,7 +202,7 @@ class GuildBuilder:
         nsfw: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> snowflake_.Snowflake:
         snowflake = self._new_snowflake()
-        payload = binding.JSONObjectBuilder()
+        payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake)
         payload.put("name", name)
         payload.put("type", channels.ChannelType.GUILD_TEXT)
@@ -234,7 +234,7 @@ class GuildBuilder:
         user_limit: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
     ) -> snowflake_.Snowflake:
         snowflake = self._new_snowflake()
-        payload = binding.JSONObjectBuilder()
+        payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake)
         payload.put("name", name)
         payload.put("type", channels.ChannelType.GUILD_VOICE)

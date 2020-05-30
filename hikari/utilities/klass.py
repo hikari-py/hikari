@@ -105,6 +105,3 @@ class Singleton(metaclass=SingletonMeta):
     """
 
     __slots__ = ()
-
-    def __init__(self):
-        pass

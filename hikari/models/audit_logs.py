@@ -181,7 +181,7 @@ class AuditLogChange:
 
 
 @enum.unique
-class AuditLogEventType(int, enum.Enum):
+class AuditLogEventType(enum.IntEnum):
     """The type of event that occurred."""
 
     GUILD_UPDATE = 1
@@ -219,6 +219,9 @@ class AuditLogEventType(int, enum.Enum):
     INTEGRATION_CREATE = 80
     INTEGRATION_UPDATE = 81
     INTEGRATION_DELETE = 82
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)

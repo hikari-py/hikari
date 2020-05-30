@@ -35,7 +35,7 @@ from hikari import errors
 from hikari.models import bases
 from hikari.net import http_client
 from hikari.net import ratelimits
-from hikari.utilities import binding
+from hikari.utilities import data_binding
 from hikari.utilities import klass
 
 if typing.TYPE_CHECKING:
@@ -343,13 +343,13 @@ class VoiceGateway(http_client.HTTPClient):
                 }
             )
 
-    async def _receive_json_payload(self) -> binding.JSONObject:
+    async def _receive_json_payload(self) -> data_binding.JSONObject:
         message = await self._ws.receive()
         self.last_message_received = self._now()
 
         if message.type == aiohttp.WSMsgType.TEXT:
             self._log_debug_payload(message.data, "received text payload")
-            return binding.load_json(message.data)
+            return data_binding.load_json(message.data)
 
         elif message.type == aiohttp.WSMsgType.CLOSE:
             close_code = self._ws.close_code
@@ -377,8 +377,8 @@ class VoiceGateway(http_client.HTTPClient):
             self.logger.debug("encountered unexpected error", exc_info=ex)
             raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
 
-    async def _send_json(self, payload: binding.JSONObject) -> None:
-        message = binding.dump_json(payload)
+    async def _send_json(self, payload: data_binding.JSONObject) -> None:
+        message = data_binding.dump_json(payload)
         self._log_debug_payload(message, "sending json payload")
         await self._ws.send_str(message)
 

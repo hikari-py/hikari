@@ -69,12 +69,13 @@ JSONBoolean = bool
 JSONNull = None
 """A null JSON value."""
 
-# We cant include JSONArray and JSONObject in the definition as MyPY does not support
-# recursive type definitions, sadly.
-JSONObject = typing.Dict[JSONString, typing.Union[JSONString, JSONNumber, JSONBoolean, JSONNull, list, dict]]
+# MyPy does not support recursive types yet. This has been ongoing for a long time, unfortunately.
+# See https://github.com/python/typing/issues/182
+
+JSONObject = typing.Dict[JSONString, typing.Any]
 """A JSON object representation as a dict."""
 
-JSONArray = typing.List[typing.Union[JSONString, JSONNumber, JSONBoolean, JSONNull, dict, list]]
+JSONArray = typing.List[typing.Any]
 """A JSON array representation as a list."""
 
 JSONAny = typing.Union[JSONString, JSONNumber, JSONBoolean, JSONNull, JSONArray, JSONObject]

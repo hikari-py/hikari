@@ -25,7 +25,7 @@ __all__ = ["CompiledRoute", "Route"]
 import re
 import typing
 
-from hikari.utilities import binding
+from hikari.utilities import data_binding
 
 DEFAULT_MAJOR_PARAMS: typing.Final[typing.Set[str]] = {"channel", "guild", "webhook"}
 HASH_SEPARATOR: typing.Final[str] = ";"
@@ -188,7 +188,7 @@ class Route:
         CompiledRoute
             The compiled _route.
         """
-        data = binding.StringMapBuilder.from_dict(kwargs)
+        data = data_binding.StringMapBuilder.from_dict(kwargs)
 
         return CompiledRoute(
             self, self.path_template.format_map(data), data[self.major_param] if self.major_param is not None else "-",
