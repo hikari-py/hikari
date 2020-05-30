@@ -50,9 +50,12 @@ def resolve_signature(func: typing.Callable) -> inspect.Signature:
         if isinstance(value.annotation, str):
             if resolved_type_hints is None:
                 resolved_type_hints = typing.get_type_hints(func)
-            parameters.append(value.replace(annotation=resolved_type_hints[key]))
-        else:
-            parameters.append(value)
+            value = value.replace(annotation=resolved_type_hints[key])
+
+        if value is type(None):
+            value = None
+
+        parameters.append(value)
     signature = signature.replace(parameters=parameters)
 
     if isinstance(signature.return_annotation, str):
@@ -60,6 +63,10 @@ def resolve_signature(func: typing.Callable) -> inspect.Signature:
             return_annotation = typing.get_type_hints(func)["return"]
         else:
             return_annotation = resolved_type_hints["return"]
+
+        if return_annotation is type(None):
+            return_annotation = None
+
         signature = signature.replace(return_annotation=return_annotation)
 
     return signature

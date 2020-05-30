@@ -16,33 +16,32 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import pytest
 
 from hikari.utilities import undefined
 from tests.hikari import _helpers
 
 
-class TestUnset:
+class TestUndefined:
     def test_repr(self):
-        assert repr(undefined.Undefined()) == "UNSET"
+        assert repr(undefined.Undefined()) == "UNDEFINED"
 
     def test_str(self):
-        assert str(undefined.Undefined()) == "UNSET"
+        assert str(undefined.Undefined()) == "UNDEFINED"
 
     def test_bool(self):
         assert bool(undefined.Undefined()) is False
 
+    # noinspection PyComparisonWithNone
     def test_singleton_behaviour(self):
-        assert undefined.Unset() is undefined.Unset()
-        assert undefined.Undefined() is undefined.Unset()
+        assert undefined.Undefined() is undefined.Undefined()
+        assert undefined.Undefined() == undefined.Undefined()
+        assert undefined.Undefined() != None
+        assert undefined.Undefined() != False
 
     @_helpers.assert_raises(type_=TypeError)
     def test_cannot_subclass(self):
         class _(undefined.Undefined):
             pass
 
-
-class TestIsUnset:
-    @pytest.mark.parametrize(["obj", "is_unset"], [(undefined.Undefined(), True), (object(), False),])
-    def test_is_unset(self, obj, is_unset):
-        assert isinstance(obj, undefined.Undefined) is is_unset
+    def test_count(self):
+        assert undefined.Undefined.count(9, 18, undefined.Undefined(), 36, undefined.Undefined(), 54) == 2

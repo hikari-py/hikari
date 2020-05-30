@@ -37,4 +37,7 @@ from hikari.impl import *
 from hikari.models import *
 from hikari.net import *
 
-__all__ = []
+from hikari.impl.bot import BotImpl as HikariBot
+from hikari.impl.rest_app import RESTAppImpl as HikariREST
+
+__all__ = ["HikariBot", "HikariREST"]
