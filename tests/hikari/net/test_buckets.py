@@ -16,12 +16,3 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import pytest
-
-from hikari.models import colors
-from hikari.models import colours
-
-
-@pytest.mark.model
-def test_colours():
-    assert colors.Color is colours.Colour

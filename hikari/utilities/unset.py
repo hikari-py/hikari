@@ -24,10 +24,10 @@ __all__ = ["Unset", "UNSET", "is_unset"]
 
 import typing
 
-from hikari.internal import class_helpers
+from hikari.utilities import klass
 
 
-class Unset(class_helpers.Singleton):
+class Unset(klass.Singleton):
     """A singleton value that represents an unset field.
 
     This will always have a falsified value.

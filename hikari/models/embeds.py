@@ -35,10 +35,6 @@ import datetime
 import typing
 
 import attr
-
-from hikari.internal import conversions
-from hikari.internal import marshaller
-from . import bases
 from . import colors
 from . import files
 
@@ -55,22 +51,17 @@ _MAX_EMBED_FIELDS: typing.Final[int] = 25
 _MAX_EMBED_SIZE: typing.Final[int] = 6000
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedFooter(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+class EmbedFooter:
     """Represents an embed footer."""
 
-    text: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
+    text: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The footer text."""
 
-    icon_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None
-    )
+    icon_url: typing.Optional[str] = attr.ib(default=None)
     """The URL of the footer icon."""
 
-    proxy_icon_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=None, if_undefined=None, default=None
-    )
+    proxy_icon_url: typing.Optional[str] = attr.ib(default=None)
     """The proxied URL of the footer icon.
 
     !!! note
@@ -79,19 +70,16 @@ class EmbedFooter(bases.Entity, marshaller.Deserializable, marshaller.Serializab
     """
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedImage(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+class EmbedImage:
     """Represents an embed image."""
 
-    url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True,
+    url: typing.Optional[str] = attr.ib(
+        default=None, repr=True,
     )
     """The URL of the image."""
 
-    proxy_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=None, if_undefined=None, default=None,
-    )
+    proxy_url: typing.Optional[str] = attr.ib(default=None,)
     """The proxied URL of the image.
 
     !!! note
@@ -99,7 +87,7 @@ class EmbedImage(bases.Entity, marshaller.Deserializable, marshaller.Serializabl
         will be ignored during serialization.
     """
 
-    height: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=None, if_undefined=None, default=None)
+    height: typing.Optional[int] = attr.ib(default=None)
     """The height of the image.
 
     !!! note
@@ -107,7 +95,7 @@ class EmbedImage(bases.Entity, marshaller.Deserializable, marshaller.Serializabl
         will be ignored during serialization.
     """
 
-    width: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=None, if_undefined=None, default=None)
+    width: typing.Optional[int] = attr.ib(default=None)
     """The width of the image.
 
     !!! note
@@ -116,19 +104,16 @@ class EmbedImage(bases.Entity, marshaller.Deserializable, marshaller.Serializabl
     """
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedThumbnail(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+class EmbedThumbnail:
     """Represents an embed thumbnail."""
 
-    url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True,
+    url: typing.Optional[str] = attr.ib(
+        default=None, repr=True,
     )
     """The URL of the thumbnail."""
 
-    proxy_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=None, if_undefined=None, default=None,
-    )
+    proxy_url: typing.Optional[str] = attr.ib(default=None,)
     """The proxied URL of the thumbnail.
 
     !!! note
@@ -136,7 +121,7 @@ class EmbedThumbnail(bases.Entity, marshaller.Deserializable, marshaller.Seriali
         will be ignored during serialization.
     """
 
-    height: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=None, if_undefined=None, default=None)
+    height: typing.Optional[int] = attr.ib(default=None)
     """The height of the thumbnail.
 
     !!! note
@@ -144,7 +129,7 @@ class EmbedThumbnail(bases.Entity, marshaller.Deserializable, marshaller.Seriali
         will be ignored during serialization.
     """
 
-    width: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=None, if_undefined=None, default=None)
+    width: typing.Optional[int] = attr.ib(default=None)
     """The width of the thumbnail.
 
     !!! note
@@ -153,9 +138,8 @@ class EmbedThumbnail(bases.Entity, marshaller.Deserializable, marshaller.Seriali
     """
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedVideo(bases.Entity, marshaller.Deserializable):
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class EmbedVideo:
     """Represents an embed video.
 
     !!! note
@@ -164,19 +148,18 @@ class EmbedVideo(bases.Entity, marshaller.Deserializable):
         embed objects.
     """
 
-    url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None, repr=True)
+    url: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The URL of the video."""
 
-    height: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
+    height: typing.Optional[int] = attr.ib(default=None)
     """The height of the video."""
 
-    width: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
+    width: typing.Optional[int] = attr.ib(default=None)
     """The width of the video."""
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedProvider(bases.Entity, marshaller.Deserializable):
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class EmbedProvider:
     """Represents an embed provider.
 
     !!! note
@@ -185,38 +168,27 @@ class EmbedProvider(bases.Entity, marshaller.Deserializable):
         You should still expect to receive these objects where appropriate.
     """
 
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None, repr=True)
+    name: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The name of the provider."""
 
-    url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, if_undefined=None, if_none=None, default=None, repr=True
-    )
+    url: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The URL of the provider."""
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedAuthor(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+class EmbedAuthor:
     """Represents an embed author."""
 
-    name: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True
-    )
+    name: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The name of the author."""
 
-    url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True
-    )
+    url: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The URL of the author."""
 
-    icon_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None
-    )
+    icon_url: typing.Optional[str] = attr.ib(default=None)
     """The URL of the author icon."""
 
-    proxy_icon_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=None, if_undefined=None, default=None
-    )
+    proxy_icon_url: typing.Optional[str] = attr.ib(default=None)
     """The proxied URL of the author icon.
 
     !!! note
@@ -225,43 +197,25 @@ class EmbedAuthor(bases.Entity, marshaller.Deserializable, marshaller.Serializab
     """
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedField(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+class EmbedField:
     """Represents a field in a embed."""
 
-    name: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
+    name: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The name of the field."""
 
-    value: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
+    value: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The value of the field."""
 
-    is_inline: bool = marshaller.attrib(
-        raw_name="inline", deserializer=bool, serializer=bool, if_undefined=False, default=False, repr=True
-    )
+    is_inline: bool = attr.ib(default=False, repr=True)
     """Whether the field should display inline. Defaults to `False`."""
 
 
-def _serialize_timestamp(timestamp: datetime.datetime) -> str:
-    return timestamp.replace(tzinfo=datetime.timezone.utc).isoformat()
-
-
-def _deserialize_fields(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[EmbedField]:
-    return [EmbedField.deserialize(field, **kwargs) for field in payload]
-
-
-def _serialize_fields(fields: typing.Sequence[EmbedField]) -> more_typing.JSONArray:
-    return [field.serialize() for field in fields]
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+class Embed:
     """Represents an embed."""
 
-    title: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True
-    )
+    title: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The title of the embed."""
 
     @title.validator
@@ -269,9 +223,7 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
         if value is not None and len(value) > _MAX_EMBED_TITLE:
             raise ValueError(f"title must not exceed {_MAX_EMBED_TITLE} characters")
 
-    description: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None
-    )
+    description: typing.Optional[str] = attr.ib(default=None)
     """The description of the embed."""
 
     @description.validator
@@ -279,57 +231,29 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
         if value is not None and len(value) > _MAX_EMBED_DESCRIPTION:
             raise ValueError(f"description must not exceed {_MAX_EMBED_DESCRIPTION} characters")
 
-    url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None, default=None)
+    url: typing.Optional[str] = attr.ib(default=None)
     """The URL of the embed."""
 
-    timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.iso8601_datetime_string_to_datetime,
-        serializer=_serialize_timestamp,
-        if_undefined=None,
-        default=None,
-        repr=True,
+    timestamp: typing.Optional[datetime.datetime] = attr.ib(
+        default=None, repr=True,
     )
     """The timestamp of the embed."""
 
-    color: typing.Optional[colors.Color] = marshaller.attrib(
-        deserializer=colors.Color,
-        serializer=int,
-        converter=attr.converters.optional(colors.Color.of),
-        if_undefined=None,
-        default=None,
+    color: typing.Optional[colors.Color] = attr.ib(
+        converter=attr.converters.optional(colors.Color.of), default=None,
     )
     """The colour of this embed's sidebar."""
 
-    footer: typing.Optional[EmbedFooter] = marshaller.attrib(
-        deserializer=EmbedFooter.deserialize,
-        serializer=EmbedFooter.serialize,
-        if_undefined=None,
-        default=None,
-        inherit_kwargs=True,
-    )
+    footer: typing.Optional[EmbedFooter] = attr.ib(default=None,)
     """The footer of the embed."""
 
-    image: typing.Optional[EmbedImage] = marshaller.attrib(
-        deserializer=EmbedImage.deserialize,
-        serializer=EmbedImage.serialize,
-        if_undefined=None,
-        default=None,
-        inherit_kwargs=True,
-    )
+    image: typing.Optional[EmbedImage] = attr.ib(default=None,)
     """The image of the embed."""
 
-    thumbnail: typing.Optional[EmbedThumbnail] = marshaller.attrib(
-        deserializer=EmbedThumbnail.deserialize,
-        serializer=EmbedThumbnail.serialize,
-        if_undefined=None,
-        default=None,
-        inherit_kwargs=True,
-    )
+    thumbnail: typing.Optional[EmbedThumbnail] = attr.ib(default=None,)
     """The thumbnail of the embed."""
 
-    video: typing.Optional[EmbedVideo] = marshaller.attrib(
-        deserializer=EmbedVideo.deserialize, serializer=None, if_undefined=None, default=None, inherit_kwargs=True
-    )
+    video: typing.Optional[EmbedVideo] = attr.ib(default=None)
     """The video of the embed.
 
     !!! note
@@ -337,9 +261,7 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
         will be ignored during serialization.
     """
 
-    provider: typing.Optional[EmbedProvider] = marshaller.attrib(
-        deserializer=EmbedProvider.deserialize, serializer=None, if_undefined=None, default=None, inherit_kwargs=True,
-    )
+    provider: typing.Optional[EmbedProvider] = attr.ib(default=None)
     """The provider of the embed.
 
     !!! note
@@ -347,22 +269,10 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
         will be ignored during serialization.
     """
 
-    author: typing.Optional[EmbedAuthor] = marshaller.attrib(
-        deserializer=EmbedAuthor.deserialize,
-        serializer=EmbedAuthor.serialize,
-        if_undefined=None,
-        default=None,
-        inherit_kwargs=True,
-    )
+    author: typing.Optional[EmbedAuthor] = attr.ib(default=None,)
     """The author of the embed."""
 
-    fields: typing.Sequence[EmbedField] = marshaller.attrib(
-        deserializer=_deserialize_fields,
-        serializer=_serialize_fields,
-        if_undefined=list,
-        factory=list,
-        inherit_kwargs=True,
-    )
+    fields: typing.Sequence[EmbedField] = attr.ib(factory=list)
     """The fields of the embed."""
 
     _assets_to_upload = attr.attrib(factory=list)

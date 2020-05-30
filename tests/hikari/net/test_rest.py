@@ -16,30 +16,3 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import asyncio
-
-import pytest
-
-from hikari.internal import more_typing
-
-
-# noinspection PyProtocol
-@pytest.mark.asyncio
-class TestFuture:
-    async def test_is_instance(self, event_loop):
-        assert isinstance(event_loop.create_future(), more_typing.Future)
-
-        async def nil():
-            pass
-
-        assert isinstance(asyncio.create_task(nil()), more_typing.Future)
-
-
-# noinspection PyProtocol
-@pytest.mark.asyncio
-class TestTask:
-    async def test_is_instance(self, event_loop):
-        async def nil():
-            pass
-
-        assert isinstance(asyncio.create_task(nil()), more_typing.Task)

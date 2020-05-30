@@ -24,7 +24,6 @@ __all__ = ["VoiceStateUpdateEvent", "VoiceServerUpdateEvent"]
 
 import attr
 
-from hikari.internal import marshaller
 from hikari.models import bases as base_models
 from hikari.models import intents
 from hikari.models import voices
@@ -32,7 +31,6 @@ from . import base as base_events
 
 
 @base_events.requires_intents(intents.Intent.GUILD_VOICE_STATES)
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
 class VoiceStateUpdateEvent(base_events.HikariEvent, voices.VoiceState):
     """Used to represent voice state update gateway events.
@@ -41,20 +39,19 @@ class VoiceStateUpdateEvent(base_events.HikariEvent, voices.VoiceState):
     """
 
 
-@marshaller.marshallable()
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class VoiceServerUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
+class VoiceServerUpdateEvent(base_events.HikariEvent):
     """Used to represent voice server update gateway events.
 
     Sent when initially connecting to voice and when the current voice instance
     falls over to a new server.
     """
 
-    token: str = marshaller.attrib(deserializer=str)
+    token: str = attr.ib()
     """The voice connection's string token."""
 
-    guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    guild_id: base_models.Snowflake = attr.ib(repr=True)
     """The ID of the guild this voice server update is for."""
 
-    endpoint: str = marshaller.attrib(deserializer=str, repr=True)
+    endpoint: str = attr.ib(repr=True)
     """The URI for this voice server host."""
