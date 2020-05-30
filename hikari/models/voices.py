@@ -30,27 +30,26 @@ from hikari.models import bases
 
 if typing.TYPE_CHECKING:
     from hikari.models import guilds
+    from hikari.utilities import snowflake
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class VoiceState(bases.Entity):
     """Represents a user's voice connection status."""
 
-    guild_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the guild this voice state is in, if applicable."""
 
-    channel_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the channel this user is connected to.
 
     This will be `None` if they are leaving voice.
     """
 
-    user_id: bases.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    user_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the user this voice state is for."""
 
-    member: typing.Optional[guilds.GuildMember] = attr.ib(
-        eq=False, hash=False,
-    )
+    member: typing.Optional[guilds.Member] = attr.ib(eq=False, hash=False)
     """The guild member this voice state is for if the voice state is in a guild."""
 
     session_id: str = attr.ib(eq=True, hash=True, repr=True)

@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+
 from __future__ import annotations
 
 __all__ = ["AbstractGatewayZookeeper"]
@@ -41,8 +42,8 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     from hikari import http_settings
     from hikari.models import gateway as gateway_models
-    from hikari.models import guilds
     from hikari.models import intents as intents_
+    from hikari.models import presences
 
 
 class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
@@ -51,10 +52,10 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         *,
         config: http_settings.HTTPSettings,
         debug: bool,
-        initial_activity: typing.Optional[gateway.Activity],
+        initial_activity: typing.Optional[presences.OwnActivity],
         initial_idle_since: typing.Optional[datetime.datetime],
         initial_is_afk: bool,
-        initial_status: guilds.PresenceStatus,
+        initial_status: presences.PresenceStatus,
         intents: typing.Optional[intents_.Intent],
         large_threshold: int,
         shard_ids: typing.Set[int],
@@ -205,8 +206,8 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
     async def update_presence(
         self,
         *,
-        status: typing.Union[undefined.Undefined, guilds.PresenceStatus] = undefined.Undefined(),
-        activity: typing.Union[undefined.Undefined, gateway.Activity, None] = undefined.Undefined(),
+        status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
+        activity: typing.Union[undefined.Undefined, presences.OwnActivity, None] = undefined.Undefined(),
         idle_since: typing.Union[undefined.Undefined, datetime.datetime] = undefined.Undefined(),
         is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> None:

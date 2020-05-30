@@ -84,10 +84,10 @@ JSONAny = typing.Union[JSONString, JSONNumber, JSONBoolean, JSONNull, JSONArray,
 if typing.TYPE_CHECKING:
 
     def dump_json(_: typing.Union[JSONArray, JSONObject]) -> str:
-        ...
+        """Convert a Python type to a JSON string."""
 
     def load_json(_: str) -> typing.Union[JSONArray, JSONObject]:
-        ...
+        """Convert a JSON string to a Python type."""
 
 
 else:
@@ -173,7 +173,7 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
     ) -> None:
         """Put a JSON value.
 
-        If the value is unset, then it will not be stored.
+        If the value is undefined, then it will not be stored.
 
         Parameters
         ----------
@@ -181,7 +181,7 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
             The key to give the element.
         value : JSONType | typing.Any | hikari.utilities.undefined.Undefined
             The JSON type to put. This may be a non-JSON type if a conversion
-            is also specified. This may alternatively be unset. In the latter
+            is also specified. This may alternatively be undefined. In the latter
             case, nothing is performed.
         conversion : typing.Callable[[typing.Any], JSONType] | None
             Optional conversion to apply.
@@ -200,7 +200,7 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
     ) -> None:
         """Put a JSON array.
 
-        If the value is unset, then it will not be stored.
+        If the value is undefined, then it will not be stored.
 
         Parameters
         ----------
@@ -208,7 +208,7 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
             The key to give the element.
         values : JSONType | typing.Any | hikari.utilities.undefined.Undefined
             The JSON types to put. This may be an iterable of non-JSON types if
-            a conversion is also specified. This may alternatively be unset.
+            a conversion is also specified. This may alternatively be undefined.
             In the latter case, nothing is performed.
         conversion : typing.Callable[[typing.Any], JSONType] | None
             Optional conversion to apply.
@@ -227,7 +227,7 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
         key : JSONString
             The key to give the element.
         value : JSONType | hikari.utilities.undefined.Undefined
-            The JSON type to put. This may alternatively be unset. In the latter
+            The JSON type to put. This may alternatively be undefined. In the latter
             case, nothing is performed.
         """
         if not isinstance(value, undefined.Undefined):
@@ -243,7 +243,7 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
         key : JSONString
             The key to give the element.
         values : typing.Iterable[typing.SupportsInt, int] | hikari.utilities.undefined.Undefined
-            The JSON snowflakes to put. This may alternatively be unset. In the latter
+            The JSON snowflakes to put. This may alternatively be undefined. In the latter
             case, nothing is performed.
         """
         if not isinstance(values, undefined.Undefined):

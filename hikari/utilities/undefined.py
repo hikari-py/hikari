@@ -80,25 +80,26 @@ class Undefined(klass.Singleton):
     def __bool__(self) -> bool:
         return False
 
-    def __repr__(self) -> str:
-        return type(self).__name__.upper()
+    def __eq__(self, other: typing.Any) -> bool:
+        return other is self
 
     def __iter__(self) -> typing.Iterator[None]:
         yield from ()
 
-    __str__ = __repr__
-
     def __init_subclass__(cls, **kwargs: typing.Any) -> typing.NoReturn:
         raise TypeError("Cannot subclass Undefined type")
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}()"
+
+    def __str__(self) -> str:
+        return type(self).__name__.upper()
 
     def __setattr__(self, _, __) -> typing.NoReturn:
         raise TypeError("Cannot modify Undefined type")
 
     def __delattr__(self, _) -> typing.NoReturn:
         raise TypeError("Cannot modify Undefined type")
-
-    def __eq__(self, other: typing.Any) -> bool:
-        return other is self
 
     @staticmethod
     def count(*objs: typing.Any) -> int:

@@ -32,7 +32,6 @@ import aiohttp
 import attr
 
 from hikari import errors
-from hikari.models import bases
 from hikari.net import http_client
 from hikari.net import ratelimits
 from hikari.utilities import data_binding
@@ -41,6 +40,7 @@ from hikari.utilities import klass
 if typing.TYPE_CHECKING:
     from hikari import bot
     from hikari import http_settings
+    from hikari.models import bases
 
 
 class VoiceGateway(http_client.HTTPClient):

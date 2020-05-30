@@ -156,20 +156,20 @@ class ICache(component.IComponent, abc.ABC):
     ##########
 
     @abc.abstractmethod
-    async def create_member(self, payload: data_binding.JSONObject, can_cache: bool = False) -> guilds.GuildMember:
+    async def create_member(self, payload: data_binding.JSONObject, can_cache: bool = False) -> guilds.Member:
         # TODO: revisit for the voodoo to make a member into a special user.
         ...
 
     @abc.abstractmethod
-    async def update_member(self, member: guilds.GuildMember, payload: data_binding.JSONObject) -> guilds.GuildMember:
+    async def update_member(self, member: guilds.Member, payload: data_binding.JSONObject) -> guilds.Member:
         ...
 
     @abc.abstractmethod
-    async def get_member(self, guild_id: int, user_id: int) -> typing.Optional[guilds.GuildMember]:
+    async def get_member(self, guild_id: int, user_id: int) -> typing.Optional[guilds.Member]:
         ...
 
     @abc.abstractmethod
-    async def delete_member(self, guild_id: int, user_id: int) -> typing.Optional[guilds.GuildMember]:
+    async def delete_member(self, guild_id: int, user_id: int) -> typing.Optional[guilds.Member]:
         ...
 
     @abc.abstractmethod
@@ -189,23 +189,21 @@ class ICache(component.IComponent, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def create_presence(
-        self, payload: data_binding.JSONObject, can_cache: bool = False
-    ) -> guilds.GuildMemberPresence:
+    async def create_presence(self, payload: data_binding.JSONObject, can_cache: bool = False) -> guilds.MemberPresence:
         ...
 
     @abc.abstractmethod
     async def update_presence(
-        self, role: guilds.GuildMemberPresence, payload: data_binding.JSONObject
-    ) -> guilds.GuildMemberPresence:
+        self, role: guilds.MemberPresence, payload: data_binding.JSONObject
+    ) -> guilds.MemberPresence:
         ...
 
     @abc.abstractmethod
-    async def get_presence(self, guild_id: int, user_id: int) -> typing.Optional[guilds.GuildMemberPresence]:
+    async def get_presence(self, guild_id: int, user_id: int) -> typing.Optional[guilds.MemberPresence]:
         ...
 
     @abc.abstractmethod
-    async def delete_presence(self, guild_id: int, user_id: int) -> typing.Optional[guilds.GuildMemberPresence]:
+    async def delete_presence(self, guild_id: int, user_id: int) -> typing.Optional[guilds.MemberPresence]:
         ...
 
     @abc.abstractmethod
@@ -213,7 +211,7 @@ class ICache(component.IComponent, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def create_guild_integration(self, payload: data_binding.JSONObject) -> guilds.PartialIntegration:
+    async def create_integration(self, payload: data_binding.JSONObject) -> guilds.PartialIntegration:
         ...
 
     @abc.abstractmethod

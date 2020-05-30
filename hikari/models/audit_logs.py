@@ -44,14 +44,13 @@ import typing
 import attr
 
 from hikari.models import bases
-from hikari.models import colors
-from hikari.models import guilds
-from hikari.models import permissions
-from hikari.models import users as users_
-from hikari.models import webhooks as webhooks_
 
 if typing.TYPE_CHECKING:
     from hikari.models import channels
+    from hikari.models import guilds
+    from hikari.models import users as users_
+    from hikari.models import webhooks as webhooks_
+    from hikari.utilities import snowflake
 
 
 class AuditLogChangeKey(str, enum.Enum):
@@ -116,54 +115,6 @@ class AuditLogChangeKey(str, enum.Enum):
         return self.name
 
     __repr__ = __str__
-
-
-def _deserialize_seconds_timedelta(seconds: typing.Union[str, int]) -> datetime.timedelta:
-    return datetime.timedelta(seconds=int(seconds))
-
-
-def _deserialize_day_timedelta(days: typing.Union[str, int]) -> datetime.timedelta:
-    return datetime.timedelta(days=int(days))
-
-
-def _deserialize_max_uses(age: int) -> typing.Union[int, float]:
-    return age if age > 0 else float("inf")
-
-
-def _deserialize_max_age(seconds: int) -> typing.Optional[datetime.timedelta]:
-    return datetime.timedelta(seconds=seconds) if seconds > 0 else None
-
-
-AUDIT_LOG_ENTRY_CONVERTERS = {
-    AuditLogChangeKey.OWNER_ID: bases.Snowflake,
-    AuditLogChangeKey.AFK_CHANNEL_ID: bases.Snowflake,
-    AuditLogChangeKey.AFK_TIMEOUT: _deserialize_seconds_timedelta,
-    AuditLogChangeKey.MFA_LEVEL: guilds.GuildMFALevel,
-    AuditLogChangeKey.VERIFICATION_LEVEL: guilds.GuildVerificationLevel,
-    AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guilds.GuildExplicitContentFilterLevel,
-    AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guilds.GuildMessageNotificationsLevel,
-    AuditLogChangeKey.PRUNE_DELETE_DAYS: _deserialize_day_timedelta,
-    AuditLogChangeKey.WIDGET_CHANNEL_ID: bases.Snowflake,
-    AuditLogChangeKey.POSITION: int,
-    AuditLogChangeKey.BITRATE: int,
-    AuditLogChangeKey.APPLICATION_ID: bases.Snowflake,
-    AuditLogChangeKey.PERMISSIONS: permissions.Permission,
-    AuditLogChangeKey.COLOR: colors.Color,
-    AuditLogChangeKey.ALLOW: permissions.Permission,
-    AuditLogChangeKey.DENY: permissions.Permission,
-    AuditLogChangeKey.CHANNEL_ID: bases.Snowflake,
-    AuditLogChangeKey.INVITER_ID: bases.Snowflake,
-    AuditLogChangeKey.MAX_USES: _deserialize_max_uses,
-    AuditLogChangeKey.USES: int,
-    AuditLogChangeKey.MAX_AGE: _deserialize_max_age,
-    AuditLogChangeKey.ID: bases.Snowflake,
-    AuditLogChangeKey.TYPE: str,
-    AuditLogChangeKey.ENABLE_EMOTICONS: bool,
-    AuditLogChangeKey.EXPIRE_BEHAVIOR: guilds.IntegrationExpireBehaviour,
-    AuditLogChangeKey.EXPIRE_GRACE_PERIOD: _deserialize_day_timedelta,
-    AuditLogChangeKey.RATE_LIMIT_PER_USER: _deserialize_seconds_timedelta,
-    AuditLogChangeKey.SYSTEM_CHANNEL_ID: bases.Snowflake,
-}
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
@@ -251,10 +202,10 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     Will be attached to the message pin and message unpin audit log entries.
     """
 
-    channel_id: bases.Snowflake = attr.ib(repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the text based channel where a pinned message is being targeted."""
 
-    message_id: bases.Snowflake = attr.ib(repr=True)
+    message_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the message that's being pinned or unpinned."""
 
 
@@ -281,7 +232,7 @@ class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
 class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     """Represents extra information attached to the message delete audit entry."""
 
-    channel_id: bases.Snowflake = attr.ib(repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The guild text based channel where these message(s) were deleted."""
 
 
@@ -297,7 +248,7 @@ class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
 class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     """Represents extra information for the voice chat based member move entry."""
 
-    channel_id: bases.Snowflake = attr.ib(repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The amount of members who were disconnected from voice in this entry."""
 
 
@@ -317,13 +268,13 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
 class AuditLogEntry(bases.Entity, bases.Unique):
     """Represents an entry in a guild's audit log."""
 
-    target_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    target_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the entity affected by this change, if applicable."""
 
     changes: typing.Sequence[AuditLogChange] = attr.ib(eq=False, hash=False, repr=False)
     """A sequence of the changes made to `AuditLogEntry.target_id`."""
 
-    user_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    user_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the user who made this change."""
 
     action_type: typing.Union[AuditLogEventType, str] = attr.ib(eq=False, hash=False)
@@ -341,16 +292,16 @@ class AuditLogEntry(bases.Entity, bases.Unique):
 class AuditLog:
     """Represents a guilds audit log."""
 
-    entries: typing.Mapping[bases.Snowflake, AuditLogEntry] = attr.ib()
+    entries: typing.Mapping[snowflake.Snowflake, AuditLogEntry] = attr.ib()
     """A sequence of the audit log's entries."""
 
-    integrations: typing.Mapping[bases.Snowflake, guilds.Integration] = attr.ib()
+    integrations: typing.Mapping[snowflake.Snowflake, guilds.Integration] = attr.ib()
     """A mapping of the partial objects of integrations found in this audit log."""
 
-    users: typing.Mapping[bases.Snowflake, users_.User] = attr.ib()
+    users: typing.Mapping[snowflake.Snowflake, users_.User] = attr.ib()
     """A mapping of the objects of users found in this audit log."""
 
-    webhooks: typing.Mapping[bases.Snowflake, webhooks_.Webhook] = attr.ib()
+    webhooks: typing.Mapping[snowflake.Snowflake, webhooks_.Webhook] = attr.ib()
     """A mapping of the objects of webhooks found in this audit log."""
 
     def __iter__(self) -> typing.Iterable[AuditLogEntry]:

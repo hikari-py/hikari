@@ -16,8 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Basic implementation the components for a single-process bot."""
 
 from __future__ import annotations
+
+__all__ = ["BotImpl"]
 
 import logging
 import typing
@@ -28,9 +31,7 @@ from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
-from hikari.models import gateway as gateway_models
-from hikari.models import guilds
-from hikari.net import gateway
+from hikari.models import presences
 from hikari.net import rest
 from hikari.net import urls
 from hikari.utilities import klass
@@ -43,6 +44,7 @@ if typing.TYPE_CHECKING:
     from hikari import event_consumer as event_consumer_
     from hikari import http_settings as http_settings_
     from hikari import event_dispatcher
+    from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
 
 
@@ -53,10 +55,10 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
         config: http_settings_.HTTPSettings,
         debug: bool = False,
         gateway_version: int = 6,
-        initial_activity: typing.Optional[gateway.Activity] = None,
+        initial_activity: typing.Optional[presences.OwnActivity] = None,
         initial_idle_since: typing.Optional[datetime.datetime] = None,
         initial_is_afk: bool = False,
-        initial_status: guilds.PresenceStatus = guilds.PresenceStatus.ONLINE,
+        initial_status: presences.PresenceStatus = presences.PresenceStatus.ONLINE,
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
         rest_version: int = 6,
@@ -73,7 +75,7 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
         self._event_manager = event_manager.EventManagerImpl(app=self)
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(app=self)
 
-        self._rest = rest.REST(
+        self._rest = rest.REST(  # nosec
             app=self, config=config, debug=debug, token=token, token_type="Bot", url=rest_url, version=rest_version,
         )
 

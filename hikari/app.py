@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Core interfaces for a Hikari application."""
+"""Contains the core interfaces for a Hikari application."""
 from __future__ import annotations
 
 __all__ = ["IApp"]
@@ -33,7 +33,7 @@ if typing.TYPE_CHECKING:
     from hikari import entity_factory as entity_factory_
     from hikari import event_consumer as event_consumer_
     from hikari import event_dispatcher as event_dispatcher_
-    from hikari.models import guilds
+    from hikari.models import presences
     from hikari.net import gateway
     from hikari.net import rest as rest_
 
@@ -61,7 +61,7 @@ class IApp(abc.ABC):
     @property
     @abc.abstractmethod
     def thread_pool(self) -> typing.Optional[futures.ThreadPoolExecutor]:
-        """The optional library-wide thread-pool to utilise for file IO."""
+        """Thread-pool to utilise for file IO within the library, if set."""
 
     @abc.abstractmethod
     async def close(self) -> None:
@@ -135,7 +135,7 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
     @property
     @abc.abstractmethod
     def gateway_shards(self) -> typing.Mapping[int, gateway.Gateway]:
-        """Mapping of each shard ID to the corresponding client for it.
+        """Map of each shard ID to the corresponding client for it.
 
         If the shards have not started, and auto=sharding is in-place, then it
         is acceptable for this to return an empty mapping.
@@ -144,7 +144,7 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
     @property
     @abc.abstractmethod
     def gateway_shard_count(self) -> int:
-        """The number of shards in the entire distributed application.
+        """Amount of shards in the entire distributed application.
 
         If the shards have not started, and auto=sharding is in-place, then it
         is acceptable for this to return `0`.
@@ -162,8 +162,8 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
     async def update_presence(
         self,
         *,
-        status: guilds.PresenceStatus = ...,
-        activity: typing.Optional[gateway.Activity] = ...,
+        status: presences.PresenceStatus = ...,
+        activity: typing.Optional[presences.OwnActivity] = ...,
         idle_since: typing.Optional[datetime.datetime] = ...,
         is_afk: bool = ...,
     ) -> None:
@@ -183,9 +183,9 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
 
         Parameters
         ----------
-        status : hikari.models.guilds.PresenceStatus
+        status : hikari.models.presences.PresenceStatus
             If specified, the new status to set.
-        activity : hikari.models.gateway.Activity | None
+        activity : hikari.models.presences.OwnActivity | None
             If specified, the new activity to set.
         idle_since : datetime.datetime | None
             If specified, the time to show up as being idle since,
