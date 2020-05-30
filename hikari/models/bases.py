@@ -131,5 +131,5 @@ class Unique(typing.SupportsInt):
         return int(self.id)
 
 
-UniqueObjectT = typing.Union[Unique, Snowflake, int, str]
+UniqueObject = typing.Union[Unique, Snowflake, int, str]
 """A unique object."""

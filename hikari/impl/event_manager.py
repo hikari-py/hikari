@@ -24,11 +24,11 @@ __all__ = ["EventManagerImpl"]
 
 from hikari.impl import event_manager_core
 from hikari.net import gateway
-from hikari.utilities import binding
+from hikari.utilities import data_binding
 
 
 class EventManagerImpl(event_manager_core.EventManagerCore):
     """Provides event handling logic for Discord events."""
 
-    async def _on_message_create(self, shard: gateway.Gateway, payload: binding.JSONObject) -> None:
+    async def _on_message_create(self, shard: gateway.Gateway, payload: data_binding.JSONObject) -> None:
         print(shard, payload)

@@ -46,7 +46,7 @@ from hikari.utilities import date
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari.utilities import binding
+    from hikari.utilities import data_binding
 
 
 DMChannelT = typing.TypeVar("DMChannelT", bound=channels_.DMChannel)
@@ -98,7 +98,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     # APPLICATIONS #
     ################
 
-    def deserialize_own_connection(self, payload: binding.JSONObject) -> applications.OwnConnection:
+    def deserialize_own_connection(self, payload: data_binding.JSONObject) -> applications.OwnConnection:
         """Parse a raw payload from Discord into an own connection object.
 
         Parameters
@@ -126,7 +126,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         own_connection.visibility = applications.ConnectionVisibility(payload["visibility"])
         return own_connection
 
-    def deserialize_own_guild(self, payload: binding.JSONObject) -> applications.OwnGuild:
+    def deserialize_own_guild(self, payload: data_binding.JSONObject) -> applications.OwnGuild:
         """Parse a raw payload from Discord into an own guild object.
 
         Parameters
@@ -145,7 +145,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         own_guild.my_permissions = permissions.Permission(payload["permissions"])
         return own_guild
 
-    def deserialize_application(self, payload: binding.JSONObject) -> applications.Application:
+    def deserialize_application(self, payload: data_binding.JSONObject) -> applications.Application:
         """Parse a raw payload from Discord into an application object.
 
         Parameters
@@ -203,7 +203,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ##############
 
     def _deserialize_audit_log_change_roles(
-        self, payload: binding.JSONArray
+        self, payload: data_binding.JSONArray
     ) -> typing.Mapping[base_models.Snowflake, guilds.PartialRole]:
         roles = {}
         for role_payload in payload:
@@ -215,7 +215,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return roles
 
     def _deserialize_audit_log_overwrites(
-        self, payload: binding.JSONArray
+        self, payload: data_binding.JSONArray
     ) -> typing.Mapping[base_models.Snowflake, channels_.PermissionOverwrite]:
         return {
             base_models.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
@@ -223,7 +223,9 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         }
 
     @staticmethod
-    def _deserialize_channel_overwrite_entry_info(payload: binding.JSONObject,) -> audit_logs.ChannelOverwriteEntryInfo:
+    def _deserialize_channel_overwrite_entry_info(
+        payload: data_binding.JSONObject,
+    ) -> audit_logs.ChannelOverwriteEntryInfo:
         channel_overwrite_entry_info = audit_logs.ChannelOverwriteEntryInfo()
         channel_overwrite_entry_info.id = base_models.Snowflake(payload["id"])
         # noinspection PyArgumentList
@@ -232,14 +234,14 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return channel_overwrite_entry_info
 
     @staticmethod
-    def _deserialize_message_pin_entry_info(payload: binding.JSONObject) -> audit_logs.MessagePinEntryInfo:
+    def _deserialize_message_pin_entry_info(payload: data_binding.JSONObject) -> audit_logs.MessagePinEntryInfo:
         message_pin_entry_info = audit_logs.MessagePinEntryInfo()
         message_pin_entry_info.channel_id = base_models.Snowflake(payload["channel_id"])
         message_pin_entry_info.message_id = base_models.Snowflake(payload["message_id"])
         return message_pin_entry_info
 
     @staticmethod
-    def _deserialize_member_prune_entry_info(payload: binding.JSONObject) -> audit_logs.MemberPruneEntryInfo:
+    def _deserialize_member_prune_entry_info(payload: data_binding.JSONObject) -> audit_logs.MemberPruneEntryInfo:
         member_prune_entry_info = audit_logs.MemberPruneEntryInfo()
         member_prune_entry_info.delete_member_days = datetime.timedelta(days=int(payload["delete_member_days"]))
         member_prune_entry_info.members_removed = int(payload["members_removed"])
@@ -247,27 +249,29 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
 
     @staticmethod
     def _deserialize_message_bulk_delete_entry_info(
-        payload: binding.JSONObject,
+        payload: data_binding.JSONObject,
     ) -> audit_logs.MessageBulkDeleteEntryInfo:
         message_bulk_delete_entry_info = audit_logs.MessageBulkDeleteEntryInfo()
         message_bulk_delete_entry_info.count = int(payload["count"])
         return message_bulk_delete_entry_info
 
     @staticmethod
-    def _deserialize_message_delete_entry_info(payload: binding.JSONObject) -> audit_logs.MessageDeleteEntryInfo:
+    def _deserialize_message_delete_entry_info(payload: data_binding.JSONObject) -> audit_logs.MessageDeleteEntryInfo:
         message_delete_entry_info = audit_logs.MessageDeleteEntryInfo()
         message_delete_entry_info.channel_id = base_models.Snowflake(payload["channel_id"])
         message_delete_entry_info.count = int(payload["count"])
         return message_delete_entry_info
 
     @staticmethod
-    def _deserialize_member_disconnect_entry_info(payload: binding.JSONObject,) -> audit_logs.MemberDisconnectEntryInfo:
+    def _deserialize_member_disconnect_entry_info(
+        payload: data_binding.JSONObject,
+    ) -> audit_logs.MemberDisconnectEntryInfo:
         member_disconnect_entry_info = audit_logs.MemberDisconnectEntryInfo()
         member_disconnect_entry_info.count = int(payload["count"])
         return member_disconnect_entry_info
 
     @staticmethod
-    def _deserialize_member_move_entry_info(payload: binding.JSONObject) -> audit_logs.MemberMoveEntryInfo:
+    def _deserialize_member_move_entry_info(payload: data_binding.JSONObject) -> audit_logs.MemberMoveEntryInfo:
         member_move_entry_info = audit_logs.MemberMoveEntryInfo()
         member_move_entry_info.channel_id = base_models.Snowflake(payload["channel_id"])
         member_move_entry_info.count = int(payload["count"])
@@ -275,11 +279,11 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
 
     @staticmethod
     def _deserialize_unrecognised_audit_log_entry_info(
-        payload: binding.JSONObject,
+        payload: data_binding.JSONObject,
     ) -> audit_logs.UnrecognisedAuditLogEntryInfo:
         return audit_logs.UnrecognisedAuditLogEntryInfo(payload)
 
-    def deserialize_audit_log(self, payload: binding.JSONObject) -> audit_logs.AuditLog:
+    def deserialize_audit_log(self, payload: data_binding.JSONObject) -> audit_logs.AuditLog:
         """Parse a raw payload from Discord into an audit log object.
 
         Parameters
@@ -351,7 +355,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     # CHANNELS #
     ############
 
-    def deserialize_permission_overwrite(self, payload: binding.JSONObject) -> channels_.PermissionOverwrite:
+    def deserialize_permission_overwrite(self, payload: data_binding.JSONObject) -> channels_.PermissionOverwrite:
         """Parse a raw payload from Discord into a permission overwrite object.
 
         Parameters
@@ -373,7 +377,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         permission_overwrite.deny = permissions.Permission(payload["deny"])
         return permission_overwrite
 
-    def serialize_permission_overwrite(self, overwrite: channels_.PermissionOverwrite) -> binding.JSONObject:
+    def serialize_permission_overwrite(self, overwrite: channels_.PermissionOverwrite) -> data_binding.JSONObject:
         """Serialize a permission overwrite object to a json serializable dict.
 
         Parameters
@@ -388,7 +392,9 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         """
         return {"id": str(overwrite.id), "type": overwrite.type, "allow": overwrite.allow, "deny": overwrite.deny}
 
-    def _set_partial_channel_attributes(self, payload: binding.JSONObject, channel: PartialChannelT) -> PartialChannelT:
+    def _set_partial_channel_attributes(
+        self, payload: data_binding.JSONObject, channel: PartialChannelT
+    ) -> PartialChannelT:
         channel.set_app(self._app)
         channel.id = base_models.Snowflake(payload["id"])
         channel.name = payload.get("name")
@@ -396,7 +402,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         channel.type = channels_.ChannelType(payload["type"])
         return channel
 
-    def deserialize_partial_channel(self, payload: binding.JSONObject) -> channels_.PartialChannel:
+    def deserialize_partial_channel(self, payload: data_binding.JSONObject) -> channels_.PartialChannel:
         """Parse a raw payload from Discord into a partial channel object.
 
         Parameters
@@ -411,7 +417,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         """
         return self._set_partial_channel_attributes(payload, channels_.PartialChannel())
 
-    def _set_dm_channel_attributes(self, payload: binding.JSONObject, channel: DMChannelT) -> DMChannelT:
+    def _set_dm_channel_attributes(self, payload: data_binding.JSONObject, channel: DMChannelT) -> DMChannelT:
         channel = self._set_partial_channel_attributes(payload, channel)
         if (last_message_id := payload["last_message_id"]) is not None:
             last_message_id = base_models.Snowflake(last_message_id)
@@ -421,7 +427,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         }
         return channel
 
-    def deserialize_dm_channel(self, payload: binding.JSONObject) -> channels_.DMChannel:
+    def deserialize_dm_channel(self, payload: data_binding.JSONObject) -> channels_.DMChannel:
         """Parse a raw payload from Discord into a DM channel object.
 
         Parameters
@@ -436,7 +442,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         """
         return self._set_dm_channel_attributes(payload, channels_.DMChannel())
 
-    def deserialize_group_dm_channel(self, payload: binding.JSONObject) -> channels_.GroupDMChannel:
+    def deserialize_group_dm_channel(self, payload: data_binding.JSONObject) -> channels_.GroupDMChannel:
         """Parse a raw payload from Discord into a group DM channel object.
 
         Parameters
@@ -457,7 +463,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         )
         return group_dm_channel
 
-    def _set_guild_channel_attributes(self, payload: binding.JSONObject, channel: GuildChannelT) -> GuildChannelT:
+    def _set_guild_channel_attributes(self, payload: data_binding.JSONObject, channel: GuildChannelT) -> GuildChannelT:
         channel = self._set_partial_channel_attributes(payload, channel)
         channel.guild_id = base_models.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         channel.position = int(payload["position"])
@@ -473,7 +479,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         channel.parent_id = parent_id
         return channel
 
-    def deserialize_guild_category(self, payload: binding.JSONObject) -> channels_.GuildCategory:
+    def deserialize_guild_category(self, payload: data_binding.JSONObject) -> channels_.GuildCategory:
         """Parse a raw payload from Discord into a guild category object.
 
         Parameters
@@ -488,7 +494,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         """
         return self._set_guild_channel_attributes(payload, channels_.GuildCategory())
 
-    def deserialize_guild_text_channel(self, payload: binding.JSONObject) -> channels_.GuildTextChannel:
+    def deserialize_guild_text_channel(self, payload: data_binding.JSONObject) -> channels_.GuildTextChannel:
         """Parse a raw payload from Discord into a guild text channel object.
 
         Parameters
@@ -512,7 +518,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         guild_text_category.last_pin_timestamp = last_pin_timestamp
         return guild_text_category
 
-    def deserialize_guild_news_channel(self, payload: binding.JSONObject) -> channels_.GuildNewsChannel:
+    def deserialize_guild_news_channel(self, payload: data_binding.JSONObject) -> channels_.GuildNewsChannel:
         """Parse a raw payload from Discord into a guild news channel object.
 
         Parameters
@@ -535,7 +541,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         guild_news_channel.last_pin_timestamp = last_pin_timestamp
         return guild_news_channel
 
-    def deserialize_guild_store_channel(self, payload: binding.JSONObject) -> channels_.GuildStoreChannel:
+    def deserialize_guild_store_channel(self, payload: data_binding.JSONObject) -> channels_.GuildStoreChannel:
         """Parse a raw payload from Discord into a guild store channel object.
 
         Parameters
@@ -550,7 +556,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         """
         return self._set_guild_channel_attributes(payload, channels_.GuildStoreChannel())
 
-    def deserialize_guild_voice_channel(self, payload: binding.JSONObject) -> channels_.GuildVoiceChannel:
+    def deserialize_guild_voice_channel(self, payload: data_binding.JSONObject) -> channels_.GuildVoiceChannel:
         """Parse a raw payload from Discord into a guild voice channel object.
 
         Parameters
@@ -568,7 +574,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         guild_voice_channel.user_limit = int(payload["user_limit"])
         return guild_voice_channel
 
-    def deserialize_channel(self, payload: binding.JSONObject) -> channels_.PartialChannel:
+    def deserialize_channel(self, payload: data_binding.JSONObject) -> channels_.PartialChannel:
         """Parse a raw payload from Discord into a channel object.
 
         Parameters
@@ -587,7 +593,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     # EMBEDS #
     ##########
 
-    def deserialize_embed(self, payload: binding.JSONObject) -> embeds.Embed:
+    def deserialize_embed(self, payload: data_binding.JSONObject) -> embeds.Embed:
         """Parse a raw payload from Discord into an embed object.
 
         Parameters
@@ -668,7 +674,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         embed.fields = fields
         return embed
 
-    def serialize_embed(self, embed: embeds.Embed) -> binding.JSONObject:
+    def serialize_embed(self, embed: embeds.Embed) -> data_binding.JSONObject:
         """Serialize an embed object to a json serializable dict.
 
         Parameters
@@ -736,7 +742,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     # EMOJIS #
     ##########
 
-    def deserialize_unicode_emoji(self, payload: binding.JSONObject) -> emojis.UnicodeEmoji:
+    def deserialize_unicode_emoji(self, payload: data_binding.JSONObject) -> emojis.UnicodeEmoji:
         """Parse a raw payload from Discord into a unicode emoji object.
 
         Parameters
@@ -753,7 +759,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         unicode_emoji.name = payload["name"]
         return unicode_emoji
 
-    def deserialize_custom_emoji(self, payload: binding.JSONObject) -> emojis.CustomEmoji:
+    def deserialize_custom_emoji(self, payload: data_binding.JSONObject) -> emojis.CustomEmoji:
         """Parse a raw payload from Discord into a custom emoji object.
 
         Parameters
@@ -773,7 +779,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         custom_emoji.is_animated = payload.get("animated", False)
         return custom_emoji
 
-    def deserialize_known_custom_emoji(self, payload: binding.JSONObject) -> emojis.KnownCustomEmoji:
+    def deserialize_known_custom_emoji(self, payload: data_binding.JSONObject) -> emojis.KnownCustomEmoji:
         """Parse a raw payload from Discord into a known custom emoji object.
 
         Parameters
@@ -800,7 +806,9 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         known_custom_emoji.is_available = payload["available"]
         return known_custom_emoji
 
-    def deserialize_emoji(self, payload: binding.JSONObject) -> typing.Union[emojis.UnicodeEmoji, emojis.CustomEmoji]:
+    def deserialize_emoji(
+        self, payload: data_binding.JSONObject
+    ) -> typing.Union[emojis.UnicodeEmoji, emojis.CustomEmoji]:
         """Parse a raw payload from Discord into an emoji object.
 
         Parameters
@@ -821,7 +829,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     # GATEWAY #
     ###########
 
-    def deserialize_gateway_bot(self, payload: binding.JSONObject) -> gateway.GatewayBot:
+    def deserialize_gateway_bot(self, payload: data_binding.JSONObject) -> gateway.GatewayBot:
         """Parse a raw payload from Discord into a gateway bot object.
 
         Parameters
@@ -849,7 +857,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     # GUILDS #
     ##########
 
-    def deserialize_guild_widget(self, payload: binding.JSONObject) -> guilds.GuildWidget:
+    def deserialize_guild_widget(self, payload: data_binding.JSONObject) -> guilds.GuildWidget:
         """Parse a raw payload from Discord into a guild widget object.
 
         Parameters
@@ -871,7 +879,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild_embed
 
     def deserialize_guild_member(
-        self, payload: binding.JSONObject, *, user: typing.Optional[users.User] = None
+        self, payload: data_binding.JSONObject, *, user: typing.Optional[users.User] = None
     ) -> guilds.GuildMember:
         """Parse a raw payload from Discord into a guild member object.
 
@@ -902,7 +910,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         guild_member.is_mute = payload["mute"]
         return guild_member
 
-    def deserialize_role(self, payload: binding.JSONObject) -> guilds.Role:
+    def deserialize_role(self, payload: data_binding.JSONObject) -> guilds.Role:
         """Parse a raw payload from Discord into a guild role object.
 
         Parameters
@@ -928,7 +936,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         guild_role.is_mentionable = payload["mentionable"]
         return guild_role
 
-    def deserialize_guild_member_presence(self, payload: binding.JSONObject) -> guilds.GuildMemberPresence:
+    def deserialize_guild_member_presence(self, payload: data_binding.JSONObject) -> guilds.GuildMemberPresence:
         """Parse a raw payload from Discord into a guild member presence object.
 
         Parameters
@@ -1056,7 +1064,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
 
     @staticmethod
     def _set_partial_integration_attributes(
-        payload: binding.JSONObject, integration: PartialGuildIntegrationT
+        payload: data_binding.JSONObject, integration: PartialGuildIntegrationT
     ) -> PartialGuildIntegrationT:
         integration.id = base_models.Snowflake(payload["id"])
         integration.name = payload["name"]
@@ -1068,7 +1076,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         integration.account = account
         return integration
 
-    def deserialize_partial_integration(self, payload: binding.JSONObject) -> guilds.PartialIntegration:
+    def deserialize_partial_integration(self, payload: data_binding.JSONObject) -> guilds.PartialIntegration:
         """Parse a raw payload from Discord into a partial integration object.
 
         Parameters
@@ -1083,7 +1091,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         """
         return self._set_partial_integration_attributes(payload, guilds.PartialIntegration())
 
-    def deserialize_integration(self, payload: binding.JSONObject) -> guilds.Integration:
+    def deserialize_integration(self, payload: data_binding.JSONObject) -> guilds.Integration:
         """Parse a raw payload from Discord into an integration object.
 
         Parameters
@@ -1112,7 +1120,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         guild_integration.last_synced_at = last_synced_at
         return guild_integration
 
-    def deserialize_guild_member_ban(self, payload: binding.JSONObject) -> guilds.GuildMemberBan:
+    def deserialize_guild_member_ban(self, payload: data_binding.JSONObject) -> guilds.GuildMemberBan:
         """Parse a raw payload from Discord into a guild member ban object.
 
         Parameters
@@ -1130,7 +1138,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         guild_member_ban.user = self.deserialize_user(payload["user"])
         return guild_member_ban
 
-    def deserialize_unavailable_guild(self, payload: binding.JSONObject) -> guilds.UnavailableGuild:
+    def deserialize_unavailable_guild(self, payload: data_binding.JSONObject) -> guilds.UnavailableGuild:
         """Parse a raw payload from Discord into a unavailable guild object.
 
         Parameters
@@ -1148,7 +1156,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         unavailable_guild.id = base_models.Snowflake(payload["id"])
         return unavailable_guild
 
-    def _set_partial_guild_attributes(self, payload: binding.JSONObject, guild: PartialGuildT) -> PartialGuildT:
+    def _set_partial_guild_attributes(self, payload: data_binding.JSONObject, guild: PartialGuildT) -> PartialGuildT:
         guild.set_app(self._app)
         guild.id = base_models.Snowflake(payload["id"])
         guild.name = payload["name"]
@@ -1162,7 +1170,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         guild.features = set(features)
         return guild
 
-    def deserialize_guild_preview(self, payload: binding.JSONObject) -> guilds.GuildPreview:
+    def deserialize_guild_preview(self, payload: data_binding.JSONObject) -> guilds.GuildPreview:
         """Parse a raw payload from Discord into a guild preview object.
 
         Parameters
@@ -1187,7 +1195,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         guild_preview.description = payload["description"]
         return guild_preview
 
-    def deserialize_guild(self, payload: binding.JSONObject) -> guilds.Guild:
+    def deserialize_guild(self, payload: data_binding.JSONObject) -> guilds.Guild:
         """Parse a raw payload from Discord into a guild object.
 
         Parameters
@@ -1301,7 +1309,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     # INVITES #
     ###########
 
-    def deserialize_vanity_url(self, payload: binding.JSONObject) -> invites.VanityURL:
+    def deserialize_vanity_url(self, payload: data_binding.JSONObject) -> invites.VanityURL:
         """Parse a raw payload from Discord into a vanity url object.
 
         Parameters
@@ -1320,7 +1328,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         vanity_url.uses = int(payload["uses"])
         return vanity_url
 
-    def _set_invite_attributes(self, payload: binding.JSONObject, invite: InviteT) -> InviteT:
+    def _set_invite_attributes(self, payload: data_binding.JSONObject, invite: InviteT) -> InviteT:
         invite.set_app(self._app)
         invite.code = payload["code"]
         if (guild_payload := payload.get("guild", ...)) is not ...:
@@ -1349,7 +1357,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         )
         return invite
 
-    def deserialize_invite(self, payload: binding.JSONObject) -> invites.Invite:
+    def deserialize_invite(self, payload: data_binding.JSONObject) -> invites.Invite:
         """Parse a raw payload from Discord into an invite object.
 
         Parameters
@@ -1364,7 +1372,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         """
         return self._set_invite_attributes(payload, invites.Invite())
 
-    def deserialize_invite_with_metadata(self, payload: binding.JSONObject) -> invites.InviteWithMetadata:
+    def deserialize_invite_with_metadata(self, payload: data_binding.JSONObject) -> invites.InviteWithMetadata:
         """Parse a raw payload from Discord into a invite with metadata object.
 
         Parameters
@@ -1391,7 +1399,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ############
 
     # TODO: arbitrarily partial ver?
-    def deserialize_message(self, payload: binding.JSONObject) -> messages.Message:
+    def deserialize_message(self, payload: data_binding.JSONObject) -> messages.Message:
         """Parse a raw payload from Discord into a message object.
 
         Parameters
@@ -1481,7 +1489,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     # USERS #
     #########
 
-    def _set_user_attributes(self, payload: binding.JSONObject, user: UserT) -> UserT:
+    def _set_user_attributes(self, payload: data_binding.JSONObject, user: UserT) -> UserT:
         user.set_app(self._app)
         user.id = base_models.Snowflake(payload["id"])
         user.discriminator = payload["discriminator"]
@@ -1491,7 +1499,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         user.is_system = payload.get("system", False)
         return user
 
-    def deserialize_user(self, payload: binding.JSONObject) -> users.User:
+    def deserialize_user(self, payload: data_binding.JSONObject) -> users.User:
         """Parse a raw payload from Discord into a user object.
 
         Parameters
@@ -1508,7 +1516,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         user.flags = users.UserFlag(payload["public_flags"]) if "public_flags" in payload else users.UserFlag.NONE
         return user
 
-    def deserialize_my_user(self, payload: binding.JSONObject) -> users.MyUser:
+    def deserialize_my_user(self, payload: data_binding.JSONObject) -> users.MyUser:
         """Parse a raw payload from Discord into a my user object.
 
         Parameters
@@ -1536,7 +1544,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     # Voices #
     ##########
 
-    def deserialize_voice_state(self, payload: binding.JSONObject) -> voices.VoiceState:
+    def deserialize_voice_state(self, payload: data_binding.JSONObject) -> voices.VoiceState:
         """Parse a raw payload from Discord into a voice state object.
 
         Parameters
@@ -1566,7 +1574,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         voice_state.is_suppressed = payload["suppress"]
         return voice_state
 
-    def deserialize_voice_region(self, payload: binding.JSONObject) -> voices.VoiceRegion:
+    def deserialize_voice_region(self, payload: data_binding.JSONObject) -> voices.VoiceRegion:
         """Parse a raw payload from Discord into a voice region object.
 
         Parameters
@@ -1592,7 +1600,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     # WEBHOOKS #
     ############
 
-    def deserialize_webhook(self, payload: binding.JSONObject) -> webhooks.Webhook:
+    def deserialize_webhook(self, payload: data_binding.JSONObject) -> webhooks.Webhook:
         """Parse a raw payload from Discord into a webhook object.
 
         Parameters

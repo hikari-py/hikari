@@ -40,11 +40,10 @@ from hikari.models import guilds
 from hikari.net import http_client
 from hikari.net import ratelimits
 from hikari.net import user_agents
-from hikari.utilities import binding
+from hikari.utilities import data_binding
 from hikari.utilities import klass
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
-
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -568,7 +567,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             else:
                 self.logger.debug("ignoring unrecognised opcode %s", op)
 
-    async def _receive_json_payload(self) -> binding.JSONObject:
+    async def _receive_json_payload(self) -> data_binding.JSONObject:
         message = await self._receive_raw()
 
         if message.type == aiohttp.WSMsgType.BINARY:
@@ -604,7 +603,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             self.logger.debug("encountered unexpected error", exc_info=ex)
             raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
 
-        return binding.load_json(string)
+        return data_binding.load_json(string)
 
     async def _receive_zlib_message(self, first_packet: bytes) -> typing.Tuple[int, str]:
         buff = bytearray(first_packet)
@@ -625,13 +624,13 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self.last_message_received = self._now()
         return packet
 
-    async def _send_json(self, payload: binding.JSONObject) -> None:
+    async def _send_json(self, payload: data_binding.JSONObject) -> None:
         await self.ratelimiter.acquire()
-        message = binding.dump_json(payload)
+        message = data_binding.dump_json(payload)
         self._log_debug_payload(message, "sending json payload")
         await self._ws.send_str(message)
 
-    def _dispatch(self, event_name: str, payload: binding.JSONObject) -> typing.Coroutine[None, typing.Any, None]:
+    def _dispatch(self, event_name: str, payload: data_binding.JSONObject) -> typing.Coroutine[None, typing.Any, None]:
         return self._app.event_consumer.consume_raw_event(self, event_name, payload)
 
     @staticmethod
@@ -654,7 +653,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
         status: typing.Union[undefined.Undefined, guilds.PresenceStatus] = undefined.Undefined(),
         activity: typing.Union[undefined.Undefined, typing.Optional[Activity]] = undefined.Undefined(),
-    ) -> binding.JSONObject:
+    ) -> data_binding.JSONObject:
         if isinstance(idle_since, undefined.Undefined):
             idle_since = self._idle_since
         if isinstance(is_afk, undefined.Undefined):

@@ -30,7 +30,7 @@ from hikari.events import base
 from hikari.events import other
 from hikari.net import gateway
 from hikari.utilities import aio
-from hikari.utilities import binding
+from hikari.utilities import data_binding
 from hikari.utilities import klass
 
 if typing.TYPE_CHECKING:
@@ -87,7 +87,9 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
 
-    async def consume_raw_event(self, shard: gateway.Gateway, event_name: str, payload: binding.JSONObject) -> None:
+    async def consume_raw_event(
+        self, shard: gateway.Gateway, event_name: str, payload: data_binding.JSONObject
+    ) -> None:
         try:
             callback = getattr(self, "_on_" + event_name.lower())
             await callback(shard, payload)

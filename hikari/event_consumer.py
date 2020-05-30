@@ -27,7 +27,7 @@ from hikari import component
 
 if typing.TYPE_CHECKING:
     from hikari.net import gateway
-    from hikari.utilities import binding
+    from hikari.utilities import data_binding
 
 
 class IEventConsumer(component.IComponent, abc.ABC):
@@ -42,7 +42,9 @@ class IEventConsumer(component.IComponent, abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
-    async def consume_raw_event(self, shard: gateway.Gateway, event_name: str, payload: binding.JSONObject) -> None:
+    async def consume_raw_event(
+        self, shard: gateway.Gateway, event_name: str, payload: data_binding.JSONObject
+    ) -> None:
         """Process a raw event from a gateway shard and process it.
 
         Parameters
