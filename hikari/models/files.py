@@ -68,7 +68,6 @@ import typing
 
 import aiohttp
 
-
 from hikari import errors
 from hikari.utilities import aio
 

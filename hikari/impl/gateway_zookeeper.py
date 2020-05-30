@@ -36,7 +36,7 @@ from hikari import app as app_
 from hikari import event_dispatcher
 from hikari.events import other
 from hikari.net import gateway
-from hikari.utilities import unset
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari import http_settings
@@ -205,10 +205,10 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
     async def update_presence(
         self,
         *,
-        status: typing.Union[unset.Unset, guilds.PresenceStatus] = unset.UNSET,
-        activity: typing.Union[unset.Unset, gateway.Activity, None] = unset.UNSET,
-        idle_since: typing.Union[unset.Unset, datetime.datetime] = unset.UNSET,
-        is_afk: typing.Union[unset.Unset, bool] = unset.UNSET,
+        status: typing.Union[undefined.Undefined, guilds.PresenceStatus] = undefined.Undefined(),
+        activity: typing.Union[undefined.Undefined, gateway.Activity, None] = undefined.Undefined(),
+        idle_since: typing.Union[undefined.Undefined, datetime.datetime] = undefined.Undefined(),
+        is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> None:
         coros = (
             s.update_presence(status=status, activity=activity, idle_since=idle_since, is_afk=is_afk)

@@ -74,6 +74,8 @@ class SingletonMeta(type):
 
     ___instances___ = {}
 
+    # Disable type-checking to hide a bug in IntelliJ for the time being.
+    @typing.no_type_check
     def __call__(cls):
         if cls not in SingletonMeta.___instances___:
             SingletonMeta.___instances___[cls] = super().__call__()
@@ -103,3 +105,6 @@ class Singleton(metaclass=SingletonMeta):
     """
 
     __slots__ = ()
+
+    def __init__(self):
+        pass

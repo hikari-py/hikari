@@ -21,9 +21,12 @@ from __future__ import annotations
 __all__ = ["IBot"]
 
 import abc
+import typing
 
 from hikari import app as app_
-from hikari import http_settings as http_settings_
+
+if typing.TYPE_CHECKING:
+    from hikari import http_settings as http_settings_
 
 
 class IBot(app_.IRESTApp, app_.IGatewayZookeeper, app_.IGatewayDispatcher, abc.ABC):

@@ -59,11 +59,10 @@ import typing
 
 import attr
 
+from hikari.net import urls
+from hikari.utilities import undefined
 from . import bases
 from . import users
-
-from hikari.net import urls
-from hikari.utilities import unset
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -507,32 +506,32 @@ class PresenceUser(users.User):
         unless it is specifically being modified for this update.
     """
 
-    discriminator: typing.Union[str, unset.Unset] = attr.ib(eq=False, hash=False, repr=True)
+    discriminator: typing.Union[str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=True)
     """This user's discriminator."""
 
-    username: typing.Union[str, unset.Unset] = attr.ib(eq=False, hash=False, repr=True)
+    username: typing.Union[str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=True)
     """This user's username."""
 
-    avatar_hash: typing.Union[None, str, unset.Unset] = attr.ib(
+    avatar_hash: typing.Union[None, str, undefined.Undefined] = attr.ib(
         eq=False, hash=False, repr=True,
     )
     """This user's avatar hash, if set."""
 
-    is_bot: typing.Union[bool, unset.Unset] = attr.ib(
+    is_bot: typing.Union[bool, undefined.Undefined] = attr.ib(
         eq=False, hash=False, repr=True,
     )
     """Whether this user is a bot account."""
 
-    is_system: typing.Union[bool, unset.Unset] = attr.ib(
+    is_system: typing.Union[bool, undefined.Undefined] = attr.ib(
         eq=False, hash=False,
     )
     """Whether this user is a system account."""
 
-    flags: typing.Union[users.UserFlag, unset.Unset] = attr.ib(eq=False, hash=False)
+    flags: typing.Union[users.UserFlag, undefined.Undefined] = attr.ib(eq=False, hash=False)
     """The public flags for this user."""
 
     @property
-    def avatar_url(self) -> typing.Union[str, unset.Unset]:
+    def avatar_url(self) -> typing.Union[str, undefined.Undefined]:
         """URL for this user's avatar if the relevant info is available.
 
         !!! note
@@ -543,7 +542,7 @@ class PresenceUser(users.User):
 
     def format_avatar_url(
         self, *, format_: typing.Optional[str] = None, size: int = 4096
-    ) -> typing.Union[str, unset.Unset]:
+    ) -> typing.Union[str, undefined.Undefined]:
         """Generate the avatar URL for this user's avatar if available.
 
         Parameters
@@ -569,33 +568,33 @@ class PresenceUser(users.User):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.discriminator is not unset.UNSET or self.avatar_hash is not unset.UNSET:
+        if self.discriminator is not undefined.Undefined() or self.avatar_hash is not undefined.Undefined():
             return super().format_avatar_url(format_=format_, size=size)
-        return unset.UNSET
+        return undefined.Undefined()
 
     @property
-    def default_avatar_index(self) -> typing.Union[int, unset.Unset]:
+    def default_avatar_index(self) -> typing.Union[int, undefined.Undefined]:
         """Integer representation of this user's default avatar.
 
         !!! note
             This will be `hikari.models.unset.UNSET` if `PresenceUser.discriminator` is
             `hikari.models.unset.UNSET`.
         """
-        if self.discriminator is not unset.UNSET:
+        if self.discriminator is not undefined.Undefined():
             return super().default_avatar_index
-        return unset.UNSET
+        return undefined.Undefined()
 
     @property
-    def default_avatar_url(self) -> typing.Union[str, unset.Unset]:
+    def default_avatar_url(self) -> typing.Union[str, undefined.Undefined]:
         """URL for this user's default avatar.
 
         !!! note
             This will be `hikari.models.unset.UNSET` if `PresenceUser.discriminator` is
             `hikari.models.unset.UNSET`.
         """
-        if self.discriminator is not unset.UNSET:
+        if self.discriminator is not undefined.Undefined():
             return super().default_avatar_url
-        return unset.UNSET
+        return undefined.Undefined()
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

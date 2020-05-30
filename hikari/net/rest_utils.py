@@ -43,7 +43,7 @@ from hikari.net import routes
 from hikari.utilities import binding
 from hikari.utilities import date
 from hikari.utilities import snowflake as snowflake_
-from hikari.utilities import unset
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari.models import channels
@@ -92,14 +92,18 @@ class GuildBuilder:
     _app: app_.IRESTApp
     _channels: typing.MutableSequence[binding.JSONObject] = attr.ib(factory=list)
     _counter: int = 0
-    _name: typing.Union[unset.Unset, str]
+    _name: typing.Union[undefined.Undefined, str]
     _request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, binding.JSONObject]]
     _roles: typing.MutableSequence[binding.JSONObject] = attr.ib(factory=list)
-    default_message_notifications: typing.Union[unset.Unset, guilds.GuildMessageNotificationsLevel] = unset.UNSET
-    explicit_content_filter_level: typing.Union[unset.Unset, guilds.GuildExplicitContentFilterLevel] = unset.UNSET
-    icon: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET
-    region: typing.Union[unset.Unset, str] = unset.UNSET
-    verification_level: typing.Union[unset.Unset, guilds.GuildVerificationLevel] = unset.UNSET
+    default_message_notifications: typing.Union[
+        undefined.Undefined, guilds.GuildMessageNotificationsLevel
+    ] = undefined.Undefined()
+    explicit_content_filter_level: typing.Union[
+        undefined.Undefined, guilds.GuildExplicitContentFilterLevel
+    ] = undefined.Undefined()
+    icon: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined()
+    region: typing.Union[undefined.Undefined, str] = undefined.Undefined()
+    verification_level: typing.Union[undefined.Undefined, guilds.GuildVerificationLevel] = undefined.Undefined()
 
     @property
     def name(self) -> str:
@@ -120,7 +124,7 @@ class GuildBuilder:
         payload.put("default_message_notifications", self.default_message_notifications)
         payload.put("explicit_content_filter", self.explicit_content_filter_level)
 
-        if not unset.is_unset(self.icon):
+        if not isinstance(self.icon, undefined.Undefined):
             payload.put("icon", await self.icon.fetch_data_uri())
 
         response = await self._request_call(route, body=payload)
@@ -131,17 +135,17 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        color: typing.Union[unset.Unset, colors.Color] = unset.UNSET,
-        colour: typing.Union[unset.Unset, colors.Color] = unset.UNSET,
-        hoisted: typing.Union[unset.Unset, bool] = unset.UNSET,
-        mentionable: typing.Union[unset.Unset, bool] = unset.UNSET,
-        permissions: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
-        position: typing.Union[unset.Unset, int] = unset.UNSET,
+        color: typing.Union[undefined.Undefined, colors.Color] = undefined.Undefined(),
+        colour: typing.Union[undefined.Undefined, colors.Color] = undefined.Undefined(),
+        hoisted: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        mentionable: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        permissions: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
+        position: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
     ) -> snowflake_.Snowflake:
         if len(self._roles) == 0 and name != "@everyone":
             raise ValueError("First role must always be the @everyone role")
 
-        if not unset.count_unset_objects(color, colour):
+        if not undefined.Undefined.count(color, colour):
             raise TypeError("Cannot specify 'color' and 'colour' together.")
 
         snowflake = self._new_snowflake()
@@ -162,9 +166,11 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        position: typing.Union[unset.Unset, int] = unset.UNSET,
-        permission_overwrites: typing.Union[unset.Unset, typing.Collection[channels.PermissionOverwrite]] = unset.UNSET,
-        nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
+        position: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
+        permission_overwrites: typing.Union[
+            undefined.Undefined, typing.Collection[channels.PermissionOverwrite]
+        ] = undefined.Undefined(),
+        nsfw: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> snowflake_.Snowflake:
         snowflake = self._new_snowflake()
         payload = binding.JSONObjectBuilder()
@@ -186,12 +192,14 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        parent_id: snowflake_.Snowflake = unset.UNSET,
-        topic: typing.Union[unset.Unset, str] = unset.UNSET,
-        rate_limit_per_user: typing.Union[unset.Unset, date.TimeSpan] = unset.UNSET,
-        position: typing.Union[unset.Unset, int] = unset.UNSET,
-        permission_overwrites: typing.Union[unset.Unset, typing.Collection[channels.PermissionOverwrite]] = unset.UNSET,
-        nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
+        parent_id: snowflake_.Snowflake = undefined.Undefined(),
+        topic: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        rate_limit_per_user: typing.Union[undefined.Undefined, date.TimeSpan] = undefined.Undefined(),
+        position: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
+        permission_overwrites: typing.Union[
+            undefined.Undefined, typing.Collection[channels.PermissionOverwrite]
+        ] = undefined.Undefined(),
+        nsfw: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> snowflake_.Snowflake:
         snowflake = self._new_snowflake()
         payload = binding.JSONObjectBuilder()
@@ -216,12 +224,14 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        parent_id: snowflake_.Snowflake = unset.UNSET,
-        bitrate: typing.Union[unset.Unset, int] = unset.UNSET,
-        position: typing.Union[unset.Unset, int] = unset.UNSET,
-        permission_overwrites: typing.Union[unset.Unset, typing.Collection[channels.PermissionOverwrite]] = unset.UNSET,
-        nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
-        user_limit: typing.Union[unset.Unset, int] = unset.UNSET,
+        parent_id: snowflake_.Snowflake = undefined.Undefined(),
+        bitrate: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
+        position: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
+        permission_overwrites: typing.Union[
+            undefined.Undefined, typing.Collection[channels.PermissionOverwrite]
+        ] = undefined.Undefined(),
+        nsfw: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        user_limit: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
     ) -> snowflake_.Snowflake:
         snowflake = self._new_snowflake()
         payload = binding.JSONObjectBuilder()

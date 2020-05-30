@@ -33,7 +33,7 @@ from hikari.models import users
 from hikari.net import routes
 from hikari.utilities import binding
 from hikari.utilities import snowflake
-from hikari.utilities import unset
+from hikari.utilities import undefined
 
 _T = typing.TypeVar("_T")
 
@@ -378,8 +378,8 @@ class AuditLogIterator(LazyIterator[audit_logs.AuditLog]):
         request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, binding.JSONObject]],
         guild_id: typing.Union[typing.SupportsInt, int],
         before: typing.Union[typing.SupportsInt, int],
-        user_id: typing.Union[typing.SupportsInt, int, unset.Unset],
-        action_type: typing.Union[int, unset.Unset],
+        user_id: typing.Union[typing.SupportsInt, int, undefined.Undefined],
+        action_type: typing.Union[int, undefined.Undefined],
     ) -> None:
         self._action_type = action_type
         self._app = app

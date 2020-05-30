@@ -18,31 +18,31 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import pytest
 
-from hikari.utilities import unset
+from hikari.utilities import undefined
 from tests.hikari import _helpers
 
 
 class TestUnset:
     def test_repr(self):
-        assert repr(unset.UNSET) == "UNSET"
+        assert repr(undefined.Undefined()) == "UNSET"
 
     def test_str(self):
-        assert str(unset.UNSET) == "UNSET"
+        assert str(undefined.Undefined()) == "UNSET"
 
     def test_bool(self):
-        assert bool(unset.UNSET) is False
+        assert bool(undefined.Undefined()) is False
 
     def test_singleton_behaviour(self):
-        assert unset.Unset() is unset.Unset()
-        assert unset.UNSET is unset.Unset()
+        assert undefined.Unset() is undefined.Unset()
+        assert undefined.Undefined() is undefined.Unset()
 
     @_helpers.assert_raises(type_=TypeError)
     def test_cannot_subclass(self):
-        class _(unset.Unset):
+        class _(undefined.Undefined):
             pass
 
 
 class TestIsUnset:
-    @pytest.mark.parametrize(["obj", "is_unset"], [(unset.UNSET, True), (object(), False),])
+    @pytest.mark.parametrize(["obj", "is_unset"], [(undefined.Undefined(), True), (object(), False),])
     def test_is_unset(self, obj, is_unset):
-        assert unset.is_unset(obj) is is_unset
+        assert isinstance(obj, undefined.Undefined) is is_unset

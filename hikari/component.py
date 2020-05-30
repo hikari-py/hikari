@@ -28,6 +28,8 @@ if typing.TYPE_CHECKING:
 
 
 class IComponent(abc.ABC):
+    """A component that makes up part of the application."""
+
     __slots__ = ()
 
     @property

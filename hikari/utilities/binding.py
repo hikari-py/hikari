@@ -43,7 +43,7 @@ import typing
 import aiohttp.typedefs
 
 from hikari.models import bases
-from hikari.utilities import unset
+from hikari.utilities import undefined
 
 Headers = typing.Mapping[str, str]
 """HTTP headers."""
@@ -108,7 +108,7 @@ class StringMapBuilder(typing.Dict[str, str]):
     def put(
         self,
         key: str,
-        value: typing.Union[unset.Unset, typing.Any],
+        value: typing.Union[undefined.Undefined, typing.Any],
         conversion: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
     ) -> None:
         """Add a key and value to the string map.
@@ -117,7 +117,7 @@ class StringMapBuilder(typing.Dict[str, str]):
         ----------
         key : str
             The string key.
-        value : hikari.utilities.unset.Unset | typing.Any
+        value : hikari.utilities.undefined.Undefined | typing.Any
             The value to set.
         conversion : typing.Callable[[typing.Any], typing.Any] | None
             An optional conversion to perform.
@@ -125,7 +125,7 @@ class StringMapBuilder(typing.Dict[str, str]):
         !!! note
             The value will always be cast to a `str` before inserting it.
         """
-        if not unset.is_unset(value):
+        if not isinstance(value, undefined.Undefined):
             if conversion is not None:
                 value = conversion(value)
 
@@ -143,11 +143,11 @@ class StringMapBuilder(typing.Dict[str, str]):
             self[key] = value
 
     @classmethod
-    def from_dict(cls, d: typing.Union[unset.Unset, typing.Dict[str, typing.Any]]) -> StringMapBuilder:
+    def from_dict(cls, d: typing.Union[undefined.Undefined, typing.Dict[str, typing.Any]]) -> StringMapBuilder:
         """Build a query from an existing dict."""
         sb = cls()
 
-        if unset.is_unset(d):
+        if isinstance(d, undefined.Undefined):
             return sb
 
         for k, v in d.items():
@@ -178,14 +178,14 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
         ----------
         key : JSONString
             The key to give the element.
-        value : JSONType | typing.Any | hikari.utilities.unset.Unset
+        value : JSONType | typing.Any | hikari.utilities.undefined.Undefined
             The JSON type to put. This may be a non-JSON type if a conversion
             is also specified. This may alternatively be unset. In the latter
             case, nothing is performed.
         conversion : typing.Callable[[typing.Any], JSONType] | None
             Optional conversion to apply.
         """
-        if not unset.is_unset(value):
+        if not isinstance(value, undefined.Undefined):
             if conversion is not None:
                 self[key] = conversion(value)
             else:
@@ -194,7 +194,7 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
     def put_array(
         self,
         key: JSONString,
-        values: typing.Union[unset.Unset, typing.Iterable[_T]],
+        values: typing.Union[undefined.Undefined, typing.Iterable[_T]],
         conversion: typing.Optional[typing.Callable[[_T], JSONAny]] = None,
     ) -> None:
         """Put a JSON array.
@@ -205,35 +205,35 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
         ----------
         key : JSONString
             The key to give the element.
-        values : JSONType | typing.Any | hikari.utilities.unset.Unset
+        values : JSONType | typing.Any | hikari.utilities.undefined.Undefined
             The JSON types to put. This may be an iterable of non-JSON types if
             a conversion is also specified. This may alternatively be unset.
             In the latter case, nothing is performed.
         conversion : typing.Callable[[typing.Any], JSONType] | None
             Optional conversion to apply.
         """
-        if not unset.is_unset(values):
+        if not isinstance(values, undefined.Undefined):
             if conversion is not None:
                 self[key] = [conversion(value) for value in values]
             else:
                 self[key] = list(values)
 
-    def put_snowflake(self, key: JSONString, value: typing.Union[unset.Unset, typing.SupportsInt, int]) -> None:
+    def put_snowflake(self, key: JSONString, value: typing.Union[undefined.Undefined, typing.SupportsInt, int]) -> None:
         """Put a snowflake.
 
         Parameters
         ----------
         key : JSONString
             The key to give the element.
-        value : JSONType | hikari.utilities.unset.Unset
+        value : JSONType | hikari.utilities.undefined.Undefined
             The JSON type to put. This may alternatively be unset. In the latter
             case, nothing is performed.
         """
-        if not unset.is_unset(value):
+        if not isinstance(value, undefined.Undefined):
             self[key] = str(int(value))
 
     def put_snowflake_array(
-        self, key: JSONString, values: typing.Union[unset.Unset, typing.Iterable[typing.SupportsInt, int]]
+        self, key: JSONString, values: typing.Union[undefined.Undefined, typing.Iterable[typing.SupportsInt, int]]
     ) -> None:
         """Put an array of snowflakes.
 
@@ -241,11 +241,11 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
         ----------
         key : JSONString
             The key to give the element.
-        values : typing.Iterable[typing.SupportsInt, int] | hikari.utilities.unset.Unset
+        values : typing.Iterable[typing.SupportsInt, int] | hikari.utilities.undefined.Undefined
             The JSON snowflakes to put. This may alternatively be unset. In the latter
             case, nothing is performed.
         """
-        if not unset.is_unset(values):
+        if not isinstance(values, undefined.Undefined):
             self[key] = [str(int(value)) for value in values]
 
 

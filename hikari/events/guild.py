@@ -50,7 +50,7 @@ from hikari.models import guilds
 from hikari.models import intents
 from hikari.models import users
 from . import base as base_events
-from ..utilities import unset
+from ..utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -163,14 +163,14 @@ class GuildMemberUpdateEvent(base_events.HikariEvent):
     user: users.User = attr.ib(repr=True)
     """The object of the user who was updated."""
 
-    nickname: typing.Union[None, str, unset.Unset] = attr.ib()
+    nickname: typing.Union[None, str, undefined.Undefined] = attr.ib()
     """This member's nickname.
 
     When set to `None`, this has been removed and when set to
     `hikari.models.unset.UNSET` this hasn't been acted on.
     """
 
-    premium_since: typing.Union[None, datetime.datetime, unset.Unset] = attr.ib()
+    premium_since: typing.Union[None, datetime.datetime, undefined.Undefined] = attr.ib()
     """The datetime of when this member started "boosting" this guild.
 
     Will be `None` if they aren't boosting.
