@@ -709,7 +709,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("max_age", max_age, date.timespan_to_int)
         body.put("max_uses", max_uses)
         body.put("temporary", temporary)
-        body.put("unique", unique),
+        body.put("unique", unique)
         body.put_snowflake("target_user", target_user)
         body.put("target_user_type", target_user_type)
         response = await self._request(route, body=body, reason=reason)
