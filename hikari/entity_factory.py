@@ -36,6 +36,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import guilds
     from hikari.models import invites
     from hikari.models import messages
+    from hikari.models import presences
     from hikari.models import users
     from hikari.models import voices
     from hikari.models import webhooks
@@ -58,7 +59,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -73,7 +74,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -88,7 +89,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -107,7 +108,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -126,7 +127,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -156,7 +157,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -171,7 +172,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -186,7 +187,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -201,7 +202,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -216,7 +217,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-            payload : Mapping[Hashable, Any]
+            payload : Mapping[str, Any]
                 The dict payload to parse.
 
         Returns
@@ -231,7 +232,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -246,7 +247,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -261,7 +262,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -276,7 +277,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -295,7 +296,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -329,7 +330,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -344,7 +345,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -359,7 +360,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -376,7 +377,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -395,7 +396,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -414,7 +415,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -424,14 +425,14 @@ class IEntityFactory(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_guild_member(
+    def deserialize_member(
         self, payload: data_binding.JSONObject, *, user: typing.Optional[users.User] = None
-    ) -> guilds.GuildMember:
-        """Parse a raw payload from Discord into a guild member object.
+    ) -> guilds.Member:
+        """Parse a raw payload from Discord into a member object.
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
         *,
         user : hikari.models.users.User?
@@ -440,38 +441,23 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.guilds.GuildMember
-            The parsed guild member object.
+        hikari.models.guilds.Member
+            The parsed member object.
         """
 
     @abc.abstractmethod
     def deserialize_role(self, payload: data_binding.JSONObject) -> guilds.Role:
-        """Parse a raw payload from Discord into a guild role object.
+        """Parse a raw payload from Discord into a role object.
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
         -------
         hikari.models.guilds.GuildRole
-            The parsed guild role object.
-        """
-
-    @abc.abstractmethod
-    def deserialize_guild_member_presence(self, payload: data_binding.JSONObject) -> guilds.GuildMemberPresence:
-        """Parse a raw payload from Discord into a guild member presence object.
-
-        Parameters
-        ----------
-        payload : Mapping[Hashable, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.guilds.GuildMemberPresence
-            The parsed guild member presence object.
+            The parsed role object.
         """
 
     @abc.abstractmethod
@@ -480,7 +466,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -495,7 +481,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -510,7 +496,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -525,7 +511,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -540,7 +526,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -555,7 +541,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -574,7 +560,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -589,7 +575,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -604,7 +590,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -622,13 +608,32 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
         -------
         hikari.models.messages.Message
             The parsed message object.
+        """
+
+    #############
+    # PRESENCES #
+    #############
+
+    @abc.abstractmethod
+    def deserialize_member_presence(self, payload: data_binding.JSONObject) -> presences.MemberPresence:
+        """Parse a raw payload from Discord into a member presence object.
+
+        Parameters
+        ----------
+        payload : Mapping[str, Any]
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.models.guilds.MemberPresence
+            The parsed member presence object.
         """
 
     #########
@@ -641,7 +646,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -656,7 +661,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -675,7 +680,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -690,7 +695,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns
@@ -709,7 +714,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[Hashable, Any]
+        payload : Mapping[str, Any]
             The dict payload to parse.
 
         Returns

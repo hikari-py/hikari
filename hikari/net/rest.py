@@ -385,7 +385,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.models.bases.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
             The channel object to fetch. This can be an existing reference to a
             channel object (if you want a more up-to-date representation, or it
             can be a snowflake representation of the channel ID.
@@ -1482,7 +1482,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         ] = undefined.Undefined(),
         mute: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
         deaf: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-    ) -> typing.Optional[guilds.GuildMember]:
+    ) -> typing.Optional[guilds.Member]:
         route = routes.PUT_GUILD_MEMBER.compile(guild=guild, user=user)
         body = data_binding.JSONObjectBuilder()
         body.put("access_token", access_token)
@@ -1492,7 +1492,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put_snowflake_array("roles", roles)
 
         if (response := await self._request(route, body=body)) is not None:
-            return self._app.entity_factory.deserialize_guild_member(response)
+            return self._app.entity_factory.deserialize_member(response)
         else:
             # User already is in the guild.
             return None
@@ -1842,14 +1842,14 @@ class REST(http_client.HTTPClient, component.IComponent):
 
     async def fetch_member(
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject], user: typing.Union[users.User, bases.UniqueObject],
-    ) -> guilds.GuildMember:
+    ) -> guilds.Member:
         route = routes.GET_GUILD_MEMBER.compile(guild=guild, user=user)
         response = await self._request(route)
-        return self._app.entity_factory.deserialize_guild_member(response)
+        return self._app.entity_factory.deserialize_member(response)
 
     def fetch_members(
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject],
-    ) -> iterators.LazyIterator[guilds.GuildMember]:
+    ) -> iterators.LazyIterator[guilds.Member]:
         return iterators.MemberIterator(self._app, self._request, guild)
 
     async def edit_member(

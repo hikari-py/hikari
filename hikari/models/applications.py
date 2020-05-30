@@ -43,6 +43,7 @@ from hikari.net import urls
 if typing.TYPE_CHECKING:
     from hikari.models import permissions as permissions_
     from hikari.models import users
+    from hikari.utilities import snowflake
 
 
 @enum.unique
@@ -258,7 +259,7 @@ class TeamMember(bases.Entity):
     Will always be `["*"]` until Discord starts using this.
     """
 
-    team_id: bases.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    team_id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of the team this member belongs to."""
 
     user: users.User = attr.ib(eq=True, hash=True, repr=True)
@@ -272,10 +273,10 @@ class Team(bases.Entity, bases.Unique):
     icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The hash of this team's icon, if set."""
 
-    members: typing.Mapping[bases.Snowflake, TeamMember] = attr.ib(eq=False, hash=False)
+    members: typing.Mapping[snowflake.Snowflake, TeamMember] = attr.ib(eq=False, hash=False)
     """The member's that belong to this team."""
 
-    owner_user_id: bases.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    owner_user_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of this team's owner."""
 
     @property
@@ -318,7 +319,7 @@ class Application(bases.Entity, bases.Unique):
     """The name of this application."""
 
     description: str = attr.ib(eq=False, hash=False)
-    """The description of this application, will be an empty string if unset."""
+    """The description of this application, will be an empty string if undefined."""
 
     is_bot_public: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=True)
     """Whether the bot associated with this application is public.
@@ -347,7 +348,7 @@ class Application(bases.Entity, bases.Unique):
     summary: str = attr.ib(eq=False, hash=False)
     """This summary for this application's primary SKU if it's sold on Discord.
 
-    Will be an empty string if unset.
+    Will be an empty string if undefined.
     """
 
     verify_key: typing.Optional[bytes] = attr.ib(eq=False, hash=False)
@@ -361,10 +362,10 @@ class Application(bases.Entity, bases.Unique):
     )
     """This application's team if it belongs to one."""
 
-    guild_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the guild this application is linked to if sold on Discord."""
 
-    primary_sku_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    primary_sku_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the primary "Game SKU" of a game that's sold on Discord."""
 
     slug: typing.Optional[str] = attr.ib(eq=False, hash=False)

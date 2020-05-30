@@ -25,9 +25,9 @@ __all__ = ["VoiceStateUpdateEvent", "VoiceServerUpdateEvent"]
 import attr
 
 from hikari.events import base as base_events
-from hikari.models import bases as base_models
 from hikari.models import intents
 from hikari.models import voices
+from hikari.utilities import snowflake
 
 
 @base_events.requires_intents(intents.Intent.GUILD_VOICE_STATES)
@@ -50,7 +50,7 @@ class VoiceServerUpdateEvent(base_events.HikariEvent):
     token: str = attr.ib()
     """The voice connection's string token."""
 
-    guild_id: base_models.Snowflake = attr.ib(repr=True)
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this voice server update is for."""
 
     endpoint: str = attr.ib(repr=True)

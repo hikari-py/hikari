@@ -20,24 +20,25 @@
 
 from __future__ import annotations
 
-from .applications import *
-from .audit_logs import *
-from .bases import *
-from .channels import *
-from .colors import *
-from .colours import *
-from .embeds import *
-from .emojis import *
-from .files import *
-from .gateway import *
-from .guilds import *
-from .intents import *
-from .invites import *
-from .messages import *
-from .permissions import *
-from .users import *
-from .voices import *
-from .webhooks import *
+from hikari.models.applications import *
+from hikari.models.audit_logs import *
+from hikari.models.bases import *
+from hikari.models.channels import *
+from hikari.models.colors import *
+from hikari.models.colours import *
+from hikari.models.embeds import *
+from hikari.models.emojis import *
+from hikari.models.files import *
+from hikari.models.gateway import *
+from hikari.models.guilds import *
+from hikari.models.intents import *
+from hikari.models.invites import *
+from hikari.models.messages import *
+from hikari.models.permissions import *
+from hikari.models.presences import *
+from hikari.models.users import *
+from hikari.models.voices import *
+from hikari.models.webhooks import *
 
 __all__ = (
     applications.__all__
@@ -55,6 +56,7 @@ __all__ = (
     + invites.__all__
     + messages.__all__
     + permissions.__all__
+    + presences.__all__
     + users.__all__
     + voices.__all__
     + webhooks.__all__

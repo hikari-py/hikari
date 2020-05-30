@@ -49,6 +49,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari.models import users
+    from hikari.utilities import snowflake
 
 
 @enum.unique
@@ -133,14 +134,14 @@ class PartialChannel(bases.Entity, bases.Unique):
 class DMChannel(PartialChannel, TextChannel):
     """Represents a DM channel."""
 
-    last_message_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the last message sent in this channel.
 
     !!! note
         This might point to an invalid or deleted message.
     """
 
-    recipients: typing.Mapping[bases.Snowflake, users.User] = attr.ib(
+    recipients: typing.Mapping[snowflake.Snowflake, users.User] = attr.ib(
         eq=False, hash=False,
     )
     """The recipients of the DM."""
@@ -150,13 +151,13 @@ class DMChannel(PartialChannel, TextChannel):
 class GroupDMChannel(DMChannel):
     """Represents a DM group channel."""
 
-    owner_id: bases.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    owner_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the owner of the group."""
 
     icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The hash of the icon of the group."""
 
-    application_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the application that created the group DM, if it's a bot based group DM."""
 
     @property
@@ -195,7 +196,7 @@ class GroupDMChannel(DMChannel):
 class GuildChannel(PartialChannel):
     """The base for anything that is a guild channel."""
 
-    guild_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the guild the channel belongs to.
 
     This will be `None` when received over the gateway in certain events (e.g.
@@ -205,7 +206,7 @@ class GuildChannel(PartialChannel):
     position: int = attr.ib(eq=False, hash=False)
     """The sorting position of the channel."""
 
-    permission_overwrites: typing.Mapping[bases.Snowflake, PermissionOverwrite] = attr.ib(eq=False, hash=False)
+    permission_overwrites: typing.Mapping[snowflake.Snowflake, PermissionOverwrite] = attr.ib(eq=False, hash=False)
     """The permission overwrites for the channel."""
 
     is_nsfw: typing.Optional[bool] = attr.ib(eq=False, hash=False)
@@ -215,7 +216,7 @@ class GuildChannel(PartialChannel):
     Guild Create).
     """
 
-    parent_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    parent_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the parent category the channel belongs to."""
 
 
@@ -231,7 +232,7 @@ class GuildTextChannel(GuildChannel, TextChannel):
     topic: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The topic of the channel."""
 
-    last_message_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the last message sent in this channel.
 
     !!! note
@@ -261,7 +262,7 @@ class GuildNewsChannel(GuildChannel, TextChannel):
     topic: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The topic of the channel."""
 
-    last_message_id: typing.Optional[bases.Snowflake] = attr.ib(eq=False, hash=False)
+    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the last message sent in this channel.
 
     !!! note
