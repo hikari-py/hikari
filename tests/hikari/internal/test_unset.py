@@ -18,7 +18,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import pytest
 
-from hikari.internal import unset
+from hikari.utilities import unset
 from tests.hikari import _helpers
 
 

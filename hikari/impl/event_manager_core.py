@@ -28,21 +28,21 @@ from hikari import event_consumer
 from hikari import event_dispatcher
 from hikari.events import base
 from hikari.events import other
-from hikari.internal import class_helpers
-from hikari.internal import more_asyncio
 from hikari.net import gateway
+from hikari.utilities import aio
+from hikari.utilities import binding
+from hikari.utilities import klass
 
 if typing.TYPE_CHECKING:
     from hikari import app as app_
-    from hikari.internal import more_typing
 
     _EventT = typing.TypeVar("_EventT", bound=base.HikariEvent, covariant=True)
-    _PredicateT = typing.Callable[[_EventT], typing.Union[bool, more_typing.Coroutine[bool]]]
+    _PredicateT = typing.Callable[[_EventT], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
     _SyncCallbackT = typing.Callable[[_EventT], None]
-    _AsyncCallbackT = typing.Callable[[_EventT], more_typing.Coroutine[None]]
+    _AsyncCallbackT = typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]]
     _CallbackT = typing.Union[_SyncCallbackT, _AsyncCallbackT]
     _ListenerMapT = typing.MutableMapping[typing.Type[_EventT], typing.MutableSequence[_CallbackT]]
-    _WaiterT = typing.Tuple[_PredicateT, more_typing.Future[_EventT]]
+    _WaiterT = typing.Tuple[_PredicateT, aio.Future[_EventT]]
     _WaiterMapT = typing.MutableMapping[typing.Type[_EventT], typing.MutableSet[_WaiterT]]
 
 
@@ -52,17 +52,18 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
     Specific event handlers should be in functions named `_on_xxx` where `xxx`
     is the raw event name being dispatched in lower-case.
     """
+
     def __init__(self, app: app_.IApp) -> None:
         self._app = app
         self._listeners: _ListenerMapT = {}
         self._waiters: _WaiterMapT = {}
-        self.logger = class_helpers.get_logger(self)
+        self.logger = klass.get_logger(self)
 
     @property
     def app(self) -> app_.IApp:
         return self._app
 
-    def dispatch(self, event: base.HikariEvent) -> more_typing.Future[typing.Any]:
+    def dispatch(self, event: base.HikariEvent) -> aio.Future[typing.Any]:
         if not isinstance(event, base.HikariEvent):
             raise TypeError(f"events must be subclasses of HikariEvent, not {type(event).__name__}")
 
@@ -73,7 +74,7 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
 
         tasks = []
 
-        for cls in mro[:mro.index(base.HikariEvent) + 1]:
+        for cls in mro[: mro.index(base.HikariEvent) + 1]:
             cls: typing.Type[_EventT]
 
             if cls in self._listeners:
@@ -84,9 +85,9 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
                 for predicate, future in self._waiters[cls]:
                     tasks.append(self._test_waiter(cls, event, predicate, future))
 
-        return asyncio.gather(*tasks) if tasks else more_asyncio.completed_future()
+        return asyncio.gather(*tasks) if tasks else aio.completed_future()
 
-    async def consume_raw_event(self, shard: gateway.Gateway, event_name: str, payload: more_typing.JSONType) -> None:
+    async def consume_raw_event(self, shard: gateway.Gateway, event_name: str, payload: binding.JSONObject) -> None:
         try:
             callback = getattr(self, "_on_" + event_name.lower())
             await callback(shard, payload)
@@ -96,12 +97,13 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
     def subscribe(
         self,
         event_type: typing.Type[_EventT],
-        callback: typing.Callable[[_EventT], typing.Union[more_typing.Coroutine[None], None]],
+        callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
     ) -> None:
         if event_type not in self._listeners:
             self._listeners[event_type] = []
 
         if not asyncio.iscoroutinefunction(callback):
+
             async def wrapper(event):
                 return callback(event)
 
@@ -110,7 +112,7 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
     def unsubscribe(
         self,
         event_type: typing.Type[_EventT],
-        callback: typing.Callable[[_EventT], typing.Union[more_typing.Coroutine[None], None]],
+        callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
     ) -> None:
         if event_type in self._listeners:
             self._listeners[event_type].remove(callback)
@@ -121,6 +123,7 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
         def decorator(callback: _CallbackT) -> _CallbackT:
             self.subscribe(event_type, callback)
             return callback
+
         return decorator
 
     async def _test_waiter(self, cls, event, predicate, future):

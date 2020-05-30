@@ -18,18 +18,18 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import pytest
 
-from hikari.internal import class_helpers
+from hikari.utilities import klass
 
 
 def test_SingletonMeta():
-    class StubSingleton(metaclass=class_helpers.SingletonMeta):
+    class StubSingleton(metaclass=klass.SingletonMeta):
         pass
 
     assert StubSingleton() is StubSingleton()
 
 
 def test_Singleton():
-    class StubSingleton(class_helpers.Singleton):
+    class StubSingleton(klass.Singleton):
         pass
 
     assert StubSingleton() is StubSingleton()
@@ -49,4 +49,4 @@ class Class:
     ],
 )
 def test_get_logger(args, expected_name):
-    assert class_helpers.get_logger(*args).name == expected_name
+    assert klass.get_logger(*args).name == expected_name

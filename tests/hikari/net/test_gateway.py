@@ -16,12 +16,3 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-from hikari.models import intents
-
-
-class TestIntent:
-    def test_is_privileged(self):
-        assert intents.Intent.GUILD_MEMBERS.is_privileged
-
-    def test_not_is_privileged(self):
-        assert not intents.Intent.DIRECT_MESSAGE_TYPING.is_privileged

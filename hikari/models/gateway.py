@@ -22,13 +22,12 @@ from __future__ import annotations
 
 __all__ = ["GatewayBot", "SessionStartLimit"]
 
-import datetime
+import typing
 
 import attr
 
-
-def _rest_after_deserializer(after: int) -> datetime.timedelta:
-    return datetime.timedelta(milliseconds=after)
+if typing.TYPE_CHECKING:
+    import datetime
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)

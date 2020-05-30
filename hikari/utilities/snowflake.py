@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -16,36 +16,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Datastructure bases."""
+"""Implementation of a Snowflake type."""
 
 from __future__ import annotations
 
-__all__ = ["Entity", "Snowflake", "Unique"]
+__all__ = ["Snowflake"]
 
-import abc
+import datetime
 import typing
 
-import attr
-
-from hikari.utilities import date as date_
-
-if typing.TYPE_CHECKING:
-    import datetime
-
-    from hikari import app as app_
-
-
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=False)
-class Entity(abc.ABC):
-    """The base for any entity used in this API."""
-
-    _app: typing.Optional[app_.IApp] = attr.ib(default=None, repr=False, eq=False, hash=False)
-    """The client application that models may use for procedures."""
-
-    def set_app(self, app: app_.IApp) -> None:
-        if hasattr(self, "_app"):
-            raise AttributeError("Protected attribute '_app' cannot be overwritten.")
-        self._app = app
+from hikari.utilities import date
 
 
 class Snowflake(int):
@@ -60,14 +40,14 @@ class Snowflake(int):
     ___MAX___: Snowflake
 
     @staticmethod
-    def __new__(cls, value: typing.Union[int, str]) -> Snowflake:
+    def __new__(cls, value: typing.Union[int, str, typing.SupportsInt]) -> Snowflake:
         return super(Snowflake, cls).__new__(cls, value)
 
     @property
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
         epoch = self >> 22
-        return date_.discord_epoch_to_datetime(epoch)
+        return date.discord_epoch_to_datetime(epoch)
 
     @property
     def internal_worker_id(self) -> int:
@@ -85,9 +65,9 @@ class Snowflake(int):
         return self & 0xFFF
 
     @classmethod
-    def from_datetime(cls, date: datetime.datetime) -> Snowflake:
+    def from_datetime(cls, timestamp: datetime.datetime) -> Snowflake:
         """Get a snowflake object from a datetime object."""
-        return cls.from_data(date, 0, 0, 0)
+        return cls.from_data(timestamp, 0, 0, 0)
 
     @classmethod
     def min(cls) -> Snowflake:
@@ -107,29 +87,5 @@ class Snowflake(int):
     def from_data(cls, timestamp: datetime.datetime, worker_id: int, process_id: int, increment: int) -> Snowflake:
         """Convert the pieces of info that comprise an ID into a Snowflake."""
         return cls(
-            (date_.datetime_to_discord_epoch(timestamp) << 22) | (worker_id << 17) | (process_id << 12) | increment
+            (date.datetime_to_discord_epoch(timestamp) << 22) | (worker_id << 17) | (process_id << 12) | increment
         )
-
-
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=False)
-class Unique(typing.SupportsInt):
-    """A base for an entity that has an integer ID of some sort.
-
-    Casting an object of this type to an `int` will produce the
-    integer ID of the object.
-    """
-
-    id: Snowflake = attr.ib(converter=Snowflake, hash=True, eq=True, repr=True)
-    """The ID of this entity."""
-
-    @property
-    def created_at(self) -> datetime.datetime:
-        """When the object was created."""
-        return self.id.created_at
-
-    def __int__(self) -> int:
-        return int(self.id)
-
-
-UniqueObjectT = typing.Union[Unique, Snowflake, int, str]
-"""A unique object."""

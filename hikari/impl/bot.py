@@ -27,14 +27,13 @@ from hikari import bot
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
-from hikari.impl import event_manager_core
 from hikari.impl import gateway_zookeeper
-from hikari.internal import class_helpers
 from hikari.models import gateway as gateway_models
 from hikari.models import guilds
 from hikari.net import gateway
 from hikari.net import rest
 from hikari.net import urls
+from hikari.utilities import klass
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -67,7 +66,7 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
         token: str,
         use_compression: bool = True,
     ):
-        self._logger = class_helpers.get_logger(self)
+        self._logger = klass.get_logger(self)
 
         self._cache = cache_impl.CacheImpl(app=self)
         self._config = config

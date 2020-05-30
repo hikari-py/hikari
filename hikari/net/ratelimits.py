@@ -173,8 +173,7 @@ import random
 import time
 import typing
 
-if typing.TYPE_CHECKING:
-    from . import more_typing
+from hikari.utilities import aio
 
 UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""
@@ -192,7 +191,7 @@ class BaseRateLimiter(abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
-    def acquire(self) -> more_typing.Future[None]:
+    def acquire(self) -> aio.Future[None]:
         """Acquire permission to perform a task that needs to have rate limit management enforced.
 
         Returns
@@ -225,10 +224,10 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     name: typing.Final[str]
     """The name of the rate limiter."""
 
-    throttle_task: typing.Optional[more_typing.Task[None]]
+    throttle_task: typing.Optional[aio.Task[None]]
     """The throttling task, or `None` if it isn't running."""
 
-    queue: typing.Final[typing.List[more_typing.Future[None]]]
+    queue: typing.Final[typing.List[aio.Future[None]]]
     """The queue of any futures under a rate limit."""
 
     logger: typing.Final[logging.Logger]
@@ -238,11 +237,11 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         self.name = name
         self.throttle_task = None
         self.queue = []
-        self.logger = logging.getLogger(f"hikari.internal.ratelimits.{type(self).__qualname__}.{name}")
+        self.logger = logging.getLogger(f"hikari.utilities.ratelimits.{type(self).__qualname__}.{name}")
         self._closed = False
 
     @abc.abstractmethod
-    def acquire(self) -> more_typing.Future[None]:
+    def acquire(self) -> aio.Future[None]:
         """Acquire time on this rate limiter.
 
         The implementation should define this.
@@ -310,7 +309,7 @@ class ManualRateLimiter(BurstRateLimiter):
     def __init__(self) -> None:
         super().__init__("global")
 
-    def acquire(self) -> more_typing.Future[None]:
+    def acquire(self) -> aio.Future[None]:
         """Acquire time on this rate limiter.
 
         Returns
@@ -439,7 +438,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.limit = limit
         self.period = period
 
-    def acquire(self) -> more_typing.Future[None]:
+    def acquire(self) -> aio.Future[None]:
         """Acquire time on this rate limiter.
 
         Returns

@@ -68,8 +68,9 @@ import typing
 
 import aiohttp
 
+
 from hikari import errors
-from hikari.internal import more_asyncio
+from hikari.utilities import aio
 
 # XXX: find optimal size.
 MAGIC_NUMBER: typing.Final[int] = 128 * 1024
@@ -355,11 +356,11 @@ class ByteStream(BaseStream):
         if inspect.isasyncgenfunction(obj):
             obj = obj()
 
-        if inspect.isasyncgen(obj) or more_asyncio.is_async_iterator(obj):
+        if inspect.isasyncgen(obj) or aio.is_async_iterator(obj):
             self._obj = _MemorizedAsyncIteratorDecorator(obj)
             return
 
-        if more_asyncio.is_async_iterable(obj):
+        if aio.is_async_iterable(obj):
             self._obj = obj
             return
 

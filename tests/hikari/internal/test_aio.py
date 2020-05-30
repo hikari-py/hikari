@@ -17,13 +17,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
-import contextlib
 
-import mock
 import pytest
 
-from hikari.internal import more_asyncio
-from tests.hikari import _helpers
+from hikari.utilities import aio
 
 
 class CoroutineStub:
@@ -63,21 +60,21 @@ class TestCompletedFuture:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("args", [(), (12,)])
     async def test_is_awaitable(self, args):
-        await more_asyncio.completed_future(*args)
+        await aio.completed_future(*args)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("args", [(), (12,)])
     async def test_is_completed(self, args):
-        future = more_asyncio.completed_future(*args)
+        future = aio.completed_future(*args)
         assert future.done()
 
     @pytest.mark.asyncio
     async def test_default_result_is_none(self):
-        assert more_asyncio.completed_future().result() is None
+        assert aio.completed_future().result() is None
 
     @pytest.mark.asyncio
     async def test_non_default_result(self):
-        assert more_asyncio.completed_future(...).result() is ...
+        assert aio.completed_future(...).result() is ...
 
 
 class TestIsAsyncIterator:
@@ -86,14 +83,14 @@ class TestIsAsyncIterator:
             async def __anext__(self):
                 return None
 
-        assert more_asyncio.is_async_iterator(AsyncIterator())
+        assert aio.is_async_iterator(AsyncIterator())
 
     def test_on_class(self):
         class AsyncIterator:
             async def __anext__(self):
                 return ...
 
-        assert more_asyncio.is_async_iterator(AsyncIterator)
+        assert aio.is_async_iterator(AsyncIterator)
 
     @pytest.mark.asyncio
     async def test_on_genexp(self):
@@ -103,7 +100,7 @@ class TestIsAsyncIterator:
 
         exp = genexp()
         try:
-            assert not more_asyncio.is_async_iterator(exp)
+            assert not aio.is_async_iterator(exp)
         finally:
             await exp.aclose()
 
@@ -112,28 +109,28 @@ class TestIsAsyncIterator:
             def __next__(self):
                 return ...
 
-        assert not more_asyncio.is_async_iterator(Iter())
+        assert not aio.is_async_iterator(Iter())
 
     def test_on_iterator_class(self):
         class Iter:
             def __next__(self):
                 return ...
 
-        assert not more_asyncio.is_async_iterator(Iter)
+        assert not aio.is_async_iterator(Iter)
 
     def test_on_async_iterable(self):
         class AsyncIter:
             def __aiter__(self):
                 yield ...
 
-        assert not more_asyncio.is_async_iterator(AsyncIter())
+        assert not aio.is_async_iterator(AsyncIter())
 
     def test_on_async_iterable_class(self):
         class AsyncIter:
             def __aiter__(self):
                 yield ...
 
-        assert not more_asyncio.is_async_iterator(AsyncIter)
+        assert not aio.is_async_iterator(AsyncIter)
 
 
 class TestIsAsyncIterable:
@@ -142,14 +139,14 @@ class TestIsAsyncIterable:
             async def __aiter__(self):
                 yield ...
 
-        assert more_asyncio.is_async_iterable(AsyncIter())
+        assert aio.is_async_iterable(AsyncIter())
 
     def test_on_class(self):
         class AsyncIter:
             async def __aiter__(self):
                 yield ...
 
-        assert more_asyncio.is_async_iterable(AsyncIter)
+        assert aio.is_async_iterable(AsyncIter)
 
     def test_on_delegate(self):
         class AsyncIterator:
@@ -160,7 +157,7 @@ class TestIsAsyncIterable:
             def __aiter__(self):
                 return AsyncIterator()
 
-        assert more_asyncio.is_async_iterable(AsyncIterable())
+        assert aio.is_async_iterable(AsyncIterable())
 
     def test_on_delegate_class(self):
         class AsyncIterator:
@@ -171,25 +168,47 @@ class TestIsAsyncIterable:
             def __aiter__(self):
                 return AsyncIterator()
 
-        assert more_asyncio.is_async_iterable(AsyncIterable)
+        assert aio.is_async_iterable(AsyncIterable)
 
     def test_on_inst(self):
         class AsyncIterator:
             async def __anext__(self):
                 return None
 
-        assert more_asyncio.is_async_iterator(AsyncIterator())
+        assert aio.is_async_iterator(AsyncIterator())
 
     def test_on_AsyncIterator(self):
         class AsyncIterator:
             async def __anext__(self):
                 return ...
 
-        assert not more_asyncio.is_async_iterable(AsyncIterator())
+        assert not aio.is_async_iterable(AsyncIterator())
 
     def test_on_AsyncIterator_class(self):
         class AsyncIterator:
             async def __anext__(self):
                 return ...
 
-        assert not more_asyncio.is_async_iterable(AsyncIterator)
+        assert not aio.is_async_iterable(AsyncIterator)
+
+
+# noinspection PyProtocol
+@pytest.mark.asyncio
+class TestFuture:
+    async def test_is_instance(self, event_loop):
+        assert isinstance(event_loop.create_future(), aio.Future)
+
+        async def nil():
+            pass
+
+        assert isinstance(asyncio.create_task(nil()), aio.Future)
+
+
+# noinspection PyProtocol
+@pytest.mark.asyncio
+class TestTask:
+    async def test_is_instance(self, event_loop):
+        async def nil():
+            pass
+
+        assert isinstance(asyncio.create_task(nil()), aio.Task)

@@ -27,10 +27,9 @@ import time
 import types
 import typing
 
-from hikari.internal import more_asyncio
-from hikari.internal import more_typing
-from hikari.internal import ratelimits
+from hikari.net import ratelimits
 from hikari.net import routes
+from hikari.utilities import aio
 
 UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""
@@ -72,7 +71,7 @@ class RESTBucket(ratelimits.WindowedBurstRateLimiter):
         """Return `True` if the bucket represents an `UNKNOWN` bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
-    def acquire(self) -> more_typing.Future[None]:
+    def acquire(self) -> aio.Future[None]:
         """Acquire time on this rate limiter.
 
         !!! note
@@ -85,7 +84,7 @@ class RESTBucket(ratelimits.WindowedBurstRateLimiter):
             A future that should be awaited immediately. Once the future completes,
             you are allowed to proceed with your operation.
         """
-        return more_asyncio.completed_future(None) if self.is_unknown else super().acquire()
+        return aio.completed_future(None) if self.is_unknown else super().acquire()
 
     def update_rate_limit(self, remaining: int, limit: int, reset_at: float) -> None:
         """Amend the rate limit.
@@ -152,7 +151,7 @@ class RESTBucketManager:
     closed_event: typing.Final[asyncio.Event]
     """An internal event that is set when the object is shut down."""
 
-    gc_task: typing.Optional[more_typing.Task[None]]
+    gc_task: typing.Optional[aio.Task[None]]
     """The internal garbage collector task."""
 
     logger: typing.Final[logging.Logger]
@@ -300,7 +299,7 @@ class RESTBucketManager:
 
         self.logger.debug("purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
 
-    def acquire(self, compiled_route: routes.CompiledRoute) -> more_typing.Future[None]:
+    def acquire(self, compiled_route: routes.CompiledRoute) -> aio.Future[None]:
         """Acquire a bucket for the given _route.
 
         Parameters

@@ -25,14 +25,14 @@ import abc
 import typing
 
 from hikari import component
-from hikari.internal import unset
+from hikari.utilities import unset
 
 if typing.TYPE_CHECKING:
     from hikari.events import base
-    from hikari.internal import more_typing
+    from hikari.utilities import aio
 
     _EventT = typing.TypeVar("_EventT", bound=base.HikariEvent, covariant=True)
-    _PredicateT = typing.Callable[[_EventT], typing.Union[bool, more_typing.Coroutine[bool]]]
+    _PredicateT = typing.Callable[[_EventT], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
 
 
 class IEventDispatcher(component.IComponent, abc.ABC):
@@ -46,7 +46,7 @@ class IEventDispatcher(component.IComponent, abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
-    def dispatch(self, event: base.HikariEvent) -> more_typing.Future[typing.Any]:
+    def dispatch(self, event: base.HikariEvent) -> aio.Future[typing.Any]:
         """Dispatch an event.
 
         Parameters
@@ -67,7 +67,7 @@ class IEventDispatcher(component.IComponent, abc.ABC):
     def subscribe(
         self,
         event_type: typing.Type[_EventT],
-        callback: typing.Callable[[_EventT], typing.Union[more_typing.Coroutine[None], None]],
+        callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
     ) -> None:
         """Subscribe a given callback to a given event type.
 
@@ -86,7 +86,7 @@ class IEventDispatcher(component.IComponent, abc.ABC):
     def unsubscribe(
         self,
         event_type: typing.Type[_EventT],
-        callback: typing.Callable[[_EventT], typing.Union[more_typing.Coroutine[None], None]],
+        callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
     ) -> None:
         """Unsubscribe a given callback from a given event type, if present.
 
@@ -107,7 +107,7 @@ class IEventDispatcher(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        event_type : hikari.internal.unset.Unset OR typing.Type[hikari.events.bases.HikariEvent]
+        event_type : hikari.utilities.unset.Unset OR typing.Type[hikari.events.bases.HikariEvent]
             The event type to subscribe to. The implementation may allow this
             to be unset. If this is the case, the event type will be inferred
             instead from the type hints on the function signature.
