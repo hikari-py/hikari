@@ -406,7 +406,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        guild : hikari.models.guilds.PartialGuild | hikari.utilities.snowflake.Snowflake | int | str
+        guild : hikari.models.guilds.PartialGuild or hikari.utilities.snowflake.Snowflake or int or str
             The guild or guild ID to update the voice state for.
         channel : hikari.models.channels.GuildVoiceChannel | hikari.utilities.Snowflake | int | str | None
             The channel or channel ID to update the voice state for. If `None`
