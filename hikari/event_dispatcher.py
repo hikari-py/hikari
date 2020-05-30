@@ -100,7 +100,9 @@ class IEventDispatcher(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def listen(self, event_type: typing.Union[undefined.Undefined, typing.Type[_EventT]]) -> None:
+    def listen(
+        self, event_type: typing.Union[undefined.Undefined, typing.Type[_EventT]] = undefined.Undefined(),
+    ) -> None:
         """Generate a decorator to subscribe a callback to an event type.
 
         This is a second-order decorator.

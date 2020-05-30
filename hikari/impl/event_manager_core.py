@@ -22,6 +22,7 @@ from __future__ import annotations
 __all__ = ["EventManagerCore"]
 
 import asyncio
+import functools
 import typing
 
 from hikari import event_consumer
@@ -32,6 +33,8 @@ from hikari.net import gateway
 from hikari.utilities import aio
 from hikari.utilities import data_binding
 from hikari.utilities import klass
+from hikari.utilities import reflect
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari import app as app_
@@ -106,10 +109,20 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
 
         if not asyncio.iscoroutinefunction(callback):
 
+            @functools.wraps(callback)
             async def wrapper(event):
                 return callback(event)
 
-            self._listeners[event_type].append(wrapper)
+            self.subscribe(event_type, wrapper)
+        else:
+            self.logger.debug(
+                "subscribing callback 'async def %s%s' to event-type %s.%s",
+                getattr(callback, "__name__", "<anon>"),
+                reflect.resolve_signature(callback),
+                event_type.__module__,
+                event_type.__qualname__,
+            )
+            self._listeners[event_type].append(callback)
 
     def unsubscribe(
         self,
@@ -117,12 +130,37 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
         callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
     ) -> None:
         if event_type in self._listeners:
+            self.logger.debug(
+                "unsubscribing callback %s%s from event-type %s.%s",
+                getattr(callback, "__name__", "<anon>"),
+                reflect.resolve_signature(callback),
+                event_type.__module__,
+                event_type.__qualname__,
+            )
             self._listeners[event_type].remove(callback)
             if not self._listeners[event_type]:
                 del self._listeners[event_type]
 
-    def listen(self, event_type: typing.Type[_EventT]) -> typing.Callable[[_CallbackT], _CallbackT]:
+    def listen(
+        self, event_type: typing.Union[undefined.Undefined, typing.Type[_EventT]] = undefined.Undefined(),
+    ) -> typing.Callable[[_CallbackT], _CallbackT]:
         def decorator(callback: _CallbackT) -> _CallbackT:
+            nonlocal event_type
+
+            signature = reflect.resolve_signature(callback)
+            params = signature.parameters.values()
+
+            if len(params) != 1:
+                raise TypeError("Event listener must have one parameter, the event object.")
+
+            event_param = next(iter(params))
+
+            if event_type is undefined.Undefined():
+                if event_param.annotation is event_param.empty:
+                    raise TypeError("Must provide the event type in the @listen decorator or as a type hint!")
+
+                event_type = event_param.annotation
+
             self.subscribe(event_type, callback)
             return callback
 
