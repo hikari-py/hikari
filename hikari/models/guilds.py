@@ -59,18 +59,18 @@ import typing
 
 import attr
 
+from hikari.models import bases
+from hikari.models import users
 from hikari.net import urls
 from hikari.utilities import undefined
-from . import bases
-from . import users
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from . import channels as channels_
-    from . import colors
-    from . import emojis as emojis_
-    from . import permissions as permissions_
+    from hikari.models import channels as channels_
+    from hikari.models import colors
+    from hikari.models import emojis as emojis_
+    from hikari.models import permissions as permissions_
 
 
 @enum.unique

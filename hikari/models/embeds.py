@@ -36,11 +36,11 @@ import typing
 
 import attr
 
-from . import colors
-from . import files
+from hikari.models import colors
+from hikari.models import files
 
 if typing.TYPE_CHECKING:
-    from hikari.internal import more_typing
+    from hikari.utilities import data_binding
 
 _MAX_FOOTER_TEXT: typing.Final[int] = 2048
 _MAX_AUTHOR_NAME: typing.Final[int] = 256
@@ -525,6 +525,6 @@ class Embed:
         if total_size > _MAX_EMBED_SIZE:
             raise ValueError("Total characters in an embed can not exceed {_MAX_EMBED_SIZE}")
 
-    def serialize(self) -> more_typing.JSONObject:
+    def serialize(self) -> data_binding.JSONObject:
         self._check_total_length()
         return super().serialize()

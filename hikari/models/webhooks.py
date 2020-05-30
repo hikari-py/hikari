@@ -27,16 +27,16 @@ import typing
 
 import attr
 
-from . import bases
-from ..net import urls
+from hikari.models import bases
+from hikari.net import urls
 
 if typing.TYPE_CHECKING:
-    from . import channels as channels_
-    from . import embeds as embeds_
-    from . import files as files_
-    from . import guilds as guilds_
-    from . import messages as messages_
-    from . import users as users_
+    from hikari.models import channels as channels_
+    from hikari.models import embeds as embeds_
+    from hikari.models import files as files_
+    from hikari.models import guilds as guilds_
+    from hikari.models import messages as messages_
+    from hikari.models import users as users_
 
 
 @enum.unique

@@ -38,13 +38,13 @@ import typing
 
 import attr
 
+from hikari.events import base as base_events
 from hikari.models import bases as base_models
 from hikari.models import channels
 from hikari.models import guilds
 from hikari.models import intents
 from hikari.models import invites
 from hikari.models import users
-from . import base as base_events
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)

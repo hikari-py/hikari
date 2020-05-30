@@ -36,18 +36,18 @@ import typing
 
 import attr
 
-from . import bases
-from . import files as files_
+from hikari.models import bases
+from hikari.models import files as files_
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from . import applications
-    from . import channels
-    from . import embeds as embeds_
-    from . import emojis as emojis_
-    from . import guilds
-    from . import users
+    from hikari.models import applications
+    from hikari.models import channels
+    from hikari.models import embeds as embeds_
+    from hikari.models import emojis as emojis_
+    from hikari.models import guilds
+    from hikari.models import users
 
 
 @enum.unique

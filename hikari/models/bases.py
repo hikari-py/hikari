@@ -37,7 +37,12 @@ if typing.TYPE_CHECKING:
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=False)
 class Entity(abc.ABC):
-    """The base for any entity used in this API."""
+    """The base for an entity used in this API.
+
+    An entity is a managed object that contains a binding to the owning
+    application instance. This enables it to perform API calls from
+    methods directly.
+    """
 
     _app: typing.Optional[app_.IApp] = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
@@ -132,4 +137,4 @@ class Unique(typing.SupportsInt):
 
 
 UniqueObject = typing.Union[Unique, Snowflake, int, str]
-"""A unique object."""
+"""A unique object type-hint."""

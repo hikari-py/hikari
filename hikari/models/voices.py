@@ -26,10 +26,10 @@ import typing
 
 import attr
 
-from . import bases
+from hikari.models import bases
 
 if typing.TYPE_CHECKING:
-    from . import guilds
+    from hikari.models import guilds
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

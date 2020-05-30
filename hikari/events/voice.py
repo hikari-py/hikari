@@ -24,10 +24,10 @@ __all__ = ["VoiceStateUpdateEvent", "VoiceServerUpdateEvent"]
 
 import attr
 
+from hikari.events import base as base_events
 from hikari.models import bases as base_models
 from hikari.models import intents
 from hikari.models import voices
-from . import base as base_events
 
 
 @base_events.requires_intents(intents.Intent.GUILD_VOICE_STATES)
