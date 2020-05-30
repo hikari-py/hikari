@@ -19,11 +19,15 @@
 """Contains the core interfaces for a Hikari application."""
 from __future__ import annotations
 
-__all__ = ["IApp"]
+__all__ = ["IApp", "IRESTApp", "IGatewayConsumer", "IGatewayDispatcher", "IGatewayZookeeper"]
 
 import abc
+import functools
 import logging
 import typing
+
+from hikari import event_dispatcher as event_dispatcher_
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from concurrent import futures
@@ -32,8 +36,8 @@ if typing.TYPE_CHECKING:
     from hikari import cache as cache_
     from hikari import entity_factory as entity_factory_
     from hikari import event_consumer as event_consumer_
-    from hikari import event_dispatcher as event_dispatcher_
     from hikari.models import presences
+    from hikari import http_settings as http_settings_
     from hikari.net import gateway
     from hikari.net import rest as rest_
 
@@ -109,6 +113,21 @@ class IGatewayDispatcher(IApp, abc.ABC):
     This may be combined with `IGatewayZookeeper` for most single-process
     bots, or may be a specific component for large distributed applications
     that consume events from a message queue, for example.
+
+    This purposely also implements some calls found in
+    `hikari.event_dispatcher.IEventDispatcher` with defaulting delegated calls
+    to the event dispatcher. This provides a more intuitive syntax for
+    applications.
+
+        # We can now do this...
+
+        >>> @bot.listen()
+        >>> async def on_message(event: hikari.MessageCreateEvent) -> None: ...
+
+        # ...instead of having to do this...
+
+        >>> @bot.listen()
+        >>> async def on_message(event: hikari.MessageCreateEvent) -> None: ...
     """
 
     __slots__ = ()
@@ -117,6 +136,31 @@ class IGatewayDispatcher(IApp, abc.ABC):
     @abc.abstractmethod
     def event_dispatcher(self) -> event_dispatcher_.IEventDispatcher:
         """Event dispatcher and waiter."""
+
+    # Do not add type hints to me! I delegate to a documented method elsewhere!
+    @functools.wraps(event_dispatcher_.IEventDispatcher.listen)
+    def listen(self, event_type=undefined.Undefined()):
+        ...
+
+    # Do not add type hints to me! I delegate to a documented method elsewhere!
+    @functools.wraps(event_dispatcher_.IEventDispatcher.subscribe)
+    def subscribe(self, event_type, callback):
+        ...
+
+    # Do not add type hints to me! I delegate to a documented method elsewhere!
+    @functools.wraps(event_dispatcher_.IEventDispatcher.unsubscribe)
+    def unsubscribe(self, event_type, callback):
+        ...
+
+    # Do not add type hints to me! I delegate to a documented method elsewhere!
+    @functools.wraps(event_dispatcher_.IEventDispatcher.wait_for)
+    async def wait_for(self, event_type, predicate, timeout):
+        ...
+
+    # Do not add type hints to me! I delegate to a documented method elsewhere!
+    @functools.wraps(event_dispatcher_.IEventDispatcher.dispatch)
+    def dispatch(self, event):
+        ...
 
 
 class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
@@ -206,3 +250,20 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
         This enables the client to be run immediately without having to
         set up the `asyncio` event loop manually first.
         """
+
+
+class IBot(IRESTApp, IGatewayZookeeper, IGatewayDispatcher, abc.ABC):
+    """Component for single-process bots.
+
+    Bots are components that have access to a REST API, an event dispatcher,
+    and an event consumer.
+
+    Additionally, bots will contain a collection of Gateway client objects.
+    """
+
+    __slots__ = ()
+
+    @property
+    @abc.abstractmethod
+    def http_settings(self) -> http_settings_.HTTPSettings:
+        """The HTTP settings to use."""

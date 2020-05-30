@@ -101,6 +101,7 @@
     padding: 1px 4px;
     overflow-wrap: break-word;
     overflow: auto !important;
+    word-break: keep-all !important;
   }
   h1 code { background: transparent }
   pre {
