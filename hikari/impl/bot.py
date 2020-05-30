@@ -26,7 +26,7 @@ import logging
 import typing
 from concurrent import futures
 
-from hikari import bot
+from hikari import app
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
@@ -35,6 +35,7 @@ from hikari.models import presences
 from hikari.net import rest
 from hikari.net import urls
 from hikari.utilities import klass
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -48,7 +49,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import intents as intents_
 
 
-class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
+class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
     def __init__(
         self,
         *,
@@ -127,6 +128,21 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBot):
     @property
     def http_settings(self) -> http_settings_.HTTPSettings:
         return self._config
+
+    def listen(self, event_type=undefined.Undefined()):
+        return self.event_dispatcher.listen(event_type)
+
+    def subscribe(self, event_type, callback):
+        return self.event_dispatcher.subscribe(event_type, callback)
+
+    def unsubscribe(self, event_type, callback):
+        return self.event_dispatcher.unsubscribe(event_type, callback)
+
+    async def wait_for(self, event_type, predicate, timeout):
+        return await self.event_dispatcher.wait_for(event_type, predicate, timeout)
+
+    def dispatch(self, event):
+        return self.event_dispatcher.dispatch(event)
 
     async def close(self) -> None:
         await super().close()
