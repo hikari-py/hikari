@@ -37,7 +37,7 @@ from hikari.models import permissions
 from hikari.models import webhooks
 from hikari.models import users
 from hikari.models import voices
-from hikari.utilities import unset
+from hikari.utilities import undefined
 
 
 class TestEntityFactoryImpl:
@@ -1360,12 +1360,12 @@ class TestEntityFactoryImpl:
         assert presence.client_status.web is guilds.PresenceStatus.OFFLINE
         # PresenceUser
         assert presence.user.id == 42
-        assert presence.user.discriminator is unset.UNSET
-        assert presence.user.username is unset.UNSET
-        assert presence.user.avatar_hash is unset.UNSET
-        assert presence.user.is_bot is unset.UNSET
-        assert presence.user.is_system is unset.UNSET
-        assert presence.user.flags is unset.UNSET
+        assert presence.user.discriminator is undefined.Undefined()
+        assert presence.user.username is undefined.Undefined()
+        assert presence.user.avatar_hash is undefined.Undefined()
+        assert presence.user.is_bot is undefined.Undefined()
+        assert presence.user.is_system is undefined.Undefined()
+        assert presence.user.flags is undefined.Undefined()
 
     def test_deserialize_guild_member_presence_with_unset_activity_fields(self, entity_factory_impl, user_payload):
         presence = entity_factory_impl.deserialize_guild_member_presence(

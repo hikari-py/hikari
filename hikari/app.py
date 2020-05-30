@@ -25,9 +25,8 @@ import abc
 import logging
 import typing
 
-from concurrent import futures
-
 if typing.TYPE_CHECKING:
+    from concurrent import futures
     import datetime
 
     from hikari import cache as cache_

@@ -25,7 +25,7 @@ import abc
 import typing
 
 from hikari import component
-from hikari.utilities import unset
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari.events import base
@@ -100,14 +100,14 @@ class IEventDispatcher(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def listen(self, event_type: typing.Union[unset.Unset, typing.Type[_EventT]]) -> None:
+    def listen(self, event_type: typing.Union[undefined.Undefined, typing.Type[_EventT]]) -> None:
         """Generate a decorator to subscribe a callback to an event type.
 
         This is a second-order decorator.
 
         Parameters
         ----------
-        event_type : hikari.utilities.unset.Unset OR typing.Type[hikari.events.bases.HikariEvent]
+        event_type : hikari.utilities.unset.Undefined OR typing.Type[hikari.events.bases.HikariEvent]
             The event type to subscribe to. The implementation may allow this
             to be unset. If this is the case, the event type will be inferred
             instead from the type hints on the function signature.

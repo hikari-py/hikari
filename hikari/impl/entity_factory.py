@@ -43,7 +43,7 @@ from hikari.models import users
 from hikari.models import voices
 from hikari.models import webhooks
 from hikari.utilities import date
-from hikari.utilities import unset
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari.utilities import binding
@@ -947,13 +947,15 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         user = guilds.PresenceUser()
         user.set_app(self._app)
         user.id = base_models.Snowflake(user_payload["id"])
-        user.discriminator = user_payload["discriminator"] if "discriminator" in user_payload else unset.UNSET
-        user.username = user_payload["username"] if "username" in user_payload else unset.UNSET
-        user.avatar_hash = user_payload["avatar"] if "avatar" in user_payload else unset.UNSET
-        user.is_bot = user_payload["bot"] if "bot" in user_payload else unset.UNSET
-        user.is_system = user_payload["system"] if "system" in user_payload else unset.UNSET
+        user.discriminator = user_payload["discriminator"] if "discriminator" in user_payload else undefined.Undefined()
+        user.username = user_payload["username"] if "username" in user_payload else undefined.Undefined()
+        user.avatar_hash = user_payload["avatar"] if "avatar" in user_payload else undefined.Undefined()
+        user.is_bot = user_payload["bot"] if "bot" in user_payload else undefined.Undefined()
+        user.is_system = user_payload["system"] if "system" in user_payload else undefined.Undefined()
         # noinspection PyArgumentList
-        user.flags = users.UserFlag(user_payload["public_flags"]) if "public_flags" in user_payload else unset.UNSET
+        user.flags = (
+            users.UserFlag(user_payload["public_flags"]) if "public_flags" in user_payload else undefined.Undefined()
+        )
         guild_member_presence.user = user
         if (role_ids := payload.get("roles", ...)) is not ...:
             guild_member_presence.role_ids = {base_models.Snowflake(role_id) for role_id in role_ids}

@@ -22,7 +22,7 @@ import typing
 import pytest
 
 from hikari.utilities import conversions
-from hikari.utilities import unset
+from hikari.utilities import undefined
 
 
 def test_put_if_specified_when_specified():
@@ -35,7 +35,7 @@ def test_put_if_specified_when_specified():
 
 def test_put_if_specified_when_unspecified():
     d = {}
-    conversions.put_if_specified(d, "bar", unset.UNSET)
+    conversions.put_if_specified(d, "bar", undefined.Undefined())
     assert d == {}
 
 

@@ -41,7 +41,7 @@ from hikari.utilities import binding
 from hikari.utilities import date
 from hikari.utilities import klass
 from hikari.utilities import snowflake
-from hikari.utilities import unset
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari import app as app_
@@ -143,9 +143,11 @@ class REST(http_client.HTTPClient, component.IComponent):
         self,
         compiled_route: routes.CompiledRoute,
         *,
-        query: typing.Union[unset.Unset, binding.StringMapBuilder] = unset.UNSET,
-        body: typing.Union[unset.Unset, aiohttp.FormData, binding.JSONObjectBuilder, binding.JSONArray] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        query: typing.Union[undefined.Undefined, binding.StringMapBuilder] = undefined.Undefined(),
+        body: typing.Union[
+            undefined.Undefined, aiohttp.FormData, binding.JSONObjectBuilder, binding.JSONArray
+        ] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         no_auth: bool = False,
     ) -> typing.Optional[binding.JSONObject, binding.JSONArray, bytes, str]:
         # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
@@ -166,12 +168,12 @@ class REST(http_client.HTTPClient, component.IComponent):
         if self._token is not None and not no_auth:
             headers["authorization"] = self._token
 
-        if unset.is_unset(body):
+        if isinstance(body, undefined.Undefined):
             body = None
 
         headers.put("x-audit-log-reason", reason)
 
-        if unset.is_unset(query):
+        if isinstance(query, undefined.Undefined):
             query = None
 
         while True:
@@ -421,16 +423,18 @@ class REST(http_client.HTTPClient, component.IComponent):
         channel: _GuildChannelT,
         /,
         *,
-        name: typing.Union[unset.Unset, str] = unset.UNSET,
-        position: typing.Union[unset.Unset, int] = unset.UNSET,
-        topic: typing.Union[unset.Unset, str] = unset.UNSET,
-        nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
-        bitrate: typing.Union[unset.Unset, int] = unset.UNSET,
-        user_limit: typing.Union[unset.Unset, int] = unset.UNSET,
-        rate_limit_per_user: typing.Union[unset.Unset, date.TimeSpan] = unset.UNSET,
-        permission_overwrites: typing.Union[unset.Unset, typing.Sequence[channels.PermissionOverwrite]] = unset.UNSET,
-        parent_category: typing.Union[unset.Unset, channels.GuildCategory] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        position: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
+        topic: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        nsfw: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        bitrate: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
+        user_limit: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
+        rate_limit_per_user: typing.Union[undefined.Undefined, date.TimeSpan] = undefined.Undefined(),
+        permission_overwrites: typing.Union[
+            undefined.Undefined, typing.Sequence[channels.PermissionOverwrite]
+        ] = undefined.Undefined(),
+        parent_category: typing.Union[undefined.Undefined, channels.GuildCategory] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> _GuildChannelT:
         """Edit a guild channel, given an existing guild channel object."""
 
@@ -439,16 +443,18 @@ class REST(http_client.HTTPClient, component.IComponent):
         channel: typing.Union[channels.PartialChannel, bases.UniqueObjectT],
         /,
         *,
-        name: typing.Union[unset.Unset, str] = unset.UNSET,
-        position: typing.Union[unset.Unset, int] = unset.UNSET,
-        topic: typing.Union[unset.Unset, str] = unset.UNSET,
-        nsfw: typing.Union[unset.Unset, bool] = unset.UNSET,
-        bitrate: typing.Union[unset.Unset, int] = unset.UNSET,
-        user_limit: typing.Union[unset.Unset, int] = unset.UNSET,
-        rate_limit_per_user: typing.Union[unset.Unset, date.TimeSpan] = unset.UNSET,
-        permission_overwrites: typing.Union[unset.Unset, typing.Sequence[channels.PermissionOverwrite]] = unset.UNSET,
-        parent_category: typing.Union[unset.Unset, channels.GuildCategory] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        position: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
+        topic: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        nsfw: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        bitrate: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
+        user_limit: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
+        rate_limit_per_user: typing.Union[undefined.Undefined, date.TimeSpan] = undefined.Undefined(),
+        permission_overwrites: typing.Union[
+            undefined.Undefined, typing.Sequence[channels.PermissionOverwrite]
+        ] = undefined.Undefined(),
+        parent_category: typing.Union[undefined.Undefined, channels.GuildCategory] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> channels.PartialChannel:
         """Edit a channel.
 
@@ -527,9 +533,9 @@ class REST(http_client.HTTPClient, component.IComponent):
         channel: typing.Union[channels.GuildChannel, bases.UniqueObjectT],
         target: typing.Union[channels.PermissionOverwrite, users.User, guilds.Role],
         *,
-        allow: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
-        deny: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        allow: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
+        deny: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> None:
         """Edit permissions for a target entity."""
 
@@ -540,9 +546,9 @@ class REST(http_client.HTTPClient, component.IComponent):
         target: typing.Union[int, str, snowflake.Snowflake],
         target_type: typing.Union[channels.PermissionOverwriteType, str],
         *,
-        allow: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
-        deny: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        allow: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
+        deny: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> None:
         """Edit permissions for a given entity ID and type."""
 
@@ -550,11 +556,11 @@ class REST(http_client.HTTPClient, component.IComponent):
         self,
         channel: typing.Union[channels.GuildChannel, bases.UniqueObjectT],
         target: typing.Union[bases.UniqueObjectT, users.User, guilds.Role, channels.PermissionOverwrite],
-        target_type: typing.Union[unset.Unset, channels.PermissionOverwriteType, str] = unset.UNSET,
+        target_type: typing.Union[undefined.Undefined, channels.PermissionOverwriteType, str] = undefined.Undefined(),
         *,
-        allow: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
-        deny: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        allow: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
+        deny: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> None:
         """Edit permissions for a specific entity in the given guild channel.
 
@@ -582,7 +588,7 @@ class REST(http_client.HTTPClient, component.IComponent):
             If an internal error occurs on Discord while handling the request.
         """
 
-        if unset.is_unset(target_type):
+        if isinstance(target_type, undefined.Undefined):
             if isinstance(target, users.User):
                 target_type = channels.PermissionOverwriteType.MEMBER
             elif isinstance(target, guilds.Role):
@@ -660,13 +666,13 @@ class REST(http_client.HTTPClient, component.IComponent):
         channel: typing.Union[channels.GuildChannel, bases.UniqueObjectT],
         /,
         *,
-        max_age: typing.Union[unset.Unset, int, float, datetime.timedelta] = unset.UNSET,
-        max_uses: typing.Union[unset.Unset, int] = unset.UNSET,
-        temporary: typing.Union[unset.Unset, bool] = unset.UNSET,
-        unique: typing.Union[unset.Unset, bool] = unset.UNSET,
-        target_user: typing.Union[unset.Unset, users.User, bases.UniqueObjectT] = unset.UNSET,
-        target_user_type: typing.Union[unset.Unset, invites.TargetUserType] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        max_age: typing.Union[undefined.Undefined, int, float, datetime.timedelta] = undefined.Undefined(),
+        max_uses: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
+        temporary: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        unique: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        target_user: typing.Union[undefined.Undefined, users.User, bases.UniqueObjectT] = undefined.Undefined(),
+        target_user_type: typing.Union[undefined.Undefined, invites.TargetUserType] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> invites.InviteWithMetadata:
         """Create an invite to the given guild channel.
 
@@ -868,9 +874,9 @@ class REST(http_client.HTTPClient, component.IComponent):
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         /,
         *,
-        before: typing.Union[unset.Unset, datetime.datetime, bases.UniqueObjectT] = unset.UNSET,
-        after: typing.Union[unset.Unset, datetime.datetime, bases.UniqueObjectT] = unset.UNSET,
-        around: typing.Union[unset.Unset, datetime.datetime, bases.UniqueObjectT] = unset.UNSET,
+        before: typing.Union[undefined.Undefined, datetime.datetime, bases.UniqueObjectT] = undefined.Undefined(),
+        after: typing.Union[undefined.Undefined, datetime.datetime, bases.UniqueObjectT] = undefined.Undefined(),
+        around: typing.Union[undefined.Undefined, datetime.datetime, bases.UniqueObjectT] = undefined.Undefined(),
     ) -> iterators.LazyIterator[messages_.Message]:
         """Browse the message history for a given text channel.
 
@@ -904,13 +910,13 @@ class REST(http_client.HTTPClient, component.IComponent):
             this function itself will not raise anything (other than
             `TypeError`).
         """
-        if unset.count_unset_objects(before, after, around) < 2:
+        if undefined.Undefined.count(before, after, around) < 2:
             raise TypeError(f"Expected no kwargs, or maximum of one of 'before', 'after', 'around'")
-        elif not unset.is_unset(before):
+        elif not isinstance(before, undefined.Undefined):
             direction, timestamp = "before", before
-        elif not unset.is_unset(after):
+        elif not isinstance(after, undefined.Undefined):
             direction, timestamp = "after", after
-        elif not unset.is_unset(around):
+        elif not isinstance(around, undefined.Undefined):
             direction, timestamp = "around", around
         else:
             direction, timestamp = "before", snowflake.Snowflake.max()
@@ -955,12 +961,12 @@ class REST(http_client.HTTPClient, component.IComponent):
     async def create_message(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
-        text: typing.Union[unset.Unset, typing.Any] = unset.UNSET,
+        text: typing.Union[undefined.Undefined, typing.Any] = undefined.Undefined(),
         *,
-        embed: typing.Union[unset.Unset, embeds_.Embed] = unset.UNSET,
-        attachments: typing.Union[unset.Unset, typing.Sequence[files.BaseStream]] = unset.UNSET,
-        tts: typing.Union[unset.Unset, bool] = unset.UNSET,
-        nonce: typing.Union[unset.Unset, str] = unset.UNSET,
+        embed: typing.Union[undefined.Undefined, embeds_.Embed] = undefined.Undefined(),
+        attachments: typing.Union[undefined.Undefined, typing.Sequence[files.BaseStream]] = undefined.Undefined(),
+        tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        nonce: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         mentions_everyone: bool = False,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObjectT]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObjectT, guilds.Role]], bool] = True,
@@ -1015,9 +1021,9 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("nonce", nonce)
         body.put("tts", tts)
 
-        attachments = [] if unset.is_unset(attachments) else [a for a in attachments]
+        attachments = [] if isinstance(attachments, undefined.Undefined) else [a for a in attachments]
 
-        if not unset.is_unset(embed):
+        if not isinstance(embed, undefined.Undefined):
             attachments += embed.assets_to_upload
 
         response = await self._request(
@@ -1030,13 +1036,13 @@ class REST(http_client.HTTPClient, component.IComponent):
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         message: typing.Union[messages_.Message, bases.UniqueObjectT],
-        text: typing.Union[unset.Unset, typing.Any] = unset.UNSET,
+        text: typing.Union[undefined.Undefined, typing.Any] = undefined.Undefined(),
         *,
-        embed: typing.Union[unset.Unset, embeds_.Embed] = unset.UNSET,
+        embed: typing.Union[undefined.Undefined, embeds_.Embed] = undefined.Undefined(),
         mentions_everyone: bool = False,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObjectT]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObjectT, guilds.Role]], bool] = True,
-        flags: typing.Union[unset.Unset, messages_.MessageFlag] = unset.UNSET,
+        flags: typing.Union[undefined.Undefined, messages_.MessageFlag] = undefined.Undefined(),
     ) -> messages_.Message:
         """Edit an existing message in a given channel.
 
@@ -1261,13 +1267,13 @@ class REST(http_client.HTTPClient, component.IComponent):
         channel: typing.Union[channels.TextChannel, bases.UniqueObjectT],
         name: str,
         *,
-        avatar: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        avatar: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> webhooks.Webhook:
         route = routes.POST_WEBHOOK.compile(channel=channel)
         body = binding.JSONObjectBuilder()
         body.put("name", name)
-        if not unset.is_unset(avatar):
+        if not isinstance(avatar, undefined.Undefined):
             body.put("avatar", await avatar.fetch_data_uri())
 
         response = await self._request(route, body=body, reason=reason)
@@ -1278,9 +1284,9 @@ class REST(http_client.HTTPClient, component.IComponent):
         webhook: typing.Union[webhooks.Webhook, bases.UniqueObjectT],
         /,
         *,
-        token: typing.Union[unset.Unset, str] = unset.UNSET,
+        token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> webhooks.Webhook:
-        if unset.is_unset(token):
+        if isinstance(token, undefined.Undefined):
             route = routes.GET_WEBHOOK.compile(webhook=webhook)
         else:
             route = routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
@@ -1306,13 +1312,13 @@ class REST(http_client.HTTPClient, component.IComponent):
         webhook: typing.Union[webhooks.Webhook, bases.UniqueObjectT],
         /,
         *,
-        token: typing.Union[unset.Unset, str] = unset.UNSET,
-        name: typing.Union[unset.Unset, str] = unset.UNSET,
-        avatar: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET,
-        channel: typing.Union[unset.Unset, channels.TextChannel, bases.UniqueObjectT] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        avatar: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
+        channel: typing.Union[undefined.Undefined, channels.TextChannel, bases.UniqueObjectT] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> webhooks.Webhook:
-        if unset.is_unset(token):
+        if isinstance(token, undefined.Undefined):
             route = routes.PATCH_WEBHOOK.compile(webhook=webhook)
         else:
             route = routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
@@ -1320,7 +1326,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body = binding.JSONObjectBuilder()
         body.put("name", name)
         body.put_snowflake("channel", channel)
-        if not unset.is_unset(avatar):
+        if not isinstance(avatar, undefined.Undefined):
             body.put("avatar", await avatar.fetch_data_uri())
 
         response = await self._request(route, body=body, reason=reason)
@@ -1331,9 +1337,9 @@ class REST(http_client.HTTPClient, component.IComponent):
         webhook: typing.Union[webhooks.Webhook, bases.UniqueObjectT],
         /,
         *,
-        token: typing.Union[unset.Unset, str] = unset.UNSET,
+        token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> None:
-        if unset.is_unset(token):
+        if isinstance(token, undefined.Undefined):
             route = routes.DELETE_WEBHOOK.compile(webhook=webhook)
         else:
             route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
@@ -1342,30 +1348,30 @@ class REST(http_client.HTTPClient, component.IComponent):
     async def execute_webhook(
         self,
         webhook: typing.Union[webhooks.Webhook, bases.UniqueObjectT],
-        text: typing.Union[unset.Unset, typing.Any] = unset.UNSET,
+        text: typing.Union[undefined.Undefined, typing.Any] = undefined.Undefined(),
         *,
-        token: typing.Union[unset.Unset, str] = unset.UNSET,
-        username: typing.Union[unset.Unset, str] = unset.UNSET,
-        avatar_url: typing.Union[unset.Unset, str] = unset.UNSET,
-        embeds: typing.Union[unset.Unset, typing.Sequence[embeds_.Embed]] = unset.UNSET,
-        attachments: typing.Union[unset.Unset, typing.Sequence[files.BaseStream]] = unset.UNSET,
-        tts: typing.Union[unset.Unset, bool] = unset.UNSET,
-        wait: typing.Union[unset.Unset, bool] = unset.UNSET,
+        token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        username: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        avatar_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        embeds: typing.Union[undefined.Undefined, typing.Sequence[embeds_.Embed]] = undefined.Undefined(),
+        attachments: typing.Union[undefined.Undefined, typing.Sequence[files.BaseStream]] = undefined.Undefined(),
+        tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        wait: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
         mentions_everyone: bool = False,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObjectT]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObjectT, guilds.Role]], bool] = True,
     ) -> messages_.Message:
-        if unset.is_unset(token):
+        if isinstance(token, undefined.Undefined):
             route = routes.POST_WEBHOOK.compile(webhook=webhook)
             no_auth = False
         else:
             route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
             no_auth = True
 
-        attachments = [] if unset.is_unset(attachments) else [a for a in attachments]
+        attachments = [] if isinstance(attachments, undefined.Undefined) else [a for a in attachments]
         serialized_embeds = []
 
-        if not unset.is_unset(embeds):
+        if not isinstance(embeds, undefined.Undefined):
             for embed in embeds:
                 attachments += embed.assets_to_upload
                 serialized_embeds.append(self._app.entity_factory.serialize_embed(embed))
@@ -1415,14 +1421,14 @@ class REST(http_client.HTTPClient, component.IComponent):
     async def edit_my_user(
         self,
         *,
-        username: typing.Union[unset.Unset, str] = unset.UNSET,
-        avatar: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET,
+        username: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        avatar: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
     ) -> users.MyUser:
         route = routes.PATCH_MY_USER.compile()
         body = binding.JSONObjectBuilder()
         body.put("username", username)
 
-        if not unset.is_unset(username):
+        if not isinstance(username, undefined.Undefined):
             body.put("avatar", await avatar.fetch_data_uri())
 
         response = await self._request(route, body=body)
@@ -1437,9 +1443,11 @@ class REST(http_client.HTTPClient, component.IComponent):
         self,
         *,
         newest_first: bool = False,
-        start_at: typing.Union[unset.Unset, guilds.PartialGuild, bases.UniqueObjectT, datetime.datetime] = unset.UNSET,
+        start_at: typing.Union[
+            undefined.Undefined, guilds.PartialGuild, bases.UniqueObjectT, datetime.datetime
+        ] = undefined.Undefined(),
     ) -> iterators.LazyIterator[applications.OwnGuild]:
-        if unset.is_unset(start_at):
+        if isinstance(start_at, undefined.Undefined):
             start_at = snowflake.Snowflake.max() if newest_first else snowflake.Snowflake.min()
         elif isinstance(start_at, datetime.datetime):
             start_at = snowflake.Snowflake.from_datetime(start_at)
@@ -1468,12 +1476,12 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         user: typing.Union[users.User, bases.UniqueObjectT],
         *,
-        nick: typing.Union[unset.Unset, str] = unset.UNSET,
+        nick: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         roles: typing.Union[
-            unset.Unset, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
-        ] = unset.UNSET,
-        mute: typing.Union[unset.Unset, bool] = unset.UNSET,
-        deaf: typing.Union[unset.Unset, bool] = unset.UNSET,
+            undefined.Undefined, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
+        ] = undefined.Undefined(),
+        mute: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        deaf: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> typing.Optional[guilds.GuildMember]:
         route = routes.PUT_GUILD_MEMBER.compile(guild=guild, user=user)
         body = binding.JSONObjectBuilder()
@@ -1504,11 +1512,11 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         /,
         *,
-        before: typing.Union[unset.Unset, datetime.datetime, bases.UniqueObjectT] = unset.UNSET,
-        user: typing.Union[unset.Unset, users.User, bases.UniqueObjectT] = unset.UNSET,
-        event_type: typing.Union[unset.Unset, audit_logs.AuditLogEventType] = unset.UNSET,
+        before: typing.Union[undefined.Undefined, datetime.datetime, bases.UniqueObjectT] = undefined.Undefined(),
+        user: typing.Union[undefined.Undefined, users.User, bases.UniqueObjectT] = undefined.Undefined(),
+        event_type: typing.Union[undefined.Undefined, audit_logs.AuditLogEventType] = undefined.Undefined(),
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
-        if unset.is_unset(before):
+        if isinstance(before, undefined.Undefined):
             before = snowflake.Snowflake.max()
         elif isinstance(before, datetime.datetime):
             before = snowflake.Snowflake.from_datetime(before)
@@ -1541,14 +1549,14 @@ class REST(http_client.HTTPClient, component.IComponent):
         image: files.BaseStream,
         *,
         roles: typing.Union[
-            unset.Unset, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
-        ] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+            undefined.Undefined, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
+        ] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> emojis.KnownCustomEmoji:
         route = routes.POST_GUILD_EMOJIS.compile(guild=guild)
         body = binding.JSONObjectBuilder()
         body.put("name", name)
-        if not unset.is_unset(image):
+        if not isinstance(image, undefined.Undefined):
             body.put("image", await image.fetch_data_uri())
 
         body.put_snowflake_array("roles", roles)
@@ -1563,11 +1571,11 @@ class REST(http_client.HTTPClient, component.IComponent):
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
         emoji: typing.Union[emojis.KnownCustomEmoji, str],
         *,
-        name: typing.Union[unset.Unset, str] = unset.UNSET,
+        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         roles: typing.Union[
-            unset.Unset, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
-        ] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+            undefined.Undefined, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
+        ] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> emojis.KnownCustomEmoji:
         route = routes.PATCH_GUILD_EMOJI.compile(
             guild=guild, emoji=emoji.url_name if isinstance(emoji, emojis.Emoji) else emoji,
@@ -1612,22 +1620,28 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         /,
         *,
-        name: typing.Union[unset.Unset, str] = unset.UNSET,
-        region: typing.Union[unset.Unset, voices.VoiceRegion, str] = unset.UNSET,
-        verification_level: typing.Union[unset.Unset, guilds.GuildVerificationLevel] = unset.UNSET,
-        default_message_notifications: typing.Union[unset.Unset, guilds.GuildMessageNotificationsLevel] = unset.UNSET,
-        explicit_content_filter_level: typing.Union[unset.Unset, guilds.GuildExplicitContentFilterLevel] = unset.UNSET,
-        afk_channel: typing.Union[unset.Unset, channels.GuildVoiceChannel, bases.UniqueObjectT] = unset.UNSET,
-        afk_timeout: typing.Union[unset.Unset, date.TimeSpan] = unset.UNSET,
-        icon: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET,
-        owner: typing.Union[unset.Unset, users.User, bases.UniqueObjectT] = unset.UNSET,
-        splash: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET,
-        banner: typing.Union[unset.Unset, files.BaseStream] = unset.UNSET,
-        system_channel: typing.Union[unset.Unset, channels.GuildTextChannel] = unset.UNSET,
-        rules_channel: typing.Union[unset.Unset, channels.GuildTextChannel] = unset.UNSET,
-        public_updates_channel: typing.Union[unset.Unset, channels.GuildTextChannel] = unset.UNSET,
-        preferred_locale: typing.Union[unset.Unset, str] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        region: typing.Union[undefined.Undefined, voices.VoiceRegion, str] = undefined.Undefined(),
+        verification_level: typing.Union[undefined.Undefined, guilds.GuildVerificationLevel] = undefined.Undefined(),
+        default_message_notifications: typing.Union[
+            undefined.Undefined, guilds.GuildMessageNotificationsLevel
+        ] = undefined.Undefined(),
+        explicit_content_filter_level: typing.Union[
+            undefined.Undefined, guilds.GuildExplicitContentFilterLevel
+        ] = undefined.Undefined(),
+        afk_channel: typing.Union[
+            undefined.Undefined, channels.GuildVoiceChannel, bases.UniqueObjectT
+        ] = undefined.Undefined(),
+        afk_timeout: typing.Union[undefined.Undefined, date.TimeSpan] = undefined.Undefined(),
+        icon: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
+        owner: typing.Union[undefined.Undefined, users.User, bases.UniqueObjectT] = undefined.Undefined(),
+        splash: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
+        banner: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
+        system_channel: typing.Union[undefined.Undefined, channels.GuildTextChannel] = undefined.Undefined(),
+        rules_channel: typing.Union[undefined.Undefined, channels.GuildTextChannel] = undefined.Undefined(),
+        public_updates_channel: typing.Union[undefined.Undefined, channels.GuildTextChannel] = undefined.Undefined(),
+        preferred_locale: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> guilds.Guild:
         route = routes.PATCH_GUILD.compile(guild=guild)
         body = binding.JSONObjectBuilder()
@@ -1644,13 +1658,13 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put_snowflake("rules_channel_id", rules_channel)
         body.put_snowflake("public_updates_channel_id", public_updates_channel)
 
-        if not unset.is_unset(icon):
+        if not isinstance(icon, undefined.Undefined):
             body.put("icon", await icon.fetch_data_uri())
 
-        if not unset.is_unset(splash):
+        if not isinstance(splash, undefined.Undefined):
             body.put("splash", await splash.fetch_data_uri())
 
-        if not unset.is_unset(banner):
+        if not isinstance(banner, undefined.Undefined):
             body.put("banner", await banner.fetch_data_uri())
 
         response = await self._request(route, body=body, reason=reason)
@@ -1675,13 +1689,17 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         name: str,
         *,
-        position: typing.Union[int, unset.Unset] = unset.UNSET,
-        topic: typing.Union[str, unset.Unset] = unset.UNSET,
-        nsfw: typing.Union[bool, unset.Unset] = unset.UNSET,
-        rate_limit_per_user: typing.Union[int, unset.Unset] = unset.UNSET,
-        permission_overwrites: typing.Union[typing.Sequence[channels.PermissionOverwrite], unset.Unset] = unset.UNSET,
-        category: typing.Union[channels.GuildCategory, bases.UniqueObjectT, unset.Unset] = unset.UNSET,
-        reason: typing.Union[str, unset.Unset] = unset.UNSET,
+        position: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        topic: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
+        nsfw: typing.Union[bool, undefined.Undefined] = undefined.Undefined(),
+        rate_limit_per_user: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        permission_overwrites: typing.Union[
+            typing.Sequence[channels.PermissionOverwrite], undefined.Undefined
+        ] = undefined.Undefined(),
+        category: typing.Union[
+            channels.GuildCategory, bases.UniqueObjectT, undefined.Undefined
+        ] = undefined.Undefined(),
+        reason: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
     ) -> channels.GuildTextChannel:
         channel = await self._create_guild_channel(
             guild,
@@ -1702,13 +1720,17 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         name: str,
         *,
-        position: typing.Union[int, unset.Unset] = unset.UNSET,
-        topic: typing.Union[str, unset.Unset] = unset.UNSET,
-        nsfw: typing.Union[bool, unset.Unset] = unset.UNSET,
-        rate_limit_per_user: typing.Union[int, unset.Unset] = unset.UNSET,
-        permission_overwrites: typing.Union[typing.Sequence[channels.PermissionOverwrite], unset.Unset] = unset.UNSET,
-        category: typing.Union[channels.GuildCategory, bases.UniqueObjectT, unset.Unset] = unset.UNSET,
-        reason: typing.Union[str, unset.Unset] = unset.UNSET,
+        position: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        topic: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
+        nsfw: typing.Union[bool, undefined.Undefined] = undefined.Undefined(),
+        rate_limit_per_user: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        permission_overwrites: typing.Union[
+            typing.Sequence[channels.PermissionOverwrite], undefined.Undefined
+        ] = undefined.Undefined(),
+        category: typing.Union[
+            channels.GuildCategory, bases.UniqueObjectT, undefined.Undefined
+        ] = undefined.Undefined(),
+        reason: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
     ) -> channels.GuildNewsChannel:
         channel = await self._create_guild_channel(
             guild,
@@ -1729,13 +1751,17 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         name: str,
         *,
-        position: typing.Union[int, unset.Unset] = unset.UNSET,
-        nsfw: typing.Union[bool, unset.Unset] = unset.UNSET,
-        user_limit: typing.Union[int, unset.Unset] = unset.UNSET,
-        bitrate: typing.Union[int, unset.Unset] = unset.UNSET,
-        permission_overwrites: typing.Union[typing.Sequence[channels.PermissionOverwrite], unset.Unset] = unset.UNSET,
-        category: typing.Union[channels.GuildCategory, bases.UniqueObjectT, unset.Unset] = unset.UNSET,
-        reason: typing.Union[str, unset.Unset] = unset.UNSET,
+        position: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        nsfw: typing.Union[bool, undefined.Undefined] = undefined.Undefined(),
+        user_limit: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        bitrate: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        permission_overwrites: typing.Union[
+            typing.Sequence[channels.PermissionOverwrite], undefined.Undefined
+        ] = undefined.Undefined(),
+        category: typing.Union[
+            channels.GuildCategory, bases.UniqueObjectT, undefined.Undefined
+        ] = undefined.Undefined(),
+        reason: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
     ) -> channels.GuildVoiceChannel:
         channel = await self._create_guild_channel(
             guild,
@@ -1756,10 +1782,12 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         name: str,
         *,
-        position: typing.Union[int, unset.Unset] = unset.UNSET,
-        nsfw: typing.Union[bool, unset.Unset] = unset.UNSET,
-        permission_overwrites: typing.Union[typing.Sequence[channels.PermissionOverwrite], unset.Unset] = unset.UNSET,
-        reason: typing.Union[str, unset.Unset] = unset.UNSET,
+        position: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        nsfw: typing.Union[bool, undefined.Undefined] = undefined.Undefined(),
+        permission_overwrites: typing.Union[
+            typing.Sequence[channels.PermissionOverwrite], undefined.Undefined
+        ] = undefined.Undefined(),
+        reason: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
     ) -> channels.GuildCategory:
         channel = await self._create_guild_channel(
             guild,
@@ -1778,15 +1806,19 @@ class REST(http_client.HTTPClient, component.IComponent):
         name: str,
         type_: channels.ChannelType,
         *,
-        position: typing.Union[int, unset.Unset] = unset.UNSET,
-        topic: typing.Union[str, unset.Unset] = unset.UNSET,
-        nsfw: typing.Union[bool, unset.Unset] = unset.UNSET,
-        bitrate: typing.Union[int, unset.Unset] = unset.UNSET,
-        user_limit: typing.Union[int, unset.Unset] = unset.UNSET,
-        rate_limit_per_user: typing.Union[int, unset.Unset] = unset.UNSET,
-        permission_overwrites: typing.Union[typing.Sequence[channels.PermissionOverwrite], unset.Unset] = unset.UNSET,
-        category: typing.Union[channels.GuildCategory, bases.UniqueObjectT, unset.Unset] = unset.UNSET,
-        reason: typing.Union[str, unset.Unset] = unset.UNSET,
+        position: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        topic: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
+        nsfw: typing.Union[bool, undefined.Undefined] = undefined.Undefined(),
+        bitrate: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        user_limit: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        rate_limit_per_user: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        permission_overwrites: typing.Union[
+            typing.Sequence[channels.PermissionOverwrite], undefined.Undefined
+        ] = undefined.Undefined(),
+        category: typing.Union[
+            channels.GuildCategory, bases.UniqueObjectT, undefined.Undefined
+        ] = undefined.Undefined(),
+        reason: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
     ) -> channels.GuildChannel:
         route = routes.POST_GUILD_CHANNELS.compile(guild=guild)
         body = binding.JSONObjectBuilder()
@@ -1835,14 +1867,16 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         user: typing.Union[users.User, bases.UniqueObjectT],
         *,
-        nick: typing.Union[unset.Unset, str] = unset.UNSET,
+        nick: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         roles: typing.Union[
-            unset.Unset, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
-        ] = unset.UNSET,
-        mute: typing.Union[unset.Unset, bool] = unset.UNSET,
-        deaf: typing.Union[unset.Unset, bool] = unset.UNSET,
-        voice_channel: typing.Union[unset.Unset, channels.GuildVoiceChannel, bases.UniqueObjectT, None] = unset.UNSET,
-        reason: typing.Union[str, unset.Unset] = unset.UNSET,
+            undefined.Undefined, typing.Collection[typing.Union[guilds.Role, bases.UniqueObjectT]]
+        ] = undefined.Undefined(),
+        mute: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        deaf: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        voice_channel: typing.Union[
+            undefined.Undefined, channels.GuildVoiceChannel, bases.UniqueObjectT, None
+        ] = undefined.Undefined(),
+        reason: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
     ) -> None:
         route = routes.PATCH_GUILD_MEMBER.compile(guild=guild, user=user)
         body = binding.JSONObjectBuilder()
@@ -1853,7 +1887,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         if voice_channel is None:
             body.put("channel_id", None)
-        elif not unset.is_unset(voice_channel):
+        elif not isinstance(voice_channel, undefined.Undefined):
             body.put_snowflake("channel_id", voice_channel)
 
         await self._request(route, body=body, reason=reason)
@@ -1863,7 +1897,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         nick: typing.Optional[str],
         *,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> None:
         route = routes.PATCH_MY_GUILD_NICKNAME.compile(guild=guild)
         body = binding.JSONObjectBuilder()
@@ -1876,7 +1910,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         user: typing.Union[users.User, bases.UniqueObjectT],
         role: typing.Union[guilds.Role, bases.UniqueObjectT],
         *,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> None:
         route = routes.PUT_GUILD_MEMBER_ROLE.compile(guild=guild, user=user, role=role)
         await self._request(route, reason=reason)
@@ -1887,7 +1921,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         user: typing.Union[users.User, bases.UniqueObjectT],
         role: typing.Union[guilds.Role, bases.UniqueObjectT],
         *,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> None:
         route = routes.DELETE_GUILD_MEMBER_ROLE.compile(guild=guild, user=user, role=role)
         await self._request(route, reason=reason)
@@ -1897,7 +1931,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         user: typing.Union[users.User, bases.UniqueObjectT],
         *,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> None:
         route = routes.DELETE_GUILD_MEMBER.compile(guild=guild, user=user,)
         await self._request(route, reason=reason)
@@ -1907,7 +1941,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         user: typing.Union[users.User, bases.UniqueObjectT],
         *,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> None:
         route = routes.PUT_GUILD_BAN.compile(guild=guild, user=user)
         await self._request(route, reason=reason)
@@ -1917,7 +1951,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         user: typing.Union[users.User, bases.UniqueObjectT],
         *,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> None:
         route = routes.DELETE_GUILD_BAN.compile(guild=guild, user=user)
         await self._request(route, reason=reason)
@@ -1950,15 +1984,15 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         /,
         *,
-        name: typing.Union[unset.Unset, str] = unset.UNSET,
-        permissions: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
-        color: typing.Union[unset.Unset, colors.Color] = unset.UNSET,
-        colour: typing.Union[unset.Unset, colors.Color] = unset.UNSET,
-        hoist: typing.Union[unset.Unset, bool] = unset.UNSET,
-        mentionable: typing.Union[unset.Unset, bool] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        permissions: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
+        color: typing.Union[undefined.Undefined, colors.Color] = undefined.Undefined(),
+        colour: typing.Union[undefined.Undefined, colors.Color] = undefined.Undefined(),
+        hoist: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        mentionable: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> guilds.Role:
-        if not unset.count_unset_objects(color, colour):
+        if not undefined.Undefined.count(color, colour):
             raise TypeError("Can not specify 'color' and 'colour' together.")
 
         route = routes.POST_GUILD_ROLES.compile(guild=guild)
@@ -1987,15 +2021,15 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         role: typing.Union[guilds.Role, bases.UniqueObjectT],
         *,
-        name: typing.Union[unset.Unset, str] = unset.UNSET,
-        permissions: typing.Union[unset.Unset, permissions_.Permission] = unset.UNSET,
-        color: typing.Union[unset.Unset, colors.Color] = unset.UNSET,
-        colour: typing.Union[unset.Unset, colors.Color] = unset.UNSET,
-        hoist: typing.Union[unset.Unset, bool] = unset.UNSET,
-        mentionable: typing.Union[unset.Unset, bool] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        permissions: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
+        color: typing.Union[undefined.Undefined, colors.Color] = undefined.Undefined(),
+        colour: typing.Union[undefined.Undefined, colors.Color] = undefined.Undefined(),
+        hoist: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        mentionable: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> guilds.Role:
-        if not unset.count_unset_objects(color, colour):
+        if not undefined.Undefined.count(color, colour):
             raise TypeError("Can not specify 'color' and 'colour' together.")
 
         route = routes.PATCH_GUILD_ROLE.compile(guild=guild, role=role)
@@ -2033,7 +2067,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         days: int,
         *,
-        reason: typing.Union[unset.Unset, str],
+        reason: typing.Union[undefined.Undefined, str],
     ) -> int:
         route = routes.POST_GUILD_PRUNE.compile(guild=guild)
         query = binding.StringMapBuilder()
@@ -2068,10 +2102,10 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         integration: typing.Union[guilds.Integration, bases.UniqueObjectT],
         *,
-        expire_behaviour: typing.Union[unset.Unset, guilds.IntegrationExpireBehaviour] = unset.UNSET,
-        expire_grace_period: typing.Union[unset.Unset, date.TimeSpan] = unset.UNSET,
-        enable_emojis: typing.Union[unset.Unset, bool] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        expire_behaviour: typing.Union[undefined.Undefined, guilds.IntegrationExpireBehaviour] = undefined.Undefined(),
+        expire_grace_period: typing.Union[undefined.Undefined, date.TimeSpan] = undefined.Undefined(),
+        enable_emojis: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> None:
         route = routes.PATCH_GUILD_INTEGRATION.compile(guild=guild, integration=integration)
         body = binding.JSONObjectBuilder()
@@ -2086,7 +2120,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         integration: typing.Union[guilds.Integration, bases.UniqueObjectT],
         *,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> None:
         route = routes.DELETE_GUILD_INTEGRATION.compile(guild=guild, integration=integration)
         await self._request(route, reason=reason)
@@ -2109,9 +2143,11 @@ class REST(http_client.HTTPClient, component.IComponent):
         guild: typing.Union[guilds.Guild, bases.UniqueObjectT],
         /,
         *,
-        channel: typing.Union[unset.Unset, channels.GuildChannel, bases.UniqueObjectT, None] = unset.UNSET,
-        enabled: typing.Union[unset.Unset, bool] = unset.UNSET,
-        reason: typing.Union[unset.Unset, str] = unset.UNSET,
+        channel: typing.Union[
+            undefined.Undefined, channels.GuildChannel, bases.UniqueObjectT, None
+        ] = undefined.Undefined(),
+        enabled: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> guilds.GuildWidget:
         route = routes.PATCH_GUILD_WIDGET.compile(guild=guild)
 
@@ -2119,7 +2155,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("enabled", enabled)
         if channel is None:
             body.put("channel", None)
-        elif not unset.is_unset(channel):
+        elif not isinstance(channel, undefined.Undefined):
             body.put_snowflake("channel", channel)
 
         response = await self._request(route, body=body, reason=reason)

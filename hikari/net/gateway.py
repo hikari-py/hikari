@@ -36,13 +36,15 @@ import attr
 from hikari import component
 from hikari import errors
 from hikari import http_settings
+from hikari.models import guilds
 from hikari.net import http_client
 from hikari.net import ratelimits
 from hikari.net import user_agents
 from hikari.utilities import binding
 from hikari.utilities import klass
 from hikari.utilities import snowflake
-from hikari.utilities import unset
+from hikari.utilities import undefined
+
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -50,7 +52,6 @@ if typing.TYPE_CHECKING:
     from hikari import app as app_
     from hikari.utilities import aio
     from hikari.models import channels
-    from hikari.models import guilds
     from hikari.models import intents as intents_
 
 
@@ -382,10 +383,10 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     async def update_presence(
         self,
         *,
-        idle_since: typing.Union[unset.Unset, typing.Optional[datetime.datetime]] = unset.UNSET,
-        is_afk: typing.Union[unset.Unset, bool] = unset.UNSET,
-        activity: typing.Union[unset.Unset, typing.Optional[Activity]] = unset.UNSET,
-        status: typing.Union[unset.Unset, guilds.PresenceStatus] = unset.UNSET,
+        idle_since: typing.Union[undefined.Undefined, typing.Optional[datetime.datetime]] = undefined.Undefined(),
+        is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        activity: typing.Union[undefined.Undefined, typing.Optional[Activity]] = undefined.Undefined(),
+        status: typing.Union[undefined.Undefined, guilds.PresenceStatus] = undefined.Undefined(),
     ) -> None:
         """Update the presence of the shard user.
 
@@ -405,10 +406,10 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         """
         payload = self._build_presence_payload(idle_since, is_afk, activity, status)
         await self._send_json({"op": self._GatewayOpcode.PRESENCE_UPDATE, "d": payload})
-        self._idle_since = idle_since if not unset.is_unset(idle_since) else self._idle_since
-        self._is_afk = is_afk if not unset.is_unset(is_afk) else self._is_afk
-        self._activity = activity if not unset.is_unset(activity) else self._activity
-        self._status = status if not unset.is_unset(status) else self._status
+        self._idle_since = idle_since if not isinstance(idle_since, undefined.Undefined) else self._idle_since
+        self._is_afk = is_afk if not isinstance(is_afk, undefined.Undefined) else self._is_afk
+        self._activity = activity if not isinstance(activity, undefined.Undefined) else self._activity
+        self._status = status if not isinstance(status, undefined.Undefined) else self._status
 
     async def update_voice_state(
         self,
@@ -649,18 +650,18 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
     def _build_presence_payload(
         self,
-        idle_since: typing.Union[unset.Unset, typing.Optional[datetime.datetime]] = unset.UNSET,
-        is_afk: typing.Union[unset.Unset, bool] = unset.UNSET,
-        status: typing.Union[unset.Unset, guilds.PresenceStatus] = unset.UNSET,
-        activity: typing.Union[unset.Unset, typing.Optional[Activity]] = unset.UNSET,
+        idle_since: typing.Union[undefined.Undefined, typing.Optional[datetime.datetime]] = undefined.Undefined(),
+        is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        status: typing.Union[undefined.Undefined, guilds.PresenceStatus] = undefined.Undefined(),
+        activity: typing.Union[undefined.Undefined, typing.Optional[Activity]] = undefined.Undefined(),
     ) -> binding.JSONObject:
-        if unset.is_unset(idle_since):
+        if isinstance(idle_since, undefined.Undefined):
             idle_since = self._idle_since
-        if unset.is_unset(is_afk):
+        if isinstance(is_afk, undefined.Undefined):
             is_afk = self._is_afk
-        if unset.is_unset(status):
+        if isinstance(status, undefined.Undefined):
             status = self._status
-        if unset.is_unset(activity):
+        if isinstance(activity, undefined.Undefined):
             activity = self._activity
 
         activity = typing.cast(typing.Optional[Activity], activity)
