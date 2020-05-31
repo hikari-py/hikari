@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Contains an interface for components wishing to build entities."""
+"""Core interface for an object that serializes/deserializes API objects."""
 from __future__ import annotations
 
 __all__ = ["IEntityFactory"]

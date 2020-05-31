@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Configuration data classes."""
+"""Data class containing AIOHTTP-specific configuration settings."""
 
 from __future__ import annotations
 

@@ -23,35 +23,35 @@ requires for rate limit handling that conforms to the passed bucket headers
 correctly.
 
 What is the theory behind this implementation?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------
 
-In this module, we refer to a `hikari.rest.routes.CompiledRoute` as a definition
-of a _route with specific major parameter values included (e.g.
-`POST /channels/123/messages`), and a `hikari.rest.routes.Route` as a
-definition of a _route without specific parameter values included (e.g.
+In this module, we refer to a `hikari.net.routes.CompiledRoute` as a definition
+of a route with specific major parameter values included (e.g.
+`POST /channels/123/messages`), and a `hikari.net.routes.Route` as a
+definition of a route without specific parameter values included (e.g.
 `POST /channels/{channel}/messages`). We can compile a
-`hikari.rest.routes.CompiledRoute` from a `hikari.rest.routes.Route`
+`hikari.net.routes.CompiledRoute` from a `hikari.net.routes.Route`
 by providing the corresponding parameters as kwargs, as you may already know.
 
 In this module, a "bucket" is an internal data structure that tracks and
-enforces the rate limit state for a specific `hikari.rest.routes.CompiledRoute`,
+enforces the rate limit state for a specific `hikari.net.routes.CompiledRoute`,
 and can manage delaying tasks in the event that we begin to get rate limited.
 It also supports providing in-order execution of queued tasks.
 
 Discord allocates types of buckets to routes. If you are making a request and
-there is a valid rate limit on the _route you hit, you should receive an
+there is a valid rate limit on the route you hit, you should receive an
 `X-RateLimit-Bucket` header from the server in your response. This is a hash
-that identifies a _route based on internal criteria that does not include major
+that identifies a route based on internal criteria that does not include major
 parameters. This `X-RateLimitBucket` is known in this module as an "bucket hash".
 
-This means that generally, the _route `POST /channels/123/messages` and
+This means that generally, the route `POST /channels/123/messages` and
 `POST /channels/456/messages` will usually sit in the same bucket, but
 `GET /channels/123/messages/789` and `PATCH /channels/123/messages/789` will
 usually not share the same bucket. Discord may or may not change this at any
 time, so hard coding this logic is not a useful thing to be doing.
 
 Rate limits, on the other hand, apply to a bucket and are specific to the major
-parameters of the compiled _route. This means that `POST /channels/123/messages`
+parameters of the compiled route. This means that `POST /channels/123/messages`
 and `POST /channels/456/messages` do not share the same real bucket, despite
 Discord providing the same bucket hash. A real bucket hash is the `str` hash of
 the bucket that Discord sends us in a response concatenated to the corresponding
@@ -59,28 +59,28 @@ major parameters. This is used for quick bucket indexing internally in this
 module.
 
 One issue that occurs from this is that we cannot effectively hash a
-`hikari.rest.routes.CompiledRoute` that has not yet been hit, meaning that
+`hikari.net.routes.CompiledRoute` that has not yet been hit, meaning that
 until we receive a response from this endpoint, we have no idea what our rate
 limits could be, nor the bucket that they sit in. This is usually not
 problematic, as the first request to an endpoint should never be rate limited
 unless you are hitting it from elsewhere in the same time window outside your
 hikari.models.applications. To manage this situation, unknown endpoints are allocated to
 a special unlimited bucket until they have an initial bucket hash code allocated
-from a response. Once this happens, the _route is reallocated a dedicated bucket.
+from a response. Once this happens, the route is reallocated a dedicated bucket.
 Unknown buckets have a hardcoded initial hash code internally.
 
 Initially acquiring time on a bucket
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------
 
 Each time you `BaseRateLimiter.acquire()` a request timeslice for a given
-`hikari.rest.routes.Route`, several things happen. The first is that we
-attempt to find the existing bucket for that _route, if there is one, or get an
+`hikari.net.routes.Route`, several things happen. The first is that we
+attempt to find the existing bucket for that route, if there is one, or get an
 unknown bucket otherwise. This is done by creating a real bucket hash from the
-compiled _route. The initial hash is calculated using a lookup table that maps
-`hikari.rest.routes.CompiledRoute` objects to their corresponding initial hash
+compiled route. The initial hash is calculated using a lookup table that maps
+`hikari.net.routes.CompiledRoute` objects to their corresponding initial hash
 codes, or to the unknown bucket hash code if not yet known. This initial hash is
-processed by the `hikari.rest.routes.CompiledRoute` to provide the real bucket
-hash we need to get the _route's bucket object internally.
+processed by the `hikari.net.routes.CompiledRoute` to provide the real bucket
+hash we need to get the route's bucket object internally.
 
 The `acquire` method will take the bucket and acquire a new timeslice on
 it. This takes the form of a `asyncio.Future` which should be awaited by
@@ -108,7 +108,7 @@ accuracy against rounding errors for rate limits (reduces the error margin from
 `1` second to `1` millisecond).
 
 Handling the rate limit headers of a response
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------------
 
 Once you have received your response, you are expected to extract the values of
 the vital rate limit headers manually and parse them to the correct data types.
@@ -141,7 +141,7 @@ This method will manage creating new buckets as needed and resetting vital
 information in each bucket you use.
 
 Tidying up
-~~~~~~~~~~
+----------
 
 To prevent unused buckets cluttering up memory, each `BaseRateLimiter`
 instance spins up a `asyncio.Task` that periodically locks the bucket list
