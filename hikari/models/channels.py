@@ -43,7 +43,7 @@ import attr
 
 from hikari.models import bases
 from hikari.models import permissions
-from hikari.net import urls
+from hikari.utilities import cdn
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -188,7 +188,7 @@ class GroupDMChannel(DMChannel):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash:
-            return urls.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            return cdn.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format_, size=size)
         return None
 
 

@@ -38,7 +38,7 @@ import attr
 
 from hikari.models import bases
 from hikari.models import guilds
-from hikari.net import urls
+from hikari.utilities import cdn
 
 if typing.TYPE_CHECKING:
     from hikari.models import permissions as permissions_
@@ -307,7 +307,7 @@ class Team(bases.Entity, bases.Unique):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash:
-            return urls.generate_cdn_url("team-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            return cdn.generate_cdn_url("team-icons", str(self.id), self.icon_hash, format_=format_, size=size)
         return None
 
 
@@ -405,7 +405,7 @@ class Application(bases.Entity, bases.Unique):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash:
-            return urls.generate_cdn_url("application-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            return cdn.generate_cdn_url("application-icons", str(self.id), self.icon_hash, format_=format_, size=size)
         return None
 
     @property
@@ -436,7 +436,7 @@ class Application(bases.Entity, bases.Unique):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.cover_image_hash:
-            return urls.generate_cdn_url(
+            return cdn.generate_cdn_url(
                 "application-assets", str(self.id), self.cover_image_hash, format_=format_, size=size
             )
         return None
