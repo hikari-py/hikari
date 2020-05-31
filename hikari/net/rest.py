@@ -152,10 +152,10 @@ class REST(http_client.HTTPClient, component.IComponent):
 
             self._token = f"{token_type.title()} {token}" if token is not None else None
 
-        if rest_url is undefined.Undefined():
+        if isinstance(rest_url, undefined.Undefined):
             rest_url = _REST_API_URL
 
-        if oauth2_url is undefined.Undefined():
+        if isinstance(oauth2_url, undefined.Undefined):
             oauth2_url = _OAUTH2_API_URL
 
         self._rest_url = rest_url.format(self)
