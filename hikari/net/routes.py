@@ -32,12 +32,12 @@ HASH_SEPARATOR: typing.Final[str] = ";"
 
 
 class CompiledRoute:
-    """A compiled representation of a _route ready to be made into a full e and to be used for a request.
+    """A compiled representation of a route ready to be made into a full e and to be used for a request.
 
     Parameters
     ----------
     route : Route
-        The _route used to make this compiled _route.
+        The route used to make this compiled route.
     path : str
         The path with any major parameters interpolated in.
     major_params_hash : str
@@ -47,13 +47,13 @@ class CompiledRoute:
     __slots__ = ("route", "major_param_hash", "compiled_path", "hash_code")
 
     route: typing.Final[Route]
-    """The _route this compiled _route was created from."""
+    """The route this compiled route was created from."""
 
     major_param_hash: typing.Final[str]
     """The major parameters in a bucket hash-compatible representation."""
 
     compiled_path: typing.Final[str]
-    """The compiled _route path to use."""
+    """The compiled route path to use."""
 
     hash_code: typing.Final[int]
     """The hash code."""
@@ -66,7 +66,7 @@ class CompiledRoute:
 
     @property
     def method(self) -> str:
-        """Return the HTTP method of this compiled _route."""
+        """Return the HTTP method of this compiled route."""
         return self.route.method
 
     def create_url(self, base_url: str) -> str:
@@ -80,7 +80,7 @@ class CompiledRoute:
         Returns
         -------
         str
-            The full URL for the _route.
+            The full URL for the route.
         """
         return base_url + self.compiled_path
 
@@ -88,7 +88,7 @@ class CompiledRoute:
         """Create a full bucket hash from a given initial hash.
 
         The result of this hash will be decided by the value of the major
-        parameters passed to the _route during the compilation phase.
+        parameters passed to the route during the compilation phase.
 
         Parameters
         ----------
@@ -100,7 +100,7 @@ class CompiledRoute:
         -------
         str
             The input hash amalgamated with a hash code produced by the
-            major parameters in this compiled _route instance.
+            major parameters in this compiled route instance.
         """
         return initial_bucket_hash + HASH_SEPARATOR + self.major_param_hash
 
@@ -174,19 +174,19 @@ class Route:
         self.hash_code = hash((self.method, self.path_template))
 
     def compile(self, **kwargs: typing.Any) -> CompiledRoute:
-        """Generate a formatted `CompiledRoute` for this _route.
+        """Generate a formatted `CompiledRoute` for this route.
 
         This takes into account any URL parameters that have been passed.
 
         Parameters
         ----------
         **kwargs : typing.Any
-            Any parameters to interpolate into the _route path.
+            Any parameters to interpolate into the route path.
 
         Returns
         -------
         CompiledRoute
-            The compiled _route.
+            The compiled route.
         """
         data = data_binding.StringMapBuilder.from_dict(kwargs)
 
