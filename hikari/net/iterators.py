@@ -24,16 +24,19 @@ __all__ = ["LazyIterator"]
 import abc
 import typing
 
-from hikari import app as app_
-from hikari.models import applications
-from hikari.models import audit_logs
-from hikari.models import guilds
-from hikari.models import messages
-from hikari.models import users
 from hikari.net import routes
 from hikari.utilities import data_binding
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
+
+if typing.TYPE_CHECKING:
+    from hikari import app as app_
+    from hikari.models import applications
+    from hikari.models import audit_logs
+    from hikari.models import guilds
+    from hikari.models import messages
+    from hikari.models import users
+
 
 _T = typing.TypeVar("_T")
 
