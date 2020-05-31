@@ -33,7 +33,7 @@ from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
 from hikari.models import presences
 from hikari.net import rest
-from hikari.net import urls
+from hikari.utilities import cdn
 from hikari.utilities import klass
 from hikari.utilities import undefined
 
@@ -63,7 +63,7 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
         rest_version: int = 6,
-        rest_url: str = urls.REST_API_URL,
+        rest_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         shard_ids: typing.Optional[typing.Set[int]],
         shard_count: typing.Optional[int],
         token: str,
@@ -77,7 +77,13 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(app=self)
 
         self._rest = rest.REST(  # nosec
-            app=self, config=config, debug=debug, token=token, token_type="Bot", url=rest_url, version=rest_version,
+            app=self,
+            config=config,
+            debug=debug,
+            token=token,
+            token_type="Bot",
+            rest_url=rest_url,
+            version=rest_version,
         )
 
         super().__init__(

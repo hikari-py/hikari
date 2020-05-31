@@ -30,11 +30,18 @@ import attr
 
 from hikari.models import bases
 from hikari.models import files
-from hikari.net import urls
+from hikari.utilities import cdn
 
 if typing.TYPE_CHECKING:
     from hikari.models import users
     from hikari.utilities import snowflake
+
+
+_TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/72x72/"
+"""The URL for Twemoji PNG artwork for built-in emojis."""
+
+_TWEMOJI_SVG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/svg/"
+"""The URL for Twemoji SVG artwork for built-in emojis."""
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -140,7 +147,7 @@ class UnicodeEmoji(Emoji):
         -------
             https://github.com/twitter/twemoji/raw/master/assets/72x72/1f004.png
         """
-        return urls.TWEMOJI_PNG_BASE_URL + self.filename
+        return _TWEMOJI_PNG_BASE_URL + self.filename
 
     @property
     def unicode_names(self) -> typing.Sequence[str]:
@@ -233,7 +240,7 @@ class CustomEmoji(Emoji, bases.Entity, bases.Unique):
 
     @property
     def url(self) -> str:
-        return urls.generate_cdn_url("emojis", str(self.id), format_="gif" if self.is_animated else "png", size=None)
+        return cdn.generate_cdn_url("emojis", str(self.id), format_="gif" if self.is_animated else "png", size=None)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
