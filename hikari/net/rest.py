@@ -710,7 +710,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("max_uses", max_uses)
         body.put("temporary", temporary)
         body.put("unique", unique)
-        body.put_snowflake("target_user", target_user)
+        body.put_snowflake("target_user_id", target_user)
         body.put("target_user_type", target_user_type)
         response = await self._request(route, body=body, reason=reason)
         return self._app.entity_factory.deserialize_invite_with_metadata(response)
