@@ -24,16 +24,19 @@ __all__ = ["LazyIterator"]
 import abc
 import typing
 
-from hikari import app as app_
-from hikari.models import applications
-from hikari.models import audit_logs
-from hikari.models import guilds
-from hikari.models import messages
-from hikari.models import users
 from hikari.net import routes
 from hikari.utilities import data_binding
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
+
+if typing.TYPE_CHECKING:
+    from hikari import app as app_
+    from hikari.models import applications
+    from hikari.models import audit_logs
+    from hikari.models import guilds
+    from hikari.models import messages
+    from hikari.models import users
+
 
 _T = typing.TypeVar("_T")
 
@@ -237,7 +240,10 @@ class _BufferedLazyIterator(typing.Generic[_T], LazyIterator[_T]):
                 return next(self._buffer)
 
 
-class MessageIterator(_BufferedLazyIterator[messages.Message]):
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class MessageIterator(_BufferedLazyIterator["messages.Message"]):
     """Implementation of an iterator for message history."""
 
     __slots__ = ("_app", "_request_call", "_direction", "_first_id", "_route")
@@ -272,7 +278,10 @@ class MessageIterator(_BufferedLazyIterator[messages.Message]):
         return (self._app.entity_factory.deserialize_message(m) for m in chunk)
 
 
-class ReactorIterator(_BufferedLazyIterator[users.User]):
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class ReactorIterator(_BufferedLazyIterator["users.User"]):
     """Implementation of an iterator for message reactions."""
 
     __slots__ = ("_app", "_first_id", "_route", "_request_call")
@@ -304,7 +313,10 @@ class ReactorIterator(_BufferedLazyIterator[users.User]):
         return (self._app.entity_factory.deserialize_user(u) for u in chunk)
 
 
-class OwnGuildIterator(_BufferedLazyIterator[applications.OwnGuild]):
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class OwnGuildIterator(_BufferedLazyIterator["applications.OwnGuild"]):
     """Implementation of an iterator for retrieving guilds you are in."""
 
     __slots__ = ("_app", "_request_call", "_route", "_newest_first", "_first_id")
@@ -337,7 +349,10 @@ class OwnGuildIterator(_BufferedLazyIterator[applications.OwnGuild]):
         return (self._app.entity_factory.deserialize_own_guild(g) for g in chunk)
 
 
-class MemberIterator(_BufferedLazyIterator[guilds.Member]):
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class MemberIterator(_BufferedLazyIterator["guilds.Member"]):
     """Implementation of an iterator for retrieving members in a guild."""
 
     __slots__ = ("_app", "_request_call", "_route", "_first_id")
@@ -369,7 +384,10 @@ class MemberIterator(_BufferedLazyIterator[guilds.Member]):
         return (self._app.entity_factory.deserialize_member(m) for m in chunk)
 
 
-class AuditLogIterator(LazyIterator[audit_logs.AuditLog]):
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class AuditLogIterator(LazyIterator["audit_logs.AuditLog"]):
     """Iterator implementation for an audit log."""
 
     def __init__(

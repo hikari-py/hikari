@@ -38,6 +38,7 @@ from hikari import errors
 from hikari.net import http_client
 from hikari.net import ratelimits
 from hikari.net import user_agents
+from hikari.models import presences
 from hikari.utilities import data_binding
 from hikari.utilities import klass
 from hikari.utilities import undefined
@@ -50,7 +51,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import intents as intents_
-    from hikari.models import presences
     from hikari.utilities import snowflake
     from hikari.utilities import aio
 

@@ -64,6 +64,15 @@ if typing.TYPE_CHECKING:
     from hikari.models import webhooks
 
 
+_REST_API_URL: typing.Final[str] = "https://discord.com/api/v{0.version}"
+"""The URL for the RESTSession API. This contains a version number parameter that
+should be interpolated.
+"""
+
+_OAUTH2_API_URL: typing.Final[str] = "https://discord.com/api/oauth2"
+"""The URL to the Discord OAuth2 API."""
+
+
 class REST(http_client.HTTPClient, component.IComponent):
     """Implementation of the V6 and V7-compatible Discord REST API.
 
@@ -88,10 +97,11 @@ class REST(http_client.HTTPClient, component.IComponent):
         left `False`.
     token : str
         The bot or bearer token. If no token is to be used, this can be `None`.
-    token_type : str
+    token_type : str or hikari.utilities.undefined.Undefined
         The type of token in use. If no token is used, this can be ignored and
-        left to the default value. This can be `"Bot"` or `"Bearer"`.
-    url : str
+        left to the default value. This can be `"Bot"` or `"Bearer"`. The
+        default if not provided will be `"Bot"`.
+    rest_url : str
         The REST API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
     version : int
@@ -108,8 +118,9 @@ class REST(http_client.HTTPClient, component.IComponent):
         config: http_settings.HTTPSettings,
         debug: bool = False,
         token: typing.Optional[str],
-        token_type: str = "Bot",
-        url: str,
+        token_type: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        rest_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        oauth2_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         version: int,
     ) -> None:
         super().__init__(
@@ -132,8 +143,23 @@ class REST(http_client.HTTPClient, component.IComponent):
         self.version = version
 
         self._app = app
-        self._token = f"{token_type.title()} {token}" if token is not None else None
-        self._url = url.format(self)
+
+        if token is None:
+            self._token = None
+        else:
+            if token_type is undefined.Undefined():
+                token_type = "Bot"
+
+            self._token = f"{token_type.title()} {token}" if token is not None else None
+
+        if isinstance(rest_url, undefined.Undefined):
+            rest_url = _REST_API_URL
+
+        if isinstance(oauth2_url, undefined.Undefined):
+            oauth2_url = _OAUTH2_API_URL
+
+        self._rest_url = rest_url.format(self)
+        self._oauth2_url = oauth2_url.format(self)
 
     @property
     def app(self) -> app_.IRESTApp:
@@ -190,7 +216,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body: typing.Optional[typing.Union[aiohttp.FormData, data_binding.JSONArray, data_binding.JSONObject]],
         query: typing.Optional[typing.Dict[str, str]],
     ) -> typing.Optional[data_binding.JSONObject, data_binding.JSONArray, bytes, str]:
-        url = compiled_route.create_url(self._url)
+        url = compiled_route.create_url(self._rest_url)
 
         # Wait for any ratelimits to finish.
         await asyncio.gather(self.buckets.acquire(compiled_route), self.global_rate_limit.acquire())

@@ -28,7 +28,7 @@ import typing
 import attr
 
 from hikari.models import bases
-from hikari.net import urls
+from hikari.utilities import cdn
 
 
 @enum.unique
@@ -166,7 +166,7 @@ class User(bases.Entity, bases.Unique):
             format_ = "gif"
         elif format_ is None:
             format_ = "png"
-        return urls.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
+        return cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
 
     @property
     def default_avatar_index(self) -> int:
@@ -176,7 +176,7 @@ class User(bases.Entity, bases.Unique):
     @property
     def default_avatar_url(self) -> str:
         """URL for this user's default avatar."""
-        return urls.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
+        return cdn.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
