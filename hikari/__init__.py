@@ -33,11 +33,10 @@ from hikari._about import __version__
 from hikari.errors import *
 from hikari.events import *
 from hikari.http_settings import *
-from hikari.impl import *
 from hikari.models import *
 from hikari.net import *
 
-from hikari.impl.bot import BotImpl as HikariBot
-from hikari.impl.rest_app import RESTAppImpl as HikariREST
+from hikari.impl.bot import BotImpl as BotApp
+from hikari.impl.rest_app import RESTAppImpl as RESTApp
 
-__all__ = ["HikariBot", "HikariREST"]
+__all__ = errors.__all__ + http_settings.__all__ + models.__all__ + net.__all__ + ["BotApp", "RESTApp"]

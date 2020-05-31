@@ -50,7 +50,7 @@ import attr
 
 from hikari.models import bases
 from hikari.models import users
-from hikari.net import urls
+from hikari.utilities import cdn
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -433,7 +433,7 @@ class PartialGuild(bases.Entity, bases.Unique):
         if self.icon_hash:
             if format_ is None:
                 format_ = "gif" if self.icon_hash.startswith("a_") else "png"
-            return urls.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            return cdn.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
         return None
 
     @property
@@ -491,7 +491,7 @@ class GuildPreview(PartialGuild):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash:
-            return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+            return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
         return None
 
     @property
@@ -522,7 +522,7 @@ class GuildPreview(PartialGuild):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.discovery_splash_hash:
-            return urls.generate_cdn_url(
+            return cdn.generate_cdn_url(
                 "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
             )
         return None
@@ -854,7 +854,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash:
-            return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+            return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
         return None
 
     @property
@@ -885,7 +885,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.discovery_splash_hash:
-            return urls.generate_cdn_url(
+            return cdn.generate_cdn_url(
                 "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
             )
         return None
@@ -918,7 +918,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash:
-            return urls.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
+            return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
         return None
 
     @property

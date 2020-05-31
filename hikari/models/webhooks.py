@@ -28,7 +28,7 @@ import typing
 import attr
 
 from hikari.models import bases
-from hikari.net import urls
+from hikari.utilities import cdn
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
@@ -408,7 +408,7 @@ class Webhook(bases.Entity, bases.Unique):
     @property
     def default_avatar_url(self) -> str:
         """URL for this webhook's default avatar."""
-        return urls.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
+        return cdn.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
 
     def format_avatar_url(self, format_: str = "png", size: int = 4096) -> str:
         """Generate the avatar URL for this webhook's custom avatar if set, else it's default avatar.
@@ -436,4 +436,4 @@ class Webhook(bases.Entity, bases.Unique):
         """
         if not self.avatar_hash:
             return self.default_avatar_url
-        return urls.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
+        return cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)

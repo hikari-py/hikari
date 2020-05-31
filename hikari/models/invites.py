@@ -29,7 +29,7 @@ import attr
 
 from hikari.models import bases
 from hikari.models import guilds
-from hikari.net import urls
+from hikari.utilities import cdn
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -111,7 +111,7 @@ class InviteGuild(guilds.PartialGuild):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash:
-            return urls.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+            return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
         return None
 
     @property
@@ -142,7 +142,7 @@ class InviteGuild(guilds.PartialGuild):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash:
-            return urls.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
+            return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
         return None
 
     @property

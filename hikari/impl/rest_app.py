@@ -30,8 +30,8 @@ from hikari import http_settings
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.net import rest as rest_
-from hikari.net import urls
 from hikari.utilities import klass
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari import cache as cache_
@@ -44,13 +44,19 @@ class RESTAppImpl(app_.IRESTApp):
         config: http_settings.HTTPSettings,
         debug: bool = False,
         token: typing.Optional[str] = None,
-        token_type: typing.Optional[str] = None,
-        rest_url: str = urls.REST_API_URL,
+        token_type: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        rest_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         version: int = 6,
     ) -> None:
         self._logger = klass.get_logger(self)
         self._rest = rest_.REST(
-            app=self, config=config, debug=debug, token=token, token_type=token_type, url=rest_url, version=version,
+            app=self,
+            config=config,
+            debug=debug,
+            token=token,
+            token_type=token_type,
+            rest_url=rest_url,
+            version=version,
         )
         self._cache = cache_impl.CacheImpl()
         self._entity_factory = entity_factory_impl.EntityFactoryImpl()
