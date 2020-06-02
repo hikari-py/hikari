@@ -16,7 +16,191 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Rate-limit implementations for the RESTSession clients."""
+"""Rate-limit extensions for RESTful bucketed endpoints.
+
+Provides implementations for the complex rate limiting mechanisms that Discord
+requires for rate limit handling that conforms to the passed bucket headers
+correctly.
+
+This was initially a bit of a headache for me to understand, personally, since
+there is a lot of "implicit detail" that is easy to miss from the documentation.
+
+In an attempt to make this somewhat understandable by anyone else, I have tried
+to document the theory of how this is handled here.
+
+What is the theory behind this implementation?
+----------------------------------------------
+
+In this module, we refer to a `hikari.net.routes.CompiledRoute` as a definition
+of a route with specific major parameter values included (e.g.
+`POST /channels/123/messages`), and a `hikari.net.routes.Route` as a
+definition of a route without specific parameter values included (e.g.
+`POST /channels/{channel}/messages`). We can compile a
+`hikari.net.routes.CompiledRoute` from a `hikari.net.routes.Route`
+by providing the corresponding parameters as kwargs, as you may already know.
+
+In this module, a "bucket" is an internal data structure that tracks and
+enforces the rate limit state for a specific `hikari.net.routes.CompiledRoute`,
+and can manage delaying tasks in the event that we begin to get rate limited.
+It also supports providing in-order execution of queued tasks.
+
+Discord allocates types of buckets to routes. If you are making a request and
+there is a valid rate limit on the route you hit, you should receive an
+`X-RateLimit-Bucket` header from the server in your response. This is a hash
+that identifies a route based on internal criteria that does not include major
+parameters. This `X-RateLimitBucket` is known in this module as an "bucket hash".
+
+This means that generally, the route `POST /channels/123/messages` and
+`POST /channels/456/messages` will usually sit in the same bucket, but
+`GET /channels/123/messages/789` and `PATCH /channels/123/messages/789` will
+usually not share the same bucket. Discord may or may not change this at any
+time, so hard coding this logic is not a useful thing to be doing.
+
+Rate limits, on the other hand, apply to a bucket and are specific to the major
+parameters of the compiled route. This means that `POST /channels/123/messages`
+and `POST /channels/456/messages` do not share the same real bucket, despite
+Discord providing the same bucket hash. A real bucket hash is the `str` hash of
+the bucket that Discord sends us in a response concatenated to the corresponding
+major parameters. This is used for quick bucket indexing internally in this
+module.
+
+One issue that occurs from this is that we cannot effectively hash a
+`hikari.net.routes.CompiledRoute` that has not yet been hit, meaning that
+until we receive a response from this endpoint, we have no idea what our rate
+limits could be, nor the bucket that they sit in. This is usually not
+problematic, as the first request to an endpoint should never be rate limited
+unless you are hitting it from elsewhere in the same time window outside your
+hikari.models.applications. To manage this situation, unknown endpoints are allocated to
+a special unlimited bucket until they have an initial bucket hash code allocated
+from a response. Once this happens, the route is reallocated a dedicated bucket.
+Unknown buckets have a hardcoded initial hash code internally.
+
+Initially acquiring time on a bucket
+------------------------------------
+
+Each time you `BaseRateLimiter.acquire()` a request timeslice for a given
+`hikari.net.routes.Route`, several things happen. The first is that we
+attempt to find the existing bucket for that route, if there is one, or get an
+unknown bucket otherwise. This is done by creating a real bucket hash from the
+compiled route. The initial hash is calculated using a lookup table that maps
+`hikari.net.routes.CompiledRoute` objects to their corresponding initial hash
+codes, or to the unknown bucket hash code if not yet known. This initial hash is
+processed by the `hikari.net.routes.CompiledRoute` to provide the real bucket
+hash we need to get the route's bucket object internally.
+
+The `BaseRateLimiter.acquire()` method will take the bucket and acquire a new
+timeslice on it. This takes the form of a `asyncio.Future` which should be
+awaited by the caller and will complete once the caller is allowed to make a
+request. Most of the time, this is done instantly, but if the bucket has an
+active rate limit preventing requests being sent, then the future will be paused
+until the rate limit is over. This may be longer than the rate limit period if
+you have queued a large number of requests during this limit, as it is
+first-come-first-served.
+
+Acquiring a rate limited bucket will start a bucket-wide task (if not already
+running) that will wait until the rate limit has completed before allowing more
+futures to complete. This is done while observing the rate limits again, so can
+easily begin to re-ratelimit itself if needed. Once the task is complete, it
+tidies itself up and disposes of itself. This task will complete once the queue
+becomes empty.
+
+The result of `RESTBucketManager.acquire()` is a tuple of a `asyncio.Future` to
+await on which completes when you are allowed to proceed with making a request,
+and a real bucket hash which should be stored temporarily. This will be
+explained in the next section.
+
+When you make your response, you should be sure to set the
+`X-RateLimit-Precision` header to `millisecond` to ensure a much greater
+accuracy against rounding errors for rate limits (reduces the error margin from
+`1` second to `1` millisecond).
+
+Handling the rate limit headers of a response
+---------------------------------------------
+
+Once you have received your response, you are expected to extract the values of
+the vital rate limit headers manually and parse them to the correct data types.
+These headers are:
+
+* `Date`:
+    the response date on the server. This should be parsed to a
+    `datetime.datetime` using `email.utils.parsedate_to_datetime`.
+* `X-RateLimit-Limit`:
+    an `int` describing the max requests in the bucket from empty to being rate
+    limited.
+* `X-RateLimit-Remaining`:
+    an `int` describing the remaining number of requests before rate limiting
+    occurs in the current window.
+* `X-RateLimit-Bucket`:
+    a `str` containing the initial bucket hash.
+* `X-RateLimit-Reset`:
+    a `float` containing the number of seconds since
+    1st January 1970 at 0:00:00 UTC at which the current ratelimit window
+    resets. This should be parsed to a `datetime.datetime` using
+    `datetime.datetime.fromtimestamp`, passing `datetime.timezone.utc`
+    as `tz`.
+
+Each of the above values should be passed to the `update_rate_limits` method to
+ensure that the bucket you acquired time from is correctly updated should
+Discord decide to alter their ratelimits on the fly without warning (including
+timings and the bucket).
+
+This method will manage creating new buckets as needed and resetting vital
+information in each bucket you use.
+
+Tidying up
+----------
+
+To prevent unused buckets cluttering up memory, each `RESTBucketManager`
+instance spins up a `asyncio.Task` that periodically locks the bucket list
+(not threadsafe, only using the concept of asyncio not yielding in regular
+functions) and disposes of any clearly stale buckets that are no longer needed.
+These will be recreated again in the future if they are needed.
+
+When shutting down an application, one must remember to `close()` the
+`RESTBucketManager` that has been used. This will ensure the garbage collection
+task is stopped, and will also ensure any remaining futures in any bucket queues
+have an `asyncio.CancelledError` set on them to prevent deadlocking ratelimited
+calls that may be waiting to be unlocked.
+
+Body-field-specific rate limiting
+---------------------------------
+
+As of the start of June, 2020, Discord appears to be enforcing another layer
+of rate limiting logic to their REST APIs which is field-specific. This means
+that special rate limits will also exist on some endpoints that limit based
+on what attributes you send in a JSON or form data payload.
+
+No information is sent in headers about these specific limits. You will only
+be made aware that they exist once you get ratelimited. In the 429 ratelimited
+response, you will have the `"global"` attribute set to `false`, and a
+`"reset_after"` attribute that differs entirely to the `X-RateLimit-Reset`
+header. Thus, it is important to not assume the value in the 429 response
+for the reset time is the same as the one in the bucket headers. Hikari's
+`hikari.net.rest.REST` implementation specifically uses the value furthest
+in the future when working out which bucket to adhere to.
+
+It is worth remembering that there is an API limit to the number of 401s,
+403s, and 429s you receive, which is around 10,000 per 15 minutes. Passing this
+limit results in a soft ban of your account.
+
+At the time of writing, the only example of this appears to be on the
+`PATCH /channels/{channel_id}` endpoint. This has a limit of two changes per
+10 minutes. More details about how this is implemented have yet to be
+released or documented...
+
+
+Caveats
+-------
+
+These implementations rely on Discord sending consistent buckets back to us.
+
+This also begins to crumble if more than one REST client is in use, since
+there is no performant way to communicate shared rate limits between
+distributed applications. The general concept to follow is that if you are
+making repeated API calls, or calls that are not event-based (e.g.
+fetching messages on a timer), then this can be considered a form of API abuse
+and should be used sparingly.
+"""
 
 from __future__ import annotations
 
