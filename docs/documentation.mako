@@ -26,13 +26,25 @@
     QUAL_TYPEHINT = "type hint"
     QUAL_VAR = "var"
 
-    def link(dobj: pdoc.Doc, *, with_prefixes=False, simple_names=False, css_classes="", name=None, default_type="", dotted=True, anchor=False, fully_qualified=False):
+    def link(
+        dobj: pdoc.Doc, 
+        *, 
+        with_prefixes=False, 
+        simple_names=False, 
+        css_classes="", 
+        name=None, 
+        default_type="", 
+        dotted=True, 
+        anchor=False, 
+        fully_qualified=False,
+        hide_ref=False,
+    ):
         prefix = ""
         name = name or dobj.name
 
         if with_prefixes:        
             if isinstance(dobj, pdoc.Function):
-                if dobj.module.name != dobj.obj.__module__:
+                if not hide_ref and dobj.module.name != dobj.obj.__module__:
                     qual = QUAL_REF + " " + dobj.funcdef()
                 else:
                     qual = dobj.funcdef()
@@ -48,7 +60,7 @@
                     prefix = f"<small class='text-muted'><em>{QUAL_VAR} </em></small>"
 
             elif isinstance(dobj, pdoc.Class):
-                if dobj.module.name != dobj.obj.__module__:
+                if not hide_ref and dobj.module.name != dobj.obj.__module__:
                     qual = f"{QUAL_REF} "
                 else:
                     qual = ""
@@ -254,6 +266,8 @@
         % else:
 
             ${show_desc(c)}
+            <div class="sep"></div>
+            ${show_source(c)}
             <div class="sep"></div>
 
             % if subclasses:
