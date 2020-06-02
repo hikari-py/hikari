@@ -22,6 +22,7 @@ from __future__ import annotations
 
 __all__ = ["get_logger", "SingletonMeta", "Singleton"]
 
+import abc
 import logging
 import typing
 
@@ -47,7 +48,7 @@ def get_logger(cls: typing.Union[typing.Type, typing.Any], *additional_args: str
     return logging.getLogger(".".join((cls.__module__, cls.__qualname__, *additional_args)))
 
 
-class SingletonMeta(type):
+class SingletonMeta(abc.ABCMeta):
     """Metaclass that makes the class a singleton.
 
     Once an instance has been defined at runtime, it will exist until the
@@ -82,7 +83,7 @@ class SingletonMeta(type):
         return SingletonMeta.___instances___[cls]
 
 
-class Singleton(metaclass=SingletonMeta):
+class Singleton(abc.ABC, metaclass=SingletonMeta):
     """Base type for anything implementing the `SingletonMeta` metaclass.
 
     Once an instance has been defined at runtime, it will exist until the
