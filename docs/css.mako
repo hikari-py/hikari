@@ -48,6 +48,10 @@ a {
     color: #e83e8c;
 }
 
+.breadcrumb-item.inactive {
+    color: #a626a4 !important;
+}
+
 .breadcrumb-item.active {
     color: #e83e8c;
 }

@@ -9,43 +9,77 @@
 
     from pdoc.html_helpers import extract_toc, glimpse, to_html as _to_html, format_git_link
 
-    def link(dobj: pdoc.Doc, *, with_prefixes=False, simple_names=False, css_classes="", name=None, default_type="", dotted=True, anchor=False):
+    QUAL_ABC = "abc"
+    QUAL_ASYNC_DEF = "async def"
+    QUAL_CLASS = "class"
+    QUAL_DATACLASS = "dataclass"
+    QUAL_CONST = "const"
+    QUAL_DEF = "def"
+    QUAL_ENUM = "enum"
+    QUAL_ENUM_FLAG = "flag"
+    QUAL_EXTERNAL = "external"
+    QUAL_METACLASS = "metaclass"
+    QUAL_MODULE = "module"
+    QUAL_NAMESPACE = "namespace"
+    QUAL_PACKAGE = "package"
+    QUAL_REF = "ref"
+    QUAL_TYPEHINT = "type hint"
+    QUAL_VAR = "var"
+
+    def link(dobj: pdoc.Doc, *, with_prefixes=False, simple_names=False, css_classes="", name=None, default_type="", dotted=True, anchor=False, fully_qualified=False):
         prefix = ""
         name = name or dobj.name
 
         if with_prefixes:        
             if isinstance(dobj, pdoc.Function):
-                prefix = "<small class='text-muted'><em>" + dobj.funcdef() + " </em></small> "
+                if dobj.module.name != dobj.obj.__module__:
+                    qual = QUAL_REF + " " + dobj.funcdef()
+                else:
+                    qual = dobj.funcdef()
+
+                prefix = "<small class='text-muted'><em>" + qual + " </em></small> "
 
             elif isinstance(dobj, pdoc.Variable):
-                if dobj.module.name == "typing" or dobj.docstring and dobj.docstring.casefold().startswith("type hint"):
-                    prefix = "<small class='text-muted'><em>type hint </em></small>"
+                if dobj.module.name == "typing" or dobj.docstring and dobj.docstring.casefold().startswith(("type hint", "typehint", "type alias")):
+                    prefix = F"<small class='text-muted'><em>{QUAL_TYPEHINT} </em></small>"
                 elif all(not c.isalpha() or c.isupper() for c in dobj.name):
-                    prefix = "<small class='text-muted'><em>const </em></small>"
+                    prefix = f"<small class='text-muted'><em>{QUAL_CONST}</em></small>"
                 else:
-                    prefix = "<small class='text-muted'><em>var </em></small>"
+                    prefix = f"<small class='text-muted'><em>{QUAL_VAR} </em></small>"
 
             elif isinstance(dobj, pdoc.Class):
-                if issubclass(dobj.obj, type):
-                    qual = "metaclass"
+                if dobj.module.name != dobj.obj.__module__:
+                    qual = f"{QUAL_REF} "
                 else:
+                    qual = ""
+
+                if issubclass(dobj.obj, type):
+                    qual += QUAL_METACLASS
+                else:
+                    if "__call__" in dobj.obj.__dict__:
+                        name += "()"
+
                     if enum.Flag in dobj.obj.mro():
-                        qual = "enum flag"        
+                        qual += QUAL_ENUM_FLAG
                     elif enum.Enum in dobj.obj.mro():
-                        qual = "enum"
+                        qual += QUAL_ENUM
+                    elif hasattr(dobj.obj, "__attrs_attrs__"):
+                        qual += QUAL_DATACLASS
                     else:
-                        qual = "class"
+                        qual += QUAL_CLASS
 
                     if inspect.isabstract(dobj.obj):
-                        qual = "abstract " + qual
+                        qual = f"{QUAL_ABC} {qual}"
             
                 prefix = f"<small class='text-muted'><em>{qual} </em></small> "
 
-                if "__call__" in dobj.obj.__dict__:
-                    name += "()"
-
             elif isinstance(dobj, pdoc.Module):
-                qual = "package" if dobj.is_package else "namespace" if dobj.is_namespace else "module"
+                if dobj.module.name != dobj.obj.__name__:
+                    qual = f"{QUAL_REF} "
+                else:
+                    qual = ""
+
+                qual += QUAL_PACKAGE if dobj.is_package else QUAL_NAMESPACE if dobj.is_namespace else QUAL_MODULE
                 prefix = f"<small class='text-muted'><em>{qual} </em></small> "
 
             else:
@@ -53,9 +87,11 @@
         else:
             name = name or dobj.name or ""
 
+        if fully_qualified and not simple_names:
+            name = dobj.module.name + "." + dobj.obj.__qualname__
 
         if isinstance(dobj, pdoc.External) and not external_links:
-            return name
+            return name if not with_prefixes else f"{QUAL_EXTERNAL} {name}"
 
         url = dobj.url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
 
@@ -115,7 +151,7 @@
                     <li class="breadcrumb-item active"><a href="#">${m.name | simple_name}</a></li>
                 % else:
                     <% url = link(m) %>
-                    <li class="breadcrumb-item">${link(m, with_prefixes=False, simple_names=True)}</li>
+                    <li class="breadcrumb-item inactive">${link(m, with_prefixes=False, simple_names=True)}</li>
                 % endif
             % endfor
         </ol>
@@ -144,14 +180,28 @@
             ))
         else:
             representation = f"{f.funcdef()} {f.name}(){return_type}: ..."
+
+        if f.module.name != f.obj.__module__:
+            try:
+                ref = pdoc._global_context[f.obj.__module__ + "." + f.obj.__qualname__]
+                redirect = True
+            except KeyError:
+                redirect = False
+        else:
+            redirect = False
     %>
     <dt>
         <pre><code id="${f.refname}" class="hljs python">${representation}</code></pre>
     </dt>
     <dd>
-        ${show_desc(f)}
+        % if redirect:
+            ${show_desc(f) | glimpse, to_html}
+            <strong>This class is defined explicitly at ${link(ref, with_prefixes=True, fully_qualified=True)}. Visit that link to view the full documentation!</strong>
+        % else:
+            ${show_desc(f)}
 
-        ${show_source(f)}
+            ${show_source(f)}
+        % endif
     </dd>
     <div class="sep"></div>
 
@@ -167,18 +217,18 @@
         subclasses = c.subclasses()
 
         params = c.params(annotate=show_type_annotations, link=link)
-        example_str = "class " + c.name + "(" + ", ".join(params) + ")"
+        example_str = f"{QUAL_CLASS} " + c.name + "(" + ", ".join(params) + ")"
 
         if len(params) > 4 or len(example_str) > 70:
             representation = "\n".join((
-                f"class {c.name} (",
+                f"{QUAL_CLASS} {c.name} (",
                 *(f"    {p}," for p in params),
                 "): ..."
             ))
         elif params:
-            representation = f"class {c.name} (" + ", ".join(params) + "): ..."
+            representation = f"{QUAL_CLASS} {c.name} (" + ", ".join(params) + "): ..."
         else:
-            representation = f"class {c.name}: ..."
+            representation = f"{QUAL_CLASS} {c.name}: ..."
     %>
     <dt>
         <h4>${link(c, with_prefixes=True, simple_names=True)}</h4>
@@ -186,71 +236,89 @@
     <dd>
         <pre><code id="${c.refname}" class="hljs python">${representation}</code></pre>
 
-        ${show_desc(c)}
-        <div class="sep"></div>
+        <% 
+            if c.module.name != c.obj.__module__:
+                try:
+                    ref = pdoc._global_context[c.obj.__module__ + "." + c.obj.__qualname__]
+                    redirect = True
+                except KeyError:
+                    redirect = False
+            else:
+                redirect = False
+        %>
 
-        % if subclasses:
-            <h5>Subclasses</h5>
-            <dl>
-                % for sc in subclasses:
-                    <dt class="nested">${link(sc, with_prefixes=True, default_type="class")}</dt>
-                    <dd class="nested">${sc.docstring | glimpse, to_html}</dd>
-                % endfor
-            </dl>
-            <div class="sep"></div>
-        % endif
 
-        % if mro:
-            <h5>Method resolution order</h5>
-            <dl>
-                <dt class="nested">${link(c, with_prefixes=True)}</dt>
-                <dd class="nested"><em class="text-muted">That's this class!</em></dd>
-                % for mro_c in mro:
-                    <dt class="nested">${link(mro_c, with_prefixes=True, default_type="class")}</dt>
-                    <dd class="nested">${mro_c.docstring | glimpse, to_html}</dd>
-                % endfor
-            </dl>
-            <div class="sep"></div>
-        % endif
+        % if redirect:
+            ${show_desc(c) | glimpse, to_html}
+            <strong>This class is defined explicitly at ${link(ref, with_prefixes=True, fully_qualified=True)}. Visit that link to view the full documentation!</strong>
+        % else:
 
-        % if class_vars:
-            <h5>Class variables</h5>
-            <dl>
-                % for cv in class_vars:
-                    ${show_var(cv)}
-                % endfor
-            </dl>
+            ${show_desc(c)}
             <div class="sep"></div>
-        % endif
 
-        % if smethods:
-            <h5>Class methods</h5>
-            <dl>
-                % for m in smethods:
-                    ${show_func(m)}
-                % endfor
-            </dl>
-            <div class="sep"></div>
-        % endif
+            % if subclasses:
+                <h5>Subclasses</h5>
+                <dl>
+                    % for sc in subclasses:
+                        <dt class="nested">${link(sc, with_prefixes=True, default_type="class")}</dt>
+                        <dd class="nested">${sc.docstring | glimpse, to_html}</dd>
+                    % endfor
+                </dl>
+                <div class="sep"></div>
+            % endif
 
-        % if inst_vars:
-            <h5>Instance variables</h5>
-            <dl>
-                % for i in inst_vars:
-                    ${show_var(i)}
-                % endfor
-            </dl>
-            <div class="sep"></div>
-        % endif
+            % if mro:
+                <h5>Method resolution order</h5>
+                <dl>
+                    <dt class="nested">${link(c, with_prefixes=True)}</dt>
+                    <dd class="nested"><em class="text-muted">That's this class!</em></dd>
+                    % for mro_c in mro:
+                        <dt class="nested">${link(mro_c, with_prefixes=True, default_type="class")}</dt>
+                        <dd class="nested">${mro_c.docstring | glimpse, to_html}</dd>
+                    % endfor
+                </dl>
+                <div class="sep"></div>
+            % endif
 
-        % if methods:
-            <h5>Instance methods</h5>
-            <dl>
-                % for m in methods:
-                    ${show_func(m)}
-                % endfor
-            </dl>
-            <div class="sep"></div>
+            % if class_vars:
+                <h5>Class variables</h5>
+                <dl>
+                    % for cv in class_vars:
+                        ${show_var(cv)}
+                    % endfor
+                </dl>
+                <div class="sep"></div>
+            % endif
+
+            % if smethods:
+                <h5>Class methods</h5>
+                <dl>
+                    % for m in smethods:
+                        ${show_func(m)}
+                    % endfor
+                </dl>
+                <div class="sep"></div>
+            % endif
+
+            % if inst_vars:
+                <h5>Instance variables</h5>
+                <dl>
+                    % for i in inst_vars:
+                        ${show_var(i)}
+                    % endfor
+                </dl>
+                <div class="sep"></div>
+            % endif
+
+            % if methods:
+                <h5>Instance methods</h5>
+                <dl>
+                    % for m in methods:
+                        ${show_func(m)}
+                    % endfor
+                </dl>
+                <div class="sep"></div>
+            % endif
         % endif
     </dd>
 </%def>
@@ -283,11 +351,11 @@
             <details class="source">
                 <summary>
                     <span>Expand source code</span>
-                        % if git_link:
-                            <br />
-                            <a href="${git_link}" class="git-link dotted">Browse git</a>
-                        %endif
-                    </summary>
+                    % if git_link:
+                        <br />
+                        <a href="${git_link}" class="git-link dotted">Browse git</a>
+                    %endif
+                </summary>
                 <pre><code class="python">${d.source | h}</code></pre>
             </details>
         % elif git_link:
@@ -314,7 +382,7 @@
         %>
 
         <div class="d-md-none d-lg-block col-lg-5 col-xl-4">
-            <nav class="nav flex-column" id="content-nav">
+            <nav class="nav flex-column" id="content-nav">               
                 % if submodules:
                     <ul class="list-unstyled">
                         % for child_module in submodules:
@@ -430,6 +498,86 @@
                     </dl>
                 </section>
             % endif
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <h2>Notation used in this documentation</h2>
+                <dl class="no-nest">
+                    <dt><code>${QUAL_DEF}</code></dt>
+                    <dd>Regular function.</dd>
+                    
+                    <dt><code>${QUAL_ASYNC_DEF}</code></dt>
+                    <dd>Coroutine function that should be awaited.</dd>
+
+                    <dt><code>${QUAL_CLASS}</code></dt>
+                    <dd>Regular class that provides a certain functionality.</dd>
+
+                    <dt><code>${QUAL_ABC}</code></dt>
+                    <dd>
+                        Abstract base class. These are partially implemented classes that require
+                        additional implementation details to be fully usable. Generally these are
+                        used to represet a subset of behaviour common between different 
+                        implementations.
+                    </dd>
+
+                    <dt><code>${QUAL_DATACLASS}</code></dt>
+                    <dd>
+                        Data class. This is a class designed to model and store information 
+                        rather than provide a certain behaviour or functionality.
+                    </dd>
+
+                    <dt><code>${QUAL_ENUM}</code></dt>
+                    <dd>Enumerated type.</dd>
+
+                    <dt><code>${QUAL_ENUM_FLAG}</code></dt>
+                    <dd>Enumerated flag type. Supports being combined.</dd>
+
+                    <dt><code>${QUAL_METACLASS}</code></dt>
+                    <dd>
+                        Metaclass. This is a base type of a class, used to control how implementing
+                        classes are created, exist, operate, and get destroyed.
+                    </dd>
+
+                    <dt><code>${QUAL_MODULE}</code></dt>
+                    <dd>Python module that you can import directly</dd>
+
+                    <dt><code>${QUAL_PACKAGE}</code></dt>
+                    <dd>Python package that can be imported and can contain sub-modules.</dd>
+
+                    <dt><code>${QUAL_NAMESPACE}</code></dt>
+                    <dd>Python namespace package that can contain sub-modules, but is not directly importable.</dd>
+
+                    <dt><code>${QUAL_TYPEHINT}</code></dt>
+                    <dd>
+                        An object or attribute used to denote a certain type or combination of types.
+                        These usually provide no functionality and only exist for documentation purposes 
+                        and for static type-checkers.
+                    </dd>
+
+                    <dt><code>${QUAL_REF}</code></dt>
+                    <dd>
+                        Used to flag that an object is defined in a different file, and is just 
+                        referred to at the current location.
+                    </dd>
+
+                    <dt><code>${QUAL_VAR}</code></dt>
+                    <dd>
+                        Variable or attribute.
+                    </dd>
+
+                    <dt><code>${QUAL_CONST}</code></dt>
+                    <dd>
+                        Value that should not be changed manually.
+                    </dd>
+
+                    <dt><code>${QUAL_EXTERNAL}</code></dt>
+                    <dd>
+                        Attribute or object that is not covered by this documentation. This usually 
+                        denotes types from other dependencies, or from the standard library.
+                    </dd>
+                </dl>
+            </div>
         </div>
     </div>
 </div>
