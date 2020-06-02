@@ -195,7 +195,7 @@ class Webhook(bases.Entity, bases.Unique):
         wait: bool = False,
         files: typing.Sequence[files_.BaseStream] = ...,
         embeds: typing.Sequence[embeds_.Embed] = ...,
-        mentions_everyone: bool = False,
+        mentions_everyone: bool = True,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, users_.User]], bool
         ] = False,
