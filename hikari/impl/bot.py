@@ -155,4 +155,4 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
         await self._rest.close()
 
     async def _fetch_gateway_recommendations(self) -> gateway_models.GatewayBot:
-        return await self.rest.fetch_recommended_gateway_settings()
+        return await self.rest.fetch_gateway_bot()

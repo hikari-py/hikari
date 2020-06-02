@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Core errors that may be raised by this API implementation."""
+"""Exceptions and warnings that can be thrown by this library."""
 
 from __future__ import annotations
 

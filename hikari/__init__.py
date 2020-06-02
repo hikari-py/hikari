@@ -16,9 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Hikari's models framework for writing Discord bots in Python."""
+"""A sane Python framework for writing modern Discord bots."""
 
 from __future__ import annotations
+
+import functools as _functools
 
 from hikari._about import __author__
 from hikari._about import __ci__
@@ -30,8 +32,14 @@ from hikari._about import __issue_tracker__
 from hikari._about import __license__
 from hikari._about import __url__
 from hikari._about import __version__
+from hikari.app import *
+from hikari.cache import *
+from hikari.component import *
+from hikari.entity_factory import *
 from hikari.errors import *
 from hikari.events import *
+from hikari.event_consumer import *
+from hikari.event_dispatcher import *
 from hikari.http_settings import *
 from hikari.models import *
 from hikari.net import *
