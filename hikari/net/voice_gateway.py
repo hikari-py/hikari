@@ -31,6 +31,7 @@ import urllib.parse
 import aiohttp
 import attr
 
+from hikari.api import component
 from hikari import errors
 from hikari.net import http_client
 from hikari.net import ratelimits
@@ -38,12 +39,13 @@ from hikari.utilities import data_binding
 from hikari.utilities import klass
 
 if typing.TYPE_CHECKING:
+    from hikari.api import app as app_
     from hikari import bot
     from hikari import http_settings
     from hikari.models import bases
 
 
-class VoiceGateway(http_client.HTTPClient):
+class VoiceGateway(http_client.HTTPClient, component.IComponent):
     """Implementation of the V4 Voice Gateway."""
 
     @enum.unique
@@ -154,6 +156,10 @@ class VoiceGateway(http_client.HTTPClient):
     def is_alive(self) -> bool:
         """Return whether the client is alive."""
         return not math.isnan(self.connected_at)
+
+    @property
+    def app(self) -> app_.IApp:
+        return self._app
 
     async def run(self) -> None:
         """Start the voice gateway client session."""

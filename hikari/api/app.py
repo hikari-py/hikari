@@ -27,16 +27,16 @@ import functools
 import logging
 import typing
 
-from hikari import event_dispatcher as event_dispatcher_
+from hikari.api import event_dispatcher as event_dispatcher_
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from concurrent import futures
     import datetime
 
-    from hikari import cache as cache_
-    from hikari import entity_factory as entity_factory_
-    from hikari import event_consumer as event_consumer_
+    from hikari.api import cache as cache_
+    from hikari.api import entity_factory as entity_factory_
+    from hikari.api import event_consumer as event_consumer_
     from hikari.models import presences
     from hikari import http_settings as http_settings_
     from hikari.net import gateway

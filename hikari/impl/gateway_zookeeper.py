@@ -33,8 +33,8 @@ import time
 import typing
 
 from hikari import _about
-from hikari import app as app_
-from hikari import event_dispatcher
+from hikari.api import app as app_
+from hikari.api import event_dispatcher
 from hikari.events import other
 from hikari.net import gateway
 from hikari.utilities import undefined

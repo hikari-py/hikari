@@ -16,30 +16,26 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Basic implementations of application components.
+"""Interfaces for components that make up Hikari applications.
 
-These components implement the interfaces in `hikari.api` to provide the
-baseline functionality. For most applications that do not have bespoke
-performance or structural requirements, you will want to use these
-implementations.
+These are provided to uncouple specific implementation details from each
+implementation, thus allowing custom solutions to be engineered such as bots
+relying on a distributed event bus or cache.
 """
-
 from __future__ import annotations
 
-from hikari.impl.bot import *
-from hikari.impl.cache import *
-from hikari.impl.entity_factory import *
-from hikari.impl.event_manager import *
-from hikari.impl.event_manager_core import *
-from hikari.impl.gateway_zookeeper import *
-from hikari.impl.rest_app import *
+from hikari.api.app import *
+from hikari.api.cache import *
+from hikari.api.component import *
+from hikari.api.entity_factory import *
+from hikari.api.event_consumer import *
+from hikari.api.event_dispatcher import *
 
 __all__ = (
-    bot.__all__
+    app.__all__
     + cache.__all__
+    + component.__all__
     + entity_factory.__all__
-    + event_manager.__all__
-    + event_manager_core.__all__
-    + gateway_zookeeper.__all__
-    + rest_app.__all__
+    + event_consumer.__all__
+    + event_dispatcher.__all__
 )

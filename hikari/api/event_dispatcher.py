@@ -24,7 +24,7 @@ __all__ = ["IEventDispatcher"]
 import abc
 import typing
 
-from hikari import component
+from hikari.api import component
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:

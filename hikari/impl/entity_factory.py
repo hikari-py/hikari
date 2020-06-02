@@ -25,8 +25,8 @@ __all__ = ["EntityFactoryImpl"]
 import datetime
 import typing
 
-from hikari import app as app_
-from hikari import entity_factory
+from hikari.api import app as app_
+from hikari.api import entity_factory
 from hikari.models import applications
 from hikari.models import audit_logs
 from hikari.models import channels as channels_

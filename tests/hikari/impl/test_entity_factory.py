@@ -21,7 +21,7 @@ import datetime
 import mock
 import pytest
 
-from hikari import app as app_
+from hikari.api import app as app_
 from hikari.impl import entity_factory
 from hikari.models import applications
 from hikari.models import audit_logs

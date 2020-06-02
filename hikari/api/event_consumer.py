@@ -24,7 +24,7 @@ __all__ = ["IEventConsumer"]
 import abc
 import typing
 
-from hikari import component
+from hikari.api import component
 
 if typing.TYPE_CHECKING:
     from hikari.net import gateway

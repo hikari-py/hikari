@@ -32,7 +32,7 @@ from hikari.utilities import snowflake
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import app as app_
+    from hikari.api import app as app_
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=False)

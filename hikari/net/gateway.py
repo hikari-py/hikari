@@ -33,7 +33,7 @@ import zlib
 import aiohttp
 import attr
 
-from hikari import component
+from hikari.api import component
 from hikari import errors
 from hikari.net import http_client
 from hikari.net import ratelimits
@@ -46,7 +46,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import app as app_
+    from hikari.api import app as app_
     from hikari import http_settings
     from hikari.models import channels
     from hikari.models import guilds

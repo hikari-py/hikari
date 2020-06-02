@@ -26,8 +26,8 @@ import asyncio
 import functools
 import typing
 
-from hikari import event_consumer
-from hikari import event_dispatcher
+from hikari.api import event_consumer
+from hikari.api import event_dispatcher
 from hikari.events import base
 from hikari.events import other
 from hikari.net import gateway
@@ -38,7 +38,7 @@ from hikari.utilities import reflect
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari import app as app_
+    from hikari.api import app as app_
 
     _EventT = typing.TypeVar("_EventT", bound=base.HikariEvent, covariant=True)
     _PredicateT = typing.Callable[[_EventT], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]

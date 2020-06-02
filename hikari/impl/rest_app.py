@@ -25,7 +25,7 @@ import logging
 import typing
 from concurrent import futures
 
-from hikari import app as app_
+from hikari.api import app as app_
 from hikari import http_settings
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
@@ -34,8 +34,8 @@ from hikari.utilities import klass
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari import cache as cache_
-    from hikari import entity_factory as entity_factory_
+    from hikari.api import cache as cache_
+    from hikari.api import entity_factory as entity_factory_
 
 
 class RESTAppImpl(app_.IRESTApp):

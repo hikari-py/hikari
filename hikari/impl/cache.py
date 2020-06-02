@@ -24,11 +24,11 @@ __all__ = ["CacheImpl"]
 
 import typing
 
-from hikari import cache
+from hikari.api import cache
 from hikari.utilities import data_binding
 
 if typing.TYPE_CHECKING:
-    from hikari import app as app_
+    from hikari.api import app as app_
     from hikari.models import applications
     from hikari.models import audit_logs
     from hikari.models import channels
