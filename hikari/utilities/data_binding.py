@@ -41,7 +41,6 @@ import aiohttp.typedefs
 from hikari.models import bases
 from hikari.utilities import undefined
 
-
 T = typing.TypeVar("T", covariant=True)
 CollectionT = typing.TypeVar("CollectionT", bound=typing.Collection, contravariant=True)
 

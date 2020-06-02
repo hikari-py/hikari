@@ -31,8 +31,8 @@ import urllib.parse
 import aiohttp
 import attr
 
-from hikari.api import component
 from hikari import errors
+from hikari.api import component
 from hikari.net import http_client
 from hikari.net import ratelimits
 from hikari.utilities import data_binding
@@ -41,7 +41,7 @@ from hikari.utilities import klass
 if typing.TYPE_CHECKING:
     from hikari.api import app as app_
     from hikari import bot
-    from hikari import http_settings
+    from hikari.net import http_settings
     from hikari.models import bases
 
 

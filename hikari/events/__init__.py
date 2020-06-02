@@ -20,11 +20,4 @@
 
 from __future__ import annotations
 
-from hikari.events.base import *
-from hikari.events.channel import *
-from hikari.events.guild import *
-from hikari.events.message import *
-from hikari.events.other import *
-from hikari.events.voice import *
-
-__all__ = base.__all__ + channel.__all__ + guild.__all__ + message.__all__ + other.__all__ + voice.__all__
+__all__ = []

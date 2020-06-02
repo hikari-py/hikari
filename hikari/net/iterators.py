@@ -37,7 +37,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import messages
     from hikari.models import users
 
-
 _T = typing.TypeVar("_T")
 
 

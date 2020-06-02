@@ -26,9 +26,9 @@ import typing
 from concurrent import futures
 
 from hikari.api import app as app_
-from hikari import http_settings
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
+from hikari.net import http_settings as http_settings_
 from hikari.net import rest as rest_
 from hikari.utilities import klass
 from hikari.utilities import undefined
@@ -41,7 +41,7 @@ if typing.TYPE_CHECKING:
 class RESTAppImpl(app_.IRESTApp):
     def __init__(
         self,
-        config: http_settings.HTTPSettings,
+        config: typing.Union[undefined.Undefined, http_settings_.HTTPSettings] = undefined.Undefined(),
         debug: bool = False,
         token: typing.Optional[str] = None,
         token_type: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
@@ -49,6 +49,9 @@ class RESTAppImpl(app_.IRESTApp):
         version: int = 6,
     ) -> None:
         self._logger = klass.get_logger(self)
+
+        config = http_settings_.HTTPSettings() if isinstance(config, undefined.Undefined) else config
+
         self._rest = rest_.REST(
             app=self,
             config=config,

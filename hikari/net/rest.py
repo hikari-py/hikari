@@ -28,11 +28,11 @@ import typing
 
 import aiohttp
 
-from hikari.api import component
 from hikari import errors
-from hikari import http_settings
+from hikari.api import component
 from hikari.net import buckets
 from hikari.net import http_client
+from hikari.net import http_settings
 from hikari.net import iterators
 from hikari.net import ratelimits
 from hikari.net import rest_utils
@@ -62,7 +62,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import users
     from hikari.models import voices
     from hikari.models import webhooks
-
 
 _REST_API_URL: typing.Final[str] = "https://discord.com/api/v{0.version}"
 """The URL for the RESTSession API. This contains a version number parameter that

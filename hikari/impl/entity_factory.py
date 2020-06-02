@@ -49,7 +49,6 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     from hikari.utilities import data_binding
 
-
 DMChannelT = typing.TypeVar("DMChannelT", bound=channels_.DMChannel)
 GuildChannelT = typing.TypeVar("GuildChannelT", bound=channels_.GuildChannel)
 InviteT = typing.TypeVar("InviteT", bound=invites.Invite)

@@ -36,7 +36,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import users
     from hikari.utilities import snowflake
 
-
 _TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/72x72/"
 """The URL for Twemoji PNG artwork for built-in emojis."""
 
