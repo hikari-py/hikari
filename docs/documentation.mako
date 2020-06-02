@@ -27,9 +27,6 @@
         if fqn in unlocatable_external_refs:
             return
 
-        if fqn in dir(builtins):
-            fqn = "builtins." + fqn
-
         if fqn not in located_external_refs:
             print("attempting to find intersphinx reference for", fqn)
             for base_url, inv in inventories.items():
@@ -42,7 +39,7 @@
                         url = base_url + uri_frag
                         print("discovered", fqn, "at", url)
                         located_external_refs[fqn] = url
-                        break        
+                        break
         try:
             return located_external_refs[fqn]
         except KeyError:
@@ -61,7 +58,7 @@
 
     from pdoc.html_helpers import extract_toc, glimpse, to_html as _to_html, format_git_link
 
-    QUAL_ABC = "abc"
+    QUAL_ABC = "abstract"
     QUAL_ASYNC_DEF = "async def"
     QUAL_CLASS = "class"
     QUAL_DATACLASS = "dataclass"
@@ -94,6 +91,9 @@
         prefix = ""
         name = name or dobj.name
 
+        if name.startswith("builtins."):
+            _, _, name = name.partition("builtins.")
+        
         if with_prefixes:        
             if isinstance(dobj, pdoc.Function):
                 if not hide_ref and dobj.module.name != dobj.obj.__module__:
@@ -101,15 +101,15 @@
                 else:
                     qual = dobj.funcdef()
 
-                prefix = "<small class='text-muted'><em>" + qual + " </em></small> "
+                prefix = "<small class='text-muted'><em>" + qual + "</em></small> "
 
             elif isinstance(dobj, pdoc.Variable):
                 if dobj.module.name == "typing" or dobj.docstring and dobj.docstring.casefold().startswith(("type hint", "typehint", "type alias")):
-                    prefix = F"<small class='text-muted'><em>{QUAL_TYPEHINT} </em></small>"
+                    prefix = F"<small class='text-muted'><em>{QUAL_TYPEHINT} </em></small> "
                 elif all(not c.isalpha() or c.isupper() for c in dobj.name):
-                    prefix = f"<small class='text-muted'><em>{QUAL_CONST}</em></small>"
+                    prefix = f"<small class='text-muted'><em>{QUAL_CONST}</em></small> "
                 else:
-                    prefix = f"<small class='text-muted'><em>{QUAL_VAR} </em></small>"
+                    prefix = f"<small class='text-muted'><em>{QUAL_VAR}</em></small> "
 
             elif isinstance(dobj, pdoc.Class):
                 if not hide_ref and dobj.module.name != dobj.obj.__module__:
@@ -135,7 +135,7 @@
                     if inspect.isabstract(dobj.obj):
                         qual = f"{QUAL_ABC} {qual}"
             
-                prefix = f"<small class='text-muted'><em>{qual} </em></small> "
+                prefix = f"<small class='text-muted'><em>{qual}</em></small> "
 
             elif isinstance(dobj, pdoc.Module):
                 if dobj.module.name != dobj.obj.__name__:
@@ -144,10 +144,10 @@
                     qual = ""
 
                 qual += QUAL_PACKAGE if dobj.is_package else QUAL_NAMESPACE if dobj.is_namespace else QUAL_MODULE
-                prefix = f"<small class='text-muted'><em>{qual} </em></small> "
+                prefix = f"<small class='text-muted'><em>{qual}</em></small> "
 
             else:
-                prefix = f"<small class='text-muted'><em>{default_type} </em></small>"
+                prefix = f"<small class='text-muted'><em>{default_type}</em></small> "
         else:
             name = name or dobj.name or ""
 
@@ -164,10 +164,13 @@
                 else:
                     fqn = dobj.name
 
+                
                 url = discover_source(fqn)
+                if url is None:
+                    url = discover_source(name)
 
                 if url is None:
-                    return name if not with_prefixes else f"{QUAL_EXTERNAL} {name}"            
+                    return name if not with_prefixes else f"{QUAL_EXTERNAL} {name}"
 
         if simple_names:
             name = simple_name(name)
@@ -191,7 +194,7 @@
         return name
 
     def get_annotation(bound_method, sep=':'):
-        annot = show_type_annotations and bound_method(link=link) or ''
+        annot = bound_method(link=link) or ''
         annot = annot.replace("NoneType", "None")
         # Remove quotes.
         if annot.startswith("'") and annot.endswith("'"):
@@ -201,7 +204,18 @@
         return annot
 
     def to_html(text):
-        return _to_html(text, module=module, link=link, latex_math=latex_math)
+        text = _to_html(text, module=module, link=link, latex_math=latex_math)
+        replacements = [
+            ('class="admonition info"', 'class="alert alert-primary"'),
+            ('class="admonition warning"', 'class="alert alert-warning"'),
+            ('class="admonition danger"', 'class="alert alert-danger"'),
+            ('class="admonition note"', 'class="alert alert-success"')
+        ]
+
+        for before, after in replacements:
+            text = text.replace(before, after)
+        
+        return text
 %>
 
 <%def name="ident(name)"><span class="ident">${name}</span></%def>
@@ -233,7 +247,9 @@
 </%def>
 
 <%def name="show_var(v, is_nested=False)">
-    <% return_type = get_annotation(v.type_annotation) %>
+    <% 
+        return_type = get_annotation(v.type_annotation)
+    %>
     <dt>
         <pre><code class="python">${link(v, anchor=True)}${return_type}</code></pre>
     </dt>
