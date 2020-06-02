@@ -25,7 +25,9 @@ from ci import nox
 @nox.inherit_environment_vars
 def pdoc(session: nox.Session) -> None:
     """Generate documentation with pdoc."""
-    session.install("-r", config.REQUIREMENTS, "git+https://github.com/pdoc3/pdoc")
+    session.install("-r", config.REQUIREMENTS)
+    session.install("pdoc3")
+    session.install("sphobjinv")
 
     session.run(
         "python",

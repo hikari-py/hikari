@@ -1,3 +1,55 @@
+<%!
+    import builtins
+    import sphobjinv
+
+    inventory_urls = [
+        "https://docs.python.org/3/objects.inv",
+        "https://docs.aiohttp.org/en/stable/objects.inv",
+        "https://www.attrs.org/en/stable/objects.inv",
+        "https://multidict.readthedocs.io/en/latest/objects.inv",
+        "https://yarl.readthedocs.io/en/latest/objects.inv",
+    ]
+
+    inventories = {}
+
+    for i in inventory_urls:
+        print("Prefetching", i)
+        inv = sphobjinv.Inventory(url=i)
+        url, _, _ = i.partition("objects.inv")
+        inventories[url] = inv.json_dict()
+
+    located_external_refs = {}
+    unlocatable_external_refs = set()
+
+
+    def discover_source(fqn):
+        #print("attempting to find", fqn, "in intersphinx inventories")
+        if fqn in unlocatable_external_refs:
+            return
+
+        if fqn in dir(builtins):
+            fqn = "builtins." + fqn
+
+        if fqn not in located_external_refs:
+            print("attempting to find intersphinx reference for", fqn)
+            for base_url, inv in inventories.items():
+                for obj in inv.values():
+                    if isinstance(obj, dict) and obj["name"] == fqn:
+                        uri_frag = obj["uri"]
+                        if uri_frag.endswith("$"):
+                            uri_frag = uri_frag[:-1] + fqn
+
+                        url = base_url + uri_frag
+                        print("discovered", fqn, "at", url)
+                        located_external_refs[fqn] = url
+                        break        
+        try:
+            return located_external_refs[fqn]
+        except KeyError:
+            print("blacklisting", fqn, "as it cannot be dereferenced from external documentation")
+            unlocatable_external_refs.add(fqn)        
+%>
+
 <%
     import abc
     import enum
@@ -102,10 +154,20 @@
         if fully_qualified and not simple_names:
             name = dobj.module.name + "." + dobj.obj.__qualname__
 
-        if isinstance(dobj, pdoc.External) and not external_links:
-            return name if not with_prefixes else f"{QUAL_EXTERNAL} {name}"
-
         url = dobj.url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+
+        if url.startswith("/"):
+
+            if isinstance(dobj, pdoc.External):
+                if dobj.module:
+                    fqn = dobj.module.name + "." + dobj.obj.__qualname__
+                else:
+                    fqn = dobj.name
+
+                url = discover_source(fqn)
+
+                if url is None:
+                    return name if not with_prefixes else f"{QUAL_EXTERNAL} {name}"            
 
         if simple_names:
             name = simple_name(name)
