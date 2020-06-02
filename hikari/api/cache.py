@@ -24,7 +24,7 @@ __all__ = ["ICache"]
 import abc
 import typing
 
-from hikari import component
+from hikari.api import component
 
 if typing.TYPE_CHECKING:
     from hikari.models import applications
@@ -36,6 +36,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import guilds
     from hikari.models import invites
     from hikari.models import messages
+    from hikari.models import presences
     from hikari.models import users
     from hikari.models import voices
 
@@ -189,21 +190,23 @@ class ICache(component.IComponent, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def create_presence(self, payload: data_binding.JSONObject, can_cache: bool = False) -> guilds.MemberPresence:
+    async def create_presence(
+        self, payload: data_binding.JSONObject, can_cache: bool = False
+    ) -> presences.MemberPresence:
         ...
 
     @abc.abstractmethod
     async def update_presence(
-        self, role: guilds.MemberPresence, payload: data_binding.JSONObject
-    ) -> guilds.MemberPresence:
+        self, role: presences.MemberPresence, payload: data_binding.JSONObject
+    ) -> presences.MemberPresence:
         ...
 
     @abc.abstractmethod
-    async def get_presence(self, guild_id: int, user_id: int) -> typing.Optional[guilds.MemberPresence]:
+    async def get_presence(self, guild_id: int, user_id: int) -> typing.Optional[presences.MemberPresence]:
         ...
 
     @abc.abstractmethod
-    async def delete_presence(self, guild_id: int, user_id: int) -> typing.Optional[guilds.MemberPresence]:
+    async def delete_presence(self, guild_id: int, user_id: int) -> typing.Optional[presences.MemberPresence]:
         ...
 
     @abc.abstractmethod

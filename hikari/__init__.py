@@ -20,8 +20,6 @@
 
 from __future__ import annotations
 
-import functools as _functools
-
 from hikari._about import __author__
 from hikari._about import __ci__
 from hikari._about import __copyright__
@@ -32,14 +30,9 @@ from hikari._about import __issue_tracker__
 from hikari._about import __license__
 from hikari._about import __url__
 from hikari._about import __version__
-from hikari.app import *
-from hikari.cache import *
-from hikari.component import *
-from hikari.entity_factory import *
 from hikari.errors import *
 from hikari.events import *
-from hikari.event_consumer import *
-from hikari.event_dispatcher import *
+from hikari.api import *
 from hikari.http_settings import *
 from hikari.models import *
 from hikari.net import *
@@ -47,4 +40,4 @@ from hikari.net import *
 from hikari.impl.bot import BotImpl as BotApp
 from hikari.impl.rest_app import RESTAppImpl as RESTApp
 
-__all__ = errors.__all__ + http_settings.__all__ + models.__all__ + net.__all__ + ["BotApp", "RESTApp"]
+__all__ = api.__all__ + errors.__all__ + http_settings.__all__ + models.__all__ + net.__all__ + ["BotApp", "RESTApp"]

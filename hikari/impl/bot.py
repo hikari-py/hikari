@@ -26,25 +26,24 @@ import logging
 import typing
 from concurrent import futures
 
-from hikari import app
+from hikari.api import app
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
 from hikari.models import presences
 from hikari.net import rest
-from hikari.utilities import cdn
 from hikari.utilities import klass
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import cache as cache_
-    from hikari import entity_factory as entity_factory_
-    from hikari import event_consumer as event_consumer_
+    from hikari.api import cache as cache_
+    from hikari.api import entity_factory as entity_factory_
+    from hikari.api import event_consumer as event_consumer_
     from hikari import http_settings as http_settings_
-    from hikari import event_dispatcher
+    from hikari.api import event_dispatcher
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
 

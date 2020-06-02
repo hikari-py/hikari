@@ -16,15 +16,15 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Core interface that any component should derive from"""
+"""Base interface for any internal components of an application."""
 
 from __future__ import annotations
 
-import abc
-import typing
+__all__ = ["IComponent"]
 
-if typing.TYPE_CHECKING:
-    from hikari import app as app_
+import abc
+
+from hikari.api import app
 
 
 class IComponent(abc.ABC):
@@ -34,5 +34,5 @@ class IComponent(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def app(self) -> app_.IApp:
+    def app(self) -> app.IApp:
         """Application that owns this component."""

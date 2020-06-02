@@ -41,7 +41,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import types
 
-    from hikari import app as app_
+    from hikari.api import app as app_
     from hikari.models import bases
     from hikari.models import channels
     from hikari.models import colors

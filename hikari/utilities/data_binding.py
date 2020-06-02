@@ -89,9 +89,9 @@ else:
 class StringMapBuilder(typing.Dict[str, str]):
     """Helper class used to quickly build query strings or header maps.
 
-    This will consume any items that are not 
+    This will consume any items that are not
     `hikari.utilities.unspecified.Unspecified`. If a value _is_ unspecified,
-    it will be ignored when inserting it. This reduces the amount of 
+    it will be ignored when inserting it. This reduces the amount of
     boilerplate needed for generating the headers and query strings for
     low-level HTTP API interaction, amongst other things.
 
@@ -163,8 +163,8 @@ class StringMapBuilder(typing.Dict[str, str]):
 
 class JSONObjectBuilder(typing.Dict[str, JSONAny]):
     """Helper class used to quickly build JSON objects from various values.
-    
-    If provided with any values that are 
+
+    If provided with any values that are
     `hikari.utilities.unspecified.Unspecified`, then these values will be ignored.
 
     This speeds up generation of JSON payloads for low level HTTP and websocket
@@ -252,7 +252,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
         self, key: str, values: typing.Union[undefined.Undefined, typing.Iterable[typing.SupportsInt, int]]
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
-        
+
         If an undefined value is given, it is ignored.
 
         Each snowflake should be castable to an `int`.
@@ -273,17 +273,17 @@ def cast_json_array(
     array: JSONArray, cast: typing.Callable[[JSONAny], T], collection_type: typing.Type[CollectionT] = typing.List[T],
 ) -> CollectionT:
     """Cast a JSON array to a given generic collection type.
-    
+
     This will perform casts on each internal item individually.
 
     Note that
 
         >>> cast_json_array(raw_list, foo, bar)
-    
+
     ...is equivalent to doing....
 
         >>> bar(foo(item) for item in raw_list)
-    
+
     Parameters
     ----------
     array : JSONArray

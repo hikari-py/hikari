@@ -28,7 +28,7 @@ import typing
 
 import aiohttp
 
-from hikari import component
+from hikari.api import component
 from hikari import errors
 from hikari import http_settings
 from hikari.net import buckets
@@ -44,7 +44,7 @@ from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari import app as app_
+    from hikari.api import app as app_
 
     from hikari.models import applications
     from hikari.models import audit_logs
@@ -1183,7 +1183,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             The channel to edit the message in. This may be a channel object, or
             the ID of an existing channel.
         message : hikari.models.messages.Messages | hikari.utilities.snowflake.Snowflake | int | str
-            The message to fetch. 
+            The message to fetch.
         text
         embed
         mentions_everyone
