@@ -392,7 +392,7 @@ class Message(bases.Entity, bases.Unique):
         *,
         content: str = ...,
         embed: embeds_.Embed = ...,
-        mentions_everyone: bool = False,
+        mentions_everyone: bool = True,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
         ] = False,
@@ -504,7 +504,7 @@ class Message(bases.Entity, bases.Unique):
         content: str = ...,
         embed: embeds_.Embed = ...,
         files: typing.Sequence[files_.BaseStream] = ...,
-        mentions_everyone: bool = False,
+        mentions_everyone: bool = True,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
         ] = False,

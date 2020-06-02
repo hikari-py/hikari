@@ -73,7 +73,7 @@ _OAUTH2_API_URL: typing.Final[str] = "https://discord.com/api/oauth2"
 """The URL to the Discord OAuth2 API."""
 
 
-class REST(http_client.HTTPClient, component.IComponent):
+class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-many-public-methods
     """Implementation of the V6 and V7-compatible Discord REST API.
 
     This manages making HTTP/1.1 requests to the API and using the entity
@@ -349,43 +349,48 @@ class REST(http_client.HTTPClient, component.IComponent):
 
     @staticmethod
     def _generate_allowed_mentions(
-        mentions_everyone: bool,
-        user_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObject, users.User]], bool],
-        role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool],
+        mentions_everyone: typing.Union[undefined.Undefined, bool],
+        user_mentions: typing.Union[
+            undefined.Undefined, typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool
+        ],
+        role_mentions: typing.Union[
+            undefined.Undefined, typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool
+        ],
     ):
         parsed_mentions = []
         allowed_mentions = {}
 
         if mentions_everyone is True:
             parsed_mentions.append("everyone")
+
         if user_mentions is True:
             parsed_mentions.append("users")
-
-        # This covers both `False` and an array of IDs/objs by using `user_mentions or a empty sequence`, where a
+        # This covers both `False` and an array of IDs/objs by using `user_mentions` or `EMPTY_SEQUENCE`, where a
         # resultant empty list will mean that all user mentions are blacklisted.
-        else:
+        elif not isinstance(user_mentions, undefined.Undefined):
             allowed_mentions["users"] = list(
                 # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
                 dict.fromkeys(str(int(m)) for m in user_mentions or ())
             )
             if len(allowed_mentions["users"]) > 100:
                 raise ValueError("Only up to 100 users can be provided.")
+
         if role_mentions is True:
             parsed_mentions.append("roles")
-
-        # This covers both `False` and an array of IDs/objs by using `user_mentions or a empty sequence`, where a
+        # This covers both `False` and an array of IDs/objs by using `user_mentions` or `EMPTY_SEQUENCE`, where a
         # resultant empty list will mean that all role mentions are blacklisted.
-        else:
+        elif not isinstance(role_mentions, undefined.Undefined):
             allowed_mentions["roles"] = list(
                 # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
                 dict.fromkeys(str(int(m)) for m in role_mentions or ())
             )
             if len(allowed_mentions["roles"]) > 100:
                 raise ValueError("Only up to 100 roles can be provided.")
-        allowed_mentions["parse"] = parsed_mentions
 
-        # As a note, discord will also treat an empty `allowed_mentions` object as if it wasn't passed at all, so we
-        # want to use empty lists for blacklisting elements rather than just not including blacklisted elements.
+        if not parsed_mentions and not allowed_mentions:
+            return undefined.Undefined()
+
+        allowed_mentions["parse"] = parsed_mentions
         return allowed_mentions
 
     def _build_message_creation_form(
@@ -412,14 +417,13 @@ class REST(http_client.HTTPClient, component.IComponent):
         Parameters
         ----------
         channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
-            The channel object to fetch. This can be an existing reference to a
-            channel object (if you want a more up-to-date representation, or it
-            can be a snowflake representation of the channel ID.
+            The channel to fetch. This may be a channel object, or the ID of an
+            existing channel.
 
         Returns
         -------
         hikari.models.channels.PartialChannel
-            The resultant channel.
+            The fetched channel.
 
         Raises
         ------
@@ -479,27 +483,44 @@ class REST(http_client.HTTPClient, component.IComponent):
         permission_overwrites: typing.Union[
             undefined.Undefined, typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.Undefined(),
-        parent_category: typing.Union[undefined.Undefined, channels.GuildCategory] = undefined.Undefined(),
+        parent_category: typing.Union[
+            undefined.Undefined, channels.GuildCategory, bases.UniqueObject
+        ] = undefined.Undefined(),
         reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> channels.PartialChannel:
         """Edit a channel.
 
         Parameters
         ----------
-        channel
-        name
-        position
-        topic
-        nsfw
-        bitrate
-        user_limit
-        rate_limit_per_user
-        permission_overwrites
-        parent_category
-        reason
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to edit. This may be a channel object, or the ID of an
+            existing channel.
+        name : hikari.utilities.undefined.Undefined | str
+            If provided, the new name for the channel.
+        position : hikari.utilities.undefined.Undefined | int
+            If provided, the new position for the channel.
+        topic : hikari.utilities.undefined.Undefined | str
+            If provided, the new topic for the channel.
+        nsfw : hikari.utilities.undefined.Undefined | bool
+            If provided, whether the channel should be marked as NSFW or not.
+        bitrate : hikari.utilities.undefined.Undefined | int
+            If provided, the new bitrate for the channel.
+        user_limit : hikari.utilities.undefined.Undefined | int
+            If provided, the new user limit in the channel.
+        rate_limit_per_user : hikari.utilities.undefined.Undefined | datetime.timedelta | float | int
+            If provided, the new rate limit per user in the channel.
+        permission_overwrites : hikari.utilities.undefined.Undefined | typing.Sequence[hikari.models.channels.PermissionOverwrite]
+            If provided, the new permission overwrites for the channel.
+        parent_category : hikari.utilities.undefined.Undefined | hikari.models.channels.GuildCategory | hikari.utilities.snowflake.Snowflake | int | str
+            If provided, the new guild category for the channel. This may be
+            a category object, or the ID of an existing category.
+        reason : hikari.utilities.undefined.Undefined | str
+            If provided, the reason that will be recorded in the audit logs.
 
         Returns
         -------
+        hikari.models.channels.PartialChannel
+            The edited channel.
 
         Raises
         ------
@@ -536,7 +557,9 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to delete. This may be a channel object, or the ID of an
+            existing channel.
 
         Raises
         ------
@@ -549,6 +572,9 @@ class REST(http_client.HTTPClient, component.IComponent):
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
 
+        !!! note
+            For Public servers, the set 'Rules' or 'Guidelines' channels and the
+            'Public Server Updates' channel cannot be deleted.
         """
         route = routes.DELETE_CHANNEL.compile(channel=channel)
         await self._request(route)
@@ -582,8 +608,8 @@ class REST(http_client.HTTPClient, component.IComponent):
         self,
         channel: typing.Union[channels.GuildChannel, bases.UniqueObject],
         target: typing.Union[bases.UniqueObject, users.User, guilds.Role, channels.PermissionOverwrite],
-        target_type: typing.Union[undefined.Undefined, channels.PermissionOverwriteType, str] = undefined.Undefined(),
         *,
+        target_type: typing.Union[undefined.Undefined, channels.PermissionOverwriteType, str] = undefined.Undefined(),
         allow: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
         deny: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
         reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
@@ -592,15 +618,27 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel
-        target
-        target_type
-        allow
-        deny
-        reason
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to edit a permission overwrite in. This may be a channel object, or
+            the ID of an existing channel.
+        target : hikari.models.users.User | hikari.models.guidls.Role | hikari.models.channels.PermissionOverwrite | hikari.utilities.snowflake.Snowflake | int | str
+            The channel overwrite to edit. This may be a overwrite object, or the ID of an
+            existing channel.
+        target_type : hikari.utilities.undefined.Undefined | hikari.models.channels.PermissionOverwriteType | str
+            If provided, the type of the target to update. If unset, will attempt to get
+            the type from `target`.
+        allow : hikari.utilities.undefined.Undefined | hikari.models.permissions.Permission
+            If provided, the new vale of all allowed permissions.
+        deny : hikari.utilities.undefined.Undefined | hikari.models.permissions.Permission
+            If provided, the new vale of all disallowed permissions.
+        reason : hikari.utilities.undefined.Undefined | str
+            If provided, the reason that will be recorded in the audit logs.
 
         Raises
         ------
+        TypeError
+            If `target_type` is unset and we were unable to determine the type
+            from `target`.
         hikari.errors.BadRequest
             If any of the fields that are passed have an invalid value.
         hikari.errors.Unauthorized
@@ -643,8 +681,11 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel
-        target
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to delete a permission overwrite in. This may be a channel
+            object, or the ID of an existing channel.
+        target : hikari.models.users.User | hikari.models.guidls.Role | hikari.models.channels.PermissionOverwrite | hikari.utilities.snowflake.Snowflake | int | str
+            The channel overwrite to delete.
 
         Raises
         ------
@@ -667,10 +708,14 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to fetch the invites from. This may be a channel
+            object, or the ID of an existing channel.
 
         Returns
         -------
+        typing.Sequence[hikari.models.invites.InviteWithMetadata]
+            The invites pointing to the given guild channel.
 
         Raises
         ------
@@ -704,17 +749,29 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel
-        max_age
-        max_uses
-        temporary
-        unique
-        target_user
-        target_user_type
-        reason
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to create a invite for. This may be a channel object,
+            or the ID of an existing channel.
+        max_age : hikari.utilities.undefined.Undefined | datetime.timedelta | float | int
+            If provided, the duration of the invite before expiry.
+        max_uses : hikari.utilities.undefined.Undefined | int
+            If provided, the max uses the invite can have.
+        temporary : hikari.utilities.undefined.Undefined | bool
+            If provided, whether the invite only grants temporary membership.
+        unique : hikari.utilities.undefined.Undefined | bool
+            If provided, wheter the invite should be unique.
+        target_user : hikari.utilities.undefined.Undefined | hikari.models.users.User | hikari.utilities.snowflake.Snowflake | int | str
+            If provided, the target user id for this invite. This may be a
+            user object, or the ID of an existing user.
+        target_user_type : hikari.utilities.undefined.Undefined | hikari.models.invites.TargetUserType | int
+            If provided, the type of target user for this invite.
+        reason : hikari.utilities.undefined.Undefined | str
+            If provided, the reason that will be recorded in the audit logs.
 
         Returns
         -------
+        hikari.models.invites.InviteWithMetadata
+            The invite to the given guild channel.
 
         Raises
         ------
@@ -748,10 +805,14 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to trigger typing in. This may be a channel object, or
+            the ID of an existing channel.
 
         Returns
         -------
+        hikari.net.rest_utils.TypingIndicator
+            A typing indicator to use.
 
         Raises
         ------
@@ -779,10 +840,14 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to fetch pins from. This may be a channel object, or
+            the ID of an existing channel.
 
         Returns
         -------
+        typing.Sequence[hikari.models.messages.Message]
+            The pinned messages in this text channel.
 
         Raises
         ------
@@ -809,8 +874,12 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel
-        message
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to pin a message in. This may be a channel object, or
+            the ID of an existing channel.
+        message : hikari.models.messges.Message | hikari.utilities.snowflake.Snowflake | int | str
+            The message to pin. This may be a message object,
+            or the ID of an existing message.
 
         Raises
         ------
@@ -836,8 +905,12 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel
-        message
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to unpin a message in. This may be a channel object, or
+            the ID of an existing channel.
+        message : hikari.models.messges.Message | hikari.utilities.snowflake.Snowflake | int | str
+            The message to unpin. This may be a message object, or the ID of an
+            existing message.
 
         Raises
         ------
@@ -850,11 +923,6 @@ class REST(http_client.HTTPClient, component.IComponent):
             in the given channel.
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            The exceptions on this endpoint will only be raised once the result
-            is awaited or interacted with. Invoking this function itself will
-            not raise any of the above types.
         """
         route = routes.DELETE_CHANNEL_PIN.compile(channel=channel, message=message)
         await self._request(route)
@@ -908,16 +976,28 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel
-        before
-        after
-        around
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to fetch messages in. This may be a channel object, or
+            the ID of an existing channel.
+        before : hikari.utilities.undefined.Undefined | datetime.datetime | hikari.utilities.snowflake.Snowflake | int | str
+            If provided, fetch messages before this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake.
+        after : hikari.utilities.undefined.Undefined | datetime.datetime | hikari.utilities.snowflake.Snowflake | int | str
+            If provided, fetch messages after this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake.
+        around : hikari.utilities.undefined.Undefined | datetime.datetime | hikari.utilities.snowflake.Snowflake | int | str
+            If provided, fetch messages around this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake.
 
         Returns
         -------
+        hikari.net.iterators.LazyIterator[hikari.models.messages.Message]
+            A iterator to fetch the messages.
 
         Raises
         ------
+        TypeError
+            If you specify more than one of `before`, `after`, `about`.
         hikari.errors.Unauthorized
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.Forbidden
@@ -927,8 +1007,6 @@ class REST(http_client.HTTPClient, component.IComponent):
             If the channel is not found.
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
-        TypeError
-            If you specify more than one of `before`, `after`, `about`.
 
         !!! note
             The exceptions on this endpoint (other than `TypeError`) will only
@@ -937,8 +1015,9 @@ class REST(http_client.HTTPClient, component.IComponent):
             `TypeError`).
         """
         if undefined.Undefined.count(before, after, around) < 2:
-            raise TypeError(f"Expected no kwargs, or maximum of one of 'before', 'after', 'around'")
-        elif not isinstance(before, undefined.Undefined):
+            raise TypeError("Expected no kwargs, or maximum of one of 'before', 'after', 'around'")
+
+        if not isinstance(before, undefined.Undefined):
             direction, timestamp = "before", before
         elif not isinstance(after, undefined.Undefined):
             direction, timestamp = "after", after
@@ -961,11 +1040,17 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel
-        message
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to fetch messages in. This may be a channel object, or
+            the ID of an existing channel.
+        message : hikari.models.messages.Message | hikari.utilities.snowflake.Snowflake | int | str
+            The message to fetch. This may be a channel object, or the ID of an
+            existing channel.
 
         Returns
         -------
+        hikari.models.messages.Message
+            The requested message.
 
         Raises
         ------
@@ -993,26 +1078,42 @@ class REST(http_client.HTTPClient, component.IComponent):
         attachments: typing.Union[undefined.Undefined, typing.Sequence[files.BaseStream]] = undefined.Undefined(),
         tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
         nonce: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        mentions_everyone: bool = False,
+        mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool] = True,
+        role_mentions: typing.Union[typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]], bool] = True,
     ) -> messages_.Message:
         """Create a message in the given channel.
 
         Parameters
         ----------
-        channel
-        text
-        embed
-        attachments
-        tts
-        nonce
-        mentions_everyone
-        user_mentions
-        role_mentions
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to create the message in. This may be a channel object, or
+            the ID of an existing channel.
+        text : hikari.utilities.undefined.Undefined | str
+            If specified, the message contents.
+        embed : hikari.utilities.undefined.Undefined | hikari.models.embeds.Embed
+            If specified, the message embed.
+        attachments : hikari.utilities.undefined.Undefined | typing.Sequence[hikari.models.files.BaseStream]
+            If specified, the message attachments.
+        tts : hikari.utilities.undefined.Undefined | bool
+            If specified, whether the message will be TTS (Text To Speech).
+        nonce : hikari.utilities.undefined.Undefined | str
+            If specified, a nonce that can be used for optimistic message sending.
+        mentions_everyone : bool
+            If specified, whether the message should parse @everyone/@here mentions.
+        user_mentions : typing.Collection[hikari.models.users.User | hikari.utilities.snowflake.Snowflake | int | str] | bool
+            If specified, and `bool`, whether to parse user mentions. If specified and
+            `list`, the users to parse the mention for. This may be a user object, or
+            the ID of an existing user.
+        role_mentions : typing.Collection[hikari.models.guilds.Role | hikari.utilities.snowflake.Snowflake | int | str] | bool
+            If specified and `bool`, whether to parse role mentions. If specified and
+            `list`, the roles to parse the mention for. This may be a role object, or
+            the ID of an existing role.
 
         Returns
         -------
+        hikari.models.messages.Message
+            The created message.
 
         Raises
         ------
@@ -1033,7 +1134,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
 
-        !!! warn
+        !!! warning
             You are expected to make a connection to the gateway and identify
             once before being able to use this endpoint for a bot.
         """
@@ -1050,7 +1151,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         attachments = [] if isinstance(attachments, undefined.Undefined) else [a for a in attachments]
 
         if not isinstance(embed, undefined.Undefined):
-            attachments += embed.assets_to_upload
+            attachments.extend(embed.assets_to_upload)
 
         response = await self._request(
             route, body=self._build_message_creation_form(body, attachments) if attachments else body
@@ -1065,18 +1166,35 @@ class REST(http_client.HTTPClient, component.IComponent):
         text: typing.Union[undefined.Undefined, typing.Any] = undefined.Undefined(),
         *,
         embed: typing.Union[undefined.Undefined, embeds_.Embed] = undefined.Undefined(),
-        mentions_everyone: bool = False,
-        user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool] = True,
+        mentions_everyone: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        user_mentions: typing.Union[
+            undefined.Undefined, typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool
+        ] = undefined.Undefined(),
+        role_mentions: typing.Union[
+            undefined.Undefined, typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool
+        ] = undefined.Undefined(),
         flags: typing.Union[undefined.Undefined, messages_.MessageFlag] = undefined.Undefined(),
     ) -> messages_.Message:
         """Edit an existing message in a given channel.
 
         Parameters
         ----------
+        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+            The channel to edit the message in. This may be a channel object, or
+            the ID of an existing channel.
+        message : hikari.models.messages.Messages | hikari.utilities.snowflake.Snowflake | int | str
+            The message to fetch. 
+        text
+        embed
+        mentions_everyone
+        user_mentions
+        role_mentions
+        flags
 
         Returns
         -------
+        hikari.models.messages.Message
+            The edited message.
 
         Raises
         ------
@@ -1383,7 +1501,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         attachments: typing.Union[undefined.Undefined, typing.Sequence[files.BaseStream]] = undefined.Undefined(),
         tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
         wait: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        mentions_everyone: bool = False,
+        mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool] = True,
     ) -> messages_.Message:
@@ -1399,7 +1517,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         if not isinstance(embeds, undefined.Undefined):
             for embed in embeds:
-                attachments += embed.assets_to_upload
+                attachments.extend(embed.assets_to_upload)
                 serialized_embeds.append(self._app.entity_factory.serialize_embed(embed))
 
         body = data_binding.JSONObjectBuilder()

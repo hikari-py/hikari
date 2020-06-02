@@ -81,7 +81,7 @@ class Emoji(files.BaseStream, abc.ABC):
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji.
 
-    !!! warn
+    !!! warning
         A word of warning if you try to upload this emoji as a file attachment.
 
         While this emoji type can be used to upload the Twemoji representations
