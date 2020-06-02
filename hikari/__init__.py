@@ -32,6 +32,6 @@ from hikari._about import __url__
 from hikari._about import __version__
 
 from hikari.impl.bot import BotImpl as Bot
-from hikari.impl.bot import BotImpl as RESTClient
+from hikari.impl.rest_app import RESTAppImpl as RESTClient
 
 __all__ = ["RESTClient", "Bot"]
