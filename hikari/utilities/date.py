@@ -16,11 +16,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Utility methods used for parsing timestamps and datetimes."""
+"""Utility methods used for parsing timestamps and datetimes from Discord."""
 
 from __future__ import annotations
 
 __all__ = [
+    "DISCORD_EPOCH",
     "rfc7231_datetime_string_to_datetime",
     "datetime_to_discord_epoch",
     "discord_epoch_to_datetime",
@@ -34,7 +35,26 @@ import email.utils
 import re
 import typing
 
+
+TimeSpan = typing.Union[int, float, datetime.timedelta]
+"""Type hint representing a naive time period or time span.
+
+This is an alias for `typing.Union[int, float, datetime.datetime]`,
+where `int` and `float` types are interpreted as a number of seconds.
+"""
+
+
 DISCORD_EPOCH: typing.Final[int] = 1_420_070_400
+"""The Discord epoch used within snowflake identifiers.
+
+This is defined as the number of seconds between
+`1/1/1970 00:00:00 UTC` and `1/1/2015 00:00:00 UTC`.
+
+References
+----------
+* [Discord API documentation - Snowflakes](https://discord.com/developers/docs/reference#snowflakes)
+"""
+
 ISO_8601_DATE_PART: typing.Final[typing.Pattern] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
 ISO_8601_TIME_PART: typing.Final[typing.Pattern] = re.compile(r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I)
 ISO_8601_TZ_PART: typing.Final[typing.Pattern] = re.compile(r"([+-])(\d{2}):(\d{2})$")
@@ -55,8 +75,8 @@ def rfc7231_datetime_string_to_datetime(date_str: str, /) -> datetime.datetime:
 
     References
     ----------
-    [RFC 2822](https://www.ietf.org/rfc/rfc2822.txt)
-    [Mozilla documentation for Date header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Date)
+    * [RFC-2822](https://www.ietf.org/rfc/rfc2822.txt)
+    * [Mozilla documentation for `Date` HTTP header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Date)
     """
     # According to Mozilla, these are always going to be GMT (which is UTC).
     return email.utils.parsedate_to_datetime(date_str).replace(tzinfo=datetime.timezone.utc)
@@ -68,16 +88,16 @@ def iso8601_datetime_string_to_datetime(date_string: str, /) -> datetime.datetim
     Parameters
     ----------
     date_string : str
-        The ISO 8601 compliant date string to parse.
+        The ISO-8601 compliant date string to parse.
 
     Returns
     -------
     datetime.datetime
-        The ISO 8601 date string as a datetime object.
+        The ISO-8601 date string as a datetime object.
 
     References
     ----------
-    [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)
+    * [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)
     """
     year, month, day = map(int, ISO_8601_DATE_PART.findall(date_string)[0])
 
@@ -106,28 +126,28 @@ def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
     Parameters
     ----------
     epoch : int
-        Number of milliseconds since 1/1/2015 (UTC)
+        Number of milliseconds since `1/1/2015 00:00:00 UTC`.
 
     Returns
     -------
     datetime.datetime
-        Number of seconds since 1/1/1970 within a datetime object (UTC).
+        Number of seconds since `1/1/1970 00:00:00 UTC`.
     """
     return datetime.datetime.fromtimestamp(epoch / 1_000 + DISCORD_EPOCH, datetime.timezone.utc)
 
 
 def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
-    """Parse a `datetime.datetime` object into an integer discord epoch..
+    """Parse a `datetime.datetime` object into an `int` `DISCORD_EPOCH` offset.
 
     Parameters
     ----------
     timestamp : datetime.datetime
-        Number of seconds since 1/1/1970 within a datetime object (UTC).
+        Number of seconds since `1/1/1970 00:00:00 UTC`.
 
     Returns
     -------
     int
-        Number of milliseconds since 1/1/2015 (UTC)
+        Number of milliseconds since `1/1/2015 00:00:00 UTC`.
     """
     return int((timestamp.timestamp() - DISCORD_EPOCH) * 1_000)
 
@@ -138,21 +158,22 @@ def unix_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
     Parameters
     ----------
     epoch : int
-        Number of milliseconds since 1/1/1970 (UTC)
+        Number of milliseconds since `1/1/1970 00:00:00 UTC`.
 
     Returns
     -------
     datetime.datetime
-        Number of seconds since 1/1/1970 within a datetime object (UTC).
+        Number of seconds since `1/1/1970 00:00:00 UTC`.
 
     !!! note
         If an epoch that's outside the range of what this system can handle,
-        this will return `datetime.datetime.max` or `datetime.datetime.min`.
+        this will return `datetime.datetime.max` if the timestamp is positive,
+        or `datetime.datetime.min` otherwise.
     """
-    try:
-        return datetime.datetime.fromtimestamp(epoch / 1000, datetime.timezone.utc)
     # Datetime seems to raise an OSError when you try to convert an out of range timestamp on Windows and a ValueError
     # if you try on a UNIX system so we want to catch both.
+    try:
+        return datetime.datetime.fromtimestamp(epoch / 1000, datetime.timezone.utc)
     except (OSError, ValueError):
         if epoch > 0:
             return datetime.datetime.max
@@ -160,16 +181,12 @@ def unix_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
             return datetime.datetime.min
 
 
-TimeSpan = typing.Union[int, float, datetime.timedelta]
-"""A representation of time."""
-
-
-def timespan_to_int(value: typing.Union[TimeSpan], /) -> int:
+def timespan_to_int(value: TimeSpan, /) -> int:
     """Cast the given timespan in seconds to an integer value.
 
     Parameters
     ----------
-    value : int | float | datetime.timedelta
+    value : TimeSpan
         The number of seconds.
 
     Returns

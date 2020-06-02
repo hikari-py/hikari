@@ -1423,7 +1423,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         response = await self._request(route, no_auth=True)
         return response["url"]
 
-    async def fetch_recommended_gateway_settings(self) -> gateway.GatewayBot:
+    async def fetch_gateway_bot(self) -> gateway.GatewayBot:
         route = routes.GET_GATEWAY_BOT.compile()
         response = await self._request(route)
         return self._app.entity_factory.deserialize_gateway_bot(response)

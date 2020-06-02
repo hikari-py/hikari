@@ -24,10 +24,6 @@ __all__ = [
     "Query",
     "JSONObject",
     "JSONArray",
-    "JSONNull",
-    "JSONBoolean",
-    "JSONString",
-    "JSONNumber",
     "JSONAny",
     "URLEncodedForm",
     "MultipartForm",
@@ -45,41 +41,33 @@ import aiohttp.typedefs
 from hikari.models import bases
 from hikari.utilities import undefined
 
+
+T = typing.TypeVar("T", covariant=True)
+CollectionT = typing.TypeVar("CollectionT", bound=typing.Collection, contravariant=True)
+
 Headers = typing.Mapping[str, str]
-"""HTTP headers."""
+"""Type hint for HTTP headers."""
 
 Query = typing.Dict[str, str]
-"""HTTP query string."""
+"""Type hint for HTTP query string."""
 
 URLEncodedForm = aiohttp.FormData
-"""Content of type application/x-www-form-encoded"""
+"""Type hint for content of type application/x-www-form-encoded"""
 
 MultipartForm = aiohttp.FormData
-"""Content of type multipart/form-data"""
-
-JSONString = str
-"""A JSON string."""
-
-JSONNumber = typing.Union[int, float]
-"""A JSON numeric value."""
-
-JSONBoolean = bool
-"""A JSON boolean value."""
-
-JSONNull = None
-"""A null JSON value."""
+"""Type hint for content of type multipart/form-data"""
 
 # MyPy does not support recursive types yet. This has been ongoing for a long time, unfortunately.
 # See https://github.com/python/typing/issues/182
 
-JSONObject = typing.Dict[JSONString, typing.Any]
-"""A JSON object representation as a dict."""
+JSONObject = typing.Dict[str, typing.Any]
+"""Type hint for a JSON-decoded object representation as a dict."""
 
 JSONArray = typing.List[typing.Any]
-"""A JSON array representation as a list."""
+"""Type hint for a JSON-decoded array representation as a list."""
 
-JSONAny = typing.Union[JSONString, JSONNumber, JSONBoolean, JSONNull, JSONArray, JSONObject]
-"""Any JSON type."""
+JSONAny = typing.Union[str, int, float, bool, None, JSONArray, JSONObject]
+"""Type hint for any valid JSON-decoded type."""
 
 if typing.TYPE_CHECKING:
 
@@ -99,11 +87,24 @@ else:
 
 
 class StringMapBuilder(typing.Dict[str, str]):
-    """Helper class used to quickly build query strings or header maps."""
+    """Helper class used to quickly build query strings or header maps.
+
+    This will consume any items that are not 
+    `hikari.utilities.unspecified.Unspecified`. If a value _is_ unspecified,
+    it will be ignored when inserting it. This reduces the amount of 
+    boilerplate needed for generating the headers and query strings for
+    low-level HTTP API interaction, amongst other things.
+
+
+    !!! warn
+        Because this subclasses `dict`, you should not use the
+        index operator to set items on this object. Doing so will skip any
+        form of validation on the type. Use the `put*` methods instead.
+    """
 
     __slots__ = ()
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def put(
@@ -118,13 +119,16 @@ class StringMapBuilder(typing.Dict[str, str]):
         ----------
         key : str
             The string key.
-        value : hikari.utilities.undefined.Undefined | typing.Any
+        value : hikari.utilities.undefined.Undefined or typing.Any
             The value to set.
-        conversion : typing.Callable[[typing.Any], typing.Any] | None
+        conversion : typing.Callable[[typing.Any], typing.Any] or None
             An optional conversion to perform.
 
         !!! note
             The value will always be cast to a `str` before inserting it.
+
+            `True` will be translated to `"true"`, `False` will be translated
+            to `"false"`, and `None` will be translated to `"null"`.
         """
         if not isinstance(value, undefined.Undefined):
             if conversion is not None:
@@ -157,8 +161,20 @@ class StringMapBuilder(typing.Dict[str, str]):
         return sb
 
 
-class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
-    """Helper class used to quickly build JSON objects from various values."""
+class JSONObjectBuilder(typing.Dict[str, JSONAny]):
+    """Helper class used to quickly build JSON objects from various values.
+    
+    If provided with any values that are 
+    `hikari.utilities.unspecified.Unspecified`, then these values will be ignored.
+
+    This speeds up generation of JSON payloads for low level HTTP and websocket
+    API interaction.
+
+    !!! warn
+        Because this subclasses `dict`, you should not use the
+        index operator to set items on this object. Doing so will skip any
+        form of validation on the type. Use the `put*` methods instead.
+    """
 
     __slots__ = ()
 
@@ -166,10 +182,7 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
         super().__init__()
 
     def put(
-        self,
-        key: JSONString,
-        value: typing.Any,
-        conversion: typing.Optional[typing.Callable[[typing.Any], JSONAny]] = None,
+        self, key: str, value: typing.Any, conversion: typing.Optional[typing.Callable[[typing.Any], JSONAny]] = None,
     ) -> None:
         """Put a JSON value.
 
@@ -177,7 +190,7 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
 
         Parameters
         ----------
-        key : JSONString
+        key : str
             The key to give the element.
         value : JSONType | typing.Any | hikari.utilities.undefined.Undefined
             The JSON type to put. This may be a non-JSON type if a conversion
@@ -194,23 +207,25 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
 
     def put_array(
         self,
-        key: JSONString,
-        values: typing.Union[undefined.Undefined, typing.Iterable[_T]],
-        conversion: typing.Optional[typing.Callable[[_T], JSONAny]] = None,
+        key: str,
+        values: typing.Union[undefined.Undefined, typing.Iterable[T]],
+        conversion: typing.Optional[typing.Callable[[T], JSONAny]] = None,
     ) -> None:
         """Put a JSON array.
 
         If the value is undefined, then it will not be stored.
 
+        If provided, a conversion will be applied to each item.
+
         Parameters
         ----------
-        key : JSONString
+        key : str
             The key to give the element.
-        values : JSONType | typing.Any | hikari.utilities.undefined.Undefined
+        values : JSONAny or Any or hikari.utilities.undefined.Undefined
             The JSON types to put. This may be an iterable of non-JSON types if
             a conversion is also specified. This may alternatively be undefined.
             In the latter case, nothing is performed.
-        conversion : typing.Callable[[typing.Any], JSONType] | None
+        conversion : typing.Callable[[typing.Any], JSONType] or None
             Optional conversion to apply.
         """
         if not isinstance(values, undefined.Undefined):
@@ -219,12 +234,12 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
             else:
                 self[key] = list(values)
 
-    def put_snowflake(self, key: JSONString, value: typing.Union[undefined.Undefined, typing.SupportsInt, int]) -> None:
-        """Put a snowflake.
+    def put_snowflake(self, key: str, value: typing.Union[undefined.Undefined, typing.SupportsInt, int]) -> None:
+        """Put a key with a snowflake value into the builder.
 
         Parameters
         ----------
-        key : JSONString
+        key : str
             The key to give the element.
         value : JSONType | hikari.utilities.undefined.Undefined
             The JSON type to put. This may alternatively be undefined. In the latter
@@ -234,28 +249,59 @@ class JSONObjectBuilder(typing.Dict[JSONString, JSONAny]):
             self[key] = str(int(value))
 
     def put_snowflake_array(
-        self, key: JSONString, values: typing.Union[undefined.Undefined, typing.Iterable[typing.SupportsInt, int]]
+        self, key: str, values: typing.Union[undefined.Undefined, typing.Iterable[typing.SupportsInt, int]]
     ) -> None:
-        """Put an array of snowflakes.
+        """Put an array of snowflakes with the given key into this builder.
+        
+        If an undefined value is given, it is ignored.
+
+        Each snowflake should be castable to an `int`.
 
         Parameters
         ----------
-        key : JSONString
+        key : str
             The key to give the element.
-        values : typing.Iterable[typing.SupportsInt, int] | hikari.utilities.undefined.Undefined
-            The JSON snowflakes to put. This may alternatively be undefined. In the latter
-            case, nothing is performed.
+        values : typing.Iterable[typing.SupportsInt or int] or hikari.utilities.undefined.Undefined
+            The JSON snowflakes to put. This may alternatively be undefined.
+            In the latter case, nothing is performed.
         """
         if not isinstance(values, undefined.Undefined):
             self[key] = [str(int(value)) for value in values]
 
 
-_T = typing.TypeVar("_T", covariant=True)
-_CT = typing.TypeVar("_CT", bound=typing.Collection, contravariant=True)
-
-
 def cast_json_array(
-    array: JSONArray, cast: typing.Callable[[JSONAny], _T], collection_type: typing.Type[_CT] = list
-) -> _CT:
-    """Cast a JSON array to a given collection type, casting each item."""
+    array: JSONArray, cast: typing.Callable[[JSONAny], T], collection_type: typing.Type[CollectionT] = typing.List[T],
+) -> CollectionT:
+    """Cast a JSON array to a given generic collection type.
+    
+    This will perform casts on each internal item individually.
+
+    Note that
+
+        >>> cast_json_array(raw_list, foo, bar)
+    
+    ...is equivalent to doing....
+
+        >>> bar(foo(item) for item in raw_list)
+    
+    Parameters
+    ----------
+    array : JSONArray
+        The raw JSON-decoded array.
+    cast : typing.Callable[[JSONAny], T]
+        The cast to apply to each item in the array. This should
+        consume any valid JSON-decoded type and return the type
+        corresponding to the generic type of the provided collection.
+    collection_type : typing.Type[CollectionT]
+        The container type to store the cast items within.
+        `CollectionT` should be a concrete implementation that is
+        a subtype of `typing.Collection`, such as `typing.List`,
+        `typing.Set`, `typing.FrozenSet`, `typing.Tuple`, etc.
+        If unspecified, this defaults to `typing.List`.
+
+    Returns
+    -------
+    CollectionT
+        The generated collection.
+    """
     return collection_type(cast(item) for item in array)

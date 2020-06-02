@@ -16,24 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Various utilities used internally within this API."""
+"""Package containing internal utilities used within this API."""
 
 from __future__ import annotations
 
-from hikari.utilities.aio import *
-from hikari.utilities.data_binding import *
-from hikari.utilities.date import *
-from hikari.utilities.klass import *
-from hikari.utilities.reflect import *
-from hikari.utilities.snowflake import *
-from hikari.utilities.undefined import *
-
-__all__ = [
-    *aio.__all__,
-    *data_binding.__all__,
-    *date.__all__,
-    *klass.__all__,
-    *reflect.__all__,
-    *snowflake.__all__,
-    *undefined.__all__,
-]
+__all__ = []

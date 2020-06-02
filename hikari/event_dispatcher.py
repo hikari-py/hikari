@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Interface providing functionality to dispatch an event object."""
+"""Core interface for components that dispatch events to the library."""
 from __future__ import annotations
 
 __all__ = ["IEventDispatcher"]
