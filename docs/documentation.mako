@@ -286,7 +286,7 @@
     <dd>
         % if redirect:
             ${show_desc(f) | glimpse, to_html}
-            <strong>This class is defined explicitly at ${link(ref, with_prefixes=True, fully_qualified=True)}. Visit that link to view the full documentation!</strong>
+            <strong>This class is defined explicitly at ${link(ref, with_prefixes=False, fully_qualified=True)}. Visit that link to view the full documentation!</strong>
         % else:
             ${show_desc(f)}
 
@@ -340,7 +340,7 @@
 
         % if redirect:
             ${show_desc(c) | glimpse, to_html}
-            <strong>This class is defined explicitly at ${link(ref, with_prefixes=True, fully_qualified=True)}. Visit that link to view the full documentation!</strong>
+            <strong>This class is defined explicitly at ${link(ref, with_prefixes=False, fully_qualified=True)}. Visit that link to view the full documentation!</strong>
         % else:
 
             ${show_desc(c)}

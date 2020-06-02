@@ -44,29 +44,87 @@ if typing.TYPE_CHECKING:
 
 
 class IApp(abc.ABC):
-    """Core components that any Hikari-based application will usually need."""
+    """The base for any type of Hikari application object.
+
+    All types of Hikari-based application should derive from this type in order
+    to provide a consistent interface that is compatible with models and events
+    that make reference to it.
+
+    Following this pattern allows you to extend this library in pretty much
+    any direction you can think of without having to rewrite major piece of
+    this code base.
+
+    Example
+    -------
+    A quick and dirty theoretical concrete implementation may look like the
+    following.
+
+        class MyApp(IApp):
+            def __init__(self):
+                self._logger = logging.getLogger(__name__)
+                self._cache = MyCacheImplementation(self)
+                self._entity_factory = MyEntityFactoryImplementation(self)
+                self._thread_pool = concurrent.futures.ThreadPoolExecutor()
+
+            logger = property(lambda self: self._logger)
+            cache = property(lambda self: self._cache)
+            entity_factory = property(lambda self: self._entity_factory)
+            thread_pool = property(lambda self: self._thread_pool)
+
+            async def close(self):
+                self._thread_pool.shutdown()
+
+    If you are in any doubt, check out the `hikari.RESTApp` and `hikari.Bot`
+    implementations to see how they are pieced together!
+    """
 
     __slots__ = ()
 
     @property
     @abc.abstractmethod
     def logger(self) -> logging.Logger:
-        """Logger for logging messages."""
+        """Logger for logging messages.
+
+        Returns
+        -------
+        logging.Logger
+            The application-level logger.
+        """
 
     @property
     @abc.abstractmethod
     def cache(self) -> cache_.ICache:
-        """Entity cache."""
+        """Entity cache.
+
+        Returns
+        -------
+        hikari.api.cache.ICache
+            The cache implementation used in this application.
+        """
 
     @property
     @abc.abstractmethod
     def entity_factory(self) -> entity_factory_.IEntityFactory:
-        """Entity creator and updater facility."""
+        """Entity creator and updater facility.
+
+        Returns
+        -------
+        hikari.api.entity_factory.IEntityFactory
+            The factory object used to produce and update Python entities.
+        """
 
     @property
     @abc.abstractmethod
     def thread_pool(self) -> typing.Optional[futures.ThreadPoolExecutor]:
-        """Thread-pool to utilise for file IO within the library, if set."""
+        """Thread-pool to utilise for file IO within the library, if set.
+
+        Returns
+        -------
+        concurrent.futures.ThreadPoolExecutor or None
+            The custom thread-pool being used for blocking IO. If the
+            default event loop thread-pool is being used, then this will
+            return `None` instead.
+        """
 
     @abc.abstractmethod
     async def close(self) -> None:
@@ -78,7 +136,8 @@ class IRESTApp(IApp, abc.ABC):
 
     Examples may include web dashboards, or applications where no gateway
     connection is required. As a result, no event conduit is provided by
-    these implementations.
+    these implementations. They do however provide a REST client, and the
+    general components defined in `IApp`
     """
 
     __slots__ = ()
@@ -86,7 +145,15 @@ class IRESTApp(IApp, abc.ABC):
     @property
     @abc.abstractmethod
     def rest(self) -> rest_.REST:
-        """REST API."""
+        """REST API Client.
+
+        Use this to make calls to Discord's REST API over HTTPS.
+
+        Returns
+        -------
+        hikari.net.rest.REST
+            The REST API client.
+        """
 
 
 class IGatewayConsumer(IApp, abc.ABC):
@@ -102,7 +169,16 @@ class IGatewayConsumer(IApp, abc.ABC):
     @property
     @abc.abstractmethod
     def event_consumer(self) -> event_consumer_.IEventConsumer:
-        """Raw event consumer."""
+        """Raw event consumer.
+
+        This should be passed raw event payloads from your gateway
+        websocket implementation.
+
+        Returns
+        -------
+        hikari.api.event_consumer.IEventConsumer
+            The event consumer implementation in-use.
+        """
 
 
 class IGatewayDispatcher(IApp, abc.ABC):
@@ -137,7 +213,27 @@ class IGatewayDispatcher(IApp, abc.ABC):
     @property
     @abc.abstractmethod
     def event_dispatcher(self) -> event_dispatcher_.IEventDispatcher:
-        """Event dispatcher and waiter."""
+        """Event dispatcher and subscription manager.
+
+        This stores every event you subscribe to in your application, and
+        manages invoking those subscribed callbacks when the corresponding
+        event occurs.
+
+        Event dispatchers also provide a `wait_for` functionality that can be
+        used to wait for a one-off event that matches a certain criteria. This
+        is useful if waiting for user feedback for a specific procedure being
+        performed.
+
+        Users may create their own events and trigger them using this as well,
+        thus providing a simple in-process event bus that can easily be extended
+        with a little work to span multiple applications in a distributed
+        cluster.
+
+        Returns
+        -------
+        hikari.api.event_dispatcher.IEventDispatcher
+            The event dispatcher in use.
+        """
 
     # Do not add type hints to me! I delegate to a documented method elsewhere!
     @functools.wraps(event_dispatcher_.IEventDispatcher.listen)
@@ -185,15 +281,35 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
 
         If the shards have not started, and auto=sharding is in-place, then it
         is acceptable for this to return an empty mapping.
+
+        !!! note
+            "Non-sharded" bots should expect one value to be in this mapping
+            under the shard ID `0`.
+
+                >>> bot.gateway_shards[0].heartbeat_latency
+                0.145612141
+
+        Returns
+        -------
+        typing.Mapping[int, hikari.net.gateway.Gateway]
+            The mapping of shard IDs to gateway connections for the
+            corresponding shard. These shard IDs are 0-indexed.
         """
 
     @property
     @abc.abstractmethod
     def gateway_shard_count(self) -> int:
-        """Amount of shards in the entire distributed application.
+        """Number of shards in the entire distributed application.
 
-        If the shards have not started, and auto=sharding is in-place, then it
-        is acceptable for this to return `0`.
+        If the shards have not started, and auto-sharding is in-place, then it
+        is acceptable for this to return `0`. When the application is running,
+        this should always be a non-zero natural number that is greater than the
+        maximum ID in `gateway_shards`.
+
+        Returns
+        -------
+        int
+            The number of shards in the entire application.
         """
 
     @abc.abstractmethod
@@ -208,16 +324,16 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
     async def update_presence(
         self,
         *,
-        status: presences.PresenceStatus = ...,
-        activity: typing.Optional[presences.OwnActivity] = ...,
-        idle_since: typing.Optional[datetime.datetime] = ...,
-        is_afk: bool = ...,
+        status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
+        activity: typing.Union[undefined.Undefined, presences.OwnActivity, None] = undefined.Undefined(),
+        idle_since: typing.Union[undefined.Undefined, datetime.datetime, None] = undefined.Undefined(),
+        is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> None:
         """Update the presence of the user for all shards.
 
         This will only update arguments that you explicitly specify a value for.
         Any arguments that you do not explicitly provide some value for will
-        not be changed.
+        not be changed (these values will default to be `undefined`).
 
         !!! warning
             This will only apply to connected shards.
@@ -229,16 +345,16 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
 
         Parameters
         ----------
-        status : hikari.models.presences.PresenceStatus
-            If specified, the new status to set.
-        activity : hikari.models.presences.OwnActivity | None
-            If specified, the new activity to set.
-        idle_since : datetime.datetime | None
-            If specified, the time to show up as being idle since,
-            or `None` if not applicable.
-        is_afk : bool
-            If specified, `True` if the user should be marked as AFK,
-            or `False` otherwise.
+        status : hikari.models.presences.PresenceStatus or hikari.utilities.undefined.Undefined
+            If defined, the new status to set.
+        activity : hikari.models.presences.OwnActivity or None or hikari.utilities.undefined.Undefined
+            If defined, the new activity to set.
+        idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
+            If defined, the time to show up as being idle since, or `None` if
+            not applicable. If undefined, then it is not changed.
+        is_afk : bool or hikari.utilities.undefined.Undefined
+            If defined, `True` if the user should be marked as AFK,
+            or `False` if not AFK.
         """
 
     @abc.abstractmethod
@@ -255,7 +371,7 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
 
 
 class IBot(IRESTApp, IGatewayZookeeper, IGatewayDispatcher, abc.ABC):
-    """Component for single-process bots.
+    """Base for bot applications.
 
     Bots are components that have access to a REST API, an event dispatcher,
     and an event consumer.
@@ -268,4 +384,15 @@ class IBot(IRESTApp, IGatewayZookeeper, IGatewayDispatcher, abc.ABC):
     @property
     @abc.abstractmethod
     def http_settings(self) -> http_settings_.HTTPSettings:
-        """The HTTP settings to use."""
+        """HTTP settings to use for the shards when they get created.
+
+        !!! info
+            This is stored only for bots, since shards are generated lazily on
+            start-up once sharding information has been retrieved from the REST
+            API. To do this, an event loop has to be running first.
+
+        Returns
+        -------
+        hikari.net.http_settings.HTTPSettings
+            The HTTP settings to use.
+        """
