@@ -44,8 +44,8 @@ from hikari.models import guilds
 from hikari.models import intents
 from hikari.models import messages
 from hikari.models import users
-from hikari.utilities import undefined
 from hikari.utilities import snowflake
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime

@@ -32,6 +32,7 @@ from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
 from hikari.models import presences
+from hikari.net import http_settings as http_settings_
 from hikari.net import rest
 from hikari.utilities import klass
 from hikari.utilities import undefined
@@ -42,7 +43,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_consumer as event_consumer_
-    from hikari import http_settings as http_settings_
     from hikari.api import event_dispatcher
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
@@ -52,7 +52,7 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
     def __init__(
         self,
         *,
-        config: http_settings_.HTTPSettings,
+        config: typing.Union[undefined.Undefined, http_settings_.HTTPSettings] = undefined.Undefined(),
         debug: bool = False,
         gateway_version: int = 6,
         initial_activity: typing.Optional[presences.OwnActivity] = None,
@@ -69,6 +69,8 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
         use_compression: bool = True,
     ):
         self._logger = klass.get_logger(self)
+
+        config = http_settings_.HTTPSettings() if isinstance(config, undefined.Undefined) else config
 
         self._cache = cache_impl.CacheImpl(app=self)
         self._config = config

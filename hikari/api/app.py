@@ -38,7 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_consumer as event_consumer_
     from hikari.models import presences
-    from hikari import http_settings as http_settings_
+    from hikari.net import http_settings as http_settings_
     from hikari.net import gateway
     from hikari.net import rest as rest_
 

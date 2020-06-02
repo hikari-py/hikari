@@ -35,14 +35,12 @@ import email.utils
 import re
 import typing
 
-
 TimeSpan = typing.Union[int, float, datetime.timedelta]
 """Type hint representing a naive time period or time span.
 
 This is an alias for `typing.Union[int, float, datetime.datetime]`,
 where `int` and `float` types are interpreted as a number of seconds.
 """
-
 
 DISCORD_EPOCH: typing.Final[int] = 1_420_070_400
 """The Discord epoch used within snowflake identifiers.

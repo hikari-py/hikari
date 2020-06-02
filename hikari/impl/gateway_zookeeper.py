@@ -40,7 +40,7 @@ from hikari.net import gateway
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari import http_settings
+    from hikari.net import http_settings
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
     from hikari.models import presences

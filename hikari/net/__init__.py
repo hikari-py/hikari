@@ -20,8 +20,4 @@
 
 from __future__ import annotations
 
-from hikari.net.gateway import *
-from hikari.net.rest import *
-from hikari.net.voice_gateway import *
-
-__all__ = gateway.__all__ + rest.__all__ + voice_gateway.__all__
+__all__ = []

@@ -24,18 +24,4 @@ relying on a distributed event bus or cache.
 """
 from __future__ import annotations
 
-from hikari.api.app import *
-from hikari.api.cache import *
-from hikari.api.component import *
-from hikari.api.entity_factory import *
-from hikari.api.event_consumer import *
-from hikari.api.event_dispatcher import *
-
-__all__ = (
-    app.__all__
-    + cache.__all__
-    + component.__all__
-    + entity_factory.__all__
-    + event_consumer.__all__
-    + event_dispatcher.__all__
-)
+__all__ = []

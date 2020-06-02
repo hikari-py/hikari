@@ -26,20 +26,4 @@ implementations.
 
 from __future__ import annotations
 
-from hikari.impl.bot import *
-from hikari.impl.cache import *
-from hikari.impl.entity_factory import *
-from hikari.impl.event_manager import *
-from hikari.impl.event_manager_core import *
-from hikari.impl.gateway_zookeeper import *
-from hikari.impl.rest_app import *
-
-__all__ = (
-    bot.__all__
-    + cache.__all__
-    + entity_factory.__all__
-    + event_manager.__all__
-    + event_manager_core.__all__
-    + gateway_zookeeper.__all__
-    + rest_app.__all__
-)
+__all__ = []

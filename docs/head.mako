@@ -1,5 +1,9 @@
+<%
+    import hikari
+%>
+
 <nav id="main-nav" class="navbar navbar-dark navbar-expand-lg bg-dark">
-    <a class="navbar-brand" href="${root_url}"><img class="d-inline-block align-top" src="${site_logo}" id="logo" alt="hikari logo" loading="lazy"/>Hikari</a>
+    <a class="navbar-brand" href="${root_url}"><img class="d-inline-block align-top" src="${site_logo}" id="logo" alt="hikari logo" loading="lazy"/>Hikari <small>v${hikari.__version__}</small></a>
 
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
         <ul class="navbar-nav">
@@ -19,6 +23,6 @@
     </form>
 
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
+        <span class="navbar-toggler-icon"/>
     </button>
 </nav>
