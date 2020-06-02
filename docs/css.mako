@@ -48,12 +48,12 @@ a {
     color: #e83e8c;
 }
 
-.breadcrumb-item.inactive {
+.breadcrumb-item.inactive > a {
     color: #a626a4 !important;
 }
 
-.breadcrumb-item.active {
-    color: #e83e8c;
+.breadcrumb-item.active > a {
+    color: #e83e8c !important;
 }
 
 .breadcrumb-item+.breadcrumb-item::before {
