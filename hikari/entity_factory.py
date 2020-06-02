@@ -603,6 +603,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
     # MESSAGES #
     ############
 
+    @abc.abstractmethod
     def deserialize_message(self, payload: data_binding.JSONObject) -> messages.Message:
         """Parse a raw payload from Discord into a message object.
 
