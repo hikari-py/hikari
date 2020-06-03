@@ -71,6 +71,7 @@
     QUAL_MODULE = "module"
     QUAL_NAMESPACE = "namespace"
     QUAL_PACKAGE = "package"
+    QUAL_PROPERTY = "property"
     QUAL_REF = "ref"
     QUAL_TYPEHINT = "type hint"
     QUAL_VAR = "var"
@@ -101,19 +102,22 @@
                 else:
                     qual = dobj.funcdef()
 
-                prefix = "<small class='text-muted'><em>" + qual + "</em></small> "
+                prefix = "<small class='text-muted'><em>" + qual + "</em></small>"
 
             elif isinstance(dobj, pdoc.Variable):
-                if dobj.module.name == "typing" or dobj.docstring and dobj.docstring.casefold().startswith(("type hint", "typehint", "type alias")):
-                    prefix = F"<small class='text-muted'><em>{QUAL_TYPEHINT} </em></small> "
+                if hasattr(dobj.cls, "obj") and (descriptor := dobj.cls.obj.__dict__.get(dobj.name)) and isinstance(descriptor, property):
+                    prefix = f"<small class='text-muted'><em>{QUAL_PROPERTY}</em></small>"
+
+                elif dobj.module.name == "typing" or dobj.docstring and dobj.docstring.casefold().startswith(("type hint", "typehint", "type alias")):
+                    prefix = F"<small class='text-muted'><em>{QUAL_TYPEHINT} </em></small>"
                 elif all(not c.isalpha() or c.isupper() for c in dobj.name):
-                    prefix = f"<small class='text-muted'><em>{QUAL_CONST}</em></small> "
+                    prefix = f"<small class='text-muted'><em>{QUAL_CONST}</em></small>"
                 else:
-                    prefix = f"<small class='text-muted'><em>{QUAL_VAR}</em></small> "
+                    prefix = f"<small class='text-muted'><em>{QUAL_VAR}</em></small>"
 
             elif isinstance(dobj, pdoc.Class):
                 if not hide_ref and dobj.module.name != dobj.obj.__module__:
-                    qual = f"{QUAL_REF} "
+                    qual = f"{QUAL_REF}"
                 else:
                     qual = ""
 
@@ -251,7 +255,7 @@
         return_type = get_annotation(v.type_annotation)
     %>
     <dt>
-        <pre><code class="python">${link(v, anchor=True)}${return_type}</code></pre>
+        <pre><code class="python">${link(v, with_prefixes=True, anchor=True)}${return_type}</code></pre>
     </dt>
     <dd>${v.docstring | to_html}</dd>
 </%def>
@@ -635,6 +639,11 @@
 
                 <dt><code>${QUAL_PACKAGE}</code></dt>
                 <dd>Python package that can be imported and can contain sub-modules.</dd>
+
+                <dt><code>${QUAL_PROPERTY}</code></dt>
+                <dd>
+                    Property type. Will always support read operations.
+                </dd>
 
                 <dt><code>${QUAL_NAMESPACE}</code></dt>
                 <dd>Python namespace package that can contain sub-modules, but is not directly importable.</dd>
