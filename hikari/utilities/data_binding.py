@@ -37,6 +37,7 @@ import json
 import typing
 
 import aiohttp.typedefs
+import multidict
 
 from hikari.models import bases
 from hikari.utilities import undefined
@@ -85,7 +86,7 @@ else:
     """Convert a JSON string to a Python type."""
 
 
-class StringMapBuilder(typing.Dict[str, str]):
+class StringMapBuilder(multidict.MultiDict[str, str]):
     """Helper class used to quickly build query strings or header maps.
 
     This will consume any items that are not
@@ -93,7 +94,6 @@ class StringMapBuilder(typing.Dict[str, str]):
     it will be ignored when inserting it. This reduces the amount of
     boilerplate needed for generating the headers and query strings for
     low-level HTTP API interaction, amongst other things.
-
 
     !!! warn
         Because this subclasses `dict`, you should not use the

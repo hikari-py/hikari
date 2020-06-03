@@ -30,6 +30,7 @@ import types
 import typing
 
 import aiohttp.typedefs
+import multidict
 
 from hikari.net import tracing
 
@@ -221,7 +222,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         url: str,
         headers: aiohttp.typedefs.LooseHeaders,
         body: typing.Union[aiohttp.FormData, dict, list, None],
-        query: typing.Dict[str, str],
+        query: typing.Union[typing.Dict[str, str], multidict.MultiDict[str, str]],
     ) -> aiohttp.ClientResponse:
         """Make an HTTP request and return the response.
 
