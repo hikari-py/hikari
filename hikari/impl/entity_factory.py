@@ -75,7 +75,10 @@ def _deserialize_max_age(seconds: int) -> typing.Optional[datetime.timedelta]:
 
 
 class EntityFactoryImpl(entity_factory.IEntityFactory):
-    """Interface for an entity factory implementation."""
+    """Standard implementation for a serializer/deserializer.
+
+    This will convert objects to/from JSON compatible representations.
+    """
 
     def __init__(self, app: app_.IApp) -> None:
         self._app = app
@@ -143,18 +146,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ################
 
     def deserialize_own_connection(self, payload: data_binding.JSONObject) -> applications.OwnConnection:
-        """Parse a raw payload from Discord into an own connection object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.applications.OwnConnection
-            The parsed own connection object.
-        """
         own_connection = applications.OwnConnection()
         own_connection.id = snowflake.Snowflake(payload["id"])
         own_connection.name = payload["name"]
@@ -171,18 +162,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return own_connection
 
     def deserialize_own_guild(self, payload: data_binding.JSONObject) -> applications.OwnGuild:
-        """Parse a raw payload from Discord into an own guild object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.applications.OwnGuild
-            The parsed own guild object.
-        """
         own_guild = self._set_partial_guild_attributes(payload, applications.OwnGuild())
         own_guild.is_owner = bool(payload["owner"])
         # noinspection PyArgumentList
@@ -190,18 +169,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return own_guild
 
     def deserialize_application(self, payload: data_binding.JSONObject) -> applications.Application:
-        """Parse a raw payload from Discord into an application object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.applications.Application
-            The parsed application object.
-        """
         application = applications.Application()
         application.set_app(self._app)
         application.id = snowflake.Snowflake(payload["id"])
@@ -332,18 +299,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return audit_logs.UnrecognisedAuditLogEntryInfo(payload)
 
     def deserialize_audit_log(self, payload: data_binding.JSONObject) -> audit_logs.AuditLog:
-        """Parse a raw payload from Discord into an audit log object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.audit_logs.AuditLogEntry
-            The parsed audit log object.
-        """
         audit_log = audit_logs.AuditLog()
 
         entries = {}
@@ -414,18 +369,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ############
 
     def deserialize_permission_overwrite(self, payload: data_binding.JSONObject) -> channels_.PermissionOverwrite:
-        """Parse a raw payload from Discord into a permission overwrite object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.channels.PermissionOverwrote
-            The parsed permission overwrite object.
-        """
         # noinspection PyArgumentList
         permission_overwrite = channels_.PermissionOverwrite(
             id=snowflake.Snowflake(payload["id"]), type=channels_.PermissionOverwriteType(payload["type"]),
@@ -437,18 +380,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return permission_overwrite
 
     def serialize_permission_overwrite(self, overwrite: channels_.PermissionOverwrite) -> data_binding.JSONObject:
-        """Serialize a permission overwrite object to a json serializable dict.
-
-        Parameters
-        ----------
-        overwrite : hikari.models.channels.PermissionOverwrite
-            The permission overwrite object to serialize.
-
-        Returns
-        -------
-        Dict[Hashable, Any]
-            The dict representation of the permission overwrite object provided.
-        """
         return {"id": str(overwrite.id), "type": overwrite.type, "allow": overwrite.allow, "deny": overwrite.deny}
 
     def _set_partial_channel_attributes(
@@ -462,18 +393,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return channel
 
     def deserialize_partial_channel(self, payload: data_binding.JSONObject) -> channels_.PartialChannel:
-        """Parse a raw payload from Discord into a partial channel object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.channels.PartialChannel
-            The parsed partial channel object.
-        """
         return self._set_partial_channel_attributes(payload, channels_.PartialChannel())
 
     def _set_dm_channel_attributes(self, payload: data_binding.JSONObject, channel: DMChannelT) -> DMChannelT:
@@ -489,33 +408,9 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return channel
 
     def deserialize_dm_channel(self, payload: data_binding.JSONObject) -> channels_.DMChannel:
-        """Parse a raw payload from Discord into a DM channel object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.channels.DMChannel
-            The parsed DM channel object.
-        """
         return self._set_dm_channel_attributes(payload, channels_.DMChannel())
 
     def deserialize_group_dm_channel(self, payload: data_binding.JSONObject) -> channels_.GroupDMChannel:
-        """Parse a raw payload from Discord into a group DM channel object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.channels.GroupDMChannel
-            The parsed group DM channel object.
-        """
         group_dm_channel = self._set_dm_channel_attributes(payload, channels_.GroupDMChannel())
         group_dm_channel.owner_id = snowflake.Snowflake(payload["owner_id"])
         group_dm_channel.icon_hash = payload["icon"]
@@ -543,33 +438,9 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return channel
 
     def deserialize_guild_category(self, payload: data_binding.JSONObject) -> channels_.GuildCategory:
-        """Parse a raw payload from Discord into a guild category object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.channels.GuildCategory
-            The parsed partial channel object.
-        """
         return self._set_guild_channel_attributes(payload, channels_.GuildCategory())
 
     def deserialize_guild_text_channel(self, payload: data_binding.JSONObject) -> channels_.GuildTextChannel:
-        """Parse a raw payload from Discord into a guild text channel object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.channels.GuildTextChannel
-            The parsed guild text channel object.
-        """
         guild_text_category = self._set_guild_channel_attributes(payload, channels_.GuildTextChannel())
         guild_text_category.topic = payload["topic"]
 
@@ -586,18 +457,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild_text_category
 
     def deserialize_guild_news_channel(self, payload: data_binding.JSONObject) -> channels_.GuildNewsChannel:
-        """Parse a raw payload from Discord into a guild news channel object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.channels.GuildNewsChannel
-            The parsed guild news channel object.
-        """
         guild_news_channel = self._set_guild_channel_attributes(payload, channels_.GuildNewsChannel())
         guild_news_channel.topic = payload["topic"]
 
@@ -612,51 +471,15 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild_news_channel
 
     def deserialize_guild_store_channel(self, payload: data_binding.JSONObject) -> channels_.GuildStoreChannel:
-        """Parse a raw payload from Discord into a guild store channel object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.channels.GuildStoreChannel
-            The parsed guild store channel object.
-        """
         return self._set_guild_channel_attributes(payload, channels_.GuildStoreChannel())
 
     def deserialize_guild_voice_channel(self, payload: data_binding.JSONObject) -> channels_.GuildVoiceChannel:
-        """Parse a raw payload from Discord into a guild voice channel object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.channels.GuildVoiceChannel
-            The parsed guild voice channel object.
-        """
         guild_voice_channel = self._set_guild_channel_attributes(payload, channels_.GuildVoiceChannel())
         guild_voice_channel.bitrate = int(payload["bitrate"])
         guild_voice_channel.user_limit = int(payload["user_limit"])
         return guild_voice_channel
 
     def deserialize_channel(self, payload: data_binding.JSONObject) -> channels_.PartialChannel:
-        """Parse a raw payload from Discord into a channel object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.channels.PartialChannel
-            The parsed partial channel based object.
-        """
         # noinspection PyArgumentList
         return self._channel_type_mapping[payload["type"]](payload)
 
@@ -665,18 +488,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ##########
 
     def deserialize_embed(self, payload: data_binding.JSONObject) -> embeds.Embed:
-        """Parse a raw payload from Discord into an embed object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.embeds.Embed
-            The parsed embed object.
-        """
         embed = embeds.Embed()
         embed.title = payload.get("title")
         embed.description = payload.get("description")
@@ -754,18 +565,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return embed
 
     def serialize_embed(self, embed: embeds.Embed) -> data_binding.JSONObject:
-        """Serialize an embed object to a json serializable dict.
-
-        Parameters
-        ----------
-        embed : hikari.models.embeds.Embed
-            The embed object to serialize.
-
-        Returns
-        -------
-        Dict[Hashable, Any]
-            The dict representation of the provided embed object.
-        """
         payload = {}
 
         if embed.title is not None:
@@ -846,35 +645,11 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ##########
 
     def deserialize_unicode_emoji(self, payload: data_binding.JSONObject) -> emojis.UnicodeEmoji:
-        """Parse a raw payload from Discord into a unicode emoji object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.emojis.UnicodeEmoji
-            The parsed unicode emoji object.
-        """
         unicode_emoji = emojis.UnicodeEmoji()
         unicode_emoji.name = payload["name"]
         return unicode_emoji
 
     def deserialize_custom_emoji(self, payload: data_binding.JSONObject) -> emojis.CustomEmoji:
-        """Parse a raw payload from Discord into a custom emoji object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.emojis.CustomEmoji
-            The parsed custom emoji object.
-        """
         custom_emoji = emojis.CustomEmoji()
         custom_emoji.set_app(self._app)
         custom_emoji.id = snowflake.Snowflake(payload["id"])
@@ -883,18 +658,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return custom_emoji
 
     def deserialize_known_custom_emoji(self, payload: data_binding.JSONObject) -> emojis.KnownCustomEmoji:
-        """Parse a raw payload from Discord into a known custom emoji object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.emojis.KnownCustomEmoji
-            The parsed known custom emoji object.
-        """
         known_custom_emoji = emojis.KnownCustomEmoji()
         known_custom_emoji.set_app(self._app)
         known_custom_emoji.id = snowflake.Snowflake(payload["id"])
@@ -914,18 +677,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_emoji(
         self, payload: data_binding.JSONObject
     ) -> typing.Union[emojis.UnicodeEmoji, emojis.CustomEmoji]:
-        """Parse a raw payload from Discord into an emoji object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.emojis.UnicodeEmoji | hikari.models.emoji.CustomEmoji
-            The parsed custom or unicode emoji object.
-        """
         if payload.get("id") is not None:
             return self.deserialize_custom_emoji(payload)
 
@@ -936,18 +687,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ###########
 
     def deserialize_gateway_bot(self, payload: data_binding.JSONObject) -> gateway.GatewayBot:
-        """Parse a raw payload from Discord into a gateway bot object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.gateway.GatewayBot
-            The parsed gateway bot object.
-        """
         gateway_bot = gateway.GatewayBot()
         gateway_bot.url = payload["url"]
         gateway_bot.shard_count = int(payload["shards"])
@@ -967,18 +706,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ##########
 
     def deserialize_guild_widget(self, payload: data_binding.JSONObject) -> guilds.GuildWidget:
-        """Parse a raw payload from Discord into a guild widget object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.guilds.GuildWidget
-            The parsed guild embed object.
-        """
         guild_embed = guilds.GuildWidget()
         guild_embed.set_app(self._app)
 
@@ -990,24 +717,11 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild_embed
 
     def deserialize_member(
-        self, payload: data_binding.JSONObject, *, user: typing.Optional[users.User] = None
-    ) -> guilds.Member:
-        """Parse a raw payload from Discord into a member object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        self,
+        payload: data_binding.JSONObject,
         *,
-        user : hikari.models.users.User?
-            The user to attach to this member, should be passed in situations
-            where "user" is not included in the payload.
-
-        Returns
-        -------
-        hikari.models.guilds.Member
-            The parsed member object.
-        """
+        user: typing.Union[undefined.Undefined, users.User] = undefined.Undefined()
+    ) -> guilds.Member:
         guild_member = guilds.Member()
         guild_member.set_app(self._app)
         guild_member.user = user or self.deserialize_user(payload["user"])
@@ -1024,18 +738,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild_member
 
     def deserialize_role(self, payload: data_binding.JSONObject) -> guilds.Role:
-        """Parse a raw payload from Discord into a guild role object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.guilds.GuildRole
-            The parsed guild role object.
-        """
         guild_role = guilds.Role()
         guild_role.set_app(self._app)
         guild_role.id = snowflake.Snowflake(payload["id"])
@@ -1064,33 +766,9 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return integration
 
     def deserialize_partial_integration(self, payload: data_binding.JSONObject) -> guilds.PartialIntegration:
-        """Parse a raw payload from Discord into a partial integration object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.guilds.PartialIntegration
-            The parsed partial integration object.
-        """
         return self._set_partial_integration_attributes(payload, guilds.PartialIntegration())
 
     def deserialize_integration(self, payload: data_binding.JSONObject) -> guilds.Integration:
-        """Parse a raw payload from Discord into an integration object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.guilds.Integration
-            The parsed integration object.
-        """
         guild_integration = self._set_partial_integration_attributes(payload, guilds.Integration())
         guild_integration.is_enabled = payload["enabled"]
         guild_integration.is_syncing = payload["syncing"]
@@ -1112,36 +790,12 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild_integration
 
     def deserialize_guild_member_ban(self, payload: data_binding.JSONObject) -> guilds.GuildMemberBan:
-        """Parse a raw payload from Discord into a guild member ban object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.GuildMemberBan
-            The parsed guild member ban object.
-        """
         guild_member_ban = guilds.GuildMemberBan()
         guild_member_ban.reason = payload["reason"]
         guild_member_ban.user = self.deserialize_user(payload["user"])
         return guild_member_ban
 
     def deserialize_unavailable_guild(self, payload: data_binding.JSONObject) -> guilds.UnavailableGuild:
-        """Parse a raw payload from Discord into a unavailable guild object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.guilds.UnavailableGuild
-            The parsed unavailable guild object.
-        """
         unavailable_guild = guilds.UnavailableGuild()
         unavailable_guild.set_app(self._app)
         unavailable_guild.id = snowflake.Snowflake(payload["id"])
@@ -1165,18 +819,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild
 
     def deserialize_guild_preview(self, payload: data_binding.JSONObject) -> guilds.GuildPreview:
-        """Parse a raw payload from Discord into a guild preview object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.guilds.GuildPreview
-            The parsed guild preview object.
-        """
         guild_preview = self._set_partial_guild_attributes(payload, guilds.GuildPreview())
         guild_preview.splash_hash = payload["splash"]
         guild_preview.discovery_splash_hash = payload["discovery_splash"]
@@ -1189,18 +831,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild_preview
 
     def deserialize_guild(self, payload: data_binding.JSONObject) -> guilds.Guild:
-        """Parse a raw payload from Discord into a guild object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.guilds.Guild
-            The parsed guild object.
-        """
         guild = self._set_partial_guild_attributes(payload, guilds.Guild())
         guild.splash_hash = payload["splash"]
         guild.discovery_splash_hash = payload["discovery_splash"]
@@ -1322,18 +952,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ###########
 
     def deserialize_vanity_url(self, payload: data_binding.JSONObject) -> invites.VanityURL:
-        """Parse a raw payload from Discord into a vanity url object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.invites.VanityURL
-            The parsed vanity url object.
-        """
         vanity_url = invites.VanityURL()
         vanity_url.set_app(self._app)
         vanity_url.code = payload["code"]
@@ -1372,33 +990,9 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return invite
 
     def deserialize_invite(self, payload: data_binding.JSONObject) -> invites.Invite:
-        """Parse a raw payload from Discord into an invite object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.invites.Invite
-            The parsed invite object.
-        """
         return self._set_invite_attributes(payload, invites.Invite())
 
     def deserialize_invite_with_metadata(self, payload: data_binding.JSONObject) -> invites.InviteWithMetadata:
-        """Parse a raw payload from Discord into a invite with metadata object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.invites.InviteWithMetadata
-            The parsed invite with metadata object.
-        """
         invite_with_metadata = self._set_invite_attributes(payload, invites.InviteWithMetadata())
         invite_with_metadata.uses = int(payload["uses"])
         invite_with_metadata.max_uses = int(payload["max_uses"])
@@ -1414,18 +1008,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
 
     # TODO: arbitrarily partial ver?
     def deserialize_message(self, payload: data_binding.JSONObject) -> messages.Message:
-        """Parse a raw payload from Discord into a message object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.messages.Message
-            The parsed message object.
-        """
         message = messages.Message()
         message.set_app(self._app)
         message.id = snowflake.Snowflake(payload["id"])
@@ -1514,18 +1096,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     #############
 
     def deserialize_member_presence(self, payload: data_binding.JSONObject) -> presences_.MemberPresence:
-        """Parse a raw payload from Discord into a member presence object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.guilds.MemberPresence
-            The parsed member presence object.
-        """
         guild_member_presence = presences_.MemberPresence()
         guild_member_presence.set_app(self._app)
         user_payload = payload["user"]
@@ -1670,37 +1240,13 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return user
 
     def deserialize_user(self, payload: data_binding.JSONObject) -> users.User:
-        """Parse a raw payload from Discord into a user object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.users.User
-            The parsed user object.
-        """
         user = self._set_user_attributes(payload, users.User())
         # noinspection PyArgumentList
         user.flags = users.UserFlag(payload["public_flags"]) if "public_flags" in payload else users.UserFlag.NONE
         return user
 
-    def deserialize_my_user(self, payload: data_binding.JSONObject) -> users.MyUser:
-        """Parse a raw payload from Discord into a my user object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.users.MyUser
-            The parsed my user object.
-        """
-        my_user = self._set_user_attributes(payload, users.MyUser())
+    def deserialize_my_user(self, payload: data_binding.JSONObject) -> users.OwnUser:
+        my_user = self._set_user_attributes(payload, users.OwnUser())
         my_user.is_mfa_enabled = payload["mfa_enabled"]
         my_user.locale = payload.get("locale")
         my_user.is_verified = payload.get("verified")
@@ -1716,18 +1262,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ##########
 
     def deserialize_voice_state(self, payload: data_binding.JSONObject) -> voices.VoiceState:
-        """Parse a raw payload from Discord into a voice state object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.voices.VoiceState
-            The parsed voice state object.
-        """
         voice_state = voices.VoiceState()
         voice_state.set_app(self._app)
         voice_state.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
@@ -1748,18 +1282,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return voice_state
 
     def deserialize_voice_region(self, payload: data_binding.JSONObject) -> voices.VoiceRegion:
-        """Parse a raw payload from Discord into a voice region object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.voices.VoiceRegion
-            The parsed voice region object.
-        """
         voice_region = voices.VoiceRegion()
         voice_region.id = payload["id"]
         voice_region.name = payload["name"]
@@ -1774,18 +1296,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ############
 
     def deserialize_webhook(self, payload: data_binding.JSONObject) -> webhooks.Webhook:
-        """Parse a raw payload from Discord into a webhook object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.models.webhooks.Webhook
-            The parsed webhook object.
-        """
         webhook = webhooks.Webhook()
         webhook.id = snowflake.Snowflake(payload["id"])
         # noinspection PyArgumentList

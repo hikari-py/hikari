@@ -30,7 +30,7 @@ __all__ = [
     "StoppedEvent",
     "ReadyEvent",
     "ResumedEvent",
-    "MyUserUpdateEvent",
+    "OwnUserUpdateEvent",
 ]
 
 import typing
@@ -120,7 +120,7 @@ class ReadyEvent(base_events.HikariEvent):
     gateway_version: int = attr.ib(repr=True)
     """The gateway version this is currently connected to."""
 
-    my_user: users.MyUser = attr.ib(repr=True)
+    my_user: users.OwnUser = attr.ib(repr=True)
     """The object of the current bot account this connection is for."""
 
     unavailable_guilds: typing.Mapping[snowflake.Snowflake, guilds.UnavailableGuild] = attr.ib()
@@ -153,7 +153,7 @@ class ReadyEvent(base_events.HikariEvent):
 
 
 @attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class MyUserUpdateEvent(base_events.HikariEvent, users.MyUser):
+class OwnUserUpdateEvent(base_events.HikariEvent, users.OwnUser):
     """Used to represent User Update gateway events.
 
     Sent when the current user is updated.

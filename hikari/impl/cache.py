@@ -194,10 +194,10 @@ class CacheImpl(cache.ICache):
     async def delete_user(self, user_id: int) -> typing.Optional[users.User]:
         pass
 
-    async def create_my_user(self, payload: data_binding.JSONObject, can_cache: bool = False) -> users.MyUser:
+    async def create_my_user(self, payload: data_binding.JSONObject, can_cache: bool = False) -> users.OwnUser:
         pass
 
-    async def update_my_user(self, my_user: users.MyUser, payload: data_binding.JSONObject) -> users.MyUser:
+    async def update_my_user(self, my_user: users.OwnUser, payload: data_binding.JSONObject) -> users.OwnUser:
         pass
 
     async def get_my_user(self) -> typing.Optional[users.User]:

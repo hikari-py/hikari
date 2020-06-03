@@ -59,20 +59,22 @@ class IApp(abc.ABC):
     A quick and dirty theoretical concrete implementation may look like the
     following.
 
-        class MyApp(IApp):
-            def __init__(self):
-                self._logger = logging.getLogger(__name__)
-                self._cache = MyCacheImplementation(self)
-                self._entity_factory = MyEntityFactoryImplementation(self)
-                self._thread_pool = concurrent.futures.ThreadPoolExecutor()
+    ```py
+    class MyApp(IApp):
+        def __init__(self):
+            self._logger = logging.getLogger(__name__)
+            self._cache = MyCacheImplementation(self)
+            self._entity_factory = MyEntityFactoryImplementation(self)
+            self._thread_pool = concurrent.futures.ThreadPoolExecutor()
 
-            logger = property(lambda self: self._logger)
-            cache = property(lambda self: self._cache)
-            entity_factory = property(lambda self: self._entity_factory)
-            thread_pool = property(lambda self: self._thread_pool)
+        logger = property(lambda self: self._logger)
+        cache = property(lambda self: self._cache)
+        entity_factory = property(lambda self: self._entity_factory)
+        thread_pool = property(lambda self: self._thread_pool)
 
-            async def close(self):
-                self._thread_pool.shutdown()
+        async def close(self):
+            self._thread_pool.shutdown()
+    ```
 
     If you are in any doubt, check out the `hikari.RESTApp` and `hikari.Bot`
     implementations to see how they are pieced together!
@@ -196,15 +198,18 @@ class IGatewayDispatcher(IApp, abc.ABC):
     to the event dispatcher. This provides a more intuitive syntax for
     applications.
 
-        # We can now do this...
+    ```py
 
-        >>> @bot.listen()
-        >>> async def on_message(event: hikari.MessageCreateEvent) -> None: ...
+    # We can now do this...
 
-        # ...instead of having to do this...
+    >>> @bot.listen()
+    >>> async def on_message(event: hikari.MessageCreateEvent) -> None: ...
 
-        >>> @bot.listen(hikari.MessageCreateEvent)
-        >>> async def on_message(event: hikari.MessageCreateEvent) -> None: ...
+    # ...instead of having to do this...
+
+    >>> @bot.listen(hikari.MessageCreateEvent)
+    >>> async def on_message(event: hikari.MessageCreateEvent) -> None: ...
+    ```
 
     """
 
@@ -286,8 +291,10 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
             "Non-sharded" bots should expect one value to be in this mapping
             under the shard ID `0`.
 
-                >>> bot.gateway_shards[0].heartbeat_latency
-                0.145612141
+            ```py
+            >>> bot.gateway_shards[0].heartbeat_latency
+            0.145612141
+            ```
 
         Returns
         -------

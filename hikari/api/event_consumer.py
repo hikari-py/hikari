@@ -35,9 +35,9 @@ class IEventConsumer(component.IComponent, abc.ABC):
     """Interface describing a component that can consume raw gateway events.
 
     Implementations will usually want to combine this with a
-    `hikari.event_dispatcher.IEventDispatcher` for a basic in-memory single-app
-    event management system. You may in some cases implement this separately
-    if you are passing events onto a system such as a message queue.
+    `hikari.api.event_dispatcher.IEventDispatcher` for a basic in-memory
+    single-app event management system. You may in some cases implement this
+    separately if you are passing events onto a system such as a message queue.
     """
 
     __slots__ = ()
@@ -54,6 +54,6 @@ class IEventConsumer(component.IComponent, abc.ABC):
             The gateway shard that emitted the event.
         event_name : str
             The event name.
-        payload : Any
+        payload : hikari.utility.data_binding.JSONObject
             The payload provided with the event.
         """

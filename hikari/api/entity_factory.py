@@ -25,6 +25,7 @@ import abc
 import typing
 
 from hikari.api import component
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari.models import applications
@@ -45,7 +46,7 @@ if typing.TYPE_CHECKING:
 
 
 class IEntityFactory(component.IComponent, abc.ABC):
-    """Component that will serialize and deserialize JSON payloads."""
+    """Interface for components that serialize and deserialize JSON payloads."""
 
     __slots__ = ()
 
@@ -59,13 +60,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.applications.OwnConnection
-            The parsed own connection object.
+            The deserialized own connection object.
         """
 
     @abc.abstractmethod
@@ -74,13 +75,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.applications.OwnGuild
-            The parsed own guild object.
+            The deserialized own guild object.
         """
 
     @abc.abstractmethod
@@ -89,13 +90,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.applications.Application
-            The parsed application object.
+            The deserialized application object.
         """
 
     ##############
@@ -108,13 +109,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.audit_logs.AuditLog
-            The parsed audit log object.
+            The deserialized audit log object.
         """
 
     ############
@@ -127,13 +128,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.channels.PermissionOverwrote
-            The parsed permission overwrite object.
+            The deserialized permission overwrite object.
         """
 
     @abc.abstractmethod
@@ -147,8 +148,8 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Returns
         -------
-        Dict[Hashable, Any]
-            The dict representation of the permission overwrite object provided.
+        hikari.utilities.data_binding.JSONObject
+            The serialized representation.
         """
 
     @abc.abstractmethod
@@ -157,13 +158,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.channels.PartialChannel
-            The parsed partial channel object.
+            The deserialized partial channel object.
         """
 
     @abc.abstractmethod
@@ -172,13 +173,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.channels.DMChannel
-            The parsed DM channel object.
+            The deserialized DM channel object.
         """
 
     @abc.abstractmethod
@@ -187,13 +188,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.channels.GroupDMChannel
-            The parsed group DM channel object.
+            The deserialized group DM channel object.
         """
 
     @abc.abstractmethod
@@ -202,13 +203,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.channels.GuildCategory
-            The parsed partial channel object.
+            The deserialized partial channel object.
         """
 
     @abc.abstractmethod
@@ -217,13 +218,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-            payload : Mapping[str, Any]
-                The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.channels.GuildTextChannel
-            The parsed guild text channel object.
+            The deserialized guild text channel object.
         """
 
     @abc.abstractmethod
@@ -232,13 +233,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.channels.GuildNewsChannel
-            The parsed guild news channel object.
+            The deserialized guild news channel object.
         """
 
     @abc.abstractmethod
@@ -247,13 +248,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.channels.GuildStoreChannel
-            The parsed guild store channel object.
+            The deserialized guild store channel object.
         """
 
     @abc.abstractmethod
@@ -262,13 +263,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.channels.GuildVoiceChannel
-            The parsed guild voice channel object.
+            The deserialized guild voice channel object.
         """
 
     @abc.abstractmethod
@@ -277,13 +278,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.channels.PartialChannel
-            The parsed partial channel based object.
+            The deserialized partial channel-derived object.
         """
 
     ##########
@@ -296,13 +297,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.embeds.Embed
-            The parsed embed object.
+            The deserialized embed object.
         """
 
     @abc.abstractmethod
@@ -316,8 +317,8 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Returns
         -------
-        Dict[Hashable, Any]
-            The dict representation of the provided embed object.
+        hikari.utilities.data_binding.JSONObject
+            The serialized object representation.
         """
 
     ##########
@@ -330,13 +331,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.emojis.UnicodeEmoji
-            The parsed unicode emoji object.
+            The deserialized unicode emoji object.
         """
 
     @abc.abstractmethod
@@ -345,13 +346,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.emojis.CustomEmoji
-            The parsed custom emoji object.
+            The deserialized custom emoji object.
         """
 
     @abc.abstractmethod
@@ -360,13 +361,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.emojis.KnownCustomEmoji
-            The parsed known custom emoji object.
+            The deserialized known custom emoji object.
         """
 
     @abc.abstractmethod
@@ -377,13 +378,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.emojis.UnicodeEmoji | hikari.models.emoji.CustomEmoji
-            The parsed custom or unicode emoji object.
+            The deserialized custom or unicode emoji object.
         """
 
     ###########
@@ -396,13 +397,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.gateway.GatewayBot
-            The parsed gateway bot object.
+            The deserialized gateway bot object.
         """
 
     ##########
@@ -411,38 +412,40 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
     @abc.abstractmethod
     def deserialize_guild_widget(self, payload: data_binding.JSONObject) -> guilds.GuildWidget:
-        """Parse a raw payload from Discord into a guild embed object.
+        """Parse a raw payload from Discord into a guild widget object.
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
-        hikari.models.guilds.GuildEmbed
-            The parsed guild embed object.
+        hikari.models.guilds.GuildWidget
+            The deserialized guild widget object.
         """
 
     @abc.abstractmethod
     def deserialize_member(
-        self, payload: data_binding.JSONObject, *, user: typing.Optional[users.User] = None
+        self, 
+        payload: data_binding.JSONObject, 
+        *, 
+        user: typing.Union[undefined.Undefined, users.User] = undefined.Undefined()
     ) -> guilds.Member:
         """Parse a raw payload from Discord into a member object.
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-        *,
-        user : hikari.models.users.User?
-            The user to attach to this member, should be passed in situations
-            where "user" is not included in the payload.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
+        user : hikari.models.users.User or hikari.utilities.undefined.Undefined
+            The user to attach to this member, should only be passed in 
+            situations where "user" is not included in the payload.
 
         Returns
         -------
         hikari.models.guilds.Member
-            The parsed member object.
+            The deserialized member object.
         """
 
     @abc.abstractmethod
@@ -451,13 +454,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.guilds.GuildRole
-            The parsed role object.
+            The deserialized role object.
         """
 
     @abc.abstractmethod
@@ -466,13 +469,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.guilds.PartialIntegration
-            The parsed partial integration object.
+            The deserialized partial integration object.
         """
 
     @abc.abstractmethod
@@ -481,13 +484,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.guilds.Integration
-            The parsed integration object.
+            The deserialized integration object.
         """
 
     @abc.abstractmethod
@@ -496,13 +499,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.GuildMemberBan
-            The parsed guild member ban object.
+            The deserialized guild member ban object.
         """
 
     @abc.abstractmethod
@@ -511,13 +514,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.guilds.UnavailableGuild
-            The parsed unavailable guild object.
+            The deserialized unavailable guild object.
         """
 
     @abc.abstractmethod
@@ -526,13 +529,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.guilds.GuildPreview
-            The parsed guild preview object.
+            The deserialized guild preview object.
         """
 
     @abc.abstractmethod
@@ -541,13 +544,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.guilds.Guild
-            The parsed guild object.
+            The deserialized guild object.
         """
 
     ###########
@@ -560,13 +563,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.invites.VanityUrl
-            The parsed vanity url object.
+            The deserialized vanity url object.
         """
 
     @abc.abstractmethod
@@ -575,13 +578,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.invites.Invite
-            The parsed invite object.
+            The deserialized invite object.
         """
 
     @abc.abstractmethod
@@ -590,13 +593,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.invites.InviteWithMetadata
-            The parsed invite with metadata object.
+            The deserialized invite with metadata object.
         """
 
     ############
@@ -609,13 +612,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.messages.Message
-            The parsed message object.
+            The deserialized message object.
         """
 
     #############
@@ -628,13 +631,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.guilds.MemberPresence
-            The parsed member presence object.
+            The deserialized member presence object.
         """
 
     #########
@@ -647,28 +650,28 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.users.User
-            The parsed user object.
+            The deserialized user object.
         """
 
     @abc.abstractmethod
-    def deserialize_my_user(self, payload: data_binding.JSONObject) -> users.MyUser:
-        """Parse a raw payload from Discord into a my user object.
+    def deserialize_my_user(self, payload: data_binding.JSONObject) -> users.OwnUser:
+        """Parse a raw payload from Discord into a user object.
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
-        hikari.models.users.MyUser
-            The parsed my user object.
+        hikari.models.users.OwnUser
+            The deserialized user object.
         """
 
     ##########
@@ -681,13 +684,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.voices.VoiceState
-            The parsed voice state object.
+            The deserialized voice state object.
         """
 
     @abc.abstractmethod
@@ -696,13 +699,13 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.voices.VoiceRegion
-            The parsed voice region object.
+            The deserialized voice region object.
         """
 
     ############
@@ -715,11 +718,11 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.models.webhooks.Webhook
-            The parsed webhook object.
+            The deserialized webhook object.
         """
