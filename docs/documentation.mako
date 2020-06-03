@@ -592,84 +592,82 @@
             % endif
         </div>
 
-        <div class="row">
-            <div class="col">
-                <h2>Notation used in this documentation</h2>
-                <dl class="no-nest">
-                    <dt><code>${QUAL_DEF}</code></dt>
-                    <dd>Regular function.</dd>
-                    
-                    <dt><code>${QUAL_ASYNC_DEF}</code></dt>
-                    <dd>Coroutine function that should be awaited.</dd>
+        <div class="col">
+            <h2>Notation used in this documentation</h2>
+            <dl class="no-nest">
+                <dt><code>${QUAL_DEF}</code></dt>
+                <dd>Regular function.</dd>
 
-                    <dt><code>${QUAL_CLASS}</code></dt>
-                    <dd>Regular class that provides a certain functionality.</dd>
+                <dt><code>${QUAL_ASYNC_DEF}</code></dt>
+                <dd>Coroutine function that should be awaited.</dd>
 
-                    <dt><code>${QUAL_ABC}</code></dt>
-                    <dd>
-                        Abstract base class. These are partially implemented classes that require
-                        additional implementation details to be fully usable. Generally these are
-                        used to represet a subset of behaviour common between different 
-                        implementations.
-                    </dd>
+                <dt><code>${QUAL_CLASS}</code></dt>
+                <dd>Regular class that provides a certain functionality.</dd>
 
-                    <dt><code>${QUAL_DATACLASS}</code></dt>
-                    <dd>
-                        Data class. This is a class designed to model and store information 
-                        rather than provide a certain behaviour or functionality.
-                    </dd>
+                <dt><code>${QUAL_ABC}</code></dt>
+                <dd>
+                    Abstract base class. These are partially implemented classes that require
+                    additional implementation details to be fully usable. Generally these are
+                    used to represet a subset of behaviour common between different
+                    implementations.
+                </dd>
 
-                    <dt><code>${QUAL_ENUM}</code></dt>
-                    <dd>Enumerated type.</dd>
+                <dt><code>${QUAL_DATACLASS}</code></dt>
+                <dd>
+                    Data class. This is a class designed to model and store information
+                    rather than provide a certain behaviour or functionality.
+                </dd>
 
-                    <dt><code>${QUAL_ENUM_FLAG}</code></dt>
-                    <dd>Enumerated flag type. Supports being combined.</dd>
+                <dt><code>${QUAL_ENUM}</code></dt>
+                <dd>Enumerated type.</dd>
 
-                    <dt><code>${QUAL_METACLASS}</code></dt>
-                    <dd>
-                        Metaclass. This is a base type of a class, used to control how implementing
-                        classes are created, exist, operate, and get destroyed.
-                    </dd>
+                <dt><code>${QUAL_ENUM_FLAG}</code></dt>
+                <dd>Enumerated flag type. Supports being combined.</dd>
 
-                    <dt><code>${QUAL_MODULE}</code></dt>
-                    <dd>Python module that you can import directly</dd>
+                <dt><code>${QUAL_METACLASS}</code></dt>
+                <dd>
+                    Metaclass. This is a base type of a class, used to control how implementing
+                    classes are created, exist, operate, and get destroyed.
+                </dd>
 
-                    <dt><code>${QUAL_PACKAGE}</code></dt>
-                    <dd>Python package that can be imported and can contain sub-modules.</dd>
+                <dt><code>${QUAL_MODULE}</code></dt>
+                <dd>Python module that you can import directly</dd>
 
-                    <dt><code>${QUAL_NAMESPACE}</code></dt>
-                    <dd>Python namespace package that can contain sub-modules, but is not directly importable.</dd>
+                <dt><code>${QUAL_PACKAGE}</code></dt>
+                <dd>Python package that can be imported and can contain sub-modules.</dd>
 
-                    <dt><code>${QUAL_TYPEHINT}</code></dt>
-                    <dd>
-                        An object or attribute used to denote a certain type or combination of types.
-                        These usually provide no functionality and only exist for documentation purposes 
-                        and for static type-checkers.
-                    </dd>
+                <dt><code>${QUAL_NAMESPACE}</code></dt>
+                <dd>Python namespace package that can contain sub-modules, but is not directly importable.</dd>
 
-                    <dt><code>${QUAL_REF}</code></dt>
-                    <dd>
-                        Used to flag that an object is defined in a different file, and is just 
-                        referred to at the current location.
-                    </dd>
+                <dt><code>${QUAL_TYPEHINT}</code></dt>
+                <dd>
+                    An object or attribute used to denote a certain type or combination of types.
+                    These usually provide no functionality and only exist for documentation purposes
+                    and for static type-checkers.
+                </dd>
 
-                    <dt><code>${QUAL_VAR}</code></dt>
-                    <dd>
-                        Variable or attribute.
-                    </dd>
+                <dt><code>${QUAL_REF}</code></dt>
+                <dd>
+                    Used to flag that an object is defined in a different file, and is just
+                    referred to at the current location.
+                </dd>
 
-                    <dt><code>${QUAL_CONST}</code></dt>
-                    <dd>
-                        Value that should not be changed manually.
-                    </dd>
+                <dt><code>${QUAL_VAR}</code></dt>
+                <dd>
+                    Variable or attribute.
+                </dd>
 
-                    <dt><code>${QUAL_EXTERNAL}</code></dt>
-                    <dd>
-                        Attribute or object that is not covered by this documentation. This usually 
-                        denotes types from other dependencies, or from the standard library.
-                    </dd>
-                </dl>
-            </div>
+                <dt><code>${QUAL_CONST}</code></dt>
+                <dd>
+                    Value that should not be changed manually.
+                </dd>
+
+                <dt><code>${QUAL_EXTERNAL}</code></dt>
+                <dd>
+                    Attribute or object that is not covered by this documentation. This usually
+                    denotes types from other dependencies, or from the standard library.
+                </dd>
+            </dl>
         </div>
     </div>
 </div>
