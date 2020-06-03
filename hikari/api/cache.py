@@ -22,7 +22,6 @@ from __future__ import annotations
 __all__ = ["ICache"]
 
 import abc
-import typing
 
 from hikari.api import component
 

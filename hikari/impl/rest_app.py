@@ -43,7 +43,7 @@ class RESTAppImpl(app_.IRESTApp):
         self,
         config: typing.Union[undefined.Undefined, http_settings_.HTTPSettings] = undefined.Undefined(),
         debug: bool = False,
-        token: typing.Optional[str] = None,
+        token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         token_type: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         rest_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         version: int = 6,
@@ -61,8 +61,8 @@ class RESTAppImpl(app_.IRESTApp):
             rest_url=rest_url,
             version=version,
         )
-        self._cache = cache_impl.CacheImpl()
-        self._entity_factory = entity_factory_impl.EntityFactoryImpl()
+        self._cache = cache_impl.CacheImpl(self)
+        self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)
 
     @property
     def logger(self) -> logging.Logger:
@@ -70,7 +70,6 @@ class RESTAppImpl(app_.IRESTApp):
 
     @property
     def thread_pool(self) -> typing.Optional[futures.ThreadPoolExecutor]:
-        # XXX: fixme
         return None
 
     @property

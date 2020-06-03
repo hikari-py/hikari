@@ -32,7 +32,14 @@ class IComponent(abc.ABC):
 
     Objects that derive from this should usually be attributes on the
     `hikari.api.app.IApp` object.
+
+    Examples
+    --------
+    See the source code for `hikari.api.entity_factory.IEntityFactory`,
+    `hikari.api.cache.ICache`, and
+    `hikari.api.event_dispatcher.IEventDispatcher` for examples of usage.
     """
+
     __slots__ = ()
 
     @property
