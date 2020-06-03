@@ -291,10 +291,8 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
             "Non-sharded" bots should expect one value to be in this mapping
             under the shard ID `0`.
 
-            ```py
-            >>> bot.gateway_shards[0].heartbeat_latency
-            0.145612141
-            ```
+                >>> bot.gateway_shards[0].heartbeat_latency
+                0.145612141
 
         Returns
         -------
