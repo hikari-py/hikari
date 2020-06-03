@@ -1155,19 +1155,20 @@ class TestEntityFactoryImpl:
         return {
             "url": "wss://gateway.discord.gg",
             "shards": 1,
-            "session_start_limit": {"total": 1000, "remaining": 991, "reset_after": 14170186},
+            "session_start_limit": {"total": 1000, "remaining": 991, "reset_after": 14170186, "max_concurrency": 5},
         }
 
     def test_deserialize_gateway_bot(self, entity_factory_impl, gateway_bot_payload):
         gateway_bot = entity_factory_impl.deserialize_gateway_bot(gateway_bot_payload)
+        assert isinstance(gateway_bot, gateway.GatewayBot)
         assert gateway_bot.url == "wss://gateway.discord.gg"
         assert gateway_bot.shard_count == 1
-        assert isinstance(gateway_bot, gateway.GatewayBot)
         # SessionStartLimit
+        assert isinstance(gateway_bot.session_start_limit, gateway.SessionStartLimit)
+        assert gateway_bot.session_start_limit.max_concurrency == 5
         assert gateway_bot.session_start_limit.total == 1000
         assert gateway_bot.session_start_limit.remaining == 991
         assert gateway_bot.session_start_limit.reset_after == datetime.timedelta(milliseconds=14170186)
-        assert isinstance(gateway_bot.session_start_limit, gateway.SessionStartLimit)
 
     ##########
     # GUILDS #
