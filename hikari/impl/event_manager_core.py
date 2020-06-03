@@ -167,6 +167,19 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
 
         return decorator
 
+    async def wait_for(
+        self, event_type: typing.Type[_EventT], predicate: _PredicateT, timeout: typing.Union[float, int, None]
+    ) -> _EventT:
+
+        future = asyncio.get_event_loop().create_future()
+
+        if event_type not in self._waiters:
+            self._waiters[event_type] = set()
+
+        self._waiters[event_type].add((predicate, future))
+
+        return await asyncio.wait_for(future, timeout=timeout) if timeout is not None else await future
+
     async def _test_waiter(self, cls, event, predicate, future):
         try:
             result = predicate(event)
@@ -196,16 +209,3 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
                 self.logger.error("an exception occurred handling an event, but it has been ignored", exc_info=ex)
             else:
                 await self.dispatch(other.ExceptionEvent(app=self._app, exception=ex, event=event, callback=callback))
-
-    async def wait_for(
-        self, event_type: typing.Type[_EventT], predicate: _PredicateT, timeout: typing.Union[float, int, None]
-    ) -> _EventT:
-
-        future = asyncio.get_event_loop().create_future()
-
-        if event_type not in self._waiters:
-            self._waiters[event_type] = set()
-
-        self._waiters[event_type].add((predicate, future))
-
-        return await asyncio.wait_for(future, timeout=timeout) if timeout is not None else await future

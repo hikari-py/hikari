@@ -114,8 +114,8 @@ class TestEntityFactoryImpl:
         assert own_connection.is_revoked is False
         assert own_connection.integrations == [entity_factory_impl.deserialize_partial_integration(partial_integration)]
         assert own_connection.is_verified is True
-        assert own_connection.is_friend_syncing is False
-        assert own_connection.is_showing_activity is True
+        assert own_connection.is_friend_sync_enabled is False
+        assert own_connection.is_activity_visible is True
         assert own_connection.visibility == applications.ConnectionVisibility.NONE
         assert isinstance(own_connection, applications.OwnConnection)
 

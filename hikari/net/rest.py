@@ -116,7 +116,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         app: app_.IRESTApp,
         config: http_settings.HTTPSettings,
         debug: bool = False,
-        token: typing.Optional[str],
+        token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         token_type: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         rest_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         oauth2_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
@@ -143,10 +143,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         self._app = app
 
-        if token is None:
+        if isinstance(token, undefined.Undefined):
             self._token = None
         else:
-            if token_type is undefined.Undefined():
+            if isinstance(token_type, undefined.Undefined):
                 token_type = "Bot"
 
             self._token = f"{token_type.title()} {token}" if token is not None else None

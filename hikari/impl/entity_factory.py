@@ -155,8 +155,8 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
             self.deserialize_partial_integration(integration) for integration in payload.get("integrations", ())
         ]
         own_connection.is_verified = payload["verified"]
-        own_connection.is_friend_syncing = payload["friend_sync"]
-        own_connection.is_showing_activity = payload["show_activity"]
+        own_connection.is_friend_sync_enabled = payload["friend_sync"]
+        own_connection.is_activity_visible = payload["show_activity"]
         # noinspection PyArgumentList
         own_connection.visibility = applications.ConnectionVisibility(payload["visibility"])
         return own_connection
@@ -720,7 +720,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         self,
         payload: data_binding.JSONObject,
         *,
-        user: typing.Union[undefined.Undefined, users.User] = undefined.Undefined()
+        user: typing.Union[undefined.Undefined, users.User] = undefined.Undefined(),
     ) -> guilds.Member:
         guild_member = guilds.Member()
         guild_member.set_app(self._app)

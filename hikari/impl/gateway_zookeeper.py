@@ -155,18 +155,6 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         if self._gather_task is not None:
             await self._gather_task
 
-    async def _abort(self) -> None:
-        for shard_id in self._tasks:
-            await self._shards[shard_id].close()
-        await asyncio.gather(*self._tasks.values(), return_exceptions=True)
-
-    async def _gather(self) -> None:
-        try:
-            await asyncio.gather(*self._tasks.values())
-        finally:
-            self.logger.debug("gather failed, shutting down shard(s)")
-            await self.close()
-
     async def close(self) -> None:
         if self._tasks:
             # This way if we cancel the stopping task, we still shut down properly.
@@ -190,10 +178,6 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
                 if has_event_dispatcher:
                     # noinspection PyUnresolvedReferences
                     await self.event_dispatcher.dispatch(other.StoppedEvent())
-
-    async def _run(self) -> None:
-        await self.start()
-        await self.join()
 
     def run(self) -> None:
         loop = asyncio.get_event_loop()
@@ -308,3 +292,19 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
     @abc.abstractmethod
     async def _fetch_gateway_recommendations(self) -> gateway_models.GatewayBot:
         ...
+
+    async def _abort(self) -> None:
+        for shard_id in self._tasks:
+            await self._shards[shard_id].close()
+        await asyncio.gather(*self._tasks.values(), return_exceptions=True)
+
+    async def _gather(self) -> None:
+        try:
+            await asyncio.gather(*self._tasks.values())
+        finally:
+            self.logger.debug("gather failed, shutting down shard(s)")
+            await self.close()
+
+    async def _run(self) -> None:
+        await self.start()
+        await self.join()
