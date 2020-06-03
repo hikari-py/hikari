@@ -2317,7 +2317,7 @@ class TestEntityFactoryImpl:
         assert my_user.email == "blahblah@blah.blah"
         assert my_user.flags == users.UserFlag.DISCORD_PARTNER | users.UserFlag.DISCORD_EMPLOYEE
         assert my_user.premium_type is users.PremiumType.NITRO_CLASSIC
-        assert isinstance(my_user, users.MyUser)
+        assert isinstance(my_user, users.OwnUser)
 
     def test_deserialize_my_user_with_unset_fields(self, entity_factory_impl, mock_app, my_user_payload):
         my_user = entity_factory_impl.deserialize_my_user(
@@ -2338,7 +2338,7 @@ class TestEntityFactoryImpl:
         assert my_user.is_system is False
         assert my_user.is_verified is None
         assert my_user.email is None
-        assert isinstance(my_user, users.MyUser)
+        assert isinstance(my_user, users.OwnUser)
 
     ##########
     # Voices #

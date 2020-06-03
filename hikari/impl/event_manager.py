@@ -27,5 +27,3 @@ from hikari.impl import event_manager_core
 
 class EventManagerImpl(event_manager_core.EventManagerCore):
     """Provides event handling logic for Discord events."""
-
-    pass

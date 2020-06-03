@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["User", "MyUser", "UserFlag", "PremiumType"]
+__all__ = ["User", "OwnUser", "UserFlag", "PremiumType"]
 
 import enum
 import typing
@@ -180,8 +180,8 @@ class User(bases.Entity, bases.Unique):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class MyUser(User):
-    """Represents a user with extended oauth2 information."""
+class OwnUser(User):
+    """Represents a user with extended OAuth2 information."""
 
     is_mfa_enabled: bool = attr.ib(eq=False, hash=False)
     """Whether the user's account has 2fa enabled."""
@@ -212,7 +212,7 @@ class MyUser(User):
     This will always be `None` for bots.
     """
 
-    async def fetch_self(self) -> MyUser:
+    async def fetch_self(self) -> OwnUser:
         """Get this user's up-to-date object.
 
         Returns

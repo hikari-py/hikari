@@ -28,11 +28,20 @@ from hikari.api import app
 
 
 class IComponent(abc.ABC):
-    """A component that makes up part of the application."""
+    """A component that makes up part of the application.
 
+    Objects that derive from this should usually be attributes on the
+    `hikari.api.app.IApp` object.
+    """
     __slots__ = ()
 
     @property
     @abc.abstractmethod
     def app(self) -> app.IApp:
-        """Application that owns this component."""
+        """Return the Application that owns this component.
+
+        Returns
+        -------
+        hikari.api.app.IApp
+            The application implementation that owns this component.
+        """

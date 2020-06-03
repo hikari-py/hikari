@@ -1556,7 +1556,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         route = routes.DELETE_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
         await self._request(route)
 
-    async def fetch_my_user(self) -> users.MyUser:
+    async def fetch_my_user(self) -> users.OwnUser:
         route = routes.GET_MY_USER.compile()
         response = await self._request(route)
         return self._app.entity_factory.deserialize_my_user(response)
@@ -1566,7 +1566,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         *,
         username: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         avatar: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
-    ) -> users.MyUser:
+    ) -> users.OwnUser:
         route = routes.PATCH_MY_USER.compile()
         body = data_binding.JSONObjectBuilder()
         body.put("username", username)
