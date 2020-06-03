@@ -46,6 +46,17 @@ class SessionStartLimit:
     After it resets it will be set to `SessionStartLimit.total`.
     """
 
+    # This is not documented at the time of writing, but is a confirmed API
+    # feature, so I have included it for completeness.
+    max_concurrency: int = attr.ib(repr=True)
+    """Maximum connection concurrency.
+
+    This defines how many shards can be started at once within a 5 second
+    window. For most bots, this will always be `1`, but for very large bots,
+    this may be increased to reduce startup times. Contact Discord for
+    more information.
+    """
+
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class GatewayBot:

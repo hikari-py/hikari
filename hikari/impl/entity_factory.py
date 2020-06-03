@@ -657,6 +657,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         hikari.models.channels.PartialChannel
             The parsed partial channel based object.
         """
+        # noinspection PyArgumentList
         return self._channel_type_mapping[payload["type"]](payload)
 
     ##########
@@ -955,6 +956,9 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         session_start_limit.total = int(session_start_limit_payload["total"])
         session_start_limit.remaining = int(session_start_limit_payload["remaining"])
         session_start_limit.reset_after = datetime.timedelta(milliseconds=session_start_limit_payload["reset_after"])
+        # I do not trust that this may never be zero for some unknown reason. If it was 0, it
+        # would hang the application on start up, so I enforce it is at least 1.
+        session_start_limit.max_concurrency = max(session_start_limit_payload.get("max_concurrency", 0), 1)
         gateway_bot.session_start_limit = session_start_limit
         return gateway_bot
 

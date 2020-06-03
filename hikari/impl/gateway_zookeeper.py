@@ -73,6 +73,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         self._initial_status = initial_status
         self._intents = intents
         self._large_threshold = large_threshold
+        self._max_concurrency = 1
         self._request_close_event = asyncio.Event()
         self._shard_count = shard_count
         self._shard_ids = shard_ids
@@ -102,7 +103,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         start_time = time.perf_counter()
 
         try:
-            for i, shard_id in enumerate(self._shards):
+            for i, shard_ids in enumerate(self._max_concurrency_chunker()):
                 if self._request_close_event.is_set():
                     break
 
@@ -116,8 +117,18 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
                     if completed:
                         raise completed.pop().exception()
 
-                shard_obj = self._shards[shard_id]
-                self._tasks[shard_id] = await shard_obj.start()
+                window = {}
+                for shard_id in shard_ids:
+                    shard_obj = self._shards[shard_id]
+                    window[shard_id] = asyncio.create_task(shard_obj.start(), name=f"start gateway shard {shard_id}")
+
+                # Wait for the group to start.
+                await asyncio.gather(*window.values())
+
+                # Store the keep-alive tasks and continue.
+                for shard_id, start_task in window.items():
+                    self._tasks[shard_id] = start_task.result()
+
         finally:
             if len(self._tasks) != len(self._shards):
                 self.logger.warning(
@@ -125,16 +136,20 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
                     len(self._tasks),
                 )
                 await self._abort()
-                return
 
-        finish_time = time.perf_counter()
-        self._gather_task = asyncio.create_task(
-            self._gather(), name=f"shard zookeeper for {len(self._shards)} shard(s)"
-        )
-        self.logger.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
+                # We know an error occurred if this condition is met, so re-raise it.
+                raise
 
-        if hasattr(self, "event_dispatcher") and isinstance(self.event_dispatcher, event_dispatcher.IEventDispatcher):
-            await self.event_dispatcher.dispatch(other.StartedEvent())
+            finish_time = time.perf_counter()
+            self._gather_task = asyncio.create_task(
+                self._gather(), name=f"shard zookeeper for {len(self._shards)} shard(s)"
+            )
+            self.logger.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
+
+            if hasattr(self, "event_dispatcher") and isinstance(
+                self.event_dispatcher, event_dispatcher.IEventDispatcher
+            ):
+                await self.event_dispatcher.dispatch(other.StartedEvent())
 
     async def join(self) -> None:
         if self._gather_task is not None:
@@ -196,6 +211,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         except KeyboardInterrupt:
             self.logger.info("received signal to shut down client")
             raise
+
         finally:
             loop.run_until_complete(self.close())
             with contextlib.suppress(NotImplementedError):
@@ -241,9 +257,14 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
 
         self._shard_count = self._shard_count if self._shard_count else gw_recs.shard_count
         self._shard_ids = self._shard_ids if self._shard_ids else range(self._shard_count)
+        self._max_concurrency = gw_recs.session_start_limit.max_concurrency
         url = gw_recs.url
 
-        self.logger.info("will connect shards to %s", url)
+        self.logger.info(
+            "will connect shards to %s. max_concurrency while connecting is %s, contact Discord to get this increased",
+            url,
+            self._max_concurrency,
+        )
 
         shard_clients: typing.Dict[int, gateway.Gateway] = {}
         for shard_id in self._shard_ids:
@@ -267,6 +288,22 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
             shard_clients[shard_id] = shard
 
         self._shards = shard_clients  # pylint: disable=attribute-defined-outside-init
+
+    def _max_concurrency_chunker(self) -> typing.Iterator[typing.Iterator[int]]:
+        """Yield generators of shard IDs.
+
+        Each yielded generator will yield every shard ID that can be started
+        at the same time.
+
+        You should then wait 5 seconds between each window.
+        """
+        n = 0
+        while n < self._shard_count:
+            next_window = [i for i in range(n, n + self._max_concurrency) if i in self._shard_ids]
+            # Don't yield anything if no IDs are in the given window.
+            if next_window:
+                yield iter(next_window)
+            n += self._max_concurrency
 
     @abc.abstractmethod
     async def _fetch_gateway_recommendations(self) -> gateway_models.GatewayBot:
