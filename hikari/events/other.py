@@ -38,17 +38,17 @@ import typing
 import attr
 
 from hikari.events import base as base_events
-from hikari.models import guilds
-from hikari.models import users
-from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
+    from hikari.models import guilds
+    from hikari.models import users
     from hikari.net import gateway as gateway_client
+    from hikari.utilities import snowflake
 
 
 # Synthetic event, is not deserialized, and is produced by the dispatcher.
 @base_events.no_catch()
-@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
+@attr.s(auto_attribs=True, eq=False, hash=False, init=True, kw_only=True, slots=True)
 class ExceptionEvent(base_events.HikariEvent):
     """Descriptor for an exception thrown while processing an event."""
 
@@ -63,30 +63,31 @@ class ExceptionEvent(base_events.HikariEvent):
 
 
 # Synthetic event, is not deserialized
-@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
+@attr.s(auto_attribs=True, eq=False, hash=False, init=False, kw_only=True, slots=True)
 class StartingEvent(base_events.HikariEvent):
     """Event that is fired before the gateway client starts all shards."""
 
 
 # Synthetic event, is not deserialized
-@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
+@attr.s(auto_attribs=True, eq=False, hash=False, init=False, kw_only=True, slots=True)
 class StartedEvent(base_events.HikariEvent):
     """Event that is fired when the gateway client starts all shards."""
 
 
 # Synthetic event, is not deserialized
-@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
+@attr.s(auto_attribs=True, eq=False, hash=False, init=False, kw_only=True, slots=True)
 class StoppingEvent(base_events.HikariEvent):
     """Event that is fired when the gateway client is instructed to disconnect all shards."""
 
 
 # Synthetic event, is not deserialized
-@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
+@attr.s(auto_attribs=True, eq=False, hash=False, init=False, kw_only=True, slots=True)
 class StoppedEvent(base_events.HikariEvent):
     """Event that is fired when the gateway client has finished disconnecting all shards."""
 
 
-@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
+# Synthetic event, is not deserialized
+@attr.s(auto_attribs=True, eq=False, hash=False, init=True, kw_only=True, slots=True)
 class ConnectedEvent(base_events.HikariEvent):
     """Event invoked each time a shard connects."""
 
@@ -94,7 +95,8 @@ class ConnectedEvent(base_events.HikariEvent):
     """The shard that connected."""
 
 
-@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
+# Synthetic event, is not deserialized
+@attr.s(auto_attribs=True, eq=False, hash=False, init=True, kw_only=True, slots=True)
 class DisconnectedEvent(base_events.HikariEvent):
     """Event invoked each time a shard disconnects."""
 
@@ -102,7 +104,8 @@ class DisconnectedEvent(base_events.HikariEvent):
     """The shard that disconnected."""
 
 
-@attr.s(auto_attribs=True, eq=False, hash=False, kw_only=True, slots=True)
+# Synthetic event, is not deserialized
+@attr.s(auto_attribs=True, eq=False, hash=False, init=True, kw_only=True, slots=True)
 class ResumedEvent(base_events.HikariEvent):
     """Represents a gateway Resume event."""
 
@@ -110,7 +113,7 @@ class ResumedEvent(base_events.HikariEvent):
     """The shard that reconnected."""
 
 
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class ReadyEvent(base_events.HikariEvent):
     """Represents the gateway Ready event.
 
@@ -132,29 +135,25 @@ class ReadyEvent(base_events.HikariEvent):
     session_id: str = attr.ib(repr=True)
     """The id of the current gateway session, used for reconnecting."""
 
-    _shard_information: typing.Optional[typing.Tuple[int, int]] = attr.ib()
-    """Information about the current shard, only provided when IDENTIFYing."""
+    shard_id: typing.Optional[int] = attr.ib(repr=True)
+    """Zero-indexed ID of the current shard.
 
-    @property
-    def shard_id(self) -> typing.Optional[int]:
-        """Zero-indexed ID of the current shard.
+    This is only available if this ready event was received while IDENTIFYing.
+    """
 
-        This is only available if this ready event was received while IDENTIFYing.
-        """
-        return self._shard_information[0] if self._shard_information else None
+    shard_count: typing.Optional[int] = attr.ib(repr=True)
+    """Total shard count for this bot.
 
-    @property
-    def shard_count(self) -> typing.Optional[int]:
-        """Total shard count for this bot.
-
-        This is only available if this ready event was received while IDENTIFYing.
-        """
-        return self._shard_information[1] if self._shard_information else None
+    This is only available if this ready event was received while IDENTIFYing.
+    """
 
 
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class OwnUserUpdateEvent(base_events.HikariEvent, users.OwnUser):
     """Used to represent User Update gateway events.
 
     Sent when the current user is updated.
     """
+
+    my_user: users.MyUser = attr.ib(repr=True)
+    """The updated object of the current application's user."""

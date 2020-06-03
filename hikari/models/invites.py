@@ -36,6 +36,7 @@ if typing.TYPE_CHECKING:
 
     from hikari.models import channels
     from hikari.models import users
+    from hikari.utilities import snowflake
 
 
 @enum.unique
@@ -158,46 +159,46 @@ class Invite(bases.Entity):
     code: str = attr.ib(eq=True, hash=True, repr=True)
     """The code for this invite."""
 
-    guild: typing.Optional[InviteGuild] = attr.ib(
-        eq=False, hash=False, repr=True,
-    )
-    """The partial object of the guild this dm belongs to.
+    guild: typing.Optional[InviteGuild] = attr.ib(eq=False, hash=False, repr=False)
+    """The partial object of the guild this invite belongs to.
 
-    Will be `None` for group dm invites.
+    Will be `None` for group DM invites and when attached to a gateway event;
+    for invites received over the gateway you should refer to `Invite.guild_id`.
     """
 
-    channel: channels.PartialChannel = attr.ib(
-        eq=False, hash=False, repr=True,
-    )
-    """The partial object of the channel this invite targets."""
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    """The ID of the guild this invite belongs to.
 
-    inviter: typing.Optional[users.User] = attr.ib(
-        eq=False, hash=False,
-    )
+    Will be `None` for group DM invites.
+    """
+
+    channel: typing.Optional[channels.PartialChannel] = attr.ib(eq=False, hash=False, repr=False)
+    """The partial object of the channel this invite targets.
+
+    Will be `None` for invite objects that are attached to gateway events,
+    in which case you should refer to `Invite.channel_id`.
+    """
+
+    channel_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    """The ID of the channel this invite targets."""
+
+    inviter: typing.Optional[users.User] = attr.ib(eq=False, hash=False)
     """The object of the user who created this invite."""
 
-    target_user: typing.Optional[users.User] = attr.ib(
-        eq=False, hash=False,
-    )
+    target_user: typing.Optional[users.User] = attr.ib(eq=False, hash=False)
     """The object of the user who this invite targets, if set."""
 
-    target_user_type: typing.Optional[TargetUserType] = attr.ib(
-        eq=False, hash=False,
-    )
+    target_user_type: typing.Optional[TargetUserType] = attr.ib(eq=False, hash=False)
     """The type of user target this invite is, if applicable."""
 
-    approximate_presence_count: typing.Optional[int] = attr.ib(
-        eq=False, hash=False,
-    )
+    approximate_presence_count: typing.Optional[int] = attr.ib(eq=False, hash=False)
     """The approximate amount of presences in this invite's guild.
 
     This is only present when `with_counts` is passed as `True` to the GET
     Invites endpoint.
     """
 
-    approximate_member_count: typing.Optional[int] = attr.ib(
-        eq=False, hash=False,
-    )
+    approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False)
     """The approximate amount of members in this invite's guild.
 
     This is only present when `with_counts` is passed as `True` to the GET
