@@ -22,24 +22,31 @@ from __future__ import annotations
 
 __all__ = ["VoiceStateUpdateEvent", "VoiceServerUpdateEvent"]
 
+import typing
+
 import attr
 
 from hikari.events import base as base_events
 from hikari.models import intents
-from hikari.models import voices
-from hikari.utilities import snowflake
+
+if typing.TYPE_CHECKING:
+    from hikari.models import voices
+    from hikari.utilities import snowflake
 
 
 @base_events.requires_intents(intents.Intent.GUILD_VOICE_STATES)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class VoiceStateUpdateEvent(base_events.HikariEvent, voices.VoiceState):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class VoiceStateUpdateEvent(base_events.HikariEvent):
     """Used to represent voice state update gateway events.
 
     Sent when a user joins, leaves or moves voice channel(s).
     """
 
+    state: voices.VoiceState = attr.ib()
+    """The object of the voice state that's being updated."""
 
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
+
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class VoiceServerUpdateEvent(base_events.HikariEvent):
     """Used to represent voice server update gateway events.
 

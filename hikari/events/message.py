@@ -22,6 +22,7 @@ from __future__ import annotations
 
 __all__ = [
     "MessageCreateEvent",
+    "UpdateMessage",
     "MessageUpdateEvent",
     "MessageDeleteEvent",
     "MessageDeleteBulkEvent",
@@ -36,38 +37,39 @@ import typing
 import attr
 
 from hikari.events import base as base_events
-from hikari.models import applications
 from hikari.models import bases as base_models
-from hikari.models import embeds as embed_models
-from hikari.models import emojis
-from hikari.models import guilds
-from hikari.models import intents
 from hikari.models import messages
-from hikari.models import users
-from hikari.utilities import snowflake
-from hikari.utilities import undefined
+from hikari.models import intents
 
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.models import applications
+    from hikari.models import embeds as embed_models
+    from hikari.models import emojis
+    from hikari.models import guilds
+    from hikari.models import users
+    from hikari.utilities import snowflake
+    from hikari.utilities import undefined
+
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class MessageCreateEvent(base_events.HikariEvent, messages.Message):
+@attr.s(auto_attribs=True, eq=False, hash=False, init=False, kw_only=True, slots=True)
+class MessageCreateEvent(base_events.HikariEvent):
     """Used to represent Message Create gateway events."""
 
+    message: messages.Message
 
-# This is an arbitrarily partial version of `messages.Message`
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class MessageUpdateEvent(base_events.HikariEvent, base_models.Unique):
-    """Represents Message Update gateway events.
 
-    !!! note
-        All fields on this model except `MessageUpdateEvent.channel` and
-        `MessageUpdateEvent.id` may be set to `hikari.models.undefined.Undefined` (a singleton)
-        we have not received information about their state from Discord
-        alongside field nullability.
+class UpdateMessage(messages.Message):
+    """An arbitrarily partial version of `hikari.models.messages.Message`.
+
+    !!! warn
+        All fields on this model except `UpdateMessage.channel` and
+        `UpdateMessage.id` may be set to
+        `hikari.models.undefined.Undefined` (a singleton) if we have not
+        received information about their state from Discord alongside field
+        nullability.
     """
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -149,8 +151,25 @@ class MessageUpdateEvent(base_events.HikariEvent, base_models.Unique):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class MessageDeleteEvent(base_events.HikariEvent):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class MessageUpdateEvent(base_events.HikariEvent, base_models.Unique):
+    """Represents Message Update gateway events.
+
+    !!! warn
+        Unlike `MessageCreateEvent`, `MessageUpdateEvent.message` is an
+        arbitrarily partial version of `hikari.models.messages.Message` where
+        any field except `UpdateMessage.id` may be set to
+        `hikari.models.undefined.Undefined` (a singleton) to indicate that
+        it has not been changed.
+    """
+
+    message: UpdateMessage
+    """The partial message object with all updated fields."""
+
+
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class MessageDeleteEvent(base_events.HikariEvent, base_models.Entity):
     """Used to represent Message Delete gateway events.
 
     Sent when a message is deleted in a channel we have access to.
@@ -171,9 +190,10 @@ class MessageDeleteEvent(base_events.HikariEvent):
     """The ID of the message that was deleted."""
 
 
+# TODO: if this doesn't apply to DMs then does guild_id need to be nullable here?
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class MessageDeleteBulkEvent(base_events.HikariEvent):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class MessageDeleteBulkEvent(base_events.HikariEvent, base_models.Entity):
     """Used to represent Message Bulk Delete gateway events.
 
     Sent when multiple messages are deleted in a channel at once.
@@ -192,27 +212,29 @@ class MessageDeleteBulkEvent(base_events.HikariEvent):
     """A collection of the IDs of the messages that were deleted."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class MessageReactionAddEvent(base_events.HikariEvent):
-    """Used to represent Message Reaction Add gateway events."""
-
-    # TODO: common base classes!
-
-    user_id: snowflake.Snowflake = attr.ib(repr=True)
-    """The ID of the user adding the reaction."""
+class BaseMessageReactionEvent(base_events.HikariEvent, base_models.Entity):
+    """A base class that all message reaction events will inherit from."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
-    """The ID of the channel where this reaction is being added."""
+    """The ID of the channel where this reaction is happening."""
 
     message_id: snowflake.Snowflake = attr.ib(repr=True)
-    """The ID of the message this reaction is being added to."""
+    """The ID of the message this reaction event is happening on."""
 
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
-    """The ID of the guild where this reaction is being added.
+    """The ID of the guild where this reaction event is happening.
 
     This will be `None` if this is happening in a DM channel.
     """
+
+
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class MessageReactionAddEvent(BaseMessageReactionEvent):
+    """Used to represent Message Reaction Add gateway events."""
+
+    user_id: snowflake.Snowflake = attr.ib(repr=True)
+    """The ID of the user adding the reaction."""
 
     # TODO: does this contain a user? If not, should it be a PartialGuildMember?
     member: typing.Optional[guilds.Member] = attr.ib()
@@ -226,63 +248,33 @@ class MessageReactionAddEvent(base_events.HikariEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class MessageReactionRemoveEvent(base_events.HikariEvent):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class MessageReactionRemoveEvent(BaseMessageReactionEvent):
     """Used to represent Message Reaction Remove gateway events."""
 
     user_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the user who is removing their reaction."""
-
-    channel_id: snowflake.Snowflake = attr.ib(repr=True)
-    """The ID of the channel where this reaction is being removed."""
-
-    message_id: snowflake.Snowflake = attr.ib(repr=True)
-    """The ID of the message this reaction is being removed from."""
-
-    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
-    """The ID of the guild where this reaction is being removed
-
-    This will be `None` if this event is happening in a DM channel.
-    """
 
     emoji: typing.Union[emojis.UnicodeEmoji, emojis.CustomEmoji] = attr.ib(repr=True)
     """The object of the emoji being removed."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class MessageReactionRemoveAllEvent(base_events.HikariEvent):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class MessageReactionRemoveAllEvent(BaseMessageReactionEvent):
     """Used to represent Message Reaction Remove All gateway events.
 
     Sent when all the reactions are removed from a message, regardless of emoji.
     """
 
-    channel_id: snowflake.Snowflake = attr.ib(repr=True)
-    """The ID of the channel where the targeted message is."""
-
-    message_id: snowflake.Snowflake = attr.ib(repr=True)
-    """The ID of the message all reactions are being removed from."""
-
-    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True,)
-    """The ID of the guild where the targeted message is, if applicable."""
-
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class MessageReactionRemoveEmojiEvent(base_events.HikariEvent):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class MessageReactionRemoveEmojiEvent(BaseMessageReactionEvent):
     """Represents Message Reaction Remove Emoji events.
 
     Sent when all the reactions for a single emoji are removed from a message.
     """
-
-    channel_id: snowflake.Snowflake = attr.ib(repr=True)
-    """The ID of the channel where the targeted message is."""
-
-    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
-    """The ID of the guild where the targeted message is, if applicable."""
-
-    message_id: snowflake.Snowflake = attr.ib(repr=True)
-    """The ID of the message the reactions are being removed from."""
 
     emoji: typing.Union[emojis.UnicodeEmoji, emojis.CustomEmoji] = attr.ib(repr=True)
     """The object of the emoji that's being removed."""
