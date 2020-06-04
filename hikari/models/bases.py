@@ -74,4 +74,4 @@ class Unique(typing.SupportsInt):
 
 
 UniqueObject = typing.Union[Unique, snowflake.Snowflake, int, str]
-"""A unique object type-hint."""
+"""Type hint representing a unique object entity."""
