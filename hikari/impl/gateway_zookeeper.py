@@ -98,6 +98,9 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         await self._init()
 
         self._request_close_event.clear()
+
+        await self._maybe_dispatch(other.StartingEvent())
+
         self.logger.info("starting %s shard(s)", len(self._shards))
 
         start_time = time.perf_counter()
@@ -146,10 +149,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
             )
             self.logger.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
 
-            if hasattr(self, "event_dispatcher") and isinstance(
-                self.event_dispatcher, event_dispatcher.IEventDispatcher
-            ):
-                await self.event_dispatcher.dispatch(other.StartedEvent())
+            await self._maybe_dispatch(other.StartedEvent())
 
     async def join(self) -> None:
         if self._gather_task is not None:
@@ -211,13 +211,13 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         idle_since: typing.Union[undefined.Undefined, datetime.datetime] = undefined.Undefined(),
         is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> None:
-        coros = (
-            s.update_presence(status=status, activity=activity, idle_since=idle_since, is_afk=is_afk)
-            for s in self._shards.values()
-            if s.is_alive
+        await asyncio.gather(
+            *(
+                s.update_presence(status=status, activity=activity, idle_since=idle_since, is_afk=is_afk)
+                for s in self._shards.values()
+                if s.is_alive
+            )
         )
-
-        await asyncio.gather(*coros)
 
     async def _init(self):
         version = _about.__version__
@@ -308,3 +308,8 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
     async def _run(self) -> None:
         await self.start()
         await self.join()
+
+    async def _maybe_dispatch(self, event) -> None:
+        if hasattr(self, "event_dispatcher"):
+            # noinspection PyUnresolvedReferences
+            await self.event_dispatcher.dispatch(event)

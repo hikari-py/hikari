@@ -53,7 +53,7 @@ if typing.TYPE_CHECKING:
 class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventConsumer):
     """Provides functionality to consume and dispatch events.
 
-    Specific event handlers should be in functions named `_on_xxx` where `xxx`
+    Specific event handlers should be in functions named `on_xxx` where `xxx`
     is the raw event name being dispatched in lower-case.
     """
 
@@ -67,35 +67,11 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
     def app(self) -> app_.IApp:
         return self._app
 
-    def dispatch(self, event: base.HikariEvent) -> aio.Future[typing.Any]:
-        if not isinstance(event, base.HikariEvent):
-            raise TypeError(f"events must be subclasses of HikariEvent, not {type(event).__name__}")
-
-        # We only need to iterate through the MRO until we hit HikariEvent, as
-        # anything after that is random garbage we don't care about, as they do
-        # not describe event types. This improves efficiency as well.
-        mro = type(event).mro()
-
-        tasks = []
-
-        for cls in mro[: mro.index(base.HikariEvent) + 1]:
-            cls: typing.Type[_EventT]
-
-            if cls in self._listeners:
-                for callback in self._listeners[cls]:
-                    tasks.append(self._invoke_callback(callback, event))
-
-            if cls in self._waiters:
-                for predicate, future in self._waiters[cls]:
-                    tasks.append(self._test_waiter(cls, event, predicate, future))
-
-        return asyncio.gather(*tasks) if tasks else aio.completed_future()
-
     async def consume_raw_event(
         self, shard: gateway.Gateway, event_name: str, payload: data_binding.JSONObject
     ) -> None:
         try:
-            callback = getattr(self, "_on_" + event_name.lower())
+            callback = getattr(self, "on_" + event_name.lower())
             await callback(shard, payload)
         except AttributeError:
             self.logger.debug("ignoring unknown event %s", event_name)
@@ -209,3 +185,27 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
                 self.logger.error("an exception occurred handling an event, but it has been ignored", exc_info=ex)
             else:
                 await self.dispatch(other.ExceptionEvent(app=self._app, exception=ex, event=event, callback=callback))
+
+    def dispatch(self, event: base.HikariEvent) -> aio.Future[typing.Any]:
+        if not isinstance(event, base.HikariEvent):
+            raise TypeError(f"Events must be subclasses of {base.HikariEvent.__name__}, not {type(event).__name__}")
+
+        # We only need to iterate through the MRO until we hit HikariEvent, as
+        # anything after that is random garbage we don't care about, as they do
+        # not describe event types. This improves efficiency as well.
+        mro = type(event).mro()
+
+        tasks = []
+
+        for cls in mro[: mro.index(base.HikariEvent) + 1]:
+            cls: typing.Type[_EventT]
+
+            if cls in self._listeners:
+                for callback in self._listeners[cls]:
+                    tasks.append(self._invoke_callback(callback, event))
+
+            if cls in self._waiters:
+                for predicate, future in self._waiters[cls]:
+                    tasks.append(self._test_waiter(cls, event, predicate, future))
+
+        return asyncio.gather(*tasks) if tasks else aio.completed_future()
