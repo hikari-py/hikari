@@ -266,12 +266,17 @@
         return_type = get_annotation(f.return_annotation, '->')
         example_str = f.funcdef() + f.name + "(" + ", ".join(params) + ")" + return_type
 
+        if params and params[0] in ("self", "mcs", "mcls", "metacls"):
+            params = params[1:]
+
         if len(params) > 4 or len(example_str) > 70:
             representation = "\n".join((
                 f.funcdef() + " " + f.name + "(",
                 *(f"    {p}," for p in params),
                 ")" + return_type + ": ..."
             ))
+        elif params:
+            representation = f"{f.funcdef()} {f.name}({', '.join(params)}){return_type}: ..."
         else:
             representation = f"{f.funcdef()} {f.name}(){return_type}: ..."
 

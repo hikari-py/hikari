@@ -57,7 +57,8 @@ class AuditLogChangeKey(str, enum.Enum):
     """Commonly known and documented keys for audit log change objects.
 
     Others may exist. These should be expected to default to the raw string
-    Discord provided us.
+    Discord provided us. These are defined for documentation purposes and
+    can be treated as regular strings for all other purposes.
     """
 
     NAME = "name"
@@ -72,8 +73,6 @@ class AuditLogChangeKey(str, enum.Enum):
     EXPLICIT_CONTENT_FILTER = "explicit_content_filter"
     DEFAULT_MESSAGE_NOTIFICATIONS = "notifications"
     VANITY_URL_CODE = "vanity_url_code"
-    ADD_ROLE_TO_MEMBER = "$add"
-    REMOVE_ROLE_FROM_MEMBER = "$remove"
     PRUNE_DELETE_DAYS = "prune_delete_days"
     WIDGET_ENABLED = "widget_enabled"
     WIDGET_CHANNEL_ID = "widget_channel_id"
@@ -107,6 +106,10 @@ class AuditLogChangeKey(str, enum.Enum):
     EXPIRE_GRACE_PERIOD = "expire_grace_period"
     RATE_LIMIT_PER_USER = "rate_limit_per_user"
     SYSTEM_CHANNEL_ID = "system_channel_id"
+
+    # Who needs consistency?
+    ADD_ROLE_TO_MEMBER = "$add"
+    REMOVE_ROLE_FROM_MEMBER = "$remove"
 
     COLOUR = COLOR
     """Alias for "COLOR"""
@@ -211,7 +214,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
-    """Represents the extra information attached to guild prune log entries."""
+    """Extra information attached to guild prune log entries."""
 
     delete_member_days: datetime.timedelta = attr.ib(repr=True)
     """The timedelta of how many days members were pruned for inactivity based on."""
@@ -222,7 +225,7 @@ class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
-    """Represents extra information for the message bulk delete audit entry."""
+    """Extra information for the message bulk delete audit entry."""
 
     count: int = attr.ib(repr=True)
     """The amount of messages that were deleted."""
@@ -230,7 +233,7 @@ class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
-    """Represents extra information attached to the message delete audit entry."""
+    """Extra information attached to the message delete audit entry."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The guild text based channel where these message(s) were deleted."""
@@ -238,7 +241,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
-    """Represents extra information for the voice chat member disconnect entry."""
+    """Extra information for the voice chat member disconnect entry."""
 
     count: int = attr.ib(repr=True)
     """The amount of members who were disconnected from voice in this entry."""
@@ -246,14 +249,20 @@ class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
-    """Represents extra information for the voice chat based member move entry."""
+    """Extra information for the voice chat based member move entry."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The amount of members who were disconnected from voice in this entry."""
 
 
 class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
-    """Represents any audit log entry options that haven't been implemented.
+    """Audit log entry options that haven't been implemented in the library.
+
+    The attributes on this object are undocumented and dynamic.
+
+    Example
+    -------
+        >>> entry_info.foobar.baz
 
     !!! note
         This model has no slots and will have arbitrary undocumented attributes
@@ -306,3 +315,6 @@ class AuditLog:
 
     def __iter__(self) -> typing.Iterable[AuditLogEntry]:
         return self.entries.values()
+
+    def __len__(self):
+        return len(self.entries)
