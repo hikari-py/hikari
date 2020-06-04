@@ -304,7 +304,7 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
     @property
     @abc.abstractmethod
     def gateway_shard_count(self) -> int:
-        """Number of shards in the entire distributed application.
+        """Count the number of shards in the entire distributed application.
 
         If the shards have not started, and auto-sharding is in-place, then it
         is acceptable for this to return `0`. When the application is running,
