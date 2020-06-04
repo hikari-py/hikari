@@ -27,7 +27,7 @@ from hikari.api import component
 
 
 class ICache(component.IComponent, abc.ABC):
-    """Interface describing the operations a cache component should provide
+    """Interface describing the operations a cache component should provide.
 
     This will be used by the gateway and REST API to cache specific types of
     objects that the application should attempt to remember for later, depending

@@ -63,17 +63,17 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     app : hikari.gateway_dispatcher.IGatewayConsumer
         The base application.
     config : hikari.http_settings.HTTPSettings
-        The aiohttp settings to use for the client session.
+        The AIOHTTP settings to use for the client session.
     debug : bool
         If `True`, each sent and received payload is dumped to the logs. If
         `False`, only the fact that data has been sent/received will be logged.
-    initial_activity : hikari.presences.OwnActivity | None
+    initial_activity : hikari.presences.OwnActivity or None or hikari.utilities.undefined.Undefined
         The initial activity to appear to have for this shard.
-    initial_idle_since : datetime.datetime | None
+    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
         The datetime to appear to be idle since.
-    initial_is_afk : bool | None
+    initial_is_afk : bool or hikari.utilities.undefined.Undefined
         Whether to appear to be AFK or not on login.
-    initial_status : hikari.models.presences.PresenceStatus | None
+    initial_status : hikari.models.presences.PresenceStatus or hikari.utilities.undefined.Undefined
         The initial status to set on login for the shard.
     intents : hikari.models.intents.Intent | None
         Collection of intents to use, or `None` to not use intents at all.
@@ -92,6 +92,12 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         If `True`, then transport compression is enabled.
     version : int
         Gateway API version to use.
+
+    !!! note
+        If all four of `initial_activity`, `initial_idle_since`,
+        `initial_is_afk`, and `initial_status` are not defined and left to their
+        default values, then the presence will not be _updated_ on startup
+        at all.
     """
 
     @enum.unique
@@ -155,10 +161,10 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         app: app_.IGatewayConsumer,
         config: http_settings.HTTPSettings,
         debug: bool = False,
-        initial_activity: typing.Optional[presences.OwnActivity] = None,
-        initial_idle_since: typing.Optional[datetime.datetime] = None,
-        initial_is_afk: typing.Optional[bool] = None,
-        initial_status: typing.Optional[presences.PresenceStatus] = None,
+        initial_activity: typing.Union[undefined.Undefined, None, presences.OwnActivity] = undefined.Undefined(),
+        initial_idle_since: typing.Union[undefined.Undefined, None, datetime.datetime] = undefined.Undefined(),
+        initial_is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        initial_status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
         shard_id: int = 0,
@@ -474,7 +480,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             if self._intents is not None:
                 payload["d"]["intents"] = self._intents
 
-            if any(item is not None for item in (self._activity, self._idle_since, self._is_afk, self._status)):
+            if undefined.Undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
                 # noinspection PyTypeChecker
                 payload["d"]["presence"] = self._build_presence_payload()
 

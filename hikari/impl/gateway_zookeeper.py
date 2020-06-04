@@ -25,14 +25,10 @@ import abc
 import asyncio
 import contextlib
 import datetime
-import inspect
-import os
-import platform
 import signal
 import time
 import typing
 
-from hikari import _about
 from hikari.api import app as app_
 from hikari.api import event_dispatcher
 from hikari.events import other
@@ -47,23 +43,109 @@ if typing.TYPE_CHECKING:
 
 
 class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
+    """Provides keep-alive logic for orchestrating multiple shards.
+
+    Parameters
+    ----------
+    compression : bool
+        Defaulting to `True`, if `True`, then zlib transport compression is used
+        for each shard connection. If `False`, no compression is used.
+    config : hikari.utilities.undefined.Undefined or hikari.net.http_settings.HTTPSettings
+        Optional aiohttp settings to apply to the created shards.
+    debug : bool
+        Defaulting to `False`, if `True`, then each payload sent and received
+        on the gateway will be dumped to debug logs, and every REST API request
+        and response will also be dumped to logs. This will provide useful
+        debugging context at the cost of performance. Generally you do not
+        need to enable this.
+    initial_activity : hikari.models.presences.OwnActivity or None or hikari.utilities.undefined.Undefined
+        The initial activity to have on each shard.
+    initial_activity : hikari.models.presences.PresenceStatus or hikari.utilities.undefined.Undefined
+        The initial status to have on each shard.
+    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
+        The initial time to show as being idle since, or `None` if not idle,
+        for each shard.
+    initial_idle_since : bool or hikari.utilities.undefined.Undefined
+        If `True`, each shard will appear as being AFK on startup. If `False`,
+        each shard will appear as _not_ being AFK.
+    intents : hikari.models.intents.Intent or None
+        The intents to use for each shard. If `None`, then no intents are
+        passed. Note that on the version `7` gateway, this will cause an
+        immediate connection close with an error code.
+    large_threshold : int
+        The number of members that need to be in a guild for the guild to be
+        considered large. Defaults to the maximum, which is `250`.
+    shard_ids : typing.Set[int] or undefined.Undefined
+        A set of every shard ID that should be created and started on startup.
+        If left undefined along with `shard_count`, then auto-sharding is used
+        instead, which is the default.
+    shard_count : int or undefined.Undefined
+        The number of shards in the entire application. If left undefined along
+        with `shard_ids`, then auto-sharding is used instead, which is the
+        default.
+    token : str
+        The bot token to use. This should not start with a prefix such as
+        `Bot `, but instead only contain the token itself.
+    version : int
+        The version of the gateway to connect to. At the time of writing,
+        only version `6` and version `7` (undocumented development release)
+        are supported. This defaults to using v6.
+
+    !!! note
+        The default parameters for `shard_ids` and `shard_count` are marked as
+        undefined. When both of these are left to the default value, the
+        application will use the Discord-provided recommendation for the number
+        of shards to start.
+
+        If only one of these two parameters are specified, expect a `TypeError`
+        to be raised.
+
+        Likewise, all shard_ids must be greater-than or equal-to `0`, and
+        less than `shard_count` to be valid. Failing to provide valid
+        values will result in a `ValueError` being raised.
+
+    !!! note
+        If all four of `initial_activity`, `initial_idle_since`,
+        `initial_is_afk`, and `initial_status` are not defined and left to their
+        default values, then the presence will not be _updated_ on startup
+        at all.
+
+    Raises
+    ------
+    TypeError
+        If sharding information is not specified correctly.
+    ValueError
+        If sharding information is provided, but is unfeasible or invalid.
+
+    """
+
     def __init__(
         self,
         *,
+        compression: bool,
         config: http_settings.HTTPSettings,
         debug: bool,
-        initial_activity: typing.Optional[presences.OwnActivity],
-        initial_idle_since: typing.Optional[datetime.datetime],
-        initial_is_afk: bool,
-        initial_status: presences.PresenceStatus,
+        initial_activity: typing.Union[undefined.Undefined, presences.OwnActivity, None] = undefined.Undefined(),
+        initial_idle_since: typing.Union[undefined.Undefined, datetime.datetime, None] = undefined.Undefined(),
+        initial_is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        initial_status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
         intents: typing.Optional[intents_.Intent],
         large_threshold: int,
         shard_ids: typing.Set[int],
         shard_count: int,
         token: str,
-        use_compression: bool,
         version: int,
     ) -> None:
+        if undefined.Undefined.count(shard_ids, shard_count):
+            raise TypeError("You must provide values for both shard_ids and shard_count, or neither.")
+        if not isinstance(shard_ids, undefined.Undefined):
+            if not shard_ids:
+                raise ValueError("At least one shard ID must be specified if provided.")
+            if not all(shard_id >= 0 for shard_id in shard_ids):
+                raise ValueError("shard_ids must be greater than or equal to 0.")
+            if not all(shard_id < shard_count for shard_id in shard_ids):
+                raise ValueError("shard_ids must be less than the total shard_count.")
+
         self._aiohttp_config = config
         self._debug = debug
         self._gather_task = None
@@ -80,7 +162,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         self._shards = {}
         self._tasks = {}
         self._token = token
-        self._use_compression = use_compression
+        self._use_compression = compression
         self._version = version
 
     @property
@@ -220,16 +302,6 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         )
 
     async def _init(self):
-        version = _about.__version__
-        # noinspection PyTypeChecker
-        path = os.path.abspath(os.path.dirname(inspect.getsourcefile(_about)))
-        py_impl = platform.python_implementation()
-        py_ver = platform.python_version()
-        py_compiler = platform.python_compiler()
-        self.logger.info(
-            "hikari v%s (installed in %s) (%s %s %s)", version, path, py_impl, py_ver, py_compiler,
-        )
-
         gw_recs = await self._fetch_gateway_recommendations()
 
         self.logger.info(
