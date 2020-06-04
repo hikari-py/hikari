@@ -24,6 +24,7 @@ __all__ = ["Gateway"]
 
 import asyncio
 import enum
+import logging
 import math
 import time
 import typing
@@ -628,6 +629,10 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         return time.perf_counter()
 
     def _log_debug_payload(self, payload: str, message: str, *args: typing.Any) -> None:
+        # Prevent logging these payloads if logging isn't enabled. This aids performance a little.
+        if not self.logger.isEnabledFor(logging.DEBUG):
+            return
+
         message = f"{message} [seq:%s, session:%s, size:%s]"
         if self._debug:
             message = f"{message} with raw payload: %s"
