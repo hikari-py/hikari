@@ -80,9 +80,6 @@ class Undefined(klass.Singleton):
     def __bool__(self) -> bool:
         return False
 
-    def __eq__(self, other: typing.Any) -> bool:
-        return other is self
-
     def __iter__(self) -> typing.Iterator[None]:
         yield from ()
 
