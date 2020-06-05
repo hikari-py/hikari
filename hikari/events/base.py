@@ -27,15 +27,13 @@ import typing
 
 import attr
 
-from hikari.models import bases as base_models
-
 if typing.TYPE_CHECKING:
     from hikari.models import intents
 
 
 # Base event, is not deserialized
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class HikariEvent(base_models.Entity, abc.ABC):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class HikariEvent(abc.ABC):
     """The base class that all events inherit from."""
 
 
