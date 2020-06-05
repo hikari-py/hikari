@@ -50,16 +50,16 @@ if typing.TYPE_CHECKING:
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)  # TODO: this intent doesn't account for DM channels.
-@attr.s(auto_attribs=True, eq=False, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class BaseChannelEvent(base_events.HikariEvent, abc.ABC):
     """A base object that Channel events will inherit from."""
 
-    channel: channels.PartialChannel
+    channel: channels.PartialChannel = attr.ib()
     """The object of the channel this event involved."""
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)  # TODO: this intent doesn't account for DM channels.
-@attr.s(auto_attribs=True, eq=False, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class ChannelCreateEvent(BaseChannelEvent):
     """Represents Channel Create gateway events.
 
@@ -69,13 +69,13 @@ class ChannelCreateEvent(BaseChannelEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)  # TODO: this intent doesn't account for DM channels.
-@attr.s(auto_attribs=True, eq=False, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class ChannelUpdateEvent(BaseChannelEvent):
     """Represents Channel Update gateway events."""
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)  # TODO: this intent doesn't account for DM channels.
-@attr.s(auto_attribs=True, eq=False, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class ChannelDeleteEvent(BaseChannelEvent):
     """Represents Channel Delete gateway events."""
 
@@ -151,11 +151,11 @@ class TypingStartEvent(base_events.HikariEvent, base_models.Entity):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
-@attr.s(auto_attribs=True, eq=False, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class InviteCreateEvent(base_events.HikariEvent):
     """Represents a gateway Invite Create event."""
 
-    invite: invites.InviteWithMetadata
+    invite: invites.InviteWithMetadata = attr.ib()
     """The object of the invite being created."""
 
 

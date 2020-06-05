@@ -54,11 +54,11 @@ if typing.TYPE_CHECKING:
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
-@attr.s(auto_attribs=True, eq=False, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class MessageCreateEvent(base_events.HikariEvent):
     """Used to represent Message Create gateway events."""
 
-    message: messages.Message
+    message: messages.Message = attr.ib()
 
 
 class UpdateMessage(messages.Message):

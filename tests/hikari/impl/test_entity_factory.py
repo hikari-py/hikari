@@ -3098,10 +3098,10 @@ class TestEntityFactoryImpl:
         assert ready_event.shard_id is None
         assert ready_event.shard_count is None
 
-    def test_deserialize_my_user_update_event(self, entity_factory_impl, my_user_payload):
-        my_user_update = entity_factory_impl.deserialize_my_user_update_event(my_user_payload)
+    def test_deserialize_own_user_update_event(self, entity_factory_impl, my_user_payload):
+        my_user_update = entity_factory_impl.deserialize_own_user_update_event(my_user_payload)
         assert my_user_update.my_user == entity_factory_impl.deserialize_my_user(my_user_payload)
-        assert isinstance(my_user_update, other_events.MyUserUpdateEvent)
+        assert isinstance(my_user_update, other_events.OwnUserUpdateEvent)
 
     ################
     # VOICE EVENTS #
