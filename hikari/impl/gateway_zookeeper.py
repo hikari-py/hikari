@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Abstract zookeeper implementation for multiple-sharded applications."""
 
 from __future__ import annotations
 
@@ -45,6 +46,14 @@ if typing.TYPE_CHECKING:
 class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
     """Provides keep-alive logic for orchestrating multiple shards.
 
+    This provides the logic needed to keep multiple shards alive at once, and
+    correctly orchestrate their startup and shutdown. Applications that are
+    multi-sharded or auto-sharded can extend this functionality to acquire the
+    ability to manage sharding.
+
+    !!! note
+        This does not provide REST API functionality.
+
     Parameters
     ----------
     compression : bool
@@ -54,8 +63,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         Optional aiohttp settings to apply to the created shards.
     debug : bool
         Defaulting to `False`, if `True`, then each payload sent and received
-        on the gateway will be dumped to debug logs, and every REST API request
-        and response will also be dumped to logs. This will provide useful
+        on the gateway will be dumped to debug logs. This will provide useful
         debugging context at the cost of performance. Generally you do not
         need to enable this.
     initial_activity : hikari.models.presences.OwnActivity or None or hikari.utilities.undefined.Undefined
@@ -112,11 +120,10 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
 
     Raises
     ------
-    TypeError
-        If sharding information is not specified correctly.
     ValueError
         If sharding information is provided, but is unfeasible or invalid.
-
+    TypeError
+        If sharding information is not specified correctly.
     """
 
     def __init__(
