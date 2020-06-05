@@ -22,7 +22,6 @@ from __future__ import annotations
 
 __all__ = [
     "Application",
-    "ApplicationOwner",
     "ConnectionVisibility",
     "OAuth2Scope",
     "OwnConnection",
@@ -32,25 +31,23 @@ __all__ = [
     "TeamMembershipState",
 ]
 
+import enum
 import typing
 
 import attr
 
-from hikari.internal import marshaller
-from hikari.internal import more_enums
-from hikari.internal import urls
-
-from . import bases
-from . import guilds
-from . import permissions
-from . import users
+from hikari.models import bases
+from hikari.models import guilds
+from hikari.utilities import cdn
 
 if typing.TYPE_CHECKING:
-    from hikari.internal import more_typing
+    from hikari.models import permissions as permissions_
+    from hikari.models import users
+    from hikari.utilities import snowflake
 
 
-@more_enums.must_be_unique
-class OAuth2Scope(str, more_enums.Enum):
+@enum.unique
+class OAuth2Scope(str, enum.Enum):
     """OAuth2 Scopes that Discord allows.
 
     These are categories of permissions for applications using the OAuth2 API
@@ -59,14 +56,14 @@ class OAuth2Scope(str, more_enums.Enum):
     """
 
     ACTIVITIES_READ = "activities.read"
-    """Enable the application to fetch a user's "Now Playing/Recently Played" list.
+    """Enables fetching the "Now Playing/Recently Played" list.
 
     !!! note
         You must be whitelisted to use this scope.
     """
 
     ACTIVITIES_WRITE = "activities.write"
-    """Enable the application to update a user's activity.
+    """Enables updating a user's activity.
 
     !!! note
         You must be whitelisted to use this scope.
@@ -76,24 +73,24 @@ class OAuth2Scope(str, more_enums.Enum):
     """
 
     APPLICATIONS_BUILDS_READ = "applications.builds.read"
-    """Enable the application to read build data for a user's applications.
+    """Enables reading build data for a user's applications.
 
     !!! note
         You must be whitelisted to use this scope.
     """
 
     APPLICATIONS_BUILDS_UPLOAD = "applications.builds.upload"
-    """Enable the application to upload/update builds for a user's applications.
+    """Enables uploading/updating builds for a user's applications.
 
     !!! note
         You must be whitelisted to use this scope.
     """
 
     APPLICATIONS_ENTITLEMENTS = "applications.entitlements"
-    """Enable the application to read entitlements for a user's applications."""
+    """Enables reading entitlements for a user's applications."""
 
     APPLICATIONS_STORE_UPDATE = "applications.store.update"
-    """Enable the application to read and update store data for the user's applications.
+    """Enables reading/updating store data for the user's applications.
 
     This includes store listings, achievements, SKU's, etc.
 
@@ -102,33 +99,37 @@ class OAuth2Scope(str, more_enums.Enum):
     """
 
     BOT = "bot"
-    """Used to add OAuth2 bots to a guild.
+    """Enables adding a bot application to a guild.
 
     !!! note
         This requires you to have set up a bot account for your application.
     """
 
     CONNECTIONS = "connections"
-    """Enable the application to view third-party linked accounts such as Twitch."""
+    """Enables viewing third-party linked accounts such as Twitch."""
 
     EMAIL = "email"
     """Enable the application to view the user's email and application info."""
 
     GROUP_DM_JOIN = "gdm.join"
-    """Enable the application to join users into a group DM."""
+    """Enables joining users into a group DM.
+
+    !!! warn
+        This cannot add the bot to a group DM.
+    """
 
     GUILDS = "guilds"
-    """Enable the application to view the guilds the user is in."""
+    """Enables viewing the guilds the user is in."""
 
     GUILDS_JOIN = "guilds.join"
-    """Enable the application to add the user to a specific guild.
+    """Enables adding the user to a specific guild.
 
     !!! note
         This requires you to have set up a bot account for your application.
     """
 
     IDENTIFY = "identify"
-    """Enable the application to view info about itself.
+    """Enables viewing info about itself.
 
     !!! note
         This does not include email address info. Use the `EMAIL` scope instead
@@ -136,31 +137,31 @@ class OAuth2Scope(str, more_enums.Enum):
     """
 
     RELATIONSHIPS_READ = "relationships.read"
-    """Enable the application to view a user's friend list.
+    """Enables viewing a user's friend list.
 
     !!! note
         You must be whitelisted to use this scope.
     """
 
     RPC = "rpc"
-    """Enable the RPC application to control the local user's Discord client.
+    """Enables the RPC application to control the local user's Discord client.
 
     !!! note
         You must be whitelisted to use this scope.
     """
 
     RPC_API = "rpc.api"
-    """Enable the RPC application to access the RPC API as the local user.
+    """Enables the RPC application to access the RPC API as the local user.
 
     !!! note
         You must be whitelisted to use this scope.
     """
 
     RPC_MESSAGES_READ = "messages.read"
-    """Enable the RPC application to read messages from all channels the user is in."""
+    """Enables the RPC application to read messages from all channels the user is in."""
 
     RPC_NOTIFICATIONS_READ = "rpc.notifications.read"
-    """Enable the RPC application to read  from all channels the user is in.
+    """Enables the RPC application to read  from all channels the user is in.
 
     !!! note
         You must be whitelisted to use this scope.
@@ -173,90 +174,73 @@ class OAuth2Scope(str, more_enums.Enum):
     """
 
 
-@more_enums.must_be_unique
-class ConnectionVisibility(int, more_enums.Enum):
+@enum.unique
+class ConnectionVisibility(int, enum.Enum):
     """Describes who can see a connection with a third party account."""
 
     NONE = 0
-    """Only you can see the connection."""
+    """Implies that only you can see the corresponding connection."""
 
     EVERYONE = 1
     """Everyone can see the connection."""
 
 
-def _deserialize_integrations(
-    payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Sequence[guilds.GuildIntegration]:
-    return [guilds.PartialGuildIntegration.deserialize(integration, **kwargs) for integration in payload]
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class OwnConnection(bases.Entity, marshaller.Deserializable):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class OwnConnection:
     """Represents a user's connection with a third party account.
 
     Returned by the `GET Current User Connections` endpoint.
     """
 
-    id: str = marshaller.attrib(deserializer=str, eq=True, hash=True, repr=True)
+    id: str = attr.ib(eq=True, hash=True, repr=True)
     """The string ID of the third party connected account.
 
     !!! warning
         Seeing as this is a third party ID, it will not be a snowflake.
     """
 
-    name: str = marshaller.attrib(deserializer=str, eq=False, hash=False, repr=True)
+    name: str = attr.ib(eq=False, hash=False, repr=True)
     """The username of the connected account."""
 
-    type: str = marshaller.attrib(deserializer=str, eq=False, hash=False, repr=True)
+    type: str = attr.ib(eq=False, hash=False, repr=True)
     """The type of service this connection is for."""
 
-    is_revoked: bool = marshaller.attrib(
-        raw_name="revoked", deserializer=bool, if_undefined=False, default=False, eq=False, hash=False,
+    is_revoked: bool = attr.ib(
+        eq=False, hash=False,
     )
-    """Whether the connection has been revoked."""
+    """`True` if the connection has been revoked."""
 
-    integrations: typing.Sequence[guilds.PartialGuildIntegration] = marshaller.attrib(
-        deserializer=_deserialize_integrations,
-        if_undefined=list,
-        factory=list,
-        inherit_kwargs=True,
-        eq=False,
-        hash=False,
+    integrations: typing.Sequence[guilds.PartialIntegration] = attr.ib(
+        eq=False, hash=False,
     )
     """A sequence of the partial guild integration objects this connection has."""
 
-    is_verified: bool = marshaller.attrib(raw_name="verified", deserializer=bool, eq=False, hash=False)
-    """Whether the connection has been verified."""
+    is_verified: bool = attr.ib(eq=False, hash=False)
+    """`True` if the connection has been verified."""
 
-    is_friend_syncing: bool = marshaller.attrib(raw_name="friend_sync", deserializer=bool, eq=False, hash=False)
-    """Whether friends should be added based on this connection."""
+    is_friend_sync_enabled: bool = attr.ib(eq=False, hash=False)
+    """`True` if friends should be added based on this connection."""
 
-    is_showing_activity: bool = marshaller.attrib(raw_name="show_activity", deserializer=bool, eq=False, hash=False)
-    """Whether this connection's activities are shown in the user's presence."""
+    is_activity_visible: bool = attr.ib(eq=False, hash=False)
+    """`True` if this connection's activities are shown in the user's presence."""
 
-    visibility: ConnectionVisibility = marshaller.attrib(
-        deserializer=ConnectionVisibility, eq=False, hash=False, repr=True
-    )
+    visibility: ConnectionVisibility = attr.ib(eq=False, hash=False, repr=True)
     """The visibility of the connection."""
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class OwnGuild(guilds.PartialGuild):
     """Represents a user bound partial guild object."""
 
-    is_owner: bool = marshaller.attrib(raw_name="owner", deserializer=bool, eq=False, hash=False, repr=True)
-    """Whether the current user owns this guild."""
+    is_owner: bool = attr.ib(eq=False, hash=False, repr=True)
+    """`True` when the current user owns this guild."""
 
-    my_permissions: permissions.Permission = marshaller.attrib(
-        raw_name="permissions", deserializer=permissions.Permission, eq=False, hash=False
-    )
-    """The guild level permissions that apply to the current user or bot."""
+    my_permissions: permissions_.Permission = attr.ib(eq=False, hash=False)
+    """The guild-level permissions that apply to the current user or bot."""
 
 
-@more_enums.must_be_unique
-class TeamMembershipState(int, more_enums.Enum):
+@enum.unique
+class TeamMembershipState(int, enum.Enum):
     """Represents the state of a user's team membership."""
 
     INVITED = 1
@@ -266,56 +250,56 @@ class TeamMembershipState(int, more_enums.Enum):
     """Denotes the user has accepted the invite and is now a member."""
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class TeamMember(bases.Entity, marshaller.Deserializable):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class TeamMember(bases.Entity):
     """Represents a member of a Team."""
 
-    membership_state: TeamMembershipState = marshaller.attrib(deserializer=TeamMembershipState, eq=False, hash=False)
+    membership_state: TeamMembershipState = attr.ib(eq=False, hash=False)
     """The state of this user's membership."""
 
-    permissions: typing.Set[str] = marshaller.attrib(deserializer=set, eq=False, hash=False)
+    permissions: typing.Set[str] = attr.ib(eq=False, hash=False)
     """This member's permissions within a team.
 
-    Will always be `["*"]` until Discord starts using this.
+    At the time of writing, this will always be a set of one `str`, which
+    will always be `"*"`. This may change in the future, however.
     """
 
-    team_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, eq=True, hash=True, repr=True)
+    team_id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of the team this member belongs to."""
 
-    user: users.User = marshaller.attrib(
-        deserializer=users.User.deserialize, inherit_kwargs=True, eq=True, hash=True, repr=True
-    )
-    """The user object of this team member."""
+    user: users.User = attr.ib(eq=True, hash=True, repr=True)
+    """The user representation of this team member."""
 
 
-def _deserialize_members(
-    payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Mapping[bases.Snowflake, TeamMember]:
-    return {bases.Snowflake(member["user"]["id"]): TeamMember.deserialize(member, **kwargs) for member in payload}
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class Team(bases.Unique, marshaller.Deserializable):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class Team(bases.Entity, bases.Unique):
     """Represents a development team, along with all its members."""
 
-    icon_hash: typing.Optional[str] = marshaller.attrib(
-        raw_name="icon", deserializer=str, if_none=None, eq=False, hash=False
-    )
-    """The hash of this team's icon, if set."""
+    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    """The CDN hash of this team's icon.
 
-    members: typing.Mapping[bases.Snowflake, TeamMember] = marshaller.attrib(
-        deserializer=_deserialize_members, inherit_kwargs=True, eq=False, hash=False
-    )
-    """The member's that belong to this team."""
+    If no icon is provided, this will be `None`.
+    """
 
-    owner_user_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, eq=False, hash=False, repr=True)
+    members: typing.Mapping[snowflake.Snowflake, TeamMember] = attr.ib(eq=False, hash=False)
+    """A mapping containing each member in this team.
+
+    The mapping maps keys containing the member's ID to values containing the
+    member object.
+    """
+
+    owner_user_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of this team's owner."""
 
     @property
     def icon_url(self) -> typing.Optional[str]:
-        """URL of this team's icon, if set."""
+        """URL for this team's icon.
+
+        Returns
+        -------
+        str or None
+            The URL, or `None` if no icon exists.
+        """
         return self.format_icon_url()
 
     def format_icon_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
@@ -332,141 +316,99 @@ class Team(bases.Unique, marshaller.Deserializable):
 
         Returns
         -------
-        str | None
-            The string URL.
+        str or None
+            The string URL, or `None` if no icon exists.
 
         Raises
         ------
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If the size is not an integer power of 2 between 16 and 4096
+            (inclusive).
         """
         if self.icon_hash:
-            return urls.generate_cdn_url("team-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            return cdn.generate_cdn_url("team-icons", str(self.id), self.icon_hash, format_=format_, size=size)
         return None
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class ApplicationOwner(users.User):
-    """Represents the user who owns an application, may be a team user."""
-
-    flags: int = marshaller.attrib(deserializer=users.UserFlag, eq=False, hash=False, repr=True)
-    """This user's flags."""
-
-    @property
-    def is_team_user(self) -> bool:
-        """If this user is a Team user (the owner of an application that's owned by a team)."""
-        return bool((self.flags >> 10) & 1)
-
-
-def _deserialize_verify_key(payload: str) -> bytes:
-    return bytes(payload, "utf-8")
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class Application(bases.Unique, marshaller.Deserializable):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class Application(bases.Entity, bases.Unique):
     """Represents the information of an Oauth2 Application."""
 
-    name: str = marshaller.attrib(deserializer=str, eq=False, hash=False, repr=True)
+    name: str = attr.ib(eq=False, hash=False, repr=True)
     """The name of this application."""
 
-    description: str = marshaller.attrib(deserializer=str, eq=False, hash=False)
-    """The description of this application, will be an empty string if unset."""
+    # TODO: default to None for consistency?
+    description: str = attr.ib(eq=False, hash=False)
+    """The description of this application, or an empty string if undefined."""
 
-    is_bot_public: typing.Optional[bool] = marshaller.attrib(
-        raw_name="bot_public", deserializer=bool, if_undefined=None, default=None, eq=False, hash=False, repr=True
-    )
-    """Whether the bot associated with this application is public.
+    is_bot_public: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=True)
+    """`True` if the bot associated with this application is public.
 
     Will be `None` if this application doesn't have an associated bot.
     """
 
-    is_bot_code_grant_required: typing.Optional[bool] = marshaller.attrib(
-        raw_name="bot_require_code_grant", deserializer=bool, if_undefined=None, default=None, eq=False, hash=False
-    )
-    """Whether this application's bot is requiring code grant for invites.
+    is_bot_code_grant_required: typing.Optional[bool] = attr.ib(eq=False, hash=False)
+    """`True` if this application's bot is requiring code grant for invites.
 
     Will be `None` if this application doesn't have a bot.
     """
 
-    owner: typing.Optional[ApplicationOwner] = marshaller.attrib(
-        deserializer=ApplicationOwner.deserialize,
-        if_undefined=None,
-        default=None,
-        inherit_kwargs=True,
-        eq=False,
-        hash=False,
-        repr=True,
-    )
-    """The object of this application's owner.
+    owner: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=True)
+    """The application's owner.
 
     This should always be `None` in application objects retrieved outside
     Discord's oauth2 flow.
     """
 
-    rpc_origins: typing.Optional[typing.Set[str]] = marshaller.attrib(
-        deserializer=set, if_undefined=None, default=None, eq=False, hash=False
-    )
-    """A collection of this application's rpc origin URLs, if rpc is enabled."""
+    rpc_origins: typing.Optional[typing.Set[str]] = attr.ib(eq=False, hash=False)
+    """A collection of this application's RPC origin URLs, if RPC is enabled."""
 
-    summary: str = marshaller.attrib(deserializer=str, eq=False, hash=False)
+    summary: str = attr.ib(eq=False, hash=False)
     """This summary for this application's primary SKU if it's sold on Discord.
 
-    Will be an empty string if unset.
+    Will be an empty string if undefined.
     """
 
-    verify_key: typing.Optional[bytes] = marshaller.attrib(
-        deserializer=_deserialize_verify_key, if_undefined=None, default=None, eq=False, hash=False
-    )
+    verify_key: typing.Optional[bytes] = attr.ib(eq=False, hash=False)
     """The base64 encoded key used for the GameSDK's `GetTicket`."""
 
-    icon_hash: typing.Optional[str] = marshaller.attrib(
-        raw_name="icon", deserializer=str, if_undefined=None, if_none=None, default=None, eq=False, hash=False
-    )
-    """The hash of this application's icon, if set."""
+    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    """The CDN hash of this application's icon, if set."""
 
-    team: typing.Optional[Team] = marshaller.attrib(
-        deserializer=Team.deserialize,
-        if_undefined=None,
-        if_none=None,
-        default=None,
-        eq=False,
-        hash=False,
-        inherit_kwargs=True,
-    )
-    """This application's team if it belongs to one."""
+    team: typing.Optional[Team] = attr.ib(eq=False, hash=False)
+    """The team this application belongs to.
 
-    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False
-    )
+    If the application is not part of a team, this will be `None`.
+    """
+
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the guild this application is linked to if sold on Discord."""
 
-    primary_sku_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False
-    )
+    primary_sku_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the primary "Game SKU" of a game that's sold on Discord."""
 
-    slug: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, if_undefined=None, default=None, eq=False, hash=False
-    )
-    """The URL slug that links to this application's store page.
+    slug: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    """The URL "slug" that is used to point to this application's store page.
 
     Only applicable to applications sold on Discord.
     """
 
-    cover_image_hash: typing.Optional[str] = marshaller.attrib(
-        raw_name="cover_image", deserializer=str, if_undefined=None, default=None, eq=False, hash=False
-    )
-    """The hash of this application's cover image on it's store, if set."""
+    cover_image_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    """The CDN's hash of this application's cover image, used on the store."""
 
     @property
     def icon_url(self) -> typing.Optional[str]:
-        """URL for this team's icon, if set."""
+        """URL for the team's icon, if there is one.
+
+        Returns
+        -------
+        str or None
+            The URL, or `None` if no icon is set.
+        """
         return self.format_icon_url()
 
     def format_icon_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the icon URL for this application if set.
+        """Generate the icon URL for this application.
 
         Parameters
         ----------
@@ -479,21 +421,28 @@ class Application(bases.Unique, marshaller.Deserializable):
 
         Returns
         -------
-        str | None
-            The string URL.
+        str or None
+            The string URL, or `None` if no icon is set.
 
         Raises
         ------
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If the size is not an integer power of 2 between 16 and 4096
+            (inclusive).
         """
         if self.icon_hash:
-            return urls.generate_cdn_url("application-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            return cdn.generate_cdn_url("application-icons", str(self.id), self.icon_hash, format_=format_, size=size)
         return None
 
     @property
     def cover_image_url(self) -> typing.Optional[str]:
-        """URL for this icon's store cover image, if set."""
+        """URL for the cover image used on the store.
+
+        Returns
+        -------
+        str or None
+            The URL, or `None` if no cover image exists.
+        """
         return self.format_cover_image_url()
 
     def format_cover_image_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
@@ -510,16 +459,17 @@ class Application(bases.Unique, marshaller.Deserializable):
 
         Returns
         -------
-        str | None
-            The string URL.
+        str or None
+            The URL, or `None` if no cover image exists.
 
         Raises
         ------
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If the size is not an integer power of 2 between 16 and 4096
+            (inclusive).
         """
         if self.cover_image_hash:
-            return urls.generate_cdn_url(
+            return cdn.generate_cdn_url(
                 "application-assets", str(self.id), self.cover_image_hash, format_=format_, size=size
             )
         return None

@@ -20,51 +20,35 @@
 
     import hikari as _hikari
 
-    _staging_version = "dev" in _version.LooseVersion(_hikari.__version__).version
-
-    # Template configuration. Copy over in your template directory
-    # (used with `--template-dir`) and adapt as necessary.
-    # Note, defaults are loaded from this distribution file, so your
-    # config.mako only needs to contain values you want overridden.
-    # You can also run pdoc with `--config KEY=VALUE` to override
-    # individual values.
-    html_lang = "en"
     show_inherited_members = True
     extract_module_toc_into_sidebar = True
     list_class_variables_in_index = True
     sort_identifiers = True
     show_type_annotations = True
-    # Show collapsed source code block next to each item.
-    # Disabling this can improve rendering speed of large modules.
+
     show_source_code = True
-    # If set, format links to objects in online source code repository
-    # according to this template. Supported keywords for interpolation
-    # are: commit, path, start_line, end_line.
+
     git_link_template = "https://gitlab.com/nekokatt/hikari/blob/{commit}/{path}#L{start_line}"
-    # A prefix to use for every HTML hyperlink in the generated documentation.
-    # No prefix results in all links being relative.
+
     link_prefix = ""
-    # Enable syntax highlighting for code/source blocks by including Highlight.js
-    syntax_highlighting = True
-    # Set the style keyword such as 'atom-one-light' or 'github-gist'
-    #     Options: https://github.com/highlightjs/highlight.js/tree/master/src/styles
-    #     Demo: https://highlightjs.org/static/demo/
-    hljs_style = "rainbow"
-    # If set, insert Google Analytics tracking code. Value is GA
-    # tracking id (UA-XXXXXX-Y).
-    google_analytics = ""
-    # If set, insert Google Custom Search search bar widget above the sidebar index.
-    # The whitespace-separated tokens represent arbitrary extra queries (at least one
-    # must match) passed to regular Google search. Example:
-    #search_query = 'inurl:github.com/USER/PROJECT  site:PROJECT.github.io  site:PROJECT.website'
-    if _staging_version:
+
+    hljs_style = "atom-one-light"
+
+    if "dev" in _version.LooseVersion(_hikari.__version__).version:
         search_query = "inurl:github.com/nekokatt/hikari  site:nekokatt.gitlab.io/hikari/hikari"
     else:  # TODO: "hikari/staging/hikari" temporarily changed to "hikari/hikari" for staging site search link.
         search_query = "inurl:github.com/nekokatt/hikari  site:nekokatt.gitlab.io/hikari/hikari"
-    # If set, render LaTeX math syntax within \(...\) (inline equations),
-    # or within \[...\] or $$...$$ or `.. math::` (block equations)
-    # as nicely-formatted math formulas using MathJax.
-    # Note: in Python docstrings, either all backslashes need to be escaped (\\)
-    # or you need to use raw r-strings.
-    latex_math = True
+
+    site_accent = "#ff029a"
+    site_logo = "https://assets.gitlab-static.net/uploads/-/system/project/avatar/12050696/Hikari-Logo_1.png"
+    site_description = "A Discord Bot framework for modern Python and asyncio built on good intentions"
+
+    # Versions of stuff
+    mathjax_version = "2.7.5"
+    bootstrap_version = "4.5.0"
+    highlightjs_version = "9.12.0"
+    jquery_version = "3.5.1"
+    popperjs_version = "1.16.0"
+
+    root_url = "https://gitlab.com/nekokatt/hikari"
 %>

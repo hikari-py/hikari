@@ -16,27 +16,22 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Hikari's models framework for writing Discord bots in Python."""
+"""A sane Python framework for writing modern Discord bots."""
 
 from __future__ import annotations
 
-from ._about import __author__
-from ._about import __ci__
-from ._about import __copyright__
-from ._about import __discord_invite__
-from ._about import __docs__
-from ._about import __email__
-from ._about import __issue_tracker__
-from ._about import __license__
-from ._about import __url__
-from ._about import __version__
-from .configs import *
-from .events import *
-from .errors import *
-from .gateway import *
-from .models import *
-from .rest import *
-from .stateful import *
-from .stateless import *
+from hikari._about import __author__
+from hikari._about import __ci__
+from hikari._about import __copyright__
+from hikari._about import __discord_invite__
+from hikari._about import __docs__
+from hikari._about import __email__
+from hikari._about import __issue_tracker__
+from hikari._about import __license__
+from hikari._about import __url__
+from hikari._about import __version__
 
-__all__ = []
+from hikari.impl.bot import BotImpl as Bot
+from hikari.impl.rest_app import RESTAppImpl as RESTClient
+
+__all__ = ["RESTClient", "Bot"]

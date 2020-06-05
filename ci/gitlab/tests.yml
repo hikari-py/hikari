@@ -109,7 +109,7 @@ test:twemoji_mapping:
     - if: "$CI_PIPELINE_SOURCE == 'schedule' && $TEST_TWEMOJI_MAPPING != null"
     - changes:
         - hikari/emojis.py
-        - hikari/internal/urls.py
+        - hikari.utilities/urls.py
   script:
     - |+
       set -e

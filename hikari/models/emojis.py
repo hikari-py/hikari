@@ -28,20 +28,23 @@ import unicodedata
 
 import attr
 
-from hikari.internal import marshaller
-from hikari.internal import urls
-
-from . import bases
-from . import files
-from . import users
+from hikari.models import bases
+from hikari.models import files
+from hikari.utilities import cdn
 
 if typing.TYPE_CHECKING:
-    from hikari.internal import more_typing
+    from hikari.models import users
+    from hikari.utilities import snowflake
+
+_TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/72x72/"
+"""The URL for Twemoji PNG artwork for built-in emojis."""
+
+_TWEMOJI_SVG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/svg/"
+"""The URL for Twemoji SVG artwork for built-in emojis."""
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class Emoji(bases.Entity, marshaller.Deserializable, files.BaseStream, abc.ABC):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class Emoji(files.BaseStream, abc.ABC):
     """Base class for all emojis.
 
     Any emoji implementation supports being used as a `hikari.models.files.BaseStream`
@@ -73,12 +76,11 @@ class Emoji(bases.Entity, marshaller.Deserializable, files.BaseStream, abc.ABC):
         return files.WebResourceStream(self.filename, self.url).__aiter__()
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji.
 
-    !!! warn
+    !!! warning
         A word of warning if you try to upload this emoji as a file attachment.
 
         While this emoji type can be used to upload the Twemoji representations
@@ -94,7 +96,7 @@ class UnicodeEmoji(Emoji):
         removed in a future release after a deprecation period.
     """
 
-    name: str = marshaller.attrib(deserializer=str, eq=True, hash=True, repr=True)
+    name: str = attr.ib(eq=True, hash=True, repr=True)
     """The code points that form the emoji."""
 
     @property
@@ -144,7 +146,7 @@ class UnicodeEmoji(Emoji):
         -------
             https://github.com/twitter/twemoji/raw/master/assets/72x72/1f004.png
         """
-        return urls.TWEMOJI_PNG_BASE_URL + self.filename
+        return _TWEMOJI_PNG_BASE_URL + self.filename
 
     @property
     def unicode_names(self) -> typing.Sequence[str]:
@@ -163,22 +165,27 @@ class UnicodeEmoji(Emoji):
     @classmethod
     def from_codepoints(cls, codepoint: int, *codepoints: int) -> UnicodeEmoji:
         """Create a unicode emoji from one or more UTF-32 codepoints."""
-        return UnicodeEmoji(name="".join(map(chr, (codepoint, *codepoints))))
+        unicode_emoji = cls()
+        unicode_emoji.name = "".join(map(chr, (codepoint, *codepoints)))
+        return unicode_emoji
 
     @classmethod
     def from_emoji(cls, emoji: str) -> UnicodeEmoji:
         """Create a unicode emoji from a raw emoji."""
-        return cls(name=emoji)
+        unicode_emoji = cls()
+        cls.name = emoji
+        return unicode_emoji
 
     @classmethod
     def from_unicode_escape(cls, escape: str) -> UnicodeEmoji:
         """Create a unicode emoji from a unicode escape string."""
-        return cls(name=str(escape.encode("utf-8"), "unicode_escape"))
+        unicode_emoji = cls()
+        unicode_emoji.name = str(escape.encode("utf-8"), "unicode_escape")
+        return unicode_emoji
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class CustomEmoji(Emoji, bases.Unique):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class CustomEmoji(Emoji, bases.Entity, bases.Unique):
     """Represents a custom emoji.
 
     This is a custom emoji that is from a guild you might not be part of.
@@ -202,18 +209,11 @@ class CustomEmoji(Emoji, bases.Unique):
         https://github.com/discord/discord-api-docs/issues/1614
     """
 
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False, repr=True)
+    name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The name of the emoji."""
 
-    is_animated: typing.Optional[bool] = marshaller.attrib(
-        raw_name="animated",
-        deserializer=bool,
-        if_undefined=False,
-        if_none=None,
-        default=False,
-        eq=False,
-        hash=False,
-        repr=True,
+    is_animated: typing.Optional[bool] = attr.ib(
+        eq=False, hash=False, repr=True,
     )
     """Whether the emoji is animated.
 
@@ -239,15 +239,10 @@ class CustomEmoji(Emoji, bases.Unique):
 
     @property
     def url(self) -> str:
-        return urls.generate_cdn_url("emojis", str(self.id), format_="gif" if self.is_animated else "png", size=None)
+        return cdn.generate_cdn_url("emojis", str(self.id), format_="gif" if self.is_animated else "png", size=None)
 
 
-def _deserialize_role_ids(payload: more_typing.JSONArray) -> typing.Set[bases.Snowflake]:
-    return {bases.Snowflake(role_id) for role_id in payload}
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class KnownCustomEmoji(CustomEmoji):
     """Represents an emoji that is known from a guild the bot is in.
 
@@ -255,22 +250,16 @@ class KnownCustomEmoji(CustomEmoji):
     _are_ part of. Ass a result, it contains a lot more information with it.
     """
 
-    role_ids: typing.Set[bases.Snowflake] = marshaller.attrib(
-        raw_name="roles", deserializer=_deserialize_role_ids, if_undefined=set, eq=False, hash=False, factory=set,
+    role_ids: typing.Set[snowflake.Snowflake] = attr.ib(
+        eq=False, hash=False,
     )
     """The IDs of the roles that are whitelisted to use this emoji.
 
     If this is empty then any user can use this emoji regardless of their roles.
     """
 
-    user: typing.Optional[users.User] = marshaller.attrib(
-        deserializer=users.User.deserialize,
-        if_none=None,
-        if_undefined=None,
-        inherit_kwargs=True,
-        default=None,
-        eq=False,
-        hash=False,
+    user: typing.Optional[users.User] = attr.ib(
+        eq=False, hash=False,
     )
     """The user that created the emoji.
 
@@ -279,30 +268,20 @@ class KnownCustomEmoji(CustomEmoji):
         permission in the server the emoji is from.
     """
 
-    is_animated: bool = marshaller.attrib(
-        raw_name="animated", deserializer=bool, if_undefined=False, default=False, eq=False, hash=False, repr=True
-    )
+    is_animated: bool = attr.ib(eq=False, hash=False, repr=True)
     """Whether the emoji is animated.
 
     Unlike in `CustomEmoji`, this information is always known, and will thus never be `None`.
     """
 
-    is_colons_required: bool = marshaller.attrib(raw_name="require_colons", deserializer=bool, eq=False, hash=False)
+    is_colons_required: bool = attr.ib(eq=False, hash=False)
     """Whether this emoji must be wrapped in colons."""
 
-    is_managed: bool = marshaller.attrib(raw_name="managed", deserializer=bool, eq=False, hash=False)
+    is_managed: bool = attr.ib(eq=False, hash=False)
     """Whether the emoji is managed by an integration."""
 
-    is_available: bool = marshaller.attrib(raw_name="available", deserializer=bool, eq=False, hash=False)
+    is_available: bool = attr.ib(eq=False, hash=False)
     """Whether this emoji can currently be used.
 
     May be `False` due to a loss of Sever Boosts on the emoji's guild.
     """
-
-
-def deserialize_reaction_emoji(payload: typing.Dict, **kwargs: typing.Any) -> typing.Union[UnicodeEmoji, CustomEmoji]:
-    """Deserialize a reaction emoji into an emoji."""
-    if payload.get("id"):
-        return CustomEmoji.deserialize(payload, **kwargs)
-
-    return UnicodeEmoji.deserialize(payload, **kwargs)

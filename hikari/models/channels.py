@@ -25,6 +25,7 @@ __all__ = [
     "PermissionOverwrite",
     "PermissionOverwriteType",
     "PartialChannel",
+    "TextChannel",
     "DMChannel",
     "GroupDMChannel",
     "GuildCategory",
@@ -33,30 +34,27 @@ __all__ = [
     "GuildNewsChannel",
     "GuildStoreChannel",
     "GuildVoiceChannel",
-    "GuildChannelBuilder",
 ]
 
-import datetime
+import abc
+import enum
 import typing
 
 import attr
 
-from hikari.internal import conversions
-from hikari.internal import marshaller
-from hikari.internal import more_collections
-from hikari.internal import more_enums
-from hikari.internal import urls
+from hikari.models import bases
+from hikari.models import permissions
+from hikari.models import users
 
-from . import bases
-from . import permissions
-from . import users
+from hikari.utilities import cdn
 
 if typing.TYPE_CHECKING:
-    from hikari.internal import more_typing
+    import datetime
+    from hikari.utilities import snowflake
 
 
-@more_enums.must_be_unique
-class ChannelType(int, more_enums.Enum):
+@enum.unique
+class ChannelType(int, enum.Enum):
     """The known channel types that are exposed to us by the API."""
 
     GUILD_TEXT = 0
@@ -81,8 +79,8 @@ class ChannelType(int, more_enums.Enum):
     """A channel that show's a game's store page."""
 
 
-@more_enums.must_be_unique
-class PermissionOverwriteType(str, more_enums.Enum):
+@enum.unique
+class PermissionOverwriteType(str, enum.Enum):
     """The type of entity a Permission Overwrite targets."""
 
     ROLE = "role"
@@ -95,24 +93,40 @@ class PermissionOverwriteType(str, more_enums.Enum):
         return self.value
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class PermissionOverwrite(bases.Unique, marshaller.Deserializable, marshaller.Serializable):
-    """Represents permission overwrites for a channel or role in a channel."""
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True)
+class PermissionOverwrite(bases.Unique):
+    """Represents permission overwrites for a channel or role in a channel.
 
-    type: PermissionOverwriteType = marshaller.attrib(
-        deserializer=PermissionOverwriteType, serializer=str, eq=True, hash=True
+    You may sometimes need to make instances of this object to add/edit
+    permission overwrites on channels.
+
+    Example
+    -------
+    Creating a permission overwrite.
+
+    ```py
+    overwrite = PermissionOverwrite(
+        type=PermissionOverwriteType.MEMBER,
+        allow=(
+            Permissions.VIEW_CHANNEL
+            | Permissions.READ_MESSAGE_HISTORY
+            | Permissions.SEND_MESSAGES
+        ),
+        deny=(
+            Permissions.MANAGE_MESSAGES
+            | Permissions.SPEAK
+        ),
     )
+    ```
+    """
+
+    type: PermissionOverwriteType = attr.ib(converter=PermissionOverwriteType, eq=True, hash=True)
     """The type of entity this overwrite targets."""
 
-    allow: permissions.Permission = marshaller.attrib(
-        deserializer=permissions.Permission, serializer=int, default=permissions.Permission(0), eq=False, hash=False
-    )
+    allow: permissions.Permission = attr.ib(converter=permissions.Permission, default=0, eq=False, hash=False)
     """The permissions this overwrite allows."""
 
-    deny: permissions.Permission = marshaller.attrib(
-        deserializer=permissions.Permission, serializer=int, default=permissions.Permission(0), eq=False, hash=False
-    )
+    deny: permissions.Permission = attr.ib(converter=permissions.Permission, default=0, eq=False, hash=False)
     """The permissions this overwrite denies."""
 
     @property
@@ -121,105 +135,77 @@ class PermissionOverwrite(bases.Unique, marshaller.Deserializable, marshaller.Se
         return typing.cast(permissions.Permission, (self.allow | self.deny))
 
 
-def register_channel_type(
-    type_: ChannelType,
-) -> typing.Callable[[typing.Type[PartialChannel]], typing.Type[PartialChannel]]:
-    """Generate a decorator for channel classes defined in this library.
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class PartialChannel(bases.Entity, bases.Unique):
+    """Channel representation for cases where further detail is not provided.
 
-    This allows them to associate themselves with a given channel type.
-
-    Parameters
-    ----------
-    type_ : ChannelType
-        The channel type to associate with.
-
-    Returns
-    -------
-    decorator(T) -> T
-        The decorator to decorate the class with.
+    This is commonly received in REST API responses where full information is
+    not available from Discord.
     """
 
-    def decorator(cls):
-        mapping = getattr(register_channel_type, "types", {})
-        mapping[type_] = cls
-        setattr(register_channel_type, "types", mapping)
-        return cls
-
-    return decorator
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class PartialChannel(bases.Unique, marshaller.Deserializable):
-    """Represents a channel where we've only received it's basic information.
-
-    This is commonly received in RESTSession responses.
-    """
-
-    name: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, if_undefined=None, if_none=None, default=None, eq=False, hash=False, repr=True
-    )
+    name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The channel's name. This will be missing for DM channels."""
 
-    type: ChannelType = marshaller.attrib(deserializer=ChannelType, eq=False, hash=False, repr=True)
+    type: ChannelType = attr.ib(eq=False, hash=False, repr=True)
     """The channel's type."""
 
 
-def _deserialize_recipients(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[users.User]:
-    return {bases.Snowflake(user["id"]): users.User.deserialize(user, **kwargs) for user in payload}
+class TextChannel(PartialChannel, abc.ABC):
+    """A channel that can have text messages in it."""
+
+    # This is a mixin, do not add slotted fields.
+    __slots__ = ()
 
 
-@register_channel_type(ChannelType.DM)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class DMChannel(PartialChannel):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class DMChannel(TextChannel):
     """Represents a DM channel."""
 
-    last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_none=None, eq=False, hash=False
-    )
+    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the last message sent in this channel.
 
-    !!! note
-        This might point to an invalid or deleted message.
+    !!! warning
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.
     """
 
-    recipients: typing.Mapping[bases.Snowflake, users.User] = marshaller.attrib(
-        deserializer=_deserialize_recipients, inherit_kwargs=True, eq=False, hash=False,
+    recipients: typing.Mapping[snowflake.Snowflake, users.User] = attr.ib(
+        eq=False, hash=False,
     )
     """The recipients of the DM."""
 
 
-@register_channel_type(ChannelType.GROUP_DM)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class GroupDMChannel(DMChannel):
     """Represents a DM group channel."""
 
-    owner_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, eq=False, hash=False, repr=True)
+    owner_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the owner of the group."""
 
-    icon_hash: typing.Optional[str] = marshaller.attrib(
-        raw_name="icon", deserializer=str, if_none=None, eq=False, hash=False
-    )
-    """The hash of the icon of the group."""
+    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    """The CDN hash of the icon of the group, if an icon is set."""
 
-    application_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False
-    )
-    """The ID of the application that created the group DM, if it's a bot based group DM."""
+    nicknames: typing.MutableMapping[snowflake.Snowflake, str] = attr.ib(eq=False, hash=False)
+    """A mapping of set nicknames within this group DMs to user IDs."""
+
+    application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    """The ID of the application that created the group DM.
+
+    If the group DM was not created by a bot, this will be `None`.
+    """
 
     @property
     def icon_url(self) -> typing.Optional[str]:
         """URL for this DM channel's icon, if set."""
         return self.format_icon_url()
 
-    def format_icon_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
+    # noinspection PyShadowingBuiltins
+    def format_icon_url(self, *, format: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this group DM's icon, if set.
 
         Parameters
         ----------
-        format_ : str
+        format : str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
@@ -228,303 +214,143 @@ class GroupDMChannel(DMChannel):
 
         Returns
         -------
-        str | None
-            The string URL.
+        str or None
+            The string URL, or `None` if no icon is present.
 
         Raises
         ------
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is not a power of two between 16 and 4096 (inclusive).
         """
         if self.icon_hash:
-            return urls.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            return cdn.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format, size=size)
         return None
 
 
-def _deserialize_overwrites(
-    payload: more_typing.JSONArray, **kwargs: typing.Any
-) -> typing.Mapping[bases.Snowflake, PermissionOverwrite]:
-    return {
-        bases.Snowflake(overwrite["id"]): PermissionOverwrite.deserialize(overwrite, **kwargs) for overwrite in payload
-    }
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class GuildChannel(PartialChannel):
     """The base for anything that is a guild channel."""
 
-    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False, repr=True
-    )
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the guild the channel belongs to.
 
-    This will be `None` when received over the gateway in certain events (e.g.
-    Guild Create).
+    !!! warning
+        This will be `None` when received over the gateway in certain events
+        (e.g Guild Create).
     """
 
-    position: int = marshaller.attrib(deserializer=int, eq=False, hash=False)
-    """The sorting position of the channel."""
+    position: int = attr.ib(eq=False, hash=False)
+    """The sorting position of the channel.
 
-    permission_overwrites: PermissionOverwrite = marshaller.attrib(
-        deserializer=_deserialize_overwrites, inherit_kwargs=True, eq=False, hash=False
-    )
-    """The permission overwrites for the channel."""
+    Higher numbers appear further down the channel list.
+    """
 
-    is_nsfw: typing.Optional[bool] = marshaller.attrib(
-        raw_name="nsfw", deserializer=bool, if_undefined=None, default=None, eq=False, hash=False
-    )
+    permission_overwrites: typing.Mapping[snowflake.Snowflake, PermissionOverwrite] = attr.ib(eq=False, hash=False)
+    """The permission overwrites for the channel.
+
+    This maps the ID of the entity in the overwrite to the overwrite data.
+    """
+
+    is_nsfw: typing.Optional[bool] = attr.ib(eq=False, hash=False)
     """Whether the channel is marked as NSFW.
 
-    This will be `None` when received over the gateway in certain events (e.g
-    Guild Create).
+    !!! warning
+        This will be `None` when received over the gateway in certain events
+        (e.g Guild Create).
     """
 
-    parent_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_none=None, if_undefined=None, default=None, eq=False, hash=False, repr=True
-    )
-    """The ID of the parent category the channel belongs to."""
+    parent_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    """The ID of the parent category the channel belongs to.
+
+    If no parent category is set for the channel, this will be `None`.
+    """
 
 
-@register_channel_type(ChannelType.GUILD_CATEGORY)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class GuildCategory(GuildChannel):
-    """Represents a guild category."""
+    """Represents a guild category channel.
+
+    These can contain other channels inside, and act as a method for
+    organisation.
+    """
 
 
-def _deserialize_rate_limit_per_user(payload: int) -> datetime.timedelta:
-    return datetime.timedelta(seconds=payload)
-
-
-@register_channel_type(ChannelType.GUILD_TEXT)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class GuildTextChannel(GuildChannel):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class GuildTextChannel(GuildChannel, TextChannel):
     """Represents a guild text channel."""
 
-    topic: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False)
+    topic: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The topic of the channel."""
 
-    last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_none=None, eq=False, hash=False
-    )
+    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the last message sent in this channel.
 
-    !!! note
-        This might point to an invalid or deleted message.
+    !!! warning
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.
     """
 
-    rate_limit_per_user: datetime.timedelta = marshaller.attrib(
-        deserializer=_deserialize_rate_limit_per_user, eq=False, hash=False
-    )
+    rate_limit_per_user: datetime.timedelta = attr.ib(eq=False, hash=False)
     """The delay (in seconds) between a user can send a message to this channel.
 
     !!! note
-        Bots, as well as users with `MANAGE_MESSAGES` or `MANAGE_CHANNEL`,
-        are not affected by this.
+        Any user that has permissions allowing `MANAGE_MESSAGES`,
+        `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
+        will not be affected by this rate limit.
     """
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None, default=None, eq=False, hash=False
-    )
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False)
     """The timestamp of the last-pinned message.
-
-    This may be `None` in several cases (currently undocumented clearly by
-    Discord).
-    """
-
-
-@register_channel_type(ChannelType.GUILD_NEWS)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, slots=True, kw_only=True)
-class GuildNewsChannel(GuildChannel):
-    """Represents an news channel."""
-
-    topic: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False)
-    """The topic of the channel."""
-
-    last_message_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_none=None, eq=False, hash=False
-    )
-    """The ID of the last message sent in this channel.
 
     !!! note
-        This might point to an invalid or deleted message.
+        This may be `None` in several cases; Discord does not document what
+        these cases are. Trust no one!
     """
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, if_undefined=None, default=None, eq=False, hash=False
-    )
+
+@attr.s(eq=True, hash=True, init=False, slots=True, kw_only=True)
+class GuildNewsChannel(GuildChannel, TextChannel):
+    """Represents an news channel."""
+
+    topic: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    """The topic of the channel."""
+
+    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    """The ID of the last message sent in this channel.
+
+    !!! warning
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.
+    """
+
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False)
     """The timestamp of the last-pinned message.
 
-    This may be `None` in several cases (currently undocumented clearly by
-    Discord).
+    !!! note
+        This may be `None` in several cases; Discord does not document what
+        these cases are. Trust no one!
     """
 
 
-@register_channel_type(ChannelType.GUILD_STORE)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class GuildStoreChannel(GuildChannel):
-    """Represents a store channel."""
+    """Represents a store channel.
+
+    These were originally used to sell games when Discord had a game store. This
+    was scrapped at the end of 2019, so these may disappear from the platform
+    eventually.
+    """
 
 
-@register_channel_type(ChannelType.GUILD_VOICE)
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class GuildVoiceChannel(GuildChannel):
     """Represents an voice channel."""
 
-    bitrate: int = marshaller.attrib(deserializer=int, eq=False, hash=False, repr=True)
-    """The bitrate for the voice channel (in bits)."""
+    bitrate: int = attr.ib(eq=False, hash=False, repr=True)
+    """The bitrate for the voice channel (in bits per second)."""
 
-    user_limit: int = marshaller.attrib(deserializer=int, eq=False, hash=False, repr=True)
-    """The user limit for the voice channel."""
+    user_limit: int = attr.ib(eq=False, hash=False, repr=True)
+    """The user limit for the voice channel.
 
-
-class GuildChannelBuilder(marshaller.Serializable):
-    """Used to create channel objects to send in guild create requests.
-
-    Parameters
-    ----------
-    channel_name : str
-        The name to set for the channel.
-    channel_type : ChannelType
-        The type of channel this should build.
-
-    Examples
-    --------
-        channel_obj = (
-            channels.GuildChannelBuilder("Catgirl-appreciation", channels.ChannelType.GUILD_TEXT)
-            .is_nsfw(True)
-            .with_topic("Here we men of culture appreciate the way of the neko.")
-            .with_rate_limit_per_user(datetime.timedelta(seconds=5))
-            .with_permission_overwrites([overwrite_obj])
-            .with_id(1)
-        )
+    If this is `0`, then assume no limit.
     """
-
-    __slots__ = ("_payload",)
-
-    def __init__(self, channel_name: str, channel_type: ChannelType) -> None:
-        self._payload: typing.Dict[str, typing.Any] = {
-            "type": channel_type,
-            "name": channel_name,
-        }
-
-    def serialize(self: GuildChannelBuilder) -> typing.Mapping[str, typing.Any]:
-        """Serialize this instance into a payload to send to Discord."""
-        return self._payload
-
-    def is_nsfw(self) -> GuildChannelBuilder:
-        """Mark this channel as NSFW."""
-        self._payload["nsfw"] = True
-        return self
-
-    def with_permission_overwrites(self, overwrites: typing.Sequence[PermissionOverwrite]) -> GuildChannelBuilder:
-        """Set the permission overwrites for this channel.
-
-        Parameters
-        ----------
-        overwrites : typing.Sequence[PermissionOverwrite]
-            A sequence of overwrite objects to add, where the first overwrite
-            object
-
-        !!! note
-            Calling this multiple times will overwrite any previously added
-            overwrites.
-        """
-        self._payload["permission_overwrites"] = [o.serialize() for o in overwrites]
-        return self
-
-    def with_topic(self, topic: str) -> GuildChannelBuilder:
-        """Set the topic for this channel.
-
-        Parameters
-        ----------
-        topic : str
-            The string topic to set.
-        """
-        self._payload["topic"] = topic
-        return self
-
-    def with_bitrate(self, bitrate: int) -> GuildChannelBuilder:
-        """Set the bitrate for this channel.
-
-        Parameters
-        ----------
-        bitrate : int
-            The bitrate to set in bits.
-        """
-        self._payload["bitrate"] = int(bitrate)
-        return self
-
-    def with_user_limit(self, user_limit: int) -> GuildChannelBuilder:
-        """Set the limit for how many users can be in this channel at once.
-
-        Parameters
-        ----------
-        user_limit : int
-            The user limit to set.
-        """
-        self._payload["user_limit"] = int(user_limit)
-        return self
-
-    def with_rate_limit_per_user(
-        self, rate_limit_per_user: typing.Union[datetime.timedelta, int]
-    ) -> GuildChannelBuilder:
-        """Set the rate limit for users sending messages in this channel.
-
-        Parameters
-        ----------
-        rate_limit_per_user : datetime.timedelta | int
-            The amount of seconds users will have to wait before sending another
-            message in the channel to set.
-        """
-        self._payload["rate_limit_per_user"] = int(
-            rate_limit_per_user.total_seconds()
-            if isinstance(rate_limit_per_user, datetime.timedelta)
-            else rate_limit_per_user
-        )
-        return self
-
-    def with_parent_category(self, category: typing.Union[bases.Snowflake, int]) -> GuildChannelBuilder:
-        """Set the parent category for this channel.
-
-        Parameters
-        ----------
-        category : hikari.models.bases.Snowflake | int
-            The placeholder ID of the category channel that should be this
-            channel's parent.
-        """
-        self._payload["parent_id"] = str(int(category))
-        return self
-
-    def with_id(self, channel_id: typing.Union[bases.Snowflake, int]) -> GuildChannelBuilder:
-        """Set the placeholder ID for this channel.
-
-        Parameters
-        ----------
-        channel_id : hikari.models.bases.Snowflake | int
-            The placeholder ID to use.
-
-        !!! note
-            This ID is purely a place holder used for setting parent category
-            channels and will have no effect on the created channel's ID.
-        """
-        self._payload["id"] = str(int(channel_id))
-        return self
-
-
-def deserialize_channel(payload: more_typing.JSONObject, **kwargs: typing.Any) -> typing.Union[GuildChannel, DMChannel]:
-    """Deserialize a channel object into the corresponding class.
-
-    !!! warning
-        This can only be used to deserialize full channel objects. To
-        deserialize a partial object, use `PartialChannel.deserialize`.
-    """
-    type_id = payload["type"]
-    types = getattr(register_channel_type, "types", more_collections.EMPTY_DICT)
-    channel_type = types[type_id]
-    return channel_type.deserialize(payload, **kwargs)

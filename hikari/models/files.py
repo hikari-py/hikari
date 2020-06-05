@@ -56,18 +56,20 @@ __all__ = ["BaseStream", "ByteStream", "WebResourceStream", "FileStream"]
 
 import abc
 import asyncio
+import base64
 import concurrent.futures
 import functools
 import http
 import inspect
 import io
+import math
 import os
 import typing
 
 import aiohttp
 
-from hikari.internal import more_asyncio
 from hikari import errors
+from hikari.utilities import aio
 
 # XXX: find optimal size.
 MAGIC_NUMBER: typing.Final[int] = 128 * 1024
@@ -106,17 +108,104 @@ class BaseStream(abc.ABC, typing.AsyncIterable[bytes]):
     @property
     @abc.abstractmethod
     def filename(self) -> str:
-        """Ffilename for the file object."""
+        """Filename for the file object."""
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(filename={self.filename!r})"
 
-    async def read(self) -> bytes:
-        """Return the entire contents of the data stream."""
-        data = io.BytesIO()
+    async def fetch_data_uri(self) -> str:
+        """Generate a data URI for the given resource.
+
+        This will only work for select image types that Discord supports,
+        currently.
+
+        The type is resolved by reading the first 20 bytes of the resource
+        asynchronously.
+
+        Returns
+        -------
+        str
+            A base-64 encoded data URI.
+
+        Raises
+        ------
+        TypeError
+            If the data format is not supported.
+        """
+        buff = await self.read(20)
+
+        if buff[:8] == b"\211PNG\r\n\032\n":
+            img_type = "image/png"
+        elif buff[6:10] in (b"Exif", b"JFIF"):
+            img_type = "image/jpeg"
+        elif buff[:6] in (b"GIF87a", b"GIF89a"):
+            img_type = "image/gif"
+        elif buff.startswith(b"RIFF") and buff[8:12] == b"WEBP":
+            img_type = "image/webp"
+        else:
+            raise TypeError("Unsupported image type passed")
+
+        image_data = base64.b64encode(buff).decode()
+
+        return f"data:{img_type};base64,{image_data}"
+
+    async def read(self, count: int = -1) -> bytes:
+        """Read from the data stream.
+
+        Parameters
+        ----------
+        count : int
+            The max number of bytes to read. If unspecified, the entire file
+            will be read. If the count is larger than the number of bytes in
+            the entire stream, then the entire stream will be returned.
+
+        Returns
+        -------
+        bytes
+            The bytes that were read.
+        """
+        if count == -1:
+            count = float("inf")
+
+        data = bytearray()
         async for chunk in self:
-            data.write(chunk)
-        return data.getvalue()
+            if len(data) >= count:
+                break
+
+            data.extend(chunk)
+
+        count = len(data) if math.isinf(count) else count
+        return data[:count]
+
+
+class _AsyncByteIterable:
+    __slots__ = ("_byte_content",)
+
+    def __init__(self, byte_content: bytes) -> None:
+        self._byte_content = byte_content
+
+    async def __aiter__(self):
+        for i in range(0, len(self._byte_content), MAGIC_NUMBER):
+            yield self._byte_content[i : i + MAGIC_NUMBER]
+
+
+class _MemorizedAsyncIteratorDecorator:
+    __slots__ = ("_async_iterator", "_exhausted", "_buff")
+
+    def __init__(self, async_iterator: typing.AsyncIterator) -> None:
+        self._async_iterator = async_iterator
+        self._exhausted = False
+        self._buff = bytearray()
+
+    async def __aiter__(self):
+        if self._exhausted:
+            async for chunk in _AsyncByteIterable(self._buff):
+                yield chunk
+        else:
+            async for chunk in self._async_iterator:
+                self._buff.extend(chunk)
+                yield chunk
+            self._exhausted = True
 
 
 class ByteStream(BaseStream):
@@ -268,17 +357,13 @@ class ByteStream(BaseStream):
         self._filename = filename
 
         if inspect.isasyncgenfunction(obj):
-            self._obj = obj()
+            obj = obj()
+
+        if inspect.isasyncgen(obj) or aio.is_async_iterator(obj):
+            self._obj = _MemorizedAsyncIteratorDecorator(obj)
             return
 
-        if more_asyncio.is_async_iterable(obj):
-            obj = obj.__aiter__()
-
-        if more_asyncio.is_async_iterator(obj):
-            self._obj = self._aiter_async_iterator(obj)
-            return
-
-        if inspect.isasyncgen(obj):
+        if aio.is_async_iterable(obj):
             self._obj = obj
             return
 
@@ -289,14 +374,13 @@ class ByteStream(BaseStream):
             obj = self._to_bytes(obj)
 
         if isinstance(obj, bytes):
-            self._obj = self._aiter_bytes(obj)
+            self._obj = _AsyncByteIterable(obj)
             return
 
         raise TypeError(f"Expected bytes-like object or async generator, got {type(obj).__qualname__}")
 
-    async def __aiter__(self) -> typing.AsyncGenerator[bytes]:
-        async for chunk in self._obj:
-            yield self._to_bytes(chunk)
+    def __aiter__(self) -> typing.AsyncGenerator[bytes]:
+        return self._obj.__aiter__()
 
     @property
     def filename(self) -> str:
@@ -310,12 +394,6 @@ class ByteStream(BaseStream):
                 yield self._to_bytes(await async_iterator.__anext__())
         except StopAsyncIteration:
             pass
-
-    @staticmethod
-    async def _aiter_bytes(bytes_: bytes) -> typing.AsyncGenerator[bytes]:
-        stream = io.BytesIO(bytes_)
-        while chunk := stream.read(MAGIC_NUMBER):
-            yield chunk
 
     @staticmethod
     def _to_bytes(byte_like: ___VALID_BYTE_TYPES___) -> bytes:

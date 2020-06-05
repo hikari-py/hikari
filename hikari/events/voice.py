@@ -22,40 +22,43 @@ from __future__ import annotations
 
 __all__ = ["VoiceStateUpdateEvent", "VoiceServerUpdateEvent"]
 
+import typing
+
 import attr
 
-from hikari.internal import marshaller
-from hikari.models import bases as base_models
+from hikari.events import base as base_events
 from hikari.models import intents
-from hikari.models import voices
 
-from . import base as base_events
+if typing.TYPE_CHECKING:
+    from hikari.models import voices
+    from hikari.utilities import snowflake
 
 
 @base_events.requires_intents(intents.Intent.GUILD_VOICE_STATES)
-@marshaller.marshallable()
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class VoiceStateUpdateEvent(base_events.HikariEvent, voices.VoiceState):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class VoiceStateUpdateEvent(base_events.HikariEvent):
     """Used to represent voice state update gateway events.
 
     Sent when a user joins, leaves or moves voice channel(s).
     """
 
+    state: voices.VoiceState = attr.ib()
+    """The object of the voice state that's being updated."""
 
-@marshaller.marshallable()
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class VoiceServerUpdateEvent(base_events.HikariEvent, marshaller.Deserializable):
+
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class VoiceServerUpdateEvent(base_events.HikariEvent):
     """Used to represent voice server update gateway events.
 
     Sent when initially connecting to voice and when the current voice instance
     falls over to a new server.
     """
 
-    token: str = marshaller.attrib(deserializer=str)
+    token: str = attr.ib()
     """The voice connection's string token."""
 
-    guild_id: base_models.Snowflake = marshaller.attrib(deserializer=base_models.Snowflake, repr=True)
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this voice server update is for."""
 
-    endpoint: str = marshaller.attrib(deserializer=str, repr=True)
+    endpoint: str = attr.ib(repr=True)
     """The URI for this voice server host."""
