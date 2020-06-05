@@ -318,8 +318,8 @@ class Message(bases.Entity, bases.Unique):
 
     async def edit(  # pylint:disable=line-too-long
         self,
-        *,
         content: str = ...,
+        *,
         embed: embeds_.Embed = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[
@@ -415,10 +415,11 @@ class Message(bases.Entity, bases.Unique):
             role_mentions=role_mentions,
         )
 
+    # FIXME: use undefined, not ...
     async def reply(  # pylint:disable=line-too-long
         self,
-        *,
         content: str = ...,
+        *,
         embed: embeds_.Embed = ...,
         files: typing.Sequence[files_.BaseStream] = ...,
         mentions_everyone: bool = True,
