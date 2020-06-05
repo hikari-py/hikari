@@ -47,6 +47,8 @@ if typing.TYPE_CHECKING:
     from hikari.models import voices as voice_models
     from hikari.models import webhooks as webhook_models
 
+    from hikari.net import gateway
+
     from hikari.utilities import data_binding
 
 
@@ -1243,11 +1245,15 @@ class IEntityFactory(component.IComponent, abc.ABC):
     ################
 
     @abc.abstractmethod
-    def deserialize_ready_event(self, payload: data_binding.JSONObject) -> other_events.ReadyEvent:
+    def deserialize_ready_event(
+        self, shard: gateway.Gateway, payload: data_binding.JSONObject,
+    ) -> other_events.ReadyEvent:
         """Parse a raw payload from Discord into a ready event object.
 
         Parameters
         ----------
+        shard : hikari.net.gateway.Gateway
+            The shard that was ready.
         payload : Mapping[str, Any]
             The dict payload to parse.
 

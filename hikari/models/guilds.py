@@ -233,7 +233,7 @@ class Member(bases.Entity):
     """This member's nickname.
 
     This will be `None` if not set and `hikari.utilities.undefined.Undefined`
-    if it's state is unknown.    
+    if it's state is unknown.
     """
 
     role_ids: typing.Set[snowflake.Snowflake] = attr.ib(

@@ -184,7 +184,7 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
             if base.is_no_catch_event(event):
                 self.logger.error("an exception occurred handling an event, but it has been ignored", exc_info=ex)
             else:
-                await self.dispatch(other.ExceptionEvent(app=self._app, exception=ex, event=event, callback=callback))
+                await self.dispatch(other.ExceptionEvent(exception=ex, event=event, callback=callback))
 
     def dispatch(self, event: base.HikariEvent) -> aio.Future[typing.Any]:
         if not isinstance(event, base.HikariEvent):

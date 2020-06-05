@@ -3072,7 +3072,9 @@ class TestEntityFactoryImpl:
     def test_deserialize_ready_event(
         self, entity_factory_impl, ready_payload, my_user_payload, guild_unavailable_payload
     ):
-        ready_event = entity_factory_impl.deserialize_ready_event(ready_payload)
+        shard = mock.MagicMock()
+        ready_event = entity_factory_impl.deserialize_ready_event(shard, ready_payload)
+        assert ready_event.shard is shard
         assert ready_event.gateway_version == 6
         assert ready_event.my_user == entity_factory_impl.deserialize_my_user(my_user_payload)
         assert ready_event.unavailable_guilds == {
@@ -3086,15 +3088,18 @@ class TestEntityFactoryImpl:
     def test_deserialize_ready_event_with_unset_fields(
         self, entity_factory_impl, ready_payload, my_user_payload, guild_unavailable_payload
     ):
+        shard = mock.MagicMock()
         ready_event = entity_factory_impl.deserialize_ready_event(
+            shard,
             {
                 "v": 6,
                 "user": my_user_payload,
                 "private_channels": [],
                 "guilds": [],
                 "session_id": "mlksdfoijpsdfioprewi09u43rw",
-            }
+            },
         )
+        assert ready_event.shard is shard
         assert ready_event.shard_id is None
         assert ready_event.shard_count is None
 

@@ -104,7 +104,6 @@ class DisconnectedEvent(base_events.HikariEvent):
     """The shard that disconnected."""
 
 
-# Synthetic event, is not deserialized
 @attr.s(eq=False, hash=False, init=True, kw_only=True, slots=True)
 class ResumedEvent(base_events.HikariEvent):
     """Represents a gateway Resume event."""
@@ -119,6 +118,9 @@ class ReadyEvent(base_events.HikariEvent):
 
     This is received only when IDENTIFYing with the gateway.
     """
+
+    shard: gateway_client.Gateway = attr.ib()
+    """The shard that is ready."""
 
     gateway_version: int = attr.ib(repr=True)
     """The gateway version this is currently connected to."""
