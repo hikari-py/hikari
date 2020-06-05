@@ -158,8 +158,8 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
         logging_level: typing.Optional[str] = "INFO",
         rest_version: int = 6,
         rest_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        shard_ids: typing.Optional[typing.Set[int]],
-        shard_count: typing.Optional[int],
+        shard_ids: typing.Union[typing.Set[int], undefined.Undefined] = undefined.Undefined(),
+        shard_count: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
         token: str,
     ):
         self._logger = klass.get_logger(self)
