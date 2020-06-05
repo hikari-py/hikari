@@ -157,6 +157,9 @@ class GroupDMChannel(DMChannel):
     icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The hash of the icon of the group."""
 
+    nicknames: typing.MutableMapping[snowflake.Snowflake, str] = attr.ib(eq=False, hash=False)
+    """A mapping of set nicknames within this group DMs to user IDs."""
+
     application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the application that created the group DM, if it's a bot based group DM."""
 

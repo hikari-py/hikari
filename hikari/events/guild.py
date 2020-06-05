@@ -21,11 +21,12 @@
 from __future__ import annotations
 
 __all__ = [
+    "GuildEvent",
     "GuildCreateEvent",
     "GuildUpdateEvent",
     "GuildLeaveEvent",
     "GuildUnavailableEvent",
-    "BaseGuildBanEvent",
+    "GuildBanEvent",
     "GuildBanAddEvent",
     "GuildBanRemoveEvent",
     "GuildEmojisUpdateEvent",
@@ -46,37 +47,47 @@ import attr
 
 from hikari.events import base as base_events
 from hikari.models import bases as base_models
-from hikari.models import emojis as emojis_models
-from hikari.models import guilds
 from hikari.models import intents
-from hikari.models import presences
-from hikari.models import users
-from hikari.utilities import snowflake
-from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    import datetime
+    from hikari.models import emojis as emojis_models
+    from hikari.models import guilds
+    from hikari.models import presences
+    from hikari.models import users
+    from hikari.utilities import snowflake
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildCreateEvent(base_events.HikariEvent, guilds.Guild):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildEvent(base_events.HikariEvent):
+    """A base object that all guild events will inherit from."""
+
+
+@base_events.requires_intents(intents.Intent.GUILDS)
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildCreateEvent(GuildEvent):
     """Used to represent Guild Create gateway events.
 
     Will be received when the bot joins a guild, and when a guild becomes
     available to a guild (either due to outage or at startup).
     """
 
+    guild: guilds.Guild = attr.ib()
+    """The object of the guild that's being created."""
+
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildUpdateEvent(base_events.HikariEvent, guilds.Guild):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildUpdateEvent(GuildEvent):
     """Used to represent Guild Update gateway events."""
 
+    guild: guilds.Guild = attr.ib()
+    """The object of the guild that's being updated."""
+
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildLeaveEvent(base_events.HikariEvent, base_models.Unique):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildLeaveEvent(GuildEvent, base_models.Unique):
     """Fired when the current user leaves the guild or is kicked/banned from it.
 
     !!! note
@@ -85,8 +96,8 @@ class GuildLeaveEvent(base_events.HikariEvent, base_models.Unique):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildUnavailableEvent(base_events.HikariEvent, base_models.Unique):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildUnavailableEvent(GuildEvent, base_models.Entity, base_models.Unique):
     """Fired when a guild becomes temporarily unavailable due to an outage.
 
     !!! note
@@ -95,8 +106,8 @@ class GuildUnavailableEvent(base_events.HikariEvent, base_models.Unique):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class BaseGuildBanEvent(base_events.HikariEvent, abc.ABC):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildBanEvent(GuildEvent, base_models.Entity, abc.ABC):
     """A base object that guild ban events will inherit from."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -107,20 +118,20 @@ class BaseGuildBanEvent(base_events.HikariEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildBanAddEvent(BaseGuildBanEvent):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildBanAddEvent(GuildBanEvent):
     """Used to represent a Guild Ban Add gateway event."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildBanRemoveEvent(BaseGuildBanEvent):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildBanRemoveEvent(GuildBanEvent):
     """Used to represent a Guild Ban Remove gateway event."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildEmojisUpdateEvent(base_events.HikariEvent):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildEmojisUpdateEvent(GuildEvent, base_models.Entity):
     """Represents a Guild Emoji Update gateway event."""
 
     guild_id: snowflake.Snowflake = attr.ib()
@@ -131,8 +142,8 @@ class GuildEmojisUpdateEvent(base_events.HikariEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_INTEGRATIONS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildIntegrationsUpdateEvent(base_events.HikariEvent):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildIntegrationsUpdateEvent(GuildEvent, base_models.Entity):
     """Used to represent Guild Integration Update gateway events."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -140,48 +151,37 @@ class GuildIntegrationsUpdateEvent(base_events.HikariEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildMemberAddEvent(base_events.HikariEvent, guilds.Member):
-    """Used to represent a Guild Member Add gateway event."""
-
-    guild_id: snowflake.Snowflake = attr.ib(repr=True)
-    """The ID of the guild where this member was added."""
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildMemberEvent(GuildEvent):
+    """A base class that all guild member events will inherit from."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildMemberUpdateEvent(base_events.HikariEvent):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildMemberAddEvent(GuildMemberEvent, base_models.Entity):
+    """Used to represent a Guild Member Add gateway event."""
+
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)  # TODO: do we want to have guild_id on all members?
+    """The ID of the guild where this member was added."""
+
+    member: guilds.Member = attr.ib(repr=True)
+    """The object of the member who's being added."""
+
+
+@base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildMemberUpdateEvent(GuildMemberEvent):
     """Used to represent a Guild Member Update gateway event.
 
     Sent when a guild member or their inner user object is updated.
     """
 
-    guild_id: snowflake.Snowflake = attr.ib(repr=True)
-    """The ID of the guild this member was updated in."""
-
-    role_ids: typing.Sequence[snowflake.Snowflake] = attr.ib()
-    """A sequence of the IDs of the member's current roles."""
-
-    user: users.User = attr.ib(repr=True)
-    """The object of the user who was updated."""
-
-    nickname: typing.Union[None, str, undefined.Undefined] = attr.ib()
-    """This member's nickname.
-
-    When set to `None`, this has been removed and when set to
-    `hikari.models.undefined.Undefined` this hasn't been acted on.
-    """
-
-    premium_since: typing.Union[None, datetime.datetime, undefined.Undefined] = attr.ib()
-    """The datetime of when this member started "boosting" this guild.
-
-    Will be `None` if they aren't boosting.
-    """
+    member: guilds.Member = attr.ib()
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildMemberRemoveEvent(base_events.HikariEvent):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildMemberRemoveEvent(GuildMemberEvent, base_models.Entity):
     """Used to represent Guild Member Remove gateway events.
 
     Sent when a member is kicked, banned or leaves a guild.
@@ -196,8 +196,13 @@ class GuildMemberRemoveEvent(base_events.HikariEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildRoleCreateEvent(base_events.HikariEvent):
+class GuildRoleEvent(GuildEvent):
+    """A base class that all guild role events will inherit from."""
+
+
+@base_events.requires_intents(intents.Intent.GUILDS)
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildRoleCreateEvent(GuildRoleEvent, base_models.Entity):
     """Used to represent a Guild Role Create gateway event."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -208,8 +213,8 @@ class GuildRoleCreateEvent(base_events.HikariEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildRoleUpdateEvent(base_events.HikariEvent):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildRoleUpdateEvent(GuildRoleEvent, base_models.Entity):
     """Used to represent a Guild Role Create gateway event."""
 
     # TODO: make any event with a guild ID into a custom base event.
@@ -222,8 +227,8 @@ class GuildRoleUpdateEvent(base_events.HikariEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class GuildRoleDeleteEvent(base_events.HikariEvent):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class GuildRoleDeleteEvent(GuildRoleEvent, base_models.Entity):
     """Represents a gateway Guild Role Delete Event."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -234,9 +239,12 @@ class GuildRoleDeleteEvent(base_events.HikariEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_PRESENCES)
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class PresenceUpdateEvent(base_events.HikariEvent, presences.MemberPresence):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class PresenceUpdateEvent(GuildEvent):
     """Used to represent Presence Update gateway events.
 
     Sent when a guild member changes their presence.
     """
+
+    presence: presences.MemberPresence = attr.ib()
+    """The object of the presence being updated."""

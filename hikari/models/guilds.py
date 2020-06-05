@@ -61,6 +61,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import permissions as permissions_
     from hikari.models import presences
     from hikari.utilities import snowflake
+    from hikari.utilities import undefined
 
 
 @enum.unique
@@ -226,10 +227,14 @@ class Member(bases.Entity):
     This will be `None` when attached to Message Create and Update gateway events.
     """
 
-    nickname: typing.Optional[str] = attr.ib(
+    nickname: typing.Union[str, None, undefined.Undefined] = attr.ib(
         eq=False, hash=False, repr=True,
     )
-    """This member's nickname, if set."""
+    """This member's nickname.
+
+    This will be `None` if not set and `hikari.utilities.undefined.Undefined`
+    if it's state is unknown.    
+    """
 
     role_ids: typing.Set[snowflake.Snowflake] = attr.ib(
         eq=False, hash=False,
@@ -239,17 +244,24 @@ class Member(bases.Entity):
     joined_at: datetime.datetime = attr.ib(eq=False, hash=False)
     """The datetime of when this member joined the guild they belong to."""
 
-    premium_since: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False)
+    premium_since: typing.Union[datetime.datetime, None, undefined.Undefined] = attr.ib(eq=False, hash=False)
     """The datetime of when this member started "boosting" this guild.
 
-    This will be `None` if they aren't boosting.
+    This will be `None` if they aren't boosting and
+    `hikari.utilities.undefined.Undefined` if their boosting status is unknown.
     """
 
-    is_deaf: bool = attr.ib(eq=False, hash=False)
-    """Whether this member is deafened by this guild in it's voice channels."""
+    is_deaf: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False)
+    """Whether this member is deafened by this guild in it's voice channels.
 
-    is_mute: bool = attr.ib(eq=False, hash=False)
-    """Whether this member is muted by this guild in it's voice channels."""
+    This will be `hikari.utilities.undefined.Undefined if it's state is unknown.
+    """
+
+    is_mute: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False)
+    """Whether this member is muted by this guild in it's voice channels.
+
+    This will be `hikari.utilities.undefined.Undefined if it's state is unknown.
+    """
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

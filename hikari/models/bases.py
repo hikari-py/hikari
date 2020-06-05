@@ -47,9 +47,7 @@ class Entity(abc.ABC):
     _app: typing.Optional[app_.IApp] = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    def set_app(self, app: app_.IApp) -> None:
-        if hasattr(self, "_app"):
-            raise AttributeError("Protected attribute '_app' cannot be overwritten.")
+    def __init__(self, app: app_.IApp) -> None:
         self._app = app
 
 
