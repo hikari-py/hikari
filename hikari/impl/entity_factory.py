@@ -47,6 +47,7 @@ from hikari.models import presences as presence_models
 from hikari.models import users as user_models
 from hikari.models import voices as voice_models
 from hikari.models import webhooks as webhook_models
+from hikari.net import gateway
 from hikari.utilities import date
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
@@ -1693,8 +1694,11 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     # OTHER EVENTS #
     ################
 
-    def deserialize_ready_event(self, payload: data_binding.JSONObject) -> other_events.ReadyEvent:
+    def deserialize_ready_event(
+        self, shard: gateway.Gateway, payload: data_binding.JSONObject
+    ) -> other_events.ReadyEvent:
         ready_event = other_events.ReadyEvent()
+        ready_event.shard = shard
         ready_event.gateway_version = int(payload["v"])
         ready_event.my_user = self.deserialize_my_user(payload["user"])
         ready_event.unavailable_guilds = {

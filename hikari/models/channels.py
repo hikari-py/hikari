@@ -166,7 +166,7 @@ class DMChannel(TextChannel):
 
     !!! warning
         This might point to an invalid or deleted message. Do not assume that
-        this will always be valid.       
+        this will always be valid.
     """
 
     recipients: typing.Mapping[snowflake.Snowflake, users.User] = attr.ib(
@@ -190,7 +190,7 @@ class GroupDMChannel(DMChannel):
 
     application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the application that created the group DM.
-    
+
     If the group DM was not created by a bot, this will be `None`.
     """
 
@@ -235,19 +235,19 @@ class GuildChannel(PartialChannel):
     """The ID of the guild the channel belongs to.
 
     !!! warning
-        This will be `None` when received over the gateway in certain events 
+        This will be `None` when received over the gateway in certain events
         (e.g Guild Create).
     """
 
     position: int = attr.ib(eq=False, hash=False)
     """The sorting position of the channel.
-    
+
     Higher numbers appear further down the channel list.
     """
 
     permission_overwrites: typing.Mapping[snowflake.Snowflake, PermissionOverwrite] = attr.ib(eq=False, hash=False)
     """The permission overwrites for the channel.
-    
+
     This maps the ID of the entity in the overwrite to the overwrite data.
     """
 
@@ -255,13 +255,13 @@ class GuildChannel(PartialChannel):
     """Whether the channel is marked as NSFW.
 
     !!! warning
-        This will be `None` when received over the gateway in certain events 
+        This will be `None` when received over the gateway in certain events
         (e.g Guild Create).
     """
 
     parent_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the parent category the channel belongs to.
-    
+
     If no parent category is set for the channel, this will be `None`.
     """
 
@@ -287,21 +287,21 @@ class GuildTextChannel(GuildChannel, TextChannel):
 
     !!! warning
         This might point to an invalid or deleted message. Do not assume that
-        this will always be valid.   
+        this will always be valid.
     """
 
     rate_limit_per_user: datetime.timedelta = attr.ib(eq=False, hash=False)
     """The delay (in seconds) between a user can send a message to this channel.
 
     !!! note
-        Any user that has permissions allowing `MANAGE_MESSAGES`, 
+        Any user that has permissions allowing `MANAGE_MESSAGES`,
         `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
         will not be affected by this rate limit.
     """
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False)
     """The timestamp of the last-pinned message.
-    
+
     !!! note
         This may be `None` in several cases; Discord does not document what
         these cases are. Trust no one!
@@ -317,10 +317,10 @@ class GuildNewsChannel(GuildChannel, TextChannel):
 
     last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the last message sent in this channel.
-    
+
     !!! warning
         This might point to an invalid or deleted message. Do not assume that
-        this will always be valid.   
+        this will always be valid.
     """
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False)
@@ -351,6 +351,6 @@ class GuildVoiceChannel(GuildChannel):
 
     user_limit: int = attr.ib(eq=False, hash=False, repr=True)
     """The user limit for the voice channel.
-    
+
     If this is `0`, then assume no limit.
     """

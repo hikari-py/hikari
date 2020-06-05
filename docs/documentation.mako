@@ -72,7 +72,6 @@
     QUAL_NAMESPACE = "namespace"
     QUAL_PACKAGE = "package"
     QUAL_PROPERTY = "property"
-    QUAL_REF = "ref"
     QUAL_TYPEHINT = "type hint"
     QUAL_VAR = "var"
 
@@ -97,10 +96,7 @@
         
         if with_prefixes:        
             if isinstance(dobj, pdoc.Function):
-                if not hide_ref and dobj.module.name != dobj.obj.__module__:
-                    qual = QUAL_REF + " " + dobj.funcdef()
-                else:
-                    qual = dobj.funcdef()
+                qual = dobj.funcdef()
 
                 prefix = "<small class='text-muted'><em>" + qual + "</em></small>"
 
@@ -116,10 +112,7 @@
                     prefix = f"<small class='text-muted'><em>{QUAL_VAR}</em></small>"
 
             elif isinstance(dobj, pdoc.Class):
-                if not hide_ref and dobj.module.name != dobj.obj.__module__:
-                    qual = f"{QUAL_REF}"
-                else:
-                    qual = ""
+                qual = ""
 
                 if issubclass(dobj.obj, type):
                     qual += QUAL_METACLASS
@@ -142,12 +135,7 @@
                 prefix = f"<small class='text-muted'><em>{qual}</em></small> "
 
             elif isinstance(dobj, pdoc.Module):
-                if dobj.module.name != dobj.obj.__name__:
-                    qual = f"{QUAL_REF} "
-                else:
-                    qual = ""
-
-                qual += QUAL_PACKAGE if dobj.is_package else QUAL_NAMESPACE if dobj.is_namespace else QUAL_MODULE
+                qual = QUAL_PACKAGE if dobj.is_package else QUAL_NAMESPACE if dobj.is_namespace else QUAL_MODULE
                 prefix = f"<small class='text-muted'><em>{qual}</em></small> "
 
             else:
@@ -658,12 +646,6 @@
                     An object or attribute used to denote a certain type or combination of types.
                     These usually provide no functionality and only exist for documentation purposes
                     and for static type-checkers.
-                </dd>
-
-                <dt><code>${QUAL_REF}</code></dt>
-                <dd>
-                    Used to flag that an object is defined in a different file, and is just
-                    referred to at the current location.
                 </dd>
 
                 <dt><code>${QUAL_VAR}</code></dt>
