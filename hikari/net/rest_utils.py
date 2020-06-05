@@ -73,6 +73,9 @@ class TypingIndicator:
         route = routes.POST_CHANNEL_TYPING.compile(channel=self._channel)
         yield from self._request_call(route).__await__()
 
+    def __enter__(self) -> typing.NoReturn:
+        raise TypeError("Use 'async with' rather than 'with' when triggering the typing indicator.")
+
     async def __aenter__(self) -> None:
         if self._task is not None:
             raise TypeError("cannot enter a typing indicator context more than once.")
@@ -85,7 +88,8 @@ class TypingIndicator:
 
     async def _keep_typing(self) -> None:
         with contextlib.suppress(asyncio.CancelledError):
-            await asyncio.gather(self, asyncio.sleep(9.9), return_exceptions=True)
+            while True:
+                await asyncio.gather(self, asyncio.sleep(9.9), return_exceptions=True)
 
 
 @attr.s(auto_attribs=True, kw_only=True, slots=True)
