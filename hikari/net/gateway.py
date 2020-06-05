@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Single-shard implementation for the V6 and V7 gateway."""
+"""Single-shard implementation for the V6 and V7 event gateway for Discord."""
 
 from __future__ import annotations
 

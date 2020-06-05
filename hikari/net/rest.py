@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Implementation of a V6 and V7 compatible REST API for Discord."""
 
 from __future__ import annotations
 
@@ -415,7 +416,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to fetch. This may be a channel object, or the ID of an
             existing channel.
 
@@ -491,29 +492,29 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to edit. This may be a channel object, or the ID of an
             existing channel.
-        name : hikari.utilities.undefined.Undefined | str
+        name : hikari.utilities.undefined.Undefined or str
             If provided, the new name for the channel.
-        position : hikari.utilities.undefined.Undefined | int
+        position : hikari.utilities.undefined.Undefined or int
             If provided, the new position for the channel.
-        topic : hikari.utilities.undefined.Undefined | str
+        topic : hikari.utilities.undefined.Undefined or str
             If provided, the new topic for the channel.
-        nsfw : hikari.utilities.undefined.Undefined | bool
+        nsfw : hikari.utilities.undefined.Undefined or bool
             If provided, whether the channel should be marked as NSFW or not.
-        bitrate : hikari.utilities.undefined.Undefined | int
+        bitrate : hikari.utilities.undefined.Undefined or int
             If provided, the new bitrate for the channel.
-        user_limit : hikari.utilities.undefined.Undefined | int
+        user_limit : hikari.utilities.undefined.Undefined or int
             If provided, the new user limit in the channel.
-        rate_limit_per_user : hikari.utilities.undefined.Undefined | datetime.timedelta | float | int
+        rate_limit_per_user : hikari.utilities.undefined.Undefined or datetime.timedelta or float or int
             If provided, the new rate limit per user in the channel.
-        permission_overwrites : hikari.utilities.undefined.Undefined | typing.Sequence[hikari.models.channels.PermissionOverwrite]
+        permission_overwrites : hikari.utilities.undefined.Undefined or typing.Sequence[hikari.models.channels.PermissionOverwrite]
             If provided, the new permission overwrites for the channel.
-        parent_category : hikari.utilities.undefined.Undefined | hikari.models.channels.GuildCategory | hikari.utilities.snowflake.Snowflake | int | str
+        parent_category : hikari.utilities.undefined.Undefined or hikari.models.channels.GuildCategory or hikari.utilities.snowflake.Snowflake or int or str
             If provided, the new guild category for the channel. This may be
             a category object, or the ID of an existing category.
-        reason : hikari.utilities.undefined.Undefined | str
+        reason : hikari.utilities.undefined.Undefined or str
             If provided, the reason that will be recorded in the audit logs.
 
         Returns
@@ -556,7 +557,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to delete. This may be a channel object, or the ID of an
             existing channel.
 
@@ -617,20 +618,20 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to edit a permission overwrite in. This may be a channel object, or
             the ID of an existing channel.
-        target : hikari.models.users.User | hikari.models.guidls.Role | hikari.models.channels.PermissionOverwrite | hikari.utilities.snowflake.Snowflake | int | str
+        target : hikari.models.users.User or hikari.models.guidls.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflake or int or str
             The channel overwrite to edit. This may be a overwrite object, or the ID of an
             existing channel.
-        target_type : hikari.utilities.undefined.Undefined | hikari.models.channels.PermissionOverwriteType | str
+        target_type : hikari.utilities.undefined.Undefined or hikari.models.channels.PermissionOverwriteType or str
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
-        allow : hikari.utilities.undefined.Undefined | hikari.models.permissions.Permission
+        allow : hikari.utilities.undefined.Undefined or hikari.models.permissions.Permission
             If provided, the new vale of all allowed permissions.
-        deny : hikari.utilities.undefined.Undefined | hikari.models.permissions.Permission
+        deny : hikari.utilities.undefined.Undefined or hikari.models.permissions.Permission
             If provided, the new vale of all disallowed permissions.
-        reason : hikari.utilities.undefined.Undefined | str
+        reason : hikari.utilities.undefined.Undefined or str
             If provided, the reason that will be recorded in the audit logs.
 
         Raises
@@ -650,7 +651,6 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
         """
-
         if isinstance(target_type, undefined.Undefined):
             if isinstance(target, users.User):
                 target_type = channels.PermissionOverwriteType.MEMBER
@@ -680,10 +680,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to delete a permission overwrite in. This may be a channel
             object, or the ID of an existing channel.
-        target : hikari.models.users.User | hikari.models.guidls.Role | hikari.models.channels.PermissionOverwrite | hikari.utilities.snowflake.Snowflake | int | str
+        target : hikari.models.users.User or hikari.models.guidls.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflake or int or str
             The channel overwrite to delete.
 
         Raises
@@ -707,7 +707,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to fetch the invites from. This may be a channel
             object, or the ID of an existing channel.
 
@@ -748,23 +748,23 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to create a invite for. This may be a channel object,
             or the ID of an existing channel.
-        max_age : hikari.utilities.undefined.Undefined | datetime.timedelta | float | int
+        max_age : hikari.utilities.undefined.Undefined or datetime.timedelta or float or int
             If provided, the duration of the invite before expiry.
-        max_uses : hikari.utilities.undefined.Undefined | int
+        max_uses : hikari.utilities.undefined.Undefined or int
             If provided, the max uses the invite can have.
-        temporary : hikari.utilities.undefined.Undefined | bool
+        temporary : hikari.utilities.undefined.Undefined or bool
             If provided, whether the invite only grants temporary membership.
-        unique : hikari.utilities.undefined.Undefined | bool
+        unique : hikari.utilities.undefined.Undefined or bool
             If provided, wheter the invite should be unique.
-        target_user : hikari.utilities.undefined.Undefined | hikari.models.users.User | hikari.utilities.snowflake.Snowflake | int | str
+        target_user : hikari.utilities.undefined.Undefined or hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str
             If provided, the target user id for this invite. This may be a
             user object, or the ID of an existing user.
-        target_user_type : hikari.utilities.undefined.Undefined | hikari.models.invites.TargetUserType | int
+        target_user_type : hikari.utilities.undefined.Undefined or hikari.models.invites.TargetUserType or int
             If provided, the type of target user for this invite.
-        reason : hikari.utilities.undefined.Undefined | str
+        reason : hikari.utilities.undefined.Undefined or str
             If provided, the reason that will be recorded in the audit logs.
 
         Returns
@@ -804,7 +804,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to trigger typing in. This may be a channel object, or
             the ID of an existing channel.
 
@@ -839,7 +839,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to fetch pins from. This may be a channel object, or
             the ID of an existing channel.
 
@@ -873,10 +873,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to pin a message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messges.Message | hikari.utilities.snowflake.Snowflake | int | str
+        message : hikari.models.messges.Message or hikari.utilities.snowflake.Snowflake or int or str
             The message to pin. This may be a message object,
             or the ID of an existing message.
 
@@ -900,14 +900,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
         message: typing.Union[messages_.Message, bases.UniqueObject],
     ) -> None:
-        """
+        """Unpin a given message from a given text channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to unpin a message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messges.Message | hikari.utilities.snowflake.Snowflake | int | str
+        message : hikari.models.messges.Message or hikari.utilities.snowflake.Snowflake or int or str
             The message to unpin. This may be a message object, or the ID of an
             existing message.
 
@@ -975,16 +975,16 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to fetch messages in. This may be a channel object, or
             the ID of an existing channel.
-        before : hikari.utilities.undefined.Undefined | datetime.datetime | hikari.utilities.snowflake.Snowflake | int | str
+        before : hikari.utilities.undefined.Undefined or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
             If provided, fetch messages before this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake.
-        after : hikari.utilities.undefined.Undefined | datetime.datetime | hikari.utilities.snowflake.Snowflake | int | str
+        after : hikari.utilities.undefined.Undefined or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
             If provided, fetch messages after this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake.
-        around : hikari.utilities.undefined.Undefined | datetime.datetime | hikari.utilities.snowflake.Snowflake | int | str
+        around : hikari.utilities.undefined.Undefined or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
             If provided, fetch messages around this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake.
 
@@ -1039,10 +1039,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to fetch messages in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Message | hikari.utilities.snowflake.Snowflake | int | str
+        message : hikari.models.messages.Message or hikari.utilities.snowflake.Snowflake or int or str
             The message to fetch. This may be a channel object, or the ID of an
             existing channel.
 
@@ -1085,26 +1085,26 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to create the message in. This may be a channel object, or
             the ID of an existing channel.
-        text : hikari.utilities.undefined.Undefined | str
+        text : hikari.utilities.undefined.Undefined or str
             If specified, the message contents.
-        embed : hikari.utilities.undefined.Undefined | hikari.models.embeds.Embed
+        embed : hikari.utilities.undefined.Undefined or hikari.models.embeds.Embed
             If specified, the message embed.
-        attachments : hikari.utilities.undefined.Undefined | typing.Sequence[hikari.models.files.BaseStream]
+        attachments : hikari.utilities.undefined.Undefined or typing.Sequence[hikari.models.files.BaseStream]
             If specified, the message attachments.
-        tts : hikari.utilities.undefined.Undefined | bool
+        tts : hikari.utilities.undefined.Undefined or bool
             If specified, whether the message will be TTS (Text To Speech).
-        nonce : hikari.utilities.undefined.Undefined | str
+        nonce : hikari.utilities.undefined.Undefined or str
             If specified, a nonce that can be used for optimistic message sending.
         mentions_everyone : bool
             If specified, whether the message should parse @everyone/@here mentions.
-        user_mentions : typing.Collection[hikari.models.users.User | hikari.utilities.snowflake.Snowflake | int | str] | bool
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str] or bool
             If specified, and `bool`, whether to parse user mentions. If specified and
             `list`, the users to parse the mention for. This may be a user object, or
             the ID of an existing user.
-        role_mentions : typing.Collection[hikari.models.guilds.Role | hikari.utilities.snowflake.Snowflake | int | str] | bool
+        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str] or bool
             If specified and `bool`, whether to parse role mentions. If specified and
             `list`, the roles to parse the mention for. This may be a role object, or
             the ID of an existing role.
@@ -1137,7 +1137,6 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             You are expected to make a connection to the gateway and identify
             once before being able to use this endpoint for a bot.
         """
-
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
 
         body = data_binding.JSONObjectBuilder()
@@ -1178,10 +1177,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel | hikari.utilities.snowflake.Snowflake | int | str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to edit the message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Messages | hikari.utilities.snowflake.Snowflake | int | str
+        message : hikari.models.messages.Messages or hikari.utilities.snowflake.Snowflake or int or str
             The message to fetch.
         text
         embed
@@ -1216,7 +1215,6 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
         """
-
         route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         body = data_binding.JSONObjectBuilder()
         body.put("content", text, str)

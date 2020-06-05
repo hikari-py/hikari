@@ -171,7 +171,7 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
 
         config = http_settings_.HTTPSettings() if isinstance(config, undefined.Undefined) else config
 
-        self._cache = cache_impl.CacheImpl(app=self)
+        self._cache = cache_impl.InMemoryCacheImpl(app=self)
         self._config = config
         self._event_manager = event_manager.EventManagerImpl(app=self)
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(app=self)

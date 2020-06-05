@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["CacheImpl"]
+__all__ = ["InMemoryCacheImpl"]
 
 import typing
 
@@ -30,7 +30,9 @@ if typing.TYPE_CHECKING:
     from hikari.api import app as app_
 
 
-class CacheImpl(cache.ICache):
+class InMemoryCacheImpl(cache.ICache):
+    """In-memory cache implementation."""
+
     def __init__(self, app: app_.IApp) -> None:
         self._app = app
 
