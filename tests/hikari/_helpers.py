@@ -35,7 +35,6 @@ import async_timeout
 import mock
 import pytest
 
-from hikari.internal import marshaller
 from hikari.models import bases
 
 _LOGGER = logging.getLogger(__name__)
@@ -254,8 +253,8 @@ def parametrize_valid_id_formats_for_models(param_name, id, model_type1, *model_
     ...     "guild",
     ...     [
     ...         1234,
-    ...         bases.Snowflake(1234),
-    ...         mock_model(guilds.Guild, id=bases.Snowflake(1234), unavailable=False)
+    ...         snowflakes.Snowflake(1234),
+    ...         mock_model(guilds.Guild, id=snowflakes.Snowflake(1234), unavailable=False)
     ...     ],
     ...     id=lambda ...: ...
     ... )

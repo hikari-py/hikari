@@ -20,11 +20,4 @@
 
 from __future__ import annotations
 
-from .base import *
-from .channel import *
-from .guild import *
-from .message import *
-from .other import *
-from .voice import *
-
-__all__ = base.__all__ + channel.__all__ + guild.__all__ + message.__all__ + other.__all__ + voice.__all__
+__all__ = []

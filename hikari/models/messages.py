@@ -31,30 +31,28 @@ __all__ = [
     "Message",
 ]
 
+import enum
 import typing
 
 import attr
 
-from hikari.internal import conversions
-from hikari.internal import marshaller
-from hikari.internal import more_enums
-from . import applications
-from . import bases
-from . import channels
-from . import embeds as embeds_
-from . import emojis as emojis_
-from . import files as files_
-from . import guilds
-from . import users
+from hikari.models import bases
+from hikari.models import files as files_
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.internal import more_typing
+    from hikari.models import applications
+    from hikari.models import channels
+    from hikari.models import embeds as embeds_
+    from hikari.models import emojis as emojis_
+    from hikari.models import guilds
+    from hikari.models import users
+    from hikari.utilities import snowflake
 
 
-@more_enums.must_be_unique
-class MessageType(int, more_enums.Enum):
+@enum.unique
+class MessageType(int, enum.Enum):
     """The type of a message."""
 
     DEFAULT = 0
@@ -97,8 +95,8 @@ class MessageType(int, more_enums.Enum):
     """Channel follow add."""
 
 
-@more_enums.must_be_unique
-class MessageFlag(more_enums.IntFlag):
+@enum.unique
+class MessageFlag(enum.IntFlag):
     """Additional flags for message options."""
 
     NONE = 0
@@ -120,8 +118,8 @@ class MessageFlag(more_enums.IntFlag):
     """This message came from the urgent message system."""
 
 
-@more_enums.must_be_unique
-class MessageActivityType(int, more_enums.Enum):
+@enum.unique
+class MessageActivityType(int, enum.Enum):
     """The type of a rich presence message activity."""
 
     NONE = 0
@@ -140,9 +138,8 @@ class MessageActivityType(int, more_enums.Enum):
     """Request to join an activity."""
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class Attachment(bases.Unique, files_.BaseStream, marshaller.Deserializable):
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class Attachment(bases.Unique, files_.BaseStream):
     """Represents a file attached to a message.
 
     You can use this object in the same way as a
@@ -150,65 +147,58 @@ class Attachment(bases.Unique, files_.BaseStream, marshaller.Deserializable):
     message, etc.
     """
 
-    filename: str = marshaller.attrib(deserializer=str, repr=True)
+    filename: str = attr.ib(repr=True)
     """The name of the file."""
 
-    size: int = marshaller.attrib(deserializer=int, repr=True)
+    size: int = attr.ib(repr=True)
     """The size of the file in bytes."""
 
-    url: str = marshaller.attrib(deserializer=str, repr=True)
+    url: str = attr.ib(repr=True)
     """The source URL of file."""
 
-    proxy_url: str = marshaller.attrib(deserializer=str)
+    proxy_url: str = attr.ib()
     """The proxied URL of file."""
 
-    height: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
+    height: typing.Optional[int] = attr.ib()
     """The height of the image (if the file is an image)."""
 
-    width: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
+    width: typing.Optional[int] = attr.ib()
     """The width of the image (if the file is an image)."""
 
     def __aiter__(self) -> typing.AsyncGenerator[bytes]:
         return files_.WebResourceStream(self.filename, self.url).__aiter__()
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class Reaction(bases.Entity, marshaller.Deserializable):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class Reaction:
     """Represents a reaction in a message."""
 
-    count: int = marshaller.attrib(deserializer=int, eq=False, hash=False, repr=True)
+    count: int = attr.ib(eq=False, hash=False, repr=True)
     """The amount of times the emoji has been used to react."""
 
-    emoji: typing.Union[emojis_.UnicodeEmoji, emojis_.CustomEmoji] = marshaller.attrib(
-        deserializer=emojis_.deserialize_reaction_emoji, inherit_kwargs=True, eq=True, hash=True, repr=True
-    )
+    emoji: typing.Union[emojis_.UnicodeEmoji, emojis_.CustomEmoji] = attr.ib(eq=True, hash=True, repr=True)
     """The emoji used to react."""
 
-    is_reacted_by_me: bool = marshaller.attrib(raw_name="me", deserializer=bool, eq=False, hash=False)
+    is_reacted_by_me: bool = attr.ib(eq=False, hash=False)
     """Whether the current user reacted using this emoji."""
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class MessageActivity(bases.Entity, marshaller.Deserializable):
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class MessageActivity:
     """Represents the activity of a rich presence-enabled message."""
 
-    type: MessageActivityType = marshaller.attrib(deserializer=MessageActivityType, repr=True)
+    type: MessageActivityType = attr.ib(repr=True)
     """The type of message activity."""
 
-    party_id: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None, repr=True)
+    party_id: typing.Optional[str] = attr.ib(repr=True)
     """The party ID of the message activity."""
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class MessageCrosspost(bases.Unique, marshaller.Deserializable):
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class MessageCrosspost(bases.Entity, bases.Unique):
     """Represents information about a cross-posted message and the origin of the original message."""
 
-    id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        raw_name="message_id", deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
-    )
+    id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the message.
 
     !!! warning
@@ -217,12 +207,10 @@ class MessageCrosspost(bases.Unique, marshaller.Deserializable):
         currently documented.
     """
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel that the message originated from."""
 
-    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None, repr=True
-    )
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild that the message originated from.
 
     !!! warning
@@ -232,163 +220,80 @@ class MessageCrosspost(bases.Unique, marshaller.Deserializable):
     """
 
 
-def _deserialize_object_mentions(payload: more_typing.JSONArray) -> typing.Set[bases.Snowflake]:
-    return {bases.Snowflake(mention["id"]) for mention in payload}
-
-
-def _deserialize_mentions(payload: more_typing.JSONArray) -> typing.Set[bases.Snowflake]:
-    return {bases.Snowflake(mention) for mention in payload}
-
-
-def _deserialize_attachments(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[Attachment]:
-    return [Attachment.deserialize(attachment, **kwargs) for attachment in payload]
-
-
-def _deserialize_embeds(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[embeds_.Embed]:
-    return [embeds_.Embed.deserialize(embed, **kwargs) for embed in payload]
-
-
-def _deserialize_reactions(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[Reaction]:
-    return [Reaction.deserialize(reaction, **kwargs) for reaction in payload]
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class Message(bases.Unique, marshaller.Deserializable):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class Message(bases.Entity, bases.Unique):
     """Represents a message."""
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, eq=False, hash=False, repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the channel that the message was sent in."""
 
-    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False, repr=True
-    )
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the guild that the message was sent in."""
 
-    author: users.User = marshaller.attrib(
-        deserializer=users.User.deserialize, inherit_kwargs=True, eq=False, hash=False, repr=True
-    )
+    author: users.User = attr.ib(eq=False, hash=False, repr=True)
     """The author of this message."""
 
-    member: typing.Optional[guilds.GuildMember] = marshaller.attrib(
-        deserializer=guilds.GuildMember.deserialize,
-        if_undefined=None,
-        default=None,
-        inherit_kwargs=True,
-        eq=False,
-        hash=False,
-        repr=True,
-    )
+    member: typing.Optional[guilds.Member] = attr.ib(eq=False, hash=False, repr=True)
     """The member properties for the message's author."""
 
-    content: str = marshaller.attrib(deserializer=str, eq=False, hash=False)
+    content: str = attr.ib(eq=False, hash=False)
     """The content of the message."""
 
-    timestamp: datetime.datetime = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, eq=False, hash=False, repr=True
-    )
+    timestamp: datetime.datetime = attr.ib(eq=False, hash=False, repr=True)
     """The timestamp that the message was sent at."""
 
-    edited_timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts, if_none=None, eq=False, hash=False
-    )
+    edited_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False)
     """The timestamp that the message was last edited at.
 
     Will be `None` if it wasn't ever edited.
     """
 
-    is_tts: bool = marshaller.attrib(raw_name="tts", deserializer=bool, eq=False, hash=False)
+    is_tts: bool = attr.ib(eq=False, hash=False)
     """Whether the message is a TTS message."""
 
-    is_mentioning_everyone: bool = marshaller.attrib(
-        raw_name="mention_everyone", deserializer=bool, eq=False, hash=False
-    )
+    is_mentioning_everyone: bool = attr.ib(eq=False, hash=False)
     """Whether the message mentions `@everyone` or `@here`."""
 
-    user_mentions: typing.Set[bases.Snowflake] = marshaller.attrib(
-        raw_name="mentions", deserializer=_deserialize_object_mentions, eq=False, hash=False,
-    )
+    user_mentions: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The users the message mentions."""
 
-    role_mentions: typing.Set[bases.Snowflake] = marshaller.attrib(
-        raw_name="mention_roles", deserializer=_deserialize_mentions, eq=False, hash=False,
-    )
+    role_mentions: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The roles the message mentions."""
 
-    channel_mentions: typing.Set[bases.Snowflake] = marshaller.attrib(
-        raw_name="mention_channels",
-        deserializer=_deserialize_object_mentions,
-        if_undefined=set,
-        eq=False,
-        hash=False,
-        factory=set,
-    )
+    channel_mentions: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The channels the message mentions."""
 
-    attachments: typing.Sequence[Attachment] = marshaller.attrib(
-        deserializer=_deserialize_attachments, inherit_kwargs=True, eq=False, hash=False,
-    )
+    attachments: typing.Sequence[Attachment] = attr.ib(eq=False, hash=False)
     """The message attachments."""
 
-    embeds: typing.Sequence[embeds_.Embed] = marshaller.attrib(
-        deserializer=_deserialize_embeds, inherit_kwargs=True, eq=False, hash=False
-    )
+    embeds: typing.Sequence[embeds_.Embed] = attr.ib(eq=False, hash=False)
     """The message embeds."""
 
-    reactions: typing.Sequence[Reaction] = marshaller.attrib(
-        deserializer=_deserialize_reactions, if_undefined=list, inherit_kwargs=True, eq=False, hash=False, factory=list,
-    )
+    reactions: typing.Sequence[Reaction] = attr.ib(eq=False, hash=False)
     """The message reactions."""
 
-    is_pinned: bool = marshaller.attrib(raw_name="pinned", deserializer=bool, eq=False, hash=False)
+    is_pinned: bool = attr.ib(eq=False, hash=False)
     """Whether the message is pinned."""
 
-    webhook_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False,
-    )
+    webhook_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """If the message was generated by a webhook, the webhook's id."""
 
-    type: MessageType = marshaller.attrib(deserializer=MessageType, eq=False, hash=False)
+    type: MessageType = attr.ib(eq=False, hash=False)
     """The message type."""
 
-    activity: typing.Optional[MessageActivity] = marshaller.attrib(
-        deserializer=MessageActivity.deserialize,
-        if_undefined=None,
-        inherit_kwargs=True,
-        default=None,
-        eq=False,
-        hash=False,
-    )
+    activity: typing.Optional[MessageActivity] = attr.ib(eq=False, hash=False)
     """The message activity."""
 
-    application: typing.Optional[applications.Application] = marshaller.attrib(
-        deserializer=applications.Application.deserialize,
-        if_undefined=None,
-        inherit_kwargs=True,
-        default=None,
-        eq=False,
-        hash=False,
-    )
+    application: typing.Optional[applications.Application] = attr.ib(eq=False, hash=False)
     """The message application."""
 
-    message_reference: typing.Optional[MessageCrosspost] = marshaller.attrib(
-        deserializer=MessageCrosspost.deserialize,
-        if_undefined=None,
-        inherit_kwargs=True,
-        default=None,
-        eq=False,
-        hash=False,
-    )
+    message_reference: typing.Optional[MessageCrosspost] = attr.ib(eq=False, hash=False)
     """The message crossposted reference data."""
 
-    flags: typing.Optional[MessageFlag] = marshaller.attrib(
-        deserializer=MessageFlag, if_undefined=None, default=None, eq=False, hash=False
-    )
+    flags: typing.Optional[MessageFlag] = attr.ib(eq=False, hash=False)
     """The message flags."""
 
-    nonce: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, if_undefined=None, default=None, eq=False, hash=False
-    )
+    nonce: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The message nonce. This is a string used for validating a message was sent."""
 
     async def fetch_channel(self) -> channels.PartialChannel:
@@ -413,15 +318,15 @@ class Message(bases.Unique, marshaller.Deserializable):
 
     async def edit(  # pylint:disable=line-too-long
         self,
-        *,
         content: str = ...,
+        *,
         embed: embeds_.Embed = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
         ] = True,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
         ] = True,
     ) -> Message:
         """Edit this message.
@@ -438,11 +343,11 @@ class Message(bases.Unique, marshaller.Deserializable):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.bases.Snowflake | int | str] | bool
+        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.snowflake.Snowflake | int | str] | bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str] | bool
+        role_mentions: typing.Collection[hikari.models.guilds.Role | hikari.models.snowflake.Snowflake | int | str] | bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -487,12 +392,12 @@ class Message(bases.Unique, marshaller.Deserializable):
         *,
         content: str = ...,
         embed: embeds_.Embed = ...,
-        mentions_everyone: bool = False,
+        mentions_everyone: bool = True,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
         ] = False,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
         ] = False,
     ) -> Message:
         """Edit this message.
@@ -510,18 +415,19 @@ class Message(bases.Unique, marshaller.Deserializable):
             role_mentions=role_mentions,
         )
 
+    # FIXME: use undefined, not ...
     async def reply(  # pylint:disable=line-too-long
         self,
-        *,
         content: str = ...,
+        *,
         embed: embeds_.Embed = ...,
         files: typing.Sequence[files_.BaseStream] = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
         ] = True,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
         ] = True,
         nonce: str = ...,
         tts: bool = ...,
@@ -547,11 +453,11 @@ class Message(bases.Unique, marshaller.Deserializable):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.bases.Snowflake | int | str] | bool
+        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.snowflake.Snowflake | int | str] | bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str] | bool
+        role_mentions: typing.Collection[hikari.models.guilds.Role | hikari.models.snowflake.Snowflake | int | str] | bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -599,12 +505,12 @@ class Message(bases.Unique, marshaller.Deserializable):
         content: str = ...,
         embed: embeds_.Embed = ...,
         files: typing.Sequence[files_.BaseStream] = ...,
-        mentions_everyone: bool = False,
+        mentions_everyone: bool = True,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, users.User]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
         ] = False,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds.GuildRole]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
         ] = False,
         nonce: str = ...,
         tts: bool = ...,

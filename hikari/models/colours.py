@@ -22,4 +22,4 @@ from __future__ import annotations
 
 __all__ = ["Colour"]
 
-from .colors import Color as Colour
+from hikari.models.colors import Color as Colour

@@ -20,83 +20,53 @@
 
 from __future__ import annotations
 
-__all__ = ["Activity", "GatewayBot", "SessionStartLimit"]
+__all__ = ["GatewayBot", "SessionStartLimit"]
 
-import datetime
 import typing
 
 import attr
 
-from hikari.internal import marshaller
-
-from . import bases
-from . import guilds
+if typing.TYPE_CHECKING:
+    import datetime
 
 
-def _rest_after_deserializer(after: int) -> datetime.timedelta:
-    return datetime.timedelta(milliseconds=after)
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class SessionStartLimit(bases.Entity, marshaller.Deserializable):
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class SessionStartLimit:
     """Used to represent information about the current session start limits."""
 
-    total: int = marshaller.attrib(deserializer=int, repr=True)
+    total: int = attr.ib(repr=True)
     """The total number of session starts the current bot is allowed."""
 
-    remaining: int = marshaller.attrib(deserializer=int, repr=True)
+    remaining: int = attr.ib(repr=True)
     """The remaining number of session starts this bot has."""
 
-    reset_after: datetime.timedelta = marshaller.attrib(deserializer=_rest_after_deserializer, repr=True)
+    reset_after: datetime.timedelta = attr.ib(repr=True)
     """When `SessionStartLimit.remaining` will reset for the current bot.
 
     After it resets it will be set to `SessionStartLimit.total`.
     """
 
+    # This is not documented at the time of writing, but is a confirmed API
+    # feature, so I have included it for completeness.
+    max_concurrency: int = attr.ib(repr=True)
+    """Maximum connection concurrency.
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class GatewayBot(bases.Entity, marshaller.Deserializable):
-    """Used to represent gateway information for the connected bot."""
-
-    url: str = marshaller.attrib(deserializer=str, repr=True)
-    """The WSS URL that can be used for connecting to the gateway."""
-
-    shard_count: int = marshaller.attrib(raw_name="shards", deserializer=int, repr=True)
-    """The recommended number of shards to use when connecting to the gateway."""
-
-    session_start_limit: SessionStartLimit = marshaller.attrib(
-        deserializer=SessionStartLimit.deserialize, inherit_kwargs=True, repr=True
-    )
-    """Information about the bot's current session start limit."""
-
-
-def _undefined_type_default() -> typing.Literal[guilds.ActivityType.PLAYING]:
-    return guilds.ActivityType.PLAYING
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class Activity(marshaller.Deserializable, marshaller.Serializable):
-    """An activity that the bot can set for one or more shards.
-
-    This will show the activity as the bot's presence.
+    This defines how many shards can be started at once within a 5 second
+    window. For most bots, this will always be `1`, but for very large bots,
+    this may be increased to reduce startup times. Contact Discord for
+    more information.
     """
 
-    name: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
-    """The activity name."""
 
-    url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_none=None, if_undefined=None, default=None, repr=True
-    )
-    """The activity URL. Only valid for `STREAMING` activities."""
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class GatewayBot:
+    """Used to represent gateway information for the connected bot."""
 
-    type: guilds.ActivityType = marshaller.attrib(
-        deserializer=guilds.ActivityType,
-        serializer=int,
-        if_undefined=_undefined_type_default,
-        default=guilds.ActivityType.PLAYING,
-        repr=True,
-    )
-    """The activity type."""
+    url: str = attr.ib(repr=True)
+    """The WSS URL that can be used for connecting to the gateway."""
+
+    shard_count: int = attr.ib(repr=True)
+    """The recommended number of shards to use when connecting to the gateway."""
+
+    session_start_limit: SessionStartLimit = attr.ib(repr=True)
+    """Information about the bot's current session start limit."""

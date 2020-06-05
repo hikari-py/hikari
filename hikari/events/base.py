@@ -27,18 +27,13 @@ import typing
 
 import attr
 
-from hikari.internal import marshaller
-from hikari.internal import more_collections
-from hikari.models import bases as base_models
-
 if typing.TYPE_CHECKING:
     from hikari.models import intents
 
 
 # Base event, is not deserialized
-@marshaller.marshallable()
-@attr.s(eq=False, hash=False, kw_only=True, slots=True)
-class HikariEvent(base_models.Entity, abc.ABC):
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class HikariEvent(abc.ABC):
     """The base class that all events inherit from."""
 
 
@@ -61,7 +56,7 @@ def get_required_intents_for(event_type: typing.Type[HikariEvent]) -> typing.Col
         Collection of acceptable subset combinations of intent needed to
         be able to receive the given event type.
     """
-    return getattr(event_type, _REQUIRED_INTENTS_ATTR, more_collections.EMPTY_COLLECTION)
+    return getattr(event_type, _REQUIRED_INTENTS_ATTR, ())
 
 
 def requires_intents(

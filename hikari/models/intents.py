@@ -22,11 +22,11 @@ from __future__ import annotations
 
 __all__ = ["Intent"]
 
-from hikari.internal import more_enums
+import enum
 
 
-@more_enums.must_be_unique
-class Intent(more_enums.IntFlag):
+@enum.unique
+class Intent(enum.IntFlag):
     """Represents an intent on the gateway.
 
     This is a bitfield representation of all the categories of event

@@ -20,102 +20,46 @@
 
 from __future__ import annotations
 
-__all__ = ["Entity", "Snowflake", "Unique"]
+__all__ = ["Entity", "Unique"]
 
 import abc
 import typing
 
 import attr
 
-from hikari.internal import conversions
-from hikari.internal import marshaller
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.components import application
+    from hikari.api import app as app_
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=False)
 class Entity(abc.ABC):
-    """The base for any entity used in this API."""
+    """The base for an entity used in this API.
 
-    _app: typing.Optional[application.Application] = attr.attrib(default=None, repr=False, eq=False, hash=False)
-    """The client application that models may use for procedures."""
-
-
-class Snowflake(int):
-    """A concrete representation of a unique identifier for an object on Discord.
-
-    This object can be treated as a regular `int` for most purposes.
+    An entity is a managed object that contains a binding to the owning
+    application instance. This enables it to perform API calls from
+    methods directly.
     """
 
-    __slots__ = ()
+    _app: typing.Optional[app_.IApp] = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
-    ___MIN___: Snowflake
-    ___MAX___: Snowflake
-
-    @staticmethod
-    def __new__(cls, value: typing.Union[int, str]) -> Snowflake:
-        return super(Snowflake, cls).__new__(cls, value)
-
-    @property
-    def created_at(self) -> datetime.datetime:
-        """When the object was created."""
-        epoch = self >> 22
-        return conversions.discord_epoch_to_datetime(epoch)
-
-    @property
-    def internal_worker_id(self) -> int:
-        """ID of the worker that created this snowflake on Discord's systems."""
-        return (self & 0x3E0_000) >> 17
-
-    @property
-    def internal_process_id(self) -> int:
-        """ID of the process that created this snowflake on Discord's systems."""
-        return (self & 0x1F_000) >> 12
-
-    @property
-    def increment(self) -> int:
-        """Increment of Discord's system when this object was made."""
-        return self & 0xFFF
-
-    @classmethod
-    def from_datetime(cls, date: datetime.datetime) -> Snowflake:
-        """Get a snowflake object from a datetime object."""
-        return cls.from_timestamp(date.timestamp())
-
-    @classmethod
-    def from_timestamp(cls, timestamp: float) -> Snowflake:
-        """Get a snowflake object from a UNIX timestamp."""
-        return cls(int((timestamp - conversions.DISCORD_EPOCH) * 1000) << 22)
-
-    @classmethod
-    def min(cls) -> Snowflake:
-        """Minimum value for a snowflake."""
-        if not hasattr(cls, "___MIN___"):
-            cls.___MIN___ = Snowflake(0)
-        return cls.___MIN___
-
-    @classmethod
-    def max(cls) -> Snowflake:
-        """Maximum value for a snowflake."""
-        if not hasattr(cls, "___MAX___"):
-            cls.___MAX___ = Snowflake((1 << 63) - 1)
-        return cls.___MAX___
+    def __init__(self, app: app_.IApp) -> None:
+        self._app = app
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class Unique(Entity, typing.SupportsInt, abc.ABC):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=False)
+class Unique(typing.SupportsInt):
     """A base for an entity that has an integer ID of some sort.
 
     Casting an object of this type to an `int` will produce the
     integer ID of the object.
     """
 
-    id: Snowflake = marshaller.attrib(hash=True, eq=True, repr=True, deserializer=Snowflake, serializer=str)
+    id: snowflake.Snowflake = attr.ib(converter=snowflake.Snowflake, hash=True, eq=True, repr=True)
     """The ID of this entity."""
 
     @property
@@ -127,4 +71,5 @@ class Unique(Entity, typing.SupportsInt, abc.ABC):
         return int(self.id)
 
 
-T = typing.TypeVar("T", bound=Unique)
+UniqueObject = typing.Union[Unique, snowflake.Snowflake, int, str]
+"""Type hint representing a unique object entity."""

@@ -85,8 +85,9 @@ safety:
 ###
 ### This runs static application security tests in addition to those that
 ### GitLab provides. Any issues are reported and the pipeline is aborted.
+### Currently commented out as it is run by the GitLab SAST.
 ###
-bandit:
-  extends: .lint
-  script:
-   - nox -s bandit --no-error-on-external-run
+# bandit:
+#   extends: .lint
+#   script:
+#    - nox -s bandit --no-error-on-external-run

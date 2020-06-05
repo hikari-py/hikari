@@ -27,6 +27,7 @@ import platform
 from hikari import _about
 
 version = _about.__version__
+# noinspection PyTypeChecker
 path = os.path.abspath(os.path.dirname(inspect.getsourcefile(_about)))
 py_impl = platform.python_implementation()
 py_ver = platform.python_version()

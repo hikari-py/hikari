@@ -31,20 +31,20 @@ __all__ = [
     "EmbedField",
 ]
 
+import copy
 import datetime
 import typing
+import warnings
+import weakref
 
 import attr
 
-from hikari.internal import conversions
-from hikari.internal import marshaller
-
-from . import bases
-from . import colors
-from . import files
+from hikari import errors
+from hikari.models import colors
+from hikari.models import files
 
 if typing.TYPE_CHECKING:
-    from hikari.internal import more_typing
+    from hikari.utilities import data_binding
 
 _MAX_FOOTER_TEXT: typing.Final[int] = 2048
 _MAX_AUTHOR_NAME: typing.Final[int] = 256
@@ -56,317 +56,315 @@ _MAX_EMBED_FIELDS: typing.Final[int] = 25
 _MAX_EMBED_SIZE: typing.Final[int] = 6000
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedFooter(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+class EmbedFooter:
     """Represents an embed footer."""
 
-    text: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
-    """The footer text."""
+    text: typing.Optional[str] = attr.ib(default=None, repr=True)
+    """The footer text, or `None` if not present."""
 
-    icon_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None
-    )
-    """The URL of the footer icon."""
+    icon_url: typing.Optional[str] = attr.ib(default=None)
+    """The URL of the footer icon, or `None` if not present."""
 
-    proxy_icon_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=None, if_undefined=None, default=None
-    )
-    """The proxied URL of the footer icon.
+    proxy_icon_url: typing.Optional[str] = attr.ib(default=None)
+    """The proxied URL of the footer icon, or `None` if not present.
 
     !!! note
         This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization.
+        will be ignored during serialization. Expect this to be populated on
+        any received embed attached to a message event.
     """
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedImage(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+class EmbedImage:
     """Represents an embed image."""
 
-    url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True,
+    url: typing.Optional[str] = attr.ib(
+        default=None, repr=True,
     )
-    """The URL of the image."""
+    """The URL of the image to show, or `None` if not present."""
 
-    proxy_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=None, if_undefined=None, default=None,
-    )
-    """The proxied URL of the image.
+    proxy_url: typing.Optional[str] = attr.ib(default=None,)
+    """The proxied URL of the image, or `None` if not present.
 
     !!! note
         This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization.
+        will be ignored during serialization. Expect this to be populated on
+        any received embed attached to a message event.
     """
 
-    height: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=None, if_undefined=None, default=None)
-    """The height of the image.
+    height: typing.Optional[int] = attr.ib(default=None)
+    """The height of the image, if present and known, otherwise `None`.
 
     !!! note
         This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization.
+        will be ignored during serialization. Expect this to be populated on
+        any received embed attached to a message event.
     """
 
-    width: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=None, if_undefined=None, default=None)
-    """The width of the image.
+    width: typing.Optional[int] = attr.ib(default=None)
+    """The width of the image, if present and known, otherwise `None`.
 
     !!! note
         This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization.
+        will be ignored during serialization. Expect this to be populated on
+        any received embed attached to a message event.
     """
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedThumbnail(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+class EmbedThumbnail:
     """Represents an embed thumbnail."""
 
-    url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True,
+    url: typing.Optional[str] = attr.ib(
+        default=None, repr=True,
     )
-    """The URL of the thumbnail."""
+    """The URL of the thumbnail to display, or `None` if not present."""
 
-    proxy_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=None, if_undefined=None, default=None,
-    )
-    """The proxied URL of the thumbnail.
+    proxy_url: typing.Optional[str] = attr.ib(default=None,)
+    """The proxied URL of the thumbnail, if present and known, otherwise `None`.
 
     !!! note
         This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization.
+        will be ignored during serialization. Expect this to be populated on
+        any received embed attached to a message event.
     """
 
-    height: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=None, if_undefined=None, default=None)
-    """The height of the thumbnail.
+    height: typing.Optional[int] = attr.ib(default=None)
+    """The height of the thumbnail, if present and known, otherwise `None`.
 
     !!! note
         This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization.
+        will be ignored during serialization. Expect this to be populated on
+        any received embed attached to a message event.
     """
 
-    width: typing.Optional[int] = marshaller.attrib(deserializer=int, serializer=None, if_undefined=None, default=None)
-    """The width of the thumbnail.
+    width: typing.Optional[int] = attr.ib(default=None)
+    """The width of the thumbnail, if present and known, otherwise `None`.
 
     !!! note
         This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization.
+        will be ignored during serialization. Expect this to be populated on
+        any received embed attached to a message event.
     """
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedVideo(bases.Entity, marshaller.Deserializable):
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class EmbedVideo:
     """Represents an embed video.
 
     !!! note
-        This embed attached object cannot be sent by bots or webhooks while
-        sending an embed and therefore shouldn't be initiated like the other
-        embed objects.
+        This object cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization. Expect this to be populated on
+        any received embed attached to a message event with a video attached.
     """
 
-    url: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None, repr=True)
+    url: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The URL of the video."""
 
-    height: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
+    height: typing.Optional[int] = attr.ib(default=None)
     """The height of the video."""
 
-    width: typing.Optional[int] = marshaller.attrib(deserializer=int, if_undefined=None, default=None)
+    width: typing.Optional[int] = attr.ib(default=None)
     """The width of the video."""
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedProvider(bases.Entity, marshaller.Deserializable):
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class EmbedProvider:
     """Represents an embed provider.
 
     !!! note
-        This embed attached object cannot be sent by bots or webhooks while
-        sending an embed and therefore shouldn't be sent by your application.
-        You should still expect to receive these objects where appropriate.
+        This object cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization. Expect this to be populated on
+        any received embed attached to a message event provided by an external
+        source.
     """
 
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_undefined=None, default=None, repr=True)
+    name: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The name of the provider."""
 
-    url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, if_undefined=None, if_none=None, default=None, repr=True
-    )
+    url: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The URL of the provider."""
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedAuthor(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
-    """Represents an embed author."""
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+class EmbedAuthor:
+    """Represents an author of an embed."""
 
-    name: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True
-    )
-    """The name of the author."""
+    name: typing.Optional[str] = attr.ib(default=None, repr=True)
+    """The name of the author, or `None` if not specified."""
 
-    url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True
-    )
-    """The URL of the author."""
+    url: typing.Optional[str] = attr.ib(default=None, repr=True)
+    """The URL that the author's name should act as a hyperlink to.
 
-    icon_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None
-    )
-    """The URL of the author icon."""
+    This may be `None` if no hyperlink on the author's name is specified.
+    """
 
-    proxy_icon_url: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=None, if_undefined=None, default=None
-    )
-    """The proxied URL of the author icon.
+    icon_url: typing.Optional[str] = attr.ib(default=None)
+    """The URL of the author's icon, or `None` if not present."""
+
+    proxy_icon_url: typing.Optional[str] = attr.ib(default=None)
+    """The proxied URL of the author icon, or `None` if not present.
 
     !!! note
         This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization.
+        will be ignored during serialization. Expect this to be populated on
+        any received embed attached to a message event.
     """
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedField(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+class EmbedField:
     """Represents a field in a embed."""
 
-    name: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
-    """The name of the field."""
+    name: typing.Optional[str] = attr.ib(default=None, repr=True)
+    """The name of the field, or `None` if not present."""
 
-    value: str = marshaller.attrib(deserializer=str, serializer=str, repr=True)
-    """The value of the field."""
+    value: typing.Optional[str] = attr.ib(default=None, repr=True)
+    """The value of the field, or `None` if not present."""
 
-    is_inline: bool = marshaller.attrib(
-        raw_name="inline", deserializer=bool, serializer=bool, if_undefined=False, default=False, repr=True
-    )
-    """Whether the field should display inline. Defaults to `False`."""
+    is_inline: bool = attr.ib(default=False, repr=True)
+    """`True` if the field should display inline. Defaults to `False`."""
 
 
-def _serialize_timestamp(timestamp: datetime.datetime) -> str:
-    return timestamp.replace(tzinfo=datetime.timezone.utc).isoformat()
-
-
-def _deserialize_fields(payload: more_typing.JSONArray, **kwargs: typing.Any) -> typing.Sequence[EmbedField]:
-    return [EmbedField.deserialize(field, **kwargs) for field in payload]
-
-
-def _serialize_fields(fields: typing.Sequence[EmbedField]) -> more_typing.JSONArray:
-    return [field.serialize() for field in fields]
-
-
-@marshaller.marshallable()
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+class Embed:
     """Represents an embed."""
 
-    title: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None, repr=True
-    )
-    """The title of the embed."""
+    title: typing.Optional[str] = attr.ib(default=None, repr=True)
+    """The title of the embed, or `None` if not present."""
 
     @title.validator
     def _title_check(self, _, value):  # pylint:disable=unused-argument
         if value is not None and len(value) > _MAX_EMBED_TITLE:
-            raise ValueError(f"title must not exceed {_MAX_EMBED_TITLE} characters")
+            warnings.warn(
+                f"title must not exceed {_MAX_EMBED_TITLE} characters", category=errors.HikariWarning,
+            )
 
-    description: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, serializer=str, if_undefined=None, default=None
-    )
-    """The description of the embed."""
+    description: typing.Optional[str] = attr.ib(default=None)
+    """The description of the embed, or `None` if not present."""
 
     @description.validator
     def _description_check(self, _, value):  # pylint:disable=unused-argument
         if value is not None and len(value) > _MAX_EMBED_DESCRIPTION:
-            raise ValueError(f"description must not exceed {_MAX_EMBED_DESCRIPTION} characters")
+            warnings.warn(
+                f"description must not exceed {_MAX_EMBED_DESCRIPTION} characters", category=errors.HikariWarning,
+            )
 
-    url: typing.Optional[str] = marshaller.attrib(deserializer=str, serializer=str, if_undefined=None, default=None)
-    """The URL of the embed."""
+    url: typing.Optional[str] = attr.ib(default=None)
+    """The URL of the embed, or `None` if not present."""
 
-    timestamp: typing.Optional[datetime.datetime] = marshaller.attrib(
-        deserializer=conversions.parse_iso_8601_ts,
-        serializer=_serialize_timestamp,
-        if_undefined=None,
-        default=None,
-        repr=True,
+    timestamp: typing.Optional[datetime.datetime] = attr.ib(
+        default=None, repr=True,
     )
-    """The timestamp of the embed."""
-
-    color: typing.Optional[colors.Color] = marshaller.attrib(
-        deserializer=colors.Color,
-        serializer=int,
-        converter=attr.converters.optional(colors.Color.of),
-        if_undefined=None,
-        default=None,
-    )
-    """The colour of this embed's sidebar."""
-
-    footer: typing.Optional[EmbedFooter] = marshaller.attrib(
-        deserializer=EmbedFooter.deserialize,
-        serializer=EmbedFooter.serialize,
-        if_undefined=None,
-        default=None,
-        inherit_kwargs=True,
-    )
-    """The footer of the embed."""
-
-    image: typing.Optional[EmbedImage] = marshaller.attrib(
-        deserializer=EmbedImage.deserialize,
-        serializer=EmbedImage.serialize,
-        if_undefined=None,
-        default=None,
-        inherit_kwargs=True,
-    )
-    """The image of the embed."""
-
-    thumbnail: typing.Optional[EmbedThumbnail] = marshaller.attrib(
-        deserializer=EmbedThumbnail.deserialize,
-        serializer=EmbedThumbnail.serialize,
-        if_undefined=None,
-        default=None,
-        inherit_kwargs=True,
-    )
-    """The thumbnail of the embed."""
-
-    video: typing.Optional[EmbedVideo] = marshaller.attrib(
-        deserializer=EmbedVideo.deserialize, serializer=None, if_undefined=None, default=None, inherit_kwargs=True
-    )
-    """The video of the embed.
+    """The timestamp of the embed, or `None` if not present.
 
     !!! note
-        This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization.
+        If specified, this should be treated as a UTC timestamp. Ensure any
+        values you set here are either generated using
+        `datetime.datetime.utcnow`, or are treated as timezone-aware timestamps.
+
+        You can generate a timezone-aware timestamp instead of a timezone-naive
+        one by specifying a timezone. Hikari will detect any difference in
+        timezone if the timestamp is non timezone-naive and fix it for you.
+
+            # I am British, and it is June, so we are in daylight saving
+            # (UTC+1 or GMT+1, specifically).
+            >>> import datetime
+
+            # This is timezone naive, notice no timezone in the repr that
+            # gets printed. This is no good to us, as Discord will interpret it
+            # as being in the future!
+            >>> datetime.datetime.now()
+            datetime.datetime(2020, 6, 5, 19, 29, 48, 281716)
+
+            # Instead, this is a timezone-aware timestamp, and we can use this
+            # correctly. This will always return the current time in UTC.
+            >>> datetime.datetime.now(tz=datetime.timezone.utc)
+            datetime.datetime(2020, 6, 5, 18, 29, 56, 424744, tzinfo=datetime.timezone.utc)
+
+            # We could instead use a custom timezone. Since the timezone is
+            # explicitly specified, Hikari will convert it to UTC for you when
+            # you send the embed.
+            >>> ...
+
+        A library on PyPI called [tzlocal](...) also exists that may be useful
+        to you if you need to get your local timezone for any reason.
+
+            >>> import datetime
+            >>> import tzlocal
+
+            # Naive datetime that will show the wrong time on Discord.
+            >>> datetime.datetime.now()
+            datetime.datetime(2020, 6, 5, 19, 33, 21, 329950)
+
+            # Timezone-aware datetime that uses my local timezone correctly.
+            >>> datetime.datetime.now(tz=tzlocal.get_localzone())
+            datetime.datetime(2020, 6, 5, 19, 33, 40, 967939, tzinfo=<DstTzInfo 'Europe/London' BST+1:00:00 DST>)
+
+            # Changing timezones.
+            >>> dt = datetime.datetime.now(tz=datetime.timezone.utc)
+            >>> print(dt)
+            datetime.datetime(2020, 6, 5, 18, 38, 27, 863990, tzinfo=datetime.timezone.utc)
+            >>> dt.astimezone(tzlocal.get_localzone())
+            datetime.datetime(2020, 6, 5, 19, 38, 27, 863990, tzinfo=<DstTzInfo 'Europe/London' BST+1:00:00 DST>)
+
+        ...this is not required, but you may find it more useful if using the
+        timestamps in debug logs, for example.
     """
 
-    provider: typing.Optional[EmbedProvider] = marshaller.attrib(
-        deserializer=EmbedProvider.deserialize, serializer=None, if_undefined=None, default=None, inherit_kwargs=True,
+    color: typing.Optional[colors.Color] = attr.ib(
+        converter=attr.converters.optional(colors.Color.of), default=None,
     )
-    """The provider of the embed.
+    """The colour of this embed.
+
+    If `None`, the default is used for the user's colour-scheme when viewing it
+    (off-white on light-theme and off-black on dark-theme).
+
+    !!! warning
+        Various bugs exist in the desktop client at the time of writing where
+        `#FFFFFF` is treated as as the default colour for your colour-scheme
+        rather than white. The current workaround appears to be using a slightly
+        off-white, such as `#DDDDDD` or `#FFFFFE` instead.
+    """
+
+    footer: typing.Optional[EmbedFooter] = attr.ib(default=None)
+    """The footer of the embed, if present, otherwise `None`."""
+
+    image: typing.Optional[EmbedImage] = attr.ib(default=None)
+    """The image to display in the embed, or `None` if not present."""
+
+    thumbnail: typing.Optional[EmbedThumbnail] = attr.ib(default=None)
+    """The thumbnail to show in the embed, or `None` if not present."""
+
+    video: typing.Optional[EmbedVideo] = attr.ib(default=None)
+    """The video to show in the embed, or `None` if not present.
 
     !!! note
-        This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization.
+        This object cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization. Expect this to be populated on
+        any received embed attached to a message event with a video attached.
     """
 
-    author: typing.Optional[EmbedAuthor] = marshaller.attrib(
-        deserializer=EmbedAuthor.deserialize,
-        serializer=EmbedAuthor.serialize,
-        if_undefined=None,
-        default=None,
-        inherit_kwargs=True,
-    )
-    """The author of the embed."""
+    provider: typing.Optional[EmbedProvider] = attr.ib(default=None)
+    """The provider of the embed, or `None if not present.
 
-    fields: typing.Sequence[EmbedField] = marshaller.attrib(
-        deserializer=_deserialize_fields,
-        serializer=_serialize_fields,
-        if_undefined=list,
-        factory=list,
-        inherit_kwargs=True,
-    )
-    """The fields of the embed."""
+    !!! note
+        This object cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization. Expect this to be populated on
+        any received embed attached to a message event with a custom provider
+        set.
+    """
 
-    _assets_to_upload = attr.attrib(factory=list)
+    author: typing.Optional[EmbedAuthor] = attr.ib(default=None)
+    """The author of the embed, or `None if not present."""
+
+    fields: typing.MutableSequence[EmbedField] = attr.ib(factory=list)
+    """The fields in the embed."""
+
+    # Use a weakref so that clearing an image can pop the reference.
+    _assets_to_upload = attr.attrib(factory=weakref.WeakSet, repr=False)
 
     @property
     def assets_to_upload(self):
@@ -383,36 +381,43 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
 
     def _maybe_ref_file_obj(self, file_obj) -> None:
         if file_obj is not None:
-            self._assets_to_upload.append(file_obj)
+            # Store a _copy_ so weakreffing works properly.
+            obj_copy = copy.copy(file_obj)
+            self._assets_to_upload.add(obj_copy)
 
-    def set_footer(self, *, text: str, icon: typing.Optional[str, files.BaseStream] = None) -> Embed:
+    def set_footer(self, *, text: typing.Optional[str], icon: typing.Optional[str, files.BaseStream] = None) -> Embed:
         """Set the embed footer.
 
         Parameters
         ----------
-        text: str
-            The optional text to set for the footer.
-        icon: hikari.models.files.BaseStream | str | None
-            The optional `hikari.models.files.BaseStream` or URL to the image to set.
+        text : str or None
+            The optional text to set for the footer. If `None`, the content is
+            cleared.
+        icon : hikari.models.files.BaseStream or str or None
+            The optional `hikari.models.files.BaseStream` or URL to the image to
+            set.
 
         Returns
         -------
         Embed
             This embed to allow method chaining.
-
-        Raises
-        ------
-        ValueError
-            If `text` exceeds 2048 characters or consists purely of whitespaces.
         """
-        if not text.strip():
-            raise ValueError("footer.text must not be empty or purely of whitespaces")
-        if len(text) > _MAX_FOOTER_TEXT:
-            raise ValueError(f"footer.text must not exceed {_MAX_FOOTER_TEXT} characters")
+        if text is not None:
+            # FIXME: move these validations to the dataclass.
+            if not text.strip():
+                warnings.warn("footer.text must not be empty or purely of whitespaces", category=errors.HikariWarning)
+            elif len(text) > _MAX_FOOTER_TEXT:
+                warnings.warn(
+                    f"footer.text must not exceed {_MAX_FOOTER_TEXT} characters", category=errors.HikariWarning
+                )
 
-        icon, file = self._extract_url(icon)
-        self.footer = EmbedFooter(text=text, icon_url=icon)
-        self._maybe_ref_file_obj(file)
+        if icon is not None:
+            icon, file = self._extract_url(icon)
+            self.footer = EmbedFooter(text=text, icon_url=icon)
+            self._maybe_ref_file_obj(file)
+        elif self.footer is not None:
+            self.footer.icon_url = None
+
         return self
 
     def set_image(self, image: typing.Optional[str, files.BaseStream] = None) -> Embed:
@@ -420,17 +425,21 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
 
         Parameters
         ----------
-        image: hikari.models.files.BaseStream | str | None
-            The optional `hikari.models.files.BaseStream` or URL to the image to set.
+        image : hikari.models.files.BaseStream or str or None
+            The optional `hikari.models.files.BaseStream` or URL to the image
+            to set. If `None`, the image is removed.
 
         Returns
         -------
         Embed
             This embed to allow method chaining.
         """
-        image, file = self._extract_url(image)
-        self.image = EmbedImage(url=image)
-        self._maybe_ref_file_obj(file)
+        if image is None:
+            self.image = None
+        else:
+            image, file = self._extract_url(image)
+            self.image = EmbedImage(url=image)
+            self._maybe_ref_file_obj(file)
         return self
 
     def set_thumbnail(self, image: typing.Optional[str, files.BaseStream] = None) -> Embed:
@@ -438,17 +447,21 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
 
         Parameters
         ----------
-        image: hikari.models.files.BaseStream | str | None
-            The optional `hikari.models.files.BaseStream` or URL to the image to set.
+        image: hikari.models.files.BaseStream or str or None
+            The optional `hikari.models.files.BaseStream` or URL to the image
+            to set. If `None`, the thumbnail is removed.
 
         Returns
         -------
         Embed
             This embed to allow method chaining.
         """
-        image, file = self._extract_url(image)
-        self.thumbnail = EmbedThumbnail(url=image)
-        self._maybe_ref_file_obj(file)
+        if image is None:
+            self.thumbnail = None
+        else:
+            image, file = self._extract_url(image)
+            self.thumbnail = EmbedThumbnail(url=image)
+            self._maybe_ref_file_obj(file)
         return self
 
     def set_author(
@@ -462,31 +475,35 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
 
         Parameters
         ----------
-        name: str | None
-            The optional authors name.
-        url: str | None
+        name: str or None
+            The optional authors name to display.
+        url: str or None
             The optional URL to make the author text link to.
-        icon: hikari.models.files.BaseStream | str | None
-            The optional `hikari.models.files.BaseStream` or URL to the icon to set.
+        icon: hikari.models.files.BaseStream or str or None
+            The optional `hikari.models.files.BaseStream` or URL to the icon
+            to set.
 
         Returns
         -------
         Embed
             This embed to allow method chaining.
-
-        Raises
-        ------
-        ValueError
-            If `name` exceeds 256 characters or consists purely of whitespaces.
         """
-        if name is not None and not name.strip():
-            raise ValueError("author.name must not be empty or purely of whitespaces")
-        if name is not None and len(name) > _MAX_AUTHOR_NAME:
-            raise ValueError(f"author.name must not exceed {_MAX_AUTHOR_NAME} characters")
+        if name is not None:
+            # TODO: move validation to dataclass
+            if name is not None and not name.strip():
+                warnings.warn("author.name must not be empty or purely of whitespaces", category=errors.HikariWarning)
+            if name is not None and len(name) > _MAX_AUTHOR_NAME:
+                warnings.warn(
+                    f"author.name must not exceed {_MAX_AUTHOR_NAME} characters", category=errors.HikariWarning
+                )
 
-        icon, icon_file = self._extract_url(icon)
-        self.author = EmbedAuthor(name=name, url=url, icon_url=icon)
-        self._maybe_ref_file_obj(icon_file)
+        if icon is not None:
+            icon, icon_file = self._extract_url(icon)
+            self.author = EmbedAuthor(name=name, url=url, icon_url=icon)
+            self._maybe_ref_file_obj(icon_file)
+        elif self.author is not None:
+            self.author.icon_url = None
+
         return self
 
     def add_field(self, *, name: str, value: str, inline: bool = False, index: typing.Optional[int] = None) -> Embed:
@@ -495,45 +512,57 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
         Parameters
         ----------
         name: str
-            The fields name (title).
+            The field name (title).
         value: str
-            The fields value.
+            The field value.
         inline: bool
-            Whether to set the field to behave as if it were inline or not. Defaults to `False`.
-        index: int | None
-            The optional index to insert the field at. If `None`, it will append to the end.
+            If `True`, multiple consecutive fields may be displayed on the same
+            line. This is not guaranteed behaviour and only occurs if viewing
+            on desktop clients. Defaults to `False`.
+        index: int or None
+            The optional index to insert the field at. If `None`, it will append
+            to the end.
 
         Returns
         -------
         Embed
             This embed to allow method chaining.
-
-        Raises
-        ------
-        ValueError
-            If `title` exceeds 256 characters or `value` exceeds 2048 characters; if
-            the `name` or `value` consist purely of whitespace, or be zero characters in size;
-            25 fields are present in the embed.
         """
         index = index if index is not None else len(self.fields)
         if len(self.fields) >= _MAX_EMBED_FIELDS:
-            raise ValueError(f"no more than {_MAX_EMBED_FIELDS} fields can be stored")
+            warnings.warn(f"no more than {_MAX_EMBED_FIELDS} fields can be stored", category=errors.HikariWarning)
 
+        # TODO: move to dataclass.
         if not name.strip():
-            raise ValueError("field.name must not be empty or purely of whitespaces")
+            warnings.warn("field.name must not be empty or purely of whitespaces", category=errors.HikariWarning)
         if len(name) > _MAX_FIELD_NAME:
-            raise ValueError(f"field.name must not exceed {_MAX_FIELD_NAME} characters")
+            warnings.warn(f"field.name must not exceed {_MAX_FIELD_NAME} characters", category=errors.HikariWarning)
 
         if not value.strip():
-            raise ValueError("field.value must not be empty or purely of whitespaces")
+            warnings.warn("field.value must not be empty or purely of whitespaces", category=errors.HikariWarning)
         if len(value) > _MAX_FIELD_VALUE:
-            raise ValueError(f"field.value must not exceed {_MAX_FIELD_VALUE} characters")
+            warnings.warn(f"field.value must not exceed {_MAX_FIELD_VALUE} characters", category=errors.HikariWarning)
 
         self.fields.insert(index, EmbedField(name=name, value=value, is_inline=inline))
         return self
 
-    def edit_field(self, index: int, *, name: str = ..., value: str = ..., inline: bool = ...) -> Embed:
+    # FIXME: use undefined.Undefined rather than `...`
+    def edit_field(self, index: int, /, *, name: str = ..., value: str = ..., inline: bool = ...) -> Embed:
         """Edit a field in this embed at the given index.
+
+        Unless you specify the attribute to change, it will not be changed. For
+        example, you can change a field value but not the field name
+        by simply specifying that parameter only.
+
+        ```py
+        >>> embed = Embed()
+        >>> embed.add_field(name="foo", value="bar")
+        >>> embed.edit_field(0, value="baz")
+        >>> print(embed.fields[0].name)
+        foo
+        >>> print(embed.fields[0].value)
+        baz
+        ```
 
         Parameters
         ----------
@@ -551,24 +580,17 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
         -------
         Embed
             This embed to allow method chaining.
-
-        Raises
-        ------
-        IndexError
-            If you referred to an index that doesn't exist.
-        ValueError
-            If `title` exceeds 256 characters or `value` exceeds 2048 characters; if
-            the `name` or `value` consist purely of whitespace, or be zero characters in size.
         """
+        # TODO: remove these checks entirely, they will be covered by the validation in the data class.
         if name is not ... and not name.strip():
-            raise ValueError("field.name must not be empty or purely of whitespaces")
+            warnings.warn("field.name must not be empty or purely of whitespaces", category=errors.HikariWarning)
         if name is not ... and len(name.strip()) > _MAX_FIELD_NAME:
-            raise ValueError(f"field.name must not exceed {_MAX_FIELD_NAME} characters")
+            warnings.warn(f"field.name must not exceed {_MAX_FIELD_NAME} characters", category=errors.HikariWarning)
 
         if value is not ... and not value.strip():
-            raise ValueError("field.value must not be empty or purely of whitespaces")
+            warnings.warn("field.value must not be empty or purely of whitespaces", category=errors.HikariWarning)
         if value is not ... and len(value) > _MAX_FIELD_VALUE:
-            raise ValueError(f"field.value must not exceed {_MAX_FIELD_VALUE} characters")
+            warnings.warn(f"field.value must not exceed {_MAX_FIELD_VALUE} characters", category=errors.HikariWarning)
 
         field = self.fields[index]
 
@@ -597,24 +619,3 @@ class Embed(bases.Entity, marshaller.Deserializable, marshaller.Serializable):
         """
         del self.fields[index]
         return self
-
-    @staticmethod
-    def _safe_len(item) -> int:
-        return len(item) if item is not None else 0
-
-    def _check_total_length(self) -> None:
-        total_size = self._safe_len(self.title)
-        total_size += self._safe_len(self.description)
-        total_size += self._safe_len(self.author.name) if self.author is not None else 0
-        total_size += len(self.footer.text) if self.footer is not None else 0
-
-        for field in self.fields:
-            total_size += len(field.name)
-            total_size += len(field.value)
-
-        if total_size > _MAX_EMBED_SIZE:
-            raise ValueError("Total characters in an embed can not exceed {_MAX_EMBED_SIZE}")
-
-    def serialize(self) -> more_typing.JSONObject:
-        self._check_total_length()
-        return super().serialize()

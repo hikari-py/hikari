@@ -22,27 +22,26 @@ from __future__ import annotations
 
 __all__ = ["WebhookType", "Webhook"]
 
+import enum
 import typing
 
 import attr
 
-from hikari.internal import marshaller
-from hikari.internal import more_enums
-from hikari.internal import urls
-
-from . import bases
-from . import users as users_
+from hikari.models import bases
+from hikari.utilities import cdn
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
-    from . import channels as channels_
-    from . import embeds as embeds_
-    from . import files as files_
-    from . import guilds as guilds_
-    from . import messages as messages_
+    from hikari.models import channels as channels_
+    from hikari.models import embeds as embeds_
+    from hikari.models import files as files_
+    from hikari.models import guilds as guilds_
+    from hikari.models import messages as messages_
+    from hikari.models import users as users_
 
 
-@more_enums.must_be_unique
-class WebhookType(int, more_enums.Enum):
+@enum.unique
+class WebhookType(int, enum.Enum):
     """Types of webhook."""
 
     INCOMING = 1
@@ -52,9 +51,8 @@ class WebhookType(int, more_enums.Enum):
     """Channel Follower webhook."""
 
 
-@marshaller.marshallable()
-@attr.s(eq=True, hash=True, kw_only=True, slots=True)
-class Webhook(bases.Unique, marshaller.Deserializable):
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class Webhook(bases.Entity, bases.Unique):
     """Represents a webhook object on Discord.
 
     This is an endpoint that can have messages sent to it using standard
@@ -62,26 +60,17 @@ class Webhook(bases.Unique, marshaller.Deserializable):
     send informational messages to specific channels.
     """
 
-    type: WebhookType = marshaller.attrib(deserializer=WebhookType, eq=False, hash=False, repr=True)
+    type: WebhookType = attr.ib(eq=False, hash=False, repr=True)
     """The type of the webhook."""
 
-    guild_id: typing.Optional[bases.Snowflake] = marshaller.attrib(
-        deserializer=bases.Snowflake, if_undefined=None, default=None, eq=False, hash=False, repr=True
-    )
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The guild ID of the webhook."""
 
-    channel_id: bases.Snowflake = marshaller.attrib(deserializer=bases.Snowflake, eq=False, hash=False, repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The channel ID this webhook is for."""
 
-    author: typing.Optional[users_.User] = marshaller.attrib(
-        raw_name="user",
-        deserializer=users_.User.deserialize,
-        if_undefined=None,
-        inherit_kwargs=True,
-        default=None,
-        eq=False,
-        hash=False,
-        repr=True,
+    author: typing.Optional[users_.User] = attr.ib(
+        eq=False, hash=False, repr=True,
     )
     """The user that created the webhook
 
@@ -90,17 +79,13 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         than the webhook's token.
     """
 
-    name: typing.Optional[str] = marshaller.attrib(deserializer=str, if_none=None, eq=False, hash=False, repr=True)
+    name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The name of the webhook."""
 
-    avatar_hash: typing.Optional[str] = marshaller.attrib(
-        raw_name="avatar", deserializer=str, if_none=None, eq=False, hash=False
-    )
+    avatar_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The avatar hash of the webhook."""
 
-    token: typing.Optional[str] = marshaller.attrib(
-        deserializer=str, if_undefined=None, default=None, eq=False, hash=False
-    )
+    token: typing.Optional[str] = attr.ib(eq=False, hash=False)
     """The token for the webhook.
 
     !!! info
@@ -120,10 +105,10 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         embeds: typing.Sequence[embeds_.Embed] = ...,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, users_.User]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users_.User]], bool
         ] = True,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds_.GuildRole]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds_.Role]], bool
         ] = True,
     ) -> typing.Optional[messages_.Message]:
         """Execute the webhook to create a message.
@@ -151,11 +136,11 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.bases.Snowflake | int | str] | bool
+        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.snowflake.Snowflake | int | str] | bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.GuildRole | hikari.models.bases.Snowflake | int | str] | bool
+        role_mentions: typing.Collection[hikari.models.guilds.Role | hikari.models.snowflake.Snowflake | int | str] | bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -210,12 +195,12 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         wait: bool = False,
         files: typing.Sequence[files_.BaseStream] = ...,
         embeds: typing.Sequence[embeds_.Embed] = ...,
-        mentions_everyone: bool = False,
+        mentions_everyone: bool = True,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, users_.User]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users_.User]], bool
         ] = False,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[bases.Snowflake, int, str, guilds_.GuildRole]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds_.Role]], bool
         ] = False,
     ) -> typing.Optional[messages_.Message]:
         """Execute the webhook to create a message with mention safety.
@@ -277,7 +262,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         *,
         name: str = ...,
         avatar: typing.Optional[files_.BaseStream] = ...,
-        channel: typing.Union[bases.Snowflake, int, str, channels_.GuildChannel] = ...,
+        channel: typing.Union[snowflake.Snowflake, int, str, channels_.GuildChannel] = ...,
         reason: str = ...,
         use_token: typing.Optional[bool] = None,
     ) -> Webhook:
@@ -290,7 +275,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         avatar : hikari.models.files.BaseStream | None
             If specified, the new avatar image. If `None`, then
             it is removed.
-        channel : hikari.models.channels.GuildChannel | hikari.models.bases.Snowflake | int
+        channel : hikari.models.channels.GuildChannel | hikari.models.snowflake.Snowflake | int
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
         reason : str
@@ -423,7 +408,7 @@ class Webhook(bases.Unique, marshaller.Deserializable):
     @property
     def default_avatar_url(self) -> str:
         """URL for this webhook's default avatar."""
-        return urls.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
+        return cdn.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
 
     def format_avatar_url(self, format_: str = "png", size: int = 4096) -> str:
         """Generate the avatar URL for this webhook's custom avatar if set, else it's default avatar.
@@ -451,4 +436,4 @@ class Webhook(bases.Unique, marshaller.Deserializable):
         """
         if not self.avatar_hash:
             return self.default_avatar_url
-        return urls.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
+        return cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
