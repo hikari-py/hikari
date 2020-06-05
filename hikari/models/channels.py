@@ -36,6 +36,7 @@ __all__ = [
     "GuildVoiceChannel",
 ]
 
+import abc
 import enum
 import typing
 
@@ -43,12 +44,12 @@ import attr
 
 from hikari.models import bases
 from hikari.models import permissions
+from hikari.models import users
+
 from hikari.utilities import cdn
 
 if typing.TYPE_CHECKING:
     import datetime
-
-    from hikari.models import users
     from hikari.utilities import snowflake
 
 
@@ -94,7 +95,30 @@ class PermissionOverwriteType(str, enum.Enum):
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True)
 class PermissionOverwrite(bases.Unique):
-    """Represents permission overwrites for a channel or role in a channel."""
+    """Represents permission overwrites for a channel or role in a channel.
+
+    You may sometimes need to make instances of this object to add/edit
+    permission overwrites on channels.
+
+    Example
+    -------
+    Creating a permission overwrite.
+
+    ```py
+    overwrite = PermissionOverwrite(
+        type=PermissionOverwriteType.MEMBER,
+        allow=(
+            Permissions.VIEW_CHANNEL
+            | Permissions.READ_MESSAGE_HISTORY
+            | Permissions.SEND_MESSAGES
+        ),
+        deny=(
+            Permissions.MANAGE_MESSAGES
+            | Permissions.SPEAK
+        ),
+    )
+    ```
+    """
 
     type: PermissionOverwriteType = attr.ib(converter=PermissionOverwriteType, eq=True, hash=True)
     """The type of entity this overwrite targets."""
@@ -111,16 +135,12 @@ class PermissionOverwrite(bases.Unique):
         return typing.cast(permissions.Permission, (self.allow | self.deny))
 
 
-class TextChannel:
-    # This is a mixin, do not add slotted fields.
-    __slots__ = ()
-
-
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class PartialChannel(bases.Entity, bases.Unique):
-    """Represents a channel where we've only received it's basic information.
+    """Channel representation for cases where further detail is not provided.
 
-    This is commonly received in RESTSession responses.
+    This is commonly received in REST API responses where full information is
+    not available from Discord.
     """
 
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
@@ -130,15 +150,23 @@ class PartialChannel(bases.Entity, bases.Unique):
     """The channel's type."""
 
 
+class TextChannel(PartialChannel, abc.ABC):
+    """A channel that can have text messages in it."""
+
+    # This is a mixin, do not add slotted fields.
+    __slots__ = ()
+
+
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class DMChannel(PartialChannel, TextChannel):
+class DMChannel(TextChannel):
     """Represents a DM channel."""
 
     last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the last message sent in this channel.
 
-    !!! note
-        This might point to an invalid or deleted message.
+    !!! warning
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.       
     """
 
     recipients: typing.Mapping[snowflake.Snowflake, users.User] = attr.ib(
@@ -155,25 +183,29 @@ class GroupDMChannel(DMChannel):
     """The ID of the owner of the group."""
 
     icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
-    """The hash of the icon of the group."""
+    """The CDN hash of the icon of the group, if an icon is set."""
 
     nicknames: typing.MutableMapping[snowflake.Snowflake, str] = attr.ib(eq=False, hash=False)
     """A mapping of set nicknames within this group DMs to user IDs."""
 
     application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
-    """The ID of the application that created the group DM, if it's a bot based group DM."""
+    """The ID of the application that created the group DM.
+    
+    If the group DM was not created by a bot, this will be `None`.
+    """
 
     @property
     def icon_url(self) -> typing.Optional[str]:
         """URL for this DM channel's icon, if set."""
         return self.format_icon_url()
 
-    def format_icon_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
+    # noinspection PyShadowingBuiltins
+    def format_icon_url(self, *, format: str = "png", size: int = 4096) -> typing.Optional[str]:
         """Generate the URL for this group DM's icon, if set.
 
         Parameters
         ----------
-        format_ : str
+        format : str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
@@ -182,16 +214,16 @@ class GroupDMChannel(DMChannel):
 
         Returns
         -------
-        str | None
-            The string URL.
+        str or None
+            The string URL, or `None` if no icon is present.
 
         Raises
         ------
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is not a power of two between 16 and 4096 (inclusive).
         """
         if self.icon_hash:
-            return cdn.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            return cdn.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format, size=size)
         return None
 
 
@@ -202,30 +234,45 @@ class GuildChannel(PartialChannel):
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the guild the channel belongs to.
 
-    This will be `None` when received over the gateway in certain events (e.g.
-    Guild Create).
+    !!! warning
+        This will be `None` when received over the gateway in certain events 
+        (e.g Guild Create).
     """
 
     position: int = attr.ib(eq=False, hash=False)
-    """The sorting position of the channel."""
+    """The sorting position of the channel.
+    
+    Higher numbers appear further down the channel list.
+    """
 
     permission_overwrites: typing.Mapping[snowflake.Snowflake, PermissionOverwrite] = attr.ib(eq=False, hash=False)
-    """The permission overwrites for the channel."""
+    """The permission overwrites for the channel.
+    
+    This maps the ID of the entity in the overwrite to the overwrite data.
+    """
 
     is_nsfw: typing.Optional[bool] = attr.ib(eq=False, hash=False)
     """Whether the channel is marked as NSFW.
 
-    This will be `None` when received over the gateway in certain events (e.g
-    Guild Create).
+    !!! warning
+        This will be `None` when received over the gateway in certain events 
+        (e.g Guild Create).
     """
 
     parent_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
-    """The ID of the parent category the channel belongs to."""
+    """The ID of the parent category the channel belongs to.
+    
+    If no parent category is set for the channel, this will be `None`.
+    """
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class GuildCategory(GuildChannel):
-    """Represents a guild category."""
+    """Represents a guild category channel.
+
+    These can contain other channels inside, and act as a method for
+    organisation.
+    """
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -238,23 +285,26 @@ class GuildTextChannel(GuildChannel, TextChannel):
     last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the last message sent in this channel.
 
-    !!! note
-        This might point to an invalid or deleted message.
+    !!! warning
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.   
     """
 
     rate_limit_per_user: datetime.timedelta = attr.ib(eq=False, hash=False)
     """The delay (in seconds) between a user can send a message to this channel.
 
     !!! note
-        Bots, as well as users with `MANAGE_MESSAGES` or `MANAGE_CHANNEL`,
-        are not affected by this.
+        Any user that has permissions allowing `MANAGE_MESSAGES`, 
+        `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
+        will not be affected by this rate limit.
     """
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False)
     """The timestamp of the last-pinned message.
-
-    This may be `None` in several cases (currently undocumented clearly by
-    Discord).
+    
+    !!! note
+        This may be `None` in several cases; Discord does not document what
+        these cases are. Trust no one!
     """
 
 
@@ -267,22 +317,29 @@ class GuildNewsChannel(GuildChannel, TextChannel):
 
     last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
     """The ID of the last message sent in this channel.
-
-    !!! note
-        This might point to an invalid or deleted message.
+    
+    !!! warning
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.   
     """
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False)
     """The timestamp of the last-pinned message.
 
-    This may be `None` in several cases (currently undocumented clearly by
-    Discord).
+    !!! note
+        This may be `None` in several cases; Discord does not document what
+        these cases are. Trust no one!
     """
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class GuildStoreChannel(GuildChannel):
-    """Represents a store channel."""
+    """Represents a store channel.
+
+    These were originally used to sell games when Discord had a game store. This
+    was scrapped at the end of 2019, so these may disappear from the platform
+    eventually.
+    """
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -290,7 +347,10 @@ class GuildVoiceChannel(GuildChannel):
     """Represents an voice channel."""
 
     bitrate: int = attr.ib(eq=False, hash=False, repr=True)
-    """The bitrate for the voice channel (in bits)."""
+    """The bitrate for the voice channel (in bits per second)."""
 
     user_limit: int = attr.ib(eq=False, hash=False, repr=True)
-    """The user limit for the voice channel."""
+    """The user limit for the voice channel.
+    
+    If this is `0`, then assume no limit.
+    """
