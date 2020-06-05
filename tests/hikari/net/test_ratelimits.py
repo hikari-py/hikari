@@ -224,7 +224,6 @@ class TestWindowedBurstRateLimiter:
         finally:
             task.cancel()
 
-
     @pytest.mark.asyncio
     async def test_task_not_scheduled_if_rate_limited_and_throttle_task_not_None(self, ratelimiter, event_loop):
         ratelimiter.drip = mock.MagicMock()

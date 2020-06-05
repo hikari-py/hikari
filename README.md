@@ -13,16 +13,17 @@ and the hope that it will be extendable and reusable, rather than an obstacle.
 
 ```py
 import hikari
+from hikari.events.message import MessageCreateEvent
 
-bot = hikari.StatelessBot(token="...")
+bot = hikari.Bot(token="...")
 
 
-@bot.event(hikari.MessageCreateEvent)
+@bot.event(MessageCreateEvent)
 async def ping(event):
     # If a non-bot user sends a message "hk.ping", respond with "Pong!"
 
     if not event.author.is_bot and event.content.startswith("hk.ping"):
-        await event.reply(content="Pong!")
+        await event.reply("Pong!")
 
 
 bot.run()
@@ -94,15 +95,13 @@ to utilize these components as a black box where necessary.
   to the original format of information provided by Discord as possible ensures that minimal
   changes are required when a breaking API design is introduced. This reduces the amount of
   stuff you need to fix in your applications as a result.
-- RESTSession only API functionality. Want to write a web dashboard? Feel free to just reuse the 
-  RESTSession client components to achieve that!
+- Standalone REST client. Not writing a bot, but need to use the API anyway? Simply
+  initialize a `hikari.RESTClient` and away you go.
   
 ### Stuff coming soon
 
 - Optional, optimised C implementations of internals to give large applications a 
   well-deserved performance boost.
-- Voice support.
-- Stateful bot support (intents will be supported as first-class citizens).
 
 ### Planned extension modules for the future
 
