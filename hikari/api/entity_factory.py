@@ -1258,8 +1258,8 @@ class IEntityFactory(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_my_user_update_event(self, payload: data_binding.JSONObject) -> other_events.MyUserUpdateEvent:
-        """Parse a raw payload from Discord into a my user update event object.
+    def deserialize_own_user_update_event(self, payload: data_binding.JSONObject) -> other_events.OwnUserUpdateEvent:
+        """Parse a raw payload from Discord into a own user update event object.
 
         Parameters
         ----------
@@ -1268,8 +1268,8 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.events.other.MyUserUpdateEvent
-            The parsed my user update event object.
+        hikari.events.other.OwnUserUpdateEvent
+            The parsed own user update event object.
         """
 
     ################

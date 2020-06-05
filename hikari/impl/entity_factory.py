@@ -62,7 +62,7 @@ PartialGuildT = typing.TypeVar("PartialGuildT", bound=guild_models.PartialGuild)
 PartialGuildIntegrationT = typing.TypeVar("PartialGuildIntegrationT", bound=guild_models.PartialIntegration)
 UserT = typing.TypeVar("UserT", bound=user_models.User)
 ReactionEventT = typing.TypeVar("ReactionEventT", bound=message_events.BaseMessageReactionEvent)
-GuildBanEventT = typing.TypeVar("GuildBanEventT", bound=guild_events.BaseGuildBanEvent)
+GuildBanEventT = typing.TypeVar("GuildBanEventT", bound=guild_events.GuildBanEvent)
 
 
 def _deserialize_seconds_timedelta(seconds: typing.Union[str, int]) -> datetime.timedelta:
@@ -169,15 +169,14 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return own_connection
 
     def deserialize_own_guild(self, payload: data_binding.JSONObject) -> application_models.OwnGuild:
-        own_guild = self._set_partial_guild_attributes(payload, application_models.OwnGuild())
+        own_guild = self._set_partial_guild_attributes(payload, application_models.OwnGuild(self._app))
         own_guild.is_owner = bool(payload["owner"])
         # noinspection PyArgumentList
         own_guild.my_permissions = permission_models.Permission(payload["permissions"])
         return own_guild
 
     def deserialize_application(self, payload: data_binding.JSONObject) -> application_models.Application:
-        application = application_models.Application()
-        application.set_app(self._app)
+        application = application_models.Application(self._app)
         application.id = snowflake.Snowflake(payload["id"])
         application.name = payload["name"]
         application.description = payload["description"]
@@ -190,15 +189,13 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         application.icon_hash = payload.get("icon")
 
         if (team_payload := payload.get("team")) is not None:
-            team = application_models.Team()
-            team.set_app(self._app)
+            team = application_models.Team(self._app)
             team.id = snowflake.Snowflake(team_payload["id"])
             team.icon_hash = team_payload["icon"]
 
             members = {}
             for member_payload in team_payload["members"]:
-                team_member = application_models.TeamMember()
-                team_member.set_app(self._app)
+                team_member = application_models.TeamMember(self._app)
                 # noinspection PyArgumentList
                 team_member.membership_state = application_models.TeamMembershipState(
                     member_payload["membership_state"]
@@ -231,8 +228,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ) -> typing.Mapping[snowflake.Snowflake, guild_models.PartialRole]:
         roles = {}
         for role_payload in payload:
-            role = guild_models.PartialRole()
-            role.set_app(self._app)
+            role = guild_models.PartialRole(self._app)
             role.id = snowflake.Snowflake(role_payload["id"])
             role.name = role_payload["name"]
             roles[role.id] = role
@@ -314,8 +310,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
 
         entries = {}
         for entry_payload in payload["audit_log_entries"]:
-            entry = audit_log_models.AuditLogEntry()
-            entry.set_app(self._app)
+            entry = audit_log_models.AuditLogEntry(self._app)
             entry.id = snowflake.Snowflake(entry_payload["id"])
 
             if (target_id := entry_payload["target_id"]) is not None:
@@ -396,7 +391,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def _set_partial_channel_attributes(
         self, payload: data_binding.JSONObject, channel: PartialChannelT
     ) -> PartialChannelT:
-        channel.set_app(self._app)
         channel.id = snowflake.Snowflake(payload["id"])
         channel.name = payload.get("name")
         # noinspection PyArgumentList
@@ -404,7 +398,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return channel
 
     def deserialize_partial_channel(self, payload: data_binding.JSONObject) -> channel_models.PartialChannel:
-        return self._set_partial_channel_attributes(payload, channel_models.PartialChannel())
+        return self._set_partial_channel_attributes(payload, channel_models.PartialChannel(self._app))
 
     def _set_dm_channel_attributes(self, payload: data_binding.JSONObject, channel: DMChannelT) -> DMChannelT:
         channel = self._set_partial_channel_attributes(payload, channel)
@@ -419,10 +413,10 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return channel
 
     def deserialize_dm_channel(self, payload: data_binding.JSONObject) -> channel_models.DMChannel:
-        return self._set_dm_channel_attributes(payload, channel_models.DMChannel())
+        return self._set_dm_channel_attributes(payload, channel_models.DMChannel(self._app))
 
     def deserialize_group_dm_channel(self, payload: data_binding.JSONObject) -> channel_models.GroupDMChannel:
-        group_dm_channel = self._set_dm_channel_attributes(payload, channel_models.GroupDMChannel())
+        group_dm_channel = self._set_dm_channel_attributes(payload, channel_models.GroupDMChannel(self._app))
         group_dm_channel.owner_id = snowflake.Snowflake(payload["owner_id"])
         group_dm_channel.icon_hash = payload["icon"]
         group_dm_channel.nicknames = {
@@ -452,10 +446,10 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return channel
 
     def deserialize_guild_category(self, payload: data_binding.JSONObject) -> channel_models.GuildCategory:
-        return self._set_guild_channel_attributes(payload, channel_models.GuildCategory())
+        return self._set_guild_channel_attributes(payload, channel_models.GuildCategory(self._app))
 
     def deserialize_guild_text_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildTextChannel:
-        guild_text_category = self._set_guild_channel_attributes(payload, channel_models.GuildTextChannel())
+        guild_text_category = self._set_guild_channel_attributes(payload, channel_models.GuildTextChannel(self._app))
         guild_text_category.topic = payload["topic"]
 
         if (last_message_id := payload["last_message_id"]) is not None:
@@ -471,7 +465,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild_text_category
 
     def deserialize_guild_news_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildNewsChannel:
-        guild_news_channel = self._set_guild_channel_attributes(payload, channel_models.GuildNewsChannel())
+        guild_news_channel = self._set_guild_channel_attributes(payload, channel_models.GuildNewsChannel(self._app))
         guild_news_channel.topic = payload["topic"]
 
         if (last_message_id := payload["last_message_id"]) is not None:
@@ -485,10 +479,10 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild_news_channel
 
     def deserialize_guild_store_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildStoreChannel:
-        return self._set_guild_channel_attributes(payload, channel_models.GuildStoreChannel())
+        return self._set_guild_channel_attributes(payload, channel_models.GuildStoreChannel(self._app))
 
     def deserialize_guild_voice_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildVoiceChannel:
-        guild_voice_channel = self._set_guild_channel_attributes(payload, channel_models.GuildVoiceChannel())
+        guild_voice_channel = self._set_guild_channel_attributes(payload, channel_models.GuildVoiceChannel(self._app))
         guild_voice_channel.bitrate = int(payload["bitrate"])
         guild_voice_channel.user_limit = int(payload["user_limit"])
         return guild_voice_channel
@@ -664,16 +658,14 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return unicode_emoji
 
     def deserialize_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.CustomEmoji:
-        custom_emoji = emoji_models.CustomEmoji()
-        custom_emoji.set_app(self._app)
+        custom_emoji = emoji_models.CustomEmoji(self._app)
         custom_emoji.id = snowflake.Snowflake(payload["id"])
         custom_emoji.name = payload["name"]
         custom_emoji.is_animated = payload.get("animated", False)
         return custom_emoji
 
     def deserialize_known_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.KnownCustomEmoji:
-        known_custom_emoji = emoji_models.KnownCustomEmoji()
-        known_custom_emoji.set_app(self._app)
+        known_custom_emoji = emoji_models.KnownCustomEmoji(self._app)
         known_custom_emoji.id = snowflake.Snowflake(payload["id"])
         known_custom_emoji.name = payload["name"]
         known_custom_emoji.is_animated = payload.get("animated", False)
@@ -720,8 +712,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ################
 
     def deserialize_guild_widget(self, payload: data_binding.JSONObject) -> guild_models.GuildWidget:
-        guild_embed = guild_models.GuildWidget()
-        guild_embed.set_app(self._app)
+        guild_embed = guild_models.GuildWidget(self._app)
 
         if (channel_id := payload["channel_id"]) is not None:
             channel_id = snowflake.Snowflake(channel_id)
@@ -736,8 +727,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         *,
         user: typing.Union[undefined.Undefined, user_models.User] = undefined.Undefined(),
     ) -> guild_models.Member:
-        guild_member = guild_models.Member()
-        guild_member.set_app(self._app)
+        guild_member = guild_models.Member(self._app)
         guild_member.user = user or self.deserialize_user(payload["user"])
         guild_member.role_ids = {snowflake.Snowflake(role_id) for role_id in payload["roles"]}
         guild_member.joined_at = date.iso8601_datetime_string_to_datetime(payload["joined_at"])
@@ -755,8 +745,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild_member
 
     def deserialize_role(self, payload: data_binding.JSONObject) -> guild_models.Role:
-        guild_role = guild_models.Role()
-        guild_role.set_app(self._app)
+        guild_role = guild_models.Role(self._app)
         guild_role.id = snowflake.Snowflake(payload["id"])
         guild_role.name = payload["name"]
         guild_role.color = color_models.Color(payload["color"])
@@ -813,13 +802,11 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild_member_ban
 
     def deserialize_unavailable_guild(self, payload: data_binding.JSONObject) -> guild_models.UnavailableGuild:
-        unavailable_guild = guild_models.UnavailableGuild()
-        unavailable_guild.set_app(self._app)
+        unavailable_guild = guild_models.UnavailableGuild(self._app)
         unavailable_guild.id = snowflake.Snowflake(payload["id"])
         return unavailable_guild
 
     def _set_partial_guild_attributes(self, payload: data_binding.JSONObject, guild: PartialGuildT) -> PartialGuildT:
-        guild.set_app(self._app)
         guild.id = snowflake.Snowflake(payload["id"])
         guild.name = payload["name"]
         guild.icon_hash = payload["icon"]
@@ -836,7 +823,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild
 
     def deserialize_guild_preview(self, payload: data_binding.JSONObject) -> guild_models.GuildPreview:
-        guild_preview = self._set_partial_guild_attributes(payload, guild_models.GuildPreview())
+        guild_preview = self._set_partial_guild_attributes(payload, guild_models.GuildPreview(self._app))
         guild_preview.splash_hash = payload["splash"]
         guild_preview.discovery_splash_hash = payload["discovery_splash"]
         guild_preview.emojis = {
@@ -848,7 +835,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return guild_preview
 
     def deserialize_guild(self, payload: data_binding.JSONObject) -> guild_models.Guild:
-        guild = self._set_partial_guild_attributes(payload, guild_models.Guild())
+        guild = self._set_partial_guild_attributes(payload, guild_models.Guild(self._app))
         guild.splash_hash = payload["splash"]
         guild.discovery_splash_hash = payload["discovery_splash"]
         guild.owner_id = snowflake.Snowflake(payload["owner_id"])
@@ -971,18 +958,16 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     #################
 
     def deserialize_vanity_url(self, payload: data_binding.JSONObject) -> invite_model.VanityURL:
-        vanity_url = invite_model.VanityURL()
-        vanity_url.set_app(self._app)
+        vanity_url = invite_model.VanityURL(self._app)
         vanity_url.code = payload["code"]
         vanity_url.uses = int(payload["uses"])
         return vanity_url
 
     def _set_invite_attributes(self, payload: data_binding.JSONObject, invite: InviteT) -> InviteT:
-        invite.set_app(self._app)
         invite.code = payload["code"]
 
         if (guild_payload := payload.get("guild", ...)) is not ...:
-            guild = self._set_partial_guild_attributes(guild_payload, invite_model.InviteGuild())
+            guild = self._set_partial_guild_attributes(guild_payload, invite_model.InviteGuild(self._app))
             guild.splash_hash = guild_payload["splash"]
             guild.banner_hash = guild_payload["banner"]
             guild.description = guild_payload["description"]
@@ -1020,10 +1005,10 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return invite
 
     def deserialize_invite(self, payload: data_binding.JSONObject) -> invite_model.Invite:
-        return self._set_invite_attributes(payload, invite_model.Invite())
+        return self._set_invite_attributes(payload, invite_model.Invite(self._app))
 
     def deserialize_invite_with_metadata(self, payload: data_binding.JSONObject) -> invite_model.InviteWithMetadata:
-        invite_with_metadata = self._set_invite_attributes(payload, invite_model.InviteWithMetadata())
+        invite_with_metadata = self._set_invite_attributes(payload, invite_model.InviteWithMetadata(self._app))
         invite_with_metadata.uses = int(payload["uses"])
         invite_with_metadata.max_uses = int(payload["max_uses"])
         max_age = payload["max_age"]
@@ -1037,8 +1022,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ##################
 
     def deserialize_message(self, payload: data_binding.JSONObject) -> message_models.Message:
-        message = message_models.Message()
-        message.set_app(self._app)
+        message = message_models.Message(self._app)
         message.id = snowflake.Snowflake(payload["id"])
         message.channel_id = snowflake.Snowflake(payload["channel_id"])
         message.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
@@ -1102,8 +1086,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         message.application = self.deserialize_application(payload["application"]) if "application" in payload else None
 
         if (crosspost_payload := payload.get("message_reference", ...)) is not ...:
-            crosspost = message_models.MessageCrosspost()
-            crosspost.set_app(self._app)
+            crosspost = message_models.MessageCrosspost(self._app)
             crosspost.id = (
                 snowflake.Snowflake(crosspost_payload["message_id"]) if "message_id" in crosspost_payload else None
             )
@@ -1125,11 +1108,9 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ###################
 
     def deserialize_member_presence(self, payload: data_binding.JSONObject) -> presence_models.MemberPresence:
-        guild_member_presence = presence_models.MemberPresence()
-        guild_member_presence.set_app(self._app)
+        guild_member_presence = presence_models.MemberPresence(self._app)
         user_payload = payload["user"]
-        user = presence_models.PresenceUser()
-        user.set_app(self._app)
+        user = presence_models.PresenceUser(self._app)
         user.id = snowflake.Snowflake(user_payload["id"])
         user.discriminator = user_payload["discriminator"] if "discriminator" in user_payload else undefined.Undefined()
         user.username = user_payload["username"] if "username" in user_payload else undefined.Undefined()
@@ -1263,7 +1244,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ###############
 
     def _set_user_attributes(self, payload: data_binding.JSONObject, user: UserT) -> UserT:
-        user.set_app(self._app)
         user.id = snowflake.Snowflake(payload["id"])
         user.discriminator = payload["discriminator"]
         user.username = payload["username"]
@@ -1273,7 +1253,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return user
 
     def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.User:
-        user = self._set_user_attributes(payload, user_models.User())
+        user = self._set_user_attributes(payload, user_models.User(self._app))
         # noinspection PyArgumentList
         user.flags = (
             user_models.UserFlag(payload["public_flags"]) if "public_flags" in payload else user_models.UserFlag.NONE
@@ -1281,7 +1261,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return user
 
     def deserialize_my_user(self, payload: data_binding.JSONObject) -> user_models.OwnUser:
-        my_user = self._set_user_attributes(payload, user_models.OwnUser())
+        my_user = self._set_user_attributes(payload, user_models.OwnUser(self._app))
         my_user.is_mfa_enabled = payload["mfa_enabled"]
         my_user.locale = payload.get("locale")
         my_user.is_verified = payload.get("verified")
@@ -1297,8 +1277,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ################
 
     def deserialize_voice_state(self, payload: data_binding.JSONObject) -> voice_models.VoiceState:
-        voice_state = voice_models.VoiceState()
-        voice_state.set_app(self._app)
+        voice_state = voice_models.VoiceState(self._app)
         voice_state.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
 
         if (channel_id := payload["channel_id"]) is not None:
@@ -1331,7 +1310,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ##################
 
     def deserialize_webhook(self, payload: data_binding.JSONObject) -> webhook_models.Webhook:
-        webhook = webhook_models.Webhook()
+        webhook = webhook_models.Webhook(self._app)
         webhook.id = snowflake.Snowflake(payload["id"])
         # noinspection PyArgumentList
         webhook.type = webhook_models.WebhookType(payload["type"])
@@ -1348,52 +1327,16 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ##################
 
     def deserialize_channel_create_event(self, payload: data_binding.JSONObject) -> channel_events.ChannelCreateEvent:
-        """Parse a raw payload from Discord into a channel create event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.channel.ChannelCreateEvent
-            The parsed channel create event object.
-        """
         channel_create_event = channel_events.ChannelCreateEvent()
         channel_create_event.channel = self.deserialize_channel(payload)
         return channel_create_event
 
     def deserialize_channel_update_event(self, payload: data_binding.JSONObject) -> channel_events.ChannelUpdateEvent:
-        """Parse a raw payload from Discord into a channel update event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.channel.ChannelUpdateEvent
-            The parsed  event object.
-        """
         channel_update_event = channel_events.ChannelUpdateEvent()
         channel_update_event.channel = self.deserialize_channel(payload)
         return channel_update_event
 
     def deserialize_channel_delete_event(self, payload: data_binding.JSONObject) -> channel_events.ChannelDeleteEvent:
-        """Parse a raw payload from Discord into a channel delete event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.channel.ChannelDeleteEvent
-            The parsed channel delete event object.
-        """
         channel_delete_event = channel_events.ChannelDeleteEvent()
         channel_delete_event.channel = self.deserialize_channel(payload)
         return channel_delete_event
@@ -1401,20 +1344,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_channel_pins_update_event(
         self, payload: data_binding.JSONObject
     ) -> channel_events.ChannelPinsUpdateEvent:
-        """Parse a raw payload from Discord into a channel pins update event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.channel.ChannelPinsUpdateEvent
-            The parsed channel pins update event object.
-        """
-        channel_pins_update = channel_events.ChannelPinsUpdateEvent()
-        channel_pins_update.set_app(self._app)
+        channel_pins_update = channel_events.ChannelPinsUpdateEvent(self._app)
         channel_pins_update.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         channel_pins_update.channel_id = snowflake.Snowflake(payload["channel_id"])
 
@@ -1426,39 +1356,13 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return channel_pins_update
 
     def deserialize_webhook_update_event(self, payload: data_binding.JSONObject) -> channel_events.WebhookUpdateEvent:
-        """Parse a raw payload from Discord into a webhook update event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.channel.WebhookUpdateEvent
-            The parsed webhook update event object.
-        """
-        webhook_update = channel_events.WebhookUpdateEvent()
-        webhook_update.set_app(self._app)
+        webhook_update = channel_events.WebhookUpdateEvent(self._app)
         webhook_update.guild_id = snowflake.Snowflake(payload["guild_id"])
         webhook_update.channel_id = snowflake.Snowflake(payload["channel_id"])
         return webhook_update
 
     def deserialize_typing_start_event(self, payload: data_binding.JSONObject) -> channel_events.TypingStartEvent:
-        """Parse a raw payload from Discord into a typing start event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.channel.TypingStartEvent
-            The parsed typing start event object.
-        """
-        typing_start = channel_events.TypingStartEvent()
-        typing_start.set_app(self._app)
+        typing_start = channel_events.TypingStartEvent(self._app)
         typing_start.channel_id = snowflake.Snowflake(payload["channel_id"])
         typing_start.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         typing_start.user_id = snowflake.Snowflake(payload["user_id"])
@@ -1469,37 +1373,12 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return typing_start
 
     def deserialize_invite_create_event(self, payload: data_binding.JSONObject) -> channel_events.InviteCreateEvent:
-        """Parse a raw payload from Discord into an invite create event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.channel.InviteCreateEvent
-            The parsed invite create event object.
-        """
         invite_create = channel_events.InviteCreateEvent()
         invite_create.invite = self.deserialize_invite(payload)
         return invite_create
 
     def deserialize_invite_delete_event(self, payload: data_binding.JSONObject) -> channel_events.InviteDeleteEvent:
-        """Parse a raw payload from Discord into an invite delete event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.channel.InviteDeleteEvent
-            The parsed invite delete event object.
-        """
-        invite_delete = channel_events.InviteDeleteEvent()
-        invite_delete.set_app(self._app)
+        invite_delete = channel_events.InviteDeleteEvent(self._app)
         invite_delete.code = payload["code"]
         invite_delete.channel_id = snowflake.Snowflake(payload["channel_id"])
         invite_delete.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
@@ -1510,52 +1389,16 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ################
 
     def deserialize_guild_create_event(self, payload: data_binding.JSONObject) -> guild_events.GuildCreateEvent:
-        """Parse a raw payload from Discord into a guild create event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.GuildCreateEvent
-            The parsed guild create event object.
-        """
         guild_create = guild_events.GuildCreateEvent()
         guild_create.guild = self.deserialize_guild(payload)
         return guild_create
 
     def deserialize_guild_update_event(self, payload: data_binding.JSONObject) -> guild_events.GuildUpdateEvent:
-        """Parse a raw payload from Discord into a guild update event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.GuildUpdateEvent
-            The parsed guild update event object.
-        """
         guild_update = guild_events.GuildUpdateEvent()
         guild_update.guild = self.deserialize_guild(payload)
         return guild_update
 
     def deserialize_guild_leave_event(self, payload: data_binding.JSONObject) -> guild_events.GuildLeaveEvent:
-        """Parse a raw payload from Discord into a guild leave event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.GuildLeaveEvent
-            The parsed guild leave event object.
-        """
         guild_leave = guild_events.GuildLeaveEvent()
         guild_leave.id = snowflake.Snowflake(payload["id"])
         return guild_leave
@@ -1563,78 +1406,27 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_guild_unavailable_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildUnavailableEvent:
-        """Parse a raw payload from Discord into a guild unavailable event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.
-            The parsed guild unavailable event object.
-        """
-        guild_unavailable = guild_events.GuildUnavailableEvent()
-        guild_unavailable.set_app(self._app)
+        guild_unavailable = guild_events.GuildUnavailableEvent(self._app)
         guild_unavailable.id = snowflake.Snowflake(payload["id"])
         return guild_unavailable
 
     def _set_base_guild_ban_event_fields(
         self, payload: data_binding.JSONObject, guild_ban: GuildBanEventT
     ) -> GuildBanEventT:
-        guild_ban.set_app(self._app)
         guild_ban.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_ban.user = self.deserialize_user(payload["user"])
         return guild_ban
 
     def deserialize_guild_ban_add_event(self, payload: data_binding.JSONObject) -> guild_events.GuildBanAddEvent:
-        """Parse a raw payload from Discord into a guild ban add event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.GuildBanAddEvent
-            The parsed guild ban add event object.
-        """
-        return self._set_base_guild_ban_event_fields(payload, guild_events.GuildBanAddEvent())
+        return self._set_base_guild_ban_event_fields(payload, guild_events.GuildBanAddEvent(self._app))
 
     def deserialize_guild_ban_remove_event(self, payload: data_binding.JSONObject) -> guild_events.GuildBanRemoveEvent:
-        """Parse a raw payload from Discord into a guild ban remove event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.GuildBanRemoveEvent
-            The parsed guild ban remove event object.
-        """
-        return self._set_base_guild_ban_event_fields(payload, guild_events.GuildBanRemoveEvent())
+        return self._set_base_guild_ban_event_fields(payload, guild_events.GuildBanRemoveEvent(self._app))
 
     def deserialize_guild_emojis_update_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildEmojisUpdateEvent:
-        """Parse a raw payload from Discord into a guild emojis update event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.GuildEmojisUpdateEvent
-            The parsed guild emojis update event object.
-        """
-        guild_emojis_update = guild_events.GuildEmojisUpdateEvent()
-        guild_emojis_update.set_app(self._app)
+        guild_emojis_update = guild_events.GuildEmojisUpdateEvent(self._app)
         guild_emojis_update.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_emojis_update.emojis = {
             snowflake.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji) for emoji in payload["emojis"]
@@ -1644,38 +1436,12 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_guild_integrations_update_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildIntegrationsUpdateEvent:
-        """Parse a raw payload from Discord into a guilds integrations update event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.GuildIntegrationsUpdateEvent
-            The parsed guilds integrations update event object.
-        """
-        guild_integrations_update = guild_events.GuildIntegrationsUpdateEvent()
-        guild_integrations_update.set_app(self._app)
+        guild_integrations_update = guild_events.GuildIntegrationsUpdateEvent(self._app)
         guild_integrations_update.guild_id = snowflake.Snowflake(payload["guild_id"])
         return guild_integrations_update
 
     def deserialize_guild_member_add_event(self, payload: data_binding.JSONObject) -> guild_events.GuildMemberAddEvent:
-        """Parse a raw payload from Discord into a guild member add event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.GuildMemberAddEvent
-            The parsed guild member add event object.
-        """
-        guild_member_add = guild_events.GuildMemberAddEvent()
-        guild_member_add.set_app(self._app)
+        guild_member_add = guild_events.GuildMemberAddEvent(self._app)
         guild_member_add.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_member_add.member = self.deserialize_member(payload)
         return guild_member_add
@@ -1683,18 +1449,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_guild_member_update_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildMemberUpdateEvent:
-        """Parse a raw payload from Discord into a guild member update event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.GuildMemberUpdateEvent
-            The parsed guild member update event object.
-        """
         guild_member_update = guild_events.GuildMemberUpdateEvent()
         guild_member_update.member = self.deserialize_member(payload)
         return guild_member_update
@@ -1702,20 +1456,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_guild_member_remove_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildMemberRemoveEvent:
-        """Parse a raw payload from Discord into a guild member remove event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.GuildMemberRemoveEvent
-            The parsed guild member remove event object.
-        """
-        guild_member_remove = guild_events.GuildMemberRemoveEvent()
-        guild_member_remove.set_app(self._app)
+        guild_member_remove = guild_events.GuildMemberRemoveEvent(self._app)
         guild_member_remove.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_member_remove.user = self.deserialize_user(payload["user"])
         return guild_member_remove
@@ -1723,20 +1464,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_guild_role_create_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildRoleCreateEvent:
-        """Parse a raw payload from Discord into a guild role create event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.GuildRoleCreateEvent
-            The parsed guild role create event object.
-        """
-        guild_role_create = guild_events.GuildRoleCreateEvent()
-        guild_role_create.set_app(self._app)
+        guild_role_create = guild_events.GuildRoleCreateEvent(self._app)
         guild_role_create.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_role_create.role = self.deserialize_role(payload["role"])
         return guild_role_create
@@ -1744,20 +1472,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_guild_role_update_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildRoleUpdateEvent:
-        """Parse a raw payload from Discord into a guild role update event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.GuildRoleUpdateEvent
-            The parsed guild role update event object.
-        """
-        guild_role_update = guild_events.GuildRoleUpdateEvent()
-        guild_role_update.set_app(self._app)
+        guild_role_update = guild_events.GuildRoleUpdateEvent(self._app)
         guild_role_update.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_role_update.role = self.deserialize_role(payload["role"])
         return guild_role_update
@@ -1765,37 +1480,12 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_guild_role_delete_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildRoleDeleteEvent:
-        """Parse a raw payload from Discord into a guild role delete event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.GuildRoleDeleteEvent
-            The parsed guild role delete event object.
-        """
-        guild_role_delete = guild_events.GuildRoleDeleteEvent()
-        guild_role_delete.set_app(self._app)
+        guild_role_delete = guild_events.GuildRoleDeleteEvent(self._app)
         guild_role_delete.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_role_delete.role_id = snowflake.Snowflake(payload["role_id"])
         return guild_role_delete
 
     def deserialize_presence_update_event(self, payload: data_binding.JSONObject) -> guild_events.PresenceUpdateEvent:
-        """Parse a raw payload from Discord into a presence update event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.guild.PresenceUpdateEvent
-            The parsed presence update event object.
-        """
         presence_update = guild_events.PresenceUpdateEvent()
         presence_update.presence = self.deserialize_member_presence(payload)
         return presence_update
@@ -1805,39 +1495,14 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ##################
 
     def deserialize_message_create_event(self, payload: data_binding.JSONObject) -> message_events.MessageCreateEvent:
-        """Parse a raw payload from Discord into a message create event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.message.MessageCreateEvent
-            The parsed message create event object.
-        """
         message_create = message_events.MessageCreateEvent()
         message_create.message = self.deserialize_message(payload)
         return message_create
 
     def deserialize_message_update_event(self, payload: data_binding.JSONObject) -> message_events.MessageUpdateEvent:
-        """Parse a raw payload from Discord into a message update event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.message.MessageUpdateEvent
-            The parsed message update event object.
-        """
         message_update = message_events.MessageUpdateEvent()
 
-        updated_message = message_events.UpdateMessage()
-        updated_message.set_app(self._app)
+        updated_message = message_events.UpdateMessage(self._app)
         updated_message.id = snowflake.Snowflake(payload["id"])
         updated_message.channel_id = (
             snowflake.Snowflake(payload["channel_id"]) if "channel_id" in payload else undefined.Undefined()
@@ -1944,8 +1609,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         )
 
         if (crosspost_payload := payload.get("message_reference", ...)) is not ...:
-            crosspost = message_models.MessageCrosspost()
-            crosspost.set_app(self._app)
+            crosspost = message_models.MessageCrosspost(self._app)
             crosspost.id = (
                 snowflake.Snowflake(crosspost_payload["message_id"]) if "message_id" in crosspost_payload else None
             )
@@ -1967,20 +1631,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return message_update
 
     def deserialize_message_delete_event(self, payload: data_binding.JSONObject) -> message_events.MessageDeleteEvent:
-        """Parse a raw payload from Discord into a message delete event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.message.MessageDeleteEvent
-            The parsed message delete event object.
-        """
-        message_delete = message_events.MessageDeleteEvent()
-        message_delete.set_app(self._app)
+        message_delete = message_events.MessageDeleteEvent(self._app)
         message_delete.channel_id = snowflake.Snowflake(payload["channel_id"])
         message_delete.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         message_delete.message_id = snowflake.Snowflake(payload["id"])
@@ -1989,20 +1640,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_message_delete_bulk_event(
         self, payload: data_binding.JSONObject
     ) -> message_events.MessageDeleteBulkEvent:
-        """Parse a raw payload from Discord into a message delete bulk event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.message.MessageDeleteBulkEvent
-            The parsed message delete bulk event object.
-        """
-        message_delete_bulk = message_events.MessageDeleteBulkEvent()
-        message_delete_bulk.set_app(self._app)
+        message_delete_bulk = message_events.MessageDeleteBulkEvent(self._app)
         message_delete_bulk.channel_id = snowflake.Snowflake(payload["channel_id"])
         message_delete_bulk.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         message_delete_bulk.message_ids = {snowflake.Snowflake(message_id) for message_id in payload["ids"]}
@@ -2011,7 +1649,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def _set_base_message_reaction_fields(
         self, payload: data_binding.JSONObject, reaction_event: ReactionEventT
     ) -> ReactionEventT:
-        reaction_event.set_app(self._app)
         reaction_event.channel_id = snowflake.Snowflake(payload["channel_id"])
         reaction_event.message_id = snowflake.Snowflake(payload["message_id"])
         reaction_event.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
@@ -2020,19 +1657,9 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_message_reaction_add_event(
         self, payload: data_binding.JSONObject
     ) -> message_events.MessageReactionAddEvent:
-        """Parse a raw payload from Discord into a message reaction add event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.message.MessageReactionAddEvent
-            The parsed message reaction add event object.
-        """
-        message_reaction_add = self._set_base_message_reaction_fields(payload, message_events.MessageReactionAddEvent())
+        message_reaction_add = self._set_base_message_reaction_fields(
+            payload, message_events.MessageReactionAddEvent(self._app)
+        )
         message_reaction_add.user_id = snowflake.Snowflake(payload["user_id"])
         message_reaction_add.member = self.deserialize_member(payload["member"]) if "member" in payload else None
         message_reaction_add.emoji = self.deserialize_emoji(payload["emoji"])
@@ -2041,20 +1668,8 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_message_reaction_remove_event(
         self, payload: data_binding.JSONObject
     ) -> message_events.MessageReactionRemoveEvent:
-        """Parse a raw payload from Discord into a message reaction remove event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.message.MessageReactionRemoveEvent
-            The parsed message reaction remove event object.
-        """
         message_reaction_remove = self._set_base_message_reaction_fields(
-            payload, message_events.MessageReactionRemoveEvent()
+            payload, message_events.MessageReactionRemoveEvent(self._app)
         )
         message_reaction_remove.user_id = snowflake.Snowflake(payload["user_id"])
         message_reaction_remove.emoji = self.deserialize_emoji(payload["emoji"])
@@ -2063,37 +1678,13 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_message_reaction_remove_all_event(
         self, payload: data_binding.JSONObject
     ) -> message_events.MessageReactionRemoveAllEvent:
-        """Parse a raw payload from Discord into a message reaction remove all event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.message.MessageReactionRemoveAllEvent
-            The parsed message reaction remove all event object.
-        """
-        return self._set_base_message_reaction_fields(payload, message_events.MessageReactionRemoveAllEvent())
+        return self._set_base_message_reaction_fields(payload, message_events.MessageReactionRemoveAllEvent(self._app))
 
     def deserialize_message_reaction_remove_emoji_event(
         self, payload: data_binding.JSONObject
     ) -> message_events.MessageReactionRemoveEmojiEvent:
-        """Parse a raw payload from Discord into a message reaction remove emoji event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.message.MessageReactionRemoveEmojiEvent
-            The parsed message reaction remove emoji event object.
-        """
         message_reaction_remove_emoji = self._set_base_message_reaction_fields(
-            payload, message_events.MessageReactionRemoveEmojiEvent()
+            payload, message_events.MessageReactionRemoveEmojiEvent(self._app)
         )
         message_reaction_remove_emoji.emoji = self.deserialize_emoji(payload["emoji"])
         return message_reaction_remove_emoji
@@ -2103,18 +1694,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     ################
 
     def deserialize_ready_event(self, payload: data_binding.JSONObject) -> other_events.ReadyEvent:
-        """Parse a raw payload from Discord into a ready event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.other.ReadyEvent
-            The parsed ready event object.
-        """
         ready_event = other_events.ReadyEvent()
         ready_event.gateway_version = int(payload["v"])
         ready_event.my_user = self.deserialize_my_user(payload["user"])
@@ -2131,20 +1710,8 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
 
         return ready_event
 
-    def deserialize_my_user_update_event(self, payload: data_binding.JSONObject) -> other_events.MyUserUpdateEvent:
-        """Parse a raw payload from Discord into a my user update event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.other.MyUserUpdateEvent
-            The parsed my user update event object.
-        """
-        my_user_update = other_events.MyUserUpdateEvent()
+    def deserialize_own_user_update_event(self, payload: data_binding.JSONObject) -> other_events.OwnUserUpdateEvent:
+        my_user_update = other_events.OwnUserUpdateEvent()
         my_user_update.my_user = self.deserialize_my_user(payload)
         return my_user_update
 
@@ -2155,18 +1722,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_voice_state_update_event(
         self, payload: data_binding.JSONObject
     ) -> voice_events.VoiceStateUpdateEvent:
-        """Parse a raw payload from Discord into a voice state update event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.voice.VoiceStateUpdateEvent
-            The parsed voice state update event object.
-        """
         voice_state_update = voice_events.VoiceStateUpdateEvent()
         voice_state_update.state = self.deserialize_voice_state(payload)
         return voice_state_update
@@ -2174,18 +1729,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_voice_server_update_event(
         self, payload: data_binding.JSONObject
     ) -> voice_events.VoiceServerUpdateEvent:
-        """Parse a raw payload from Discord into a voice server update event object.
-
-        Parameters
-        ----------
-        payload : Mapping[str, Any]
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.voice.VoiceServerUpdateEvent
-            The parsed voice server update event object.
-        """
         voice_server_update = voice_events.VoiceServerUpdateEvent()
         voice_server_update.token = payload["token"]
         voice_server_update.guild_id = snowflake.Snowflake(payload["guild_id"])
