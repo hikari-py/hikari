@@ -26,12 +26,12 @@ _real_new_event_loop = asyncio.new_event_loop
 def _new_event_loop():
     loop = _real_new_event_loop()
     loop.set_debug(True)
+
+    with contextlib.suppress(AttributeError):
+        # provisional since py37
+        sys.set_coroutine_origin_tracking_depth(20)
+
     return loop
 
 
 asyncio.new_event_loop = _new_event_loop
-
-
-with contextlib.suppress(AttributeError):
-    # provisional since py37
-    sys.set_coroutine_origin_tracking_depth(20)
