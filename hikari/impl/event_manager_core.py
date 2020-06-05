@@ -181,10 +181,13 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
                 await result
 
         except Exception as ex:
+            # Skip the first frame in logs, we don't care for it.
+            trio = type(ex), ex, ex.__traceback__.tb_next
+
             if base.is_no_catch_event(event):
-                self.logger.error("an exception occurred handling an event, but it has been ignored", exc_info=ex)
+                self.logger.error("an exception occurred handling an event, but it has been ignored", exc_info=trio)
             else:
-                self.logger.error("an exception occurred handling an event", exc_info=ex)
+                self.logger.error("an exception occurred handling an event", exc_info=trio)
                 await self.dispatch(other.ExceptionEvent(exception=ex, event=event, callback=callback))
 
     def dispatch(self, event: base.HikariEvent) -> aio.Future[typing.Any]:
