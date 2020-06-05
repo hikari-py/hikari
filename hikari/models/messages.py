@@ -38,6 +38,7 @@ import attr
 
 from hikari.models import bases
 from hikari.models import files as files_
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -314,14 +315,14 @@ class Message(bases.Entity, bases.Unique):
         hikari.errors.NotFound
             If the channel this message was created in does not exist.
         """
-        return await self._app.rest.fetch_channel(channel=self.channel_id)
+        return await self._app.rest.fetch_channel(self.channel_id)
 
     async def edit(  # pylint:disable=line-too-long
         self,
-        content: str = ...,
+        text: typing.Union[undefined.Undefined, str, None] = undefined.Undefined(),
         *,
-        embed: embeds_.Embed = ...,
-        mentions_everyone: bool = True,
+        embed: typing.Union[undefined.Undefined, embeds_.Embed, None] = undefined.Undefined(),
+        mentions_everyone: bool = False,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
         ] = True,
@@ -336,18 +337,20 @@ class Message(bases.Entity, bases.Unique):
 
         Parameters
         ----------
-        content : str
-            If specified, the message content to set on the message.
-        embed : hikari.models.embeds.Embed
-            If specified, the embed object to set on the message.
+        text : str or hikari.utilities.undefined.Undefined or None
+            If specified, the message text to set on the message. If `None`,
+            then the content is removed if already present.
+        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.Undefined or None
+            If specified, the embed object to set on the message. If `None`,
+            then the embed is removed if already present.
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.snowflake.Snowflake | int | str] | bool
+            discord and lead to actual pings, defaults to `False`.
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.models.snowflake.Snowflake or int or str] or bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role | hikari.models.snowflake.Snowflake | int | str] | bool
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.models.snowflake.Snowflake or int or str] or bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -377,87 +380,58 @@ class Message(bases.Entity, bases.Unique):
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
         """
-        return await self._app.rest.update_message(
+        return await self._app.rest.edit_message(
             message=self.id,
             channel=self.channel_id,
-            content=content,
+            text=text,
             embed=embed,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
         )
 
-    async def safe_edit(
-        self,
-        *,
-        content: str = ...,
-        embed: embeds_.Embed = ...,
-        mentions_everyone: bool = True,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
-        ] = False,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
-        ] = False,
-    ) -> Message:
-        """Edit this message.
-
-        This is the same as `edit`, but with all defaults set to prevent any
-        mentions from working by default.
-        """
-        return await self._app.rest.safe_update_message(
-            message=self.id,
-            channel=self.channel_id,
-            content=content,
-            embed=embed,
-            mentions_everyone=mentions_everyone,
-            user_mentions=user_mentions,
-            role_mentions=role_mentions,
-        )
-
-    # FIXME: use undefined, not ...
     async def reply(  # pylint:disable=line-too-long
         self,
-        content: str = ...,
+        text: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         *,
-        embed: embeds_.Embed = ...,
-        files: typing.Sequence[files_.BaseStream] = ...,
-        mentions_everyone: bool = True,
+        embed: typing.Union[undefined.Undefined, embeds_.Embed] = undefined.Undefined(),
+        attachments: typing.Sequence[files_.BaseStream] = undefined.Undefined(),
+        mentions_everyone: bool = False,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
         ] = True,
         role_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
         ] = True,
-        nonce: str = ...,
-        tts: bool = ...,
+        nonce: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> Message:
         """Create a message in the channel this message belongs to.
 
         Parameters
         ----------
-        content : str
-            If specified, the message content to send with the message.
-        nonce : str
+        text : str or hikari.utilities.undefined.Undefined
+            If specified, the message text to send with the message.
+        nonce : str or hikari.utilities.undefined.Undefined
             If specified, an optional ID to send for opportunistic message
             creation. This doesn't serve any real purpose for general use,
             and can usually be ignored.
-        tts : bool
+        tts : bool or hikari.utilities.undefined.Undefined
             If specified, whether the message will be sent as a TTS message.
-        files : typing.Sequence[hikari.models.files.BaseStream]
-            If specified, a sequence of files to upload, if desired. Should be
-            between 1 and 10 objects in size (inclusive), also including embed
-            attachments.
-        embed : hikari.models.embeds.Embed
+        attachments : typing.Sequence[hikari.models.files.BaseStream]
+            If specified, a sequence of attachments to upload, if desired.
+            Should be between 1 and 10 objects in size (inclusive), also
+            including embed attachments.
+        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.Undefined
             If specified, the embed object to send with the message.
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.snowflake.Snowflake | int | str] | bool
+            discord and lead to actual pings, defaults to `False`.
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.models.snowflake.Snowflake or int or str] or bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role | hikari.models.snowflake.Snowflake | int | str] | bool
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.models.snowflake.Snowflake or int or str] or bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -489,43 +463,10 @@ class Message(bases.Entity, bases.Unique):
         """
         return await self._app.rest.create_message(
             channel=self.channel_id,
-            content=content,
+            text=text,
             nonce=nonce,
             tts=tts,
-            files=files,
-            embed=embed,
-            mentions_everyone=mentions_everyone,
-            user_mentions=user_mentions,
-            role_mentions=role_mentions,
-        )
-
-    async def safe_reply(
-        self,
-        *,
-        content: str = ...,
-        embed: embeds_.Embed = ...,
-        files: typing.Sequence[files_.BaseStream] = ...,
-        mentions_everyone: bool = True,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
-        ] = False,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
-        ] = False,
-        nonce: str = ...,
-        tts: bool = ...,
-    ) -> Message:
-        """Reply to a message.
-
-        This is the same as `reply`, but with all defaults set to prevent any
-        mentions from working by default.
-        """
-        return await self._app.rest.safe_create_message(
-            channel=self.channel_id,
-            content=content,
-            nonce=nonce,
-            tts=tts,
-            files=files,
+            attachments=attachments,
             embed=embed,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
@@ -543,14 +484,14 @@ class Message(bases.Entity, bases.Unique):
         hikari.errors.Forbidden
             If you lack the permissions to delete the message.
         """
-        await self._app.rest.delete_messages(channel=self.channel_id, message=self.id)
+        await self._app.rest.delete_message(self.channel_id, self.id)
 
     async def add_reaction(self, emoji: typing.Union[str, emojis_.Emoji]) -> None:
         r"""Add a reaction to this message.
 
         Parameters
         ----------
-        emoji : hikari.models.emojis.Emoji | str
+        emoji : hikari.models.emojis.Emoji or str
             The emoji to add.
 
         Examples
@@ -590,9 +531,9 @@ class Message(bases.Entity, bases.Unique):
 
         Parameters
         ----------
-        emoji : hikari.models.emojis.Emoji | str
+        emoji : hikari.models.emojis.Emoji or str
             The emoji to remove.
-        user : hikari.models.users.User | None
+        user : hikari.models.users.User or None
             The user of the reaction to remove. If `None`, then the bot's
             reaction is removed instead.
 
@@ -625,14 +566,14 @@ class Message(bases.Entity, bases.Unique):
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        await self._app.rest.remove_reaction(channel=self.channel_id, message=self.id, emoji=emoji, user=user)
+        await self._app.rest.delete_reaction(channel=self.channel_id, message=self.id, emoji=emoji, user=user)
 
     async def remove_all_reactions(self, emoji: typing.Optional[typing.Union[str, emojis_.Emoji]] = None) -> None:
         r"""Remove all users' reactions for a specific emoji from the message.
 
         Parameters
         ----------
-        emoji : hikari.models.emojis.Emoji | str | None
+        emoji : hikari.models.emojis.Emoji or str or None
             The emoji to remove all reactions for. If not specified, or `None`,
             then all emojis are removed.
 
@@ -657,4 +598,7 @@ class Message(bases.Entity, bases.Unique):
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        await self._app.rest.remove_all_reactions(channel=self.channel_id, message=self.id, emoji=emoji)
+        if emoji is None:
+            await self._app.rest.delete_all_reactions(channel=self.channel_id, message=self.id)
+        else:
+            await self._app.rest.delete_all_reactions_for_emoji(channel=self.channel_id, message=self.id, emoji=emoji)

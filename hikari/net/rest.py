@@ -1254,6 +1254,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
     async def delete_messages(
         self,
         channel: typing.Union[channels.GuildTextChannel, bases.UniqueObject],
+        /,
         *messages: typing.Union[messages_.Message, bases.UniqueObject],
     ) -> None:
         """Bulk-delete between 2 and 100 messages from the given guild channel.

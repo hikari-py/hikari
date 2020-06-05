@@ -44,7 +44,15 @@ class Entity(abc.ABC):
     methods directly.
     """
 
-    _app: typing.Optional[app_.IApp] = attr.ib(default=None, repr=False, eq=False, hash=False)
+    _app: typing.Union[
+        None,
+        app_.IApp,
+        app_.IGatewayZookeeper,
+        app_.IGatewayConsumer,
+        app_.IGatewayDispatcher,
+        app_.IRESTApp,
+        app_.IBot,
+    ] = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     def __init__(self, app: app_.IApp) -> None:
