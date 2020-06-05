@@ -48,19 +48,24 @@ class Color(int):
     Examples of conversions to given formats include:
 
     ```py
-
     >>> c = Color(0xFF051A)
     Color(r=0xff, g=0x5, b=0x1a)
+
     >>> hex(c)
     0xff051a
+
     >>> c.hex_code
     #FF051A
+
     >>> str(c)
     #FF051A
+
     >>> int(c)
     16712986
+
     >>> c.rgb
     (255, 5, 26)
+
     >>> c.rgb_float
     (1.0, 0.0196078431372549, 0.10196078431372549)
     ```
@@ -72,20 +77,28 @@ class Color(int):
     ```py
     >>> Color.of(0xFF051A)
     Color(r=0xff, g=0x5, b=0x1a)
+
     >>> Color.of(16712986)
     Color(r=0xff, g=0x5, b=0x1a)
+
     >>> c = Color.of((255, 5, 26))
     Color(r=0xff, g=0x5, b=1xa)
+
     >>> c = Color.of(255, 5, 26)
     Color(r=0xff, g=0x5, b=1xa)
+
     >>> c = Color.of([0xFF, 0x5, 0x1a])
     Color(r=0xff, g=0x5, b=1xa)
+
     >>> c = Color.of("#1a2b3c")
     Color(r=0x1a, g=0x2b, b=0x3c)
+
     >>> c = Color.of("#1AB")
     Color(r=0x11, g=0xaa, b=0xbb)
+
     >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
     Color(r=0xff, g=0x5, b=0x1a)
+
     >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
     Color(r=0xff, g=0x5, b=0x1a)
     ```
@@ -95,12 +108,16 @@ class Color(int):
     ```py
     >>> c = Color(16712986)
     Color(r=0xff, g=0x5, b=0x1a)
+
     >>> c = Color.from_rgb(255, 5, 26)
     Color(r=0xff, g=0x5, b=1xa)
+
     >>> c = Color.from_hex_code("#1a2b3c")
     Color(r=0x1a, g=0x2b, b=0x3c)
+
     >>> c = Color.from_hex_code("#1AB")
     Color(r=0x11, g=0xaa, b=0xbb)
+
     >>> c = Color.from_rgb_float(1.0, 0.0196078431372549, 0.10196078431372549)
     Color(r=0xff, g=0x5, b=0x1a)
     ```
@@ -289,12 +306,12 @@ class Color(int):
         raise ValueError("Color code is invalid length. Must be 3 or 6 digits")
 
     @classmethod
-    def from_int(cls, i: typing.SupportsInt, /) -> Color:
+    def from_int(cls, integer: typing.SupportsInt, /) -> Color:
         """Convert the given `typing.SupportsInt` to a `Color`.
 
         Parameters
         ----------
-        i : typing.SupportsInt
+        integer : typing.SupportsInt
             The raw color integer.
 
         Returns
@@ -302,7 +319,7 @@ class Color(int):
         Color
             The Color object.
         """
-        return cls(i)
+        return cls(integer)
 
     # Partially chose to override these as the docstrings contain typos according to Sphinx.
     @classmethod
@@ -356,20 +373,28 @@ class Color(int):
         ```py
         >>> Color.of(0xFF051A)
         Color(r=0xff, g=0x5, b=0x1a)
+
         >>> Color.of(16712986)
         Color(r=0xff, g=0x5, b=0x1a)
+
         >>> c = Color.of((255, 5, 26))
         Color(r=0xff, g=0x5, b=1xa)
+
         >>> c = Color.of(255, 5, 26)
         Color(r=0xff, g=0x5, b=1xa)
+
         >>> c = Color.of([0xFF, 0x5, 0x1a])
         Color(r=0xff, g=0x5, b=1xa)
+
         >>> c = Color.of("#1a2b3c")
         Color(r=0x1a, g=0x2b, b=0x3c)
+
         >>> c = Color.of("#1AB")
         Color(r=0x11, g=0xaa, b=0xbb)
+
         >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
         Color(r=0xff, g=0x5, b=0x1a)
+
         >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
         Color(r=0xff, g=0x5, b=0x1a)
         ```
@@ -413,11 +438,9 @@ class Color(int):
         ----------
         length : int
             The number of bytes to produce. Should be around `3`, but not less.
-
         byteorder : str
             The endianess of the value represented by the bytes.
             Can be `"big"` endian or `"little"` endian.
-
         signed : bool
             Whether the value is signed or unsigned.
 
