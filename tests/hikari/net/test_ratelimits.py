@@ -214,12 +214,16 @@ class TestWindowedBurstRateLimiter:
         ratelimiter.throttle = mock.AsyncMock()
         ratelimiter.is_rate_limited = mock.MagicMock(return_value=True)
 
-        ratelimiter.acquire()
-        assert ratelimiter.throttle_task is not None
+        task = ratelimiter.acquire()
+        try:
+            assert ratelimiter.throttle_task is not None
 
-        await asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
 
-        ratelimiter.throttle.assert_called()
+            ratelimiter.throttle.assert_called()
+        finally:
+            task.cancel()
+
 
     @pytest.mark.asyncio
     async def test_task_not_scheduled_if_rate_limited_and_throttle_task_not_None(self, ratelimiter, event_loop):
