@@ -23,8 +23,10 @@ from __future__ import annotations
 __all__ = ["IComponent"]
 
 import abc
+import typing
 
-from hikari.api import app
+if typing.TYPE_CHECKING:
+    from hikari.api import app
 
 
 class IComponent(abc.ABC):
