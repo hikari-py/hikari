@@ -143,7 +143,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         token: str,
         version: int,
     ) -> None:
-        if undefined.Undefined.count(shard_ids, shard_count):
+        if undefined.Undefined.count(shard_ids, shard_count) == 1:
             raise TypeError("You must provide values for both shard_ids and shard_count, or neither.")
         if not isinstance(shard_ids, undefined.Undefined):
             if not shard_ids:
