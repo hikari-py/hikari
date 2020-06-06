@@ -26,13 +26,13 @@ import time
 import mock
 import pytest
 
-from hikari.net import ratelimits
+from hikari.net import rate_limits
 from tests.hikari import _helpers
 
 
 class TestBaseRateLimiter:
     def test_context_management(self):
-        class MockedBaseRateLimiter(ratelimits.BaseRateLimiter):
+        class MockedBaseRateLimiter(rate_limits.BaseRateLimiter):
             close = mock.MagicMock()
             acquire = NotImplemented
 
@@ -45,7 +45,7 @@ class TestBaseRateLimiter:
 class TestBurstRateLimiter:
     @pytest.fixture
     def mock_burst_limiter(self):
-        class Impl(ratelimits.BurstRateLimiter):
+        class Impl(rate_limits.BurstRateLimiter):
             def acquire(self, *args, **kwargs) -> asyncio.Future:
                 raise NotImplementedError
 
@@ -82,25 +82,30 @@ class TestBurstRateLimiter:
         mock_burst_limiter.close()
         assert mock_burst_limiter.throttle_task.cancelled(), "throttle_task is not cancelled"
 
+    def test_close_when_closed(self, mock_burst_limiter):
+        # Double-running shouldn't do anything adverse.
+        mock_burst_limiter.close()
+        mock_burst_limiter.close()
+
 
 class TestManualRateLimiter:
     @pytest.mark.asyncio
     async def test_acquire_returns_completed_future_if_lock_task_is_None(self):
-        with ratelimits.ManualRateLimiter() as limiter:
+        with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = None
             future = limiter.acquire()
             assert future.done()
 
     @pytest.mark.asyncio
     async def test_acquire_returns_incomplete_future_if_lock_task_is_not_None(self):
-        with ratelimits.ManualRateLimiter() as limiter:
+        with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = asyncio.get_running_loop().create_future()
             future = limiter.acquire()
             assert not future.done()
 
     @pytest.mark.asyncio
     async def test_acquire_places_future_on_queue_if_lock_task_is_not_None(self):
-        with ratelimits.ManualRateLimiter() as limiter:
+        with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = asyncio.get_running_loop().create_future()
             assert len(limiter.queue) == 0
             future = limiter.acquire()
@@ -110,7 +115,7 @@ class TestManualRateLimiter:
 
     @pytest.mark.asyncio
     async def test_lock_cancels_existing_task(self):
-        with ratelimits.ManualRateLimiter() as limiter:
+        with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = asyncio.get_running_loop().create_future()
             old_task = limiter.throttle_task
             limiter.throttle(0)
@@ -119,7 +124,7 @@ class TestManualRateLimiter:
 
     @pytest.mark.asyncio
     async def test_lock_schedules_throttle(self):
-        with _helpers.unslot_class(ratelimits.ManualRateLimiter)() as limiter:
+        with _helpers.unslot_class(rate_limits.ManualRateLimiter)() as limiter:
             limiter.unlock_later = mock.AsyncMock()
             limiter.throttle(0)
             await limiter.throttle_task
@@ -127,7 +132,7 @@ class TestManualRateLimiter:
 
     @pytest.mark.asyncio
     async def test_throttle_chews_queue_completing_futures(self, event_loop):
-        with ratelimits.ManualRateLimiter() as limiter:
+        with rate_limits.ManualRateLimiter() as limiter:
             futures = [event_loop.create_future() for _ in range(10)]
             limiter.queue = list(futures)
             await limiter.unlock_later(0.01)
@@ -149,7 +154,7 @@ class TestManualRateLimiter:
                 popped_at.append(time.perf_counter())
                 return event_loop.create_future()
 
-        with _helpers.unslot_class(ratelimits.ManualRateLimiter)() as limiter:
+        with _helpers.unslot_class(rate_limits.ManualRateLimiter)() as limiter:
             with mock.patch("asyncio.sleep", wraps=mock_sleep):
                 limiter.queue = MockList()
 
@@ -162,7 +167,7 @@ class TestManualRateLimiter:
 
     @pytest.mark.asyncio
     async def test_throttle_clears_throttle_task(self, event_loop):
-        with ratelimits.ManualRateLimiter() as limiter:
+        with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = event_loop.create_future()
             await limiter.unlock_later(0)
         assert limiter.throttle_task is None
@@ -171,7 +176,7 @@ class TestManualRateLimiter:
 class TestWindowedBurstRateLimiter:
     @pytest.fixture
     def ratelimiter(self):
-        inst = _helpers.unslot_class(ratelimits.WindowedBurstRateLimiter)(__name__, 3, 3)
+        inst = _helpers.unslot_class(rate_limits.WindowedBurstRateLimiter)(__name__, 3, 3)
         yield inst
         with contextlib.suppress(Exception):
             inst.close()
@@ -258,7 +263,7 @@ class TestWindowedBurstRateLimiter:
 
     @pytest.mark.asyncio
     async def test_throttle_consumes_queue(self, event_loop):
-        with ratelimits.WindowedBurstRateLimiter(__name__, 0.01, 1) as rl:
+        with rate_limits.WindowedBurstRateLimiter(__name__, 0.01, 1) as rl:
             rl.queue = [event_loop.create_future() for _ in range(15)]
             old_queue = list(rl.queue)
             await rl.throttle()
@@ -287,7 +292,7 @@ class TestWindowedBurstRateLimiter:
             future.add_done_callback(lambda _: completion_times.append(time.perf_counter()))
             return future
 
-        with ratelimits.WindowedBurstRateLimiter(__name__, period, limit) as rl:
+        with rate_limits.WindowedBurstRateLimiter(__name__, period, limit) as rl:
             futures = [create_task(i) for i in range(total_requests)]
             rl.queue = list(futures)
             rl.reset_at = time.perf_counter()
@@ -327,25 +332,25 @@ class TestWindowedBurstRateLimiter:
 
     @pytest.mark.asyncio
     async def test_throttle_resets_throttle_task(self, event_loop):
-        with ratelimits.WindowedBurstRateLimiter(__name__, 0.01, 1) as rl:
+        with rate_limits.WindowedBurstRateLimiter(__name__, 0.01, 1) as rl:
             rl.queue = [event_loop.create_future() for _ in range(15)]
             rl.throttle_task = None
             await rl.throttle()
         assert rl.throttle_task is None
 
     def test_get_time_until_reset_if_not_rate_limited(self):
-        with _helpers.unslot_class(ratelimits.WindowedBurstRateLimiter)(__name__, 0.01, 1) as rl:
+        with _helpers.unslot_class(rate_limits.WindowedBurstRateLimiter)(__name__, 0.01, 1) as rl:
             rl.is_rate_limited = mock.MagicMock(return_value=False)
             assert rl.get_time_until_reset(420) == 0.0
 
     def test_get_time_until_reset_if_rate_limited(self):
-        with _helpers.unslot_class(ratelimits.WindowedBurstRateLimiter)(__name__, 0.01, 1) as rl:
+        with _helpers.unslot_class(rate_limits.WindowedBurstRateLimiter)(__name__, 0.01, 1) as rl:
             rl.is_rate_limited = mock.MagicMock(return_value=True)
             rl.reset_at = 420.4
             assert rl.get_time_until_reset(69.8) == 420.4 - 69.8
 
     def test_is_rate_limited_when_rate_limit_expired_resets_self(self):
-        with ratelimits.WindowedBurstRateLimiter(__name__, 403, 27) as rl:
+        with rate_limits.WindowedBurstRateLimiter(__name__, 403, 27) as rl:
             now = 180
             rl.reset_at = 80
             rl.remaining = 4
@@ -357,7 +362,7 @@ class TestWindowedBurstRateLimiter:
 
     @pytest.mark.parametrize("remaining", [-1, 0, 1])
     def test_is_rate_limited_when_rate_limit_not_expired_only_returns_expr(self, remaining):
-        with ratelimits.WindowedBurstRateLimiter(__name__, 403, 27) as rl:
+        with rate_limits.WindowedBurstRateLimiter(__name__, 403, 27) as rl:
             now = 420
             rl.reset_at = now + 69
             rl.remaining = remaining
@@ -366,14 +371,14 @@ class TestWindowedBurstRateLimiter:
 
 class TestExponentialBackOff:
     def test_reset(self):
-        eb = ratelimits.ExponentialBackOff()
+        eb = rate_limits.ExponentialBackOff()
         eb.increment = 10
         eb.reset()
         assert eb.increment == 0
 
     @pytest.mark.parametrize(["iteration", "backoff"], enumerate((1, 2, 4, 8, 16, 32)))
     def test_increment_linear(self, iteration, backoff):
-        eb = ratelimits.ExponentialBackOff(2, 64, 0)
+        eb = rate_limits.ExponentialBackOff(2, 64, 0)
 
         for _ in range(iteration):
             next(eb)
@@ -382,7 +387,7 @@ class TestExponentialBackOff:
 
     def test_increment_maximum(self):
         max_bound = 64
-        eb = ratelimits.ExponentialBackOff(2, max_bound, 0)
+        eb = rate_limits.ExponentialBackOff(2, max_bound, 0)
         iterations = math.ceil(math.log2(max_bound))
         for _ in range(iterations):
             next(eb)
@@ -396,7 +401,7 @@ class TestExponentialBackOff:
     @pytest.mark.parametrize(["iteration", "backoff"], enumerate((1, 2, 4, 8, 16, 32)))
     def test_increment_jitter(self, iteration, backoff):
         abs_tol = 1
-        eb = ratelimits.ExponentialBackOff(2, 64, abs_tol)
+        eb = rate_limits.ExponentialBackOff(2, 64, abs_tol)
 
         for _ in range(iteration):
             next(eb)
@@ -404,5 +409,5 @@ class TestExponentialBackOff:
         assert math.isclose(next(eb), backoff, abs_tol=abs_tol)
 
     def test_iter_returns_self(self):
-        eb = ratelimits.ExponentialBackOff(2, 64, 123)
+        eb = rate_limits.ExponentialBackOff(2, 64, 123)
         assert iter(eb) is eb

@@ -38,7 +38,7 @@ from hikari import errors
 from hikari.api import component
 from hikari.models import presences
 from hikari.net import http_client
-from hikari.net import ratelimits
+from hikari.net import rate_limits
 from hikari.net import user_agents
 from hikari.utilities import data_binding
 from hikari.utilities import klass
@@ -190,7 +190,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         )
         self._activity = initial_activity
         self._app = app
-        self._backoff = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
+        self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         self._handshake_event = asyncio.Event()
         self._idle_since = initial_idle_since
         self._intents = intents
@@ -214,7 +214,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self.last_heartbeat_sent = float("nan")
         self.last_message_received = float("nan")
         self.large_threshold = large_threshold
-        self.ratelimiter = ratelimits.WindowedBurstRateLimiter(str(shard_id), 60.0, 120)
+        self.ratelimiter = rate_limits.WindowedBurstRateLimiter(str(shard_id), 60.0, 120)
         self.session_id = None
 
         scheme, netloc, path, params, _, _ = urllib.parse.urlparse(url, allow_fragments=True)

@@ -35,7 +35,7 @@ from hikari.net import buckets
 from hikari.net import http_client
 from hikari.net import http_settings
 from hikari.net import iterators
-from hikari.net import ratelimits
+from hikari.net import rate_limits
 from hikari.net import rest_utils
 from hikari.net import routes
 from hikari.utilities import data_binding
@@ -137,7 +137,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             trust_env=config.trust_env,
         )
         self.buckets = buckets.RESTBucketManager()
-        self.global_rate_limit = ratelimits.ManualRateLimiter()
+        self.global_rate_limit = rate_limits.ManualRateLimiter()
         self._invalid_requests = 0
         self._invalid_request_window = -float("inf")
         self.version = version
