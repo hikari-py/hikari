@@ -52,7 +52,7 @@ coverage:results:
   script:
     - pip install nox virtualenv
     - nox -s coalesce-coverage --no-error-on-external-run
-  stage: pre-report
+  stage: report
 
 
 ###

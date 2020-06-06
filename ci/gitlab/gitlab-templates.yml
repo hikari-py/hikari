@@ -54,29 +54,6 @@ license_scanning:
   stage: test
 
 ###
-### Deploy the pages to GitLab.
-###
-### This pulls the results of generate-master-pages and generate-stating-pages
-### and places them in the correct
-###
-### This must use a specific name. Do not rename it for consistency.
-###
-pages:
-  artifacts:
-    paths:
-      - public/
-  dependencies:
-    - pylint
-    - coverage:results
-    - pages:staging
-  extends: .busybox:musl
-  rules:
-    - if: "$CI_COMMIT_REF_NAME == 'staging'"
-  script:
-    - ls public -R
-  stage: deploy
-
-###
 ### GitLab's Static Application Security Testing suite.
 ###
 ### This checks for security issues on every commit and MR. This is reported
