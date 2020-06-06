@@ -38,7 +38,7 @@ from hikari import errors
 from hikari.api import component
 from hikari.models import presences
 from hikari.net import http_client
-from hikari.net import ratelimits
+from hikari.net import rate_limits
 from hikari.net import user_agents
 from hikari.utilities import data_binding
 from hikari.utilities import klass
@@ -76,7 +76,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         Whether to appear to be AFK or not on login.
     initial_status : hikari.models.presences.PresenceStatus or hikari.utilities.undefined.Undefined
         The initial status to set on login for the shard.
-    intents : hikari.models.intents.Intent | None
+    intents : hikari.models.intents.Intent or None
         Collection of intents to use, or `None` to not use intents at all.
     large_threshold : int
         The number of members to have in a guild for it to be considered large.
@@ -190,7 +190,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         )
         self._activity = initial_activity
         self._app = app
-        self._backoff = ratelimits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
+        self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         self._handshake_event = asyncio.Event()
         self._idle_since = initial_idle_since
         self._intents = intents
@@ -214,7 +214,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self.last_heartbeat_sent = float("nan")
         self.last_message_received = float("nan")
         self.large_threshold = large_threshold
-        self.ratelimiter = ratelimits.WindowedBurstRateLimiter(str(shard_id), 60.0, 120)
+        self.ratelimiter = rate_limits.WindowedBurstRateLimiter(str(shard_id), 60.0, 120)
         self.session_id = None
 
         scheme, netloc, path, params, _, _ = urllib.parse.urlparse(url, allow_fragments=True)
@@ -382,16 +382,16 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        idle_since : datetime.datetime | None | hikari.utilities.undefined.Undefined
+        idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
             The datetime that the user started being idle. If undefined, this
             will not be changed.
-        is_afk : bool | hikari.utilities.undefined.Undefined
+        is_afk : bool or hikari.utilities.undefined.Undefined
             If `True`, the user is marked as AFK. If `False`, the user is marked
             as being active. If undefined, this will not be changed.
-        activity : hikari.models.presences.OwnActivity | None | hikari.utilities.undefined.Undefined
+        activity : hikari.models.presences.OwnActivity or None or hikari.utilities.undefined.Undefined
             The activity to appear to be playing. If undefined, this will not be
             changed.
-        status : hikari.models.presences.PresenceStatus | hikari.utilities.undefined.Undefined
+        status : hikari.models.presences.PresenceStatus or hikari.utilities.undefined.Undefined
             The web status to show. If undefined, this will not be changed.
         """
         payload = self._build_presence_payload(idle_since, is_afk, activity, status)
@@ -415,7 +415,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         ----------
         guild : hikari.models.guilds.PartialGuild or hikari.utilities.snowflake.Snowflake or int or str
             The guild or guild ID to update the voice state for.
-        channel : hikari.models.channels.GuildVoiceChannel | hikari.utilities.Snowflake | int | str | None
+        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.Snowflake or int or str or None
             The channel or channel ID to update the voice state for. If `None`
             then the bot will leave the voice channel that it is in for the
             given guild.

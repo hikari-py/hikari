@@ -29,13 +29,18 @@ EMPTY: typing.Final[inspect.Parameter.empty] = inspect.Parameter.empty
 """A singleton that empty annotations will be set to in `resolve_signature`."""
 
 
-def resolve_signature(func: typing.Callable) -> inspect.Signature:
+def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signature:
     """Get the `inspect.Signature` of `func` with resolved forward annotations.
 
     Parameters
     ----------
     func : typing.Callable[[...], ...]
         The function to get the resolved annotations from.
+
+    !!! warning
+        This will use `eval` to resolve string typehints and forward references.
+        This has a slight performance overhead, so attempt to cache this info
+        as much as possible.
 
     Returns
     -------
@@ -44,29 +49,19 @@ def resolve_signature(func: typing.Callable) -> inspect.Signature:
         resolved.
     """
     signature = inspect.signature(func)
-    resolved_type_hints = None
-    parameters = []
-    for key, value in signature.parameters.items():
-        if isinstance(value.annotation, str):
-            if resolved_type_hints is None:
-                resolved_type_hints = typing.get_type_hints(func)
-            value = value.replace(annotation=resolved_type_hints[key])
+    resolved_typehints = typing.get_type_hints(func)
+    params = []
 
-        if value is type(None):
-            value = None
+    none_type = type(None)
+    for name, param in signature.parameters.items():
+        if isinstance(param.annotation, str):
+            param = param.replace(annotation=resolved_typehints[name] if name in resolved_typehints else EMPTY)
+        if param.annotation is none_type:
+            param = param.replace(annotation=None)
+        params.append(param)
 
-        parameters.append(value)
-    signature = signature.replace(parameters=parameters)
+    return_annotation = resolved_typehints.get("return", EMPTY)
+    if return_annotation is none_type:
+        return_annotation = None
 
-    if isinstance(signature.return_annotation, str):
-        if resolved_type_hints is None:
-            return_annotation = typing.get_type_hints(func)["return"]
-        else:
-            return_annotation = resolved_type_hints["return"]
-
-        if return_annotation is type(None):
-            return_annotation = None
-
-        signature = signature.replace(return_annotation=return_annotation)
-
-    return signature
+    return signature.replace(parameters=params, return_annotation=return_annotation)

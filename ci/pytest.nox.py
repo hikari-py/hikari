@@ -24,19 +24,25 @@ from ci import config
 from ci import nox
 
 FLAGS = [
-    "-c", config.PYTEST_INI,
-    "-r", "a",
+    "-c",
+    config.PYTEST_INI,
+    "-r",
+    "a",
     "--full-trace",
-    "-n", "auto",
-    "--cov", config.MAIN_PACKAGE,
-    "--cov-config", config.COVERAGE_INI,
-    "--cov-report", "term",
-    "--cov-report", f"html:{config.COVERAGE_HTML_PATH}",
+    "--cov",
+    config.MAIN_PACKAGE,
+    "--cov-config",
+    config.COVERAGE_INI,
+    "--cov-report",
+    "term",
+    "--cov-report",
+    f"html:{config.COVERAGE_HTML_PATH}",
     "--cov-branch",
-    "--junitxml", config.COVERAGE_JUNIT_PATH,
+    "--junitxml",
+    config.COVERAGE_JUNIT_PATH,
     "--force-testdox",
     "--showlocals",
-    config.TEST_PACKAGE
+    config.TEST_PACKAGE,
 ]
 
 
@@ -44,8 +50,7 @@ FLAGS = [
 def pytest(session: nox.Session) -> None:
     """Run unit tests and measure code coverage."""
     session.install(
-        "-r", config.REQUIREMENTS,
-        "-r", config.DEV_REQUIREMENTS,
+        "-r", config.REQUIREMENTS, "-r", config.DEV_REQUIREMENTS,
     )
     shutil.rmtree(".coverage", ignore_errors=True)
     session.run("python", "-m", "pytest", *FLAGS)
