@@ -241,7 +241,7 @@ class Member(bases.Entity):
     )
     """A sequence of the IDs of the member's current roles."""
 
-    joined_at: datetime.datetime = attr.ib(eq=False, hash=False)
+    joined_at: typing.Union[datetime.datetime, undefined.Undefined] = attr.ib(eq=False, hash=False)
     """The datetime of when this member joined the guild they belong to."""
 
     premium_since: typing.Union[datetime.datetime, None, undefined.Undefined] = attr.ib(eq=False, hash=False)
