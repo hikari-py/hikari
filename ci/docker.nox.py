@@ -29,6 +29,7 @@ from ci import nox
 
 
 if shutil.which("docker"):
+
     @nox.session(reuse_venv=True)
     def docker(session: nox.Session) -> None:
         """Run a nox session in a container that targets a specific Python version.
@@ -74,6 +75,6 @@ if shutil.which("docker"):
             "--rm",
             "-it",
             python,
-            f"/bin/sh -c 'cd hikari && pip install nox && nox {args}'"
+            f"/bin/sh -c 'cd hikari && pip install nox && nox {args}'",
         )
         print("\033[33m<<<<<<<<<<<<<<<<<<<  EXITING  CONTAINER  >>>>>>>>>>>>>>>>>>>\033[0m")

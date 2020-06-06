@@ -37,6 +37,7 @@ def session(*, only_if=lambda: True, default: bool = False, reuse_venv: bool = F
             _options.sessions.append(func.__name__)
 
         return _session(reuse_venv=reuse_venv, **kwargs)(func) if only_if() else func
+
     return decorator
 
 
@@ -46,6 +47,7 @@ def inherit_environment_vars(func):
         for n, v in os.environ.items():
             session.env[n] = v
         return func(session)
+
     return logic
 
 
