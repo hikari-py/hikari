@@ -298,14 +298,26 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
 
     @staticmethod
     def __get_logging_format():
+        # Modified from
         # https://github.com/django/django/blob/master/django/core/management/color.py
-        plat = sys.platform
-        supported_platform = plat != "Pocket PC" and (plat != "win32" or "ANSICON" in os.environ)
-        # isatty is not always implemented, #6223.
-        is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
-        # https://youtrack.jetbrains.com/issue/PY-4853
 
-        if supported_platform and is_a_tty or os.getenv("PYCHARM_HOSTED"):
+        plat = sys.platform
+        supports_color = False
+
+        # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
+        is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+
+        if plat != "Pocket PC":
+            if plat == "win32":
+                supports_color |= os.getenv("TERM_PROGRAM", None) == "mintty"
+                supports_color |= "ANSICON" in os.environ
+                supports_color |= is_a_tty
+            else:
+                supports_color = is_a_tty
+
+            supports_color |= bool(os.getenv("PYCHARM_HOSTED", ""))
+
+        if supports_color:
             blue = "\033[1;35m"
             gray = "\033[1;37m"
             green = "\033[1;32m"
