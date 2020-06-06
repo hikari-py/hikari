@@ -1,16 +1,11 @@
 async-timeout~=3.0.1
 coverage~=5.1
 nox==2020.5.24
-# Virtualenv 20.0.19 breaks nox randomnly...
 virtualenv==20.0.21
-# Pylint 2.5.0 is broken
 pylint==2.5.2
-pylint-json2html-v2~=0.2.2
-pylint-junit~=0.2.0
-pytest~=5.4.3
-pytest-asyncio~=0.12.0
-pytest-cov~=2.9.0
-pytest-randomly~=3.4.0
-pytest-testdox~=1.2.1
-pytest-xdist~=1.32.0
+# 5.4.3 breaks stuff for us on Windows as usual...
+pytest==5.4.2
+pytest-asyncio==0.12.0
+pytest-cov==2.9.0
+pytest-testdox==1.2.1
 mock~=4.0.2

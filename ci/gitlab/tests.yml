@@ -70,10 +70,11 @@ test:win32:
   extends: .win32
   script:
     - choco install --no-progress python -y
+    - if (!(test-path "public")) { New-Item -ItemType Directory -Force -Path public }
     - py -3 -V
     - py -3 -m pip install nox
     - py -3 -m nox -s pytest --no-error-on-external-run
-    - mv .coverage "public/${CI_JOB_NAME}.coverage"
+    - mv .coverage ".\public\test-win32.coverage"
   stage: test
 
 ###
