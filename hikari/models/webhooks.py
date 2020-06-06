@@ -136,18 +136,18 @@ class Webhook(bases.Entity, bases.Unique):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Collection[hikari.models.users.User | hikari.models.snowflake.Snowflake | int | str] | bool
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str] or bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role | hikari.models.snowflake.Snowflake | int | str] | bool
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str] or bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
 
         Returns
         -------
-        hikari.models.messages.Message | None
+        hikari.models.messages.Message or None
             The created message object, if `wait` is `True`, else `None`.
 
         Raises
@@ -233,7 +233,7 @@ class Webhook(bases.Entity, bases.Unique):
 
         Parameters
         ----------
-        use_token : bool | None
+        use_token : bool or None
             If set to `True` then the webhook's token will be used for this
             request; if set to `False` then bot authorization will be used;
             if not specified then the webhook's token will be used for the
@@ -272,17 +272,17 @@ class Webhook(bases.Entity, bases.Unique):
         ----------
         name : str
             If specified, the new name string.
-        avatar : hikari.models.files.BaseStream | None
+        avatar : hikari.models.files.BaseStream or None
             If specified, the new avatar image. If `None`, then
             it is removed.
-        channel : hikari.models.channels.GuildChannel | hikari.models.snowflake.Snowflake | int
+        channel : hikari.models.channels.GuildChannel or hikari.utilities.snowflake.Snowflake or int
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
         reason : str
             If specified, the audit log reason explaining why the operation
             was performed. This field will be used when using the webhook's
             token rather than bot authorization.
-        use_token : bool | None
+        use_token : bool or None
             If set to `True` then the webhook's token will be used for this
             request; if set to `False` then bot authorization will be used;
             if not specified then the webhook's token will be used for the
@@ -361,7 +361,7 @@ class Webhook(bases.Entity, bases.Unique):
 
         Parameters
         ----------
-        use_token : bool | None
+        use_token : bool or None
             If set to `True` then the webhook's token will be used for this
             request; if set to `False` then bot authorization will be used;
             if not specified then the webhook's token will be used for the
