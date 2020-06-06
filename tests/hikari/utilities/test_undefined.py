@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import pytest
 
 from hikari.utilities import undefined
 from tests.hikari import _helpers
@@ -45,3 +46,17 @@ class TestUndefined:
 
     def test_count(self):
         assert undefined.Undefined.count(9, 18, undefined.Undefined(), 36, undefined.Undefined(), 54) == 2
+
+    def test_iter(self):
+        with pytest.raises(StopIteration):
+            next(iter(undefined.Undefined()))
+
+    def test_modify(self):
+        u = undefined.Undefined()
+        with pytest.raises(TypeError):
+            u.foo = 12
+
+    def test_delete(self):
+        u = undefined.Undefined()
+        with pytest.raises(TypeError):
+            del u.count
