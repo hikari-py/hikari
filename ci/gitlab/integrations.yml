@@ -32,9 +32,8 @@ dependency_scanning:
   interruptible: true
   retry: 1
   stage: test
-  # Do not enable until gitlab 13.0 on 2019-05-22.
-  #rules:
-  #  - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'schedule'"
+  rules:
+    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'schedule'"
   variables:
     DS_DEFAULT_ANALYZERS: "gemnasium-python"
 
@@ -50,9 +49,8 @@ dependency_scanning:
 license_scanning:
   interruptible: true
   retry: 1
-  # Do not enable until gitlab 13.0 on 2019-05-22.
-  #rules:
-  #  - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'schedule'"
+  rules:
+    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'schedule'"
   stage: test
 
 ###
@@ -75,10 +73,7 @@ pages:
   rules:
     - if: "$CI_COMMIT_REF_NAME == 'staging'"
   script:
-    - |+
-      set -e
-      set -x
-      ls public -R
+    - ls public -R
   stage: deploy
 
 ###
@@ -92,9 +87,8 @@ pages:
 sast:
   interruptible: true
   retry: 1
-  # Do not enable until gitlab 13.0 on 2019-05-22.
-  #rules:
-  #  - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'schedule'"
+  rules:
+    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'schedule'"
   stage: test
   variables:
     SAST_BANDIT_EXCLUDED_PATHS: tests/*,docs/*,ci/*,insomnia/*,public/*,tasks/*,noxfile.old.py
