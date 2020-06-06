@@ -186,7 +186,9 @@ class GuildBuilder:
         payload.put("nsfw", nsfw)
 
         payload.put_array(
-            "permission_overwrites", permission_overwrites, self._app.entity_factory.serialize_permission_overwrite
+            "permission_overwrites",
+            permission_overwrites,
+            conversion=self._app.entity_factory.serialize_permission_overwrite,
         )
 
         self._channels.append(payload)
@@ -212,13 +214,15 @@ class GuildBuilder:
         payload.put("name", name)
         payload.put("type", channels.ChannelType.GUILD_TEXT)
         payload.put("topic", topic)
-        payload.put("rate_limit_per_user", rate_limit_per_user, date.timespan_to_int)
+        payload.put("rate_limit_per_user", rate_limit_per_user, conversion=date.timespan_to_int)
         payload.put("position", position)
         payload.put("nsfw", nsfw)
         payload.put_snowflake("parent_id", parent_id)
 
         payload.put_array(
-            "permission_overwrites", permission_overwrites, self._app.entity_factory.serialize_permission_overwrite
+            "permission_overwrites",
+            permission_overwrites,
+            conversion=self._app.entity_factory.serialize_permission_overwrite,
         )
 
         self._channels.append(payload)
@@ -250,7 +254,9 @@ class GuildBuilder:
         payload.put_snowflake("parent_id", parent_id)
 
         payload.put_array(
-            "permission_overwrites", permission_overwrites, self._app.entity_factory.serialize_permission_overwrite
+            "permission_overwrites",
+            permission_overwrites,
+            conversion=self._app.entity_factory.serialize_permission_overwrite,
         )
 
         self._channels.append(payload)
