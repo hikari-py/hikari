@@ -213,7 +213,7 @@ import time
 import types
 import typing
 
-from hikari.net import ratelimits
+from hikari.net import rate_limits
 from hikari.net import routes
 from hikari.utilities import aio
 
@@ -221,7 +221,7 @@ UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""
 
 
-class RESTBucket(ratelimits.WindowedBurstRateLimiter):
+class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     """Represents a rate limit for an RESTSession endpoint.
 
     Component to represent an active rate limit bucket on a specific RESTSession _route
