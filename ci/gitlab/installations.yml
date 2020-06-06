@@ -21,49 +21,44 @@
 .pip:
   extends: .reactive-job
   script:
-    - |+
-      set -e
-      set -x
-      apt install git -y
-      pip install nox 'virtualenv<20.0.19'
-      nox --sessions pip-sdist pip-bdist-wheel pip-git --no-error-on-external-run
+    - apt install git -y
+    - pip install nox
+    - nox --sessions pip-sdist pip-bdist-wheel pip-git --no-error-on-external-run
   stage: test
+
 ###
-### Setup script tests for CPython 3.8.0
+### Setup script tests for Windows.
+###
+### This simply tests that stuff runs on a Windows runner.
 ###
 ### Test locally installing the library via pip in several formats
 ###
-"install:3.8.0":
+"install:win32":
+  extends: .win32
+  script:
+    - choco install --no-progress python -y
+    - refreshenv
+    - py -3 -V
+    - py -3 -m pip install nox
+    - py -3 -m nox --sessions pip-sdist pip-bdist-wheel --no-error-on-external-run
+  stage: test
+
+###
+### Setup script tests for CPython 3.8
+###
+### Test locally installing the library via pip in several formats
+###
+"install:3.8":
   extends:
-    - .cpython:3.8.0
+    - .cpython:3.8
     - .pip
 
 ###
-### Setup script tests for CPython 3.8.1
+### Setup script tests for CPython 3.9rc
 ###
 ### Test locally installing the library via pip in several formats
 ###
-"install:3.8.1":
+"install:3.9rc":
   extends:
-    - .cpython:3.8.1
-    - .pip
-
-###
-### Setup script tests for CPython 3.8.2
-###
-### Test locally installing the library via pip in several formats
-###
-"install:3.8.2":
-  extends:
-    - .cpython:3.8.2
-    - .pip
-
-###
-### Setup script tests for CPython 3.9.0
-###
-### Test locally installing the library via pip in several formats
-###
-"install:3.9.0":
-  extends:
-    - .cpython:3.9.0
+    - .cpython:3.9rc
     - .pip
