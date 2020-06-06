@@ -23,76 +23,52 @@
     paths:
       - public/
   before_script:
-    - |+
-      set -e
-      set -x
-      apt-get install git -qy
+    - apt-get install git -qy
+    - >
       git log -n 1 "${CI_COMMIT_SHA}" --format="%B" \
           | grep -iqE "\[\s*(skip|no|don'?t|do\s+not)\s+pages?\s*\]" \
-        && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" \
-        && exit 0
-      mkdir public || true
+         && echo "SKIPPING ${CI_JOB_STAGE} STAGE JOB" \
+         && exit 0
+    - mkdir public || true
   extends: .cpython
   stage: report
-
-###
-### Base for generating documentation ready to be published.
-###
-.pages:generate:
-  extends: .pages
-  retry:
-    max: 2
-  rules:
-    - if: "$CI_COMMIT_REF_NAME == 'staging' && $CI_COMMIT_TAG == null"
-  script: |+
-    set -x
-    apt-get update
-    apt-get install -qy graphviz git # FIXME: Remove once in master.
-    pip install nox 'virtualenv<20.0.19'
-    nox --sessions pages pdoc --no-error-on-external-run
-
-###
-### Generate pages for staging branch and export them.
-###
-pages:staging:
-  extends: .pages:generate
-  variables:
-    TARGET_BRANCH: staging
-
-###
-### Generate pages for the current branch as a test.
-###
-pages:test:
-  extends:
-    - .pages
-    - .reactive-job
-  rules:
-    - if: "$CI_COMMIT_REF_NAME != 'master' && $CI_COMMIT_REF_NAME != 'staging'"
-    - if: "$CI_PIPELINE_SOURCE == 'push' || $CI_PIPELINE_SOURCE == 'web'"
-  script:
-    - |+
-      set -e
-      set -x
-      apt-get update
-      apt-get install -qy graphviz # FIXME: remove once in master
-      pip install nox 'virtualenv<20.0.19'
-      nox --sessions pages pdoc --no-error-on-external-run
-
 
 ###
 ### Generate pages for the current branch as a test, enabling the visual feedback
 ### stuff to allow in-site comments being relayed back to the associated merge
 ### request.
 ###
-pages:feedback:
+pdoc3:
   extends:
     # DO NOT EXTEND ANYTHING WITH AN only/except BLOCK!
     - .pages
   rules:
     - if: "$CI_PIPELINE_SOURCE == 'merge_request_event'"
+    - if: "$CI_COMMIT_REF_NAME != 'master'"
+    - if: "$CI_PIPELINE_SOURCE == 'push' || $CI_PIPELINE_SOURCE == 'web'"
   script:
-    - |+
-      set -e
-      set -x
-      pip install nox 'virtualenv<20.0.19'
-      nox --sessions pages pdoc --no-error-on-external-run
+    - pip install nox
+    - nox --sessions pages pdoc --no-error-on-external-run
+
+
+###
+### Deploy the pages to GitLab.
+###
+### This pulls the results of generate-master-pages and generate-stating-pages
+### and places them in the correct
+###
+### This must use a specific name. Do not rename it for consistency.
+###
+pages:
+  artifacts:
+    paths:
+      - public/
+  dependencies:
+    - coverage:results
+    - pdoc3
+  extends: .busybox:musl
+  rules:
+    - if: "$CI_COMMIT_REF_NAME == 'staging'"
+  script:
+    - ls public -R
+  stage: deploy

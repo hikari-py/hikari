@@ -188,7 +188,9 @@ class Route:
         CompiledRoute
             The compiled route.
         """
-        data = data_binding.StringMapBuilder.from_dict(kwargs)
+        data = data_binding.StringMapBuilder()
+        for k, v in kwargs.items():
+            data.put(k, v)
 
         return CompiledRoute(
             self, self.path_template.format_map(data), data[self.major_param] if self.major_param is not None else "-",

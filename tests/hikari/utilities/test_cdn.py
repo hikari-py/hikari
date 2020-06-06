@@ -16,36 +16,26 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import asyncio
-import contextlib
-import sys
-
 import pytest
 
-_real_new_event_loop = asyncio.new_event_loop
+from hikari.utilities import cdn
 
 
-def _new_event_loop():
-    loop = _real_new_event_loop()
-    loop.set_debug(True)
-
-    with contextlib.suppress(AttributeError):
-        # provisional since py37
-        sys.set_coroutine_origin_tracking_depth(20)
-
-    return loop
+def test_generate_cdn_url():
+    url = cdn.generate_cdn_url("not", "a", "path", format_="neko", size=16)
+    assert url == "https://cdn.discordapp.com/not/a/path.neko?size=16"
 
 
-asyncio.new_event_loop = _new_event_loop
+def test_generate_cdn_url_with_size_set_to_none():
+    url = cdn.generate_cdn_url("not", "a", "path", format_="neko", size=None)
+    assert url == "https://cdn.discordapp.com/not/a/path.neko"
 
 
-_pytest_parametrize = pytest.mark.parametrize
+def test_generate_cdn_url_with_invalid_size_out_of_limits():
+    with pytest.raises(ValueError):
+        cdn.generate_cdn_url("not", "a", "path", format_="neko", size=11)
 
 
-def parametrize(*args, **kwargs):
-    # Force ids to be strified by default for readability.
-    kwargs.setdefault("ids", repr)
-    return _pytest_parametrize(*args, **kwargs)
-
-
-pytest.mark.parametrize = parametrize
+def test_generate_cdn_url_with_invalid_size_now_power_of_two():
+    with pytest.raises(ValueError):
+        cdn.generate_cdn_url("not", "a", "path", format_="neko", size=111)

@@ -22,8 +22,8 @@ bot = hikari.Bot(token="...")
 async def ping(event):
     # If a non-bot user sends a message "hk.ping", respond with "Pong!"
 
-    if not event.author.is_bot and event.content.startswith("hk.ping"):
-        await event.reply("Pong!")
+    if not event.message.author.is_bot and event.message.content.startswith("hk.ping"):
+        await event.message.reply("Pong!")
 
 
 bot.run()

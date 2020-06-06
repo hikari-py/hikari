@@ -21,12 +21,7 @@ import traceback
 from ci import config
 from ci import nox
 
-FLAGS = [
-    "pylint",
-    config.MAIN_PACKAGE,
-    "--rcfile",
-    config.PYLINT_INI
-]
+FLAGS = ["pylint", config.MAIN_PACKAGE, "--rcfile", config.PYLINT_INI]
 
 SUCCESS_CODES = list(range(0, 256))
 

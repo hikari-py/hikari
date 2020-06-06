@@ -731,7 +731,11 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         guild_member = guild_models.Member(self._app)
         guild_member.user = user or self.deserialize_user(payload["user"])
         guild_member.role_ids = {snowflake.Snowflake(role_id) for role_id in payload["roles"]}
-        guild_member.joined_at = date.iso8601_datetime_string_to_datetime(payload["joined_at"])
+
+        if (joined_at := payload.get("joined_at")) is not None:
+            guild_member.joined_at = date.iso8601_datetime_string_to_datetime(joined_at)
+        else:
+            guild_member.joined_at = undefined.Undefined()
 
         guild_member.nickname = payload["nick"] if "nick" in payload else undefined.Undefined()
 

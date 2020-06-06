@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Black code-style jobs."""
+import os
+
 from ci import nox
 
 
@@ -25,6 +27,7 @@ PATHS = [
     "tests",
     "setup.py",
     "noxfile.py",
+    *(os.path.join("ci", f) for f in os.listdir("ci") if f.endswith(".py")),
 ]
 
 
