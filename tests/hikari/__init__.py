@@ -20,6 +20,8 @@ import asyncio
 import contextlib
 import sys
 
+import pytest
+
 _real_new_event_loop = asyncio.new_event_loop
 
 
@@ -35,3 +37,15 @@ def _new_event_loop():
 
 
 asyncio.new_event_loop = _new_event_loop
+
+
+_pytest_parametrize = pytest.mark.parametrize
+
+
+def parametrize(*args, **kwargs):
+    # Force ids to be strified by default for readability.
+    kwargs.setdefault("ids", repr)
+    return _pytest_parametrize(*args, **kwargs)
+
+
+pytest.mark.parametrize = parametrize

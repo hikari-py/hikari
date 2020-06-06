@@ -273,9 +273,8 @@ class TestWindowedBurstRateLimiter:
             assert future.done(), f"future {i} was incomplete!"
 
     @pytest.mark.asyncio
-    @pytest.mark.slow
     @_helpers.retry(5)
-    async def test_throttle_sleeps_each_time_limit_is_hit_and_releases_bursts_of_futures_periodically(self, event_loop):
+    async def test_throttle_when_limited_sleeps_then_bursts_repeatedly(self, event_loop):
         limit = 5
         period = 3
         total_requests = period * limit * 2
@@ -361,7 +360,7 @@ class TestWindowedBurstRateLimiter:
             assert rl.remaining == 27
 
     @pytest.mark.parametrize("remaining", [-1, 0, 1])
-    def test_is_rate_limited_when_rate_limit_not_expired_only_returns_expr(self, remaining):
+    def test_is_rate_limited_when_rate_limit_not_expired_only_returns_False(self, remaining):
         with rate_limits.WindowedBurstRateLimiter(__name__, 403, 27) as rl:
             now = 420
             rl.reset_at = now + 69
