@@ -92,6 +92,7 @@ class TypingIndicator:
                 await asyncio.gather(self, asyncio.sleep(9.9), return_exceptions=True)
 
 
+# TODO: document!
 @attr.s(auto_attribs=True, kw_only=True, slots=True)
 class GuildBuilder:
     _app: app_.IRESTApp
