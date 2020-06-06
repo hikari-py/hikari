@@ -18,6 +18,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 
+import pytest
+
 from hikari.utilities import date as date_
 
 
@@ -117,3 +119,18 @@ def test_unix_epoch_to_datetime_with_out_of_range_positive_timestamp():
 
 def test_unix_epoch_to_datetime_with_out_of_range_negative_timestamp():
     assert date_.unix_epoch_to_datetime(-996877846784536) == datetime.datetime.min
+
+
+@pytest.mark.parametrize(
+    ["input_value", "expected_result"],
+    [
+        (5, 5),
+        (2.718281828459045, 2),
+        (datetime.timedelta(days=5, seconds=3, milliseconds=12), 432_003),
+        (-5, 0),
+        (-2.718281828459045, 0),
+        (datetime.timedelta(days=-5, seconds=-3, milliseconds=12), 0),
+    ],
+)
+def test_timespan_to_int(input_value, expected_result):
+    assert date_.timespan_to_int(input_value) == expected_result
