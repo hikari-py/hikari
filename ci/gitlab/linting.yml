@@ -21,7 +21,7 @@
 .lint:
   allow_failure: false
   before_script:
-    - pip install nox 'virtualenv<20.0.19'
+    - pip install nox
     - mkdir public || true
   extends:
     - .cpython
@@ -45,7 +45,7 @@ pylint:
       junit: public/pylint.xml
   extends: .lint
   script:
-   - nox -s pylint --no-error-on-external-run
+    - nox -s pylint --no-error-on-external-run
 
 ###
 ### Documentation linting.
@@ -70,7 +70,7 @@ black:
    - nox -s check-formatting --no-error-on-external-run -- --check --diff
 
 ###
-### Security checks #1
+### Security checks.
 ###
 ### This runs static application security tests in addition to those that
 ### GitLab provides. Any issues are reported and the pipeline is aborted.
@@ -80,14 +80,3 @@ safety:
   script:
    - nox -s safety --no-error-on-external-run
 
-###
-### Security checks #2.
-###
-### This runs static application security tests in addition to those that
-### GitLab provides. Any issues are reported and the pipeline is aborted.
-### Currently commented out as it is run by the GitLab SAST.
-###
-# bandit:
-#   extends: .lint
-#   script:
-#    - nox -s bandit --no-error-on-external-run

@@ -29,8 +29,6 @@ FLAGS = [
     "-r",
     "a",
     "--full-trace",
-    "-n",
-    "auto",
     "--cov",
     config.MAIN_PACKAGE,
     "--cov-config",
