@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["IComponent"]
+__all__: typing.List[str] = ["IComponent"]
 
 import abc
 import typing

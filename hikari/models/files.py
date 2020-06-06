@@ -52,7 +52,7 @@ memory usage, and the application becoming unresponsive during IO.
 
 from __future__ import annotations
 
-__all__ = ["BaseStream", "ByteStream", "WebResourceStream", "FileStream"]
+__all__: typing.List[str] = ["BaseStream", "ByteStream", "WebResourceStream", "FileStream"]
 
 import abc
 import asyncio

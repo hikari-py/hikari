@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["BotImpl"]
+__all__: typing.List[str] = ["BotImpl"]
 
 import inspect
 import logging

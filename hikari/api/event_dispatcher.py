@@ -19,9 +19,10 @@
 """Core interface for components that dispatch events to the library."""
 from __future__ import annotations
 
-__all__ = ["IEventDispatcher"]
+__all__: typing.List[str] = ["IEventDispatcher"]
 
 import abc
+import asyncio
 import typing
 
 from hikari.api import component
@@ -29,7 +30,6 @@ from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari.events import base
-    from hikari.utilities import aio
 
     _EventT = typing.TypeVar("_EventT", bound=base.HikariEvent, covariant=True)
     _PredicateT = typing.Callable[[_EventT], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
@@ -49,7 +49,7 @@ class IEventDispatcher(component.IComponent, abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
-    def dispatch(self, event: base.HikariEvent) -> aio.Future[typing.Any]:
+    def dispatch(self, event: base.HikariEvent) -> asyncio.Future[typing.Any]:
         """Dispatch an event.
 
         Parameters

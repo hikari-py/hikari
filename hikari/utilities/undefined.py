@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["Undefined"]
+__all__: typing.List[str] = ["Undefined"]
 
 import typing
 
@@ -80,10 +80,10 @@ class Undefined(klass.Singleton):
     def __bool__(self) -> bool:
         return False
 
-    def __iter__(self) -> typing.Iterator[None]:
+    def __iter__(self) -> typing.Iterator[typing.Any]:
         yield from ()
 
-    def __init_subclass__(cls, **kwargs: typing.Any) -> typing.NoReturn:
+    def __init_subclass__(cls, **kwargs: typing.Any) -> None:
         raise TypeError("Cannot subclass Undefined type")
 
     def __repr__(self) -> str:
@@ -92,10 +92,10 @@ class Undefined(klass.Singleton):
     def __str__(self) -> str:
         return type(self).__name__.upper()
 
-    def __setattr__(self, _, __) -> typing.NoReturn:
+    def __setattr__(self, _: str, __: typing.Any) -> typing.NoReturn:
         raise TypeError("Cannot modify Undefined type")
 
-    def __delattr__(self, _) -> typing.NoReturn:
+    def __delattr__(self, _: str) -> typing.NoReturn:
         raise TypeError("Cannot modify Undefined type")
 
     @staticmethod

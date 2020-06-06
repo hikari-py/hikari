@@ -20,6 +20,11 @@
 
 from __future__ import annotations
 
+__all__: typing.List[str] = ["RESTClient", "Bot"]
+
+# noinspection PyUnresolvedReferences
+import typing
+
 from hikari._about import __author__
 from hikari._about import __ci__
 from hikari._about import __copyright__
@@ -33,5 +38,3 @@ from hikari._about import __version__
 
 from hikari.impl.bot import BotImpl as Bot
 from hikari.impl.rest_app import RESTAppImpl as RESTClient
-
-__all__ = ["RESTClient", "Bot"]

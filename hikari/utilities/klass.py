@@ -20,14 +20,14 @@
 
 from __future__ import annotations
 
-__all__ = ["get_logger", "SingletonMeta", "Singleton"]
+__all__: typing.List[str] = ["get_logger", "SingletonMeta", "Singleton"]
 
 import abc
 import logging
 import typing
 
 
-def get_logger(cls: typing.Union[typing.Type, typing.Any], *additional_args: str) -> logging.Logger:
+def get_logger(cls: typing.Union[typing.Type[typing.Any], typing.Any], *additional_args: str) -> logging.Logger:
     """Get an appropriately named logger for the given class or object.
 
     Parameters
@@ -73,11 +73,11 @@ class SingletonMeta(abc.ABCMeta):
 
     __slots__ = ()
 
-    ___instances___ = {}
+    ___instances___: typing.Dict[typing.Type[typing.Any], typing.Any] = {}
 
     # Disable type-checking to hide a bug in IntelliJ for the time being.
     @typing.no_type_check
-    def __call__(cls):
+    def __call__(cls) -> typing.Any:
         if cls not in SingletonMeta.___instances___:
             SingletonMeta.___instances___[cls] = super().__call__()
         return SingletonMeta.___instances___[cls]

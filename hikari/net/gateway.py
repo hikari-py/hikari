@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["Gateway"]
+__all__: typing.List[str] = ["Gateway"]
 
 import asyncio
 import enum
@@ -53,7 +53,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import guilds
     from hikari.models import intents as intents_
     from hikari.utilities import snowflake
-    from hikari.utilities import aio
 
 
 class Gateway(http_client.HTTPClient, component.IComponent):
@@ -237,7 +236,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         """Return whether the shard is alive."""
         return not math.isnan(self.connected_at)
 
-    async def start(self) -> aio.Task[None]:
+    async def start(self) -> asyncio.Task[None]:
         """Start the shard, wait for it to become ready.
 
         Returns

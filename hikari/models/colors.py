@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["Color"]
+__all__: typing.List[str] = ["Color"]
 
 import string
 import typing
@@ -125,10 +125,12 @@ class Color(int):
 
     __slots__ = ()
 
-    def __new__(cls, raw_rgb: typing.Union[int, typing.SupportsInt], /) -> Color:
-        if not 0 <= int(raw_rgb) <= 0xFF_FF_FF:
+    def __init__(self, raw_rgb: typing.SupportsInt) -> None:
+        if not (0 <= int(raw_rgb) <= 0xFFFFFF):
             raise ValueError(f"raw_rgb must be in the exclusive range of 0 and {0xFF_FF_FF}")
-        return super(Color, cls).__new__(cls, raw_rgb)
+        # The __new__ for `int` initializes the value for us, this super-call does nothing other
+        # than keeping the linter happy.
+        super().__init__()
 
     def __repr__(self) -> str:
         r, g, b = self.rgb
@@ -323,7 +325,9 @@ class Color(int):
 
     # Partially chose to override these as the docstrings contain typos according to Sphinx.
     @classmethod
-    def from_bytes(cls, bytes_: typing.Sequence[int], byteorder: str, *, signed: bool = True) -> Color:
+    def from_bytes(
+        cls, bytes_: typing.Union[typing.Iterable[int], typing.SupportsBytes], byteorder: str, *, signed: bool = True
+    ) -> Color:
         """Convert the bytes to a `Color`.
 
         Parameters
@@ -346,6 +350,7 @@ class Color(int):
         return Color(int.from_bytes(bytes_, byteorder, signed=signed))
 
     @classmethod
+    @typing.no_type_check
     def of(
         cls,
         *values: typing.Union[

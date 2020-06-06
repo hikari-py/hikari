@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["IApp", "IRESTApp", "IGatewayConsumer", "IGatewayDispatcher", "IGatewayZookeeper", "IBot"]
+__all__: typing.List[str] = ["IApp", "IRESTApp", "IGatewayConsumer", "IGatewayDispatcher", "IGatewayZookeeper", "IBot"]
 
 import abc
 import functools
