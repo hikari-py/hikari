@@ -306,7 +306,7 @@ class PresenceUser(users.User):
 
         Returns
         -------
-        hikari.models.undefined.Undefined | str
+        hikari.models.undefined.Undefined or str
             The string URL of the user's custom avatar if
             either `PresenceUser.avatar_hash` is set or their default avatar if
             `PresenceUser.discriminator` is set, else `hikari.models.undefined.Undefined`.

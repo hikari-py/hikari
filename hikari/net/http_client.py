@@ -50,23 +50,23 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
     ----------
     allow_redirects : bool
         Whether to allow redirects or not. Defaults to `False`.
-    connector : aiohttp.BaseConnector | None
+    connector : aiohttp.BaseConnector or None
         Optional aiohttp _connector info for making an HTTP connection
     debug : bool
         Defaults to `False`. If `True`, then a lot of contextual information
         regarding low-level HTTP communication will be logged to the _debug
         logger on this class.
-    proxy_auth : aiohttp.BasicAuth | None
+    proxy_auth : aiohttp.BasicAuth or None
         Optional authorization to be used if using a proxy.
-    proxy_url : str | None
+    proxy_url : str or None
         Optional proxy URL to use for HTTP requests.
-    ssl_context : ssl.SSLContext | None
+    ssl_context : ssl.SSLContext or None
         The optional SSL context to be used.
     verify_ssl : bool
         Whether or not the client should enforce SSL signed certificate
         verification. If 1 it will ignore potentially malicious
         SSL certificates.
-    timeout : float | None
+    timeout : float or None
         The optional _request_timeout for all HTTP requests.
     trust_env : bool
         If `True`, and no proxy info is given, then `HTTP_PROXY` and
@@ -234,7 +234,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
             The URL to hit.
         headers : typing.Dict[str, str]
             Headers to use when making the request.
-        body : aiohttp.FormData | dict | list | None
+        body : aiohttp.FormData or dict or list or None
             The body to send. Currently this will send the content in
             a form body if you pass an instance of `aiohttp.FormData`, or
             as a JSON body if you pass a `list` or `dict`. Any other types

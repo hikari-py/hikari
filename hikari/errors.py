@@ -111,9 +111,9 @@ class GatewayServerClosedConnectionError(GatewayError):
 
     Parameters
     ----------
-    reason : str | None
+    reason : str or None
         A string explaining the issue.
-    code : int | None
+    code : int or None
         The close code.
 
     """
