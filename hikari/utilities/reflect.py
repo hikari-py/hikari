@@ -50,12 +50,18 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
     """
     signature = inspect.signature(func)
     resolved_typehints = typing.get_type_hints(func)
-    return_annotation = resolved_typehints.pop("return") if "return" in resolved_typehints else EMPTY
     params = []
 
+    none_type = type(None)
     for name, param in signature.parameters.items():
         if isinstance(param.annotation, str):
             param = param.replace(annotation=resolved_typehints[name] if name in resolved_typehints else EMPTY)
+        if param.annotation is none_type:
+            param = param.replace(annotation=None)
         params.append(param)
+
+    return_annotation = resolved_typehints.get("return", EMPTY)
+    if return_annotation is none_type:
+        return_annotation = None
 
     return signature.replace(parameters=params, return_annotation=return_annotation)
