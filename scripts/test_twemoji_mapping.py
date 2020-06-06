@@ -28,7 +28,8 @@ import sys
 sys.path.append(".")
 
 import aiohttp
-import hikari
+from hikari.models import emojis
+from hikari import errors
 
 
 skipped_emojis = []
@@ -53,12 +54,13 @@ async def run():
         task.add_done_callback(lambda _: semaphore.release())
         tasks.append(task)
 
-        if i and i % 750 == 0:
+        if i and i % 250 == 0:
             print("Backing off so GitHub doesn't IP ban us")
             await asyncio.gather(*tasks)
             await asyncio.sleep(10)
             tasks.clear()
 
+    print("\033[0;38mCatching up...\033[0m\r")
     await asyncio.gather(*tasks)
 
     print("Results")
@@ -76,7 +78,7 @@ async def run():
 
 
 async def try_fetch(i, n, emoji_surrogates, name):
-    emoji = hikari.UnicodeEmoji(name=emoji_surrogates)
+    emoji = emojis.UnicodeEmoji.from_emoji(emoji_surrogates)
     ex = None
     for _ in range(5):
         try:
@@ -87,16 +89,19 @@ async def try_fetch(i, n, emoji_surrogates, name):
             ex = None
             break
 
-    if isinstance(ex, hikari.errors.ServerHTTPErrorResponse):
+    if isinstance(ex, errors.ServerHTTPErrorResponse):
         skipped_emojis.append((emoji_surrogates, name))
-        print("[ SKIP ]", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url, str(ex))
+        print("\033[1;38m[ SKIP ]\033[0m", f"{i}/{n}",
+              name, *map(hex, map(ord, emoji_surrogates)), emoji.url, str(ex))
 
     if ex is None:
         valid_emojis.append((emoji_surrogates, name))
-        print("[  OK  ]", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url)
+        print("\033[1;32m[  OK  ]\033[0m", f"{i}/{n}",
+              name, *map(hex, map(ord, emoji_surrogates)), emoji.url)
     else:
         invalid_emojis.append((emoji_surrogates, name))
-        print("[ FAIL ]", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), type(ex), ex, emoji.url)
+        print("\033[1;31m[ FAIL ]\033[0m", f"{i}/{n}",
+              name, *map(hex, map(ord, emoji_surrogates)), type(ex), ex, emoji.url)
 
 
 asyncio.run(run())
