@@ -77,6 +77,22 @@ class TestResolveSignature:
         assert signature.parameters["bat"].annotation is int
         assert signature.return_annotation is reflect.EMPTY
 
+    def test_handles_None(self):
+        def foo(bar: None) -> None:
+            ...
+
+        signature = reflect.resolve_signature(foo)
+        assert signature.parameters["bar"].annotation is None
+        assert signature.return_annotation is None
+
+    def test_handles_NoneType(self):
+        def foo(bar: type(None)) -> type(None):
+            ...
+
+        signature = reflect.resolve_signature(foo)
+        assert signature.parameters["bar"].annotation is None
+        assert signature.return_annotation is None
+
     def test_handles_only_return_annotated(self):
         def foo(bar, bat) -> str:
             ...
