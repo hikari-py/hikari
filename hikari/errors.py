@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = [
+__all__: typing.List[str] = [
     "HikariError",
     "HikariWarning",
     "NotFound",
@@ -170,7 +170,7 @@ class HTTPErrorResponse(HTTPError):
     ----------
     url : str
         The URL that produced the error message.
-    status : http.HTTPStatus
+    status : int or http.HTTPStatus
         The HTTP status code of the response that caused this error.
     headers : aiohttp.typedefs.LooseHeaders
         Any headers that were given in the response.
@@ -180,7 +180,7 @@ class HTTPErrorResponse(HTTPError):
 
     __slots__ = ("status", "headers", "raw_body")
 
-    status: http.HTTPStatus
+    status: typing.Union[int, http.HTTPStatus]
     """The HTTP status code for the response."""
 
     headers: aiohttp.typedefs.LooseHeaders
@@ -209,8 +209,14 @@ class HTTPErrorResponse(HTTPError):
             raw_body = str(self.raw_body)
 
         chomped = len(raw_body) > 200
-        name = self.status.name.replace("_", " ").title()
-        return f"{self.status.value} {name}: {raw_body[:200]}{'...' if chomped else ''}"
+
+        if isinstance(self.status, http.HTTPStatus):
+            name = self.status.name.replace("_", " ").title()
+            name_value = f"{name} {self.status.value}"
+        else:
+            name_value = str(self.status)
+
+        return f"{name_value}: {raw_body[:200]}{'...' if chomped else ''}"
 
 
 class ClientHTTPErrorResponse(HTTPErrorResponse):

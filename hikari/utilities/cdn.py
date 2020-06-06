@@ -20,9 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = [
-    "generate_cdn_url",
-]
+__all__: typing.List[str] = ["generate_cdn_url"]
 
 import typing
 import urllib.parse

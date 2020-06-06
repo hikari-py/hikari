@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["InMemoryCacheImpl"]
+__all__: typing.List[str] = ["InMemoryCacheImpl"]
 
 import typing
 

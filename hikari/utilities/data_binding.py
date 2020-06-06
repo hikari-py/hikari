@@ -19,7 +19,7 @@
 """Data binding utilities."""
 from __future__ import annotations
 
-__all__ = [
+__all__: typing.List[str] = [
     "Headers",
     "Query",
     "JSONObject",
@@ -43,12 +43,11 @@ from hikari.models import bases
 from hikari.utilities import undefined
 
 T = typing.TypeVar("T", covariant=True)
-CollectionT = typing.TypeVar("CollectionT", bound=typing.Collection, contravariant=True)
 
 Headers = typing.Mapping[str, str]
 """Type hint for HTTP headers."""
 
-Query = typing.Union[typing.Dict[str, str], multidict.MultiDict[str, str]]
+Query = typing.Union[typing.Dict[str, str], multidict.MultiDict[str]]
 """Type hint for HTTP query string."""
 
 URLEncodedForm = aiohttp.FormData
@@ -86,7 +85,7 @@ else:
     """Convert a JSON string to a Python type."""
 
 
-class StringMapBuilder(multidict.MultiDict[str, str]):
+class StringMapBuilder(multidict.MultiDict[str]):
     """Helper class used to quickly build query strings or header maps.
 
     This will consume any items that are not
@@ -168,7 +167,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
 
     __slots__ = ()
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def put(
@@ -246,7 +245,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
             self[key] = str(int(value))
 
     def put_snowflake_array(
-        self, key: str, values: typing.Union[undefined.Undefined, typing.Iterable[typing.SupportsInt, int]], /
+        self, key: str, values: typing.Union[undefined.Undefined, typing.Iterable[typing.SupportsInt]], /
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
 
@@ -258,7 +257,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
         ----------
         key : str
             The key to give the element.
-        values : typing.Iterable[typing.SupportsInt or int] or hikari.utilities.undefined.Undefined
+        values : typing.Iterable[typing.SupportsInt] or hikari.utilities.undefined.Undefined
             The JSON snowflakes to put. This may alternatively be undefined.
             In the latter case, nothing is performed.
         """
@@ -266,9 +265,9 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
             self[key] = [str(int(value)) for value in values]
 
 
-def cast_json_array(
-    array: JSONArray, cast: typing.Callable[[JSONAny], T], collection_type: typing.Type[CollectionT] = list,
-) -> CollectionT:
+# There isn't a nice way to type this correctly :(
+@typing.no_type_check
+def cast_json_array(array, cast, collection_type=list):
     """Cast a JSON array to a given generic collection type.
 
     This will perform casts on each internal item individually.
@@ -289,15 +288,13 @@ def cast_json_array(
         The cast to apply to each item in the array. This should
         consume any valid JSON-decoded type and return the type
         corresponding to the generic type of the provided collection.
-    collection_type : typing.Type[CollectionT]
-        The container type to store the cast items within.
-        `CollectionT` should be a concrete implementation that is
-        a subtype of `typing.Collection`, such as `list`, `set`, `frozenSet`,
-        `tuple`, etc. If unspecified, this defaults to `list`.
+    collection_type : typing.Callable[[typing.Iterable[T]], typing.Collection[T]]
+        The container type to store the cast items within. This should be called
+        with options such as `list`, `set`, `frozenset`, `tuple`, etc.
 
     Returns
     -------
-    CollectionT
+    typing.Collection[T]
         The generated collection.
 
     Example

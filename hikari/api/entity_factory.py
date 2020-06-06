@@ -19,7 +19,7 @@
 """Core interface for an object that serializes/deserializes API objects."""
 from __future__ import annotations
 
-__all__ = ["IEntityFactory"]
+__all__: typing.List[str] = ["IEntityFactory"]
 
 import abc
 import typing

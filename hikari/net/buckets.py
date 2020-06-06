@@ -204,7 +204,7 @@ and should be used sparingly.
 
 from __future__ import annotations
 
-__all__ = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
+__all__: typing.List[str] = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
 
 import asyncio
 import datetime
@@ -257,7 +257,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         """Return `True` if the bucket represents an `UNKNOWN` bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
-    def acquire(self) -> aio.Future[None]:
+    def acquire(self) -> asyncio.Future[None]:
         """Acquire time on this rate limiter.
 
         !!! note
@@ -337,7 +337,7 @@ class RESTBucketManager:
     closed_event: typing.Final[asyncio.Event]
     """An internal event that is set when the object is shut down."""
 
-    gc_task: typing.Optional[aio.Task[None]]
+    gc_task: typing.Optional[asyncio.Task[None]]
     """The internal garbage collector task."""
 
     logger: typing.Final[logging.Logger]
@@ -485,7 +485,7 @@ class RESTBucketManager:
 
         self.logger.debug("purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
 
-    def acquire(self, compiled_route: routes.CompiledRoute) -> aio.Future[None]:
+    def acquire(self, compiled_route: routes.CompiledRoute) -> asyncio.Future[None]:
         """Acquire a bucket for the given _route.
 
         Parameters

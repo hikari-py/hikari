@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["HTTPSettings"]
+__all__: typing.List[str] = ["HTTPSettings"]
 
 import typing
 

@@ -20,7 +20,13 @@
 
 from __future__ import annotations
 
-__all__ = ["HikariEvent", "get_required_intents_for", "requires_intents", "no_catch", "is_no_catch_event"]
+__all__: typing.List[str] = [
+    "HikariEvent",
+    "get_required_intents_for",
+    "requires_intents",
+    "no_catch",
+    "is_no_catch_event",
+]
 
 import abc
 import typing
@@ -56,7 +62,7 @@ def get_required_intents_for(event_type: typing.Type[HikariEvent]) -> typing.Col
         Collection of acceptable subset combinations of intent needed to
         be able to receive the given event type.
     """
-    return getattr(event_type, _REQUIRED_INTENTS_ATTR, ())
+    return typing.cast(typing.Collection[typing.Any], getattr(event_type, _REQUIRED_INTENTS_ATTR, ()))
 
 
 def requires_intents(
@@ -82,7 +88,7 @@ def requires_intents(
     return decorator
 
 
-def no_catch():
+def no_catch() -> typing.Callable[[typing.Type[_HikariEventT]], typing.Type[_HikariEventT]]:
     """Decorate an event type to indicate errors should not be handled.
 
     This is useful for exception event types that you do not want to
@@ -98,4 +104,4 @@ def no_catch():
 
 def is_no_catch_event(obj: typing.Union[_HikariEventT, typing.Type[_HikariEventT]]) -> bool:
     """Return True if this event is marked as `no_catch`."""
-    return getattr(obj, _NO_THROW_ATTR, False)
+    return typing.cast(bool, getattr(obj, _NO_THROW_ATTR, False))

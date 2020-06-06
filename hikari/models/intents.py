@@ -20,9 +20,12 @@
 
 from __future__ import annotations
 
-__all__ = ["Intent"]
+__all__: typing.List[str] = ["Intent"]
 
 import enum
+
+# noinspection PyUnresolvedReferences
+import typing
 
 
 @enum.unique

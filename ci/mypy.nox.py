@@ -16,11 +16,22 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Communication tools for Discord's network-level API endpoints."""
 
-from __future__ import annotations
+from ci import config
+from ci import nox
 
-__all__: typing.List[str] = []
 
-# noinspection PyUnresolvedReferences
-import typing
+@nox.session(reuse_venv=True, default=True)
+def mypy(session: nox.Session) -> None:
+    session.install("-r", "requirements.txt", "mypy==0.780")
+    session.run(
+        "mypy",
+        "-p",
+        config.MAIN_PACKAGE,
+        "--pretty",
+        "--show-error-codes",
+        "--show-column-numbers",
+        # "--show-error-context",
+        "--strict",
+        "--warn-redundant-casts",
+    )

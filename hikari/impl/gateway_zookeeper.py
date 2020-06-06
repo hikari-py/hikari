@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["AbstractGatewayZookeeper"]
+__all__: typing.List[str] = ["AbstractGatewayZookeeper"]
 
 import abc
 import asyncio

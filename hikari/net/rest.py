@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["REST"]
+__all__: typing.List[str] = ["REST"]
 
 import asyncio
 import datetime
@@ -1458,7 +1458,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         *,
         token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        avatar: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
+        avatar: typing.Union[None, undefined.Undefined, files.BaseStream] = undefined.Undefined(),
         channel: typing.Union[undefined.Undefined, channels.TextChannel, bases.UniqueObject] = undefined.Undefined(),
         reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> webhooks.Webhook:
@@ -1500,7 +1500,6 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         embeds: typing.Union[undefined.Undefined, typing.Sequence[embeds_.Embed]] = undefined.Undefined(),
         attachments: typing.Union[undefined.Undefined, typing.Sequence[files.BaseStream]] = undefined.Undefined(),
         tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        wait: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool] = True,
@@ -1527,7 +1526,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("username", username)
         body.put("avatar_url", avatar_url)
         body.put("tts", tts)
-        body.put("wait", wait)
+        body.put("wait", True)
 
         response = await self._request(
             route, body=self._build_message_creation_form(body, attachments) if attachments else body, no_auth=no_auth,

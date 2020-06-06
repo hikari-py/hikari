@@ -19,7 +19,7 @@
 """Core interface for components that consume raw API event payloads."""
 from __future__ import annotations
 
-__all__ = ["IEventConsumer"]
+__all__: typing.List[str] = ["IEventConsumer"]
 
 import abc
 import typing

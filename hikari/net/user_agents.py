@@ -27,14 +27,14 @@ valid bot and not attempting to abuse the API.
 
 from __future__ import annotations
 
-__all__ = ["UserAgent"]
+__all__: typing.List[str] = ["UserAgent"]
 
 import typing
 
 from hikari.utilities import klass
 
 
-class UserAgent(metaclass=klass.SingletonMeta):
+class UserAgent(klass.Singleton):
     """Platform version info.
 
     !!! note
@@ -73,7 +73,7 @@ class UserAgent(metaclass=klass.SingletonMeta):
     `"DiscordBot (https://gitlab.com/nekokatt/hikari; 1.0.1; Nekokatt) CPython 3.8.2 GCC 9.2.0 Linux"`
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         from hikari._about import __author__, __url__, __version__
         from platform import python_implementation, python_version, python_branch, python_compiler, platform
 
@@ -85,16 +85,15 @@ class UserAgent(metaclass=klass.SingletonMeta):
         self.user_agent = f"DiscordBot ({__url__}; {__version__}; {__author__}) {python_version()} {self.system_type}"
 
     @staticmethod
-    def _join_strip(*args):
+    def _join_strip(*args: str) -> str:
         return " ".join((arg.strip() for arg in args if arg.strip()))
 
-    # Inore docstring not starting in an imperativge mood
     @property
-    def websocket_triplet(self) -> typing.Dict[str, str]:  # noqa: D401
-        """A dict representing device and library info.
+    def websocket_triplet(self) -> typing.Dict[str, str]:
+        """Generate a dict representing device and library info.
 
         This is the object to send to Discord representing device info when
-        IDENTIFYing with the gateway in the format `typing.Dict`[`str`, `str`]
+        IDENTIFYing with the gateway in the format `typing.Dict[str, str]`
         """
         return {
             "$os": self.system_type,

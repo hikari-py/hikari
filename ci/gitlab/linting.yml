@@ -80,3 +80,11 @@ safety:
   script:
    - nox -s safety --no-error-on-external-run
 
+
+###
+### MyPy static type checker.
+###
+mypy:
+  extends: .lint
+  script:
+    - nox -s mypy --no-error-on-external-run

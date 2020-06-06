@@ -19,9 +19,12 @@
 """Core interface for a cache implementation."""
 from __future__ import annotations
 
-__all__ = ["ICache"]
+__all__: typing.List[str] = ["ICache"]
 
 import abc
+
+# noinspection PyUnresolvedReferences
+import typing
 
 from hikari.api import component
 
