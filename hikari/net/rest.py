@@ -546,7 +546,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("rate_limit_per_user", rate_limit_per_user)
         body.put_snowflake("parent_id", parent_category)
         body.put_array(
-            "permission_overwrites", permission_overwrites, self._app.entity_factory.serialize_permission_overwrite
+            "permission_overwrites",
+            permission_overwrites,
+            conversion=self._app.entity_factory.serialize_permission_overwrite,
         )
 
         response = await self._request(route, body=body, reason=reason)
@@ -788,7 +790,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         """
         route = routes.POST_CHANNEL_INVITES.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
-        body.put("max_age", max_age, date.timespan_to_int)
+        body.put("max_age", max_age, conversion=date.timespan_to_int)
         body.put("max_uses", max_uses)
         body.put("temporary", temporary)
         body.put("unique", unique)
@@ -1141,8 +1143,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         body = data_binding.JSONObjectBuilder()
         body.put("allowed_mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions))
-        body.put("content", text, str)
-        body.put("embed", embed, self._app.entity_factory.serialize_embed)
+        body.put("content", text, conversion=str)
+        body.put("embed", embed, conversion=self._app.entity_factory.serialize_embed)
         body.put("nonce", nonce)
         body.put("tts", tts)
 
@@ -1217,8 +1219,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         """
         route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         body = data_binding.JSONObjectBuilder()
-        body.put("content", text, str)
-        body.put("embed", embed, self._app.entity_factory.serialize_embed)
+        body.put("content", text, conversion=str)
+        body.put("embed", embed, conversion=self._app.entity_factory.serialize_embed)
         body.put("flags", flags)
         body.put("allowed_mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions))
         response = await self._request(route, body=body)
@@ -1520,7 +1522,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         body = data_binding.JSONObjectBuilder()
         body.put("mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions))
-        body.put("content", text, str)
+        body.put("content", text, conversion=str)
         body.put("embeds", serialized_embeds)
         body.put("username", username)
         body.put("avatar_url", avatar_url)
@@ -1788,12 +1790,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         route = routes.PATCH_GUILD.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
-        body.put("region", region, str)
+        body.put("region", region, conversion=str)
         body.put("verification", verification_level)
         body.put("notifications", default_message_notifications)
         body.put("explicit_content_filter", explicit_content_filter_level)
         body.put("afk_timeout", afk_timeout)
-        body.put("preferred_locale", preferred_locale, str)
+        body.put("preferred_locale", preferred_locale, conversion=str)
         body.put_snowflake("afk_channel_id", afk_channel)
         body.put_snowflake("owner_id", owner)
         body.put_snowflake("system_channel_id", system_channel)
@@ -1966,7 +1968,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("rate_limit_per_user", rate_limit_per_user)
         body.put_snowflake("category_id", category)
         body.put_array(
-            "permission_overwrites", permission_overwrites, self._app.entity_factory.serialize_permission_overwrite
+            "permission_overwrites",
+            permission_overwrites,
+            conversion=self._app.entity_factory.serialize_permission_overwrite,
         )
 
         response = await self._request(route, body=body, reason=reason)
@@ -2240,7 +2244,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         route = routes.PATCH_GUILD_INTEGRATION.compile(guild=guild, integration=integration)
         body = data_binding.JSONObjectBuilder()
         body.put("expire_behaviour", expire_behaviour)
-        body.put("expire_grace_period", expire_grace_period, date.timespan_to_int)
+        body.put("expire_grace_period", expire_grace_period, conversion=date.timespan_to_int)
         # Inconsistent naming in the API itself, so I have changed the name.
         body.put("enable_emoticons", enable_emojis)
         await self._request(route, body=body, reason=reason)
