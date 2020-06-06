@@ -434,7 +434,7 @@ class PartialGuild(bases.Entity, bases.Unique):
 
         Returns
         -------
-        str | None
+        str or None
             The string URL.
 
         Raises
@@ -494,7 +494,7 @@ class GuildPreview(PartialGuild):
 
         Returns
         -------
-        str | None
+        str or None
             The string URL.
 
         Raises
@@ -525,7 +525,7 @@ class GuildPreview(PartialGuild):
 
         Returns
         -------
-        str | None
+        str or None
             The string URL.
 
         Raises
@@ -857,7 +857,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
         Returns
         -------
-        str | None
+        str or None
             The string URL.
 
         Raises
@@ -888,7 +888,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
         Returns
         -------
-        str | None
+        str or None
             The string URL.
 
         Raises
@@ -921,7 +921,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
         Returns
         -------
-        str | None
+        str or None
             The string URL.
 
         Raises
