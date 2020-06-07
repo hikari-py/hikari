@@ -35,6 +35,7 @@ DOCUMENTATION_DIRECTORY = "docs"
 ROOT_INDEX_SOURCE = "index.html"
 
 # Linting and test configs.
+MYPY_INI = "mypy.ini"
 PYDOCSTYLE_INI = "pydocstyle.ini"
 PYLINT_INI = "pylint.ini"
 PYLINT_JUNIT_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "pylint.xml")

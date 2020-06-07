@@ -316,5 +316,5 @@ class AuditLog:
     def __iter__(self) -> typing.Iterable[AuditLogEntry]:
         return self.entries.values()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.entries)

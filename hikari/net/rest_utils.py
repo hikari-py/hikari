@@ -22,8 +22,7 @@ You should never need to make any of these objects manually.
 """
 from __future__ import annotations
 
-# Do not document anything in here.
-__all__: typing.List[str] = []
+__all__: typing.List[str] = ["TypingIndicator", "GuildBuilder"]
 
 import asyncio
 import contextlib
@@ -63,11 +62,13 @@ class TypingIndicator:
     def __init__(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, data_binding.JSONObject]],
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
     ) -> None:
         self._channel = channel
         self._request_call = request_call
-        self._task = None
+        self._task: typing.Optional[asyncio.Task[None]] = None
 
     def __await__(self) -> typing.Generator[None, typing.Any, None]:
         route = routes.POST_CHANNEL_TYPING.compile(channel=self._channel)
@@ -82,44 +83,165 @@ class TypingIndicator:
         self._task = asyncio.create_task(self._keep_typing(), name=f"repeatedly trigger typing in {self._channel}")
 
     async def __aexit__(self, ex_t: typing.Type[Exception], ex_v: Exception, exc_tb: types.TracebackType) -> None:
-        self._task.cancel()
-        # Prevent reusing this object by not setting it back to None.
-        self._task = NotImplemented
+        # This will always be true, but this keeps MyPy quiet.
+        if self._task is not None:
+            self._task.cancel()
+            # Prevent reusing this object by not setting it back to None.
+            self._task = NotImplemented
 
     async def _keep_typing(self) -> None:
         with contextlib.suppress(asyncio.CancelledError):
             while True:
-                await asyncio.gather(self, asyncio.sleep(9.9), return_exceptions=True)
+                # Use slightly less than 10s to ensure latency does not
+                # cause the typing indicator to stop showing for a split
+                # second if the request is slow to execute.
+                await asyncio.gather(self, asyncio.sleep(9))
 
 
-# TODO: document!
 @attr.s(auto_attribs=True, kw_only=True, slots=True)
 class GuildBuilder:
+    """A helper class used to construct a prototype for a guild.
+
+    This is used to create a guild in a tidy way using the REST API, since
+    the logic behind creating a guild on an API level is somewhat confusing
+    and detailed.
+
+    !!! note
+        This is a helper class that is used by `hikari.net.rest.REST`.
+        You should only ever need to use instances of this class that are
+        produced by that API, thus, any details about the constructor are
+        omitted from the following examples for brevity.
+
+    Examples
+    --------
+    Creating an empty guild.
+
+    ```py
+    guild = await rest.guild_builder("My Server!").create()
+    ```
+
+    Creating a guild with an icon
+
+    ```py
+    from hikari.models.files import WebResourceStream
+
+    guild_builder = rest.guild_builder("My Server!")
+    guild_builder.icon = WebResourceStream("cat.png", "http://...")
+    guild = await guild_builder.create()
+    ```
+
+    Adding roles to your guild.
+
+    ```py
+    from hikari.models.permissions import Permission
+
+    guild_builder = rest.guild_builder("My Server!")
+
+    everyone_role_id = guild_builder.add_role("@everyone")
+    admin_role_id = guild_builder.add_role("Admins", permissions=Permission.ADMINISTRATOR)
+
+    await guild_builder.create()
+    ```
+
+    !!! warning
+        The first role must always be the `@everyone` role.
+
+    !!! note
+        Functions that return a `hikari.utilities.snowflake.Snowflake` do
+        **not** provide the final ID that the object will have once the
+        API call is made. The returned IDs are only able to be used to
+        re-reference particular objects while building the guild format.
+
+        This is provided to allow creation of channels within categories,
+        and to provide permission overwrites.
+
+    Adding a text channel to your guild.
+
+    ```py
+    guild_builder = rest.guild_builder("My Server!")
+
+    category_id = guild_builder.add_category("My safe place")
+    channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
+
+    await guild_builder.create()
+    ```
+    """
+
+    # Required arguments.
     _app: app_.IRESTApp
+    _name: str
+
+    # Optional args that we kept hidden.
     _channels: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list)
     _counter: int = 0
-    _name: typing.Union[undefined.Undefined, str]
-    _request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, data_binding.JSONObject]]
+    _request_call: typing.Callable[
+        ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+    ]
     _roles: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list)
+
     default_message_notifications: typing.Union[
         undefined.Undefined, guilds.GuildMessageNotificationsLevel
     ] = undefined.Undefined()
+    """Default message notification level that can be overwritten.
+
+    If not overridden, this will use the Discord default level.
+    """
+
     explicit_content_filter_level: typing.Union[
         undefined.Undefined, guilds.GuildExplicitContentFilterLevel
     ] = undefined.Undefined()
+    """Explicit content filter level that can be overwritten.
+
+    If not overridden, this will use the Discord default level.
+    """
+
     icon: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined()
+    """Guild icon to use that can be overwritten.
+
+    If not overridden, the guild will not have an icon.
+    """
+
     region: typing.Union[undefined.Undefined, str] = undefined.Undefined()
+    """Guild voice channel region to use that can be overwritten.
+
+    If not overridden, the guild will use the default voice region for Discord.
+    """
+
     verification_level: typing.Union[undefined.Undefined, guilds.GuildVerificationLevel] = undefined.Undefined()
+    """Verification level required to join the guild that can be overwritten.
+
+    If not overridden, the guild will use the default verification level for
+    Discord.
+    """
 
     @property
     def name(self) -> str:
-        # Read-only!
+        """Guild name."""
         return self._name
 
-    def __await__(self) -> typing.Generator[guilds.Guild, None, typing.Any]:
-        yield from self.create().__await__()
-
     async def create(self) -> guilds.Guild:
+        """Send the request to Discord to create the guild.
+
+        The application user will be added to this guild as soon as it is
+        created. All IDs that were provided when building this guild will
+        become invalid and will be replaced with real IDs.
+
+        Returns
+        -------
+        hikari.models.guilds.Guild
+            The created guild.
+
+        Raises
+        ------
+        hikari.errors.BadRequest
+            If any values set in the guild builder are invalid.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you are already in 10 guilds.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """
         route = routes.POST_GUILDS.compile()
         payload = data_binding.JSONObjectBuilder()
         payload.put("name", self.name)
@@ -133,7 +255,8 @@ class GuildBuilder:
         if not isinstance(self.icon, undefined.Undefined):
             payload.put("icon", await self.icon.fetch_data_uri())
 
-        response = await self._request_call(route, body=payload)
+        raw_response = await self._request_call(route, body=payload)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild(response)
 
     def add_role(
@@ -148,6 +271,55 @@ class GuildBuilder:
         permissions: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
         position: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
     ) -> snowflake_.Snowflake:
+        """Create a role.
+
+        !!! note
+            The first role you create must always be the `@everyone` role, and
+            must have that name. This role will ignore the `hoisted`, `color`,
+            `colour`, `mentionable` and `position` parameters.
+
+        Parameters
+        ----------
+        name : str
+            The role name.
+        color : hikari.utilities.undefined.Undefined or hikari.models.color.Color
+            The colour of the role to use. If unspecified, then the default
+            colour is used instead.
+        colour : hikari.utilities.undefined.Undefined or hikari.models.color.Color
+            Alias for the `color` parameter for non-american users.
+        hoisted : hikari.utilities.undefined.Undefined or bool
+            If `True`, the role will show up in the user sidebar in a separate
+            category if it is the highest hoisted role. If `False`, or
+            unspecified, then this will not occur.
+        mentionable : hikari.utilities.undefined.Undefined or bool
+            If `True`, then the role will be able to be mentioned.
+        permissions : hikari.utilities.undefined.Undefined or hikari.models.permissions.Permission
+            The optional permissions to enforce on the role. If unspecified,
+            the default permissions for roles will be used.
+
+            !!! note
+                The default permissions are **NOT** the same as providing
+                zero permissions. To set no permissions, you should
+                pass `Permission(0)` explicitly.
+        position : hikari.utilities.undefined.Undefined or int
+            If specified, the position to place the role in.
+
+        Returns
+        -------
+        hikari.utilities.snowflake.Snowflake
+            The dummy ID for this role that can be used temporarily to refer
+            to this object while designing the guild layout.
+
+            When the guild is created, this will be replaced with a different
+            ID.
+
+        Raises
+        ------
+        ValueError
+            If you are defining the first role, but did not name it `@everyone`.
+        TypeError
+            If you specify both `color` and `colour` together.
+        """
         if len(self._roles) == 0 and name != "@everyone":
             raise ValueError("First role must always be the @everyone role")
 
@@ -178,6 +350,30 @@ class GuildBuilder:
         ] = undefined.Undefined(),
         nsfw: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> snowflake_.Snowflake:
+        """Create a category channel.
+
+        Parameters
+        ----------
+        name : str
+            The name of the category.
+        position : hikari.utilities.undefined.Undefined or int
+            The position to place the category in, if specified.
+        permission_overwrites : hikari.utilities.undefined.Undefined or typing.Collection[hikari.models.channels.PermissionOverwrite]
+            If defined, a collection of one or more
+            `hikari.models.channels.PermissionOverwrite` objects.
+        nsfw : hikari.utilities.undefined.Undefined or bool
+            If `True`, the channel is marked as NSFW and only users over
+            18 years of age should be given access.
+
+        Returns
+        -------
+        hikari.utilities.snowflake.Snowflake
+            The dummy ID for this channel that can be used temporarily to refer
+            to this object while designing the guild layout.
+
+            When the guild is created, this will be replaced with a different
+            ID.
+        """
         snowflake = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake)
@@ -200,7 +396,7 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        parent_id: snowflake_.Snowflake = undefined.Undefined(),
+        parent_id: typing.Union[undefined.Undefined, snowflake_.Snowflake] = undefined.Undefined(),
         topic: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         rate_limit_per_user: typing.Union[undefined.Undefined, date.TimeSpan] = undefined.Undefined(),
         position: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
@@ -209,6 +405,39 @@ class GuildBuilder:
         ] = undefined.Undefined(),
         nsfw: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> snowflake_.Snowflake:
+        """Create a text channel.
+
+        Parameters
+        ----------
+        name : str
+            The name of the category.
+        position : hikari.utilities.undefined.Undefined or int
+            The position to place the category in, if specified.
+        permission_overwrites : hikari.utilities.undefined.Undefined or typing.Collection[hikari.models.channels.PermissionOverwrite]
+            If defined, a collection of one or more
+            `hikari.models.channels.PermissionOverwrite` objects.
+        nsfw : hikari.utilities.undefined.Undefined or bool
+            If `True`, the channel is marked as NSFW and only users over
+            18 years of age should be given access.
+        parent_id : hikari.utilities.undefined.Undefined or hikari.utilities.snowflake.Snowflake
+            If defined, should be a snowflake ID of a category channel
+            that was made with this builder. If provided, this channel will
+            become a child channel of that category.
+        topic : hikari.utilities.undefined.Undefined or str
+            If specified, the topic to set on the channel.
+        rate_limit_per_user : hikari.utilities.undefined.Undefined or hikari.utilities.date.TimeSpan
+            If specified, the time to wait between allowing consecutive messages
+            to be sent. If not specified, this will not be enabled.
+
+        Returns
+        -------
+        hikari.utilities.snowflake.Snowflake
+            The dummy ID for this channel that can be used temporarily to refer
+            to this object while designing the guild layout.
+
+            When the guild is created, this will be replaced with a different
+            ID.
+        """
         snowflake = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake)
@@ -234,7 +463,7 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        parent_id: snowflake_.Snowflake = undefined.Undefined(),
+        parent_id: typing.Union[undefined.Undefined, snowflake_.Snowflake] = undefined.Undefined(),
         bitrate: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
         position: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
         permission_overwrites: typing.Union[
@@ -243,6 +472,39 @@ class GuildBuilder:
         nsfw: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
         user_limit: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
     ) -> snowflake_.Snowflake:
+        """Create a voice channel.
+
+        Parameters
+        ----------
+        name : str
+            The name of the category.
+        position : hikari.utilities.undefined.Undefined or int
+            The position to place the category in, if specified.
+        permission_overwrites : hikari.utilities.undefined.Undefined or typing.Collection[hikari.models.channels.PermissionOverwrite]
+            If defined, a collection of one or more
+            `hikari.models.channels.PermissionOverwrite` objects.
+        nsfw : hikari.utilities.undefined.Undefined or bool
+            If `True`, the channel is marked as NSFW and only users over
+            18 years of age should be given access.
+        parent_id : hikari.utilities.undefined.Undefined or hikari.utilities.snowflake.Snowflake
+            If defined, should be a snowflake ID of a category channel
+            that was made with this builder. If provided, this channel will
+            become a child channel of that category.
+        bitrate : hikari.utilities.undefined.Undefined or int
+            If specified, the bitrate to set on the channel.
+        user_limit : hikari.utilities.undefined.Undefined or int
+            If specified, the maximum number of users to allow in the voice
+            channel.
+
+        Returns
+        -------
+        hikari.utilities.snowflake.Snowflake
+            The dummy ID for this channel that can be used temporarily to refer
+            to this object while designing the guild layout.
+
+            When the guild is created, this will be replaced with a different
+            ID.
+        """
         snowflake = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake)

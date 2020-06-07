@@ -90,7 +90,7 @@ class PermissionOverwriteType(str, enum.Enum):
     """A permission overwrite that targets a specific guild member."""
 
     def __str__(self) -> str:
-        return self.value
+        return str(self.value)
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True)
@@ -124,19 +124,20 @@ class PermissionOverwrite(bases.Unique):
     """The type of entity this overwrite targets."""
 
     allow: permissions.Permission = attr.ib(
-        converter=permissions.Permission, default=0, eq=False, hash=False, repr=False
+        converter=permissions.Permission, default=permissions.Permission.NONE, eq=False, hash=False, repr=False,
     )
     """The permissions this overwrite allows."""
 
     deny: permissions.Permission = attr.ib(
-        converter=permissions.Permission, default=0, eq=False, hash=False, repr=False
+        converter=permissions.Permission, default=permissions.Permission.NONE, eq=False, hash=False, repr=False
     )
     """The permissions this overwrite denies."""
 
     @property
     def unset(self) -> permissions.Permission:
         """Bitfield of all permissions not explicitly allowed or denied by this overwrite."""
-        return typing.cast(permissions.Permission, (self.allow | self.deny))
+        # noinspection PyArgumentList
+        return permissions.Permission(~(self.allow | self.deny))
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

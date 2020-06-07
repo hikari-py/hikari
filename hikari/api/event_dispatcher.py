@@ -31,10 +31,10 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     from hikari.events import base
 
-    _EventT = typing.TypeVar("_EventT", bound=base.HikariEvent, covariant=True)
-    _PredicateT = typing.Callable[[_EventT], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
-    _SyncCallbackT = typing.Callable[[_EventT], None]
-    _AsyncCallbackT = typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]]
+    _EventT = typing.TypeVar("_EventT", bound=base.HikariEvent)
+    _PredicateT = typing.Callable[[base.HikariEvent], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
+    _SyncCallbackT = typing.Callable[[base.HikariEvent], None]
+    _AsyncCallbackT = typing.Callable[[base.HikariEvent], typing.Coroutine[None, typing.Any, None]]
     _CallbackT = typing.Union[_SyncCallbackT, _AsyncCallbackT]
 
 

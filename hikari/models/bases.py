@@ -42,6 +42,7 @@ class Entity(abc.ABC):
     application instance. This enables it to perform API calls from
     methods directly.
     """
+
     _AppT = typing.Union[app_.IRESTApp, app_.IBot]
 
     _app: _AppT = attr.ib(default=None, repr=False, eq=False, hash=False)

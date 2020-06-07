@@ -238,8 +238,3 @@ class TestCastJSONArray:
         arr = ["foo", "bar", "baz"]
 
         assert data_binding.cast_json_array(arr, cast) == [r1, r2, r3]
-
-    def test_cast_with_custom_container(self):
-        cast = lambda obj: obj
-        arr = ["foo", "bar", "baz", "foo"]
-        assert data_binding.cast_json_array(arr, cast, set) == {"foo", "bar", "baz"}

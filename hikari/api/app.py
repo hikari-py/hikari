@@ -31,12 +31,15 @@ from hikari.api import event_dispatcher as event_dispatcher_
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from concurrent import futures
+    import asyncio
     import datetime
+
+    from concurrent import futures
 
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_consumer as event_consumer_
+    from hikari.events import base
     from hikari.models import presences
     from hikari.net import http_settings as http_settings_
     from hikari.net import gateway
@@ -215,6 +218,13 @@ class IGatewayDispatcher(IApp, abc.ABC):
 
     __slots__ = ()
 
+    if typing.TYPE_CHECKING:
+        _EventT = typing.TypeVar("_EventT", bound=base.HikariEvent)
+        _PredicateT = typing.Callable[[base.HikariEvent], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
+        _SyncCallbackT = typing.Callable[[base.HikariEvent], None]
+        _AsyncCallbackT = typing.Callable[[base.HikariEvent], typing.Coroutine[None, typing.Any, None]]
+        _CallbackT = typing.Union[_SyncCallbackT, _AsyncCallbackT]
+
     @property
     @abc.abstractmethod
     def event_dispatcher(self) -> event_dispatcher_.IEventDispatcher:
@@ -242,27 +252,38 @@ class IGatewayDispatcher(IApp, abc.ABC):
 
     # Do not add type hints to me! I delegate to a documented method elsewhere!
     @functools.wraps(event_dispatcher_.IEventDispatcher.listen)
-    def listen(self, event_type=undefined.Undefined()):
+    def listen(
+        self, event_type: typing.Union[undefined.Undefined, typing.Type[_EventT]] = undefined.Undefined(),
+    ) -> typing.Callable[[_CallbackT], _CallbackT]:
         ...
 
     # Do not add type hints to me! I delegate to a documented method elsewhere!
     @functools.wraps(event_dispatcher_.IEventDispatcher.subscribe)
-    def subscribe(self, event_type, callback):
+    def subscribe(
+        self,
+        event_type: typing.Type[_EventT],
+        callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
+    ) -> None:
         ...
 
     # Do not add type hints to me! I delegate to a documented method elsewhere!
     @functools.wraps(event_dispatcher_.IEventDispatcher.unsubscribe)
-    def unsubscribe(self, event_type, callback):
+    def unsubscribe(
+        self,
+        event_type: typing.Type[_EventT],
+        callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
+    ) -> None:
         ...
 
     # Do not add type hints to me! I delegate to a documented method elsewhere!
     @functools.wraps(event_dispatcher_.IEventDispatcher.wait_for)
-    async def wait_for(self, event_type, predicate, timeout):
+    async def wait_for(
+        self, event_type: typing.Type[_EventT], predicate: _PredicateT, timeout: typing.Union[float, int, None],
+    ) -> _EventT:
         ...
 
-    # Do not add type hints to me! I delegate to a documented method elsewhere!
     @functools.wraps(event_dispatcher_.IEventDispatcher.dispatch)
-    def dispatch(self, event):
+    def dispatch(self, event: base.HikariEvent) -> asyncio.Future[typing.Any]:
         ...
 
 
@@ -329,8 +350,8 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
     async def update_presence(
         self,
         *,
-        status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
-        activity: typing.Union[undefined.Undefined, presences.OwnActivity, None] = undefined.Undefined(),
+        status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
+        activity: typing.Union[undefined.Undefined, presences.Activity, None] = undefined.Undefined(),
         idle_since: typing.Union[undefined.Undefined, datetime.datetime, None] = undefined.Undefined(),
         is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> None:
@@ -350,9 +371,9 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
 
         Parameters
         ----------
-        status : hikari.models.presences.PresenceStatus or hikari.utilities.undefined.Undefined
+        status : hikari.models.presences.Status or hikari.utilities.undefined.Undefined
             If defined, the new status to set.
-        activity : hikari.models.presences.OwnActivity or None or hikari.utilities.undefined.Undefined
+        activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.Undefined
             If defined, the new activity to set.
         idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
             If defined, the time to show up as being idle since, or `None` if

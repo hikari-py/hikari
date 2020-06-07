@@ -22,9 +22,8 @@ from ci import config
 from ci import nox
 
 
-# Do not reuse venv, download new definitions each run.
-@nox.session(reuse_venv=False, default=True)
+@nox.session(reuse_venv=True, default=True)
 def safety(session: nox.Session) -> None:
     """Perform dependency scanning."""
-    session.install("safety", "-r", config.REQUIREMENTS)
-    session.run("safety", "check")
+    session.install("safety", "-Ur", config.REQUIREMENTS)
+    session.run("safety", "check", "--full-report")
