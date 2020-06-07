@@ -67,13 +67,13 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     debug : bool
         If `True`, each sent and received payload is dumped to the logs. If
         `False`, only the fact that data has been sent/received will be logged.
-    initial_activity : hikari.presences.OwnActivity or None or hikari.utilities.undefined.Undefined
+    initial_activity : hikari.presences.Activity or None or hikari.utilities.undefined.Undefined
         The initial activity to appear to have for this shard.
     initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
         The datetime to appear to be idle since.
     initial_is_afk : bool or hikari.utilities.undefined.Undefined
         Whether to appear to be AFK or not on login.
-    initial_status : hikari.models.presences.PresenceStatus or hikari.utilities.undefined.Undefined
+    initial_status : hikari.models.presences.Status or hikari.utilities.undefined.Undefined
         The initial status to set on login for the shard.
     intents : hikari.models.intents.Intent or None
         Collection of intents to use, or `None` to not use intents at all.
@@ -161,10 +161,10 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         app: app_.IGatewayConsumer,
         config: http_settings.HTTPSettings,
         debug: bool = False,
-        initial_activity: typing.Union[undefined.Undefined, None, presences.OwnActivity] = undefined.Undefined(),
+        initial_activity: typing.Union[undefined.Undefined, None, presences.Activity] = undefined.Undefined(),
         initial_idle_since: typing.Union[undefined.Undefined, None, datetime.datetime] = undefined.Undefined(),
         initial_is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        initial_status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
+        initial_status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
         shard_id: int = 0,
@@ -187,24 +187,25 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             timeout=config.request_timeout,
             trust_env=config.trust_env,
         )
-        self._activity = initial_activity
+        self._activity: typing.Union[undefined.Undefined, None, presences.Activity] = initial_activity
         self._app = app
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         self._handshake_event = asyncio.Event()
-        self._idle_since = initial_idle_since
-        self._intents = intents
-        self._is_afk = initial_is_afk
+        self._idle_since: typing.Union[undefined.Undefined, None, datetime.datetime] = initial_idle_since
+        self._intents: typing.Optional[intents_.Intent] = intents
+        self._is_afk: typing.Union[undefined.Undefined, bool] = initial_is_afk
         self._last_run_started_at = float("nan")
         self._request_close_event = asyncio.Event()
-        self._seq = None
-        self._shard_id = shard_id
-        self._shard_count = shard_count
-        self._status = initial_status
+        self._seq: typing.Optional[str] = None
+        self._shard_id: int = shard_id
+        self._shard_count: int = shard_count
+        self._status: typing.Union[undefined.Undefined, presences.Status] = initial_status
         self._token = token
         self._use_compression = use_compression
         self._version = version
-        self._ws = None
-        self._zlib = None
+        self._ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
+        # No typeshed/stub.
+        self._zlib: typing.Any = None
         self._zombied = False
 
         self.connected_at = float("nan")
@@ -214,7 +215,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self.last_message_received = float("nan")
         self.large_threshold = large_threshold
         self.ratelimiter = rate_limits.WindowedBurstRateLimiter(str(shard_id), 60.0, 120)
-        self.session_id = None
+        self.session_id: typing.Optional[str] = None
 
         scheme, netloc, path, params, _, _ = urllib.parse.urlparse(url, allow_fragments=True)
 
@@ -374,8 +375,8 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         *,
         idle_since: typing.Union[undefined.Undefined, typing.Optional[datetime.datetime]] = undefined.Undefined(),
         is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        activity: typing.Union[undefined.Undefined, typing.Optional[presences.OwnActivity]] = undefined.Undefined(),
-        status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
+        activity: typing.Union[undefined.Undefined, typing.Optional[presences.Activity]] = undefined.Undefined(),
+        status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
     ) -> None:
         """Update the presence of the shard user.
 
@@ -387,14 +388,15 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         is_afk : bool or hikari.utilities.undefined.Undefined
             If `True`, the user is marked as AFK. If `False`, the user is marked
             as being active. If undefined, this will not be changed.
-        activity : hikari.models.presences.OwnActivity or None or hikari.utilities.undefined.Undefined
+        activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.Undefined
             The activity to appear to be playing. If undefined, this will not be
             changed.
-        status : hikari.models.presences.PresenceStatus or hikari.utilities.undefined.Undefined
+        status : hikari.models.presences.Status or hikari.utilities.undefined.Undefined
             The web status to show. If undefined, this will not be changed.
         """
-        payload = self._build_presence_payload(idle_since, is_afk, activity, status)
-        await self._send_json({"op": self._GatewayOpcode.PRESENCE_UPDATE, "d": payload})
+        presence = self._build_presence_payload(idle_since=idle_since, is_afk=is_afk, status=status, activity=activity)
+        payload: data_binding.JSONObject = {"op": self._GatewayOpcode.PRESENCE_UPDATE, "d": presence}
+        await self._send_json(payload)
         self._idle_since = idle_since if not isinstance(idle_since, undefined.Undefined) else self._idle_since
         self._is_afk = is_afk if not isinstance(is_afk, undefined.Undefined) else self._is_afk
         self._activity = activity if not isinstance(activity, undefined.Undefined) else self._activity
@@ -425,7 +427,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             If `True`, the bot will deafen itself in that voice channel. If
             `False`, then it will undeafen itself.
         """
-        payload = {
+        payload: data_binding.JSONObject = {
             "op": self._GatewayOpcode.VOICE_STATE_UPDATE,
             "d": {
                 "guild_id": str(int(guild)),
@@ -436,7 +438,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         }
         await self._send_json(payload)
 
-    async def _close_ws(self, code: int, message: str):
+    async def _close_ws(self, code: int, message: str) -> None:
         self.logger.debug("sending close frame with code %s and message %r", int(code), message)
         # None if the websocket error'ed on initialization.
         if self._ws is not None:
@@ -466,7 +468,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         else:
             # IDENTIFY!
             # noinspection PyArgumentList
-            payload = {
+            payload: data_binding.JSONObject = {
                 "op": self._GatewayOpcode.IDENTIFY,
                 "d": {
                     "token": self._token,
@@ -593,9 +595,15 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             self.logger.debug("encountered unexpected error", exc_info=ex)
             raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
 
-        return data_binding.load_json(string)
+        # We assume this is always a JSON object, I'd rather not cast here and waste
+        # CPU time as this is somewhat performance critical for large bots.
+        return data_binding.load_json(string)  # type: ignore
 
     async def _receive_zlib_message(self, first_packet: bytes) -> typing.Tuple[int, str]:
+        # Alloc new array each time; this prevents consuming a large amount of
+        # unused memory because of Discord sending massive payloads on connect
+        # initially before the payloads shrink in size. Python may not shrink
+        # this dynamically if not...
         buff = bytearray(first_packet)
 
         packets = 1
@@ -620,8 +628,8 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self._log_debug_payload(message, "sending json payload")
         await self._ws.send_str(message)
 
-    def _dispatch(self, event_name: str, payload: data_binding.JSONObject) -> typing.Coroutine[None, typing.Any, None]:
-        return self._app.event_consumer.consume_raw_event(self, event_name, payload)
+    def _dispatch(self, event_name: str, event: data_binding.JSONObject) -> typing.Coroutine[None, typing.Any, None]:
+        return self._app.event_consumer.consume_raw_event(self, event_name, event)
 
     @staticmethod
     def _now() -> float:
@@ -645,8 +653,8 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self,
         idle_since: typing.Union[undefined.Undefined, typing.Optional[datetime.datetime]] = undefined.Undefined(),
         is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
-        activity: typing.Union[undefined.Undefined, typing.Optional[presences.OwnActivity]] = undefined.Undefined(),
+        status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
+        activity: typing.Union[undefined.Undefined, typing.Optional[presences.Activity]] = undefined.Undefined(),
     ) -> data_binding.JSONObject:
         if isinstance(idle_since, undefined.Undefined):
             idle_since = self._idle_since
@@ -657,20 +665,18 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         if isinstance(activity, undefined.Undefined):
             activity = self._activity
 
-        activity = typing.cast(typing.Optional[presences.OwnActivity], activity)
-
-        if activity is None:
-            game = None
-        else:
-            game = {
+        if activity is not None and not isinstance(activity, undefined.Undefined):
+            game: typing.Union[undefined.Undefined, None, data_binding.JSONObject] = {
                 "name": activity.name,
                 "url": activity.url,
                 "type": activity.type,
             }
+        else:
+            game = activity
 
-        return {
-            "since": idle_since.timestamp() if idle_since is not None else None,
-            "afk": is_afk if is_afk is not None else False,
-            "status": status.value if status is not None else presences.PresenceStatus.ONLINE.value,
-            "game": game,
-        }
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("since", idle_since, conversion=datetime.datetime.timestamp)
+        payload.put("afk", is_afk)
+        payload.put("status", status)
+        payload.put("game", game)
+        return payload

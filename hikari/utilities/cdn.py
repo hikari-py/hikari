@@ -20,10 +20,15 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["generate_cdn_url"]
+__all__: typing.List[str] = ["generate_cdn_url", "get_avatar_url", "get_default_avatar_url", "get_default_avatar_index"]
 
 import typing
 import urllib.parse
+
+
+if typing.TYPE_CHECKING:
+    from hikari.utilities import snowflake
+
 
 BASE_CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
 """The URL for the CDN."""
@@ -64,3 +69,73 @@ def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]
     url = urllib.parse.urljoin(BASE_CDN_URL, "/" + path) + "." + str(format_)
     query = urllib.parse.urlencode({"size": size}) if size is not None else None
     return f"{url}?{query}" if query else url
+
+
+def get_avatar_url(
+    user_id: snowflake.Snowflake, avatar_hash: str, *, format_: typing.Optional[str] = None, size: int = 4096,
+) -> str:
+    """Generate the avatar URL for this user's custom avatar if set, else their default avatar.
+
+    Parameters
+    ----------
+    user_id : hikari.utilities.snowflake.Snowflake
+        The user ID of the avatar to fetch.
+    avatar_hash : str
+        The avatar hash code.
+    format_ : str
+        The format to use for this URL, defaults to `png` or `gif`.
+        Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+        animated). Will be ignored for default avatars which can only be
+        `png`.
+    size : int
+        The size to set for the URL, defaults to `4096`.
+        Can be any power of two between 16 and 4096.
+        Will be ignored for default avatars.
+
+    Returns
+    -------
+    str
+        The string URL, or None if the default avatar is used instead.
+
+    Raises
+    ------
+    ValueError
+        If `size` is not a power of two or not between 16 and 4096.
+    """
+    if format_ is None and avatar_hash.startswith("a_"):
+        format_ = "gif"
+    elif format_ is None:
+        format_ = "png"
+    return generate_cdn_url("avatars", str(user_id), avatar_hash, format_=format_, size=size)
+
+
+def get_default_avatar_index(discriminator: str) -> int:
+    """Get the index of the default avatar for the given discriminator.
+
+    Parameters
+    ----------
+    discriminator : str
+        The integer discriminator, as a string.
+
+    Returns
+    -------
+    int
+        The index.
+    """
+    return int(discriminator) % 5
+
+
+def get_default_avatar_url(discriminator: str) -> str:
+    """URL for this user's default avatar.
+
+    Parameters
+    ----------
+    discriminator : str
+        The integer discriminator, as a string.
+
+    Returns
+    -------
+    str
+        The avatar URL.
+    """
+    return generate_cdn_url("embed", "avatars", str(get_default_avatar_index(discriminator)), format_="png", size=None,)

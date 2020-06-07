@@ -23,15 +23,8 @@ from ci import nox
 
 @nox.session(reuse_venv=True, default=True)
 def mypy(session: nox.Session) -> None:
-    session.install("-r", "requirements.txt", "mypy==0.780")
+    # LXML is used for cobertura reporting.
+    session.install("-r", "requirements.txt", "mypy==0.780", "lxml")
     session.run(
-        "mypy",
-        "-p",
-        config.MAIN_PACKAGE,
-        "--pretty",
-        "--show-error-codes",
-        "--show-column-numbers",
-        # "--show-error-context",
-        "--strict",
-        "--warn-redundant-casts",
+        "mypy", "-p", config.MAIN_PACKAGE, "--config", config.MYPY_INI,
     )

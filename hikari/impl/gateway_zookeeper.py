@@ -66,9 +66,9 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         on the gateway will be dumped to debug logs. This will provide useful
         debugging context at the cost of performance. Generally you do not
         need to enable this.
-    initial_activity : hikari.models.presences.OwnActivity or None or hikari.utilities.undefined.Undefined
+    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.Undefined
         The initial activity to have on each shard.
-    initial_activity : hikari.models.presences.PresenceStatus or hikari.utilities.undefined.Undefined
+    initial_activity : hikari.models.presences.Status or hikari.utilities.undefined.Undefined
         The initial status to have on each shard.
     initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
         The initial time to show as being idle since, or `None` if not idle,
@@ -132,10 +132,10 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         compression: bool,
         config: http_settings.HTTPSettings,
         debug: bool,
-        initial_activity: typing.Union[undefined.Undefined, presences.OwnActivity, None] = undefined.Undefined(),
+        initial_activity: typing.Union[undefined.Undefined, presences.Activity, None] = undefined.Undefined(),
         initial_idle_since: typing.Union[undefined.Undefined, datetime.datetime, None] = undefined.Undefined(),
         initial_is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        initial_status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
+        initial_status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
         intents: typing.Optional[intents_.Intent],
         large_threshold: int,
         shard_ids: typing.Set[int],
@@ -295,8 +295,8 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
     async def update_presence(
         self,
         *,
-        status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
-        activity: typing.Union[undefined.Undefined, presences.OwnActivity, None] = undefined.Undefined(),
+        status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
+        activity: typing.Union[undefined.Undefined, presences.Activity, None] = undefined.Undefined(),
         idle_since: typing.Union[undefined.Undefined, datetime.datetime] = undefined.Undefined(),
         is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
     ) -> None:
