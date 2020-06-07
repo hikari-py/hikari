@@ -102,16 +102,16 @@ class User(bases.Entity, bases.Unique):
     username: str = attr.ib(eq=False, hash=False, repr=True)
     """This user's username."""
 
-    avatar_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    avatar_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """This user's avatar hash, if set."""
 
-    is_bot: bool = attr.ib(eq=False, hash=False)
+    is_bot: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is a bot account."""
 
-    is_system: bool = attr.ib(eq=False, hash=False)
+    is_system: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is a system account."""
 
-    flags: UserFlag = attr.ib(eq=False, hash=False)
+    flags: UserFlag = attr.ib(eq=False, hash=False, repr=False)
     """The public flags for this user."""
 
     async def fetch_self(self) -> User:
@@ -183,30 +183,30 @@ class User(bases.Entity, bases.Unique):
 class OwnUser(User):
     """Represents a user with extended OAuth2 information."""
 
-    is_mfa_enabled: bool = attr.ib(eq=False, hash=False)
+    is_mfa_enabled: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether the user's account has 2fa enabled."""
 
-    locale: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    locale: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The user's set language. This is not provided by the `READY` event."""
 
-    is_verified: typing.Optional[bool] = attr.ib(eq=False, hash=False)
+    is_verified: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether the email for this user's account has been verified.
 
     Will be `None` if retrieved through the oauth2 flow without the `email`
     scope.
     """
 
-    email: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    email: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The user's set email.
 
     Will be `None` if retrieved through the oauth2 flow without the `email`
     scope and for bot users.
     """
 
-    flags: UserFlag = attr.ib(eq=False, hash=False)
+    flags: UserFlag = attr.ib(eq=False, hash=False, repr=False)
     """This user account's flags."""
 
-    premium_type: typing.Optional[PremiumType] = attr.ib(eq=False, hash=False)
+    premium_type: typing.Optional[PremiumType] = attr.ib(eq=False, hash=False, repr=False)
     """The type of Nitro Subscription this user account had.
 
     This will always be `None` for bots.
