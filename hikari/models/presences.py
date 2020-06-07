@@ -97,10 +97,10 @@ class ActivityParty:
     id: typing.Optional[str] = attr.ib(eq=True, hash=True, repr=True)
     """The string id of this party instance, if set."""
 
-    current_size: typing.Optional[int] = attr.ib(eq=False, hash=False)
+    current_size: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """Current size of this party, if applicable."""
 
-    max_size: typing.Optional[int] = attr.ib(eq=False, hash=False)
+    max_size: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """Maximum size of this party, if applicable."""
 
 
@@ -108,16 +108,16 @@ class ActivityParty:
 class ActivityAssets:
     """Used to represent possible assets for an activity."""
 
-    large_image: typing.Optional[str] = attr.ib()
+    large_image: typing.Optional[str] = attr.ib(repr=False)
     """The ID of the asset's large image, if set."""
 
-    large_text: typing.Optional[str] = attr.ib()
+    large_text: typing.Optional[str] = attr.ib(repr=False)
     """The text that'll appear when hovering over the large image, if set."""
 
-    small_image: typing.Optional[str] = attr.ib()
+    small_image: typing.Optional[str] = attr.ib(repr=False)
     """The ID of the asset's small image, if set."""
 
-    small_text: typing.Optional[str] = attr.ib()
+    small_text: typing.Optional[str] = attr.ib(repr=False)
     """The text that'll appear when hovering over the small image, if set."""
 
 
@@ -125,13 +125,13 @@ class ActivityAssets:
 class ActivitySecret:
     """The secrets used for interacting with an activity party."""
 
-    join: typing.Optional[str] = attr.ib()
+    join: typing.Optional[str] = attr.ib(repr=False)
     """The secret used for joining a party, if applicable."""
 
-    spectate: typing.Optional[str] = attr.ib()
+    spectate: typing.Optional[str] = attr.ib(repr=False)
     """The secret used for spectating a party, if applicable."""
 
-    match: typing.Optional[str] = attr.ib()
+    match: typing.Optional[str] = attr.ib(repr=False)
     """The secret used for joining a party, if applicable."""
 
 
@@ -171,42 +171,42 @@ class RichActivity:
     type: ActivityType = attr.ib(repr=True)
     """The activity's type."""
 
-    url: typing.Optional[str] = attr.ib()
+    url: typing.Optional[str] = attr.ib(repr=False)
     """The URL for a `STREAM` type activity, if applicable."""
 
-    created_at: datetime.datetime = attr.ib()
+    created_at: datetime.datetime = attr.ib(repr=False)
     """When this activity was added to the user's session."""
 
-    timestamps: typing.Optional[ActivityTimestamps] = attr.ib()
+    timestamps: typing.Optional[ActivityTimestamps] = attr.ib(repr=False)
     """The timestamps for when this activity's current state will start and
     end, if applicable.
     """
 
-    application_id: typing.Optional[snowflake.Snowflake] = attr.ib()
+    application_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=False)
     """The ID of the application this activity is for, if applicable."""
 
-    details: typing.Optional[str] = attr.ib()
+    details: typing.Optional[str] = attr.ib(repr=False)
     """The text that describes what the activity's target is doing, if set."""
 
-    state: typing.Optional[str] = attr.ib()
+    state: typing.Optional[str] = attr.ib(repr=False)
     """The current status of this activity's target, if set."""
 
-    emoji: typing.Union[None, emojis_.UnicodeEmoji, emojis_.CustomEmoji] = attr.ib()
+    emoji: typing.Union[None, emojis_.UnicodeEmoji, emojis_.CustomEmoji] = attr.ib(repr=False)
     """The emoji of this activity, if it is a custom status and set."""
 
-    party: typing.Optional[ActivityParty] = attr.ib()
+    party: typing.Optional[ActivityParty] = attr.ib(repr=False)
     """Information about the party associated with this activity, if set."""
 
-    assets: typing.Optional[ActivityAssets] = attr.ib()
+    assets: typing.Optional[ActivityAssets] = attr.ib(repr=False)
     """Images and their hover over text for the activity."""
 
-    secrets: typing.Optional[ActivitySecret] = attr.ib()
+    secrets: typing.Optional[ActivitySecret] = attr.ib(repr=False)
     """Secrets for Rich Presence joining and spectating."""
 
-    is_instance: typing.Optional[bool] = attr.ib()
+    is_instance: typing.Optional[bool] = attr.ib(repr=False)
     """Whether this activity is an instanced game session."""
 
-    flags: ActivityFlag = attr.ib()
+    flags: ActivityFlag = attr.ib(repr=False)
     """Flags that describe what the activity includes."""
 
 
@@ -260,22 +260,16 @@ class PresenceUser(users.User):
     username: typing.Union[str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=True)
     """This user's username."""
 
-    avatar_hash: typing.Union[None, str, undefined.Undefined] = attr.ib(
-        eq=False, hash=False, repr=True,
-    )
+    avatar_hash: typing.Union[None, str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=True)
     """This user's avatar hash, if set."""
 
-    is_bot: typing.Union[bool, undefined.Undefined] = attr.ib(
-        eq=False, hash=False, repr=True,
-    )
+    is_bot: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=True)
     """Whether this user is a bot account."""
 
-    is_system: typing.Union[bool, undefined.Undefined] = attr.ib(
-        eq=False, hash=False,
-    )
+    is_system: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is a system account."""
 
-    flags: typing.Union[users.UserFlag, undefined.Undefined] = attr.ib(eq=False, hash=False)
+    flags: typing.Union[users.UserFlag, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=False)
     """The public flags for this user."""
 
     @property
@@ -358,9 +352,7 @@ class MemberPresence(bases.Entity):
         changed in an event.
     """
 
-    role_ids: typing.Optional[typing.Sequence[snowflake.Snowflake]] = attr.ib(
-        eq=False, hash=False,
-    )
+    role_ids: typing.Optional[typing.Sequence[snowflake.Snowflake]] = attr.ib(eq=False, hash=False, repr=False)
     """The ids of the user's current roles in the guild this presence belongs to.
 
     !!! info
@@ -377,27 +369,21 @@ class MemberPresence(bases.Entity):
     visible_status: PresenceStatus = attr.ib(eq=False, hash=False, repr=True)
     """This user's current status being displayed by the client."""
 
-    activities: typing.Sequence[RichActivity] = attr.ib(eq=False, hash=False)
+    activities: typing.Sequence[RichActivity] = attr.ib(eq=False, hash=False, repr=False)
     """An array of the user's activities, with the top one will being
     prioritised by the client.
     """
 
-    client_status: ClientStatus = attr.ib(
-        eq=False, hash=False,
-    )
+    client_status: ClientStatus = attr.ib(eq=False, hash=False, repr=False)
     """An object of the target user's client statuses."""
 
-    premium_since: typing.Optional[datetime.datetime] = attr.ib(
-        eq=False, hash=False,
-    )
+    premium_since: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this member started "boosting" this guild.
 
     This will be `None` if they aren't boosting.
     """
 
-    nickname: typing.Optional[str] = attr.ib(
-        eq=False, hash=False, repr=True,
-    )
+    nickname: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """This member's nickname, if set."""
 
 
@@ -408,11 +394,11 @@ class OwnActivity:
     This will show the activity as the bot's presence.
     """
 
-    name: str = attr.ib()
+    name: str = attr.ib(repr=True)
     """The activity name."""
 
-    url: typing.Optional[str] = attr.ib(default=None)
+    url: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The activity URL. Only valid for `STREAMING` activities."""
 
-    type: ActivityType = attr.ib(converter=ActivityType)
+    type: ActivityType = attr.ib(converter=ActivityType, repr=True)
     """The activity type."""

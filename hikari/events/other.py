@@ -52,13 +52,13 @@ if typing.TYPE_CHECKING:
 class ExceptionEvent(base_events.HikariEvent):
     """Descriptor for an exception thrown while processing an event."""
 
-    exception: Exception = attr.ib()
+    exception: Exception = attr.ib(repr=True)
     """The exception that was raised."""
 
-    event: base_events.HikariEvent = attr.ib()
+    event: base_events.HikariEvent = attr.ib(repr=True)
     """The event that was being invoked when the exception occurred."""
 
-    callback: typing.Callable[[base_events.HikariEvent], typing.Awaitable[None]] = attr.ib()
+    callback: typing.Callable[[base_events.HikariEvent], typing.Awaitable[None]] = attr.ib(repr=False)
     """The event that was being invoked when the exception occurred."""
 
 
@@ -91,7 +91,7 @@ class StoppedEvent(base_events.HikariEvent):
 class ConnectedEvent(base_events.HikariEvent):
     """Event invoked each time a shard connects."""
 
-    shard: gateway_client.Gateway = attr.ib()
+    shard: gateway_client.Gateway = attr.ib(repr=True)
     """The shard that connected."""
 
 
@@ -100,7 +100,7 @@ class ConnectedEvent(base_events.HikariEvent):
 class DisconnectedEvent(base_events.HikariEvent):
     """Event invoked each time a shard disconnects."""
 
-    shard: gateway_client.Gateway = attr.ib()
+    shard: gateway_client.Gateway = attr.ib(repr=True)
     """The shard that disconnected."""
 
 
@@ -108,7 +108,7 @@ class DisconnectedEvent(base_events.HikariEvent):
 class ResumedEvent(base_events.HikariEvent):
     """Represents a gateway Resume event."""
 
-    shard: gateway_client.Gateway = attr.ib()
+    shard: gateway_client.Gateway = attr.ib(repr=True)
     """The shard that reconnected."""
 
 
@@ -119,7 +119,7 @@ class ReadyEvent(base_events.HikariEvent):
     This is received only when IDENTIFYing with the gateway.
     """
 
-    shard: gateway_client.Gateway = attr.ib()
+    shard: gateway_client.Gateway = attr.ib(repr=False)
     """The shard that is ready."""
 
     gateway_version: int = attr.ib(repr=True)
@@ -128,7 +128,7 @@ class ReadyEvent(base_events.HikariEvent):
     my_user: users.OwnUser = attr.ib(repr=True)
     """The object of the current bot account this connection is for."""
 
-    unavailable_guilds: typing.Mapping[snowflake.Snowflake, guilds.UnavailableGuild] = attr.ib()
+    unavailable_guilds: typing.Mapping[snowflake.Snowflake, guilds.UnavailableGuild] = attr.ib(repr=False)
     """A mapping of the guilds this bot is currently in.
 
     All guilds will start off "unavailable".
