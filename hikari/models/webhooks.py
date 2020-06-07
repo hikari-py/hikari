@@ -69,9 +69,7 @@ class Webhook(bases.Entity, bases.Unique):
     channel_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The channel ID this webhook is for."""
 
-    author: typing.Optional[users_.User] = attr.ib(
-        eq=False, hash=False, repr=True,
-    )
+    author: typing.Optional[users_.User] = attr.ib(eq=False, hash=False, repr=True)
     """The user that created the webhook
 
     !!! info
@@ -82,10 +80,10 @@ class Webhook(bases.Entity, bases.Unique):
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The name of the webhook."""
 
-    avatar_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    avatar_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The avatar hash of the webhook."""
 
-    token: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    token: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The token for the webhook.
 
     !!! info

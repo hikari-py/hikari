@@ -277,16 +277,16 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
 class AuditLogEntry(bases.Entity, bases.Unique):
     """Represents an entry in a guild's audit log."""
 
-    target_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    target_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the entity affected by this change, if applicable."""
 
     changes: typing.Sequence[AuditLogChange] = attr.ib(eq=False, hash=False, repr=False)
     """A sequence of the changes made to `AuditLogEntry.target_id`."""
 
-    user_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    user_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the user who made this change."""
 
-    action_type: typing.Union[AuditLogEventType, str] = attr.ib(eq=False, hash=False)
+    action_type: typing.Union[AuditLogEventType, str] = attr.ib(eq=False, hash=False, repr=True)
     """The type of action this entry represents."""
 
     options: typing.Optional[BaseAuditLogEntryInfo] = attr.ib(eq=False, hash=False, repr=False)
@@ -301,16 +301,16 @@ class AuditLogEntry(bases.Entity, bases.Unique):
 class AuditLog:
     """Represents a guilds audit log."""
 
-    entries: typing.Mapping[snowflake.Snowflake, AuditLogEntry] = attr.ib()
+    entries: typing.Mapping[snowflake.Snowflake, AuditLogEntry] = attr.ib(repr=False)
     """A sequence of the audit log's entries."""
 
-    integrations: typing.Mapping[snowflake.Snowflake, guilds.Integration] = attr.ib()
+    integrations: typing.Mapping[snowflake.Snowflake, guilds.Integration] = attr.ib(repr=False)
     """A mapping of the partial objects of integrations found in this audit log."""
 
-    users: typing.Mapping[snowflake.Snowflake, users_.User] = attr.ib()
+    users: typing.Mapping[snowflake.Snowflake, users_.User] = attr.ib(repr=False)
     """A mapping of the objects of users found in this audit log."""
 
-    webhooks: typing.Mapping[snowflake.Snowflake, webhooks_.Webhook] = attr.ib()
+    webhooks: typing.Mapping[snowflake.Snowflake, webhooks_.Webhook] = attr.ib(repr=False)
     """A mapping of the objects of webhooks found in this audit log."""
 
     def __iter__(self) -> typing.Iterable[AuditLogEntry]:

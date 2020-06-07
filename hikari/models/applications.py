@@ -205,23 +205,19 @@ class OwnConnection:
     type: str = attr.ib(eq=False, hash=False, repr=True)
     """The type of service this connection is for."""
 
-    is_revoked: bool = attr.ib(
-        eq=False, hash=False,
-    )
+    is_revoked: bool = attr.ib(eq=False, hash=False, repr=False)
     """`True` if the connection has been revoked."""
 
-    integrations: typing.Sequence[guilds.PartialIntegration] = attr.ib(
-        eq=False, hash=False,
-    )
+    integrations: typing.Sequence[guilds.PartialIntegration] = attr.ib(eq=False, hash=False, repr=False)
     """A sequence of the partial guild integration objects this connection has."""
 
-    is_verified: bool = attr.ib(eq=False, hash=False)
+    is_verified: bool = attr.ib(eq=False, hash=False, repr=False)
     """`True` if the connection has been verified."""
 
-    is_friend_sync_enabled: bool = attr.ib(eq=False, hash=False)
+    is_friend_sync_enabled: bool = attr.ib(eq=False, hash=False, repr=False)
     """`True` if friends should be added based on this connection."""
 
-    is_activity_visible: bool = attr.ib(eq=False, hash=False)
+    is_activity_visible: bool = attr.ib(eq=False, hash=False, repr=False)
     """`True` if this connection's activities are shown in the user's presence."""
 
     visibility: ConnectionVisibility = attr.ib(eq=False, hash=False, repr=True)
@@ -235,7 +231,7 @@ class OwnGuild(guilds.PartialGuild):
     is_owner: bool = attr.ib(eq=False, hash=False, repr=True)
     """`True` when the current user owns this guild."""
 
-    my_permissions: permissions_.Permission = attr.ib(eq=False, hash=False)
+    my_permissions: permissions_.Permission = attr.ib(eq=False, hash=False, repr=False)
     """The guild-level permissions that apply to the current user or bot."""
 
 
@@ -254,10 +250,10 @@ class TeamMembershipState(int, enum.Enum):
 class TeamMember(bases.Entity):
     """Represents a member of a Team."""
 
-    membership_state: TeamMembershipState = attr.ib(eq=False, hash=False)
+    membership_state: TeamMembershipState = attr.ib(eq=False, hash=False, repr=False)
     """The state of this user's membership."""
 
-    permissions: typing.Set[str] = attr.ib(eq=False, hash=False)
+    permissions: typing.Set[str] = attr.ib(eq=False, hash=False, repr=False)
     """This member's permissions within a team.
 
     At the time of writing, this will always be a set of one `str`, which
@@ -275,13 +271,13 @@ class TeamMember(bases.Entity):
 class Team(bases.Entity, bases.Unique):
     """Represents a development team, along with all its members."""
 
-    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The CDN hash of this team's icon.
 
     If no icon is provided, this will be `None`.
     """
 
-    members: typing.Mapping[snowflake.Snowflake, TeamMember] = attr.ib(eq=False, hash=False)
+    members: typing.Mapping[snowflake.Snowflake, TeamMember] = attr.ib(eq=False, hash=False, repr=False)
     """A mapping containing each member in this team.
 
     The mapping maps keys containing the member's ID to values containing the
@@ -338,7 +334,7 @@ class Application(bases.Entity, bases.Unique):
     """The name of this application."""
 
     # TODO: default to None for consistency?
-    description: str = attr.ib(eq=False, hash=False)
+    description: str = attr.ib(eq=False, hash=False, repr=False)
     """The description of this application, or an empty string if undefined."""
 
     is_bot_public: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=True)
@@ -347,7 +343,7 @@ class Application(bases.Entity, bases.Unique):
     Will be `None` if this application doesn't have an associated bot.
     """
 
-    is_bot_code_grant_required: typing.Optional[bool] = attr.ib(eq=False, hash=False)
+    is_bot_code_grant_required: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """`True` if this application's bot is requiring code grant for invites.
 
     Will be `None` if this application doesn't have a bot.
@@ -360,40 +356,40 @@ class Application(bases.Entity, bases.Unique):
     Discord's oauth2 flow.
     """
 
-    rpc_origins: typing.Optional[typing.Set[str]] = attr.ib(eq=False, hash=False)
+    rpc_origins: typing.Optional[typing.Set[str]] = attr.ib(eq=False, hash=False, repr=False)
     """A collection of this application's RPC origin URLs, if RPC is enabled."""
 
-    summary: str = attr.ib(eq=False, hash=False)
+    summary: str = attr.ib(eq=False, hash=False, repr=False)
     """This summary for this application's primary SKU if it's sold on Discord.
 
     Will be an empty string if undefined.
     """
 
-    verify_key: typing.Optional[bytes] = attr.ib(eq=False, hash=False)
+    verify_key: typing.Optional[bytes] = attr.ib(eq=False, hash=False, repr=False)
     """The base64 encoded key used for the GameSDK's `GetTicket`."""
 
-    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The CDN hash of this application's icon, if set."""
 
-    team: typing.Optional[Team] = attr.ib(eq=False, hash=False)
+    team: typing.Optional[Team] = attr.ib(eq=False, hash=False, repr=False)
     """The team this application belongs to.
 
     If the application is not part of a team, this will be `None`.
     """
 
-    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the guild this application is linked to if sold on Discord."""
 
-    primary_sku_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    primary_sku_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the primary "Game SKU" of a game that's sold on Discord."""
 
-    slug: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    slug: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The URL "slug" that is used to point to this application's store page.
 
     Only applicable to applications sold on Discord.
     """
 
-    cover_image_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    cover_image_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's cover image, used on the store."""
 
     @property

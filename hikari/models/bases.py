@@ -52,7 +52,7 @@ class Entity(abc.ABC):
         app_.IGatewayDispatcher,
         app_.IRESTApp,
         app_.IBot,
-    ] = attr.ib(default=None, repr=False, eq=False, hash=False)
+    ] = attr.ib(default=None, eq=False, hash=False, repr=False)
     """The client application that models may use for procedures."""
 
     def __init__(self, app: app_.IApp) -> None:
@@ -67,7 +67,7 @@ class Unique(typing.SupportsInt):
     integer ID of the object.
     """
 
-    id: snowflake.Snowflake = attr.ib(converter=snowflake.Snowflake, hash=True, eq=True, repr=True)
+    id: snowflake.Snowflake = attr.ib(converter=snowflake.Snowflake, eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     @property
