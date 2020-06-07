@@ -54,7 +54,7 @@ if typing.TYPE_CHECKING:
 class BaseChannelEvent(base_events.HikariEvent, abc.ABC):
     """A base object that Channel events will inherit from."""
 
-    channel: channels.PartialChannel = attr.ib()
+    channel: channels.PartialChannel = attr.ib(repr=True)
     """The object of the channel this event involved."""
 
 
@@ -89,7 +89,7 @@ class ChannelPinsUpdateEvent(base_events.HikariEvent, base_models.Entity):
     when a pinned message is deleted.
     """
 
-    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib()
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild where this event happened.
 
     Will be `None` if this happened in a DM channel.
@@ -140,10 +140,10 @@ class TypingStartEvent(base_events.HikariEvent, base_models.Entity):
     user_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the user who triggered this typing event."""
 
-    timestamp: datetime.datetime = attr.ib()
+    timestamp: datetime.datetime = attr.ib(repr=False)
     """The datetime of when this typing event started."""
 
-    member: typing.Optional[guilds.Member] = attr.ib()
+    member: typing.Optional[guilds.Member] = attr.ib(repr=False)
     """The member object of the user who triggered this typing event.
 
     Will be `None` if this was triggered in a DM.
@@ -155,7 +155,7 @@ class TypingStartEvent(base_events.HikariEvent, base_models.Entity):
 class InviteCreateEvent(base_events.HikariEvent):
     """Represents a gateway Invite Create event."""
 
-    invite: invites.InviteWithMetadata = attr.ib()
+    invite: invites.InviteWithMetadata = attr.ib(repr=True)
     """The object of the invite being created."""
 
 

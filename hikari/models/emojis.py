@@ -212,9 +212,7 @@ class CustomEmoji(Emoji, bases.Entity, bases.Unique):
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The name of the emoji."""
 
-    is_animated: typing.Optional[bool] = attr.ib(
-        eq=False, hash=False, repr=True,
-    )
+    is_animated: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=True)
     """Whether the emoji is animated.
 
     Will be `None` when received in Message Reaction Remove and Message
@@ -250,17 +248,13 @@ class KnownCustomEmoji(CustomEmoji):
     _are_ part of. Ass a result, it contains a lot more information with it.
     """
 
-    role_ids: typing.Set[snowflake.Snowflake] = attr.ib(
-        eq=False, hash=False,
-    )
+    role_ids: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The IDs of the roles that are whitelisted to use this emoji.
 
     If this is empty then any user can use this emoji regardless of their roles.
     """
 
-    user: typing.Optional[users.User] = attr.ib(
-        eq=False, hash=False,
-    )
+    user: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=False)
     """The user that created the emoji.
 
     !!! note
@@ -274,13 +268,13 @@ class KnownCustomEmoji(CustomEmoji):
     Unlike in `CustomEmoji`, this information is always known, and will thus never be `None`.
     """
 
-    is_colons_required: bool = attr.ib(eq=False, hash=False)
+    is_colons_required: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this emoji must be wrapped in colons."""
 
-    is_managed: bool = attr.ib(eq=False, hash=False)
+    is_managed: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether the emoji is managed by an integration."""
 
-    is_available: bool = attr.ib(eq=False, hash=False)
+    is_available: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this emoji can currently be used.
 
     May be `False` due to a loss of Sever Boosts on the emoji's guild.

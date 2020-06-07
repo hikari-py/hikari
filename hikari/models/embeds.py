@@ -63,10 +63,10 @@ class EmbedFooter:
     text: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The footer text, or `None` if not present."""
 
-    icon_url: typing.Optional[str] = attr.ib(default=None)
+    icon_url: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The URL of the footer icon, or `None` if not present."""
 
-    proxy_icon_url: typing.Optional[str] = attr.ib(default=None)
+    proxy_icon_url: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The proxied URL of the footer icon, or `None` if not present.
 
     !!! note
@@ -80,12 +80,10 @@ class EmbedFooter:
 class EmbedImage:
     """Represents an embed image."""
 
-    url: typing.Optional[str] = attr.ib(
-        default=None, repr=True,
-    )
+    url: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The URL of the image to show, or `None` if not present."""
 
-    proxy_url: typing.Optional[str] = attr.ib(default=None,)
+    proxy_url: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The proxied URL of the image, or `None` if not present.
 
     !!! note
@@ -94,7 +92,7 @@ class EmbedImage:
         any received embed attached to a message event.
     """
 
-    height: typing.Optional[int] = attr.ib(default=None)
+    height: typing.Optional[int] = attr.ib(default=None, repr=False)
     """The height of the image, if present and known, otherwise `None`.
 
     !!! note
@@ -103,7 +101,7 @@ class EmbedImage:
         any received embed attached to a message event.
     """
 
-    width: typing.Optional[int] = attr.ib(default=None)
+    width: typing.Optional[int] = attr.ib(default=None, repr=False)
     """The width of the image, if present and known, otherwise `None`.
 
     !!! note
@@ -117,12 +115,10 @@ class EmbedImage:
 class EmbedThumbnail:
     """Represents an embed thumbnail."""
 
-    url: typing.Optional[str] = attr.ib(
-        default=None, repr=True,
-    )
+    url: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The URL of the thumbnail to display, or `None` if not present."""
 
-    proxy_url: typing.Optional[str] = attr.ib(default=None,)
+    proxy_url: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The proxied URL of the thumbnail, if present and known, otherwise `None`.
 
     !!! note
@@ -131,7 +127,7 @@ class EmbedThumbnail:
         any received embed attached to a message event.
     """
 
-    height: typing.Optional[int] = attr.ib(default=None)
+    height: typing.Optional[int] = attr.ib(default=None, repr=False)
     """The height of the thumbnail, if present and known, otherwise `None`.
 
     !!! note
@@ -140,7 +136,7 @@ class EmbedThumbnail:
         any received embed attached to a message event.
     """
 
-    width: typing.Optional[int] = attr.ib(default=None)
+    width: typing.Optional[int] = attr.ib(default=None, repr=False)
     """The width of the thumbnail, if present and known, otherwise `None`.
 
     !!! note
@@ -163,10 +159,10 @@ class EmbedVideo:
     url: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The URL of the video."""
 
-    height: typing.Optional[int] = attr.ib(default=None)
+    height: typing.Optional[int] = attr.ib(default=None, repr=False)
     """The height of the video."""
 
-    width: typing.Optional[int] = attr.ib(default=None)
+    width: typing.Optional[int] = attr.ib(default=None, repr=False)
     """The width of the video."""
 
 
@@ -201,10 +197,10 @@ class EmbedAuthor:
     This may be `None` if no hyperlink on the author's name is specified.
     """
 
-    icon_url: typing.Optional[str] = attr.ib(default=None)
+    icon_url: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The URL of the author's icon, or `None` if not present."""
 
-    proxy_icon_url: typing.Optional[str] = attr.ib(default=None)
+    proxy_icon_url: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The proxied URL of the author icon, or `None` if not present.
 
     !!! note
@@ -242,7 +238,7 @@ class Embed:
                 f"title must not exceed {_MAX_EMBED_TITLE} characters", category=errors.HikariWarning,
             )
 
-    description: typing.Optional[str] = attr.ib(default=None)
+    description: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The description of the embed, or `None` if not present."""
 
     @description.validator
@@ -252,12 +248,10 @@ class Embed:
                 f"description must not exceed {_MAX_EMBED_DESCRIPTION} characters", category=errors.HikariWarning,
             )
 
-    url: typing.Optional[str] = attr.ib(default=None)
+    url: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The URL of the embed, or `None` if not present."""
 
-    timestamp: typing.Optional[datetime.datetime] = attr.ib(
-        default=None, repr=True,
-    )
+    timestamp: typing.Optional[datetime.datetime] = attr.ib(default=None, repr=True)
     """The timestamp of the embed, or `None` if not present.
 
     !!! note
@@ -315,7 +309,7 @@ class Embed:
     """
 
     color: typing.Optional[colors.Color] = attr.ib(
-        converter=attr.converters.optional(colors.Color.of), default=None,
+        converter=attr.converters.optional(colors.Color.of), default=None, repr=False
     )
     """The colour of this embed.
 
@@ -329,16 +323,16 @@ class Embed:
         off-white, such as `#DDDDDD` or `#FFFFFE` instead.
     """
 
-    footer: typing.Optional[EmbedFooter] = attr.ib(default=None)
+    footer: typing.Optional[EmbedFooter] = attr.ib(default=None, repr=False)
     """The footer of the embed, if present, otherwise `None`."""
 
-    image: typing.Optional[EmbedImage] = attr.ib(default=None)
+    image: typing.Optional[EmbedImage] = attr.ib(default=None, repr=False)
     """The image to display in the embed, or `None` if not present."""
 
-    thumbnail: typing.Optional[EmbedThumbnail] = attr.ib(default=None)
+    thumbnail: typing.Optional[EmbedThumbnail] = attr.ib(default=None, repr=False)
     """The thumbnail to show in the embed, or `None` if not present."""
 
-    video: typing.Optional[EmbedVideo] = attr.ib(default=None)
+    video: typing.Optional[EmbedVideo] = attr.ib(default=None, repr=False)
     """The video to show in the embed, or `None` if not present.
 
     !!! note
@@ -347,7 +341,7 @@ class Embed:
         any received embed attached to a message event with a video attached.
     """
 
-    provider: typing.Optional[EmbedProvider] = attr.ib(default=None)
+    provider: typing.Optional[EmbedProvider] = attr.ib(default=None, repr=False)
     """The provider of the embed, or `None if not present.
 
     !!! note
@@ -357,10 +351,10 @@ class Embed:
         set.
     """
 
-    author: typing.Optional[EmbedAuthor] = attr.ib(default=None)
+    author: typing.Optional[EmbedAuthor] = attr.ib(default=None, repr=False)
     """The author of the embed, or `None if not present."""
 
-    fields: typing.MutableSequence[EmbedField] = attr.ib(factory=list)
+    fields: typing.MutableSequence[EmbedField] = attr.ib(factory=list, repr=False)
     """The fields in the embed."""
 
     # Use a weakref so that clearing an image can pop the reference.

@@ -42,7 +42,7 @@ class VoiceStateUpdateEvent(base_events.HikariEvent):
     Sent when a user joins, leaves or moves voice channel(s).
     """
 
-    state: voices.VoiceState = attr.ib()
+    state: voices.VoiceState = attr.ib(repr=True)
     """The object of the voice state that's being updated."""
 
 
@@ -54,7 +54,7 @@ class VoiceServerUpdateEvent(base_events.HikariEvent):
     falls over to a new server.
     """
 
-    token: str = attr.ib()
+    token: str = attr.ib(repr=False)
     """The voice connection's string token."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
