@@ -58,6 +58,7 @@ import abc
 import asyncio
 import base64
 import concurrent.futures
+import contextlib
 import functools
 import http
 import inspect
@@ -364,7 +365,7 @@ class ByteStream(BaseStream):
             return
 
         if aio.is_async_iterable(obj):
-            self._obj = obj
+            self._obj = obj  # type: ignore
             return
 
         if isinstance(obj, (io.StringIO, io.BytesIO)):
@@ -380,7 +381,7 @@ class ByteStream(BaseStream):
         raise TypeError(f"Expected bytes-like object or async generator, got {type(obj).__qualname__}")
 
     def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
-        return self._obj.__aiter__()
+        return self._obj.__aiter__()  # type: ignore
 
     @property
     def filename(self) -> str:
@@ -430,11 +431,11 @@ class WebResourceStream(BaseStream):
     url: str
     """The URL of the resource."""
 
-    def __init__(self, filename: str, url: str) -> None:
+    def __init__(self, filename: str, url: str, /) -> None:
         self._filename = filename
         self.url = url
 
-    async def __aiter__(self) -> typing.Generator[bytes, None, None]:
+    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         async with aiohttp.request("GET", self.url) as response:
             if 200 <= response.status < 300:
                 async for chunk in response.content:
@@ -454,6 +455,7 @@ class WebResourceStream(BaseStream):
         if response.status == http.HTTPStatus.NOT_FOUND:
             raise errors.NotFound(real_url, response.headers, raw_body)
 
+        cls: typing.Type[errors.HikariError]
         if 400 <= response.status < 500:
             cls = errors.ClientHTTPErrorResponse
         elif 500 <= response.status < 600:
@@ -527,6 +529,7 @@ class FileStream(BaseStream):
         self,
         filename: str,
         path: typing.Union[str, os.PathLike],
+        /,
         *,
         executor: typing.Optional[concurrent.futures.Executor] = None,
     ) -> None:
@@ -538,7 +541,9 @@ class FileStream(BaseStream):
     ) -> None:
         ...
 
-    def __init__(self, *args, executor=None) -> None:
+    def __init__(
+        self, *args: typing.Union[str, os.PathLike], executor: typing.Optional[concurrent.futures.Executor] = None
+    ) -> None:
         if len(args) == 1:
             self._filename = os.path.basename(args[0])
             self.path = args[0]
@@ -546,33 +551,21 @@ class FileStream(BaseStream):
             self._filename, self.path = args
         self._executor = executor
 
-    def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
+    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         loop = asyncio.get_event_loop()
         # We cant use a process pool in the same way we do a thread pool, as
-        # we cannot pickle file objects that we pass between threads. This
-        # method instead will stream the data via a pipe to us.
+        # we cannot pickle file objects that we pass between threads.
         if isinstance(self._executor, concurrent.futures.ProcessPoolExecutor):
-
-            return self._processpool_strategy(loop)
-
-        return self._threadpool_strategy(loop)
+            raise NotImplementedError("Cannot currently use a ProcessPoolExecutor to perform IO in this implementation")
+        else:
+            fp = await loop.run_in_executor(self._executor, functools.partial(open, self.path, "rb"))
+            try:
+                while chunk := await loop.run_in_executor(self._executor, fp.read, MAGIC_NUMBER):
+                    yield chunk
+            finally:
+                with contextlib.suppress(IOError):
+                    await loop.run_in_executor(self._executor, fp.close)
 
     @property
     def filename(self) -> str:
         return self._filename
-
-    async def _threadpool_strategy(self, loop):
-        fp = await loop.run_in_executor(self._executor, functools.partial(open, self.path, "rb"))
-        try:
-            while chunk := await loop.run_in_executor(self._executor, fp.read, MAGIC_NUMBER):
-                yield chunk
-        finally:
-            await loop.run_in_executor(self._executor, fp.close)
-
-    async def _processpool_strategy(self, loop):
-        yield await loop.run_in_executor(self._executor, self._read_all, self.path)
-
-    @staticmethod
-    def _read_all(path):
-        with open(path, "rb") as fp:
-            return fp.read()
