@@ -91,5 +91,5 @@ mypy:
     - nox -s mypy --no-error-on-external-run
   artifacts:
     reports:
-      cobertura: public/mypy/cobertura.xml
+      junit: public/mypy.xml
     when: always

@@ -26,5 +26,12 @@ def mypy(session: nox.Session) -> None:
     # LXML is used for cobertura reporting.
     session.install("-r", "requirements.txt", "mypy==0.780", "lxml")
     session.run(
-        "mypy", "-p", config.MAIN_PACKAGE, "--config", config.MYPY_INI,
+        "mypy",
+        "-p",
+        config.MAIN_PACKAGE,
+        "--config",
+        config.MYPY_INI,
+        "--junit-xml",
+        config.MYPY_JUNIT_OUTPUT_PATH,
+        success_codes=range(0, 256),
     )
