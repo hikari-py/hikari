@@ -23,6 +23,7 @@ from __future__ import annotations
 __all__: typing.List[str] = ["REST"]
 
 import asyncio
+import contextlib
 import datetime
 import http
 import typing
@@ -40,6 +41,7 @@ from hikari.net import rest_utils
 from hikari.net import routes
 from hikari.utilities import data_binding
 from hikari.utilities import date
+from hikari.utilities import files
 from hikari.utilities import klass
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
@@ -54,7 +56,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import colors
     from hikari.models import embeds as embeds_
     from hikari.models import emojis
-    from hikari.models import files
     from hikari.models import gateway
     from hikari.models import guilds
     from hikari.models import invites
@@ -63,6 +64,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import users
     from hikari.models import voices
     from hikari.models import webhooks
+
 
 _REST_API_URL: typing.Final[str] = "https://discord.com/api/v{0.version}"
 """The URL for the RESTSession API. This contains a version number parameter that
@@ -225,11 +227,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         await asyncio.gather(self.buckets.acquire(compiled_route), self.global_rate_limit.acquire())
 
         # Make the request.
+        # noinspection PyUnresolvedReferences
         response = await self._perform_request(
             method=compiled_route.method, url=url, headers=headers, body=body, query=query
         )
-
-        real_url = str(response.real_url)
 
         # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
         await self._handle_rate_limits_for_response(compiled_route, response)
@@ -239,36 +240,20 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         if response.status == http.HTTPStatus.NO_CONTENT:
             return None
 
-        raw_body = await response.read()
-
         # Handle the response.
         if 200 <= response.status < 300:
             if response.content_type == self._APPLICATION_JSON:
                 # Only deserializing here stops Cloudflare shenanigans messing us around.
-                return data_binding.load_json(raw_body)
+                return data_binding.load_json(await response.read())
+
+            real_url = str(response.real_url)
             raise errors.HTTPError(real_url, f"Expected JSON response but received {response.content_type}")
 
-        if response.status == http.HTTPStatus.BAD_REQUEST:
-            raise errors.BadRequest(real_url, response.headers, raw_body)
-        if response.status == http.HTTPStatus.UNAUTHORIZED:
-            raise errors.Unauthorized(real_url, response.headers, raw_body)
-        if response.status == http.HTTPStatus.FORBIDDEN:
-            raise errors.Forbidden(real_url, response.headers, raw_body)
-        if response.status == http.HTTPStatus.NOT_FOUND:
-            raise errors.NotFound(real_url, response.headers, raw_body)
+        await self._handle_error_response(response)
 
-        # noinspection PyArgumentList
-        status = http.HTTPStatus(response.status)
-
-        cls: typing.Type[errors.HikariError]
-        if 400 <= status < 500:
-            cls = errors.ClientHTTPErrorResponse
-        elif 500 <= status < 600:
-            cls = errors.ServerHTTPErrorResponse
-        else:
-            cls = errors.HTTPErrorResponse
-
-        raise cls(real_url, status, response.headers, raw_body)
+    @staticmethod
+    async def _handle_error_response(response) -> typing.NoReturn:
+        return await http_client.parse_error_response(response)
 
     async def _handle_rate_limits_for_response(
         self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse
@@ -387,17 +372,6 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             allowed_mentions["parse"] = parsed_mentions
 
         return allowed_mentions
-
-    def _build_message_creation_form(
-        self, payload: data_binding.JSONObject, attachments: typing.Sequence[files.BaseStream],
-    ) -> aiohttp.FormData:
-        form = data_binding.URLEncodedForm()
-        form.add_field("payload_json", data_binding.dump_json(payload), content_type=self._APPLICATION_JSON)
-        for i, attachment in enumerate(attachments):
-            form.add_field(
-                f"file{i}", attachment, filename=attachment.filename, content_type=self._APPLICATION_OCTET_STREAM
-            )
-        return form
 
     async def close(self) -> None:
         """Close the REST client and any open HTTP connections."""
@@ -1052,7 +1026,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         text: typing.Union[undefined.Undefined, typing.Any] = undefined.Undefined(),
         *,
         embed: typing.Union[undefined.Undefined, embeds_.Embed] = undefined.Undefined(),
-        attachments: typing.Union[undefined.Undefined, typing.Sequence[files.BaseStream]] = undefined.Undefined(),
+        attachments: typing.Union[undefined.Undefined, typing.Sequence[files.Resource]] = undefined.Undefined(),
         tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
         nonce: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         mentions_everyone: bool = True,
@@ -1070,7 +1044,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             If specified, the message contents.
         embed : hikari.utilities.undefined.Undefined or hikari.models.embeds.Embed
             If specified, the message embed.
-        attachments : hikari.utilities.undefined.Undefined or typing.Sequence[hikari.models.files.BaseStream]
+        attachments : hikari.utilities.undefined.Undefined or typing.Sequence[hikari.utilities.files.Resource]
             If specified, the message attachments.
         tts : hikari.utilities.undefined.Undefined or bool
             If specified, whether the message will be TTS (Text To Speech).
@@ -1126,12 +1100,27 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         attachments = [] if isinstance(attachments, undefined.Undefined) else [a for a in attachments]
 
-        if not isinstance(embed, undefined.Undefined):
-            attachments.extend(embed.assets_to_upload)
+        # TODO: embed attachments...
 
-        raw_response = await self._request(
-            route, body=self._build_message_creation_form(body, attachments) if attachments else body
-        )
+        if attachments:
+            form = data_binding.URLEncodedForm()
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=self._APPLICATION_JSON)
+
+            stack = contextlib.AsyncExitStack()
+
+            try:
+                for i, attachment in enumerate(attachments):
+                    stream = await stack.enter_async_context(attachment.stream())
+                    form.add_field(
+                        f"file{i}", stream, filename=stream.filename, content_type=self._APPLICATION_OCTET_STREAM
+                    )
+
+                raw_response = await self._request(route, body=form)
+            finally:
+                await stack.aclose()
+        else:
+            raw_response = await self._request(route, body=body)
+
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_message(response)
 
@@ -1139,9 +1128,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
         message: typing.Union[messages_.Message, bases.UniqueObject],
-        text: typing.Union[undefined.Undefined, typing.Any] = undefined.Undefined(),
+        text: typing.Union[undefined.Undefined, None, typing.Any] = undefined.Undefined(),
         *,
-        embed: typing.Union[undefined.Undefined, embeds_.Embed] = undefined.Undefined(),
+        embed: typing.Union[undefined.Undefined, None, embeds_.Embed] = undefined.Undefined(),
         mentions_everyone: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
         user_mentions: typing.Union[
             undefined.Undefined, typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool
@@ -1195,10 +1184,19 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         """
         route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         body = data_binding.JSONObjectBuilder()
-        body.put("content", text, conversion=str)
-        body.put("embed", embed, conversion=self._app.entity_factory.serialize_embed)
         body.put("flags", flags)
         body.put("allowed_mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions))
+
+        if text is not None:
+            body.put("content", text, conversion=str)
+        else:
+            body.put("content", None)
+
+        if embed is not None:
+            body.put("embed", embed, conversion=self._app.entity_factory.serialize_embed)
+        else:
+            body.put("embed", None)
+
         raw_response = await self._request(route, body=body)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_message(response)
@@ -1269,7 +1267,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
         message: typing.Union[messages_.Message, bases.UniqueObject],
-        emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
+        emoji: typing.Union[str, emojis.Emoji],
     ) -> None:
         """Add a reaction emoji to a message in a given channel.
 
@@ -1294,7 +1292,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             If an internal error occurs on Discord while handling the request.
         """
         route = routes.PUT_MY_REACTION.compile(
-            emoji=emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji),
+            emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
             channel=channel,
             message=message,
         )
@@ -1304,7 +1302,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
         message: typing.Union[messages_.Message, bases.UniqueObject],
-        emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
+        emoji: typing.Union[str, emojis.Emoji],
     ) -> None:
         """Delete a reaction that your application user created.
 
@@ -1327,7 +1325,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             If an internal error occurs on Discord while handling the request.
         """
         route = routes.DELETE_MY_REACTION.compile(
-            emoji=emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji),
+            emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
             channel=channel,
             message=message,
         )
@@ -1337,10 +1335,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
         message: typing.Union[messages_.Message, bases.UniqueObject],
-        emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
+        emoji: typing.Union[str, emojis.Emoji],
     ) -> None:
         route = routes.DELETE_REACTION_EMOJI.compile(
-            emoji=emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji),
+            emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
             channel=channel,
             message=message,
         )
@@ -1350,11 +1348,11 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
         message: typing.Union[messages_.Message, bases.UniqueObject],
-        emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
+        emoji: typing.Union[str, emojis.Emoji],
         user: typing.Union[users.User, bases.UniqueObject],
     ) -> None:
         route = routes.DELETE_REACTION_USER.compile(
-            emoji=emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji),
+            emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
             channel=channel,
             message=message,
             user=user,
@@ -1373,14 +1371,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
         message: typing.Union[messages_.Message, bases.UniqueObject],
-        emoji: typing.Union[str, emojis.UnicodeEmoji, emojis.KnownCustomEmoji],
+        emoji: typing.Union[str, emojis.Emoji],
     ) -> iterators.LazyIterator[users.User]:
         return iterators.ReactorIterator(
             app=self._app,
             request_call=self._request,
             channel_id=str(int(channel)),
             message_id=str(int(message)),
-            emoji=emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji),
+            emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
         )
 
     async def create_webhook(
@@ -1388,14 +1386,15 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
         name: str,
         *,
-        avatar: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
+        avatar: typing.Union[undefined.Undefined, files.Resource] = undefined.Undefined(),
         reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> webhooks.Webhook:
         route = routes.POST_WEBHOOK.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         if not isinstance(avatar, undefined.Undefined):
-            body.put("avatar", await avatar.fetch_data_uri())
+            async with avatar.stream() as stream:
+                body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
@@ -1439,7 +1438,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         *,
         token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        avatar: typing.Union[None, undefined.Undefined, files.BaseStream] = undefined.Undefined(),
+        avatar: typing.Union[None, undefined.Undefined, files.Resource] = undefined.Undefined(),
         channel: typing.Union[undefined.Undefined, channels.TextChannel, bases.UniqueObject] = undefined.Undefined(),
         reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> webhooks.Webhook:
@@ -1452,7 +1451,11 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("name", name)
         body.put_snowflake("channel", channel)
         if not isinstance(avatar, undefined.Undefined):
-            body.put("avatar", await avatar.fetch_data_uri() if avatar is not None else None)
+            if avatar is None:
+                body.put("avatar", None)
+            else:
+                async with avatar.stream() as stream:
+                    body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
@@ -1480,7 +1483,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         username: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         avatar_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         embeds: typing.Union[undefined.Undefined, typing.Sequence[embeds_.Embed]] = undefined.Undefined(),
-        attachments: typing.Union[undefined.Undefined, typing.Sequence[files.BaseStream]] = undefined.Undefined(),
+        attachments: typing.Union[undefined.Undefined, typing.Sequence[files.Resource]] = undefined.Undefined(),
         tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool] = True,
@@ -1498,7 +1501,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         if not isinstance(embeds, undefined.Undefined):
             for embed in embeds:
-                attachments.extend(embed.assets_to_upload)
+                # TODO: embed attachments.
                 serialized_embeds.append(self._app.entity_factory.serialize_embed(embed))
 
         body = data_binding.JSONObjectBuilder()
@@ -1510,9 +1513,23 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("tts", tts)
         body.put("wait", True)
 
-        raw_response = await self._request(
-            route, body=self._build_message_creation_form(body, attachments) if attachments else body, no_auth=no_auth,
-        )
+        if attachments:
+            form = data_binding.URLEncodedForm()
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=self._APPLICATION_JSON)
+
+            stack = contextlib.AsyncExitStack()
+
+            try:
+                for i, attachment in enumerate(attachments):
+                    stream, filename = await stack.enter_async_context(attachment.to_attachment(self._app))
+                    form.add_field(f"file{i}", stream, filename=filename, content_type=self._APPLICATION_OCTET_STREAM)
+
+                raw_response = await self._request(route, body=form, no_auth=no_auth)
+            finally:
+                await stack.aclose()
+        else:
+            raw_response = await self._request(route, body=body, no_auth=no_auth)
+
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_message(response)
 
@@ -1551,14 +1568,15 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         *,
         username: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        avatar: typing.Union[undefined.Undefined, None, files.BaseStream] = undefined.Undefined(),
+        avatar: typing.Union[undefined.Undefined, None, files.Resource] = undefined.Undefined(),
     ) -> users.OwnUser:
         route = routes.PATCH_MY_USER.compile()
         body = data_binding.JSONObjectBuilder()
         body.put("username", username)
 
-        if isinstance(avatar, files.BaseStream):
-            body.put("avatar", await avatar.fetch_data_uri())
+        if isinstance(avatar, files.Resource):
+            async with avatar.stream() as stream:
+                body.put("avatar", await stream.data_uri())
         else:
             body.put("avatar", avatar)
 
@@ -1693,7 +1711,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         name: str,
-        image: files.BaseStream,
+        image: files.Resource,
         *,
         roles: typing.Union[
             undefined.Undefined, typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]]
@@ -1704,7 +1722,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         if not isinstance(image, undefined.Undefined):
-            body.put("image", await image.fetch_data_uri())
+            async with image.stream() as stream:
+                body.put("image", await stream.data_uri())
 
         body.put_snowflake_array("roles", roles)
 
@@ -1782,10 +1801,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             undefined.Undefined, channels.GuildVoiceChannel, bases.UniqueObject
         ] = undefined.Undefined(),
         afk_timeout: typing.Union[undefined.Undefined, date.TimeSpan] = undefined.Undefined(),
-        icon: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
+        icon: typing.Union[undefined.Undefined, None, files.Resource] = undefined.Undefined(),
         owner: typing.Union[undefined.Undefined, users.User, bases.UniqueObject] = undefined.Undefined(),
-        splash: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
-        banner: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
+        splash: typing.Union[undefined.Undefined, None, files.Resource] = undefined.Undefined(),
+        banner: typing.Union[undefined.Undefined, None, files.Resource] = undefined.Undefined(),
         system_channel: typing.Union[undefined.Undefined, channels.GuildTextChannel] = undefined.Undefined(),
         rules_channel: typing.Union[undefined.Undefined, channels.GuildTextChannel] = undefined.Undefined(),
         public_updates_channel: typing.Union[undefined.Undefined, channels.GuildTextChannel] = undefined.Undefined(),
@@ -1807,14 +1826,28 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put_snowflake("rules_channel_id", rules_channel)
         body.put_snowflake("public_updates_channel_id", public_updates_channel)
 
+        # FIXME: gather these futures simultaneously for a 3x speedup...
+
         if not isinstance(icon, undefined.Undefined):
-            body.put("icon", await icon.fetch_data_uri())
+            if icon is None:
+                body.put("icon", None)
+            else:
+                async with icon.stream() as stream:
+                    body.put("icon", await stream.data_uri())
 
         if not isinstance(splash, undefined.Undefined):
-            body.put("splash", await splash.fetch_data_uri())
+            if splash is None:
+                body.put("splash", None)
+            else:
+                async with splash.stream() as stream:
+                    body.put("splash", await stream.data_uri())
 
         if not isinstance(banner, undefined.Undefined):
-            body.put("banner", await banner.fetch_data_uri())
+            if banner is None:
+                body.put("banner", None)
+            else:
+                async with banner.stream() as stream:
+                    body.put("banner", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)

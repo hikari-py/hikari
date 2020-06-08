@@ -120,7 +120,7 @@ class IApp(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def thread_pool(self) -> typing.Optional[futures.ThreadPoolExecutor]:
+    def thread_pool_executor(self) -> typing.Optional[futures.ThreadPoolExecutor]:
         """Thread-pool to utilise for file IO within the library, if set.
 
         Returns

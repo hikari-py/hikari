@@ -96,7 +96,7 @@ class RESTAppImpl(app_.IRESTApp):
         return self._logger
 
     @property
-    def thread_pool(self) -> typing.Optional[futures.ThreadPoolExecutor]:
+    def thread_pool_executor(self) -> typing.Optional[futures.ThreadPoolExecutor]:
         return None
 
     @property
