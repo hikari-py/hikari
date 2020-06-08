@@ -27,12 +27,12 @@ import logging
 import typing
 
 
-def get_logger(cls: typing.Union[typing.Type[typing.Any], typing.Any], *additional_args: str) -> logging.Logger:
+def get_logger(obj: typing.Union[typing.Type[typing.Any], typing.Any], *additional_args: str) -> logging.Logger:
     """Get an appropriately named logger for the given class or object.
 
     Parameters
     ----------
-    cls : typing.Type OR object
+    obj : typing.Type or object
         A type or instance of a type to make a logger in the name of.
     *additional_args : str
         Additional tokens to append onto the logger name, separated by `.`.
@@ -44,8 +44,11 @@ def get_logger(cls: typing.Union[typing.Type[typing.Any], typing.Any], *addition
     logging.Logger
         The logger to use.
     """
-    cls = cls if isinstance(cls, type) else type(cls)
-    return logging.getLogger(".".join((cls.__module__, cls.__qualname__, *additional_args)))
+    if isinstance(obj, str):
+        return logging.getLogger(obj)
+    else:
+        obj = obj if isinstance(obj, type) else type(obj)
+        return logging.getLogger(".".join((obj.__module__, obj.__qualname__, *additional_args)))
 
 
 class SingletonMeta(abc.ABCMeta):

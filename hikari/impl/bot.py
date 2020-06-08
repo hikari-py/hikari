@@ -219,7 +219,7 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
         return self._entity_factory
 
     @property
-    def thread_pool(self) -> typing.Optional[futures.ThreadPoolExecutor]:
+    def thread_pool_executor(self) -> typing.Optional[futures.ThreadPoolExecutor]:
         # XXX: fixme
         return None
 

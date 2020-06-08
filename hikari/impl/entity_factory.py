@@ -659,14 +659,14 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return unicode_emoji
 
     def deserialize_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.CustomEmoji:
-        custom_emoji = emoji_models.CustomEmoji(self._app)
+        custom_emoji = emoji_models.CustomEmoji()
         custom_emoji.id = snowflake.Snowflake(payload["id"])
         custom_emoji.name = payload["name"]
         custom_emoji.is_animated = payload.get("animated", False)
         return custom_emoji
 
     def deserialize_known_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.KnownCustomEmoji:
-        known_custom_emoji = emoji_models.KnownCustomEmoji(self._app)
+        known_custom_emoji = emoji_models.KnownCustomEmoji()
         known_custom_emoji.id = snowflake.Snowflake(payload["id"])
         known_custom_emoji.name = payload["name"]
         known_custom_emoji.is_animated = payload.get("animated", False)

@@ -31,20 +31,13 @@ __all__: typing.List[str] = [
     "EmbedField",
 ]
 
-import copy
 import datetime
 import typing
-import warnings
-import weakref
 
 import attr
 
-from hikari import errors
 from hikari.models import colors
-from hikari.models import files
-
-if typing.TYPE_CHECKING:
-    from hikari.utilities import data_binding
+from hikari.utilities import files
 
 _MAX_FOOTER_TEXT: typing.Final[int] = 2048
 _MAX_AUTHOR_NAME: typing.Final[int] = 256
@@ -63,7 +56,7 @@ class EmbedFooter:
     text: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The footer text, or `None` if not present."""
 
-    icon_url: typing.Optional[str] = attr.ib(default=None, repr=False)
+    icon: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The URL of the footer icon, or `None` if not present."""
 
     proxy_icon_url: typing.Optional[str] = attr.ib(default=None, repr=False)
@@ -81,10 +74,10 @@ class EmbedImage:
     """Represents an embed image."""
 
     url: typing.Optional[str] = attr.ib(default=None, repr=True)
-    """The URL of the image to show, or `None` if not present."""
+    """The image to show, or `None` if not present."""
 
-    proxy_url: typing.Optional[str] = attr.ib(default=None, repr=False)
-    """The proxied URL of the image, or `None` if not present.
+    proxy_image: typing.Optional[str] = attr.ib(default=None, repr=False)
+    """The proxy image, or `None` if not present.
 
     !!! note
         This field cannot be set by bots or webhooks while sending an embed and
@@ -197,10 +190,10 @@ class EmbedAuthor:
     This may be `None` if no hyperlink on the author's name is specified.
     """
 
-    icon_url: typing.Optional[str] = attr.ib(default=None, repr=False)
+    icon: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The URL of the author's icon, or `None` if not present."""
 
-    proxy_icon_url: typing.Optional[str] = attr.ib(default=None, repr=False)
+    proxy_icon: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The proxied URL of the author icon, or `None` if not present.
 
     !!! note
@@ -228,25 +221,13 @@ class EmbedField:
 class Embed:
     """Represents an embed."""
 
+    _color: typing.Optional[colors.Color] = attr.ib(default=None, repr=False)
+
     title: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The title of the embed, or `None` if not present."""
 
-    @title.validator
-    def _title_check(self, _, value):  # pylint:disable=unused-argument
-        if value is not None and len(value) > _MAX_EMBED_TITLE:
-            warnings.warn(
-                f"title must not exceed {_MAX_EMBED_TITLE} characters", category=errors.HikariWarning,
-            )
-
     description: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The description of the embed, or `None` if not present."""
-
-    @description.validator
-    def _description_check(self, _, value):  # pylint:disable=unused-argument
-        if value is not None and len(value) > _MAX_EMBED_DESCRIPTION:
-            warnings.warn(
-                f"description must not exceed {_MAX_EMBED_DESCRIPTION} characters", category=errors.HikariWarning,
-            )
 
     url: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The URL of the embed, or `None` if not present."""
@@ -308,21 +289,6 @@ class Embed:
         timestamps in debug logs, for example.
     """
 
-    color: typing.Optional[colors.Color] = attr.ib(
-        converter=attr.converters.optional(colors.Color.of), default=None, repr=False
-    )
-    """The colour of this embed.
-
-    If `None`, the default is used for the user's colour-scheme when viewing it
-    (off-white on light-theme and off-black on dark-theme).
-
-    !!! warning
-        Various bugs exist in the desktop client at the time of writing where
-        `#FFFFFF` is treated as as the default colour for your colour-scheme
-        rather than white. The current workaround appears to be using a slightly
-        off-white, such as `#DDDDDD` or `#FFFFFE` instead.
-    """
-
     footer: typing.Optional[EmbedFooter] = attr.ib(default=None, repr=False)
     """The footer of the embed, if present, otherwise `None`."""
 
@@ -357,259 +323,18 @@ class Embed:
     fields: typing.MutableSequence[EmbedField] = attr.ib(factory=list, repr=False)
     """The fields in the embed."""
 
-    # Use a weakref so that clearing an image can pop the reference.
-    _assets_to_upload = attr.attrib(factory=weakref.WeakSet, repr=False)
-
     @property
-    def assets_to_upload(self):
-        """File assets that need to be uploaded when sending the embed."""
-        return self._assets_to_upload
+    def color(self) -> typing.Optional[colors.Color]:
+        """Embed color, or `None` if not present."""
+        return self._color
 
-    @staticmethod
-    def _extract_url(url) -> typing.Tuple[typing.Optional[str], typing.Optional[files.BaseStream]]:
-        if url is None:
-            return None, None
-        if isinstance(url, files.BaseStream):
-            return f"attachment://{url.filename}", url
-        return url, None
+    @color.setter
+    def color(self, color: colors.ColorLike) -> None:
+        self._color = colors.Color.of(color)
 
-    def _maybe_ref_file_obj(self, file_obj) -> None:
-        if file_obj is not None:
-            # Store a _copy_ so weakreffing works properly.
-            obj_copy = copy.copy(file_obj)
-            self._assets_to_upload.add(obj_copy)
+    @color.deleter
+    def color(self) -> None:
+        self._color = None
 
-    def set_footer(self, *, text: typing.Optional[str], icon: typing.Optional[str, files.BaseStream] = None) -> Embed:
-        """Set the embed footer.
-
-        Parameters
-        ----------
-        text : str or None
-            The optional text to set for the footer. If `None`, the content is
-            cleared.
-        icon : hikari.models.files.BaseStream or str or None
-            The optional `hikari.models.files.BaseStream` or URL to the image to
-            set.
-
-        Returns
-        -------
-        Embed
-            This embed to allow method chaining.
-        """
-        if text is not None:
-            # FIXME: move these validations to the dataclass.
-            if not text.strip():
-                warnings.warn("footer.text must not be empty or purely of whitespaces", category=errors.HikariWarning)
-            elif len(text) > _MAX_FOOTER_TEXT:
-                warnings.warn(
-                    f"footer.text must not exceed {_MAX_FOOTER_TEXT} characters", category=errors.HikariWarning
-                )
-
-        if icon is not None:
-            icon, file = self._extract_url(icon)
-            self.footer = EmbedFooter(text=text, icon_url=icon)
-            self._maybe_ref_file_obj(file)
-        elif self.footer is not None:
-            self.footer.icon_url = None
-
-        return self
-
-    def set_image(self, image: typing.Optional[str, files.BaseStream] = None) -> Embed:
-        """Set the embed image.
-
-        Parameters
-        ----------
-        image : hikari.models.files.BaseStream or str or None
-            The optional `hikari.models.files.BaseStream` or URL to the image
-            to set. If `None`, the image is removed.
-
-        Returns
-        -------
-        Embed
-            This embed to allow method chaining.
-        """
-        if image is None:
-            self.image = None
-        else:
-            image, file = self._extract_url(image)
-            self.image = EmbedImage(url=image)
-            self._maybe_ref_file_obj(file)
-        return self
-
-    def set_thumbnail(self, image: typing.Optional[str, files.BaseStream] = None) -> Embed:
-        """Set the thumbnail image.
-
-        Parameters
-        ----------
-        image: hikari.models.files.BaseStream or str or None
-            The optional `hikari.models.files.BaseStream` or URL to the image
-            to set. If `None`, the thumbnail is removed.
-
-        Returns
-        -------
-        Embed
-            This embed to allow method chaining.
-        """
-        if image is None:
-            self.thumbnail = None
-        else:
-            image, file = self._extract_url(image)
-            self.thumbnail = EmbedThumbnail(url=image)
-            self._maybe_ref_file_obj(file)
-        return self
-
-    def set_author(
-        self,
-        *,
-        name: typing.Optional[str] = None,
-        url: typing.Optional[str] = None,
-        icon: typing.Optional[str, files.BaseStream] = None,
-    ) -> Embed:
-        """Set the author of this embed.
-
-        Parameters
-        ----------
-        name: str or None
-            The optional authors name to display.
-        url: str or None
-            The optional URL to make the author text link to.
-        icon: hikari.models.files.BaseStream or str or None
-            The optional `hikari.models.files.BaseStream` or URL to the icon
-            to set.
-
-        Returns
-        -------
-        Embed
-            This embed to allow method chaining.
-        """
-        if name is not None:
-            # TODO: move validation to dataclass
-            if name is not None and not name.strip():
-                warnings.warn("author.name must not be empty or purely of whitespaces", category=errors.HikariWarning)
-            if name is not None and len(name) > _MAX_AUTHOR_NAME:
-                warnings.warn(
-                    f"author.name must not exceed {_MAX_AUTHOR_NAME} characters", category=errors.HikariWarning
-                )
-
-        if icon is not None:
-            icon, icon_file = self._extract_url(icon)
-            self.author = EmbedAuthor(name=name, url=url, icon_url=icon)
-            self._maybe_ref_file_obj(icon_file)
-        elif self.author is not None:
-            self.author.icon_url = None
-
-        return self
-
-    def add_field(self, *, name: str, value: str, inline: bool = False, index: typing.Optional[int] = None) -> Embed:
-        """Add a field to this embed.
-
-        Parameters
-        ----------
-        name: str
-            The field name (title).
-        value: str
-            The field value.
-        inline: bool
-            If `True`, multiple consecutive fields may be displayed on the same
-            line. This is not guaranteed behaviour and only occurs if viewing
-            on desktop clients. Defaults to `False`.
-        index: int or None
-            The optional index to insert the field at. If `None`, it will append
-            to the end.
-
-        Returns
-        -------
-        Embed
-            This embed to allow method chaining.
-        """
-        index = index if index is not None else len(self.fields)
-        if len(self.fields) >= _MAX_EMBED_FIELDS:
-            warnings.warn(f"no more than {_MAX_EMBED_FIELDS} fields can be stored", category=errors.HikariWarning)
-
-        # TODO: move to dataclass.
-        if not name.strip():
-            warnings.warn("field.name must not be empty or purely of whitespaces", category=errors.HikariWarning)
-        if len(name) > _MAX_FIELD_NAME:
-            warnings.warn(f"field.name must not exceed {_MAX_FIELD_NAME} characters", category=errors.HikariWarning)
-
-        if not value.strip():
-            warnings.warn("field.value must not be empty or purely of whitespaces", category=errors.HikariWarning)
-        if len(value) > _MAX_FIELD_VALUE:
-            warnings.warn(f"field.value must not exceed {_MAX_FIELD_VALUE} characters", category=errors.HikariWarning)
-
-        self.fields.insert(index, EmbedField(name=name, value=value, is_inline=inline))
-        return self
-
-    # FIXME: use undefined.Undefined rather than `...`
-    def edit_field(self, index: int, /, *, name: str = ..., value: str = ..., inline: bool = ...) -> Embed:
-        """Edit a field in this embed at the given index.
-
-        Unless you specify the attribute to change, it will not be changed. For
-        example, you can change a field value but not the field name
-        by simply specifying that parameter only.
-
-        ```py
-        >>> embed = Embed()
-        >>> embed.add_field(name="foo", value="bar")
-        >>> embed.edit_field(0, value="baz")
-        >>> print(embed.fields[0].name)
-        foo
-        >>> print(embed.fields[0].value)
-        baz
-        ```
-
-        Parameters
-        ----------
-        index: int
-            The index to edit the field at.
-        name: str
-            If specified, the new fields name (title).
-        value: str
-            If specified, the new fields value.
-        inline: bool
-            If specified, the whether to set the field to behave as if it were
-            inline or not.
-
-        Returns
-        -------
-        Embed
-            This embed to allow method chaining.
-        """
-        # TODO: remove these checks entirely, they will be covered by the validation in the data class.
-        if name is not ... and not name.strip():
-            warnings.warn("field.name must not be empty or purely of whitespaces", category=errors.HikariWarning)
-        if name is not ... and len(name.strip()) > _MAX_FIELD_NAME:
-            warnings.warn(f"field.name must not exceed {_MAX_FIELD_NAME} characters", category=errors.HikariWarning)
-
-        if value is not ... and not value.strip():
-            warnings.warn("field.value must not be empty or purely of whitespaces", category=errors.HikariWarning)
-        if value is not ... and len(value) > _MAX_FIELD_VALUE:
-            warnings.warn(f"field.value must not exceed {_MAX_FIELD_VALUE} characters", category=errors.HikariWarning)
-
-        field = self.fields[index]
-
-        field.name = name if name is not ... else field.name
-        field.value = value if value is not ... else field.value
-        field.is_inline = inline if value is not ... else field.is_inline
-        return self
-
-    def remove_field(self, index: int) -> Embed:
-        """Remove a field from this embed at the given index.
-
-        Parameters
-        ----------
-        index: int
-            The index of the field to remove.
-
-        Returns
-        -------
-        Embed
-            This embed to allow method chaining.
-
-        Raises
-        ------
-        IndexError
-            If you referred to an index that doesn't exist.
-        """
-        del self.fields[index]
-        return self
+    colour = color
+    """An alias for `color`."""

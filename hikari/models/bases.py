@@ -60,7 +60,9 @@ class Unique(typing.SupportsInt):
     integer ID of the object.
     """
 
-    id: snowflake.Snowflake = attr.ib(converter=snowflake.Snowflake, eq=True, hash=True, repr=True)
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, default=snowflake.Snowflake(0),
+    )
     """The ID of this entity."""
 
     @property

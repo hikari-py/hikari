@@ -29,8 +29,8 @@ import unicodedata
 import attr
 
 from hikari.models import bases
-from hikari.models import files
 from hikari.utilities import cdn
+from hikari.utilities import files
 
 if typing.TYPE_CHECKING:
     from hikari.models import users
@@ -44,7 +44,7 @@ _TWEMOJI_SVG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/r
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class Emoji(files.BaseStream, abc.ABC):
+class Emoji(files.WebResource, abc.ABC):
     """Base class for all emojis.
 
     Any emoji implementation supports being used as a `hikari.models.files.BaseStream`
@@ -71,9 +71,6 @@ class Emoji(files.BaseStream, abc.ABC):
     @abc.abstractmethod
     def mention(self) -> str:
         """Mention string to use to mention the emoji with."""
-
-    def __aiter__(self) -> typing.AsyncIterator[bytes]:
-        return files.WebResourceStream(self.filename, self.url).__aiter__()
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

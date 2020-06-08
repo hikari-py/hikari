@@ -34,10 +34,11 @@ __all__: typing.List[str] = [
 import enum
 import typing
 
+import aiohttp
 import attr
 
 from hikari.models import bases
-from hikari.models import files as files_
+from hikari.utilities import files as files_
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -140,7 +141,7 @@ class MessageActivityType(int, enum.Enum):
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class Attachment(bases.Unique, files_.BaseStream):
+class Attachment(bases.Unique, files_.WebResource):
     """Represents a file attached to a message.
 
     You can use this object in the same way as a
@@ -148,14 +149,14 @@ class Attachment(bases.Unique, files_.BaseStream):
     message, etc.
     """
 
+    url: str = attr.ib(repr=True)
+    """The source URL of file."""
+
     filename: str = attr.ib(repr=True)
     """The name of the file."""
 
     size: int = attr.ib(repr=True)
     """The size of the file in bytes."""
-
-    url: str = attr.ib(repr=True)
-    """The source URL of file."""
 
     proxy_url: str = attr.ib(repr=False)
     """The proxied URL of file."""
@@ -165,9 +166,6 @@ class Attachment(bases.Unique, files_.BaseStream):
 
     width: typing.Optional[int] = attr.ib(repr=False)
     """The width of the image (if the file is an image)."""
-
-    def __aiter__(self) -> typing.AsyncGenerator[bytes]:
-        return files_.WebResourceStream(self.filename, self.url).__aiter__()
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -196,8 +194,12 @@ class MessageActivity:
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class MessageCrosspost(bases.Entity, bases.Unique):
-    """Represents information about a cross-posted message and the origin of the original message."""
+class MessageCrosspost(bases.Entity):
+    """Represents information about a cross-posted message.
+
+    This is a message that is sent in one channel/guild and may be
+    "published" to another.
+    """
 
     id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the message.
@@ -395,8 +397,8 @@ class Message(bases.Entity, bases.Unique):
         text: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         *,
         embed: typing.Union[undefined.Undefined, embeds_.Embed] = undefined.Undefined(),
-        attachments: typing.Sequence[files_.BaseStream] = undefined.Undefined(),
-        mentions_everyone: bool = True,
+        attachments: typing.Union[undefined.Undefined, typing.Sequence[files_.Resource]] = undefined.Undefined(),
+        mentions_everyone: bool = False,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
         ] = True,
@@ -418,7 +420,7 @@ class Message(bases.Entity, bases.Unique):
             and can usually be ignored.
         tts : bool or hikari.utilities.undefined.Undefined
             If specified, whether the message will be sent as a TTS message.
-        attachments : typing.Sequence[hikari.models.files.BaseStream]
+        attachments : typing.Sequence[hikari.models.files.BaseStream] or hikari.utilities.undefined.Undefined
             If specified, a sequence of attachments to upload, if desired.
             Should be between 1 and 10 objects in size (inclusive), also
             including embed attachments.
@@ -491,7 +493,7 @@ class Message(bases.Entity, bases.Unique):
 
         Parameters
         ----------
-        emoji : hikari.models.emojis.Emoji or str
+        emoji : str or hikari.models.emojis.Emoji
             The emoji to add.
 
         Examples
@@ -510,31 +512,37 @@ class Message(bases.Entity, bases.Unique):
 
         Raises
         ------
+        hikari.errors.BadRequest
+            If the emoji is invalid, unknown, or formatted incorrectly.
         hikari.errors.Forbidden
             If this is the first reaction using this specific emoji on this
             message and you lack the `ADD_REACTIONS` permission. If you lack
             `READ_MESSAGE_HISTORY`, this may also raise this error.
         hikari.errors.NotFound
-            If the channel or message is not found, or if the emoji is not found.
-        hikari.errors.BadRequest
-            If the emoji is invalid, unknown, or formatted incorrectly.
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
+            If the channel or message is not found, or if the emoji is not
+            found.
 
+            !!! note
+                This will also occur if you try to add an emoji from a
+                guild you are not part of if no one else has previously
+                reacted with the same emoji.
         """
         await self._app.rest.add_reaction(channel=self.channel_id, message=self.id, emoji=emoji)
 
     async def remove_reaction(
-        self, emoji: typing.Union[str, emojis_.Emoji], *, user: typing.Optional[users.User] = None
+        self,
+        emoji: typing.Union[str, emojis_.Emoji],
+        *,
+        user: typing.Union[users.User, undefined.Undefined] = undefined.Undefined(),
     ) -> None:
         r"""Remove a reaction from this message.
 
         Parameters
         ----------
-        emoji : hikari.models.emojis.Emoji or str
+        emoji : str or hikari.models.emojis.Emoji
             The emoji to remove.
-        user : hikari.models.users.User or None
-            The user of the reaction to remove. If `None`, then the bot's
+        user : hikari.models.users.User or hikari.utilities.undefined.Undefined
+            The user of the reaction to remove. If unspecified, then the bot's
             reaction is removed instead.
 
         Examples
@@ -553,6 +561,10 @@ class Message(bases.Entity, bases.Unique):
 
         Raises
         ------
+        hikari.errors.BadRequest
+            If the emoji is invalid, unknown, or formatted incorrectly.
+            If any invalid snowflake IDs are passed; a snowflake may be invalid
+            due to it being outside of the range of a 64 bit integer.
         hikari.errors.Forbidden
             If this is the first reaction using this specific emoji on this
             message and you lack the `ADD_REACTIONS` permission. If you lack
@@ -560,22 +572,24 @@ class Message(bases.Entity, bases.Unique):
             remove the reaction of another user without `MANAGE_MESSAGES`, this
             will be raised.
         hikari.errors.NotFound
-            If the channel or message is not found, or if the emoji is not found.
-        hikari.errors.BadRequest
-            If the emoji is invalid, unknown, or formatted incorrectly.
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
+            If the channel or message is not found, or if the emoji is not
+            found.
         """
-        await self._app.rest.delete_reaction(channel=self.channel_id, message=self.id, emoji=emoji, user=user)
+        if isinstance(user, undefined.Undefined):
+            await self._app.rest.delete_my_reaction(channel=self.channel_id, message=self.id, emoji=emoji)
+        else:
+            await self._app.rest.delete_reaction(channel=self.channel_id, message=self.id, emoji=emoji, user=user)
 
-    async def remove_all_reactions(self, emoji: typing.Optional[typing.Union[str, emojis_.Emoji]] = None) -> None:
+    async def remove_all_reactions(
+        self, emoji: typing.Union[str, emojis_.Emoji, undefined.Undefined] = undefined.Undefined()
+    ) -> None:
         r"""Remove all users' reactions for a specific emoji from the message.
 
         Parameters
         ----------
-        emoji : hikari.models.emojis.Emoji or str or None
-            The emoji to remove all reactions for. If not specified, or `None`,
-            then all emojis are removed.
+        emoji : str hikari.models.emojis.Emoji or hikari.utilities.undefined.Undefined
+            The emoji to remove all reactions for. If not specified, then all
+            emojis are removed.
 
         Example
         --------
@@ -592,13 +606,14 @@ class Message(bases.Entity, bases.Unique):
             If you are missing the `MANAGE_MESSAGES` permission, or the
             permission to view the channel
         hikari.errors.NotFound
-            If the channel or message is not found, or if the emoji is not found.
+            If the channel or message is not found, or if the emoji is not
+            found.
         hikari.errors.BadRequest
             If the emoji is invalid, unknown, or formatted incorrectly.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        if emoji is None:
+        if isinstance(emoji, undefined.Undefined):
             await self._app.rest.delete_all_reactions(channel=self.channel_id, message=self.id)
         else:
             await self._app.rest.delete_all_reactions_for_emoji(channel=self.channel_id, message=self.id, emoji=emoji)
