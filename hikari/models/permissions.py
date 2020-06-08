@@ -20,9 +20,12 @@
 
 from __future__ import annotations
 
-__all__ = ["Permission"]
+__all__: typing.List[str] = ["Permission"]
 
 import enum
+
+# noinspection PyUnresolvedReferences
+import typing
 
 
 @enum.unique

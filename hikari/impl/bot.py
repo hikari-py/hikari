@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["BotImpl"]
+__all__: typing.List[str] = ["BotImpl"]
 
 import inspect
 import logging
@@ -74,9 +74,9 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
         The version of the gateway to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to using v6.
-    initial_activity : hikari.models.presences.OwnActivity or None or hikari.utilities.undefined.Undefined
+    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.Undefined
         The initial activity to have on each shard.
-    initial_activity : hikari.models.presences.PresenceStatus or hikari.utilities.undefined.Undefined
+    initial_activity : hikari.models.presences.Status or hikari.utilities.undefined.Undefined
         The initial status to have on each shard.
     initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
         The initial time to show as being idle since, or `None` if not idle,
@@ -149,10 +149,10 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
         debug: bool = False,
         gateway_compression: bool = True,
         gateway_version: int = 6,
-        initial_activity: typing.Union[undefined.Undefined, presences.OwnActivity, None] = undefined.Undefined(),
+        initial_activity: typing.Union[undefined.Undefined, presences.Activity, None] = undefined.Undefined(),
         initial_idle_since: typing.Union[undefined.Undefined, datetime.datetime, None] = undefined.Undefined(),
         initial_is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        initial_status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
+        initial_status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
         logging_level: typing.Optional[str] = "INFO",

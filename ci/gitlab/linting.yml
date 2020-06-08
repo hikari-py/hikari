@@ -27,7 +27,7 @@
     - .cpython
     - .reactive-job
   interruptible: true
-  retry: 2
+  retry: 0
   stage: test
 
 ###
@@ -43,9 +43,10 @@ pylint:
       - public/pylint.html
     reports:
       junit: public/pylint.xml
+    when: always
   extends: .lint
   script:
-    - nox -s pylint --no-error-on-external-run
+    - nox -s pylint-junit --no-error-on-external-run
 
 ###
 ### Documentation linting.
@@ -80,3 +81,15 @@ safety:
   script:
    - nox -s safety --no-error-on-external-run
 
+###
+### MyPy static type checker.
+###
+mypy:
+  allow_failure: true
+  extends: .lint
+  script:
+    - nox -s mypy --no-error-on-external-run
+  artifacts:
+    reports:
+      cobertura: public/mypy/cobertura.xml
+    when: always

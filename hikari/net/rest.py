@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["REST"]
+__all__: typing.List[str] = ["REST"]
 
 import asyncio
 import datetime
@@ -95,8 +95,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         information useful for debugging this application. These logs will
         be written as DEBUG log entries. For most purposes, this should be
         left `False`.
-    token : str
-        The bot or bearer token. If no token is to be used, this can be `None`.
+    token : str or hikari.utilities.undefined.Undefined
+        The bot or bearer token. If no token is to be used,
+        this can be undefined.
     token_type : str or hikari.utilities.undefined.Undefined
         The type of token in use. If no token is used, this can be ignored and
         left to the default value. This can be `"Bot"` or `"Bearer"`. The
@@ -145,12 +146,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self._app = app
 
         if isinstance(token, undefined.Undefined):
-            self._token = None
+            full_token = None
         else:
             if isinstance(token_type, undefined.Undefined):
                 token_type = "Bot"
 
-            self._token = f"{token_type.title()} {token}" if token is not None else None
+            full_token = f"{token_type.title()} {token}"
+
+        self._token: typing.Optional[str] = full_token
 
         if isinstance(rest_url, undefined.Undefined):
             rest_url = _REST_API_URL
@@ -169,13 +172,13 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         compiled_route: routes.CompiledRoute,
         *,
-        query: typing.Union[undefined.Undefined, data_binding.StringMapBuilder] = undefined.Undefined(),
+        query: typing.Union[undefined.Undefined, None, data_binding.StringMapBuilder] = undefined.Undefined(),
         body: typing.Union[
-            undefined.Undefined, aiohttp.FormData, data_binding.JSONObjectBuilder, data_binding.JSONArray
+            undefined.Undefined, None, aiohttp.FormData, data_binding.JSONObjectBuilder, data_binding.JSONArray
         ] = undefined.Undefined(),
         reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         no_auth: bool = False,
-    ) -> typing.Optional[data_binding.JSONObject, data_binding.JSONArray, bytes, str]:
+    ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
         # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
         # of JSON response. If an error occurs, the response body is returned in the
         # raised exception as a bytes object. This is done since the differences between
@@ -213,9 +216,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         compiled_route: routes.CompiledRoute,
         headers: data_binding.Headers,
-        body: typing.Optional[typing.Union[aiohttp.FormData, data_binding.JSONArray, data_binding.JSONObject]],
-        query: typing.Optional[typing.Dict[str, str]],
-    ) -> typing.Optional[data_binding.JSONObject, data_binding.JSONArray, bytes, str]:
+        body: typing.Union[None, aiohttp.FormData, data_binding.JSONArray, data_binding.JSONObject],
+        query: typing.Union[None, data_binding.StringMapBuilder],
+    ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
         url = compiled_route.create_url(self._rest_url)
 
         # Wait for any ratelimits to finish.
@@ -257,6 +260,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         # noinspection PyArgumentList
         status = http.HTTPStatus(response.status)
 
+        cls: typing.Type[errors.HikariError]
         if 400 <= status < 500:
             cls = errors.ClientHTTPErrorResponse
         elif 500 <= status < 600:
@@ -351,12 +355,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
     def _generate_allowed_mentions(
         mentions_everyone: typing.Union[undefined.Undefined, bool],
         user_mentions: typing.Union[
-            undefined.Undefined, typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool
+            undefined.Undefined, typing.Collection[typing.Union[bases.UniqueObject, users.User]], bool
         ],
         role_mentions: typing.Union[
             undefined.Undefined, typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool
         ],
-    ):
+    ) -> typing.Union[undefined.Undefined, data_binding.JSONObject]:
         parsed_mentions = []
         allowed_mentions = {}
 
@@ -365,32 +369,23 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         if user_mentions is True:
             parsed_mentions.append("users")
-        # This covers both `False` and an array of IDs/objs by using `user_mentions` or `EMPTY_SEQUENCE`, where a
-        # resultant empty list will mean that all user mentions are blacklisted.
-        elif not isinstance(user_mentions, undefined.Undefined):
-            allowed_mentions["users"] = list(
-                # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
-                dict.fromkeys(str(int(m)) for m in user_mentions or ())
-            )
-            if len(allowed_mentions["users"]) > 100:
-                raise ValueError("Only up to 100 users can be provided.")
+        elif isinstance(user_mentions, typing.Collection):
+            # Duplicates are an error.
+            snowflakes = {str(int(u)) for u in user_mentions}
+            allowed_mentions["users"] = list(snowflakes)
 
         if role_mentions is True:
             parsed_mentions.append("roles")
-        # This covers both `False` and an array of IDs/objs by using `user_mentions` or `EMPTY_SEQUENCE`, where a
-        # resultant empty list will mean that all role mentions are blacklisted.
-        elif not isinstance(role_mentions, undefined.Undefined):
-            allowed_mentions["roles"] = list(
-                # dict.fromkeys is used to remove duplicate entries that would cause discord to return an error.
-                dict.fromkeys(str(int(m)) for m in role_mentions or ())
-            )
-            if len(allowed_mentions["roles"]) > 100:
-                raise ValueError("Only up to 100 roles can be provided.")
+        elif isinstance(role_mentions, typing.Collection):
+            snowflakes = {str(int(r)) for r in role_mentions}
+            allowed_mentions["roles"] = list(snowflakes)
 
         if not parsed_mentions and not allowed_mentions:
             return undefined.Undefined()
 
-        allowed_mentions["parse"] = parsed_mentions
+        if parsed_mentions:
+            allowed_mentions["parse"] = parsed_mentions
+
         return allowed_mentions
 
     def _build_message_creation_form(
@@ -437,36 +432,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             If an internal error occurs on Discord while handling the request.
         """
         route = routes.GET_CHANNEL.compile(channel=channel)
-        response = await self._request(route)
+        raw_response = self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_channel(response)
 
     if typing.TYPE_CHECKING:
         _GuildChannelT = typing.TypeVar("_GuildChannelT", bound=channels.GuildChannel, contravariant=True)
-
-    # This overload just tells any static type checker that if we input, say,
-    # a GuildTextChannel, we should always expect a GuildTextChannel as the
-    # result. This only applies to actual Channel types... we cannot infer the
-    # result of calling this endpoint with a snowflake.
-    @typing.overload
-    async def edit_channel(
-        self,
-        channel: _GuildChannelT,
-        /,
-        *,
-        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        position: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
-        topic: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        nsfw: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        bitrate: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
-        user_limit: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
-        rate_limit_per_user: typing.Union[undefined.Undefined, date.TimeSpan] = undefined.Undefined(),
-        permission_overwrites: typing.Union[
-            undefined.Undefined, typing.Sequence[channels.PermissionOverwrite]
-        ] = undefined.Undefined(),
-        parent_category: typing.Union[undefined.Undefined, channels.GuildCategory] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-    ) -> _GuildChannelT:
-        """Edit a guild channel, given an existing guild channel object."""
 
     async def edit_channel(
         self,
@@ -551,7 +522,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             conversion=self._app.entity_factory.serialize_permission_overwrite,
         )
 
-        response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, body=body, reason=reason)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_channel(response)
 
     async def delete_channel(self, channel: typing.Union[channels.PartialChannel, bases.UniqueObject], /) -> None:
@@ -598,8 +570,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         channel: typing.Union[channels.GuildChannel, bases.UniqueObject],
         target: typing.Union[int, str, snowflake.Snowflake],
-        target_type: typing.Union[channels.PermissionOverwriteType, str],
         *,
+        target_type: typing.Union[channels.PermissionOverwriteType, str],
         allow: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
         deny: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
         reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
@@ -730,7 +702,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             If an internal error occurs on Discord while handling the request.
         """
         route = routes.GET_CHANNEL_INVITES.compile(channel=channel)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_invite_with_metadata)
 
     async def create_invite(
@@ -796,7 +769,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("unique", unique)
         body.put_snowflake("target_user_id", target_user)
         body.put("target_user_type", target_user_type)
-        response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, body=body, reason=reason)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_invite_with_metadata(response)
 
     def trigger_typing(
@@ -863,7 +837,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             If an internal error occurs on Discord while handling the request.
         """
         route = routes.GET_CHANNEL_PINS.compile(channel=channel)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_message)
 
     async def pin_message(
@@ -918,7 +893,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         hikari.errors.Unauthorized
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.Forbidden
-            If you lack permissions pin messages in the given channel.
+            If you lack permissions to pin messages in the given channel.
         hikari.errors.NotFound
             If the channel is not found or the message is not a pinned message
             in the given channel.
@@ -1030,7 +1005,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         if isinstance(timestamp, datetime.datetime):
             timestamp = snowflake.Snowflake.from_datetime(timestamp)
 
-        return iterators.MessageIterator(self._app, self._request, channel, direction, timestamp,)
+        return iterators.MessageIterator(self._app, self._request, str(int(channel)), direction, str(timestamp))
 
     async def fetch_message(
         self,
@@ -1067,7 +1042,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             If an internal error occurs on Discord while handling the request.
         """
         route = routes.GET_CHANNEL_MESSAGE.compile(channel=channel, message=message)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_message(response)
 
     async def create_message(
@@ -1153,10 +1129,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         if not isinstance(embed, undefined.Undefined):
             attachments.extend(embed.assets_to_upload)
 
-        response = await self._request(
+        raw_response = await self._request(
             route, body=self._build_message_creation_form(body, attachments) if attachments else body
         )
-
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_message(response)
 
     async def edit_message(
@@ -1223,7 +1199,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("embed", embed, conversion=self._app.entity_factory.serialize_embed)
         body.put("flags", flags)
         body.put("allowed_mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions))
-        response = await self._request(route, body=body)
+        raw_response = await self._request(route, body=body)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_message(response)
 
     async def delete_message(
@@ -1401,8 +1378,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         return iterators.ReactorIterator(
             app=self._app,
             request_call=self._request,
-            channel_id=channel,
-            message_id=message,
+            channel_id=str(int(channel)),
+            message_id=str(int(message)),
             emoji=emoji.url_name if isinstance(emoji, emojis.KnownCustomEmoji) else str(emoji),
         )
 
@@ -1420,7 +1397,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         if not isinstance(avatar, undefined.Undefined):
             body.put("avatar", await avatar.fetch_data_uri())
 
-        response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, body=body, reason=reason)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_webhook(response)
 
     async def fetch_webhook(
@@ -1434,21 +1412,24 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             route = routes.GET_WEBHOOK.compile(webhook=webhook)
         else:
             route = routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_webhook(response)
 
     async def fetch_channel_webhooks(
         self, channel: typing.Union[channels.TextChannel, bases.UniqueObject], /
     ) -> typing.Sequence[webhooks.Webhook]:
         route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=channel)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_webhook)
 
     async def fetch_guild_webhooks(
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
     ) -> typing.Sequence[webhooks.Webhook]:
         route = routes.GET_GUILD_WEBHOOKS.compile(channel=guild)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_webhook)
 
     async def edit_webhook(
@@ -1458,7 +1439,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         *,
         token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        avatar: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
+        avatar: typing.Union[None, undefined.Undefined, files.BaseStream] = undefined.Undefined(),
         channel: typing.Union[undefined.Undefined, channels.TextChannel, bases.UniqueObject] = undefined.Undefined(),
         reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> webhooks.Webhook:
@@ -1471,9 +1452,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("name", name)
         body.put_snowflake("channel", channel)
         if not isinstance(avatar, undefined.Undefined):
-            body.put("avatar", await avatar.fetch_data_uri())
+            body.put("avatar", await avatar.fetch_data_uri() if avatar is not None else None)
 
-        response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, body=body, reason=reason)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_webhook(response)
 
     async def delete_webhook(
@@ -1500,7 +1482,6 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         embeds: typing.Union[undefined.Undefined, typing.Sequence[embeds_.Embed]] = undefined.Undefined(),
         attachments: typing.Union[undefined.Undefined, typing.Sequence[files.BaseStream]] = undefined.Undefined(),
         tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        wait: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool] = True,
@@ -1527,30 +1508,33 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("username", username)
         body.put("avatar_url", avatar_url)
         body.put("tts", tts)
-        body.put("wait", wait)
+        body.put("wait", True)
 
-        response = await self._request(
+        raw_response = await self._request(
             route, body=self._build_message_creation_form(body, attachments) if attachments else body, no_auth=no_auth,
         )
-
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_message(response)
 
     async def fetch_gateway_url(self) -> str:
         route = routes.GET_GATEWAY.compile()
         # This doesn't need authorization.
-        response = await self._request(route, no_auth=True)
+        raw_response = await self._request(route, no_auth=True)
+        response = typing.cast(typing.Mapping[str, str], raw_response)
         return response["url"]
 
     async def fetch_gateway_bot(self) -> gateway.GatewayBot:
         route = routes.GET_GATEWAY_BOT.compile()
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_gateway_bot(response)
 
     async def fetch_invite(self, invite: typing.Union[invites.Invite, str]) -> invites.Invite:
         route = routes.GET_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
         query = data_binding.StringMapBuilder()
         query.put("with_counts", True)
-        response = await self._request(route, query=query)
+        raw_response = await self._request(route, query=query)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_invite(response)
 
     async def delete_invite(self, invite: typing.Union[invites.Invite, str]) -> None:
@@ -1559,28 +1543,33 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def fetch_my_user(self) -> users.OwnUser:
         route = routes.GET_MY_USER.compile()
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_my_user(response)
 
     async def edit_my_user(
         self,
         *,
         username: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        avatar: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined(),
+        avatar: typing.Union[undefined.Undefined, None, files.BaseStream] = undefined.Undefined(),
     ) -> users.OwnUser:
         route = routes.PATCH_MY_USER.compile()
         body = data_binding.JSONObjectBuilder()
         body.put("username", username)
 
-        if not isinstance(username, undefined.Undefined):
+        if isinstance(avatar, files.BaseStream):
             body.put("avatar", await avatar.fetch_data_uri())
+        else:
+            body.put("avatar", avatar)
 
-        response = await self._request(route, body=body)
+        raw_response = await self._request(route, body=body)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_my_user(response)
 
     async def fetch_my_connections(self) -> typing.Sequence[applications.OwnConnection]:
         route = routes.GET_MY_CONNECTIONS.compile()
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_own_connection)
 
     def fetch_my_guilds(
@@ -1596,7 +1585,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         elif isinstance(start_at, datetime.datetime):
             start_at = snowflake.Snowflake.from_datetime(start_at)
 
-        return iterators.OwnGuildIterator(self._app, self._request, newest_first, start_at)
+        return iterators.OwnGuildIterator(self._app, self._request, newest_first, str(start_at))
 
     async def leave_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /) -> None:
         route = routes.DELETE_MY_GUILD.compile(guild=guild)
@@ -1606,12 +1595,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         route = routes.POST_MY_CHANNELS.compile()
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("recipient_id", user)
-        response = await self._request(route, body=body)
+        raw_response = await self._request(route, body=body)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_dm_channel(response)
 
     async def fetch_application(self) -> applications.Application:
         route = routes.GET_MY_APPLICATION.compile()
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_application(response)
 
     async def add_user_to_guild(
@@ -1635,7 +1626,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("deaf", deaf)
         body.put_snowflake_array("roles", roles)
 
-        if (response := await self._request(route, body=body)) is not None:
+        if (raw_response := await self._request(route, body=body)) is not None:
+            response = typing.cast(data_binding.JSONObject, raw_response)
             return self._app.entity_factory.deserialize_member(response)
         else:
             # User already is in the guild.
@@ -1643,12 +1635,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:
         route = routes.GET_VOICE_REGIONS.compile()
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_voice_region)
 
     async def fetch_user(self, user: typing.Union[users.User, bases.UniqueObject]) -> users.User:
         route = routes.GET_USER.compile(user=user)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_user(response)
 
     def fetch_audit_log(
@@ -1660,10 +1654,17 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         user: typing.Union[undefined.Undefined, users.User, bases.UniqueObject] = undefined.Undefined(),
         event_type: typing.Union[undefined.Undefined, audit_logs.AuditLogEventType] = undefined.Undefined(),
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
+        guild = str(int(guild))
+
         if isinstance(before, undefined.Undefined):
-            before = snowflake.Snowflake.max()
+            before = str(snowflake.Snowflake.max())
         elif isinstance(before, datetime.datetime):
-            before = snowflake.Snowflake.from_datetime(before)
+            before = str(snowflake.Snowflake.from_datetime(before))
+        else:
+            before = str(int(before))
+
+        if not isinstance(user, undefined.Undefined):
+            user = str(int(user))
 
         return iterators.AuditLogIterator(self._app, self._request, guild, before, user, event_type)
 
@@ -1676,15 +1677,17 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         route = routes.GET_GUILD_EMOJI.compile(
             guild=guild, emoji=emoji.url_name if isinstance(emoji, emojis.Emoji) else emoji,
         )
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_known_custom_emoji(response)
 
     async def fetch_guild_emojis(
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
     ) -> typing.Set[emojis.KnownCustomEmoji]:
         route = routes.GET_GUILD_EMOJIS.compile(guild=guild)
-        response = await self._request(route)
-        return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_known_custom_emoji, set)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
+        return set(data_binding.cast_json_array(response, self._app.entity_factory.deserialize_known_custom_emoji))
 
     async def create_emoji(
         self,
@@ -1705,8 +1708,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         body.put_snowflake_array("roles", roles)
 
-        response = await self._request(route, body=body, reason=reason)
-
+        raw_response = await self._request(route, body=body, reason=reason)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_known_custom_emoji(response)
 
     async def edit_emoji(
@@ -1728,8 +1731,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("name", name)
         body.put_snowflake_array("roles", roles)
 
-        response = await self._request(route, body=body, reason=reason)
-
+        raw_response = await self._request(route, body=body, reason=reason)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_known_custom_emoji(response)
 
     async def delete_emoji(
@@ -1744,19 +1747,21 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         )
         await self._request(route)
 
-    def create_guild(self, name: str, /) -> rest_utils.GuildBuilder:
+    def guild_builder(self, name: str, /) -> rest_utils.GuildBuilder:
         return rest_utils.GuildBuilder(app=self._app, name=name, request_call=self._request)
 
     async def fetch_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /) -> guilds.Guild:
         route = routes.GET_GUILD.compile(guild=guild)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild(response)
 
     async def fetch_guild_preview(
         self, guild: typing.Union[guilds.PartialGuild, bases.UniqueObject], /
     ) -> guilds.GuildPreview:
         route = routes.GET_GUILD_PREVIEW.compile(guild=guild)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild_preview(response)
 
     async def edit_guild(
@@ -1811,8 +1816,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         if not isinstance(banner, undefined.Undefined):
             body.put("banner", await banner.fetch_data_uri())
 
-        response = await self._request(route, body=body, reason=reason)
-
+        raw_response = await self._request(route, body=body, reason=reason)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild(response)
 
     async def delete_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObject]) -> None:
@@ -1823,7 +1828,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject]
     ) -> typing.Sequence[channels.GuildChannel]:
         route = routes.GET_GUILD_CHANNELS.compile(guild=guild)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
         channel_sequence = data_binding.cast_json_array(response, self._app.entity_factory.deserialize_channel)
         # Will always be guild channels unless Discord messes up severely on something!
         return typing.cast(typing.Sequence[channels.GuildChannel], channel_sequence)
@@ -1973,7 +1979,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             conversion=self._app.entity_factory.serialize_permission_overwrite,
         )
 
-        response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, body=body, reason=reason)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         channel = self._app.entity_factory.deserialize_channel(response)
         return typing.cast(channels.GuildChannel, channel)
 
@@ -1990,13 +1997,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject], user: typing.Union[users.User, bases.UniqueObject],
     ) -> guilds.Member:
         route = routes.GET_GUILD_MEMBER.compile(guild=guild, user=user)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_member(response)
 
     def fetch_members(
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject],
     ) -> iterators.LazyIterator[guilds.Member]:
-        return iterators.MemberIterator(self._app, self._request, guild)
+        return iterators.MemberIterator(self._app, self._request, str(int(guild)))
 
     async def edit_member(
         self,
@@ -2096,21 +2104,24 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject], user: typing.Union[users.User, bases.UniqueObject],
     ) -> guilds.GuildMemberBan:
         route = routes.GET_GUILD_BAN.compile(guild=guild, user=user)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild_member_ban(response)
 
     async def fetch_bans(
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
     ) -> typing.Sequence[guilds.GuildMemberBan]:
         route = routes.GET_GUILD_BANS.compile(guild=guild)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_guild_member_ban)
 
     async def fetch_roles(
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
     ) -> typing.Sequence[guilds.Role]:
         route = routes.GET_GUILD_ROLES.compile(guild=guild)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_role)
 
     async def create_role(
@@ -2138,7 +2149,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("hoist", hoist)
         body.put("mentionable", mentionable)
 
-        response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, body=body, reason=reason)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_role(response)
 
     async def reposition_roles(
@@ -2176,7 +2188,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("hoist", hoist)
         body.put("mentionable", mentionable)
 
-        response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, body=body, reason=reason)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_role(response)
 
     async def delete_role(
@@ -2193,7 +2206,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         route = routes.GET_GUILD_PRUNE.compile(guild=guild)
         query = data_binding.StringMapBuilder()
         query.put("days", days)
-        response = await self._request(route, query=query)
+        raw_response = await self._request(route, query=query)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return int(response["pruned"])
 
     async def begin_guild_prune(
@@ -2207,28 +2221,32 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         query = data_binding.StringMapBuilder()
         query.put("compute_prune_count", True)
         query.put("days", days)
-        response = await self._request(route, query=query, reason=reason)
+        raw_response = await self._request(route, query=query, reason=reason)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return int(response["pruned"])
 
     async def fetch_guild_voice_regions(
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
     ) -> typing.Sequence[voices.VoiceRegion]:
         route = routes.GET_GUILD_VOICE_REGIONS.compile(guild=guild)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_voice_region)
 
     async def fetch_guild_invites(
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         route = routes.GET_GUILD_INVITES.compile(guild=guild)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_invite_with_metadata)
 
     async def fetch_integrations(
         self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
     ) -> typing.Sequence[guilds.Integration]:
         route = routes.GET_GUILD_INTEGRATIONS.compile(guild=guild)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_integration)
 
     async def edit_integration(
@@ -2269,7 +2287,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def fetch_widget(self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /) -> guilds.GuildWidget:
         route = routes.GET_GUILD_WIDGET.compile(guild=guild)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild_widget(response)
 
     async def edit_widget(
@@ -2292,10 +2311,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         elif not isinstance(channel, undefined.Undefined):
             body.put_snowflake("channel", channel)
 
-        response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, body=body, reason=reason)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild_widget(response)
 
     async def fetch_vanity_url(self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /) -> invites.VanityURL:
         route = routes.GET_GUILD_VANITY_URL.compile(guild=guild)
-        response = await self._request(route)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_vanity_url(response)

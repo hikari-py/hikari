@@ -16,11 +16,15 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Communication tools for Discord's network-level API endpoints."""
 
-from __future__ import annotations
+from ci import config
+from ci import nox
 
-__all__: typing.List[str] = []
 
-# noinspection PyUnresolvedReferences
-import typing
+@nox.session(reuse_venv=True, default=True)
+def mypy(session: nox.Session) -> None:
+    # LXML is used for cobertura reporting.
+    session.install("-r", "requirements.txt", "mypy==0.780", "lxml")
+    session.run(
+        "mypy", "-p", config.MAIN_PACKAGE, "--config", config.MYPY_INI,
+    )

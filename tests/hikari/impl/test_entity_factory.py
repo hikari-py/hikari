@@ -2096,10 +2096,10 @@ class TestEntityFactoryImpl:
         assert presence.user.is_system is True
         assert presence.user.flags == user_models.UserFlag(131072)
 
-        assert isinstance(presence.user, presence_models.PresenceUser)
+        assert isinstance(presence.user, user_models.PartialUser)
         assert presence.role_ids == {49494949}
         assert presence.guild_id == 44004040
-        assert presence.visible_status == presence_models.PresenceStatus.DND
+        assert presence.visible_status == presence_models.Status.DND
         # PresenceActivity
         assert len(presence.activities) == 1
         activity = presence.activities[0]
@@ -2140,9 +2140,9 @@ class TestEntityFactoryImpl:
         assert isinstance(activity, presence_models.RichActivity)
 
         # ClientStatus
-        assert presence.client_status.desktop == presence_models.PresenceStatus.ONLINE
-        assert presence.client_status.mobile == presence_models.PresenceStatus.IDLE
-        assert presence.client_status.web == presence_models.PresenceStatus.DND
+        assert presence.client_status.desktop == presence_models.Status.ONLINE
+        assert presence.client_status.mobile == presence_models.Status.IDLE
+        assert presence.client_status.web == presence_models.Status.DND
         assert isinstance(presence.client_status, presence_models.ClientStatus)
 
         assert presence.premium_since == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
@@ -2185,9 +2185,9 @@ class TestEntityFactoryImpl:
         assert presence.nickname is None
         assert presence.role_ids is None
         # ClientStatus
-        assert presence.client_status.desktop is presence_models.PresenceStatus.OFFLINE
-        assert presence.client_status.mobile is presence_models.PresenceStatus.OFFLINE
-        assert presence.client_status.web is presence_models.PresenceStatus.OFFLINE
+        assert presence.client_status.desktop is presence_models.Status.OFFLINE
+        assert presence.client_status.mobile is presence_models.Status.OFFLINE
+        assert presence.client_status.web is presence_models.Status.OFFLINE
         # PresenceUser
         assert presence.user.id == 42
         assert presence.user.discriminator is undefined.Undefined()

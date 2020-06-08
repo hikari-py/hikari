@@ -20,9 +20,11 @@
 
 from __future__ import annotations
 
-__all__ = ["Snowflake"]
+__all__: typing.List[str] = ["Snowflake"]
 
 import datetime
+
+# noinspection PyUnresolvedReferences
 import typing
 
 from hikari.utilities import date
@@ -38,10 +40,6 @@ class Snowflake(int):
 
     ___MIN___: Snowflake
     ___MAX___: Snowflake
-
-    @staticmethod
-    def __new__(cls, value: typing.Union[int, str, typing.SupportsInt]) -> Snowflake:
-        return super(Snowflake, cls).__new__(cls, value)
 
     @property
     def created_at(self) -> datetime.datetime:

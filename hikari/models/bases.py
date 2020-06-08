@@ -20,19 +20,18 @@
 
 from __future__ import annotations
 
-__all__ = ["Entity", "Unique"]
+__all__: typing.List[str] = ["Entity", "Unique"]
 
 import abc
 import typing
 
 import attr
 
+from hikari.api import app as app_
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     import datetime
-
-    from hikari.api import app as app_
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=False)
@@ -44,18 +43,12 @@ class Entity(abc.ABC):
     methods directly.
     """
 
-    _app: typing.Union[
-        None,
-        app_.IApp,
-        app_.IGatewayZookeeper,
-        app_.IGatewayConsumer,
-        app_.IGatewayDispatcher,
-        app_.IRESTApp,
-        app_.IBot,
-    ] = attr.ib(default=None, eq=False, hash=False, repr=False)
+    _AppT = typing.Union[app_.IRESTApp, app_.IBot]
+
+    _app: _AppT = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    def __init__(self, app: app_.IApp) -> None:
+    def __init__(self, app: _AppT) -> None:
         self._app = app
 
 

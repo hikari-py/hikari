@@ -17,12 +17,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Pylint support."""
+import os
 import traceback
 from ci import config
 from ci import nox
 
 FLAGS = ["pylint", config.MAIN_PACKAGE, "--rcfile", config.PYLINT_INI]
-
+PYLINT_VER = "pylint==2.5.2"
+PYLINT_JUNIT_VER = "pylint-junit==0.2.0"
 SUCCESS_CODES = list(range(0, 256))
 
 
@@ -30,12 +32,35 @@ SUCCESS_CODES = list(range(0, 256))
 def pylint(session: nox.Session) -> None:
     """Run pylint against the code base and report any code smells or issues."""
 
-    session.install(
-        "-r", config.REQUIREMENTS, "-r", config.DEV_REQUIREMENTS,
-    )
+    session.install("-r", config.REQUIREMENTS, "-r", config.DEV_REQUIREMENTS, PYLINT_VER)
 
     try:
         print("generating plaintext report")
         session.run(*FLAGS, *session.posargs, success_codes=SUCCESS_CODES)
+    except Exception:
+        traceback.print_exc()
+
+
+@nox.session(default=False, reuse_venv=True)
+def pylint_junit(session: nox.Session) -> None:
+    """Runs `pylint', but produces JUnit reports instead of textual ones."""
+
+    session.install(
+        "-r", config.REQUIREMENTS, "-r", config.DEV_REQUIREMENTS, PYLINT_VER, PYLINT_JUNIT_VER,
+    )
+
+    try:
+        print("generating plaintext report")
+        if not os.path.exists(config.ARTIFACT_DIRECTORY):
+            os.mkdir(config.ARTIFACT_DIRECTORY)
+
+        with open(config.PYLINT_JUNIT_OUTPUT_PATH, "w+") as fp:
+            session.run(
+                *FLAGS,
+                "--output-format=pylint_junit.JUnitReporter",
+                *session.posargs,
+                success_codes=SUCCESS_CODES,
+                stdout=fp,
+            )
     except Exception:
         traceback.print_exc()

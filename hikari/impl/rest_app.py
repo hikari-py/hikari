@@ -24,7 +24,7 @@ API, such as web dashboards and other OAuth2-based scripts.
 
 from __future__ import annotations
 
-__all__ = ["RESTAppImpl"]
+__all__: typing.List[str] = ["RESTAppImpl"]
 
 import logging
 import typing

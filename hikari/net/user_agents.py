@@ -27,14 +27,15 @@ valid bot and not attempting to abuse the API.
 
 from __future__ import annotations
 
-__all__ = ["UserAgent"]
+__all__: typing.List[str] = ["UserAgent"]
 
+import aiohttp
 import typing
 
 from hikari.utilities import klass
 
 
-class UserAgent(metaclass=klass.SingletonMeta):
+class UserAgent(klass.Singleton):
     """Platform version info.
 
     !!! note
@@ -62,7 +63,7 @@ class UserAgent(metaclass=klass.SingletonMeta):
 
     Examples
     --------
-    `"Linux-5.4.15-2-MANJARO-x86_64-with-glibc2.2.5"`
+    `"Linux 64bit"`
     """
 
     user_agent: typing.Final[str]
@@ -70,31 +71,38 @@ class UserAgent(metaclass=klass.SingletonMeta):
 
     Examples
     --------
-    `"DiscordBot (https://gitlab.com/nekokatt/hikari; 1.0.1; Nekokatt) CPython 3.8.2 GCC 9.2.0 Linux"`
+    `"DiscordBot (https://gitlab.com/nekokatt/hikari; 1.0.1) Nekokatt Aiohttp/3.6.2 CPython/3.8.2 Linux 64bit"`
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         from hikari._about import __author__, __url__, __version__
-        from platform import python_implementation, python_version, python_branch, python_compiler, platform
+        from platform import python_implementation, python_version, python_branch, python_compiler, architecture, system
 
         self.library_version = f"hikari {__version__}"
         self.platform_version = self._join_strip(
             python_implementation(), python_version(), python_branch(), python_compiler()
         )
-        self.system_type = platform()
-        self.user_agent = f"DiscordBot ({__url__}; {__version__}; {__author__}) {python_version()} {self.system_type}"
+        self.system_type = " ".join((system(), architecture()[0]))
+        self.user_agent = (
+            f"DiscordBot ({__url__}; {__version__}) {__author__} "
+            f"Aiohttp/{aiohttp.__version__} "
+            f"{python_implementation()}/{python_version()} "
+            f"{self.system_type}"
+        )
+
+        logger = klass.get_logger(self)
+        logger.debug("Using User-Agent %r", self.user_agent)
 
     @staticmethod
-    def _join_strip(*args):
+    def _join_strip(*args: str) -> str:
         return " ".join((arg.strip() for arg in args if arg.strip()))
 
-    # Inore docstring not starting in an imperativge mood
     @property
-    def websocket_triplet(self) -> typing.Dict[str, str]:  # noqa: D401
-        """A dict representing device and library info.
+    def websocket_triplet(self) -> typing.Dict[str, str]:
+        """Generate a dict representing device and library info.
 
         This is the object to send to Discord representing device info when
-        IDENTIFYing with the gateway in the format `typing.Dict`[`str`, `str`]
+        IDENTIFYing with the gateway in the format `typing.Dict[str, str]`
         """
         return {
             "$os": self.system_type,

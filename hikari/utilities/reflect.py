@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["resolve_signature", "EMPTY"]
+__all__: typing.List[str] = ["resolve_signature", "EMPTY"]
 
 import inspect
 import typing

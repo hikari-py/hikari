@@ -29,6 +29,8 @@ include:
 ### This must use a specific name. Do not rename it for consistency.
 ###
 dependency_scanning:
+  artifacts:
+    when: always
   interruptible: true
   retry: 1
   stage: test
@@ -47,6 +49,8 @@ dependency_scanning:
 ### This must use a specific name. Do not rename it for consistency.
 ###
 license_scanning:
+  artifacts:
+    when: always
   interruptible: true
   retry: 1
   rules:
@@ -62,6 +66,8 @@ license_scanning:
 ### This must use a specific name. Do not rename it for consistency.
 ###
 sast:
+  artifacts:
+    when: always
   interruptible: true
   retry: 1
   rules:

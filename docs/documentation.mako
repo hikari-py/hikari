@@ -186,7 +186,8 @@
         return name
 
     def get_annotation(bound_method, sep=':'):
-        annot = bound_method(link=link) or ''
+        annot = bound_method(link=link) or 'typing.Any'
+        
         annot = annot.replace("NoneType", "None")
         # Remove quotes.
         if annot.startswith("'") and annot.endswith("'"):
@@ -241,6 +242,10 @@
 <%def name="show_var(v, is_nested=False)">
     <% 
         return_type = get_annotation(v.type_annotation)
+        if return_type == "":
+            parent = v.cls.obj if v.cls is not None else v.module.obj
+            if hasattr(parent, "__annotations__") and v.name in parent.__annotations__:
+                return_type = get_annotation(lambda *_, **__: parent.__annotations__[v.name])
     %>
     <dt>
         <pre><code class="python">${link(v, with_prefixes=True, anchor=True)}${return_type}</code></pre>

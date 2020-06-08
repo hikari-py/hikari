@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["User", "OwnUser", "UserFlag", "PremiumType"]
+__all__: typing.List[str] = ["User", "OwnUser", "UserFlag", "PremiumType"]
 
 import enum
 import typing
@@ -29,6 +29,7 @@ import attr
 
 from hikari.models import bases
 from hikari.utilities import cdn
+from hikari.utilities import undefined
 
 
 @enum.unique
@@ -93,25 +94,56 @@ class PremiumType(int, enum.Enum):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class User(bases.Entity, bases.Unique):
-    """Represents a user."""
+class PartialUser(bases.Entity, bases.Unique):
+    """Represents partial information about a user.
 
-    discriminator: str = attr.ib(eq=False, hash=False, repr=True)
+    This is pretty much the same as a normal user, but information may not be
+    present.
+    """
+
+    discriminator: typing.Union[str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=True)
     """This user's discriminator."""
 
-    username: str = attr.ib(eq=False, hash=False, repr=True)
+    username: typing.Union[str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=True)
     """This user's username."""
 
-    avatar_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    avatar_hash: typing.Union[None, str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=False)
     """This user's avatar hash, if set."""
 
-    is_bot: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_bot: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is a bot account."""
 
-    is_system: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_system: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False)
     """Whether this user is a system account."""
 
-    flags: UserFlag = attr.ib(eq=False, hash=False, repr=False)
+    flags: typing.Union[UserFlag, undefined.Undefined] = attr.ib(eq=False, hash=False)
+    """The public flags for this user."""
+
+
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class User(PartialUser):
+    """Represents partial information about a user."""
+
+    # These are not attribs on purpose. The idea is to narrow the types of
+    # these fields without redefining them twice in the slots. This is
+    # compatible with MYPY, hence why I have done it like this...
+
+    discriminator: str
+    """This user's discriminator."""
+
+    username: str
+    """This user's username."""
+
+    avatar_hash: typing.Optional[str]
+    """This user's avatar hash, if they have one, otherwise `None`."""
+
+    is_bot: bool
+    """`True` if this user is a bot account, `False` otherwise."""
+
+    is_system: bool
+    """`True` if this user is a system account, `False` otherwise."""
+
+    flags: UserFlag
     """The public flags for this user."""
 
     async def fetch_self(self) -> User:
@@ -130,12 +162,16 @@ class User(bases.Entity, bases.Unique):
         return await self._app.rest.fetch_user(user=self.id)
 
     @property
-    def avatar_url(self) -> str:
-        """URL for this user's custom avatar if set, else default."""
+    def avatar_url(self) -> typing.Optional[str]:
+        """URL for this user's custom avatar if set, else `None`."""
         return self.format_avatar_url()
 
-    def format_avatar_url(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> str:
-        """Generate the avatar URL for this user's custom avatar if set, else their default avatar.
+    def format_avatar_url(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[str]:
+        """Generate the avatar URL for this user's custom avatar if set.
+
+        If no custom avatar is set, this returns `None`. You can then use the
+        `User.default_avatar_url` attribute instead to fetch the displayed
+        URL.
 
         Parameters
         ----------
@@ -152,31 +188,26 @@ class User(bases.Entity, bases.Unique):
         Returns
         -------
         str
-            The string URL.
+            The string URL, or `None` if not present.
 
         Raises
         ------
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if not self.avatar_hash:
-            return self.default_avatar_url
-
-        if format_ is None and self.avatar_hash.startswith("a_"):
-            format_ = "gif"
-        elif format_ is None:
-            format_ = "png"
-        return cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
+        if self.avatar_hash is not None:
+            return cdn.get_avatar_url(self.id, self.avatar_hash, format_=format_, size=size)
+        return None
 
     @property
     def default_avatar_index(self) -> int:
         """Integer representation of this user's default avatar."""
-        return int(self.discriminator) % 5
+        return cdn.get_default_avatar_index(self.discriminator)
 
     @property
     def default_avatar_url(self) -> str:
         """URL for this user's default avatar."""
-        return cdn.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
+        return cdn.get_default_avatar_url(self.discriminator)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -184,7 +215,7 @@ class OwnUser(User):
     """Represents a user with extended OAuth2 information."""
 
     is_mfa_enabled: bool = attr.ib(eq=False, hash=False, repr=False)
-    """Whether the user's account has 2fa enabled."""
+    """Whether the user's account has multi-factor authentication enabled."""
 
     locale: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The user's set language. This is not provided by the `READY` event."""
@@ -192,15 +223,15 @@ class OwnUser(User):
     is_verified: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether the email for this user's account has been verified.
 
-    Will be `None` if retrieved through the oauth2 flow without the `email`
+    Will be `None` if retrieved through the OAuth2 flow without the `email`
     scope.
     """
 
     email: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The user's set email.
 
-    Will be `None` if retrieved through the oauth2 flow without the `email`
-    scope and for bot users.
+    Will be `None` if retrieved through OAuth2 flow without the `email`
+    scope. Will always be `None` for bot users.
     """
 
     flags: UserFlag = attr.ib(eq=False, hash=False, repr=False)
@@ -220,4 +251,4 @@ class OwnUser(User):
         hikari.models.users.User
             The requested user object.
         """
-        return await self._app.rest.fetch_me()
+        return await self._app.rest.fetch_my_user()
