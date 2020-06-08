@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["EntityFactoryImpl"]
+__all__: typing.List[str] = ["EntityFactoryImpl"]
 
 import datetime
 import typing
@@ -1115,7 +1115,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     def deserialize_member_presence(self, payload: data_binding.JSONObject) -> presence_models.MemberPresence:
         guild_member_presence = presence_models.MemberPresence(self._app)
         user_payload = payload["user"]
-        user = presence_models.PresenceUser(self._app)
+        user = user_models.PartialUser(self._app)
         user.id = snowflake.Snowflake(user_payload["id"])
         user.discriminator = user_payload["discriminator"] if "discriminator" in user_payload else undefined.Undefined()
         user.username = user_payload["username"] if "username" in user_payload else undefined.Undefined()
@@ -1137,15 +1137,17 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
 
         guild_member_presence.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         # noinspection PyArgumentList
-        guild_member_presence.visible_status = presence_models.PresenceStatus(payload["status"])
+        guild_member_presence.visible_status = presence_models.Status(payload["status"])
 
         activities = []
         for activity_payload in payload["activities"]:
-            activity = presence_models.RichActivity()
-            activity.name = activity_payload["name"]
             # noinspection PyArgumentList
-            activity.type = presence_models.ActivityType(activity_payload["type"])
-            activity.url = activity_payload.get("url")
+            activity = presence_models.RichActivity(
+                name=activity_payload["name"],
+                type=presence_models.ActivityType(activity_payload["type"]),
+                url=activity_payload.get("url"),
+            )
+
             activity.created_at = date.unix_epoch_to_datetime(activity_payload["created_at"])
 
             if (timestamps_payload := activity_payload.get("timestamps", ...)) is not ...:
@@ -1217,21 +1219,21 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         client_status = presence_models.ClientStatus()
         # noinspection PyArgumentList
         client_status.desktop = (
-            presence_models.PresenceStatus(client_status_payload["desktop"])
+            presence_models.Status(client_status_payload["desktop"])
             if "desktop" in client_status_payload
-            else presence_models.PresenceStatus.OFFLINE
+            else presence_models.Status.OFFLINE
         )
         # noinspection PyArgumentList
         client_status.mobile = (
-            presence_models.PresenceStatus(client_status_payload["mobile"])
+            presence_models.Status(client_status_payload["mobile"])
             if "mobile" in client_status_payload
-            else presence_models.PresenceStatus.OFFLINE
+            else presence_models.Status.OFFLINE
         )
         # noinspection PyArgumentList
         client_status.web = (
-            presence_models.PresenceStatus(client_status_payload["web"])
+            presence_models.Status(client_status_payload["web"])
             if "web" in client_status_payload
-            else presence_models.PresenceStatus.OFFLINE
+            else presence_models.Status.OFFLINE
         )
         guild_member_presence.client_status = client_status
 

@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["EventManagerCore"]
+__all__: typing.List[str] = ["EventManagerCore"]
 
 import asyncio
 import functools
@@ -46,7 +46,7 @@ if typing.TYPE_CHECKING:
     _AsyncCallbackT = typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]]
     _CallbackT = typing.Union[_SyncCallbackT, _AsyncCallbackT]
     _ListenerMapT = typing.MutableMapping[typing.Type[_EventT], typing.MutableSequence[_CallbackT]]
-    _WaiterT = typing.Tuple[_PredicateT, aio.Future[_EventT]]
+    _WaiterT = typing.Tuple[_PredicateT, asyncio.Future[_EventT]]
     _WaiterMapT = typing.MutableMapping[typing.Type[_EventT], typing.MutableSet[_WaiterT]]
 
 
@@ -190,7 +190,7 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
                 self.logger.error("an exception occurred handling an event", exc_info=trio)
                 await self.dispatch(other.ExceptionEvent(exception=ex, event=event, callback=callback))
 
-    def dispatch(self, event: base.HikariEvent) -> aio.Future[typing.Any]:
+    def dispatch(self, event: base.HikariEvent) -> asyncio.Future[typing.Any]:
         if not isinstance(event, base.HikariEvent):
             raise TypeError(f"Events must be subclasses of {base.HikariEvent.__name__}, not {type(event).__name__}")
 

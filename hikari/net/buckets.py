@@ -204,7 +204,7 @@ and should be used sparingly.
 
 from __future__ import annotations
 
-__all__ = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
+__all__: typing.List[str] = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
 
 import asyncio
 import datetime
@@ -257,7 +257,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         """Return `True` if the bucket represents an `UNKNOWN` bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
-    def acquire(self) -> aio.Future[None]:
+    def acquire(self) -> asyncio.Future[None]:
         """Acquire time on this rate limiter.
 
         !!! note
@@ -337,7 +337,7 @@ class RESTBucketManager:
     closed_event: typing.Final[asyncio.Event]
     """An internal event that is set when the object is shut down."""
 
-    gc_task: typing.Optional[aio.Task[None]]
+    gc_task: typing.Optional[asyncio.Task[None]]
     """The internal garbage collector task."""
 
     logger: typing.Final[logging.Logger]
@@ -347,7 +347,7 @@ class RESTBucketManager:
         self.routes_to_hashes = {}
         self.real_hashes_to_buckets = {}
         self.closed_event: asyncio.Event = asyncio.Event()
-        self.gc_task: typing.Optional[asyncio.Task] = None
+        self.gc_task: typing.Optional[asyncio.Task[None]] = None
         self.logger = logging.getLogger("hikari.rest.buckets.RESTBucketManager")
 
     def __enter__(self) -> RESTBucketManager:
@@ -485,7 +485,7 @@ class RESTBucketManager:
 
         self.logger.debug("purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
 
-    def acquire(self, compiled_route: routes.CompiledRoute) -> aio.Future[None]:
+    def acquire(self, compiled_route: routes.CompiledRoute) -> asyncio.Future[None]:
         """Acquire a bucket for the given _route.
 
         Parameters
@@ -530,7 +530,7 @@ class RESTBucketManager:
     def update_rate_limits(
         self,
         compiled_route: routes.CompiledRoute,
-        bucket_header: typing.Optional[str],
+        bucket_header: str,
         remaining_header: int,
         limit_header: int,
         date_header: datetime.datetime,
@@ -543,8 +543,7 @@ class RESTBucketManager:
         compiled_route : hikari.rest.routes.CompiledRoute
             The compiled _route to get the bucket for.
         bucket_header : str, optional
-            The `X-RateLimit-Bucket` header that was provided in the response,
-            or `None` if not present.
+            The `X-RateLimit-Bucket` header that was provided in the response.
         remaining_header : int
             The `X-RateLimit-Remaining` header cast to an `int`.
         limit_header : int

@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["EventManagerImpl"]
+__all__: typing.List[str] = ["EventManagerImpl"]
 
 import typing
 

@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = [
+__all__: typing.List[str] = [
     "DISCORD_EPOCH",
     "rfc7231_datetime_string_to_datetime",
     "datetime_to_discord_epoch",
@@ -53,9 +53,9 @@ References
 * [Discord API documentation - Snowflakes](https://discord.com/developers/docs/reference#snowflakes)
 """
 
-ISO_8601_DATE_PART: typing.Final[typing.Pattern] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
-ISO_8601_TIME_PART: typing.Final[typing.Pattern] = re.compile(r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I)
-ISO_8601_TZ_PART: typing.Final[typing.Pattern] = re.compile(r"([+-])(\d{2}):(\d{2})$")
+ISO_8601_DATE_PART: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
+ISO_8601_TIME_PART: typing.Final[typing.Pattern[str]] = re.compile(r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I)
+ISO_8601_TZ_PART: typing.Final[typing.Pattern[str]] = re.compile(r"([+-])(\d{2}):(\d{2})$")
 
 
 def rfc7231_datetime_string_to_datetime(date_str: str, /) -> datetime.datetime:

@@ -19,10 +19,9 @@
 """Base functionality for any HTTP-based network component."""
 from __future__ import annotations
 
-__all__ = ["HTTPClient"]
+__all__: typing.List[str] = ["HTTPClient"]
 
 import abc
-import contextlib
 import json
 import logging
 import ssl
@@ -30,9 +29,11 @@ import types
 import typing
 
 import aiohttp.typedefs
-import multidict
 
 from hikari.net import tracing
+
+if typing.TYPE_CHECKING:
+    from hikari.utilities import data_binding
 
 
 class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
@@ -168,14 +169,14 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
     ) -> None:
         self.logger = logger
 
-        self.__client_session = None
+        self.__client_session: typing.Optional[aiohttp.ClientSession] = None
         self._allow_redirects = allow_redirects
         self._connector = connector
         self._debug = debug
         self._proxy_auth = proxy_auth
         self._proxy_headers = proxy_headers
         self._proxy_url = proxy_url
-        self._ssl_context: ssl.SSLContext = ssl_context
+        self._ssl_context = ssl_context
         self._request_timeout = timeout
         self._trust_env = trust_env
         self._tracers = [(tracing.DebugTracer(self.logger) if debug else tracing.CFRayTracer(self.logger))]
@@ -191,7 +192,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
 
     async def close(self) -> None:
         """Close the client safely."""
-        with contextlib.suppress(Exception):
+        if self.__client_session is not None:
             await self.__client_session.close()
             self.logger.debug("closed client session object %r", self.__client_session)
             self.__client_session = None
@@ -220,9 +221,11 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         *,
         method: str,
         url: str,
-        headers: aiohttp.typedefs.LooseHeaders,
-        body: typing.Union[aiohttp.FormData, dict, list, None],
-        query: typing.Union[typing.Dict[str, str], multidict.MultiDict[str, str]],
+        headers: data_binding.Headers,
+        body: typing.Union[
+            data_binding.JSONObjectBuilder, aiohttp.FormData, data_binding.JSONObject, data_binding.JSONArray, None
+        ],
+        query: typing.Union[data_binding.Query, data_binding.StringMapBuilder, None],
     ) -> aiohttp.ClientResponse:
         """Make an HTTP request and return the response.
 
@@ -247,14 +250,13 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         aiohttp.ClientResponse
             The HTTP response.
         """
+        kwargs: typing.Dict[str, typing.Any] = {}
+
         if isinstance(body, (dict, list)):
-            kwargs = {"json": body}
+            kwargs["json"] = body
 
         elif isinstance(body, aiohttp.FormData):
-            kwargs = {"data": body}
-
-        else:
-            kwargs = {}
+            kwargs["data"] = body
 
         trace_request_ctx = types.SimpleNamespace()
         trace_request_ctx.request_body = body

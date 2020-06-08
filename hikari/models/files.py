@@ -52,7 +52,7 @@ memory usage, and the application becoming unresponsive during IO.
 
 from __future__ import annotations
 
-__all__ = ["BaseStream", "ByteStream", "WebResourceStream", "FileStream"]
+__all__: typing.List[str] = ["BaseStream", "ByteStream", "WebResourceStream", "FileStream"]
 
 import abc
 import asyncio
@@ -165,7 +165,7 @@ class BaseStream(abc.ABC, typing.AsyncIterable[bytes]):
             The bytes that were read.
         """
         if count == -1:
-            count = float("inf")
+            count = float("inf")  # type: ignore
 
         data = bytearray()
         async for chunk in self:
@@ -184,7 +184,7 @@ class _AsyncByteIterable:
     def __init__(self, byte_content: bytes) -> None:
         self._byte_content = byte_content
 
-    async def __aiter__(self):
+    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         for i in range(0, len(self._byte_content), MAGIC_NUMBER):
             yield self._byte_content[i : i + MAGIC_NUMBER]
 
@@ -192,12 +192,12 @@ class _AsyncByteIterable:
 class _MemorizedAsyncIteratorDecorator:
     __slots__ = ("_async_iterator", "_exhausted", "_buff")
 
-    def __init__(self, async_iterator: typing.AsyncIterator) -> None:
+    def __init__(self, async_iterator: typing.AsyncIterator[bytes]) -> None:
         self._async_iterator = async_iterator
         self._exhausted = False
         self._buff = bytearray()
 
-    async def __aiter__(self):
+    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         if self._exhausted:
             async for chunk in _AsyncByteIterable(self._buff):
                 yield chunk
@@ -340,6 +340,7 @@ class ByteStream(BaseStream):
     ]
 
     ___VALID_TYPES___ = typing.Union[
+        typing.Callable[[], typing.AsyncGenerator[typing.Any, ___VALID_BYTE_TYPES___]],
         typing.AsyncGenerator[typing.Any, ___VALID_BYTE_TYPES___],
         typing.AsyncIterator[___VALID_BYTE_TYPES___],
         typing.AsyncIterable[___VALID_BYTE_TYPES___],
@@ -349,18 +350,17 @@ class ByteStream(BaseStream):
     ]
 
     _obj: typing.Union[
-        typing.AsyncGenerator[typing.Any, ___VALID_BYTE_TYPES___],
-        typing.AsyncIterable[typing.Any, ___VALID_BYTE_TYPES___],
+        typing.AsyncGenerator[typing.Any, ___VALID_BYTE_TYPES___], typing.AsyncIterable[___VALID_BYTE_TYPES___],
     ]
 
     def __init__(self, filename: str, obj: ___VALID_TYPES___) -> None:
         self._filename = filename
 
         if inspect.isasyncgenfunction(obj):
-            obj = obj()
+            obj = obj()  # type: ignore
 
         if inspect.isasyncgen(obj) or aio.is_async_iterator(obj):
-            self._obj = _MemorizedAsyncIteratorDecorator(obj)
+            self._obj = _MemorizedAsyncIteratorDecorator(obj)  # type: ignore
             return
 
         if aio.is_async_iterable(obj):
@@ -379,7 +379,7 @@ class ByteStream(BaseStream):
 
         raise TypeError(f"Expected bytes-like object or async generator, got {type(obj).__qualname__}")
 
-    def __aiter__(self) -> typing.AsyncGenerator[bytes]:
+    def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         return self._obj.__aiter__()
 
     @property
@@ -387,7 +387,7 @@ class ByteStream(BaseStream):
         return self._filename
 
     async def _aiter_async_iterator(
-        self, async_iterator: typing.AsyncGenerator[___VALID_BYTE_TYPES___]
+        self, async_iterator: typing.AsyncGenerator[typing.Any, ___VALID_BYTE_TYPES___]
     ) -> typing.AsyncIterator[bytes]:
         try:
             while True:
@@ -434,7 +434,7 @@ class WebResourceStream(BaseStream):
         self._filename = filename
         self.url = url
 
-    async def __aiter__(self) -> typing.AsyncGenerator[bytes]:
+    async def __aiter__(self) -> typing.Generator[bytes, None, None]:
         async with aiohttp.request("GET", self.url) as response:
             if 200 <= response.status < 300:
                 async for chunk in response.content:
@@ -461,6 +461,7 @@ class WebResourceStream(BaseStream):
         else:
             cls = errors.HTTPErrorResponse
 
+        # noinspection PyArgumentList
         raise cls(real_url, http.HTTPStatus(response.status), response.headers, raw_body)
 
     @property
@@ -545,7 +546,7 @@ class FileStream(BaseStream):
             self._filename, self.path = args
         self._executor = executor
 
-    def __aiter__(self) -> typing.AsyncGenerator[bytes]:
+    def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         loop = asyncio.get_event_loop()
         # We cant use a process pool in the same way we do a thread pool, as
         # we cannot pickle file objects that we pass between threads. This

@@ -23,7 +23,7 @@ See `hikari.net.buckets` for REST-specific rate-limiting logic.
 
 from __future__ import annotations
 
-__all__ = [
+__all__: typing.List[str] = [
     "BaseRateLimiter",
     "BurstRateLimiter",
     "ManualRateLimiter",
@@ -38,7 +38,10 @@ import random
 import time
 import typing
 
-from hikari.utilities import aio
+
+if typing.TYPE_CHECKING:
+    import types
+
 
 UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""
@@ -56,7 +59,7 @@ class BaseRateLimiter(abc.ABC):
     __slots__ = ()
 
     @abc.abstractmethod
-    def acquire(self) -> aio.Future[None]:
+    def acquire(self) -> asyncio.Future[None]:
         """Acquire permission to perform a task that needs to have rate limit management enforced.
 
         Returns
@@ -70,10 +73,10 @@ class BaseRateLimiter(abc.ABC):
     def close(self) -> None:
         """Close the rate limiter, cancelling any internal tasks that are executing."""
 
-    def __enter__(self):
+    def __enter__(self) -> BaseRateLimiter:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
         self.close()
 
 
@@ -89,10 +92,10 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     name: typing.Final[str]
     """The name of the rate limiter."""
 
-    throttle_task: typing.Optional[aio.Task[None]]
+    throttle_task: typing.Optional[asyncio.Task[typing.Any]]
     """The throttling task, or `None` if it isn't running."""
 
-    queue: typing.Final[typing.List[aio.Future[None]]]
+    queue: typing.Final[typing.List[asyncio.Future[typing.Any]]]
     """The queue of any futures under a rate limit."""
 
     logger: typing.Final[logging.Logger]
@@ -106,7 +109,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         self._closed = False
 
     @abc.abstractmethod
-    def acquire(self) -> aio.Future[None]:
+    def acquire(self) -> asyncio.Future[typing.Any]:
         """Acquire time on this rate limiter.
 
         The implementation should define this.
@@ -174,7 +177,7 @@ class ManualRateLimiter(BurstRateLimiter):
     def __init__(self) -> None:
         super().__init__("global")
 
-    def acquire(self) -> aio.Future[None]:
+    def acquire(self) -> asyncio.Future[typing.Any]:
         """Acquire time on this rate limiter.
 
         Returns
@@ -303,7 +306,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.limit = limit
         self.period = period
 
-    def acquire(self) -> aio.Future[None]:
+    def acquire(self) -> asyncio.Future[typing.Any]:
         """Acquire time on this rate limiter.
 
         Returns

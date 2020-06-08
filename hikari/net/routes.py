@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__ = ["CompiledRoute", "Route"]
+__all__: typing.List[str] = ["CompiledRoute", "Route"]
 
 import re
 import typing
@@ -107,7 +107,7 @@ class CompiledRoute:
     def __hash__(self) -> int:
         return self.hash_code
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: typing.Any) -> bool:
         return (
             isinstance(other, CompiledRoute)
             and self.route == other.route
@@ -166,10 +166,12 @@ class Route:
         self.method = method
         self.path_template = path_template
 
+        major_param: typing.Optional[str]
         if match := self._MAJOR_PARAM_REGEX.search(path_template):
-            self.major_param = match.group(1)
+            major_param = match.group(1)
         else:
-            self.major_param = None
+            major_param = None
+        self.major_param = major_param
 
         self.hash_code = hash((self.method, self.path_template))
 
@@ -205,7 +207,7 @@ class Route:
     def __hash__(self) -> int:
         return self.hash_code
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: typing.Any) -> bool:
         return (
             isinstance(other, Route)
             and self.method == other.method
