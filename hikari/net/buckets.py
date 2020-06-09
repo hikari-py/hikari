@@ -490,7 +490,7 @@ class RESTBucketManager:
 
         Parameters
         ----------
-        compiled_route : hikari.rest.routes.CompiledRoute
+        compiled_route : hikari.net.routes.CompiledRoute
             The _route to get the bucket for.
 
         Returns
@@ -540,7 +540,7 @@ class RESTBucketManager:
 
         Parameters
         ----------
-        compiled_route : hikari.rest.routes.CompiledRoute
+        compiled_route : hikari.net.routes.CompiledRoute
             The compiled _route to get the bucket for.
         bucket_header : str, optional
             The `X-RateLimit-Bucket` header that was provided in the response.

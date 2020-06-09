@@ -54,6 +54,6 @@ class IEventConsumer(component.IComponent, abc.ABC):
             The gateway shard that emitted the event.
         event_name : str
             The event name.
-        payload : hikari.utility.data_binding.JSONObject
+        payload : hikari.utilities.data_binding.JSONObject
             The payload provided with the event.
         """

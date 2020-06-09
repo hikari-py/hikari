@@ -322,13 +322,13 @@ class Message(bases.Entity, bases.Unique):
         text: typing.Union[undefined.Undefined, str, None] = undefined.Undefined(),
         *,
         embed: typing.Union[undefined.Undefined, embeds_.Embed, None] = undefined.Undefined(),
-        mentions_everyone: bool = False,
+        mentions_everyone: typing.Union[bool, undefined.Undefined] = undefined.Undefined(),
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
-        ] = True,
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool, undefined.Undefined
+        ] = undefined.Undefined(),
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
-        ] = True,
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.Undefined
+        ] = undefined.Undefined(),
     ) -> Message:
         """Edit this message.
 
@@ -346,11 +346,11 @@ class Message(bases.Entity, bases.Unique):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `False`.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.models.snowflake.Snowflake or int or str] or bool
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str] or bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.models.snowflake.Snowflake or int or str] or bool
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str] or bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -396,7 +396,7 @@ class Message(bases.Entity, bases.Unique):
         *,
         embed: typing.Union[undefined.Undefined, embeds_.Embed] = undefined.Undefined(),
         attachments: typing.Sequence[files_.BaseStream] = undefined.Undefined(),
-        mentions_everyone: bool = False,
+        mentions_everyone: bool = True,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
         ] = True,
@@ -427,11 +427,11 @@ class Message(bases.Entity, bases.Unique):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `False`.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.models.snowflake.Snowflake or int or str] or bool
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str] or bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.models.snowflake.Snowflake or int or str] or bool
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str] or bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.

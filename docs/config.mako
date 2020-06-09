@@ -28,7 +28,7 @@
 
     show_source_code = True
 
-    git_link_template = "https://gitlab.com/nekokatt/hikari/blob/{commit}/{path}#L{start_line}"
+    git_link_template = "https://gitlab.com/nekokatt/hikari/blob/{commit}/{path}#L{start_line}-L{end_line}"
 
     link_prefix = ""
 

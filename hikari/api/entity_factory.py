@@ -140,7 +140,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.channels.PermissionOverwrote
+        hikari.models.channels.PermissionOverwrite
             The deserialized permission overwrite object.
         """
 
@@ -466,7 +466,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.guilds.GuildRole
+        hikari.models.guilds.Role
             The deserialized role object.
         """
 
@@ -511,7 +511,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.GuildMemberBan
+        hikari.models.guilds.GuildMemberBan
             The deserialized guild member ban object.
         """
 
@@ -575,7 +575,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.invites.VanityUrl
+        hikari.models.invites.VanityURL
             The deserialized vanity url object.
         """
 
@@ -644,7 +644,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.guilds.MemberPresence
+        hikari.models.presences.MemberPresence
             The deserialized member presence object.
         """
 
