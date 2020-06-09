@@ -1299,6 +1299,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         voice_state.is_self_deafened = payload["self_deaf"]
         voice_state.is_self_muted = payload["self_mute"]
         voice_state.is_streaming = payload.get("self_stream", False)
+        voice_state.is_video_enabled = payload["self_video"]
         voice_state.is_suppressed = payload["suppress"]
         return voice_state
 
