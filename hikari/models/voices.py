@@ -70,6 +70,9 @@ class VoiceState(bases.Entity):
     is_streaming: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is streaming using "Go Live"."""
 
+    is_video_enabled: bool = attr.ib(eq=False, hash=False, repr=False)
+    """Whether this user's camera is enabled."""
+
     is_suppressed: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is muted by the current user."""
 
