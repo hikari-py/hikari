@@ -282,10 +282,10 @@ class GuildBuilder:
         ----------
         name : str
             The role name.
-        color : hikari.utilities.undefined.Undefined or hikari.models.color.Color
+        color : hikari.utilities.undefined.Undefined or hikari.models.colors.Color
             The colour of the role to use. If unspecified, then the default
             colour is used instead.
-        colour : hikari.utilities.undefined.Undefined or hikari.models.color.Color
+        colour : hikari.utilities.undefined.Undefined or hikari.models.colors.Color
             Alias for the `color` parameter for non-american users.
         hoisted : hikari.utilities.undefined.Undefined or bool
             If `True`, the role will show up in the user sidebar in a separate
