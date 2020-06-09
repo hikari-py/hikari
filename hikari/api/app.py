@@ -79,8 +79,8 @@ class IApp(abc.ABC):
             self._thread_pool.shutdown()
     ```
 
-    If you are in any doubt, check out the `hikari.RESTApp` and `hikari.Bot`
-    implementations to see how they are pieced together!
+    If you are in any doubt, check out the `hikari.impl.rest_app.RESTAppImpl` and
+    `hikari.impl.bot.BotImpl` implementations to see how they are pieced together!
     """
 
     __slots__ = ()
@@ -197,7 +197,7 @@ class IGatewayDispatcher(IApp, abc.ABC):
     that consume events from a message queue, for example.
 
     This purposely also implements some calls found in
-    `hikari.event_dispatcher.IEventDispatcher` with defaulting delegated calls
+    `hikari.api.event_dispatcher.IEventDispatcher` with defaulting delegated calls
     to the event dispatcher. This provides a more intuitive syntax for
     applications.
 

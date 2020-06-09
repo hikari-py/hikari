@@ -545,7 +545,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
     !!! note
         If a guild object is considered to be unavailable, then the state of any
-        other fields other than the `Guild.is_unavailable` and `Guild.id` are
+        other fields other than the `is_unavailable` and `id` are
         outdated or incorrect. If a guild is unavailable, then the contents of
         any other fields should be ignored.
     """

@@ -230,7 +230,7 @@ class Webhook(bases.Entity, bases.Unique):
         avatar : hikari.models.files.BaseStream or None or hikari.utilities.undefined.Undefined
             If specified, the new avatar image. If `None`, then
             it is removed.
-        channel : hikari.models.channels.GuildChannel or hikari.models.bases.UniqueObject or hikari.utilities.undefined.Undefined
+        channel : hikari.utilities.undefined.Undefined or hikari.models.channels.GuildChannel or hikari.models.bases.Unique or hikari.utilities.snowflake.Snowflake or str or int
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
         reason : str or hikari.utilities.undefined.Undefined
