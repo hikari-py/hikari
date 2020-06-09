@@ -2425,6 +2425,7 @@ class TestEntityFactoryImpl:
             "self_deaf": False,
             "self_mute": True,
             "self_stream": True,
+            "self_video": True,
             "suppress": False,
         }
 
@@ -2441,6 +2442,7 @@ class TestEntityFactoryImpl:
         assert voice_state.is_self_deafened is False
         assert voice_state.is_self_muted is True
         assert voice_state.is_streaming is True
+        assert voice_state.is_video_enabled is True
         assert voice_state.is_suppressed is False
         assert isinstance(voice_state, voice_models.VoiceState)
 
@@ -2454,6 +2456,7 @@ class TestEntityFactoryImpl:
                 "mute": True,
                 "self_deaf": False,
                 "self_mute": True,
+                "self_video": False,
                 "suppress": False,
             }
         )
