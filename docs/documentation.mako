@@ -148,21 +148,19 @@
 
         url = dobj.url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
 
-        if url.startswith("/"):
-
-            if isinstance(dobj, pdoc.External):
-                if dobj.module:
-                    fqn = dobj.module.name + "." + dobj.obj.__qualname__
-                else:
-                    fqn = dobj.name
+        if isinstance(dobj, pdoc.External):
+            if dobj.module:
+                fqn = dobj.module.name + "." + dobj.obj.__qualname__
+            else:
+                fqn = dobj.name
 
                 
-                url = discover_source(fqn)
-                if url is None:
-                    url = discover_source(name)
+            url = discover_source(fqn)
+            if url is None:
+                url = discover_source(name)
 
-                if url is None:
-                    return name if not with_prefixes else f"{QUAL_EXTERNAL} {name}"
+            if url is None:
+                return name if not with_prefixes else f"{QUAL_EXTERNAL} {name}"
 
         if simple_names:
             name = simple_name(name)

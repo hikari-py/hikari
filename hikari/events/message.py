@@ -65,9 +65,8 @@ class UpdateMessage(messages.Message):
     """An arbitrarily partial version of `hikari.models.messages.Message`.
 
     !!! warn
-        All fields on this model except `UpdateMessage.channel` and
-        `UpdateMessage.id` may be set to
-        `hikari.models.undefined.Undefined` (a singleton) if we have not
+        All fields on this model except `channel` and `id` may be set to
+        `hikari.utilities.undefined.Undefined` (a singleton) if we have not
         received information about their state from Discord alongside field
         nullability.
     """
@@ -158,9 +157,8 @@ class MessageUpdateEvent(base_events.HikariEvent, base_models.Unique):
     !!! warn
         Unlike `MessageCreateEvent`, `MessageUpdateEvent.message` is an
         arbitrarily partial version of `hikari.models.messages.Message` where
-        any field except `UpdateMessage.id` may be set to
-        `hikari.models.undefined.Undefined` (a singleton) to indicate that
-        it has not been changed.
+        any field except `id` may be set to `hikari.utilities.undefined.Undefined`
+        (a singleton) to indicate that it has not been changed.
     """
 
     message: UpdateMessage = attr.ib(repr=True)

@@ -60,14 +60,14 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
     Parameters
     ----------
-    app : hikari.gateway_dispatcher.IGatewayConsumer
+    app : hikari.api.app.IGatewayConsumer
         The base application.
-    config : hikari.http_settings.HTTPSettings
+    config : hikari.net.http_settings.HTTPSettings
         The AIOHTTP settings to use for the client session.
     debug : bool
         If `True`, each sent and received payload is dumped to the logs. If
         `False`, only the fact that data has been sent/received will be logged.
-    initial_activity : hikari.presences.Activity or None or hikari.utilities.undefined.Undefined
+    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.Undefined
         The initial activity to appear to have for this shard.
     initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
         The datetime to appear to be idle since.
@@ -416,7 +416,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         ----------
         guild : hikari.models.guilds.PartialGuild or hikari.utilities.snowflake.Snowflake or int or str
             The guild or guild ID to update the voice state for.
-        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.Snowflake or int or str or None
+        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.Snowflake or int or str or None
             The channel or channel ID to update the voice state for. If `None`
             then the bot will leave the voice channel that it is in for the
             given guild.

@@ -82,10 +82,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     Parameters
     ----------
-    app : hikari.rest_app.IRESTApp
+    app : hikari.api.app.IRESTApp
         The REST application containing all other application components
         that Hikari uses.
-    config : hikari.http_settings.HTTPSettings
+    config : hikari.net.http_settings.HTTPSettings
         The AIOHTTP-specific configuration settings. This is used to configure
         proxies, and specify TCP connectors to control the size of HTTP
         connection pools, etc.
@@ -595,7 +595,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to edit a permission overwrite in. This may be a channel object, or
             the ID of an existing channel.
-        target : hikari.models.users.User or hikari.models.guidls.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflake or int or str
+        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflake or int or str
             The channel overwrite to edit. This may be a overwrite object, or the ID of an
             existing channel.
         target_type : hikari.utilities.undefined.Undefined or hikari.models.channels.PermissionOverwriteType or str
@@ -657,7 +657,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to delete a permission overwrite in. This may be a channel
             object, or the ID of an existing channel.
-        target : hikari.models.users.User or hikari.models.guidls.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflake or int or str
+        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflake or int or str
             The channel overwrite to delete.
 
         Raises
@@ -853,7 +853,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to pin a message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messges.Message or hikari.utilities.snowflake.Snowflake or int or str
+        message : hikari.models.messages.Message or hikari.utilities.snowflake.Snowflake or int or str
             The message to pin. This may be a message object,
             or the ID of an existing message.
 
@@ -884,7 +884,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to unpin a message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messges.Message or hikari.utilities.snowflake.Snowflake or int or str
+        message : hikari.models.messages.Message or hikari.utilities.snowflake.Snowflake or int or str
             The message to unpin. This may be a message object, or the ID of an
             existing message.
 
@@ -1158,7 +1158,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to edit the message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Messages or hikari.utilities.snowflake.Snowflake or int or str
+        message : hikari.models.messages.Message or hikari.utilities.snowflake.Snowflake or int or str
             The message to fetch.
         text
         embed

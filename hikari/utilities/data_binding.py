@@ -89,10 +89,9 @@ else:
 class StringMapBuilder(multidict.MultiDict[str]):
     """Helper class used to quickly build query strings or header maps.
 
-    This will consume any items that are not
-    `hikari.utilities.unspecified.Unspecified`. If a value _is_ unspecified,
-    it will be ignored when inserting it. This reduces the amount of
-    boilerplate needed for generating the headers and query strings for
+    This will consume any items that are not `hikari.utilities.undefined.Undefined`.
+    If a value _is_ unspecified, it will be ignored when inserting it. This reduces
+    the amount of boilerplate needed for generating the headers and query strings for
     low-level HTTP API interaction, amongst other things.
 
     !!! warn
@@ -153,9 +152,8 @@ class StringMapBuilder(multidict.MultiDict[str]):
 class JSONObjectBuilder(typing.Dict[str, JSONAny]):
     """Helper class used to quickly build JSON objects from various values.
 
-    If provided with any values that are
-    `hikari.utilities.unspecified.Unspecified`, then these values will be
-    ignored.
+    If provided with any values that are `hikari.utilities.undefined.Undefined`,
+    then these values will be ignored.
 
     This speeds up generation of JSON payloads for low level HTTP and websocket
     API interaction.
