@@ -30,6 +30,7 @@ import os
 import pathlib
 import time
 import typing
+import urllib.parse
 
 import aiohttp.client
 import attr
@@ -42,6 +43,17 @@ if typing.TYPE_CHECKING:
 
 _LOGGER: typing.Final[logging.Logger] = klass.get_logger(__name__)
 _MAGIC: typing.Final[int] = 50 * 1024
+_FILE: typing.Final[str] = "file://"
+
+
+def ensure_resource(url_or_resource: typing.Union[str, Resource]) -> Resource:
+    """Given a resource or string, convert it to a valid resource as needed."""
+    if isinstance(url_or_resource, Resource):
+        return url_or_resource
+    else:
+        if url_or_resource.startswith(_FILE):
+            return File(url_or_resource[len(_FILE):])
+        return URL(url_or_resource)
 
 
 def guess_mimetype_from_filename(name: str) -> typing.Optional[str]:
@@ -237,8 +249,6 @@ class RawBytes(Resource):
 
 
 class WebResource(Resource, abc.ABC):
-    __slots__ = ()
-
     @contextlib.asynccontextmanager
     async def stream(self) -> WebReader:
         """Start streaming the content into memory by downloading it.
@@ -325,6 +335,22 @@ class WebResource(Resource, abc.ABC):
                     )
                 else:
                     await http_client.parse_error_response(resp)
+
+
+@attr.s(auto_attribs=True)
+class URL(WebResource):
+    """A URL that represents a web resource."""
+
+    _url: str
+
+    @property
+    def url(self) -> str:
+        return self._url
+
+    @property
+    def filename(self) -> str:
+        url = urllib.parse.urlparse(self._url)
+        return os.path.basename(url.path)
 
 
 class File(Resource):

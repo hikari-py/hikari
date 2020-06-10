@@ -49,6 +49,7 @@ _MAX_EMBED_FIELDS: typing.Final[int] = 25
 _MAX_EMBED_SIZE: typing.Final[int] = 6000
 
 
+
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
 class EmbedFooter:
     """Represents an embed footer."""
@@ -56,10 +57,10 @@ class EmbedFooter:
     text: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The footer text, or `None` if not present."""
 
-    icon: typing.Optional[str] = attr.ib(default=None, repr=False)
+    icon: typing.Optional[files.Resource] = attr.ib(default=None, repr=False, converter=files.ensure_resource)
     """The URL of the footer icon, or `None` if not present."""
 
-    proxy_icon_url: typing.Optional[str] = attr.ib(default=None, repr=False)
+    proxy_icon: typing.Optional[files.Resource] = attr.ib(default=None, repr=False)
     """The proxied URL of the footer icon, or `None` if not present.
 
     !!! note
@@ -73,10 +74,10 @@ class EmbedFooter:
 class EmbedImage:
     """Represents an embed image."""
 
-    url: typing.Optional[str] = attr.ib(default=None, repr=True)
+    image: typing.Optional[files.Resource] = attr.ib(default=None, repr=True, converter=files.ensure_resource)
     """The image to show, or `None` if not present."""
 
-    proxy_image: typing.Optional[str] = attr.ib(default=None, repr=False)
+    proxy_image: typing.Optional[files.Resource] = attr.ib(default=None, repr=False)
     """The proxy image, or `None` if not present.
 
     !!! note
@@ -108,10 +109,10 @@ class EmbedImage:
 class EmbedThumbnail:
     """Represents an embed thumbnail."""
 
-    url: typing.Optional[str] = attr.ib(default=None, repr=True)
+    image: typing.Optional[files.Resource] = attr.ib(default=None, repr=True)
     """The URL of the thumbnail to display, or `None` if not present."""
 
-    proxy_url: typing.Optional[str] = attr.ib(default=None, repr=False)
+    proxy_image: typing.Optional[files.Resource] = attr.ib(default=None, repr=False)
     """The proxied URL of the thumbnail, if present and known, otherwise `None`.
 
     !!! note
@@ -149,7 +150,7 @@ class EmbedVideo:
         any received embed attached to a message event with a video attached.
     """
 
-    url: typing.Optional[str] = attr.ib(default=None, repr=True)
+    video: typing.Optional[files.Resource] = attr.ib(default=None, repr=True)
     """The URL of the video."""
 
     height: typing.Optional[int] = attr.ib(default=None, repr=False)
@@ -190,10 +191,10 @@ class EmbedAuthor:
     This may be `None` if no hyperlink on the author's name is specified.
     """
 
-    icon: typing.Optional[str] = attr.ib(default=None, repr=False)
+    icon: typing.Optional[files.Resource] = attr.ib(default=None, repr=False, converter=files.ensure_resource)
     """The URL of the author's icon, or `None` if not present."""
 
-    proxy_icon: typing.Optional[str] = attr.ib(default=None, repr=False)
+    proxy_icon: typing.Optional[files.Resource] = attr.ib(default=None, repr=False)
     """The proxied URL of the author icon, or `None` if not present.
 
     !!! note
