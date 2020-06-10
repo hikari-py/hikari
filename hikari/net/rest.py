@@ -111,7 +111,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         The API version to use.
     """
 
-    class _RateLimited(RuntimeError):
+    class _RetryRequest(RuntimeError):
         __slots__ = ()
 
     def __init__(
@@ -211,7 +211,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             try:
                 # Moved to a separate method to keep branch counts down.
                 return await self._request_once(compiled_route=compiled_route, headers=headers, body=body, query=query)
-            except self._RateLimited:
+            except self._RetryRequest:
                 pass
 
     async def _request_once(
@@ -233,7 +233,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         )
 
         # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
-        await self._handle_rate_limits_for_response(compiled_route, response)
+        await self._parse_ratelimits(compiled_route, response)
 
         # Don't bother processing any further if we got NO CONTENT. There's not anything
         # to check.
@@ -255,9 +255,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
     async def _handle_error_response(response) -> typing.NoReturn:
         return await http_client.parse_error_response(response)
 
-    async def _handle_rate_limits_for_response(
-        self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse
-    ) -> None:
+    async def _parse_ratelimits(self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse) -> None:
         # Worth noting there is some bug on V6 that rate limits me immediately if I have an invalid token.
         # https://github.com/discord/discord-api-docs/issues/1569
 
@@ -272,58 +270,6 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         is_rate_limited = response.status == http.HTTPStatus.TOO_MANY_REQUESTS
 
-        if is_rate_limited:
-            if response.content_type != self._APPLICATION_JSON:
-                # We don't know exactly what this could imply. It is likely Cloudflare interfering
-                # but I'd rather we just give up than do something resulting in multiple failed
-                # requests repeatedly.
-                raise errors.HTTPErrorResponse(
-                    str(response.real_url),
-                    http.HTTPStatus.TOO_MANY_REQUESTS,
-                    response.headers,
-                    await response.read(),
-                    f"received rate limited response with unexpected response type {response.content_type}",
-                )
-
-            body = await response.json()
-
-            body_retry_after = float(body["retry_after"]) / 1_000
-
-            if body.get("global", False):
-                self.global_rate_limit.throttle(body_retry_after)
-
-                self.logger.warning("you are being rate-limited globally - trying again after %ss", body_retry_after)
-            else:
-                # Discord can do a messed up thing where the headers suggest we aren't rate limited,
-                # but we still get 429s with a different rate limit.
-                # If this occurs, we need to take the rate limit that is furthest in the future
-                # to avoid excessive 429ing everywhere repeatedly, causing an API ban,
-                # since our logic assumes the rate limit info they give us is actually
-                # remotely correct.
-                #
-                # At the time of writing, editing a channel more than twice per 10 minutes seems
-                # to trigger this, which makes me nervous that the info we are receiving isn't
-                # correct, but whatever... this is the best we can do.
-
-                header_reset_at = reset_at
-                body_retry_at = now_date.timestamp() + body_retry_after
-
-                if body_retry_at > header_reset_at:
-                    reset_date = datetime.datetime.fromtimestamp(body_retry_at, tz=datetime.timezone.utc)
-
-                self.logger.warning(
-                    "you are being rate-limited on bucket %s for route %s - trying again after %ss "
-                    "(headers suggest %ss back-off finishing at %s; rate-limited response specifies %ss "
-                    "back-off finishing at %s)",
-                    bucket,
-                    compiled_route,
-                    reset_at,
-                    header_reset_at - now_date.timestamp(),
-                    header_reset_at,
-                    body_retry_after,
-                    body_retry_at,
-                )
-
         self.buckets.update_rate_limits(
             compiled_route=compiled_route,
             bucket_header=bucket,
@@ -333,8 +279,66 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             reset_at_header=reset_date,
         )
 
-        if is_rate_limited:
-            raise self._RateLimited()
+        if not is_rate_limited:
+            return
+
+        if response.content_type != self._APPLICATION_JSON:
+            # We don't know exactly what this could imply. It is likely Cloudflare interfering
+            # but I'd rather we just give up than do something resulting in multiple failed
+            # requests repeatedly.
+            raise errors.HTTPErrorResponse(
+                str(response.real_url),
+                http.HTTPStatus.TOO_MANY_REQUESTS,
+                response.headers,
+                await response.read(),
+                f"received rate limited response with unexpected response type {response.content_type}",
+            )
+
+        body = await response.json()
+        body_retry_after = float(body["retry_after"]) / 1_000
+
+        if body.get("global", False) is True:
+            self.global_rate_limit.throttle(body_retry_after)
+
+            self.logger.warning("you are being rate-limited globally - trying again after %ss", body_retry_after)
+            return
+
+
+        # Discord have started applying ratelimits to operations on some endpoints
+        # based on specific fields used in the JSON body.
+        # This does not get reflected in the headers. The first we know is when we
+        # get a 429.
+        # The issue is that we may get the same response if Discord dynamically
+        # adjusts the bucket ratelimits.
+        #
+        # We have no mechanism for handing field-based ratelimits, so if we get
+        # to here, but notice remaining is greater than zero, we should just error.
+        #
+        # Worth noting we still ignore the retry_after in the body. I have no clue
+        # if there is some weird edge case where a bucket rate limit can occur on
+        # top of a non-global one, but in this case this check will misbehave and
+        # instead of erroring, will trigger a backoff that might be 10 minutes or
+        # more...
+
+        # I realise remaining should never be less than zero, but quite frankly, I don't
+        # trust that voodoo type stuff won't ever occur with that value from them...
+        if remaining <= 0:
+            # We can retry and we will then abide by the updated bucket ratelimits.
+            self.logger.debug(
+                "ratelimited on bucket %s at %s. This is a bucket discrepancy, so we will retry at %s",
+                bucket,
+                compiled_route,
+                reset_date,
+            )
+            raise self._RetryRequest()
+
+        raise errors.RateLimited(
+            str(response.real_url),
+            compiled_route,
+            response.headers,
+            body,
+            body_retry_after,
+        )
 
     @staticmethod
     def _generate_allowed_mentions(
@@ -1100,7 +1104,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         attachments = [] if isinstance(attachments, undefined.Undefined) else [a for a in attachments]
 
-        # TODO: embed attachments...
+        # TODO: embed handle images.
 
         if attachments:
             form = data_binding.URLEncodedForm()
