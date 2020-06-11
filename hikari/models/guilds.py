@@ -51,6 +51,7 @@ import attr
 from hikari.models import bases
 from hikari.models import users
 from hikari.utilities import cdn
+from hikari.utilities import files
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -417,23 +418,31 @@ class PartialGuild(bases.Entity, bases.Unique):
     features: typing.Set[typing.Union[GuildFeature, str]] = attr.ib(eq=False, hash=False, repr=False)
     """A set of the features in this guild."""
 
-    def format_icon_url(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's custom icon, if set.
+    @property
+    def icon_url(self) -> typing.Optional[files.URL]:
+        """Icon for the guild, if set; otherwise `None`."""
+        return self.format_icon()
+
+    def format_icon(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's icon, if set.
 
         Parameters
         ----------
-        format_ : str
+        format_ : str or None
             The format to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
+
+            If `None`, then the correct default format is determined based on
+            whether the icon is animated or not.
         size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
-        str or None
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL to the resource, or `None` if no icon is set.
 
         Raises
         ------
@@ -441,15 +450,9 @@ class PartialGuild(bases.Entity, bases.Unique):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash:
-            if format_ is None:
-                format_ = "gif" if self.icon_hash.startswith("a_") else "png"
-            return cdn.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            url = cdn.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            return files.URL(url)
         return None
-
-    @property
-    def icon_url(self) -> typing.Optional[str]:
-        """URL for this guild's icon, if set."""
-        return self.format_icon_url()
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -474,8 +477,13 @@ class GuildPreview(PartialGuild):
     description: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The guild's description, if set."""
 
-    def format_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's splash image, if set.
+    @property
+    def splash_url(self) -> typing.Optional[files.URL]:
+        """Splash for the guild, if set."""
+        return self.format_splash()
+
+    def format_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's splash image, if set.
 
         Parameters
         ----------
@@ -488,8 +496,8 @@ class GuildPreview(PartialGuild):
 
         Returns
         -------
-        str or None
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL to the splash, or `None` if not set.
 
         Raises
         ------
@@ -497,16 +505,17 @@ class GuildPreview(PartialGuild):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash:
-            return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+            url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+            return files.URL(url)
         return None
 
     @property
-    def splash_url(self) -> typing.Optional[str]:
-        """URL for this guild's splash, if set."""
-        return self.format_splash_url()
+    def discovery_splash(self) -> typing.Optional[files.URL]:
+        """Discovery splash for the guild, if set."""
+        return self.format_discovery_splash()
 
-    def format_discovery_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's discovery splash image, if set.
+    def format_discovery_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's discovery splash image, if set.
 
         Parameters
         ----------
@@ -519,7 +528,7 @@ class GuildPreview(PartialGuild):
 
         Returns
         -------
-        str or None
+        hikari.utilities.files.URL or None
             The string URL.
 
         Raises
@@ -528,15 +537,11 @@ class GuildPreview(PartialGuild):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.discovery_splash_hash:
-            return cdn.generate_cdn_url(
+            url = cdn.generate_cdn_url(
                 "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
             )
+            return files.URL(url)
         return None
-
-    @property
-    def discovery_splash_url(self) -> typing.Optional[str]:
-        """URL for this guild's discovery splash, if set."""
-        return self.format_discovery_splash_url()
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -833,8 +838,13 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     remain `None`.
     """
 
-    def format_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's splash image, if set.
+    @property
+    def splash_url(self) -> typing.Optional[files.URL]:
+        """Splash for the guild, if set."""
+        return self.format_splash()
+
+    def format_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's splash image, if set.
 
         Parameters
         ----------
@@ -847,8 +857,8 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
         Returns
         -------
-        str or None
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL to the splash, or `None` if not set.
 
         Raises
         ------
@@ -856,16 +866,17 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash:
-            return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+            url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+            return files.URL(url)
         return None
 
     @property
-    def splash_url(self) -> typing.Optional[str]:
-        """URL for this guild's splash, if set."""
-        return self.format_splash_url()
+    def discovery_splash(self) -> typing.Optional[files.URL]:
+        """Discovery splash for the guild, if set."""
+        return self.format_discovery_splash()
 
-    def format_discovery_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's discovery splash image, if set.
+    def format_discovery_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's discovery splash image, if set.
 
         Parameters
         ----------
@@ -878,7 +889,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
         Returns
         -------
-        str or None
+        hikari.utilities.files.URL or None
             The string URL.
 
         Raises
@@ -887,18 +898,19 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.discovery_splash_hash:
-            return cdn.generate_cdn_url(
+            url = cdn.generate_cdn_url(
                 "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
             )
+            return files.URL(url)
         return None
 
     @property
-    def discovery_splash_url(self) -> typing.Optional[str]:
-        """URL for this guild's discovery splash, if set."""
-        return self.format_discovery_splash_url()
+    def banner(self) -> typing.Optional[files.URL]:
+        """Banner for the guild, if set."""
+        return self.format_banner()
 
-    def format_banner_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's banner image, if set.
+    def format_banner(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's banner image, if set.
 
         Parameters
         ----------
@@ -911,8 +923,8 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
         Returns
         -------
-        str or None
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL of the banner, or `None` if no banner is set.
 
         Raises
         ------
@@ -920,10 +932,6 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash:
-            return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
+            url = cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
+            return files.URL(url)
         return None
-
-    @property
-    def banner_url(self) -> typing.Optional[str]:
-        """URL for this guild's banner, if set."""
-        return self.format_banner_url()

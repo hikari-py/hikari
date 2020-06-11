@@ -34,7 +34,6 @@ __all__: typing.List[str] = [
 import enum
 import typing
 
-import aiohttp
 import attr
 
 from hikari.models import bases
@@ -522,10 +521,9 @@ class Message(bases.Entity, bases.Unique):
             If the channel or message is not found, or if the emoji is not
             found.
 
-            !!! note
-                This will also occur if you try to add an emoji from a
-                guild you are not part of if no one else has previously
-                reacted with the same emoji.
+            This will also occur if you try to add an emoji from a
+            guild you are not part of if no one else has previously
+            reacted with the same emoji.
         """
         await self._app.rest.add_reaction(channel=self.channel_id, message=self.id, emoji=emoji)
 
@@ -587,7 +585,7 @@ class Message(bases.Entity, bases.Unique):
 
         Parameters
         ----------
-        emoji : str hikari.models.emojis.Emoji or hikari.utilities.undefined.Undefined
+        emoji : str or hikari.models.emojis.Emoji or hikari.utilities.undefined.Undefined
             The emoji to remove all reactions for. If not specified, then all
             emojis are removed.
 

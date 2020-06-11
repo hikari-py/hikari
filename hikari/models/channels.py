@@ -47,6 +47,7 @@ from hikari.models import permissions
 from hikari.models import users
 
 from hikari.utilities import cdn
+from hikari.utilities import files
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -198,13 +199,13 @@ class GroupDMChannel(DMChannel):
     """
 
     @property
-    def icon_url(self) -> typing.Optional[str]:
-        """URL for this DM channel's icon, if set."""
+    def icon(self) -> typing.Optional[files.URL]:
+        """Icon for this DM channel, if set."""
         return self.format_icon_url()
 
     # noinspection PyShadowingBuiltins
-    def format_icon_url(self, *, format: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this group DM's icon, if set.
+    def format_icon(self, *, format: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the icon for this DM, if set.
 
         Parameters
         ----------
@@ -217,8 +218,8 @@ class GroupDMChannel(DMChannel):
 
         Returns
         -------
-        str or None
-            The string URL, or `None` if no icon is present.
+        hikari.utilities.files.URL or None
+            The URL, or `None` if no icon is present.
 
         Raises
         ------
@@ -226,7 +227,8 @@ class GroupDMChannel(DMChannel):
             If `size` is not a power of two between 16 and 4096 (inclusive).
         """
         if self.icon_hash:
-            return cdn.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format, size=size)
+            url = cdn.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format, size=size)
+            return files.URL(url)
         return None
 
 

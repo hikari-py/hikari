@@ -23,9 +23,13 @@ from __future__ import annotations
 __all__ = [
     "ensure_resource",
     "AsyncReader",
+    "ByteReader",
+    "FileReader",
+    "WebReader",
     "Resource",
     "Bytes",
     "File",
+    "WebResource",
     "URL",
 ]
 
@@ -194,7 +198,7 @@ def generate_filename_from_details(
     if extension is None and mimetype is not None:
         extension = guess_file_extension(mimetype)
 
-    if extension is None or extension == "":
+    if not extension:
         extension = ""
     elif not extension.startswith("."):
         extension = f".{extension}"
@@ -432,8 +436,7 @@ class Bytes(Resource):
         if filename is None and mimetype is None:
             if extension is None:
                 raise TypeError("Cannot infer data type details, please specify one of filetype, mimetype, extension")
-            else:
-                raise TypeError("Cannot infer data type details from extension. Please specify mimetype or filename")
+            raise TypeError("Cannot infer data type details from extension. Please specify mimetype or filename")
 
         self._filename = filename
         self.mimetype = mimetype
@@ -448,7 +451,19 @@ class Bytes(Resource):
         return self._filename
 
     @contextlib.asynccontextmanager
-    async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = None) -> AsyncReader:
+    async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = None) -> ByteReader:
+        """Start streaming the content in chunks.
+
+        Parameters
+        ----------
+        executor : concurrent.futures.ThreadPoolExecutor or None
+            Not used. Provided only to match the underlying interface.executor
+
+        Returns
+        -------
+        ByteReader
+            The byte stream.
+        """
         yield ByteReader(self.filename, self.mimetype, self.data)
 
 
@@ -481,7 +496,7 @@ class WebResource(Resource, abc.ABC):
 
         Parameters
         ----------
-        executor :
+        executor : concurrent.futures.ThreadPoolExecutor or None
             Not used. Provided only to match the underlying interface.
 
         Examples
@@ -637,5 +652,19 @@ class File(Resource):
         return self._filename
 
     @contextlib.asynccontextmanager
-    async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = None) -> AsyncReader:
+    async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = None) -> FileReader:
+        """Start streaming the resource using a thread pool executor.
+
+        Parameters
+        ----------
+        executor : typing.Optional[concurrent.futures.ThreadPoolExecutor]
+            The thread pool to run the blocking read operations in. If
+            `None`, the default executor for the running event loop will be
+            used instead.
+
+        Returns
+        -------
+        FileReader
+            The file reader object.
+        """
         yield FileReader(self.filename, None, executor, self.path)

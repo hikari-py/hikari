@@ -61,7 +61,7 @@ class Unique(typing.SupportsInt):
     """
 
     id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, default=snowflake.Snowflake(0),
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
     )
     """The ID of this entity."""
 

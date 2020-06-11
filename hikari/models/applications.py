@@ -39,6 +39,7 @@ import attr
 from hikari.models import bases
 from hikari.models import guilds
 from hikari.utilities import cdn
+from hikari.utilities import files
 
 if typing.TYPE_CHECKING:
     from hikari.models import permissions as permissions_
@@ -288,18 +289,18 @@ class Team(bases.Entity, bases.Unique):
     """The ID of this team's owner."""
 
     @property
-    def icon_url(self) -> typing.Optional[str]:
-        """URL for this team's icon.
+    def icon_url(self) -> typing.Optional[files.URL]:
+        """Team icon.
 
         Returns
         -------
-        str or None
+        hikari.utilities.files.URL or None
             The URL, or `None` if no icon exists.
         """
-        return self.format_icon_url()
+        return self.format_icon()
 
-    def format_icon_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the icon URL for this team if set.
+    def format_icon(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the icon for this team if set.
 
         Parameters
         ----------
@@ -312,8 +313,8 @@ class Team(bases.Entity, bases.Unique):
 
         Returns
         -------
-        str or None
-            The string URL, or `None` if no icon exists.
+        hikari.utilities.files.URL or None
+            The URL, or `None` if no icon exists.
 
         Raises
         ------
@@ -322,7 +323,8 @@ class Team(bases.Entity, bases.Unique):
             (inclusive).
         """
         if self.icon_hash:
-            return cdn.generate_cdn_url("team-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            url = cdn.generate_cdn_url("team-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            return files.URL(url)
         return None
 
 
@@ -393,18 +395,18 @@ class Application(bases.Entity, bases.Unique):
     """The CDN's hash of this application's cover image, used on the store."""
 
     @property
-    def icon_url(self) -> typing.Optional[str]:
-        """URL for the team's icon, if there is one.
+    def icon(self) -> typing.Optional[files.URL]:
+        """Team icon, if there is one.
 
         Returns
         -------
-        str or None
-            The URL, or `None` if no icon is set.
+        hikari.utilities.files.URL or None
+            The URL, or `None` if no icon exists.
         """
-        return self.format_icon_url()
+        return self.format_icon()
 
-    def format_icon_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the icon URL for this application.
+    def format_icon(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the icon for this application.
 
         Parameters
         ----------
@@ -417,8 +419,8 @@ class Application(bases.Entity, bases.Unique):
 
         Returns
         -------
-        str or None
-            The string URL, or `None` if no icon is set.
+        hikari.utilities.files.URL or None
+            The URL, or `None` if no icon exists.
 
         Raises
         ------
@@ -427,22 +429,23 @@ class Application(bases.Entity, bases.Unique):
             (inclusive).
         """
         if self.icon_hash:
-            return cdn.generate_cdn_url("application-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            url = cdn.generate_cdn_url("application-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+            return files.URL(url)
         return None
 
     @property
-    def cover_image_url(self) -> typing.Optional[str]:
-        """URL for the cover image used on the store.
+    def cover_image(self) -> typing.Optional[files.URL]:
+        """Cover image used on the store.
 
         Returns
         -------
-        str or None
+        hikari.utilities.files.URL or None
             The URL, or `None` if no cover image exists.
         """
-        return self.format_cover_image_url()
+        return self.format_cover_image()
 
-    def format_cover_image_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this application's store page's cover image is set and applicable.
+    def format_cover_image(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the cover image used in the store, if set.
 
         Parameters
         ----------
@@ -455,7 +458,7 @@ class Application(bases.Entity, bases.Unique):
 
         Returns
         -------
-        str or None
+        hikari.utilities.files.URL or None
             The URL, or `None` if no cover image exists.
 
         Raises
@@ -465,7 +468,8 @@ class Application(bases.Entity, bases.Unique):
             (inclusive).
         """
         if self.cover_image_hash:
-            return cdn.generate_cdn_url(
+            url = cdn.generate_cdn_url(
                 "application-assets", str(self.id), self.cover_image_hash, format_=format_, size=size
             )
+            return files.URL(url)
         return None

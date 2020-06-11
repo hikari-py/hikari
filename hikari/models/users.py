@@ -164,13 +164,11 @@ class User(PartialUser):
 
     @property
     def avatar(self) -> typing.Optional[files.URL]:
-        """URL for this user's custom avatar if set, else `None`."""
-        return self.format_avatar_url()
+        """Avatar for the user if set, else `None`."""
+        return self.format_avatar()
 
-    def format_avatar_url(
-        self, *, format_: typing.Optional[str] = None, size: int = 4096
-    ) -> typing.Optional[files.URL]:
-        """Generate the avatar URL for this user's custom avatar if set.
+    def format_avatar(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the avatar for this user, if set.
 
         If no custom avatar is set, this returns `None`. You can then use the
         `User.default_avatar_url` attribute instead to fetch the displayed
@@ -178,11 +176,14 @@ class User(PartialUser):
 
         Parameters
         ----------
-        format_ : str
+        format_ : str or `None`
             The format to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated). Will be ignored for default avatars which can only be
             `png`.
+
+            If `None`, then the correct default format is determined based on
+            whether the icon is animated or not.
         size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
@@ -191,7 +192,7 @@ class User(PartialUser):
         Returns
         -------
         hikari.utilities.files.URL
-            The string URL, or `None` if not present.
+            The URL to the avatar, or `None` if not present.
 
         Raises
         ------
@@ -204,15 +205,15 @@ class User(PartialUser):
         return None
 
     @property
+    def default_avatar(self) -> files.URL:  # noqa: D401 imperative mood check
+        """Placeholder default avatar for the user."""
+        url = cdn.get_default_avatar_url(self.discriminator)
+        return files.URL(url)
+
+    @property
     def default_avatar_index(self) -> int:
         """Integer representation of this user's default avatar."""
         return cdn.get_default_avatar_index(self.discriminator)
-
-    @property
-    def default_avatar(self) -> files.URL:
-        """URL for this user's default avatar."""
-        url = cdn.get_default_avatar_url(self.discriminator)
-        return files.URL(url)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

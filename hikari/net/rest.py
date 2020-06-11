@@ -1445,12 +1445,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put_snowflake("channel", channel)
-        if not isinstance(avatar, undefined.Undefined):
-            if avatar is None:
-                body.put("avatar", None)
-            else:
-                async with avatar.stream(executor=self._app.thread_pool_executor) as stream:
-                    body.put("avatar", await stream.data_uri())
+
+        if avatar is None:
+            body.put("avatar", None)
+        elif not isinstance(avatar, undefined.Undefined):
+            async with avatar.stream(executor=self._app.thread_pool_executor) as stream:
+                body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
@@ -1824,26 +1824,23 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         # FIXME: gather these futures simultaneously for a 3x speedup...
 
-        if not isinstance(icon, undefined.Undefined):
-            if icon is None:
-                body.put("icon", None)
-            else:
-                async with icon.stream(executor=self._app.thread_pool_executor) as stream:
-                    body.put("icon", await stream.data_uri())
+        if icon is None:
+            body.put("icon", None)
+        elif not isinstance(icon, undefined.Undefined):
+            async with icon.stream(executor=self._app.thread_pool_executor) as stream:
+                body.put("icon", await stream.data_uri())
 
-        if not isinstance(splash, undefined.Undefined):
-            if splash is None:
-                body.put("splash", None)
-            else:
-                async with splash.stream(executor=self._app.thread_pool_executor) as stream:
-                    body.put("splash", await stream.data_uri())
+        if splash is None:
+            body.put("splash", None)
+        elif not isinstance(splash, undefined.Undefined):
+            async with splash.stream(executor=self._app.thread_pool_executor) as stream:
+                body.put("splash", await stream.data_uri())
 
-        if not isinstance(banner, undefined.Undefined):
-            if banner is None:
-                body.put("banner", None)
-            else:
-                async with banner.stream(executor=self._app.thread_pool_executor) as stream:
-                    body.put("banner", await stream.data_uri())
+        if banner is None:
+            body.put("banner", None)
+        elif not isinstance(banner, undefined.Undefined):
+            async with banner.stream(executor=self._app.thread_pool_executor) as stream:
+                body.put("banner", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
