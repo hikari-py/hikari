@@ -104,6 +104,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         The API version to use.
     """
 
+    __slots__ = ("buckets", "global_rate_limit", "version", "_app", "_rest_url", "_token")
+
     class _RetryRequest(RuntimeError):
         __slots__ = ()
 
@@ -133,8 +135,6 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         )
         self.buckets = buckets.RESTBucketManager()
         self.global_rate_limit = rate_limits.ManualRateLimiter()
-        self._invalid_requests = 0
-        self._invalid_request_window = -float("inf")
         self.version = version
 
         self._app = app
@@ -238,11 +238,11 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             real_url = str(response.real_url)
             raise errors.HTTPError(real_url, f"Expected JSON response but received {response.content_type}")
 
-        await self._handle_error_response(response)
+        return await self._handle_error_response(response)
 
     @staticmethod
-    async def _handle_error_response(response) -> typing.NoReturn:
-        return await http_client.parse_error_response(response)
+    async def _handle_error_response(response: aiohttp.ClientResponse) -> typing.NoReturn:
+        raise await http_client.generate_error_response(response)
 
     async def _parse_ratelimits(self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse) -> None:
         # Worth noting there is some bug on V6 that rate limits me immediately if I have an invalid token.
@@ -1093,14 +1093,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("tts", tts)
 
         if isinstance(attachments, undefined.Undefined):
-            attachments = []
+            final_attachments: typing.List[files.Resource] = []
         else:
-            attachments = [files.ensure_resource(a) for a in attachments]
+            final_attachments = [files.ensure_resource(a) for a in attachments]
 
         if not isinstance(embed, undefined.Undefined):
             embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
             body.put("embed", embed_payload)
-            attachments.extend(embed_attachments)
+            final_attachments.extend(embed_attachments)
 
         if attachments:
             form = data_binding.URLEncodedForm()
@@ -1109,7 +1109,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             stack = contextlib.AsyncExitStack()
 
             try:
-                for i, attachment in enumerate(attachments):
+                for i, attachment in enumerate(final_attachments):
                     stream = await stack.enter_async_context(attachment.stream(executor=self._app.thread_pool_executor))
                     form.add_field(
                         f"file{i}", stream, filename=stream.filename, content_type=self._APPLICATION_OCTET_STREAM
@@ -1192,9 +1192,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         else:
             body.put("content", None)
 
-        if embed is not None:
-            body.put("embed", embed, conversion=self._app.entity_factory.serialize_embed)
-        else:
+        if isinstance(embed, embeds_.Embed):
+            embed_payload, _ = self._app.entity_factory.serialize_embed(embed)
+            body.put("embed", embed_payload)
+        elif embed is None:
             body.put("embed", None)
 
         raw_response = await self._request(route, body=body)
@@ -1522,8 +1523,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
             try:
                 for i, attachment in enumerate(attachments):
-                    stream, filename = await stack.enter_async_context(attachment.to_attachment(self._app))
-                    form.add_field(f"file{i}", stream, filename=filename, content_type=self._APPLICATION_OCTET_STREAM)
+                    stream = await stack.enter_async_context(attachment.stream(self._app.thread_pool_executor))
+                    form.add_field(
+                        f"file{i}", stream, filename=stream.filename, content_type=self._APPLICATION_OCTET_STREAM
+                    )
 
                 raw_response = await self._request(route, body=form, no_auth=no_auth)
             finally:

@@ -44,9 +44,9 @@ if typing.TYPE_CHECKING:
     from hikari.models import bases
     from hikari.models import channels
     from hikari.models import colors
-    from hikari.models import files
     from hikari.models import guilds
     from hikari.models import permissions as permissions_
+    from hikari.utilities import files
 
 
 class TypingIndicator:
@@ -195,7 +195,7 @@ class GuildBuilder:
     If not overridden, this will use the Discord default level.
     """
 
-    icon: typing.Union[undefined.Undefined, files.BaseStream] = undefined.Undefined()
+    icon: typing.Union[undefined.Undefined, files.URL] = undefined.Undefined()
     """Guild icon to use that can be overwritten.
 
     If not overridden, the guild will not have an icon.
@@ -253,7 +253,10 @@ class GuildBuilder:
         payload.put("explicit_content_filter", self.explicit_content_filter_level)
 
         if not isinstance(self.icon, undefined.Undefined):
-            payload.put("icon", await self.icon.fetch_data_uri())
+            # This isn't annotated properly in the standard library, apparently.
+            async with self.icon.stream(self._app.thread_pool_executor) as stream:
+                data_uri = await stream.data_uri()
+                payload.put("icon", data_uri)
 
         raw_response = await self._request_call(route, body=payload)
         response = typing.cast(data_binding.JSONObject, raw_response)

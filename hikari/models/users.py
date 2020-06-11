@@ -200,7 +200,13 @@ class User(PartialUser):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.avatar_hash is not None:
-            url = cdn.get_avatar_url(self.id, self.avatar_hash, format_=format_, size=size)
+            if format_ is None:
+                if self.avatar_hash.startswith("a_"):
+                    format_ = "gif"
+                else:
+                    format_ = "png"
+
+            url = cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
             return files.URL(url)
         return None
 

@@ -428,7 +428,7 @@ class Application(bases.Entity, bases.Unique):
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
         """
-        if self.icon_hash:
+        if self.icon_hash is not None:
             url = cdn.generate_cdn_url("application-icons", str(self.id), self.icon_hash, format_=format_, size=size)
             return files.URL(url)
         return None
@@ -467,7 +467,7 @@ class Application(bases.Entity, bases.Unique):
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
         """
-        if self.cover_image_hash:
+        if self.cover_image_hash is not None:
             url = cdn.generate_cdn_url(
                 "application-assets", str(self.id), self.cover_image_hash, format_=format_, size=size
             )

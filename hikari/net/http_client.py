@@ -335,19 +335,19 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         )
 
 
-async def parse_error_response(response: aiohttp.ClientResponse) -> typing.NoReturn:
-    """Given an erroneous HTTP response, raise a corresponding exception."""
+async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HTTPError:
+    """Given an erroneous HTTP response, return a corresponding exception."""
     real_url = str(response.real_url)
     raw_body = await response.read()
 
     if response.status == http.HTTPStatus.BAD_REQUEST:
-        raise errors.BadRequest(real_url, response.headers, raw_body)
+        return errors.BadRequest(real_url, response.headers, raw_body)
     if response.status == http.HTTPStatus.UNAUTHORIZED:
-        raise errors.Unauthorized(real_url, response.headers, raw_body)
+        return errors.Unauthorized(real_url, response.headers, raw_body)
     if response.status == http.HTTPStatus.FORBIDDEN:
-        raise errors.Forbidden(real_url, response.headers, raw_body)
+        return errors.Forbidden(real_url, response.headers, raw_body)
     if response.status == http.HTTPStatus.NOT_FOUND:
-        raise errors.NotFound(real_url, response.headers, raw_body)
+        return errors.NotFound(real_url, response.headers, raw_body)
 
     # noinspection PyArgumentList
     status = http.HTTPStatus(response.status)
@@ -360,4 +360,4 @@ async def parse_error_response(response: aiohttp.ClientResponse) -> typing.NoRet
     else:
         cls = errors.HTTPErrorResponse
 
-    raise cls(real_url, status, response.headers, raw_body)
+    return cls(real_url, status, response.headers, raw_body)

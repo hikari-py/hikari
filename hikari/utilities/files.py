@@ -73,12 +73,12 @@ def ensure_resource(url_or_resource: Resource, /) -> Resource:
     """Given a resource, return it."""
 
 
-def ensure_resource(url_or_resource: typing.Union[None, str, os.PathLike, Resource], /) -> typing.Optional[Resource]:
+def ensure_resource(url_or_resource: typing.Union[None, str, Resource], /) -> typing.Optional[Resource]:
     """Given a resource or string, convert it to a valid resource as needed.
 
     Parameters
     ----------
-    url_or_resource : None or str or os.PathLike or Resource
+    url_or_resource : None or str or Resource
         The item to convert. If the item is `None`, then `None` is returned.
         Likewise if a `Resource` is passed, it is simply returned again.
         Anything else is converted to a `Resource` first.
@@ -113,7 +113,8 @@ def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
         The closest guess to the given filename. May be `None` if
         no match was found.
     """
-    return mimetypes.guess_type(name)
+    guess, _ = mimetypes.guess_type(name)
+    return guess
 
 
 def guess_mimetype_from_data(data: bytes, /) -> typing.Optional[str]:
@@ -267,7 +268,7 @@ class ByteReader(AsyncReader):
     data: bytes
     """The data that will be yielded in chunks."""
 
-    def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
+    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         for i in range(0, len(self.data), _MAGIC):
             yield self.data[i : i + _MAGIC]
 
@@ -281,7 +282,7 @@ class FileReader(AsyncReader):
     blocking IO.
     """
 
-    path: typing.Union[str, os.PathLike, pathlib.Path]
+    path: typing.Union[str, pathlib.Path]
     """The path to the resource to read."""
 
     loop: asyncio.AbstractEventLoop = attr.ib(factory=asyncio.get_running_loop)
@@ -374,6 +375,7 @@ class Resource(abc.ABC):
 
     @abc.abstractmethod
     @contextlib.asynccontextmanager
+    @typing.no_type_check
     async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor]) -> AsyncReader:
         """Return an async iterable of bytes to stream."""
 
@@ -433,10 +435,10 @@ class Bytes(Resource):
         if extension is None and mimetype is not None:
             extension = guess_file_extension(mimetype)
 
-        if filename is None and mimetype is None:
+        if mimetype is None:
             if extension is None:
-                raise TypeError("Cannot infer data type details, please specify one of filetype, mimetype, extension")
-            raise TypeError("Cannot infer data type details from extension. Please specify mimetype or filename")
+                raise TypeError("Cannot infer data type details, please specify a mimetype or an extension")
+            raise TypeError("Cannot infer data type details from extension. Please specify a mimetype")
 
         self._filename = filename
         self.mimetype = mimetype
@@ -451,6 +453,7 @@ class Bytes(Resource):
         return self._filename
 
     @contextlib.asynccontextmanager
+    @typing.no_type_check
     async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = None) -> ByteReader:
         """Start streaming the content in chunks.
 
@@ -488,6 +491,7 @@ class WebResource(Resource, abc.ABC):
     __slots__ = ()
 
     @contextlib.asynccontextmanager
+    @typing.no_type_check
     async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = None) -> WebReader:
         """Start streaming the content into memory by downloading it.
 
@@ -558,13 +562,6 @@ class WebResource(Resource, abc.ABC):
                     if mimetype is None:
                         mimetype = resp.content_type
 
-                    if filename is None:
-                        if resp.content_disposition is not None:
-                            filename = resp.content_disposition.filename
-
-                        if filename is None:
-                            filename = generate_filename_from_details(mimetype=mimetype)
-
                     yield WebReader(
                         stream=resp.content,
                         url=str(resp.real_url),
@@ -576,7 +573,7 @@ class WebResource(Resource, abc.ABC):
                         size=resp.content_length,
                     )
                 else:
-                    await http_client.parse_error_response(resp)
+                    raise await http_client.generate_error_response(resp)
 
 
 class URL(WebResource):
@@ -634,10 +631,10 @@ class File(Resource):
 
     __slots__ = ("path", "_filename")
 
-    path: typing.Union[str, os.PathLike, pathlib.Path]
+    path: typing.Union[str, pathlib.Path]
     _filename: typing.Optional[str]
 
-    def __init__(self, path: typing.Union[str, os.PathLike, pathlib.Path], filename: typing.Optional[str]) -> None:
+    def __init__(self, path: typing.Union[str, pathlib.Path], filename: typing.Optional[str]) -> None:
         self.path = path
         self._filename = filename
 
@@ -652,6 +649,7 @@ class File(Resource):
         return self._filename
 
     @contextlib.asynccontextmanager
+    @typing.no_type_check
     async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = None) -> FileReader:
         """Start streaming the resource using a thread pool executor.
 

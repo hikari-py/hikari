@@ -41,6 +41,10 @@ from hikari.models import colors
 from hikari.utilities import files
 
 
+def _maybe_color(value: typing.Optional[colors.ColorLike]) -> typing.Optional[colors.Color]:
+    return colors.Color.of(value) if value is not None else None
+
+
 @attr.s(slots=True, kw_only=True, init=False)
 class EmbedResource(files.Resource):
     """A base type for any resource provided in an embed.
@@ -66,10 +70,11 @@ class EmbedResource(files.Resource):
         return self.resource.url
 
     @property
-    def filename(self) -> typing.Optional[str]:
+    def filename(self) -> str:
         return self.resource.filename
 
     @contextlib.asynccontextmanager
+    @typing.no_type_check
     async def stream(self) -> files.AsyncReader:
         async with self.resource.stream() as stream:
             yield stream
@@ -179,14 +184,27 @@ class EmbedField:
 class Embed:
     """Represents an embed."""
 
-    color: typing.Optional[colors.Color] = attr.ib(
-        default=None, repr=False, converter=lambda c: colors.Color.of(c) if c is not None else None,
-    )
-    """The colour of the embed, or `None` to use the default."""
+    color: typing.Optional[colors.Color] = attr.ib(default=None, repr=False, converter=_maybe_color)
+    """Colour of the embed, or `None` to use the default."""
 
-    colour: typing.Optional[colors.Color] = property(
-        lambda self: self.color, lambda self, colour: setattr(self, "color", colour)
-    )
+    @property
+    def colour(self) -> typing.Optional[colors.Color]:
+        """Colour of the embed, or `None` to use the default.
+
+        !!! note
+            This is an alias for `color` for people who do not use Americanized
+            English.
+        """
+        return self.color
+
+    @colour.setter
+    def colour(self, value: typing.Optional[colors.ColorLike]) -> None:
+        # implicit attrs conversion.
+        self.color = value  # type: ignore
+
+    @colour.deleter
+    def colour(self) -> None:
+        del self.color
 
     title: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The title of the embed, or `None` if not present."""
