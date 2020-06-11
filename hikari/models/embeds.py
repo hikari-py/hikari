@@ -22,7 +22,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "Embed",
-    "EmbedThumbnail",
+    "EmbedResource",
     "EmbedVideo",
     "EmbedImage",
     "EmbedProvider",
@@ -31,6 +31,7 @@ __all__: typing.List[str] = [
     "EmbedField",
 ]
 
+import contextlib
 import datetime
 import typing
 
@@ -39,51 +40,55 @@ import attr
 from hikari.models import colors
 from hikari.utilities import files
 
-_MAX_FOOTER_TEXT: typing.Final[int] = 2048
-_MAX_AUTHOR_NAME: typing.Final[int] = 256
-_MAX_FIELD_NAME: typing.Final[int] = 256
-_MAX_FIELD_VALUE: typing.Final[int] = 1024
-_MAX_EMBED_TITLE: typing.Final[int] = 256
-_MAX_EMBED_DESCRIPTION: typing.Final[int] = 2048
-_MAX_EMBED_FIELDS: typing.Final[int] = 25
-_MAX_EMBED_SIZE: typing.Final[int] = 6000
+
+@attr.s(slots=True, kw_only=True, init=False)
+class EmbedResource(files.Resource):
+    """A base type for any resource provided in an embed.
+
+    Resources can be downloaded and uploaded, and may also be provided from
+    Discord with an additional proxy URL internally.
+    """
+
+    resource: files.Resource = attr.ib(repr=True)
+    """The resource this object wraps around."""
+
+    proxy_resource: typing.Optional[files.Resource] = attr.ib(default=None, repr=False)
+    """The proxied version of the resource, or `None` if not present.
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed
+        and will be ignored during serialization. Expect this to be
+        populated on any received embed attached to a message event.
+    """
+
+    @property
+    def url(self) -> str:
+        return self.resource.url
+
+    @property
+    def filename(self) -> typing.Optional[str]:
+        return self.resource.filename
+
+    @contextlib.asynccontextmanager
+    async def stream(self) -> files.AsyncReader:
+        async with self.resource.stream() as stream:
+            yield stream
 
 
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class EmbedFooter:
     """Represents an embed footer."""
 
     text: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The footer text, or `None` if not present."""
 
-    icon: typing.Optional[files.Resource] = attr.ib(default=None, repr=False, converter=files.ensure_resource)
+    icon: typing.Optional[EmbedResource] = attr.ib(default=None, repr=False)
     """The URL of the footer icon, or `None` if not present."""
 
-    proxy_icon: typing.Optional[files.Resource] = attr.ib(default=None, repr=False)
-    """The proxied URL of the footer icon, or `None` if not present.
 
-    !!! note
-        This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization. Expect this to be populated on
-        any received embed attached to a message event.
-    """
-
-
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
-class EmbedImage:
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+class EmbedImage(EmbedResource):
     """Represents an embed image."""
-
-    image: typing.Optional[files.Resource] = attr.ib(default=None, repr=True, converter=files.ensure_resource)
-    """The image to show, or `None` if not present."""
-
-    proxy_image: typing.Optional[files.Resource] = attr.ib(default=None, repr=False)
-    """The proxy image, or `None` if not present.
-
-    !!! note
-        This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization. Expect this to be populated on
-        any received embed attached to a message event.
-    """
 
     height: typing.Optional[int] = attr.ib(default=None, repr=False)
     """The height of the image, if present and known, otherwise `None`.
@@ -104,43 +109,8 @@ class EmbedImage:
     """
 
 
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
-class EmbedThumbnail:
-    """Represents an embed thumbnail."""
-
-    image: typing.Optional[files.Resource] = attr.ib(default=None, repr=True)
-    """The URL of the thumbnail to display, or `None` if not present."""
-
-    proxy_image: typing.Optional[files.Resource] = attr.ib(default=None, repr=False)
-    """The proxied URL of the thumbnail, if present and known, otherwise `None`.
-
-    !!! note
-        This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization. Expect this to be populated on
-        any received embed attached to a message event.
-    """
-
-    height: typing.Optional[int] = attr.ib(default=None, repr=False)
-    """The height of the thumbnail, if present and known, otherwise `None`.
-
-    !!! note
-        This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization. Expect this to be populated on
-        any received embed attached to a message event.
-    """
-
-    width: typing.Optional[int] = attr.ib(default=None, repr=False)
-    """The width of the thumbnail, if present and known, otherwise `None`.
-
-    !!! note
-        This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization. Expect this to be populated on
-        any received embed attached to a message event.
-    """
-
-
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class EmbedVideo:
+class EmbedVideo(EmbedResource):
     """Represents an embed video.
 
     !!! note
@@ -148,9 +118,6 @@ class EmbedVideo:
         will be ignored during serialization. Expect this to be populated on
         any received embed attached to a message event with a video attached.
     """
-
-    video: typing.Optional[files.Resource] = attr.ib(default=None, repr=True)
-    """The URL of the video."""
 
     height: typing.Optional[int] = attr.ib(default=None, repr=False)
     """The height of the video."""
@@ -177,7 +144,7 @@ class EmbedProvider:
     """The URL of the provider."""
 
 
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class EmbedAuthor:
     """Represents an author of an embed."""
 
@@ -190,20 +157,11 @@ class EmbedAuthor:
     This may be `None` if no hyperlink on the author's name is specified.
     """
 
-    icon: typing.Optional[files.Resource] = attr.ib(default=None, repr=False, converter=files.ensure_resource)
-    """The URL of the author's icon, or `None` if not present."""
-
-    proxy_icon: typing.Optional[files.Resource] = attr.ib(default=None, repr=False)
-    """The proxied URL of the author icon, or `None` if not present.
-
-    !!! note
-        This field cannot be set by bots or webhooks while sending an embed and
-        will be ignored during serialization. Expect this to be populated on
-        any received embed attached to a message event.
-    """
+    icon: typing.Optional[EmbedResource] = attr.ib(default=None, repr=False)
+    """The author's icon, or `None` if not present."""
 
 
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class EmbedField:
     """Represents a field in a embed."""
 
@@ -221,7 +179,24 @@ class EmbedField:
 class Embed:
     """Represents an embed."""
 
-    _color: typing.Optional[colors.Color] = attr.ib(default=None, repr=False)
+    type: str = attr.ib(default="rich", repr=True)
+    """The type of the embed.
+    
+    Defaults to `"rich"`.
+    
+    !!! note
+        You can only specify `"rich"` when creating a new embed. Any other
+        value will be ignored.
+    """
+
+    color: typing.Optional[colors.Color] = attr.ib(
+        default=None, repr=False, converter=lambda c: colors.Color.of(c) if c is not None else None,
+    )
+    """The colour of the embed, or `None` to use the default."""
+
+    colour: typing.Optional[colors.Color] = property(
+        lambda self: self.color, lambda self, colour: setattr(self, "color", colour)
+    )
 
     title: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The title of the embed, or `None` if not present."""
@@ -295,7 +270,7 @@ class Embed:
     image: typing.Optional[EmbedImage] = attr.ib(default=None, repr=False)
     """The image to display in the embed, or `None` if not present."""
 
-    thumbnail: typing.Optional[EmbedThumbnail] = attr.ib(default=None, repr=False)
+    thumbnail: typing.Optional[EmbedImage] = attr.ib(default=None, repr=False)
     """The thumbnail to show in the embed, or `None` if not present."""
 
     video: typing.Optional[EmbedVideo] = attr.ib(default=None, repr=False)
@@ -323,18 +298,72 @@ class Embed:
     fields: typing.MutableSequence[EmbedField] = attr.ib(factory=list, repr=False)
     """The fields in the embed."""
 
-    @property
-    def color(self) -> typing.Optional[colors.Color]:
-        """Embed color, or `None` if not present."""
-        return self._color
+    def set_author(
+        self,
+        *,
+        name: typing.Optional[str] = None,
+        url: typing.Optional[str] = None,
+        icon: typing.Union[None, str, files.Resource] = None,
+    ) -> Embed:
+        if name is None and url is None and icon is None:
+            self.author = None
+        else:
+            self.author = EmbedAuthor()
+            self.author.name = name
+            self.author.url = url
+            if icon is not None:
+                self.author.icon = EmbedResource()
+                self.author.icon.resource = files.ensure_resource(icon)
+            else:
+                self.author.icon = None
+        return self
 
-    @color.setter
-    def color(self, color: colors.ColorLike) -> None:
-        self._color = colors.Color.of(color)
+    def set_footer(
+        self, *, text: typing.Optional[str] = None, icon: typing.Union[None, str, files.Resource] = None,
+    ) -> Embed:
+        if text is None and icon is None:
+            self.footer = None
+        else:
+            self.footer = EmbedFooter()
+            self.footer.text = text
+            if icon is not None:
+                self.footer.icon = EmbedResource()
+                self.footer.icon.resource = files.ensure_resource(icon)
+            else:
+                self.footer.icon = None
+        return self
 
-    @color.deleter
-    def color(self) -> None:
-        self._color = None
+    def set_image(self, image: typing.Union[None, str, files.Resource] = None, /) -> Embed:
+        if image is None:
+            self.image = None
+        else:
+            self.image = EmbedImage()
+            self.image.resource = files.ensure_resource(image)
+        return self
 
-    colour = color
-    """An alias for `color`."""
+    def set_thumbnail(self, image: typing.Union[None, str, files.Resource] = None, /) -> Embed:
+        if image is None:
+            self.thumbnail = None
+        else:
+            self.thumbnail = EmbedImage()
+            self.thumbnail.resource = files.ensure_resource(image)
+        return self
+
+    def add_field(self, name: str, value: str, *, inline: bool = False) -> Embed:
+        field = EmbedField()
+        field.name = name
+        field.value = value
+        field.is_inline = inline
+        self.fields.append(field)
+        return self
+
+    def edit_field(self, index: int, name: str, value: str, /, *, inline: bool = False) -> Embed:
+        field = self.fields[index]
+        field.name = name
+        field.value = value
+        field.is_inline = inline
+        return self
+
+    def remove_field(self, index: int, /) -> Embed:
+        del self.fields[index]
+        return self

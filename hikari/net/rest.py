@@ -1013,7 +1013,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         text: typing.Union[undefined.Undefined, typing.Any] = undefined.Undefined(),
         *,
         embed: typing.Union[undefined.Undefined, embeds_.Embed] = undefined.Undefined(),
-        attachments: typing.Union[undefined.Undefined, typing.Sequence[files.Resource]] = undefined.Undefined(),
+        attachments: typing.Union[
+            undefined.Undefined, typing.Sequence[typing.Union[str, files.Resource]]
+        ] = undefined.Undefined(),
         tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
         nonce: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         mentions_everyone: bool = True,
@@ -1031,8 +1033,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             If specified, the message contents.
         embed : hikari.utilities.undefined.Undefined or hikari.models.embeds.Embed
             If specified, the message embed.
-        attachments : hikari.utilities.undefined.Undefined or typing.Sequence[hikari.utilities.files.Resource]
-            If specified, the message attachments.
+        attachments : hikari.utilities.undefined.Undefined or typing.Sequence[str or hikari.utilities.files.Resource]
+            If specified, the message attachments. These can be resources, or
+            strings consisting of paths on your computer or URLs.
         tts : hikari.utilities.undefined.Undefined or bool
             If specified, whether the message will be TTS (Text To Speech).
         nonce : hikari.utilities.undefined.Undefined or str
@@ -1081,13 +1084,18 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body = data_binding.JSONObjectBuilder()
         body.put("allowed_mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions))
         body.put("content", text, conversion=str)
-        body.put("embed", embed, conversion=self._app.entity_factory.serialize_embed)
         body.put("nonce", nonce)
         body.put("tts", tts)
 
-        attachments = [] if isinstance(attachments, undefined.Undefined) else [a for a in attachments]
+        if isinstance(attachments, undefined.Undefined):
+            attachments = []
+        else:
+            attachments = [files.ensure_resource(a) for a in attachments]
 
-        # TODO: embed handle images.
+        if not isinstance(embed, undefined.Undefined):
+            embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
+            body.put("embed", embed_payload)
+            attachments.extend(embed_attachments)
 
         if attachments:
             form = data_binding.URLEncodedForm()
@@ -1097,7 +1105,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
             try:
                 for i, attachment in enumerate(attachments):
-                    stream = await stack.enter_async_context(attachment.stream())
+                    stream = await stack.enter_async_context(attachment.stream(executor=self._app.thread_pool_executor))
                     form.add_field(
                         f"file{i}", stream, filename=stream.filename, content_type=self._APPLICATION_OCTET_STREAM
                     )
@@ -1380,7 +1388,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         if not isinstance(avatar, undefined.Undefined):
-            async with avatar.stream() as stream:
+            async with avatar.stream(executor=self._app.thread_pool_executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
@@ -1441,7 +1449,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             if avatar is None:
                 body.put("avatar", None)
             else:
-                async with avatar.stream() as stream:
+                async with avatar.stream(executor=self._app.thread_pool_executor) as stream:
                     body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
@@ -1488,8 +1496,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         if not isinstance(embeds, undefined.Undefined):
             for embed in embeds:
-                # TODO: embed attachments.
-                serialized_embeds.append(self._app.entity_factory.serialize_embed(embed))
+                embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
+                serialized_embeds.append(embed_payload)
+                attachments.extend(embed_attachments)
 
         body = data_binding.JSONObjectBuilder()
         body.put("mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions))
@@ -1562,7 +1571,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("username", username)
 
         if isinstance(avatar, files.Resource):
-            async with avatar.stream() as stream:
+            async with avatar.stream(executor=self._app.thread_pool_executor) as stream:
                 body.put("avatar", await stream.data_uri())
         else:
             body.put("avatar", avatar)
@@ -1709,7 +1718,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         if not isinstance(image, undefined.Undefined):
-            async with image.stream() as stream:
+            async with image.stream(executor=self._app.thread_pool_executor) as stream:
                 body.put("image", await stream.data_uri())
 
         body.put_snowflake_array("roles", roles)
@@ -1819,21 +1828,21 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             if icon is None:
                 body.put("icon", None)
             else:
-                async with icon.stream() as stream:
+                async with icon.stream(executor=self._app.thread_pool_executor) as stream:
                     body.put("icon", await stream.data_uri())
 
         if not isinstance(splash, undefined.Undefined):
             if splash is None:
                 body.put("splash", None)
             else:
-                async with splash.stream() as stream:
+                async with splash.stream(executor=self._app.thread_pool_executor) as stream:
                     body.put("splash", await stream.data_uri())
 
         if not isinstance(banner, undefined.Undefined):
             if banner is None:
                 body.put("banner", None)
             else:
-                async with banner.stream() as stream:
+                async with banner.stream(executor=self._app.thread_pool_executor) as stream:
                     body.put("banner", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
