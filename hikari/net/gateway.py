@@ -256,12 +256,12 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             if self.is_alive:
                 self.logger.info("received request to shut down shard")
             else:
-                self.logger.debug("shard marked as closed before it was able to start")
+                self.logger.debug("shard marked as closed when it was not running")
             self._request_close_event.set()
 
             if self._ws is not None:
-                self.logger.warning("gateway client closed by user, will not attempt to restart")
-                await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "user shut down application")
+                self.logger.warning("gateway client closed, will not attempt to restart")
+                await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "client shut down")
 
     async def _run(self) -> None:
         """Start the shard and wait for it to shut down."""
@@ -355,6 +355,16 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             else:
                 self._backoff.reset()
             return not self._request_close_event.is_set()
+
+        except errors.GatewayServerClosedConnectionError as ex:
+            if ex.can_reconnect:
+                self.logger.warning(
+                    "server closed the connection with %s (%s), will attempt to reconnect", ex.code, ex.reason,
+                )
+                await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me")
+            else:
+                await self._close_ws(self._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you failed the connection")
+                raise
 
         except Exception as ex:
             self.logger.error("unexpected exception occurred, shard will now die", exc_info=ex)
@@ -581,7 +591,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             else:
                 reason = f"unknown close code {close_code}"
 
-            can_reconnect = close_code in (
+            can_reconnect = close_code < 4000 or close_code in (
                 self._GatewayCloseCode.DECODE_ERROR,
                 self._GatewayCloseCode.INVALID_SEQ,
                 self._GatewayCloseCode.UNKNOWN_ERROR,
@@ -589,7 +599,8 @@ class Gateway(http_client.HTTPClient, component.IComponent):
                 self._GatewayCloseCode.RATE_LIMITED,
             )
 
-            raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect, False, True)
+            # Always try to resume if possible first.
+            raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect, can_reconnect, True)
 
         elif message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
             raise self._SocketClosed()
