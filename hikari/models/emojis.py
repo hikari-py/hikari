@@ -182,7 +182,7 @@ class UnicodeEmoji(Emoji):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class CustomEmoji(Emoji, bases.Entity, bases.Unique):
+class CustomEmoji(bases.Entity, bases.Unique, Emoji):
     """Represents a custom emoji.
 
     This is a custom emoji that is from a guild you might not be part of.

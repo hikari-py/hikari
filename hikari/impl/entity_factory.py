@@ -36,6 +36,7 @@ from hikari.models import applications as application_models
 from hikari.models import audit_logs as audit_log_models
 from hikari.models import channels as channel_models
 from hikari.models import colors as color_models
+from hikari.models import embeds
 from hikari.models import embeds as embed_models
 from hikari.models import emojis as emoji_models
 from hikari.models import gateway as gateway_models
@@ -49,6 +50,7 @@ from hikari.models import voices as voice_models
 from hikari.models import webhooks as webhook_models
 from hikari.net import gateway
 from hikari.utilities import date
+from hikari.utilities import files
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -498,6 +500,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
 
     def deserialize_embed(self, payload: data_binding.JSONObject) -> embed_models.Embed:
         embed = embed_models.Embed()
+        embed.type = payload["type"]
         embed.title = payload.get("title")
         embed.description = payload.get("description")
         embed.url = payload.get("url")
@@ -506,19 +509,24 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         )
         embed.color = color_models.Color(payload["color"]) if "color" in payload else None
 
+        # TODO: @FasterSpeeding, can we use `None` here instead to keep MyPy happy?
         if (footer_payload := payload.get("footer", ...)) is not ...:
             footer = embed_models.EmbedFooter()
             footer.text = footer_payload["text"]
-            footer.icon_url = footer_payload.get("icon_url")
-            footer.proxy_icon_url = footer_payload.get("proxy_icon_url")
+            if (icon_url := footer_payload.get("icon")) is not None:
+                footer.icon = embed_models.EmbedImage()
+                footer.icon.resource = files.ensure_resource(icon_url)
+                footer.icon.proxy_resource = files.ensure_resource(footer_payload.get("proxy_icon_url"))
+            else:
+                footer.icon = None
             embed.footer = footer
         else:
             embed.footer = None
 
         if (image_payload := payload.get("image", ...)) is not ...:
             image = embed_models.EmbedImage()
-            image.url = image_payload.get("url")
-            image.proxy_url = image_payload.get("proxy_url")
+            image.resource = files.ensure_resource(image_payload.get("url"))
+            image.proxy_resource = files.ensure_resource(image_payload.get("proxy_url"))
             image.height = int(image_payload["height"]) if "height" in image_payload else None
             image.width = int(image_payload["width"]) if "width" in image_payload else None
             embed.image = image
@@ -526,9 +534,9 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
             embed.image = None
 
         if (thumbnail_payload := payload.get("thumbnail", ...)) is not ...:
-            thumbnail = embed_models.EmbedThumbnail()
-            thumbnail.url = thumbnail_payload.get("url")
-            thumbnail.proxy_url = thumbnail_payload.get("proxy_url")
+            thumbnail = embed_models.EmbedImage()
+            thumbnail.resource = files.ensure_resource(thumbnail_payload.get("url"))
+            thumbnail.proxy_resource = files.ensure_resource(thumbnail_payload.get("proxy_url"))
             thumbnail.height = int(thumbnail_payload["height"]) if "height" in thumbnail_payload else None
             thumbnail.width = int(thumbnail_payload["width"]) if "width" in thumbnail_payload else None
             embed.thumbnail = thumbnail
@@ -537,7 +545,8 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
 
         if (video_payload := payload.get("video", ...)) is not ...:
             video = embed_models.EmbedVideo()
-            video.url = video_payload.get("url")
+            video.resource = files.ensure_resource(thumbnail_payload.get("url"))
+            video.proxy_resource = None
             video.height = int(video_payload["height"]) if "height" in video_payload else None
             video.width = int(video_payload["width"]) if "width" in video_payload else None
             embed.video = video
@@ -556,8 +565,12 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
             author = embed_models.EmbedAuthor()
             author.name = author_payload.get("name")
             author.url = author_payload.get("url")
-            author.icon_url = author_payload.get("icon_url")
-            author.proxy_icon_url = author_payload.get("proxy_icon_url")
+            if (icon_url := author_payload.get("icon")) is not None:
+                author.icon = embed_models.EmbedImage()
+                author.icon.resource = files.ensure_resource(icon_url)
+                author.icon.proxy_resource = files.ensure_resource(author_payload.get("proxy_icon_url"))
+            else:
+                author.icon = None
             embed.author = author
         else:
             embed.author = None
@@ -573,8 +586,12 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
 
         return embed
 
-    def serialize_embed(self, embed: embed_models.Embed) -> data_binding.JSONObject:
+    def serialize_embed(
+        self, embed: embed_models.Embed,
+    ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource]]:
+
         payload = {}
+        uploads = []
 
         if embed.title is not None:
             payload["title"] = embed.title
@@ -597,24 +614,36 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
             if embed.footer.text is not None:
                 footer_payload["text"] = embed.footer.text
 
-            if embed.footer.icon_url is not None:
-                footer_payload["icon_url"] = embed.footer.icon_url
+            if embed.footer.icon is not None:
+                if isinstance(embed.footer.icon.resource, files.WebResource):
+                    footer_payload["icon_url"] = embed.footer.icon.url
+                else:
+                    footer_payload["icon_url"] = f"attachment://{embed.footer.icon.filename}"
+                    uploads.append(embed.footer.icon)
 
             payload["footer"] = footer_payload
 
         if embed.image is not None:
             image_payload = {}
 
-            if embed.image.url is not None:
-                image_payload["url"] = embed.image.url
+            if embed.image is not None:
+                if isinstance(embed.image.resource, files.WebResource):
+                    image_payload["url"] = embed.image.url
+                else:
+                    image_payload["url"] = f"attachment://{embed.image.filename}"
+                    uploads.append(embed.image.resource)
 
             payload["image"] = image_payload
 
         if embed.thumbnail is not None:
             thumbnail_payload = {}
 
-            if embed.thumbnail.url is not None:
-                thumbnail_payload["url"] = embed.thumbnail.url
+            if embed.thumbnail is not None:
+                if isinstance(embed.thumbnail.resource, files.WebResource):
+                    thumbnail_payload["url"] = embed.thumbnail.url
+                else:
+                    thumbnail_payload["url"] = f"attachment://{embed.thumbnail.filename}"
+                    uploads.append(embed.thumbnail.resource)
 
             payload["thumbnail"] = thumbnail_payload
 
@@ -627,8 +656,12 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
             if embed.author.url is not None:
                 author_payload["url"] = embed.author.url
 
-            if embed.author.icon_url is not None:
-                author_payload["icon_url"] = embed.author.icon_url
+            if embed.author.icon is not None:
+                if isinstance(embed.footer.icon.resource, files.WebResource):
+                    author_payload["icon_url"] = embed.author.icon.url
+                else:
+                    author_payload["icon_url"] = f"attachment://{embed.author.icon.filename}"
+                    uploads.append(embed.author.icon)
 
             payload["author"] = author_payload
 
@@ -647,7 +680,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
                 field_payloads.append(field_payload)
             payload["fields"] = field_payloads
 
-        return payload
+        return payload, uploads
 
     ################
     # EMOJI MODELS #
@@ -659,14 +692,14 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         return unicode_emoji
 
     def deserialize_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.CustomEmoji:
-        custom_emoji = emoji_models.CustomEmoji()
+        custom_emoji = emoji_models.CustomEmoji(self._app)
         custom_emoji.id = snowflake.Snowflake(payload["id"])
         custom_emoji.name = payload["name"]
         custom_emoji.is_animated = payload.get("animated", False)
         return custom_emoji
 
     def deserialize_known_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.KnownCustomEmoji:
-        known_custom_emoji = emoji_models.KnownCustomEmoji()
+        known_custom_emoji = emoji_models.KnownCustomEmoji(self._app)
         known_custom_emoji.id = snowflake.Snowflake(payload["id"])
         known_custom_emoji.name = payload["name"]
         known_custom_emoji.is_animated = payload.get("animated", False)

@@ -50,6 +50,7 @@ if typing.TYPE_CHECKING:
     from hikari.net import gateway
 
     from hikari.utilities import data_binding
+    from hikari.utilities import files
 
 
 class IEntityFactory(component.IComponent, abc.ABC):
@@ -314,7 +315,9 @@ class IEntityFactory(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def serialize_embed(self, embed: embed_models.Embed) -> data_binding.JSONObject:
+    def serialize_embed(
+        self, embed: embed_models.Embed
+    ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource]]:
         """Serialize an embed object to a json serializable dict.
 
         Parameters
@@ -324,8 +327,10 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.utilities.data_binding.JSONObject
-            The serialized object representation.
+        typing.Tuple[hikari.utilities.data_binding.JSONObject, typing.List[hikari.utilities.files.Resource]]
+            A tuple with two items in it. The first item will be the serialized
+            embed representation. The second item will be a list of resources
+            to upload with the embed.
         """
 
     ################

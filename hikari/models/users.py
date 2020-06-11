@@ -29,6 +29,7 @@ import attr
 
 from hikari.models import bases
 from hikari.utilities import cdn
+from hikari.utilities import files
 from hikari.utilities import undefined
 
 
@@ -162,11 +163,13 @@ class User(PartialUser):
         return await self._app.rest.fetch_user(user=self.id)
 
     @property
-    def avatar_url(self) -> typing.Optional[str]:
+    def avatar(self) -> typing.Optional[files.URL]:
         """URL for this user's custom avatar if set, else `None`."""
         return self.format_avatar_url()
 
-    def format_avatar_url(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[str]:
+    def format_avatar_url(
+        self, *, format_: typing.Optional[str] = None, size: int = 4096
+    ) -> typing.Optional[files.URL]:
         """Generate the avatar URL for this user's custom avatar if set.
 
         If no custom avatar is set, this returns `None`. You can then use the
@@ -187,7 +190,7 @@ class User(PartialUser):
 
         Returns
         -------
-        str
+        hikari.utilities.files.URL
             The string URL, or `None` if not present.
 
         Raises
@@ -196,7 +199,8 @@ class User(PartialUser):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.avatar_hash is not None:
-            return cdn.get_avatar_url(self.id, self.avatar_hash, format_=format_, size=size)
+            url = cdn.get_avatar_url(self.id, self.avatar_hash, format_=format_, size=size)
+            return files.URL(url)
         return None
 
     @property
@@ -205,9 +209,10 @@ class User(PartialUser):
         return cdn.get_default_avatar_index(self.discriminator)
 
     @property
-    def default_avatar_url(self) -> str:
+    def default_avatar(self) -> files.URL:
         """URL for this user's default avatar."""
-        return cdn.get_default_avatar_url(self.discriminator)
+        url = cdn.get_default_avatar_url(self.discriminator)
+        return files.URL(url)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

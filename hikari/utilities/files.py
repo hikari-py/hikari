@@ -18,7 +18,12 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
-__all__ = []
+__all__ = [
+    "Resource",
+    "Bytes",
+    "File",
+    "URL",
+]
 
 import abc
 import asyncio
@@ -43,17 +48,34 @@ if typing.TYPE_CHECKING:
 
 _LOGGER: typing.Final[logging.Logger] = klass.get_logger(__name__)
 _MAGIC: typing.Final[int] = 50 * 1024
-_FILE: typing.Final[str] = "file://"
 
 
-def ensure_resource(url_or_resource: typing.Union[str, Resource]) -> Resource:
+@typing.overload
+def ensure_resource(url_or_resource: None) -> None:
+    """Given None, return None."""
+
+
+@typing.overload
+def ensure_resource(url_or_resource: str) -> Resource:
+    """Given a string, convert it to a resource."""
+
+
+@typing.overload
+def ensure_resource(url_or_resource: Resource) -> Resource:
+    """Given a resource, return it.."""
+
+
+def ensure_resource(url_or_resource: typing.Union[None, str, os.PathLike, Resource],) -> typing.Optional[Resource]:
     """Given a resource or string, convert it to a valid resource as needed."""
     if isinstance(url_or_resource, Resource):
         return url_or_resource
-    else:
-        if url_or_resource.startswith(_FILE):
-            return File(url_or_resource[len(_FILE) :])
-        return URL(url_or_resource)
+    elif url_or_resource is not None:
+        if url_or_resource.startswith(("https://", "http://")):
+            return URL(url_or_resource)
+        else:
+            path = pathlib.Path(url_or_resource)
+            return File(path, path.name)
+    return None
 
 
 def guess_mimetype_from_filename(name: str) -> typing.Optional[str]:
@@ -143,11 +165,15 @@ class ByteReader(AsyncReader):
 @attr.s(auto_attribs=True, slots=True)
 class FileReader(AsyncReader):
     executor: typing.Optional[concurrent.futures.Executor]
-    path: typing.Union[str, os.PathLike]
+    path: typing.Union[str, os.PathLike, pathlib.Path]
     loop: asyncio.AbstractEventLoop = attr.ib(factory=asyncio.get_running_loop)
 
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
-        fp = await self.loop.run_in_executor(self.executor, self._open, self.path)
+        path = self.path
+        if isinstance(path, pathlib.Path):
+            path = await self.loop.run_in_executor(self.executor, self._expand, self.path)
+
+        fp = await self.loop.run_in_executor(self.executor, self._open, path)
         try:
             while True:
                 chunk = await self.loop.run_in_executor(self.executor, self._read_chunk, fp, _MAGIC)
@@ -156,6 +182,12 @@ class FileReader(AsyncReader):
                     break
         finally:
             await self.loop.run_in_executor(self.executor, self._close, fp)
+
+    @staticmethod
+    def _expand(path: pathlib.Path) -> pathlib.Path:
+        # .expanduser is Platform dependent. Will expand stuff like ~ to /home/<user> on posix.
+        # .resolve will follow symlinks and what-have-we to translate stuff like `..` to proper paths.
+        return path.expanduser().resolve()
 
     @staticmethod
     def _read_chunk(fp: typing.IO[bytes], n: int = 10_000) -> bytes:
@@ -188,8 +220,9 @@ class WebReader(AsyncReader):
             yield chunk[0]
 
 
-@attr.s(auto_attribs=True)
 class Resource(abc.ABC):
+    __slots__ = ()
+
     @property
     @abc.abstractmethod
     def url(self) -> str:
@@ -202,11 +235,14 @@ class Resource(abc.ABC):
 
     @abc.abstractmethod
     @contextlib.asynccontextmanager
-    async def stream(self) -> AsyncReader:
+    async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor]) -> AsyncReader:
         """Return an async iterable of bytes to stream."""
 
 
-class RawBytes(Resource):
+@attr.s(init=False, slots=True)
+class Bytes(Resource):
+    data: bytes
+
     def __init__(
         self,
         data: bytes,
@@ -244,17 +280,24 @@ class RawBytes(Resource):
         return self._filename
 
     @contextlib.asynccontextmanager
-    async def stream(self) -> AsyncReader:
+    async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = None) -> AsyncReader:
         yield ByteReader(self.filename, self.mimetype, self.data)
 
 
 class WebResource(Resource, abc.ABC):
+    __slots__ = ()
+
     @contextlib.asynccontextmanager
-    async def stream(self) -> WebReader:
+    async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = None) -> WebReader:
         """Start streaming the content into memory by downloading it.
 
         You can use this to fetch the entire resource, parts of the resource,
         or just to view any metadata that may be provided.
+
+        Parameters
+        ----------
+        executor :
+            Not used. Provided only to match the underlying interface.
 
         Examples
         --------
@@ -337,11 +380,11 @@ class WebResource(Resource, abc.ABC):
                     await http_client.parse_error_response(resp)
 
 
-@attr.s(auto_attribs=True)
+@attr.s(slots=True)
 class URL(WebResource):
     """A URL that represents a web resource."""
 
-    _url: str
+    _url: typing.Union[str] = attr.ib(init=True)
 
     @property
     def url(self) -> str:
@@ -353,17 +396,10 @@ class URL(WebResource):
         return os.path.basename(url.path)
 
 
+@attr.s(slots=True)
 class File(Resource):
-    def __init__(
-        self,
-        path: typing.Union[str, os.PathLike],
-        *,
-        filename: typing.Optional[str] = None,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
-    ) -> None:
-        self.path = path
-        self._filename = filename if filename is not None else os.path.basename(path)
-        self.executor = executor
+    path: typing.Union[str, os.PathLike, pathlib.Path] = attr.ib()
+    _filename: typing.Optional[str] = attr.ib(default=None)
 
     @property
     def url(self) -> str:
@@ -371,8 +407,10 @@ class File(Resource):
 
     @property
     def filename(self) -> typing.Optional[str]:
+        if self._filename is None:
+            return os.path.basename(self.path)
         return self._filename
 
     @contextlib.asynccontextmanager
-    async def stream(self) -> AsyncReader:
-        yield FileReader(self.filename, None, self.executor, self.path)
+    async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = None) -> AsyncReader:
+        yield FileReader(self.filename, None, executor, self.path)
