@@ -39,9 +39,9 @@ __all__: typing.List[str] = [
 import http
 import typing
 
-from hikari.net import routes
 
 if typing.TYPE_CHECKING:
+    from hikari.net import routes
     from hikari.utilities import data_binding
 
 
@@ -368,7 +368,7 @@ class RateLimited(ClientHTTPErrorResponse):
         url: str,
         route: routes.CompiledRoute,
         headers: data_binding.Headers,
-        raw_body: typing.AnyStr,
+        raw_body: typing.Any,
         retry_after: float,
     ) -> None:
         self.retry_after = retry_after

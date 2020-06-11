@@ -30,6 +30,7 @@ import attr
 from hikari.models import bases
 from hikari.models import guilds
 from hikari.utilities import cdn
+from hikari.utilities import files
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -89,8 +90,13 @@ class InviteGuild(guilds.PartialGuild):
     `features` for this guild. If not, this will always be `None`.
     """
 
-    def format_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's splash, if set.
+    @property
+    def splash_url(self) -> typing.Optional[files.URL]:
+        """Splash for the guild, if set."""
+        return self.format_splash()
+
+    def format_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's splash image, if set.
 
         Parameters
         ----------
@@ -103,8 +109,8 @@ class InviteGuild(guilds.PartialGuild):
 
         Returns
         -------
-        str or None
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL to the splash, or `None` if not set.
 
         Raises
         ------
@@ -112,16 +118,17 @@ class InviteGuild(guilds.PartialGuild):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash:
-            return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+            url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+            return files.URL(url)
         return None
 
     @property
-    def splash_url(self) -> typing.Optional[str]:
-        """URL for this guild's splash, if set."""
-        return self.format_splash_url()
+    def banner(self) -> typing.Optional[files.URL]:
+        """Banner for the guild, if set."""
+        return self.format_banner()
 
-    def format_banner_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's banner, if set.
+    def format_banner(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's banner image, if set.
 
         Parameters
         ----------
@@ -134,8 +141,8 @@ class InviteGuild(guilds.PartialGuild):
 
         Returns
         -------
-        str or None
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL of the banner, or `None` if no banner is set.
 
         Raises
         ------
@@ -143,13 +150,9 @@ class InviteGuild(guilds.PartialGuild):
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash:
-            return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
+            url = cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
+            return files.URL(url)
         return None
-
-    @property
-    def banner_url(self) -> typing.Optional[str]:
-        """URL for this guild's banner, if set."""
-        return self.format_banner_url()
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

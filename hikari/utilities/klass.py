@@ -46,9 +46,9 @@ def get_logger(obj: typing.Union[typing.Type[typing.Any], typing.Any], *addition
     """
     if isinstance(obj, str):
         return logging.getLogger(obj)
-    else:
-        obj = obj if isinstance(obj, type) else type(obj)
-        return logging.getLogger(".".join((obj.__module__, obj.__qualname__, *additional_args)))
+
+    obj = obj if isinstance(obj, type) else type(obj)
+    return logging.getLogger(".".join((obj.__module__, obj.__qualname__, *additional_args)))
 
 
 class SingletonMeta(abc.ABCMeta):

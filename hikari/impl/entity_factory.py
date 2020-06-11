@@ -36,7 +36,6 @@ from hikari.models import applications as application_models
 from hikari.models import audit_logs as audit_log_models
 from hikari.models import channels as channel_models
 from hikari.models import colors as color_models
-from hikari.models import embeds
 from hikari.models import embeds as embed_models
 from hikari.models import emojis as emoji_models
 from hikari.models import gateway as gateway_models
@@ -500,7 +499,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
 
     def deserialize_embed(self, payload: data_binding.JSONObject) -> embed_models.Embed:
         embed = embed_models.Embed()
-        embed.type = payload["type"]
         embed.title = payload.get("title")
         embed.description = payload.get("description")
         embed.url = payload.get("url")
