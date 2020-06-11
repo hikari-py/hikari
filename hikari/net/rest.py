@@ -115,7 +115,6 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         token_type: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         rest_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        oauth2_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         version: int,
     ) -> None:
         super().__init__(
@@ -152,11 +151,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         if isinstance(rest_url, undefined.Undefined):
             rest_url = strings.REST_API_URL
 
-        if isinstance(oauth2_url, undefined.Undefined):
-            oauth2_url = strings.OAUTH2_API_URL
-
         self._rest_url = rest_url.format(self)
-        self._oauth2_url = oauth2_url.format(self)
 
     @property
     def app(self) -> app_.IRESTApp:

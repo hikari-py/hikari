@@ -374,7 +374,8 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
 
     async def _abort(self) -> None:
         for shard_id in self._tasks:
-            await self._shards[shard_id].close()
+            if self._shards[shard_id].is_alive:
+                await self._shards[shard_id].close()
         await asyncio.gather(*self._tasks.values(), return_exceptions=True)
 
     async def _gather(self) -> None:

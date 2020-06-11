@@ -35,7 +35,7 @@ if typing.TYPE_CHECKING:
 class EventManagerImpl(event_manager_core.EventManagerCore):
     """Provides event handling logic for Discord events."""
 
-    async def on_connect(self, shard: gateway.Gateway, _: data_binding.JSONObject) -> None:
+    async def on_connected(self, shard: gateway.Gateway, _: data_binding.JSONObject) -> None:
         """Handle connection events.
 
         This is a synthetic event produced by the gateway implementation in
@@ -44,7 +44,7 @@ class EventManagerImpl(event_manager_core.EventManagerCore):
         # FIXME: this should be in entity factory
         await self.dispatch(other.ConnectedEvent(shard=shard))
 
-    async def on_disconnect(self, shard: gateway.Gateway, _: data_binding.JSONObject) -> None:
+    async def on_disconnected(self, shard: gateway.Gateway, _: data_binding.JSONObject) -> None:
         """Handle disconnection events.
 
         This is a synthetic event produced by the gateway implementation in
