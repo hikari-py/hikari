@@ -16,9 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Utilities and classes for interacting with files and web resources."""
+
 from __future__ import annotations
 
 __all__ = [
+    "ensure_resource",
+    "AsyncReader",
     "Resource",
     "Bytes",
     "File",
@@ -51,22 +55,35 @@ _MAGIC: typing.Final[int] = 50 * 1024
 
 
 @typing.overload
-def ensure_resource(url_or_resource: None) -> None:
+def ensure_resource(url_or_resource: None, /) -> None:
     """Given None, return None."""
 
 
 @typing.overload
-def ensure_resource(url_or_resource: str) -> Resource:
+def ensure_resource(url_or_resource: str, /) -> Resource:
     """Given a string, convert it to a resource."""
 
 
 @typing.overload
-def ensure_resource(url_or_resource: Resource) -> Resource:
-    """Given a resource, return it.."""
+def ensure_resource(url_or_resource: Resource, /) -> Resource:
+    """Given a resource, return it."""
 
 
-def ensure_resource(url_or_resource: typing.Union[None, str, os.PathLike, Resource],) -> typing.Optional[Resource]:
-    """Given a resource or string, convert it to a valid resource as needed."""
+def ensure_resource(url_or_resource: typing.Union[None, str, os.PathLike, Resource], /) -> typing.Optional[Resource]:
+    """Given a resource or string, convert it to a valid resource as needed.
+
+    Parameters
+    ----------
+    url_or_resource : None or str or os.PathLike or Resource
+        The item to convert. If the item is `None`, then `None` is returned.
+        Likewise if a `Resource` is passed, it is simply returned again.
+        Anything else is converted to a `Resource` first.
+
+    Returns
+    -------
+    Resource or None
+        The resource to use, or `None` if `None` was input.
+    """
     if isinstance(url_or_resource, Resource):
         return url_or_resource
     elif url_or_resource is not None:
@@ -78,8 +95,13 @@ def ensure_resource(url_or_resource: typing.Union[None, str, os.PathLike, Resour
     return None
 
 
-def guess_mimetype_from_filename(name: str) -> typing.Optional[str]:
+def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
     """Guess the mimetype of an object given a filename.
+
+    Parameters
+    ----------
+    name : bytes
+        The filename to inspect.
 
     Returns
     -------
@@ -90,7 +112,24 @@ def guess_mimetype_from_filename(name: str) -> typing.Optional[str]:
     return mimetypes.guess_type(name)
 
 
-def guess_mimetype_from_data(data: bytes) -> typing.Optional[str]:
+def guess_mimetype_from_data(data: bytes, /) -> typing.Optional[str]:
+    """Guess the mimetype of some data from the header.
+
+    !!! warning
+        This function only detects valid image headers that Discord allows
+        the use of. Anything else will go undetected.
+
+    Parameters
+    ----------
+    data : bytes
+        The byte content to inspect.
+
+    Returns
+    -------
+    str or None
+        The mimetype, if it was found. If the header is unrecognised, then
+        `None` is returned.
+    """
     if data.startswith(b"\211PNG\r\n\032\n"):
         return "image/png"
     elif data[6:].startswith((b"Exif", b"JFIF")):
@@ -104,6 +143,26 @@ def guess_mimetype_from_data(data: bytes) -> typing.Optional[str]:
 
 
 def guess_file_extension(mimetype: str) -> typing.Optional[str]:
+    """Guess the file extension for a given mimetype.
+
+    Parameters
+    ----------
+    mimetype : str
+        The mimetype to guess the extension for.
+
+    Example
+    -------
+    ```py
+    >>> guess_file_extension("image/png")
+    ".png"
+    ```
+
+    Returns
+    -------
+    str or None
+        The file extension, prepended with a `.`. If no match was found,
+        return `None`.
+    """
     return mimetypes.guess_extension(mimetype)
 
 
@@ -113,6 +172,22 @@ def generate_filename_from_details(
     extension: typing.Optional[str] = None,
     data: typing.Optional[bytes] = None,
 ) -> str:
+    """Given optional information about a resource, generate a filename.
+
+    Parameters
+    ----------
+    mimetype : str or None
+        The mimetype of the content, or `None` if not known.
+    extension : str or None
+        The file extension to use, or `None` if not known.
+    data : bytes or None
+        The data to inspect, or `None` if not known.
+
+    Returns
+    -------
+    str
+        A generated quasi-unique filename.
+    """
     if data is not None and mimetype is None:
         mimetype = guess_mimetype_from_data(data)
 
@@ -128,6 +203,20 @@ def generate_filename_from_details(
 
 
 def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
+    """Convert the data and mimetype to a data URI.
+
+    Parameters
+    ----------
+    data : bytes
+        The data to encode as base64.
+    mimetype : str or None
+        The mimetype, or `None` if we should attempt to guess it.
+
+    Returns
+    -------
+    str
+        A data URI string.
+    """
     if mimetype is None:
         mimetype = guess_mimetype_from_data(data)
 
@@ -140,13 +229,27 @@ def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
 
 @attr.s(auto_attribs=True, slots=True)
 class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
+    """Protocol for reading a resource asynchronously using bit inception.
+
+    This supports being used as an async iterable, although the implementation
+    detail is left to each implementation of this class to define.
+    """
+
     filename: str
+    """The filename of the resource."""
+
     mimetype: typing.Optional[str]
+    """The mimetype of the resource. May be `None` if not known."""
 
     async def data_uri(self) -> str:
+        """Fetch the data URI.
+
+        This reads the entire resource.
+        """
         return to_data_uri(await self.read(), self.mimetype)
 
     async def read(self) -> bytes:
+        """Read the rest of the resource and return it in a `bytes` object."""
         buff = bytearray()
         async for chunk in self:
             buff.extend(chunk)
@@ -155,7 +258,10 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
 
 @attr.s(auto_attribs=True, slots=True)
 class ByteReader(AsyncReader):
+    """Asynchronous file reader that operates on in-memory data."""
+
     data: bytes
+    """The data that will be yielded in chunks."""
 
     def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         for i in range(0, len(self.data), _MAGIC):
@@ -164,9 +270,18 @@ class ByteReader(AsyncReader):
 
 @attr.s(auto_attribs=True, slots=True)
 class FileReader(AsyncReader):
-    executor: typing.Optional[concurrent.futures.Executor]
+    """Asynchronous file reader that reads a resource from local storage."""
+
+    executor: typing.Optional[concurrent.futures.ThreadPoolExecutor]
+    """The associated `concurrent.futures.ThreadPoolExecutor` to use for
+    blocking IO.
+    """
+
     path: typing.Union[str, os.PathLike, pathlib.Path]
+    """The path to the resource to read."""
+
     loop: asyncio.AbstractEventLoop = attr.ib(factory=asyncio.get_running_loop)
+    """The event loop to use."""
 
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         path = self.path
@@ -204,12 +319,25 @@ class FileReader(AsyncReader):
 
 @attr.s(auto_attribs=True, slots=True)
 class WebReader(AsyncReader):
+    """Asynchronous reader to use to read data from a web resource."""
+
     stream: aiohttp.StreamReader
-    uri: str
+    """The `aiohttp.StreamReader` to read the content from."""
+
+    url: str
+    """The URL being read from."""
+
     status: int
+    """The initial HTTP response status."""
+
     reason: str
+    """The HTTP response status reason."""
+
     charset: typing.Optional[str]
+    """Optional character set information, if known."""
+
     size: typing.Optional[int]
+    """The size of the resource, if known."""
 
     async def read(self) -> bytes:
         return await self.stream.read()
@@ -221,17 +349,24 @@ class WebReader(AsyncReader):
 
 
 class Resource(abc.ABC):
+    """Base for any uploadable or downloadable representation of information.
+
+    These representations can be streamed using bit inception for performance,
+    which may result in significant decrease in memory usage for larger
+    resources.
+    """
+
     __slots__ = ()
 
     @property
     @abc.abstractmethod
     def url(self) -> str:
-        """The URL, if known."""
+        """URL of the resource."""
 
     @property
     @abc.abstractmethod
-    def filename(self) -> typing.Optional[str]:
-        """The filename, if known."""
+    def filename(self) -> str:
+        """Filename of the resource."""
 
     @abc.abstractmethod
     @contextlib.asynccontextmanager
@@ -239,9 +374,42 @@ class Resource(abc.ABC):
         """Return an async iterable of bytes to stream."""
 
 
-@attr.s(init=False, slots=True)
 class Bytes(Resource):
+    """Representation of in-memory data to upload.
+
+    Parameters
+    ----------
+    data : bytes
+        The raw data.
+    mimetype : str or None
+        The mimetype, or `None` if you do not wish to specify this.
+    filename : str or None
+        The filename to use, or `None` if one should be generated as needed.
+    extension : str or None
+        The file extension to use, or `None` if one should be determined
+        manually as needed.
+
+    !!! note
+        You only need to provide one of `mimetype`, `filename`, or `extension`.
+        The other information will be determined using Python's `mimetypes`
+        module.
+
+        If none of these three are provided, then a crude guess may be
+        made successfully for specific image types. If no file format
+        information can be calculated, then the resource will fail during
+        uploading.
+    """
+
+    __slots__ = ("data", "_filename", "mimetype", "extension")
+
     data: bytes
+    """The raw data to upload."""
+
+    mimetype: typing.Optional[str]
+    """The provided mimetype, if specified. Otherwise `None`."""
+
+    extension: typing.Optional[str]
+    """The provided file extension, if specified. Otherwise `None`."""
 
     def __init__(
         self,
@@ -263,20 +431,20 @@ class Bytes(Resource):
 
         if filename is None and mimetype is None:
             if extension is None:
-                raise TypeError("Cannot infer data type details, please specify one of filetype, filename, extension")
+                raise TypeError("Cannot infer data type details, please specify one of filetype, mimetype, extension")
             else:
                 raise TypeError("Cannot infer data type details from extension. Please specify mimetype or filename")
 
         self._filename = filename
-        self.mimetype: str = mimetype
-        self.extension: typing.Optional[str] = extension
+        self.mimetype = mimetype
+        self.extension = extension
 
     @property
     def url(self) -> str:
-        return to_data_uri(self.data, self.mimetype)
+        return f"attachment://{self.filename}"
 
     @property
-    def filename(self) -> typing.Optional[str]:
+    def filename(self) -> str:
         return self._filename
 
     @contextlib.asynccontextmanager
@@ -285,6 +453,23 @@ class Bytes(Resource):
 
 
 class WebResource(Resource, abc.ABC):
+    """Base class for a resource that resides on the internet.
+
+    The logic for identifying this resource is left to each implementation
+    to define.
+
+    !!! info
+        For a usable concrete implementation, use `URL` instead.
+
+    !!! note
+        Some components may choose to not upload this resource directly and
+        instead simply refer to the URL as needed. The main place this will
+        occur is within embeds.
+
+        If you need to re-upload the resource, you should download it into
+        a `Bytes` and pass that instead in these cases.
+    """
+
     __slots__ = ()
 
     @contextlib.asynccontextmanager
@@ -346,7 +531,6 @@ class WebResource(Resource, abc.ABC):
         hikari.errors.HTTPErrorResponse
             If any other unexpected response code is returned.
         """
-
         async with aiohttp.ClientSession() as session:
             async with session.request("get", self.url, raise_for_status=False) as resp:
                 if 200 <= resp.status < 400:
@@ -368,7 +552,7 @@ class WebResource(Resource, abc.ABC):
 
                     yield WebReader(
                         stream=resp.content,
-                        uri=str(resp.real_url),
+                        url=str(resp.real_url),
                         status=resp.status,
                         reason=resp.reason,
                         filename=filename,
@@ -380,11 +564,27 @@ class WebResource(Resource, abc.ABC):
                     await http_client.parse_error_response(resp)
 
 
-@attr.s(slots=True)
 class URL(WebResource):
-    """A URL that represents a web resource."""
+    """A URL that represents a web resource.
 
-    _url: typing.Union[str] = attr.ib(init=True)
+    Parameters
+    ----------
+    url : str
+        The URL of the resource.
+
+    !!! note
+        Some components may choose to not upload this resource directly and
+        instead simply refer to the URL as needed. The main place this will
+        occur is within embeds.
+
+        If you need to re-upload the resource, you should download it into
+        a `Bytes` and pass that instead in these cases.
+    """
+
+    __slots__ = ("_url",)
+
+    def __init__(self, url: str) -> None:
+        self._url = url
 
     @property
     def url(self) -> str:
@@ -396,17 +596,42 @@ class URL(WebResource):
         return os.path.basename(url.path)
 
 
-@attr.s(slots=True)
 class File(Resource):
-    path: typing.Union[str, os.PathLike, pathlib.Path] = attr.ib()
-    _filename: typing.Optional[str] = attr.ib(default=None)
+    """A resource that exists on the local machine's storage to be uploaded.
+
+    Parameters
+    ----------
+    path : str or os.PathLike or pathlib.Path
+        The path to use.
+
+        !!! note
+            If passing a `pathlib.Path`, this must not be a `pathlib.PurePath`
+            directly, as it will be used to expand tokens such as `~` that
+            denote the home directory, and `..` for relative paths.
+
+            This will all be performed as required in an executor to prevent
+            blocking the event loop.
+
+    filename : str or None
+        The filename to use. If this is `None`, the name of the file is taken
+        from the path instead.
+    """
+
+    __slots__ = ("path", "_filename")
+
+    path: typing.Union[str, os.PathLike, pathlib.Path]
+    _filename: typing.Optional[str]
+
+    def __init__(self, path: typing.Union[str, os.PathLike, pathlib.Path], filename: typing.Optional[str]) -> None:
+        self.path = path
+        self._filename = filename
 
     @property
     def url(self) -> str:
-        return pathlib.PurePath(self.path).as_uri()
+        return f"attachment://{self.filename}"
 
     @property
-    def filename(self) -> typing.Optional[str]:
+    def filename(self) -> str:
         if self._filename is None:
             return os.path.basename(self.path)
         return self._filename

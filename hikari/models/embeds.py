@@ -181,9 +181,9 @@ class Embed:
 
     type: str = attr.ib(default="rich", repr=True)
     """The type of the embed.
-    
+
     Defaults to `"rich"`.
-    
+
     !!! note
         You can only specify `"rich"` when creating a new embed. Any other
         value will be ignored.

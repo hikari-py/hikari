@@ -51,8 +51,8 @@ class HTTPSettings:
     """The optional URL of the proxy to send requests via."""
 
     request_timeout: typing.Optional[float] = 10.0
-    """Optional request timeout to use. 
-    
+    """Optional request timeout to use.
+
     If an HTTP request takes longer than this, it will be aborted.
 
     Defaults to 10 seconds.
