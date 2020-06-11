@@ -26,6 +26,7 @@ import asyncio
 import contextlib
 import datetime
 import http
+import math
 import typing
 
 import aiohttp
@@ -317,11 +318,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
                 compiled_route,
                 reset_date,
             )
+
+        # If the values are within 20% of eachother by relativistic tolerance, it is probably
+        # safe to retry the request, as they are likely the same value just with some
+        # measuring difference. 20% was used as a rounded figure.
+        if math.isclose(body_retry_after, (reset_date - now_date).total_seconds(), rel_tol=0.20):
             raise self._RetryRequest()
 
-        raise errors.RateLimited(
-            str(response.real_url), compiled_route, response.headers, body, body_retry_after,
-        )
+        raise errors.RateLimited(str(response.real_url), compiled_route, response.headers, body, body_retry_after)
 
     @staticmethod
     def _generate_allowed_mentions(
