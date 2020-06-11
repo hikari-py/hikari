@@ -341,9 +341,10 @@ class RateLimited(ClientHTTPErrorResponse):
     You should not usually see this occur, unless Discord vastly change their
     ratelimit system without prior warning, which might happen in the future.
 
-    If you receive this regularly, please file a bug report, or contact
-    Discord with the relevant debug information that can be obtained by
-    enabling debug logs and enabling the debug mode on the REST components.
+    !!! note
+        If you receive this regularly, please file a bug report, or contact
+        Discord with the relevant debug information that can be obtained by
+        enabling debug logs and enabling the debug mode on the REST components.
 
     Parameters
     ----------
