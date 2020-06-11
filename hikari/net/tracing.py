@@ -183,6 +183,7 @@ class DebugTracer(BaseTracer):
             latency,
             ctx.identifier,
             dict(response.headers),
+            body,
         )
 
     @typing.no_type_check
