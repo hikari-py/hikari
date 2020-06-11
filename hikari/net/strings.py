@@ -43,6 +43,7 @@ X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = "X-RateLimit-Limit"
 X_RATELIMIT_PRECISION_HEADER: typing.Final[str] = "X-RateLimit-Precision"
 X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = "X-RateLimit-Remaining"
 X_RATELIMIT_RESET_HEADER: typing.Final[str] = "X-RateLimit-Reset"
+X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = "X-RateLimit-Reset-After"
 
 # Mimetypes.
 APPLICATION_JSON: typing.Final[str] = "application/json"
