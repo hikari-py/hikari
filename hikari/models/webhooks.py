@@ -390,7 +390,7 @@ class Webhook(bases.Entity, bases.Unique):
         ValueError
             If `size` is not a power of two between 16 and 4096 (inclusive).
         """
-        if not self.avatar_hash:
+        if self.avatar_hash is not None:
             url = cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
             return files_.URL(url)
         return None

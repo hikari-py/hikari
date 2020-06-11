@@ -449,7 +449,13 @@ class PartialGuild(bases.Entity, bases.Unique):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.icon_hash:
+        if self.icon_hash is not None:
+            if format_ is None:
+                if self.icon_hash.startswith("a_"):
+                    format_ = "gif"
+                else:
+                    format_ = "png"
+
             url = cdn.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
             return files.URL(url)
         return None
@@ -504,7 +510,7 @@ class GuildPreview(PartialGuild):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.splash_hash:
+        if self.splash_hash is not None:
             url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
             return files.URL(url)
         return None
@@ -536,7 +542,7 @@ class GuildPreview(PartialGuild):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.discovery_splash_hash:
+        if self.discovery_splash_hash is not None:
             url = cdn.generate_cdn_url(
                 "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
             )
@@ -865,7 +871,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.splash_hash:
+        if self.splash_hash is not None:
             url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
             return files.URL(url)
         return None
@@ -931,7 +937,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.banner_hash:
+        if self.banner_hash is not None:
             url = cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
             return files.URL(url)
         return None

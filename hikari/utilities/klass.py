@@ -78,9 +78,9 @@ class SingletonMeta(abc.ABCMeta):
 
     ___instances___: typing.Dict[typing.Type[typing.Any], typing.Any] = {}
 
-    def __call__(cls):
+    def __call__(cls, *args: typing.Any, **kwargs: typing.Any) -> typing.Any:
         if cls not in SingletonMeta.___instances___:
-            SingletonMeta.___instances___[cls] = super().__call__()
+            SingletonMeta.___instances___[cls] = super().__call__(*args, **kwargs)
         return SingletonMeta.___instances___[cls]
 
 

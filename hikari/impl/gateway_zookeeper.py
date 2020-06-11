@@ -155,7 +155,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
 
         self._aiohttp_config = config
         self._debug = debug
-        self._gather_task = None
+        self._gather_task: typing.Optional[asyncio.Task[None]] = None
         self._initial_activity = initial_activity
         self._initial_idle_since = initial_idle_since
         self._initial_is_afk = initial_is_afk
@@ -166,8 +166,8 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         self._request_close_event = asyncio.Event()
         self._shard_count = shard_count
         self._shard_ids = shard_ids
-        self._shards = {}
-        self._tasks = {}
+        self._shards: typing.Dict[int, gateway.Gateway] = {}
+        self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
         self._use_compression = compression
         self._version = version
@@ -206,8 +206,9 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
                         self._tasks.values(), timeout=5, return_when=asyncio.FIRST_COMPLETED
                     )
 
-                    if completed:
-                        raise completed.pop().exception()
+                    while completed:
+                        if (ex := completed.pop().exception()) is not None:
+                            raise ex
 
                 window = {}
                 for shard_id in shard_ids:
@@ -251,12 +252,8 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
 
             self.logger.info("stopping %s shard(s)", len(self._tasks))
 
-            has_event_dispatcher = hasattr(self, "event_dispatcher") and isinstance(
-                self.event_dispatcher, event_dispatcher.IEventDispatcher
-            )
-
             try:
-                if has_event_dispatcher:
+                if isinstance(self, app_.IGatewayDispatcher):
                     # noinspection PyUnresolvedReferences
                     await self.event_dispatcher.dispatch(other.StoppingEvent())
 
@@ -264,14 +261,14 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
             finally:
                 self._tasks.clear()
 
-                if has_event_dispatcher:
+                if isinstance(self, app_.IGatewayDispatcher):
                     # noinspection PyUnresolvedReferences
                     await self.event_dispatcher.dispatch(other.StoppedEvent())
 
     def run(self) -> None:
         loop = asyncio.get_event_loop()
 
-        def sigterm_handler(*_):
+        def sigterm_handler(*_: typing.Any) -> None:
             loop.create_task(self.close())
 
         try:

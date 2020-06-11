@@ -117,7 +117,7 @@ class InviteGuild(guilds.PartialGuild):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.splash_hash:
+        if self.splash_hash is not None:
             url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
             return files.URL(url)
         return None
@@ -149,7 +149,7 @@ class InviteGuild(guilds.PartialGuild):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.banner_hash:
+        if self.banner_hash is not None:
             url = cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
             return files.URL(url)
         return None
@@ -244,6 +244,6 @@ class InviteWithMetadata(Invite):
 
         If this invite doesn't have a set expiry then this will be `None`.
         """
-        if self.max_age:
+        if self.max_age is not None:
             return self.created_at + self.max_age
         return None
