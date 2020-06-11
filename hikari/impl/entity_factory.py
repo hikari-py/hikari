@@ -615,11 +615,10 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
                 footer_payload["text"] = embed.footer.text
 
             if embed.footer.icon is not None:
-                if isinstance(embed.footer.icon.resource, files.WebResource):
-                    footer_payload["icon_url"] = embed.footer.icon.url
-                else:
-                    footer_payload["icon_url"] = f"attachment://{embed.footer.icon.filename}"
+                if not isinstance(embed.footer.icon.resource, files.WebResource):
                     uploads.append(embed.footer.icon)
+
+                footer_payload["icon_url"] = embed.footer.icon.url
 
             payload["footer"] = footer_payload
 
@@ -627,11 +626,10 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
             image_payload = {}
 
             if embed.image is not None:
-                if isinstance(embed.image.resource, files.WebResource):
-                    image_payload["url"] = embed.image.url
-                else:
-                    image_payload["url"] = f"attachment://{embed.image.filename}"
+                if not isinstance(embed.image.resource, files.WebResource):
                     uploads.append(embed.image.resource)
+
+                image_payload["url"] = embed.image.url
 
             payload["image"] = image_payload
 
@@ -639,11 +637,10 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
             thumbnail_payload = {}
 
             if embed.thumbnail is not None:
-                if isinstance(embed.thumbnail.resource, files.WebResource):
-                    thumbnail_payload["url"] = embed.thumbnail.url
-                else:
-                    thumbnail_payload["url"] = f"attachment://{embed.thumbnail.filename}"
+                if not isinstance(embed.thumbnail.resource, files.WebResource):
                     uploads.append(embed.thumbnail.resource)
+
+                thumbnail_payload["url"] = embed.thumbnail.url
 
             payload["thumbnail"] = thumbnail_payload
 
@@ -657,11 +654,9 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
                 author_payload["url"] = embed.author.url
 
             if embed.author.icon is not None:
-                if isinstance(embed.footer.icon.resource, files.WebResource):
-                    author_payload["icon_url"] = embed.author.icon.url
-                else:
-                    author_payload["icon_url"] = f"attachment://{embed.author.icon.filename}"
+                if not isinstance(embed.footer.icon.resource, files.WebResource):
                     uploads.append(embed.author.icon)
+                author_payload["icon_url"] = embed.author.icon.url
 
             payload["author"] = author_payload
 
