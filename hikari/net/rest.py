@@ -254,6 +254,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         remaining = int(resp_headers.get(strings.X_RATELIMIT_REMAINING_HEADER, "1"))
         bucket = resp_headers.get(strings.X_RATELIMIT_BUCKET_HEADER, "None")
         reset_at = float(resp_headers.get(strings.X_RATELIMIT_RESET_HEADER, "0"))
+        reset_after = float(resp_headers.get(strings.X_RATELIMIT_RESET_AFTER_HEADER, "0"))
         reset_date = datetime.datetime.fromtimestamp(reset_at, tz=datetime.timezone.utc)
         now_date = date.rfc7231_datetime_string_to_datetime(resp_headers[strings.DATE_HEADER])
 
@@ -322,7 +323,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         # If the values are within 20% of eachother by relativistic tolerance, it is probably
         # safe to retry the request, as they are likely the same value just with some
         # measuring difference. 20% was used as a rounded figure.
-        if math.isclose(body_retry_after, (reset_date - now_date).total_seconds(), rel_tol=0.20):
+        if math.isclose(body_retry_after, reset_after, rel_tol=0.20):
             raise self._RetryRequest()
 
         raise errors.RateLimited(str(response.real_url), compiled_route, response.headers, body, body_retry_after)
