@@ -32,6 +32,8 @@ import typing
 
 import aiohttp.abc
 
+from hikari.net import strings
+
 
 class BaseTracer:
     """Base type for tracing HTTP requests."""
@@ -65,11 +67,13 @@ class CFRayTracer(BaseTracer):
         ctx.start_time = time.perf_counter()
 
         self.logger.debug(
-            "%s %s [content-type:%s, accept:%s] [%s]",
+            "%s %s [%s:%s, %s:%s] [%s]",
             params.method,
             params.url,
-            params.headers.get("content-type"),
-            params.headers.get("accept"),
+            strings.CONTENT_TYPE_HEADER,
+            params.headers.get(strings.CONTENT_TYPE_HEADER),
+            strings.ACCEPT_HEADER,
+            params.headers.get(strings.ACCEPT_HEADER),
             ctx.identifier,
         )
 
@@ -79,14 +83,18 @@ class CFRayTracer(BaseTracer):
         latency = round((time.perf_counter() - ctx.start_time) * 1_000, 1)
         response = params.response
         self.logger.debug(
-            "%s %s after %sms [content-type:%s, size:%s, cf-ray:%s, cf-request-id:%s] [%s]",
+            "%s %s after %sms [%s:%s, %s:%s, %s:%s, %s:%s] [%s]",
             response.status,
             response.reason,
             latency,
-            response.headers.get("content-type"),
-            response.headers.get("content-length", 0),
-            response.headers.get("cf-ray"),
-            response.headers.get("cf-request-id"),
+            strings.CONTENT_TYPE_HEADER,
+            response.headers.get(strings.CONTENT_TYPE_HEADER),
+            strings.CONTENT_LENGTH_HEADER,
+            response.headers.get(strings.CONTENT_LENGTH_HEADER, 0),
+            strings.CF_RAY_HEADER,
+            response.headers.get(strings.CF_RAY_HEADER),
+            strings.CF_REQUEST_ID_HEADER,
+            response.headers.get(strings.CF_REQUEST_ID_HEADER),
             ctx.identifier,
         )
 
@@ -161,6 +169,12 @@ class DebugTracer(BaseTracer):
         """Log an inbound response."""
         latency = round((time.perf_counter() - ctx.start_time) * 1_000, 2)
         response = params.response
+
+        if strings.CONTENT_TYPE_HEADER in response.headers:
+            body = await self._format_body(await response.read())
+        else:
+            body = "no-content"
+
         self.logger.debug(
             "%s %s %s after %sms [%s]\n  response headers: %s\n  response body: %s",
             response.real_url,
@@ -169,7 +183,6 @@ class DebugTracer(BaseTracer):
             latency,
             ctx.identifier,
             dict(response.headers),
-            await self._format_body(await response.read()) if "content-type" in response.headers else "<no content>",
         )
 
     @typing.no_type_check
@@ -200,7 +213,7 @@ class DebugTracer(BaseTracer):
     @typing.no_type_check
     async def on_dns_cache_miss(self, _, ctx, params):
         """Log when we have to query a DNS server for an IP address."""
-        self.logger.debug("will perform DNS lookup of new host %s  [%s]", params.host, ctx.identifier)
+        self.logger.debug("will perform DNS lookup of new host %s [%s]", params.host, ctx.identifier)
 
     # noinspection PyMethodMayBeStatic
     @typing.no_type_check

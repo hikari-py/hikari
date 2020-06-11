@@ -316,8 +316,8 @@ class NotFound(ClientHTTPErrorResponse):
     def __init__(self, url: str, headers: data_binding.Headers, raw_body: typing.AnyStr) -> None:
         status = http.HTTPStatus.NOT_FOUND
         super().__init__(url, status, headers, raw_body)
-        
-        
+
+
 class RateLimited(ClientHTTPErrorResponse):
     """Raised when a non-global ratelimit that cannot be handled occurs.
     
@@ -363,27 +363,26 @@ class RateLimited(ClientHTTPErrorResponse):
     __slots__ = ()
 
     def __init__(
-        self, 
-        url: str, 
+        self,
+        url: str,
         route: routes.CompiledRoute,
-        headers: data_binding.Headers, 
-        raw_body: typing.AnyStr, 
+        headers: data_binding.Headers,
+        raw_body: typing.AnyStr,
         retry_after: float,
     ) -> None:
         self.retry_after = retry_after
         self.route = route
-        
+
         status = http.HTTPStatus.TOO_MANY_REQUESTS
         super().__init__(
-            url, 
-            status, 
-            headers, 
-            raw_body, 
-            f"You are being rate-limited for {self.retry_after:,} seconds on route {route}. Please slow down!"
+            url,
+            status,
+            headers,
+            raw_body,
+            f"You are being rate-limited for {self.retry_after:,} seconds on route {route}. Please slow down!",
         )
-    
-    
-        
+
+
 class ServerHTTPErrorResponse(HTTPErrorResponse):
     """Base exception for an erroneous HTTP response that is a server error.
 

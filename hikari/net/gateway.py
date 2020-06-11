@@ -39,7 +39,7 @@ from hikari.api import component
 from hikari.models import presences
 from hikari.net import http_client
 from hikari.net import rate_limits
-from hikari.net import user_agents
+from hikari.net import strings
 from hikari.utilities import data_binding
 from hikari.utilities import klass
 from hikari.utilities import undefined
@@ -474,7 +474,11 @@ class Gateway(http_client.HTTPClient, component.IComponent):
                     "token": self._token,
                     "compress": False,
                     "large_threshold": self.large_threshold,
-                    "properties": user_agents.UserAgent().websocket_triplet,
+                    "properties": {
+                        "$os": strings.SYSTEM_TYPE,
+                        "$browser": strings.AIOHTTP_VERSION,
+                        "$device": strings.LIBRARY_VERSION,
+                    },
                     "shard": [self._shard_id, self._shard_count],
                 },
             }

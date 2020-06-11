@@ -39,6 +39,8 @@ from hikari.net import iterators
 from hikari.net import rate_limits
 from hikari.net import rest_utils
 from hikari.net import routes
+from hikari.net import strings
+from hikari.models import emojis
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
@@ -55,7 +57,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import channels
     from hikari.models import colors
     from hikari.models import embeds as embeds_
-    from hikari.models import emojis
     from hikari.models import gateway
     from hikari.models import guilds
     from hikari.models import invites
@@ -64,15 +65,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import users
     from hikari.models import voices
     from hikari.models import webhooks
-
-
-_REST_API_URL: typing.Final[str] = "https://discord.com/api/v{0.version}"
-"""The URL for the RESTSession API. This contains a version number parameter that
-should be interpolated.
-"""
-
-_OAUTH2_API_URL: typing.Final[str] = "https://discord.com/api/oauth2"
-"""The URL to the Discord OAuth2 API."""
 
 
 class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-many-public-methods
@@ -151,17 +143,17 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             full_token = None
         else:
             if isinstance(token_type, undefined.Undefined):
-                token_type = "Bot"
+                token_type = strings.BOT_TOKEN
 
             full_token = f"{token_type.title()} {token}"
 
         self._token: typing.Optional[str] = full_token
 
         if isinstance(rest_url, undefined.Undefined):
-            rest_url = _REST_API_URL
+            rest_url = strings.REST_API_URL
 
         if isinstance(oauth2_url, undefined.Undefined):
-            oauth2_url = _OAUTH2_API_URL
+            oauth2_url = strings.OAUTH2_API_URL
 
         self._rest_url = rest_url.format(self)
         self._oauth2_url = oauth2_url.format(self)
@@ -192,17 +184,18 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             self.buckets.start()
 
         headers = data_binding.StringMapBuilder()
+        headers.setdefault(strings.USER_AGENT_HEADER, strings.HTTP_USER_AGENT)
 
-        headers.put("x-ratelimit-precision", "millisecond")
-        headers.put("accept", self._APPLICATION_JSON)
+        headers.put(strings.X_RATELIMIT_PRECISION_HEADER, "millisecond")
+        headers.put(strings.ACCEPT_HEADER, strings.APPLICATION_JSON)
 
         if self._token is not None and not no_auth:
-            headers["authorization"] = self._token
+            headers[strings.AUTHORIZATION_HEADER] = self._token
 
         if isinstance(body, undefined.Undefined):
             body = None
 
-        headers.put("x-audit-log-reason", reason)
+        headers.put(strings.X_AUDIT_LOG_REASON_HEADER, reason)
 
         if isinstance(query, undefined.Undefined):
             query = None
@@ -261,12 +254,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         # Handle rate limiting.
         resp_headers = response.headers
-        limit = int(resp_headers.get("x-ratelimit-limit", "1"))
-        remaining = int(resp_headers.get("x-ratelimit-remaining", "1"))
-        bucket = resp_headers.get("x-ratelimit-bucket", "None")
-        reset_at = float(resp_headers.get("x-ratelimit-reset", "0"))
+        limit = int(resp_headers.get(strings.X_RATELIMIT_LIMIT_HEADER, "1"))
+        remaining = int(resp_headers.get(strings.X_RATELIMIT_REMAINING_HEADER, "1"))
+        bucket = resp_headers.get(strings.X_RATELIMIT_BUCKET_HEADER, "None")
+        reset_at = float(resp_headers.get(strings.X_RATELIMIT_RESET_HEADER, "0"))
         reset_date = datetime.datetime.fromtimestamp(reset_at, tz=datetime.timezone.utc)
-        now_date = date.rfc7231_datetime_string_to_datetime(resp_headers["date"])
+        now_date = date.rfc7231_datetime_string_to_datetime(resp_headers[strings.DATE_HEADER])
 
         is_rate_limited = response.status == http.HTTPStatus.TOO_MANY_REQUESTS
 
@@ -303,7 +296,6 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             self.logger.warning("you are being rate-limited globally - trying again after %ss", body_retry_after)
             return
 
-
         # Discord have started applying ratelimits to operations on some endpoints
         # based on specific fields used in the JSON body.
         # This does not get reflected in the headers. The first we know is when we
@@ -325,7 +317,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         if remaining <= 0:
             # We can retry and we will then abide by the updated bucket ratelimits.
             self.logger.debug(
-                "ratelimited on bucket %s at %s. This is a bucket discrepancy, so we will retry at %s",
+                "rate-limited on bucket %s at %s. This is a bucket discrepancy, so we will retry at %s",
                 bucket,
                 compiled_route,
                 reset_date,
@@ -333,11 +325,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             raise self._RetryRequest()
 
         raise errors.RateLimited(
-            str(response.real_url),
-            compiled_route,
-            response.headers,
-            body,
-            body_retry_after,
+            str(response.real_url), compiled_route, response.headers, body, body_retry_after,
         )
 
     @staticmethod
@@ -1694,10 +1682,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
-        emoji: typing.Union[emojis.KnownCustomEmoji, str],
+        emoji: typing.Union[emojis.CustomEmoji, bases.UniqueObject],
     ) -> emojis.KnownCustomEmoji:
         route = routes.GET_GUILD_EMOJI.compile(
-            guild=guild, emoji=emoji.url_name if isinstance(emoji, emojis.Emoji) else emoji,
+            guild=guild, emoji=emoji.id if isinstance(emoji, emojis.CustomEmoji) else emoji,
         )
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
@@ -1739,7 +1727,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
-        emoji: typing.Union[emojis.KnownCustomEmoji, str],
+        emoji: typing.Union[emojis.CustomEmoji, bases.UniqueObject],
         *,
         name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
         roles: typing.Union[
@@ -1748,7 +1736,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
     ) -> emojis.KnownCustomEmoji:
         route = routes.PATCH_GUILD_EMOJI.compile(
-            guild=guild, emoji=emoji.url_name if isinstance(emoji, emojis.Emoji) else emoji,
+            guild=guild, emoji=emoji.id if isinstance(emoji, emojis.CustomEmoji) else emoji,
         )
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
@@ -1762,11 +1750,11 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
-        emoji: typing.Union[emojis.KnownCustomEmoji, str],
+        emoji: typing.Union[emojis.CustomEmoji, bases.UniqueObject],
         # Reason is not currently supported for some reason. See
     ) -> None:
         route = routes.DELETE_GUILD_EMOJI.compile(
-            guild=guild, emoji=emoji.url_name if isinstance(emoji, emojis.Emoji) else emoji,
+            guild=guild, emoji=emoji.id if isinstance(emoji, emojis.CustomEmoji) else emoji,
         )
         await self._request(route)
 
