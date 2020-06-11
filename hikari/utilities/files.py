@@ -52,7 +52,7 @@ def ensure_resource(url_or_resource: typing.Union[str, Resource]) -> Resource:
         return url_or_resource
     else:
         if url_or_resource.startswith(_FILE):
-            return File(url_or_resource[len(_FILE):])
+            return File(url_or_resource[len(_FILE) :])
         return URL(url_or_resource)
 
 

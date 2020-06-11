@@ -49,7 +49,6 @@ _MAX_EMBED_FIELDS: typing.Final[int] = 25
 _MAX_EMBED_SIZE: typing.Final[int] = 6000
 
 
-
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
 class EmbedFooter:
     """Represents an embed footer."""

@@ -78,9 +78,7 @@ class SingletonMeta(abc.ABCMeta):
 
     ___instances___: typing.Dict[typing.Type[typing.Any], typing.Any] = {}
 
-    # Disable type-checking to hide a bug in IntelliJ for the time being.
-    @typing.no_type_check
-    def __call__(cls) -> typing.Any:
+    def __call__(cls):
         if cls not in SingletonMeta.___instances___:
             SingletonMeta.___instances___[cls] = super().__call__()
         return SingletonMeta.___instances___[cls]
@@ -109,3 +107,10 @@ class Singleton(abc.ABC, metaclass=SingletonMeta):
     """
 
     __slots__ = ()
+
+
+class Static(type):
+    """Metaclass that prevents instantiation. Enables the use """
+
+    def __call__(cls) -> typing.NoReturn:
+        raise TypeError("This class is static-only, and cannot be instantiated.")
