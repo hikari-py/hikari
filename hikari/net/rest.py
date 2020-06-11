@@ -291,7 +291,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             self.global_rate_limit.throttle(body_retry_after)
 
             self.logger.warning("you are being rate-limited globally - trying again after %ss", body_retry_after)
-            return
+            raise self._RetryRequest()
 
         # Discord have started applying ratelimits to operations on some endpoints
         # based on specific fields used in the JSON body.
