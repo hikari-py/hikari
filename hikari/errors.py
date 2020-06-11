@@ -320,27 +320,27 @@ class NotFound(ClientHTTPErrorResponse):
 
 class RateLimited(ClientHTTPErrorResponse):
     """Raised when a non-global ratelimit that cannot be handled occurs.
-    
-    This should only ever occur for specific routes that have additional 
+
+    This should only ever occur for specific routes that have additional
     rate-limits applied to them by Discord. At the time of writing, the
     PATCH CHANNEL endpoint is the only one that knowingly implements this, and
     does so by implementing rate-limits on the usage of specific fields only.
-    
+
     If you receive one of these, you should NOT try again until the given
     time has passed, either discarding the operation you performed, or waiting
     until the given time has passed first. Note that it may still be valid to
-    send requests with different attributes in them. 
-    
-    A use case for this by Discord appears to be to stop abuse from bots that 
-    change channel names, etc, regularly. This kind of action allegedly causes 
+    send requests with different attributes in them.
+
+    A use case for this by Discord appears to be to stop abuse from bots that
+    change channel names, etc, regularly. This kind of action allegedly causes
     a fair amount of overhead internally for Discord. In the case you encounter
     this, you may be able to send different requests that manipulate the same
     entities (in this case editing the same channel) that do not use the same
-    collection of attributes as the previous request. 
-    
+    collection of attributes as the previous request.
+
     You should not usually see this occur, unless Discord vastly change their
-    ratelimit system without prior warning, which might happen in the future. 
-    
+    ratelimit system without prior warning, which might happen in the future.
+
     If you receive this regularly, please file a bug report, or contact
     Discord with the relevant debug information that can be obtained by
     enabling debug logs and enabling the debug mode on the REST components.
@@ -357,7 +357,7 @@ class RateLimited(ClientHTTPErrorResponse):
         The body that was received.
     retry_after : float
         How many seconds to wait before you can reuse the route with the
-        specific request. 
+        specific request.
     """
 
     __slots__ = ()

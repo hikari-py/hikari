@@ -107,10 +107,3 @@ class Singleton(abc.ABC, metaclass=SingletonMeta):
     """
 
     __slots__ = ()
-
-
-class Static(type):
-    """Metaclass that prevents instantiation. Enables the use """
-
-    def __call__(cls) -> typing.NoReturn:
-        raise TypeError("This class is static-only, and cannot be instantiated.")
