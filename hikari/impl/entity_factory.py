@@ -507,7 +507,6 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         )
         embed.color = color_models.Color(payload["color"]) if "color" in payload else None
 
-        # TODO: @FasterSpeeding, can we use `None` here instead to keep MyPy happy?
         if (footer_payload := payload.get("footer", ...)) is not ...:
             footer = embed_models.EmbedFooter()
             footer.text = footer_payload["text"]
