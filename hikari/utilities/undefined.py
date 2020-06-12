@@ -26,13 +26,15 @@ __all__: typing.List[str] = ["UndefinedType", "UNDEFINED"]
 import typing
 
 
-class _UndefinedType:
+class UndefinedType:
+    """Type of the `UNDEFINED` sentinel value."""
+
     __slots__ = ()
 
     def __bool__(self) -> bool:
         return False
 
-    def __init_subclass__(cls, **kwargs) -> None:
+    def __init_subclass__(cls, **kwargs: typing.Any) -> None:
         raise TypeError("Cannot subclass UndefinedType")
 
     def __repr__(self) -> str:
@@ -42,27 +44,15 @@ class _UndefinedType:
         return "UNDEFINED"
 
 
-# Only expose correctly for static type checkers. Prevents anyone misusing it
-# outside of simply checking `if value is UNDEFINED`.
-UndefinedType = _UndefinedType if typing.TYPE_CHECKING else object()
-"""Type hint describing the type of `UNDEFINED` used for type hints
-
-This is a purely sentinel type hint at runtime, and will not support instance
-checking.
-"""
-
-UNDEFINED: typing.Final[_UndefinedType] = _UndefinedType()
+# noinspection PyTypeChecker
+UNDEFINED: typing.Final[UndefinedType] = UndefinedType()
 """Undefined sentinel value.
 
 This will behave as a false value in conditions.
 """
 
 # Prevent making any more instances as much as possible.
-_UndefinedType.__new__ = NotImplemented
-_UndefinedType.__init__ = NotImplemented
-
-# Remove the reference here.
-del _UndefinedType
+setattr(UndefinedType, "__new__", NotImplemented)
 
 
 def count(*items: typing.Any) -> int:

@@ -24,7 +24,7 @@ from tests.hikari import _helpers
 
 class TestUndefined:
     def test_repr(self):
-        assert repr(undefined.UNDEFINED) == "Undefined()"
+        assert repr(undefined.UNDEFINED) == "<undefined value>"
 
     def test_str(self):
         assert str(undefined.UNDEFINED) == "UNDEFINED"

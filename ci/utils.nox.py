@@ -29,6 +29,8 @@ TRASH = [
     "hikari.egg-info",
     "public",
     ".coverage",
+    ".pytest_cache",
+    ".mypy_cache",
 ]
 
 

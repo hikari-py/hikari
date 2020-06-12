@@ -227,7 +227,13 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
         conversion : typing.Callable[[typing.Any], JSONType] or None
             Optional conversion to apply.
         """
-        if not values is undefined.UNDEFINED:
+        if values is not undefined.UNDEFINED:
+            # MyPy cannot always determine that a singleton is used as a singleton,
+            # since it isn't really possible to make our own true singletons, hacks
+            # can always work around it. Thus, we have to cast. This is basically a
+            # no-op normally.
+            values = typing.cast("typing.Iterable[T]", values)
+
             if conversion is not None:
                 self[key] = [conversion(value) for value in values]
             else:
@@ -244,14 +250,12 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
             The JSON type to put. This may alternatively be undefined. In the latter
             case, nothing is performed.
         """
-        if not value is undefined.UNDEFINED:
+        if value is not undefined.UNDEFINED:
+            value = typing.cast("bases.UniqueObject", value)
             self[key] = str(int(value))
 
     def put_snowflake_array(
-        self,
-        key: str,
-        values: typing.Union[undefined.UndefinedType, typing.Iterable[typing.Union[bases.UniqueObject]]],
-        /,
+        self, key: str, values: typing.Union[undefined.UndefinedType, typing.Iterable[bases.UniqueObject]], /,
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
 
@@ -267,7 +271,8 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
             The JSON snowflakes to put. This may alternatively be undefined.
             In the latter case, nothing is performed.
         """
-        if not values is undefined.UNDEFINED:
+        if values is not undefined.UNDEFINED:
+            values = typing.cast("typing.Iterable[bases.UniqueObject]", values)
             self[key] = [str(int(value)) for value in values]
 
 
