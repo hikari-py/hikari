@@ -27,6 +27,7 @@ import typing
 
 import attr
 
+from hikari.api import app
 from hikari.models import bases
 from hikari.utilities import cdn
 from hikari.utilities import files as files_
@@ -329,6 +330,7 @@ class Webhook(bases.Entity, bases.Unique):
         ValueError
             If `use_token` is passed as `True` when `Webhook.token` is `None`.
         """
+
         if use_token and not self.token:
             raise ValueError("This webhook's token is unknown, so cannot be used.")
 

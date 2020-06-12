@@ -20,14 +20,14 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["IApp", "IRESTApp", "IGatewayConsumer", "IGatewayDispatcher", "IGatewayZookeeper", "IBot"]
+__all__: typing.List[str] = ["IRESTApp", "IGatewayConsumer", "IGatewayDispatcher", "IGatewayZookeeper", "IBot"]
 
 import abc
-import functools
 import logging
 import typing
 
 from hikari.api import event_dispatcher as event_dispatcher_
+from hikari.utilities import reflect
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -46,44 +46,29 @@ if typing.TYPE_CHECKING:
     from hikari.net import rest as rest_
 
 
-class IApp(abc.ABC):
-    """The base for any type of Hikari application object.
+class IRESTApp(abc.ABC):
+    """Component specialization that is used for REST-only applications.
 
-    All types of Hikari-based application should derive from this type in order
-    to provide a consistent interface that is compatible with models and events
-    that make reference to it.
-
-    Following this pattern allows you to extend this library in pretty much
-    any direction you can think of without having to rewrite major piece of
-    this code base.
-
-    Example
-    -------
-    A quick and dirty theoretical concrete implementation may look like the
-    following.
-
-    ```py
-    class MyApp(IApp):
-        def __init__(self):
-            self._logger = logging.getLogger(__name__)
-            self._cache = MyCacheImplementation(self)
-            self._entity_factory = MyEntityFactoryImplementation(self)
-            self._thread_pool = concurrent.futures.ThreadPoolExecutor()
-
-        logger = property(lambda self: self._logger)
-        cache = property(lambda self: self._cache)
-        entity_factory = property(lambda self: self._entity_factory)
-        thread_pool = property(lambda self: self._thread_pool)
-
-        async def close(self):
-            self._thread_pool.shutdown()
-    ```
-
-    If you are in any doubt, check out the `hikari.impl.rest_app.RESTAppImpl` and
-    `hikari.impl.bot.BotImpl` implementations to see how they are pieced together!
+    Examples may include web dashboards, or applications where no gateway
+    connection is required. As a result, no event conduit is provided by
+    these implementations. They do however provide a REST client, and the
+    general components defined in `IRESTApp`
     """
 
     __slots__ = ()
+
+    @property
+    @abc.abstractmethod
+    def rest(self) -> rest_.REST:
+        """REST API Client.
+
+        Use this to make calls to Discord's REST API over HTTPS.
+
+        Returns
+        -------
+        hikari.net.rest.REST
+            The REST API client.
+        """
 
     @property
     @abc.abstractmethod
@@ -136,32 +121,7 @@ class IApp(abc.ABC):
         """Safely shut down all resources."""
 
 
-class IRESTApp(IApp, abc.ABC):
-    """Component specialization that is used for REST-only applications.
-
-    Examples may include web dashboards, or applications where no gateway
-    connection is required. As a result, no event conduit is provided by
-    these implementations. They do however provide a REST client, and the
-    general components defined in `IApp`
-    """
-
-    __slots__ = ()
-
-    @property
-    @abc.abstractmethod
-    def rest(self) -> rest_.REST:
-        """REST API Client.
-
-        Use this to make calls to Discord's REST API over HTTPS.
-
-        Returns
-        -------
-        hikari.net.rest.REST
-            The REST API client.
-        """
-
-
-class IGatewayConsumer(IApp, abc.ABC):
+class IGatewayConsumer(IRESTApp, abc.ABC):
     """Component specialization that supports consumption of raw events.
 
     This may be combined with `IGatewayZookeeper` for most single-process
@@ -186,7 +146,7 @@ class IGatewayConsumer(IApp, abc.ABC):
         """
 
 
-class IGatewayDispatcher(IApp, abc.ABC):
+class IGatewayDispatcher(abc.ABC):
     """Component specialization that supports dispatching of events.
 
     These events are expected to be instances of
@@ -213,7 +173,6 @@ class IGatewayDispatcher(IApp, abc.ABC):
     >>> @bot.listen(hikari.MessageCreateEvent)
     >>> async def on_message(event: hikari.MessageCreateEvent) -> None: ...
     ```
-
     """
 
     __slots__ = ()
@@ -250,39 +209,35 @@ class IGatewayDispatcher(IApp, abc.ABC):
             The event dispatcher in use.
         """
 
-    # Do not add type hints to me! I delegate to a documented method elsewhere!
-    @functools.wraps(event_dispatcher_.IEventDispatcher.listen)
+    @reflect.steal_docstring_from(event_dispatcher_.IEventDispatcher.listen)
     def listen(
         self, event_type: typing.Union[undefined.UndefinedType, typing.Type[_EventT]] = undefined.UNDEFINED,
     ) -> typing.Callable[[_CallbackT], _CallbackT]:
         ...
 
-    # Do not add type hints to me! I delegate to a documented method elsewhere!
-    @functools.wraps(event_dispatcher_.IEventDispatcher.subscribe)
+    @reflect.steal_docstring_from(event_dispatcher_.IEventDispatcher.subscribe)
     def subscribe(
         self,
         event_type: typing.Type[_EventT],
         callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
-    ) -> None:
+    ) -> typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]]:
         ...
 
-    # Do not add type hints to me! I delegate to a documented method elsewhere!
-    @functools.wraps(event_dispatcher_.IEventDispatcher.unsubscribe)
+    @reflect.steal_docstring_from(event_dispatcher_.IEventDispatcher.unsubscribe)
     def unsubscribe(
         self,
         event_type: typing.Type[_EventT],
-        callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
+        callback: typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]],
     ) -> None:
         ...
 
-    # Do not add type hints to me! I delegate to a documented method elsewhere!
-    @functools.wraps(event_dispatcher_.IEventDispatcher.wait_for)
+    @reflect.steal_docstring_from(event_dispatcher_.IEventDispatcher.wait_for)
     async def wait_for(
         self, event_type: typing.Type[_EventT], predicate: _PredicateT, timeout: typing.Union[float, int, None],
     ) -> _EventT:
         ...
 
-    @functools.wraps(event_dispatcher_.IEventDispatcher.dispatch)
+    @reflect.steal_docstring_from(event_dispatcher_.IEventDispatcher.dispatch)
     def dispatch(self, event: base.HikariEvent) -> asyncio.Future[typing.Any]:
         ...
 
@@ -396,7 +351,7 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
         """
 
 
-class IBot(IRESTApp, IGatewayZookeeper, IGatewayDispatcher, abc.ABC):
+class IBot(IGatewayZookeeper, IGatewayDispatcher, abc.ABC):
     """Base for bot applications.
 
     Bots are components that have access to a REST API, an event dispatcher,

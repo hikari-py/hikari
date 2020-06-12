@@ -35,6 +35,7 @@ from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.net import http_settings as http_settings_
 from hikari.net import rest as rest_
+from hikari.utilities import reflect
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:

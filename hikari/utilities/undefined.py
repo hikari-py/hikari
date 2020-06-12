@@ -22,20 +22,17 @@ from __future__ import annotations
 
 __all__: typing.List[str] = ["UndefinedType", "UNDEFINED"]
 
+import enum
+
 # noinspection PyUnresolvedReferences
 import typing
 
 
-class UndefinedType:
-    """Type of the `UNDEFINED` sentinel value."""
-
+class _UndefinedType:
     __slots__ = ()
 
     def __bool__(self) -> bool:
         return False
-
-    def __init_subclass__(cls, **kwargs: typing.Any) -> None:
-        raise TypeError("Cannot subclass UndefinedType")
 
     def __repr__(self) -> str:
         return "<undefined value>"
@@ -44,15 +41,28 @@ class UndefinedType:
         return "UNDEFINED"
 
 
+# Using an enum enables us to use typing.Literal. MyPy has a special case for
+# assuming that the number of instances of a specific enum is limited by design,
+# whereas using a constant value does not provide that. In short, this allows
+# MyPy to determine it can statically cast a value to a different type when
+# we do `is` and `is not` checks on values, which removes the need for casts.
+class _UndefinedTypeWrapper(_UndefinedType, enum.Enum):
+    UNDEFINED_VALUE = _UndefinedType()
+
+
+# Prevent making any more instances as much as possible.
+setattr(_UndefinedType, "__new__", NotImplemented)
+setattr(_UndefinedTypeWrapper, "__new__", NotImplemented)
+
+UndefinedType = typing.Literal[_UndefinedTypeWrapper.UNDEFINED_VALUE]
+"""A type hint for the literal `UNDEFINED` object."""
+
 # noinspection PyTypeChecker
-UNDEFINED: typing.Final[UndefinedType] = UndefinedType()
+UNDEFINED: typing.Final[UndefinedType] = _UndefinedTypeWrapper.UNDEFINED_VALUE
 """Undefined sentinel value.
 
 This will behave as a false value in conditions.
 """
-
-# Prevent making any more instances as much as possible.
-setattr(UndefinedType, "__new__", NotImplemented)
 
 
 def count(*items: typing.Any) -> int:

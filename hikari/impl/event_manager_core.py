@@ -39,12 +39,12 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     from hikari.api import app as app_
 
-    _EventT = typing.TypeVar("_EventT", bound=base.HikariEvent, covariant=True)
+    _EventT = typing.TypeVar("_EventT", bound=base.HikariEvent, contravariant=True)
     _PredicateT = typing.Callable[[_EventT], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
     _SyncCallbackT = typing.Callable[[_EventT], None]
     _AsyncCallbackT = typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]]
     _CallbackT = typing.Union[_SyncCallbackT, _AsyncCallbackT]
-    _ListenerMapT = typing.MutableMapping[typing.Type[_EventT], typing.MutableSequence[_CallbackT]]
+    _ListenerMapT = typing.MutableMapping[typing.Type[_EventT], typing.MutableSequence[_AsyncCallbackT]]
     _WaiterT = typing.Tuple[_PredicateT, asyncio.Future[_EventT]]
     _WaiterMapT = typing.MutableMapping[typing.Type[_EventT], typing.MutableSet[_WaiterT]]
 
@@ -56,14 +56,14 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
     is the raw event name being dispatched in lower-case.
     """
 
-    def __init__(self, app: app_.IApp) -> None:
+    def __init__(self, app: app_.IRESTApp) -> None:
         self._app = app
         self._listeners: _ListenerMapT = {}
         self._waiters: _WaiterMapT = {}
         self.logger = reflect.get_logger(self)
 
     @property
-    def app(self) -> app_.IApp:
+    def app(self) -> app_.IRESTApp:
         return self._app
 
     async def consume_raw_event(
@@ -79,17 +79,19 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
         self,
         event_type: typing.Type[_EventT],
         callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
-    ) -> None:
+    ) -> typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]]:
         if event_type not in self._listeners:
             self._listeners[event_type] = []
 
         if not asyncio.iscoroutinefunction(callback):
 
             @functools.wraps(callback)
-            async def wrapper(event):
-                return callback(event)
+            async def wrapper(event: _EventT) -> None:
+                callback(event)
 
             self.subscribe(event_type, wrapper)
+
+            return wrapper
         else:
             self.logger.debug(
                 "subscribing callback 'async def %s%s' to event-type %s.%s",
@@ -98,12 +100,16 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
                 event_type.__module__,
                 event_type.__qualname__,
             )
+
+            callback = typing.cast("typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]]", callback)
             self._listeners[event_type].append(callback)
+
+            return callback
 
     def unsubscribe(
         self,
         event_type: typing.Type[_EventT],
-        callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
+        callback: typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]],
     ) -> None:
         if event_type in self._listeners:
             self.logger.debug(
@@ -137,6 +143,9 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
 
                 event_type = event_param.annotation
 
+                if not isinstance(event_type, type) or not issubclass(event_type, base.HikariEvent):
+                    raise TypeError("Event type must derive from HikariEvent")
+
             self.subscribe(event_type, callback)
             return callback
 
@@ -146,7 +155,7 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
         self, event_type: typing.Type[_EventT], predicate: _PredicateT, timeout: typing.Union[float, int, None]
     ) -> _EventT:
 
-        future = asyncio.get_event_loop().create_future()
+        future: asyncio.Future[_EventT] = asyncio.get_event_loop().create_future()
 
         if event_type not in self._waiters:
             self._waiters[event_type] = set()
@@ -155,11 +164,13 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
 
         return await asyncio.wait_for(future, timeout=timeout) if timeout is not None else await future
 
-    async def _test_waiter(self, cls, event, predicate, future):
+    async def _test_waiter(
+        self, cls: typing.Type[_EventT], event: _EventT, predicate: _PredicateT, future: asyncio.Future[_EventT]
+    ) -> None:
         try:
             result = predicate(event)
-            if asyncio.iscoroutinefunction(result):
-                result = await result
+            if asyncio.iscoroutine(result):
+                result = await result  # type: ignore
 
             if not result:
                 return
@@ -173,7 +184,7 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
         if not self._waiters[cls]:
             del self._waiters[cls]
 
-    async def _invoke_callback(self, callback: _CallbackT, event: _EventT) -> None:
+    async def _invoke_callback(self, callback: _AsyncCallbackT, event: _EventT) -> None:
         try:
             result = callback(event)
             if asyncio.iscoroutine(result):
@@ -181,7 +192,7 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
 
         except Exception as ex:
             # Skip the first frame in logs, we don't care for it.
-            trio = type(ex), ex, ex.__traceback__.tb_next
+            trio = type(ex), ex, ex.__traceback__.tb_next if ex.__traceback__ is not None else None
 
             if base.is_no_catch_event(event):
                 self.logger.error("an exception occurred handling an event, but it has been ignored", exc_info=trio)
@@ -198,12 +209,11 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
         # not describe event types. This improves efficiency as well.
         mro = type(event).mro()
 
-        tasks = []
+        tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
 
         for cls in mro[: mro.index(base.HikariEvent) + 1]:
-            cls: typing.Type[_EventT]
-
             if cls in self._listeners:
+
                 for callback in self._listeners[cls]:
                     tasks.append(self._invoke_callback(callback, event))
 

@@ -252,8 +252,7 @@ class GuildBuilder:
         payload.put("default_message_notifications", self.default_message_notifications)
         payload.put("explicit_content_filter", self.explicit_content_filter_level)
 
-        if not self.icon is undefined.UNDEFINED:
-            # This isn't annotated properly in the standard library, apparently.
+        if self.icon is not undefined.UNDEFINED:
             async with self.icon.stream(self._app.thread_pool_executor) as stream:
                 data_uri = await stream.data_uri()
                 payload.put("icon", data_uri)

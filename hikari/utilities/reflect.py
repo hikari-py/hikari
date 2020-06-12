@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["resolve_signature", "EMPTY", "get_logger"]
+__all__: typing.List[str] = ["resolve_signature", "EMPTY", "get_logger", "steal_docstring_from"]
 
 import inspect
 import logging
@@ -90,3 +90,14 @@ def get_logger(obj: typing.Union[typing.Type[typing.Any], typing.Any], *addition
 
     obj = obj if isinstance(obj, type) else type(obj)
     return logging.getLogger(".".join((obj.__module__, obj.__qualname__, *additional_args)))
+
+
+T = typing.TypeVar("T")
+
+
+def steal_docstring_from(source: typing.Any) -> typing.Callable[[T], T]:
+    def decorator(obj: T) -> T:
+        setattr(obj, "__doc__", getattr(source, "__doc__", None))
+        return obj
+
+    return decorator
