@@ -228,40 +228,40 @@ class Member(bases.Entity):
     This will be `None` when attached to Message Create and Update gateway events.
     """
 
-    nickname: typing.Union[str, None, undefined.Undefined] = attr.ib(
+    nickname: typing.Union[str, None, undefined.UndefinedType] = attr.ib(
         eq=False, hash=False, repr=True,
     )
     """This member's nickname.
 
-    This will be `None` if not set and `hikari.utilities.undefined.Undefined`
+    This will be `None` if not set and `hikari.utilities.undefined.UndefinedType`
     if it's state is unknown.
     """
 
     role_ids: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """A sequence of the IDs of the member's current roles."""
 
-    joined_at: typing.Union[datetime.datetime, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=False)
+    joined_at: typing.Union[datetime.datetime, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this member joined the guild they belong to."""
 
-    premium_since: typing.Union[datetime.datetime, None, undefined.Undefined] = attr.ib(
+    premium_since: typing.Union[datetime.datetime, None, undefined.UndefinedType] = attr.ib(
         eq=False, hash=False, repr=False
     )
     """The datetime of when this member started "boosting" this guild.
 
     This will be `None` if they aren't boosting and
-    `hikari.utilities.undefined.Undefined` if their boosting status is unknown.
+    `hikari.utilities.undefined.UndefinedType` if their boosting status is unknown.
     """
 
-    is_deaf: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=False)
+    is_deaf: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this member is deafened by this guild in it's voice channels.
 
-    This will be `hikari.utilities.undefined.Undefined if it's state is unknown.
+    This will be `hikari.utilities.undefined.UndefinedType if it's state is unknown.
     """
 
-    is_mute: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=False)
+    is_mute: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this member is muted by this guild in it's voice channels.
 
-    This will be `hikari.utilities.undefined.Undefined if it's state is unknown.
+    This will be `hikari.utilities.undefined.UndefinedType if it's state is unknown.
     """
 
 

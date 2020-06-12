@@ -102,22 +102,22 @@ class PartialUser(bases.Entity, bases.Unique):
     present.
     """
 
-    discriminator: typing.Union[str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=True)
+    discriminator: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)
     """This user's discriminator."""
 
-    username: typing.Union[str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=True)
+    username: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)
     """This user's username."""
 
-    avatar_hash: typing.Union[None, str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=False)
+    avatar_hash: typing.Union[None, str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
     """This user's avatar hash, if set."""
 
-    is_bot: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=False)
+    is_bot: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is a bot account."""
 
-    is_system: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False)
+    is_system: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False)
     """Whether this user is a system account."""
 
-    flags: typing.Union[UserFlag, undefined.Undefined] = attr.ib(eq=False, hash=False)
+    flags: typing.Union[UserFlag, undefined.UndefinedType] = attr.ib(eq=False, hash=False)
     """The public flags for this user."""
 
 

@@ -27,7 +27,6 @@ import logging
 import os
 import platform
 import sys
-
 import typing
 from concurrent import futures
 
@@ -39,7 +38,7 @@ from hikari.impl import gateway_zookeeper
 from hikari.models import presences
 from hikari.net import http_settings as http_settings_
 from hikari.net import rest
-from hikari.utilities import klass
+from hikari.utilities import reflect
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -58,7 +57,7 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
 
     Parameters
     ----------
-    config : hikari.utilities.undefined.Undefined or hikari.net.http_settings.HTTPSettings
+    config : hikari.utilities.undefined.UndefinedType or hikari.net.http_settings.HTTPSettings
         Optional aiohttp settings to apply to the REST components, gateway
         shards, and voice websockets. If undefined, then sane defaults are used.
     debug : bool
@@ -74,14 +73,14 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
         The version of the gateway to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to using v6.
-    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.Undefined
+    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
         The initial activity to have on each shard.
-    initial_activity : hikari.models.presences.Status or hikari.utilities.undefined.Undefined
+    initial_activity : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
         The initial status to have on each shard.
-    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
+    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
         The initial time to show as being idle since, or `None` if not idle,
         for each shard.
-    initial_idle_since : bool or hikari.utilities.undefined.Undefined
+    initial_idle_since : bool or hikari.utilities.undefined.UndefinedType
         If `True`, each shard will appear as being AFK on startup. If `False`,
         each shard will appear as _not_ being AFK.
     intents : hikari.models.intents.Intent or None
@@ -103,11 +102,11 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
         The version of the REST API to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to v6.
-    shard_ids : typing.Set[int] or undefined.Undefined
+    shard_ids : typing.Set[int] or undefined.UndefinedType
         A set of every shard ID that should be created and started on startup.
         If left undefined along with `shard_count`, then auto-sharding is used
         instead, which is the default.
-    shard_count : int or undefined.Undefined
+    shard_count : int or undefined.UndefinedType
         The number of shards in the entire application. If left undefined along
         with `shard_ids`, then auto-sharding is used instead, which is the
         default.
@@ -145,31 +144,31 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
     def __init__(
         self,
         *,
-        config: typing.Union[undefined.Undefined, http_settings_.HTTPSettings] = undefined.Undefined(),
+        config: typing.Union[undefined.UndefinedType, http_settings_.HTTPSettings] = undefined.UNDEFINED,
         debug: bool = False,
         gateway_compression: bool = True,
         gateway_version: int = 6,
-        initial_activity: typing.Union[undefined.Undefined, presences.Activity, None] = undefined.Undefined(),
-        initial_idle_since: typing.Union[undefined.Undefined, datetime.datetime, None] = undefined.Undefined(),
-        initial_is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        initial_status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
+        initial_activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
+        initial_idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
+        initial_is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        initial_status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
         logging_level: typing.Optional[str] = "INFO",
         rest_version: int = 6,
-        rest_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        shard_ids: typing.Union[typing.Set[int], undefined.Undefined] = undefined.Undefined(),
-        shard_count: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        rest_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        shard_ids: typing.Union[typing.Set[int], undefined.UndefinedType] = undefined.UNDEFINED,
+        shard_count: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
         token: str,
     ):
-        self._logger = klass.get_logger(self)
+        self._logger = reflect.get_logger(self)
 
         # If logging is already configured, then this does nothing.
         if logging_level is not None:
             logging.basicConfig(level=logging_level, format=self.__get_logging_format())
         self.__print_banner()
 
-        config = http_settings_.HTTPSettings() if isinstance(config, undefined.Undefined) else config
+        config = http_settings_.HTTPSettings() if config is undefined.UNDEFINED else config
 
         self._cache = cache_impl.InMemoryCacheImpl(app=self)
         self._config = config
@@ -235,7 +234,7 @@ class BotImpl(gateway_zookeeper.AbstractGatewayZookeeper, app.IBot):
     def http_settings(self) -> http_settings_.HTTPSettings:
         return self._config
 
-    def listen(self, event_type=undefined.Undefined()):
+    def listen(self, event_type=undefined.UNDEFINED):
         return self.event_dispatcher.listen(event_type)
 
     def subscribe(self, event_type, callback):

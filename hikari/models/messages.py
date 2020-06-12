@@ -320,16 +320,16 @@ class Message(bases.Entity, bases.Unique):
 
     async def edit(  # pylint:disable=line-too-long
         self,
-        text: typing.Union[undefined.Undefined, str, None] = undefined.Undefined(),
+        text: typing.Union[undefined.UndefinedType, str, None] = undefined.UNDEFINED,
         *,
-        embed: typing.Union[undefined.Undefined, embeds_.Embed, None] = undefined.Undefined(),
-        mentions_everyone: typing.Union[bool, undefined.Undefined] = undefined.Undefined(),
+        embed: typing.Union[undefined.UndefinedType, embeds_.Embed, None] = undefined.UNDEFINED,
+        mentions_everyone: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool, undefined.Undefined
-        ] = undefined.Undefined(),
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.Undefined
-        ] = undefined.Undefined(),
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
     ) -> Message:
         """Edit this message.
 
@@ -338,10 +338,10 @@ class Message(bases.Entity, bases.Unique):
 
         Parameters
         ----------
-        text : str or hikari.utilities.undefined.Undefined or None
+        text : str or hikari.utilities.undefined.UndefinedType or None
             If specified, the message text to set on the message. If `None`,
             then the content is removed if already present.
-        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.Undefined or None
+        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType or None
             If specified, the embed object to set on the message. If `None`,
             then the embed is removed if already present.
         mentions_everyone : bool
@@ -393,10 +393,10 @@ class Message(bases.Entity, bases.Unique):
 
     async def reply(  # pylint:disable=line-too-long
         self,
-        text: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        text: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         *,
-        embed: typing.Union[undefined.Undefined, embeds_.Embed] = undefined.Undefined(),
-        attachments: typing.Union[undefined.Undefined, typing.Sequence[files_.Resource]] = undefined.Undefined(),
+        embed: typing.Union[undefined.UndefinedType, embeds_.Embed] = undefined.UNDEFINED,
+        attachments: typing.Union[undefined.UndefinedType, typing.Sequence[files_.Resource]] = undefined.UNDEFINED,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
@@ -404,26 +404,26 @@ class Message(bases.Entity, bases.Unique):
         role_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
         ] = True,
-        nonce: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
     ) -> Message:
         """Create a message in the channel this message belongs to.
 
         Parameters
         ----------
-        text : str or hikari.utilities.undefined.Undefined
+        text : str or hikari.utilities.undefined.UndefinedType
             If specified, the message text to send with the message.
-        nonce : str or hikari.utilities.undefined.Undefined
+        nonce : str or hikari.utilities.undefined.UndefinedType
             If specified, an optional ID to send for opportunistic message
             creation. This doesn't serve any real purpose for general use,
             and can usually be ignored.
-        tts : bool or hikari.utilities.undefined.Undefined
+        tts : bool or hikari.utilities.undefined.UndefinedType
             If specified, whether the message will be sent as a TTS message.
-        attachments : typing.Sequence[hikari.models.files.BaseStream] or hikari.utilities.undefined.Undefined
+        attachments : typing.Sequence[hikari.models.files.BaseStream] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of attachments to upload, if desired.
             Should be between 1 and 10 objects in size (inclusive), also
             including embed attachments.
-        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.Undefined
+        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
             If specified, the embed object to send with the message.
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
@@ -531,7 +531,7 @@ class Message(bases.Entity, bases.Unique):
         self,
         emoji: typing.Union[str, emojis_.Emoji],
         *,
-        user: typing.Union[users.User, undefined.Undefined] = undefined.Undefined(),
+        user: typing.Union[users.User, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> None:
         r"""Remove a reaction from this message.
 
@@ -539,7 +539,7 @@ class Message(bases.Entity, bases.Unique):
         ----------
         emoji : str or hikari.models.emojis.Emoji
             The emoji to remove.
-        user : hikari.models.users.User or hikari.utilities.undefined.Undefined
+        user : hikari.models.users.User or hikari.utilities.undefined.UndefinedType
             The user of the reaction to remove. If unspecified, then the bot's
             reaction is removed instead.
 
@@ -573,19 +573,19 @@ class Message(bases.Entity, bases.Unique):
             If the channel or message is not found, or if the emoji is not
             found.
         """
-        if isinstance(user, undefined.Undefined):
+        if user is undefined.UNDEFINED:
             await self._app.rest.delete_my_reaction(channel=self.channel_id, message=self.id, emoji=emoji)
         else:
             await self._app.rest.delete_reaction(channel=self.channel_id, message=self.id, emoji=emoji, user=user)
 
     async def remove_all_reactions(
-        self, emoji: typing.Union[str, emojis_.Emoji, undefined.Undefined] = undefined.Undefined()
+        self, emoji: typing.Union[str, emojis_.Emoji, undefined.UndefinedType] = undefined.UNDEFINED
     ) -> None:
         r"""Remove all users' reactions for a specific emoji from the message.
 
         Parameters
         ----------
-        emoji : str or hikari.models.emojis.Emoji or hikari.utilities.undefined.Undefined
+        emoji : str or hikari.models.emojis.Emoji or hikari.utilities.undefined.UndefinedType
             The emoji to remove all reactions for. If not specified, then all
             emojis are removed.
 
@@ -611,7 +611,7 @@ class Message(bases.Entity, bases.Unique):
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         """
-        if isinstance(emoji, undefined.Undefined):
+        if emoji is undefined.UNDEFINED:
             await self._app.rest.delete_all_reactions(channel=self.channel_id, message=self.id)
         else:
             await self._app.rest.delete_all_reactions_for_emoji(channel=self.channel_id, message=self.id, emoji=emoji)

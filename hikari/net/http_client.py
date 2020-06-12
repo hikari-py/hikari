@@ -36,7 +36,6 @@ from hikari import errors
 from hikari.net import tracing
 from hikari.utilities import data_binding
 
-
 try:
     # noinspection PyProtectedMember
     RequestContextManager = aiohttp.client._RequestContextManager

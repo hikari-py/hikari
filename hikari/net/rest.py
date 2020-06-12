@@ -33,6 +33,7 @@ import aiohttp
 
 from hikari import errors
 from hikari.api import component
+from hikari.models import emojis
 from hikari.net import buckets
 from hikari.net import http_client
 from hikari.net import http_settings
@@ -41,11 +42,10 @@ from hikari.net import rate_limits
 from hikari.net import rest_utils
 from hikari.net import routes
 from hikari.net import strings
-from hikari.models import emojis
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
-from hikari.utilities import klass
+from hikari.utilities import reflect
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -90,10 +90,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         information useful for debugging this application. These logs will
         be written as DEBUG log entries. For most purposes, this should be
         left `False`.
-    token : str or hikari.utilities.undefined.Undefined
+    token : str or hikari.utilities.undefined.UndefinedType
         The bot or bearer token. If no token is to be used,
         this can be undefined.
-    token_type : str or hikari.utilities.undefined.Undefined
+    token_type : str or hikari.utilities.undefined.UndefinedType
         The type of token in use. If no token is used, this can be ignored and
         left to the default value. This can be `"Bot"` or `"Bearer"`. The
         default if not provided will be `"Bot"`.
@@ -115,16 +115,16 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         app: app_.IRESTApp,
         config: http_settings.HTTPSettings,
         debug: bool = False,
-        token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        token_type: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        rest_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        token_type: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        rest_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         version: int,
     ) -> None:
         super().__init__(
             allow_redirects=config.allow_redirects,
             connector=config.tcp_connector_factory() if config.tcp_connector_factory else None,
             debug=debug,
-            logger=klass.get_logger(self),
+            logger=reflect.get_logger(self),
             proxy_auth=config.proxy_auth,
             proxy_headers=config.proxy_headers,
             proxy_url=config.proxy_url,
@@ -139,17 +139,17 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         self._app = app
 
-        if isinstance(token, undefined.Undefined):
+        if token is undefined.UNDEFINED:
             full_token = None
         else:
-            if isinstance(token_type, undefined.Undefined):
+            if token_type is undefined.UNDEFINED:
                 token_type = strings.BOT_TOKEN
 
             full_token = f"{token_type.title()} {token}"
 
         self._token: typing.Optional[str] = full_token
 
-        if isinstance(rest_url, undefined.Undefined):
+        if rest_url is undefined.UNDEFINED:
             rest_url = strings.REST_API_URL
 
         self._rest_url = rest_url.format(self)
@@ -162,11 +162,11 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         compiled_route: routes.CompiledRoute,
         *,
-        query: typing.Union[undefined.Undefined, None, data_binding.StringMapBuilder] = undefined.Undefined(),
+        query: typing.Union[undefined.UndefinedType, None, data_binding.StringMapBuilder] = undefined.UNDEFINED,
         body: typing.Union[
-            undefined.Undefined, None, aiohttp.FormData, data_binding.JSONObjectBuilder, data_binding.JSONArray
-        ] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+            undefined.UndefinedType, None, aiohttp.FormData, data_binding.JSONObjectBuilder, data_binding.JSONArray
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         no_auth: bool = False,
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
         # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
@@ -188,12 +188,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         if self._token is not None and not no_auth:
             headers[strings.AUTHORIZATION_HEADER] = self._token
 
-        if isinstance(body, undefined.Undefined):
+        if body is undefined.UNDEFINED:
             body = None
 
         headers.put(strings.X_AUDIT_LOG_REASON_HEADER, reason)
 
-        if isinstance(query, undefined.Undefined):
+        if query is undefined.UNDEFINED:
             query = None
 
         while True:
@@ -330,14 +330,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     @staticmethod
     def _generate_allowed_mentions(
-        mentions_everyone: typing.Union[undefined.Undefined, bool],
+        mentions_everyone: typing.Union[undefined.UndefinedType, bool],
         user_mentions: typing.Union[
-            undefined.Undefined, typing.Collection[typing.Union[bases.UniqueObject, users.User]], bool
+            undefined.UndefinedType, typing.Collection[typing.Union[bases.UniqueObject, users.User]], bool
         ],
         role_mentions: typing.Union[
-            undefined.Undefined, typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool
+            undefined.UndefinedType, typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool
         ],
-    ) -> typing.Union[undefined.Undefined, data_binding.JSONObject]:
+    ) -> typing.Union[undefined.UndefinedType, data_binding.JSONObject]:
         parsed_mentions = []
         allowed_mentions = {}
 
@@ -358,7 +358,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             allowed_mentions["roles"] = list(snowflakes)
 
         if not parsed_mentions and not allowed_mentions:
-            return undefined.Undefined()
+            return undefined.UNDEFINED
 
         if parsed_mentions:
             allowed_mentions["parse"] = parsed_mentions
@@ -410,20 +410,20 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel: typing.Union[channels.PartialChannel, bases.UniqueObject],
         /,
         *,
-        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        position: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
-        topic: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        nsfw: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        bitrate: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
-        user_limit: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
-        rate_limit_per_user: typing.Union[undefined.Undefined, date.TimeSpan] = undefined.Undefined(),
+        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        position: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
+        topic: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        nsfw: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        bitrate: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
+        user_limit: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
+        rate_limit_per_user: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
         permission_overwrites: typing.Union[
-            undefined.Undefined, typing.Sequence[channels.PermissionOverwrite]
-        ] = undefined.Undefined(),
+            undefined.UndefinedType, typing.Sequence[channels.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
         parent_category: typing.Union[
-            undefined.Undefined, channels.GuildCategory, bases.UniqueObject
-        ] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+            undefined.UndefinedType, channels.GuildCategory, bases.UniqueObject
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> channels.PartialChannel:
         """Edit a channel.
 
@@ -432,26 +432,26 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to edit. This may be a channel object, or the ID of an
             existing channel.
-        name : hikari.utilities.undefined.Undefined or str
+        name : hikari.utilities.undefined.UndefinedType or str
             If provided, the new name for the channel.
-        position : hikari.utilities.undefined.Undefined or int
+        position : hikari.utilities.undefined.UndefinedType or int
             If provided, the new position for the channel.
-        topic : hikari.utilities.undefined.Undefined or str
+        topic : hikari.utilities.undefined.UndefinedType or str
             If provided, the new topic for the channel.
-        nsfw : hikari.utilities.undefined.Undefined or bool
+        nsfw : hikari.utilities.undefined.UndefinedType or bool
             If provided, whether the channel should be marked as NSFW or not.
-        bitrate : hikari.utilities.undefined.Undefined or int
+        bitrate : hikari.utilities.undefined.UndefinedType or int
             If provided, the new bitrate for the channel.
-        user_limit : hikari.utilities.undefined.Undefined or int
+        user_limit : hikari.utilities.undefined.UndefinedType or int
             If provided, the new user limit in the channel.
-        rate_limit_per_user : hikari.utilities.undefined.Undefined or datetime.timedelta or float or int
+        rate_limit_per_user : hikari.utilities.undefined.UndefinedType or datetime.timedelta or float or int
             If provided, the new rate limit per user in the channel.
-        permission_overwrites : hikari.utilities.undefined.Undefined or typing.Sequence[hikari.models.channels.PermissionOverwrite]
+        permission_overwrites : hikari.utilities.undefined.UndefinedType or typing.Sequence[hikari.models.channels.PermissionOverwrite]
             If provided, the new permission overwrites for the channel.
-        parent_category : hikari.utilities.undefined.Undefined or hikari.models.channels.GuildCategory or hikari.utilities.snowflake.Snowflake or int or str
+        parent_category : hikari.utilities.undefined.UndefinedType or hikari.models.channels.GuildCategory or hikari.utilities.snowflake.Snowflake or int or str
             If provided, the new guild category for the channel. This may be
             a category object, or the ID of an existing category.
-        reason : hikari.utilities.undefined.Undefined or str
+        reason : hikari.utilities.undefined.UndefinedType or str
             If provided, the reason that will be recorded in the audit logs.
 
         Returns
@@ -525,9 +525,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel: typing.Union[channels.GuildChannel, bases.UniqueObject],
         target: typing.Union[channels.PermissionOverwrite, users.User, guilds.Role],
         *,
-        allow: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
-        deny: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        allow: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
+        deny: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
         """Edit permissions for a target entity."""
 
@@ -538,9 +538,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         target: typing.Union[int, str, snowflake.Snowflake],
         *,
         target_type: typing.Union[channels.PermissionOverwriteType, str],
-        allow: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
-        deny: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        allow: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
+        deny: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
         """Edit permissions for a given entity ID and type."""
 
@@ -549,10 +549,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel: typing.Union[channels.GuildChannel, bases.UniqueObject],
         target: typing.Union[bases.UniqueObject, users.User, guilds.Role, channels.PermissionOverwrite],
         *,
-        target_type: typing.Union[undefined.Undefined, channels.PermissionOverwriteType, str] = undefined.Undefined(),
-        allow: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
-        deny: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        target_type: typing.Union[undefined.UndefinedType, channels.PermissionOverwriteType, str] = undefined.UNDEFINED,
+        allow: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
+        deny: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
         """Edit permissions for a specific entity in the given guild channel.
 
@@ -564,14 +564,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflake or int or str
             The channel overwrite to edit. This may be a overwrite object, or the ID of an
             existing channel.
-        target_type : hikari.utilities.undefined.Undefined or hikari.models.channels.PermissionOverwriteType or str
+        target_type : hikari.utilities.undefined.UndefinedType or hikari.models.channels.PermissionOverwriteType or str
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
-        allow : hikari.utilities.undefined.Undefined or hikari.models.permissions.Permission
+        allow : hikari.utilities.undefined.UndefinedType or hikari.models.permissions.Permission
             If provided, the new vale of all allowed permissions.
-        deny : hikari.utilities.undefined.Undefined or hikari.models.permissions.Permission
+        deny : hikari.utilities.undefined.UndefinedType or hikari.models.permissions.Permission
             If provided, the new vale of all disallowed permissions.
-        reason : hikari.utilities.undefined.Undefined or str
+        reason : hikari.utilities.undefined.UndefinedType or str
             If provided, the reason that will be recorded in the audit logs.
 
         Raises
@@ -591,7 +591,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
         """
-        if isinstance(target_type, undefined.Undefined):
+        if target_type is undefined.UNDEFINED:
             if isinstance(target, users.User):
                 target_type = channels.PermissionOverwriteType.MEMBER
             elif isinstance(target, guilds.Role):
@@ -677,13 +677,13 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel: typing.Union[channels.GuildChannel, bases.UniqueObject],
         /,
         *,
-        max_age: typing.Union[undefined.Undefined, int, float, datetime.timedelta] = undefined.Undefined(),
-        max_uses: typing.Union[undefined.Undefined, int] = undefined.Undefined(),
-        temporary: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        unique: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        target_user: typing.Union[undefined.Undefined, users.User, bases.UniqueObject] = undefined.Undefined(),
-        target_user_type: typing.Union[undefined.Undefined, invites.TargetUserType] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        max_age: typing.Union[undefined.UndefinedType, int, float, datetime.timedelta] = undefined.UNDEFINED,
+        max_uses: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
+        temporary: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        unique: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        target_user: typing.Union[undefined.UndefinedType, users.User, bases.UniqueObject] = undefined.UNDEFINED,
+        target_user_type: typing.Union[undefined.UndefinedType, invites.TargetUserType] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
         """Create an invite to the given guild channel.
 
@@ -692,20 +692,20 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to create a invite for. This may be a channel object,
             or the ID of an existing channel.
-        max_age : hikari.utilities.undefined.Undefined or datetime.timedelta or float or int
+        max_age : hikari.utilities.undefined.UndefinedType or datetime.timedelta or float or int
             If provided, the duration of the invite before expiry.
-        max_uses : hikari.utilities.undefined.Undefined or int
+        max_uses : hikari.utilities.undefined.UndefinedType or int
             If provided, the max uses the invite can have.
-        temporary : hikari.utilities.undefined.Undefined or bool
+        temporary : hikari.utilities.undefined.UndefinedType or bool
             If provided, whether the invite only grants temporary membership.
-        unique : hikari.utilities.undefined.Undefined or bool
+        unique : hikari.utilities.undefined.UndefinedType or bool
             If provided, wheter the invite should be unique.
-        target_user : hikari.utilities.undefined.Undefined or hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str
+        target_user : hikari.utilities.undefined.UndefinedType or hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str
             If provided, the target user id for this invite. This may be a
             user object, or the ID of an existing user.
-        target_user_type : hikari.utilities.undefined.Undefined or hikari.models.invites.TargetUserType or int
+        target_user_type : hikari.utilities.undefined.UndefinedType or hikari.models.invites.TargetUserType or int
             If provided, the type of target user for this invite.
-        reason : hikari.utilities.undefined.Undefined or str
+        reason : hikari.utilities.undefined.UndefinedType or str
             If provided, the reason that will be recorded in the audit logs.
 
         Returns
@@ -910,9 +910,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
         /,
         *,
-        before: typing.Union[undefined.Undefined, datetime.datetime, bases.UniqueObject] = undefined.Undefined(),
-        after: typing.Union[undefined.Undefined, datetime.datetime, bases.UniqueObject] = undefined.Undefined(),
-        around: typing.Union[undefined.Undefined, datetime.datetime, bases.UniqueObject] = undefined.Undefined(),
+        before: typing.Union[undefined.UndefinedType, datetime.datetime, bases.UniqueObject] = undefined.UNDEFINED,
+        after: typing.Union[undefined.UndefinedType, datetime.datetime, bases.UniqueObject] = undefined.UNDEFINED,
+        around: typing.Union[undefined.UndefinedType, datetime.datetime, bases.UniqueObject] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[messages_.Message]:
         """Browse the message history for a given text channel.
 
@@ -921,13 +921,13 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to fetch messages in. This may be a channel object, or
             the ID of an existing channel.
-        before : hikari.utilities.undefined.Undefined or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
+        before : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
             If provided, fetch messages before this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake.
-        after : hikari.utilities.undefined.Undefined or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
+        after : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
             If provided, fetch messages after this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake.
-        around : hikari.utilities.undefined.Undefined or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
+        around : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
             If provided, fetch messages around this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake.
 
@@ -956,14 +956,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             this function itself will not raise anything (other than
             `TypeError`).
         """
-        if undefined.Undefined.count(before, after, around) < 2:
+        if undefined.count(before, after, around) < 2:
             raise TypeError("Expected no kwargs, or maximum of one of 'before', 'after', 'around'")
 
-        if not isinstance(before, undefined.Undefined):
+        if not before is undefined.UNDEFINED:
             direction, timestamp = "before", before
-        elif not isinstance(after, undefined.Undefined):
+        elif not after is undefined.UNDEFINED:
             direction, timestamp = "after", after
-        elif not isinstance(around, undefined.Undefined):
+        elif not around is undefined.UNDEFINED:
             direction, timestamp = "around", around
         else:
             direction, timestamp = "before", snowflake.Snowflake.max()
@@ -1015,14 +1015,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
     async def create_message(
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        text: typing.Union[undefined.Undefined, typing.Any] = undefined.Undefined(),
+        text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
         *,
-        embed: typing.Union[undefined.Undefined, embeds_.Embed] = undefined.Undefined(),
+        embed: typing.Union[undefined.UndefinedType, embeds_.Embed] = undefined.UNDEFINED,
         attachments: typing.Union[
-            undefined.Undefined, typing.Sequence[typing.Union[str, files.Resource]]
-        ] = undefined.Undefined(),
-        tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        nonce: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+            undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
+        ] = undefined.UNDEFINED,
+        tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]], bool] = True,
@@ -1034,16 +1034,16 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
             The channel to create the message in. This may be a channel object, or
             the ID of an existing channel.
-        text : hikari.utilities.undefined.Undefined or str
+        text : hikari.utilities.undefined.UndefinedType or str
             If specified, the message contents.
-        embed : hikari.utilities.undefined.Undefined or hikari.models.embeds.Embed
+        embed : hikari.utilities.undefined.UndefinedType or hikari.models.embeds.Embed
             If specified, the message embed.
-        attachments : hikari.utilities.undefined.Undefined or typing.Sequence[str or hikari.utilities.files.Resource]
+        attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[str or hikari.utilities.files.Resource]
             If specified, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        tts : hikari.utilities.undefined.Undefined or bool
+        tts : hikari.utilities.undefined.UndefinedType or bool
             If specified, whether the message will be TTS (Text To Speech).
-        nonce : hikari.utilities.undefined.Undefined or str
+        nonce : hikari.utilities.undefined.UndefinedType or str
             If specified, a nonce that can be used for optimistic message sending.
         mentions_everyone : bool
             If specified, whether the message should parse @everyone/@here mentions.
@@ -1092,12 +1092,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("nonce", nonce)
         body.put("tts", tts)
 
-        if isinstance(attachments, undefined.Undefined):
+        if attachments is undefined.UNDEFINED:
             final_attachments: typing.List[files.Resource] = []
         else:
             final_attachments = [files.ensure_resource(a) for a in attachments]
 
-        if not isinstance(embed, undefined.Undefined):
+        if not embed is undefined.UNDEFINED:
             embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
             body.put("embed", embed_payload)
             final_attachments.extend(embed_attachments)
@@ -1128,17 +1128,17 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self,
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
         message: typing.Union[messages_.Message, bases.UniqueObject],
-        text: typing.Union[undefined.Undefined, None, typing.Any] = undefined.Undefined(),
+        text: typing.Union[undefined.UndefinedType, None, typing.Any] = undefined.UNDEFINED,
         *,
-        embed: typing.Union[undefined.Undefined, None, embeds_.Embed] = undefined.Undefined(),
-        mentions_everyone: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        embed: typing.Union[undefined.UndefinedType, None, embeds_.Embed] = undefined.UNDEFINED,
+        mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         user_mentions: typing.Union[
-            undefined.Undefined, typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool
-        ] = undefined.Undefined(),
+            undefined.UndefinedType, typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool
+        ] = undefined.UNDEFINED,
         role_mentions: typing.Union[
-            undefined.Undefined, typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool
-        ] = undefined.Undefined(),
-        flags: typing.Union[undefined.Undefined, messages_.MessageFlag] = undefined.Undefined(),
+            undefined.UndefinedType, typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool
+        ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Edit an existing message in a given channel.
 
@@ -1387,13 +1387,13 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         channel: typing.Union[channels.TextChannel, bases.UniqueObject],
         name: str,
         *,
-        avatar: typing.Union[undefined.Undefined, files.Resource] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        avatar: typing.Union[undefined.UndefinedType, files.Resource] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
         route = routes.POST_WEBHOOK.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
-        if not isinstance(avatar, undefined.Undefined):
+        if not avatar is undefined.UNDEFINED:
             async with avatar.stream(executor=self._app.thread_pool_executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
@@ -1406,9 +1406,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         webhook: typing.Union[webhooks.Webhook, bases.UniqueObject],
         /,
         *,
-        token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
-        if isinstance(token, undefined.Undefined):
+        if token is undefined.UNDEFINED:
             route = routes.GET_WEBHOOK.compile(webhook=webhook)
         else:
             route = routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
@@ -1437,13 +1437,13 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         webhook: typing.Union[webhooks.Webhook, bases.UniqueObject],
         /,
         *,
-        token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        avatar: typing.Union[None, undefined.Undefined, files.Resource] = undefined.Undefined(),
-        channel: typing.Union[undefined.Undefined, channels.TextChannel, bases.UniqueObject] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        avatar: typing.Union[None, undefined.UndefinedType, files.Resource] = undefined.UNDEFINED,
+        channel: typing.Union[undefined.UndefinedType, channels.TextChannel, bases.UniqueObject] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
-        if isinstance(token, undefined.Undefined):
+        if token is undefined.UNDEFINED:
             route = routes.PATCH_WEBHOOK.compile(webhook=webhook)
         else:
             route = routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
@@ -1454,7 +1454,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         if avatar is None:
             body.put("avatar", None)
-        elif not isinstance(avatar, undefined.Undefined):
+        elif not avatar is undefined.UNDEFINED:
             async with avatar.stream(executor=self._app.thread_pool_executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
@@ -1467,9 +1467,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         webhook: typing.Union[webhooks.Webhook, bases.UniqueObject],
         /,
         *,
-        token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
-        if isinstance(token, undefined.Undefined):
+        if token is undefined.UNDEFINED:
             route = routes.DELETE_WEBHOOK.compile(webhook=webhook)
         else:
             route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
@@ -1478,29 +1478,29 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
     async def execute_webhook(
         self,
         webhook: typing.Union[webhooks.Webhook, bases.UniqueObject],
-        text: typing.Union[undefined.Undefined, typing.Any] = undefined.Undefined(),
+        text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
         *,
-        token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        username: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        avatar_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        embeds: typing.Union[undefined.Undefined, typing.Sequence[embeds_.Embed]] = undefined.Undefined(),
-        attachments: typing.Union[undefined.Undefined, typing.Sequence[files.Resource]] = undefined.Undefined(),
-        tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        username: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        avatar_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        embeds: typing.Union[undefined.UndefinedType, typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        attachments: typing.Union[undefined.UndefinedType, typing.Sequence[files.Resource]] = undefined.UNDEFINED,
+        tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool] = True,
     ) -> messages_.Message:
-        if isinstance(token, undefined.Undefined):
+        if token is undefined.UNDEFINED:
             route = routes.POST_WEBHOOK.compile(webhook=webhook)
             no_auth = False
         else:
             route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
             no_auth = True
 
-        attachments = [] if isinstance(attachments, undefined.Undefined) else [a for a in attachments]
+        attachments = [] if attachments is undefined.UNDEFINED else [a for a in attachments]
         serialized_embeds = []
 
-        if not isinstance(embeds, undefined.Undefined):
+        if not embeds is undefined.UNDEFINED:
             for embed in embeds:
                 embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
                 serialized_embeds.append(embed_payload)
@@ -1571,8 +1571,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
     async def edit_my_user(
         self,
         *,
-        username: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        avatar: typing.Union[undefined.Undefined, None, files.Resource] = undefined.Undefined(),
+        username: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        avatar: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
     ) -> users.OwnUser:
         route = routes.PATCH_MY_USER.compile()
         body = data_binding.JSONObjectBuilder()
@@ -1599,10 +1599,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         *,
         newest_first: bool = False,
         start_at: typing.Union[
-            undefined.Undefined, guilds.PartialGuild, bases.UniqueObject, datetime.datetime
-        ] = undefined.Undefined(),
+            undefined.UndefinedType, guilds.PartialGuild, bases.UniqueObject, datetime.datetime
+        ] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[applications.OwnGuild]:
-        if isinstance(start_at, undefined.Undefined):
+        if start_at is undefined.UNDEFINED:
             start_at = snowflake.Snowflake.max() if newest_first else snowflake.Snowflake.min()
         elif isinstance(start_at, datetime.datetime):
             start_at = snowflake.Snowflake.from_datetime(start_at)
@@ -1633,12 +1633,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         user: typing.Union[users.User, bases.UniqueObject],
         *,
-        nick: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        nick: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         roles: typing.Union[
-            undefined.Undefined, typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]]
-        ] = undefined.Undefined(),
-        mute: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        deaf: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]]
+        ] = undefined.UNDEFINED,
+        mute: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        deaf: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
     ) -> typing.Optional[guilds.Member]:
         route = routes.PUT_GUILD_MEMBER.compile(guild=guild, user=user)
         body = data_binding.JSONObjectBuilder()
@@ -1672,20 +1672,20 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         /,
         *,
-        before: typing.Union[undefined.Undefined, datetime.datetime, bases.UniqueObject] = undefined.Undefined(),
-        user: typing.Union[undefined.Undefined, users.User, bases.UniqueObject] = undefined.Undefined(),
-        event_type: typing.Union[undefined.Undefined, audit_logs.AuditLogEventType] = undefined.Undefined(),
+        before: typing.Union[undefined.UndefinedType, datetime.datetime, bases.UniqueObject] = undefined.UNDEFINED,
+        user: typing.Union[undefined.UndefinedType, users.User, bases.UniqueObject] = undefined.UNDEFINED,
+        event_type: typing.Union[undefined.UndefinedType, audit_logs.AuditLogEventType] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         guild = str(int(guild))
 
-        if isinstance(before, undefined.Undefined):
+        if before is undefined.UNDEFINED:
             before = str(snowflake.Snowflake.max())
         elif isinstance(before, datetime.datetime):
             before = str(snowflake.Snowflake.from_datetime(before))
         else:
             before = str(int(before))
 
-        if not isinstance(user, undefined.Undefined):
+        if not user is undefined.UNDEFINED:
             user = str(int(user))
 
         return iterators.AuditLogIterator(self._app, self._request, guild, before, user, event_type)
@@ -1718,14 +1718,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         image: files.Resource,
         *,
         roles: typing.Union[
-            undefined.Undefined, typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]]
-        ] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]]
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
         route = routes.POST_GUILD_EMOJIS.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
-        if not isinstance(image, undefined.Undefined):
+        if not image is undefined.UNDEFINED:
             async with image.stream(executor=self._app.thread_pool_executor) as stream:
                 body.put("image", await stream.data_uri())
 
@@ -1741,11 +1741,11 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
         emoji: typing.Union[emojis.CustomEmoji, bases.UniqueObject],
         *,
-        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         roles: typing.Union[
-            undefined.Undefined, typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]]
-        ] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]]
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
         route = routes.PATCH_GUILD_EMOJI.compile(
             guild=guild, emoji=emoji.id if isinstance(emoji, emojis.CustomEmoji) else emoji,
@@ -1792,28 +1792,28 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         /,
         *,
-        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        region: typing.Union[undefined.Undefined, voices.VoiceRegion, str] = undefined.Undefined(),
-        verification_level: typing.Union[undefined.Undefined, guilds.GuildVerificationLevel] = undefined.Undefined(),
+        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        region: typing.Union[undefined.UndefinedType, voices.VoiceRegion, str] = undefined.UNDEFINED,
+        verification_level: typing.Union[undefined.UndefinedType, guilds.GuildVerificationLevel] = undefined.UNDEFINED,
         default_message_notifications: typing.Union[
-            undefined.Undefined, guilds.GuildMessageNotificationsLevel
-        ] = undefined.Undefined(),
+            undefined.UndefinedType, guilds.GuildMessageNotificationsLevel
+        ] = undefined.UNDEFINED,
         explicit_content_filter_level: typing.Union[
-            undefined.Undefined, guilds.GuildExplicitContentFilterLevel
-        ] = undefined.Undefined(),
+            undefined.UndefinedType, guilds.GuildExplicitContentFilterLevel
+        ] = undefined.UNDEFINED,
         afk_channel: typing.Union[
-            undefined.Undefined, channels.GuildVoiceChannel, bases.UniqueObject
-        ] = undefined.Undefined(),
-        afk_timeout: typing.Union[undefined.Undefined, date.TimeSpan] = undefined.Undefined(),
-        icon: typing.Union[undefined.Undefined, None, files.Resource] = undefined.Undefined(),
-        owner: typing.Union[undefined.Undefined, users.User, bases.UniqueObject] = undefined.Undefined(),
-        splash: typing.Union[undefined.Undefined, None, files.Resource] = undefined.Undefined(),
-        banner: typing.Union[undefined.Undefined, None, files.Resource] = undefined.Undefined(),
-        system_channel: typing.Union[undefined.Undefined, channels.GuildTextChannel] = undefined.Undefined(),
-        rules_channel: typing.Union[undefined.Undefined, channels.GuildTextChannel] = undefined.Undefined(),
-        public_updates_channel: typing.Union[undefined.Undefined, channels.GuildTextChannel] = undefined.Undefined(),
-        preferred_locale: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+            undefined.UndefinedType, channels.GuildVoiceChannel, bases.UniqueObject
+        ] = undefined.UNDEFINED,
+        afk_timeout: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
+        icon: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
+        owner: typing.Union[undefined.UndefinedType, users.User, bases.UniqueObject] = undefined.UNDEFINED,
+        splash: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
+        banner: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
+        system_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
+        rules_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
+        public_updates_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
+        preferred_locale: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> guilds.Guild:
         route = routes.PATCH_GUILD.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
@@ -1834,19 +1834,19 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         if icon is None:
             body.put("icon", None)
-        elif not isinstance(icon, undefined.Undefined):
+        elif not icon is undefined.UNDEFINED:
             async with icon.stream(executor=self._app.thread_pool_executor) as stream:
                 body.put("icon", await stream.data_uri())
 
         if splash is None:
             body.put("splash", None)
-        elif not isinstance(splash, undefined.Undefined):
+        elif not splash is undefined.UNDEFINED:
             async with splash.stream(executor=self._app.thread_pool_executor) as stream:
                 body.put("splash", await stream.data_uri())
 
         if banner is None:
             body.put("banner", None)
-        elif not isinstance(banner, undefined.Undefined):
+        elif not banner is undefined.UNDEFINED:
             async with banner.stream(executor=self._app.thread_pool_executor) as stream:
                 body.put("banner", await stream.data_uri())
 
@@ -1873,15 +1873,17 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         name: str,
         *,
-        position: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
-        topic: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
-        nsfw: typing.Union[bool, undefined.Undefined] = undefined.Undefined(),
-        rate_limit_per_user: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        position: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
+        topic: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
+        nsfw: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
+        rate_limit_per_user: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
         permission_overwrites: typing.Union[
-            typing.Sequence[channels.PermissionOverwrite], undefined.Undefined
-        ] = undefined.Undefined(),
-        category: typing.Union[channels.GuildCategory, bases.UniqueObject, undefined.Undefined] = undefined.Undefined(),
-        reason: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
+            typing.Sequence[channels.PermissionOverwrite], undefined.UndefinedType
+        ] = undefined.UNDEFINED,
+        category: typing.Union[
+            channels.GuildCategory, bases.UniqueObject, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channels.GuildTextChannel:
         channel = await self._create_guild_channel(
             guild,
@@ -1902,15 +1904,17 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         name: str,
         *,
-        position: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
-        topic: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
-        nsfw: typing.Union[bool, undefined.Undefined] = undefined.Undefined(),
-        rate_limit_per_user: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        position: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
+        topic: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
+        nsfw: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
+        rate_limit_per_user: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
         permission_overwrites: typing.Union[
-            typing.Sequence[channels.PermissionOverwrite], undefined.Undefined
-        ] = undefined.Undefined(),
-        category: typing.Union[channels.GuildCategory, bases.UniqueObject, undefined.Undefined] = undefined.Undefined(),
-        reason: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
+            typing.Sequence[channels.PermissionOverwrite], undefined.UndefinedType
+        ] = undefined.UNDEFINED,
+        category: typing.Union[
+            channels.GuildCategory, bases.UniqueObject, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channels.GuildNewsChannel:
         channel = await self._create_guild_channel(
             guild,
@@ -1931,15 +1935,17 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         name: str,
         *,
-        position: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
-        nsfw: typing.Union[bool, undefined.Undefined] = undefined.Undefined(),
-        user_limit: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
-        bitrate: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        position: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
+        nsfw: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
+        user_limit: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
+        bitrate: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
         permission_overwrites: typing.Union[
-            typing.Sequence[channels.PermissionOverwrite], undefined.Undefined
-        ] = undefined.Undefined(),
-        category: typing.Union[channels.GuildCategory, bases.UniqueObject, undefined.Undefined] = undefined.Undefined(),
-        reason: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
+            typing.Sequence[channels.PermissionOverwrite], undefined.UndefinedType
+        ] = undefined.UNDEFINED,
+        category: typing.Union[
+            channels.GuildCategory, bases.UniqueObject, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channels.GuildVoiceChannel:
         channel = await self._create_guild_channel(
             guild,
@@ -1960,12 +1966,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         name: str,
         *,
-        position: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
-        nsfw: typing.Union[bool, undefined.Undefined] = undefined.Undefined(),
+        position: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
+        nsfw: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
         permission_overwrites: typing.Union[
-            typing.Sequence[channels.PermissionOverwrite], undefined.Undefined
-        ] = undefined.Undefined(),
-        reason: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
+            typing.Sequence[channels.PermissionOverwrite], undefined.UndefinedType
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channels.GuildCategory:
         channel = await self._create_guild_channel(
             guild,
@@ -1984,17 +1990,19 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         name: str,
         type_: channels.ChannelType,
         *,
-        position: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
-        topic: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
-        nsfw: typing.Union[bool, undefined.Undefined] = undefined.Undefined(),
-        bitrate: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
-        user_limit: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
-        rate_limit_per_user: typing.Union[int, undefined.Undefined] = undefined.Undefined(),
+        position: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
+        topic: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
+        nsfw: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
+        bitrate: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
+        user_limit: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
+        rate_limit_per_user: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
         permission_overwrites: typing.Union[
-            typing.Sequence[channels.PermissionOverwrite], undefined.Undefined
-        ] = undefined.Undefined(),
-        category: typing.Union[channels.GuildCategory, bases.UniqueObject, undefined.Undefined] = undefined.Undefined(),
-        reason: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
+            typing.Sequence[channels.PermissionOverwrite], undefined.UndefinedType
+        ] = undefined.UNDEFINED,
+        category: typing.Union[
+            channels.GuildCategory, bases.UniqueObject, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channels.GuildChannel:
         route = routes.POST_GUILD_CHANNELS.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
@@ -2045,16 +2053,16 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         user: typing.Union[users.User, bases.UniqueObject],
         *,
-        nick: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        nick: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         roles: typing.Union[
-            undefined.Undefined, typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]]
-        ] = undefined.Undefined(),
-        mute: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        deaf: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]]
+        ] = undefined.UNDEFINED,
+        mute: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        deaf: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         voice_channel: typing.Union[
-            undefined.Undefined, channels.GuildVoiceChannel, bases.UniqueObject, None
-        ] = undefined.Undefined(),
-        reason: typing.Union[str, undefined.Undefined] = undefined.Undefined(),
+            undefined.UndefinedType, channels.GuildVoiceChannel, bases.UniqueObject, None
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PATCH_GUILD_MEMBER.compile(guild=guild, user=user)
         body = data_binding.JSONObjectBuilder()
@@ -2065,7 +2073,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         if voice_channel is None:
             body.put("channel_id", None)
-        elif not isinstance(voice_channel, undefined.Undefined):
+        elif not voice_channel is undefined.UNDEFINED:
             body.put_snowflake("channel_id", voice_channel)
 
         await self._request(route, body=body, reason=reason)
@@ -2075,7 +2083,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         nick: typing.Optional[str],
         *,
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PATCH_MY_GUILD_NICKNAME.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
@@ -2088,7 +2096,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         user: typing.Union[users.User, bases.UniqueObject],
         role: typing.Union[guilds.Role, bases.UniqueObject],
         *,
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PUT_GUILD_MEMBER_ROLE.compile(guild=guild, user=user, role=role)
         await self._request(route, reason=reason)
@@ -2099,7 +2107,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         user: typing.Union[users.User, bases.UniqueObject],
         role: typing.Union[guilds.Role, bases.UniqueObject],
         *,
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_GUILD_MEMBER_ROLE.compile(guild=guild, user=user, role=role)
         await self._request(route, reason=reason)
@@ -2109,7 +2117,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         user: typing.Union[users.User, bases.UniqueObject],
         *,
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_GUILD_MEMBER.compile(guild=guild, user=user,)
         await self._request(route, reason=reason)
@@ -2119,7 +2127,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         user: typing.Union[users.User, bases.UniqueObject],
         *,
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PUT_GUILD_BAN.compile(guild=guild, user=user)
         await self._request(route, reason=reason)
@@ -2129,7 +2137,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         user: typing.Union[users.User, bases.UniqueObject],
         *,
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_GUILD_BAN.compile(guild=guild, user=user)
         await self._request(route, reason=reason)
@@ -2163,15 +2171,15 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         /,
         *,
-        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        permissions: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
-        color: typing.Union[undefined.Undefined, colors.Color] = undefined.Undefined(),
-        colour: typing.Union[undefined.Undefined, colors.Color] = undefined.Undefined(),
-        hoist: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        mentionable: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        permissions: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
+        color: typing.Union[undefined.UndefinedType, colors.Color] = undefined.UNDEFINED,
+        colour: typing.Union[undefined.UndefinedType, colors.Color] = undefined.UNDEFINED,
+        hoist: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        mentionable: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> guilds.Role:
-        if not undefined.Undefined.count(color, colour):
+        if not undefined.count(color, colour):
             raise TypeError("Can not specify 'color' and 'colour' together.")
 
         route = routes.POST_GUILD_ROLES.compile(guild=guild)
@@ -2201,15 +2209,15 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         role: typing.Union[guilds.Role, bases.UniqueObject],
         *,
-        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        permissions: typing.Union[undefined.Undefined, permissions_.Permission] = undefined.Undefined(),
-        color: typing.Union[undefined.Undefined, colors.Color] = undefined.Undefined(),
-        colour: typing.Union[undefined.Undefined, colors.Color] = undefined.Undefined(),
-        hoist: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        mentionable: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        permissions: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
+        color: typing.Union[undefined.UndefinedType, colors.Color] = undefined.UNDEFINED,
+        colour: typing.Union[undefined.UndefinedType, colors.Color] = undefined.UNDEFINED,
+        hoist: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        mentionable: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> guilds.Role:
-        if not undefined.Undefined.count(color, colour):
+        if not undefined.count(color, colour):
             raise TypeError("Can not specify 'color' and 'colour' together.")
 
         route = routes.PATCH_GUILD_ROLE.compile(guild=guild, role=role)
@@ -2249,7 +2257,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         days: int,
         *,
-        reason: typing.Union[undefined.Undefined, str],
+        reason: typing.Union[undefined.UndefinedType, str],
     ) -> int:
         route = routes.POST_GUILD_PRUNE.compile(guild=guild)
         query = data_binding.StringMapBuilder()
@@ -2288,10 +2296,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         integration: typing.Union[guilds.Integration, bases.UniqueObject],
         *,
-        expire_behaviour: typing.Union[undefined.Undefined, guilds.IntegrationExpireBehaviour] = undefined.Undefined(),
-        expire_grace_period: typing.Union[undefined.Undefined, date.TimeSpan] = undefined.Undefined(),
-        enable_emojis: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        expire_behaviour: typing.Union[
+            undefined.UndefinedType, guilds.IntegrationExpireBehaviour
+        ] = undefined.UNDEFINED,
+        expire_grace_period: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
+        enable_emojis: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PATCH_GUILD_INTEGRATION.compile(guild=guild, integration=integration)
         body = data_binding.JSONObjectBuilder()
@@ -2306,7 +2316,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, bases.UniqueObject],
         integration: typing.Union[guilds.Integration, bases.UniqueObject],
         *,
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_GUILD_INTEGRATION.compile(guild=guild, integration=integration)
         await self._request(route, reason=reason)
@@ -2331,10 +2341,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         /,
         *,
         channel: typing.Union[
-            undefined.Undefined, channels.GuildChannel, bases.UniqueObject, None
-        ] = undefined.Undefined(),
-        enabled: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+            undefined.UndefinedType, channels.GuildChannel, bases.UniqueObject, None
+        ] = undefined.UNDEFINED,
+        enabled: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> guilds.GuildWidget:
         route = routes.PATCH_GUILD_WIDGET.compile(guild=guild)
 
@@ -2342,7 +2352,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("enabled", enabled)
         if channel is None:
             body.put("channel", None)
-        elif not isinstance(channel, undefined.Undefined):
+        elif not channel is undefined.UNDEFINED:
             body.put_snowflake("channel", channel)
 
         raw_response = await self._request(route, body=body, reason=reason)

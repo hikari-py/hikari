@@ -406,8 +406,8 @@ class AuditLogIterator(LazyIterator["audit_logs.AuditLog"]):
         ],
         guild_id: str,
         before: str,
-        user_id: typing.Union[str, undefined.Undefined],
-        action_type: typing.Union[int, undefined.Undefined],
+        user_id: typing.Union[str, undefined.UndefinedType],
+        action_type: typing.Union[int, undefined.UndefinedType],
     ) -> None:
         self._action_type = action_type
         self._app = app

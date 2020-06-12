@@ -24,39 +24,29 @@ from tests.hikari import _helpers
 
 class TestUndefined:
     def test_repr(self):
-        assert repr(undefined.Undefined()) == "Undefined()"
+        assert repr(undefined.UNDEFINED) == "Undefined()"
 
     def test_str(self):
-        assert str(undefined.Undefined()) == "UNDEFINED"
+        assert str(undefined.UNDEFINED) == "UNDEFINED"
 
     def test_bool(self):
-        assert bool(undefined.Undefined()) is False
+        assert bool(undefined.UNDEFINED) is False
 
     # noinspection PyComparisonWithNone
     def test_singleton_behaviour(self):
-        assert undefined.Undefined() is undefined.Undefined()
-        assert undefined.Undefined() == undefined.Undefined()
-        assert undefined.Undefined() != None
-        assert undefined.Undefined() != False
+        assert undefined.UNDEFINED is undefined.UNDEFINED
+        assert undefined.UNDEFINED == undefined.UNDEFINED
+        assert undefined.UNDEFINED != None
+        assert undefined.UNDEFINED != False
 
     @_helpers.assert_raises(type_=TypeError)
     def test_cannot_subclass(self):
-        class _(undefined.Undefined):
+        class _(undefined.UndefinedType):
             pass
 
     def test_count(self):
-        assert undefined.Undefined.count(9, 18, undefined.Undefined(), 36, undefined.Undefined(), 54) == 2
+        assert undefined.count(9, 18, undefined.UNDEFINED, 36, undefined.UNDEFINED, 54) == 2
 
-    def test_iter(self):
-        with pytest.raises(StopIteration):
-            next(iter(undefined.Undefined()))
-
-    def test_modify(self):
-        u = undefined.Undefined()
-        with pytest.raises(TypeError):
-            u.foo = 12
-
-    def test_delete(self):
-        u = undefined.Undefined()
-        with pytest.raises(TypeError):
-            del u.count
+    @_helpers.assert_raises(type_=TypeError)
+    def test_cannot_reinstatiate(self):
+        type(undefined.UNDEFINED)()

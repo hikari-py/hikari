@@ -27,7 +27,7 @@ import urllib.parse
 
 
 if typing.TYPE_CHECKING:
-    from hikari.utilities import snowflake
+    pass
 
 
 BASE_CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"

@@ -1233,7 +1233,7 @@ class TestEntityFactoryImpl:
         assert member.is_deaf is False
         assert member.is_mute is True
         assert isinstance(member, guild_models.Member)
-        assert member.joined_at is undefined.Undefined()
+        assert member.joined_at is undefined.UNDEFINED
 
     def test_deserialize_member_with_undefined_fields(self, entity_factory_impl, user_payload):
         member = entity_factory_impl.deserialize_member(
@@ -1243,10 +1243,10 @@ class TestEntityFactoryImpl:
                 "user": user_payload,
             }
         )
-        assert member.nickname is undefined.Undefined()
-        assert member.premium_since is undefined.Undefined()
-        assert member.is_deaf is undefined.Undefined()
-        assert member.is_mute is undefined.Undefined()
+        assert member.nickname is undefined.UNDEFINED
+        assert member.premium_since is undefined.UNDEFINED
+        assert member.is_deaf is undefined.UNDEFINED
+        assert member.is_mute is undefined.UNDEFINED
 
     def test_deserialize_member_with_passed_through_user_object(self, entity_factory_impl):
         mock_user = mock.MagicMock(user_models.User)
@@ -2190,12 +2190,12 @@ class TestEntityFactoryImpl:
         assert presence.client_status.web is presence_models.Status.OFFLINE
         # PresenceUser
         assert presence.user.id == 42
-        assert presence.user.discriminator is undefined.Undefined()
-        assert presence.user.username is undefined.Undefined()
-        assert presence.user.avatar_hash is undefined.Undefined()
-        assert presence.user.is_bot is undefined.Undefined()
-        assert presence.user.is_system is undefined.Undefined()
-        assert presence.user.flags is undefined.Undefined()
+        assert presence.user.discriminator is undefined.UNDEFINED
+        assert presence.user.username is undefined.UNDEFINED
+        assert presence.user.avatar_hash is undefined.UNDEFINED
+        assert presence.user.is_bot is undefined.UNDEFINED
+        assert presence.user.is_system is undefined.UNDEFINED
+        assert presence.user.flags is undefined.UNDEFINED
 
     def test_deserialize_member_presence_with_unset_activity_fields(self, entity_factory_impl, user_payload):
         presence = entity_factory_impl.deserialize_member_presence(
@@ -2885,29 +2885,29 @@ class TestEntityFactoryImpl:
         message_update = entity_factory_impl.deserialize_message_update_event({"id": "42424242"})
 
         assert message_update.message.id == 42424242
-        assert message_update.message.channel_id is undefined.Undefined()
-        assert message_update.message.guild_id is undefined.Undefined()
-        assert message_update.message.author is undefined.Undefined()
-        assert message_update.message.member is undefined.Undefined()
-        assert message_update.message.content is undefined.Undefined()
-        assert message_update.message.timestamp is undefined.Undefined()
-        assert message_update.message.edited_timestamp is undefined.Undefined()
-        assert message_update.message.is_tts is undefined.Undefined()
-        assert message_update.message.is_mentioning_everyone is undefined.Undefined()
-        assert message_update.message.user_mentions is undefined.Undefined()
-        assert message_update.message.role_mentions is undefined.Undefined()
-        assert message_update.message.channel_mentions is undefined.Undefined()
-        assert message_update.message.attachments is undefined.Undefined()
-        assert message_update.message.embeds is undefined.Undefined()
-        assert message_update.message.reactions is undefined.Undefined()
-        assert message_update.message.is_pinned is undefined.Undefined()
-        assert message_update.message.webhook_id is undefined.Undefined()
-        assert message_update.message.type is undefined.Undefined()
-        assert message_update.message.activity is undefined.Undefined()
-        assert message_update.message.application is undefined.Undefined()
-        assert message_update.message.message_reference is undefined.Undefined()
-        assert message_update.message.flags is undefined.Undefined()
-        assert message_update.message.nonce is undefined.Undefined()
+        assert message_update.message.channel_id is undefined.UNDEFINED
+        assert message_update.message.guild_id is undefined.UNDEFINED
+        assert message_update.message.author is undefined.UNDEFINED
+        assert message_update.message.member is undefined.UNDEFINED
+        assert message_update.message.content is undefined.UNDEFINED
+        assert message_update.message.timestamp is undefined.UNDEFINED
+        assert message_update.message.edited_timestamp is undefined.UNDEFINED
+        assert message_update.message.is_tts is undefined.UNDEFINED
+        assert message_update.message.is_mentioning_everyone is undefined.UNDEFINED
+        assert message_update.message.user_mentions is undefined.UNDEFINED
+        assert message_update.message.role_mentions is undefined.UNDEFINED
+        assert message_update.message.channel_mentions is undefined.UNDEFINED
+        assert message_update.message.attachments is undefined.UNDEFINED
+        assert message_update.message.embeds is undefined.UNDEFINED
+        assert message_update.message.reactions is undefined.UNDEFINED
+        assert message_update.message.is_pinned is undefined.UNDEFINED
+        assert message_update.message.webhook_id is undefined.UNDEFINED
+        assert message_update.message.type is undefined.UNDEFINED
+        assert message_update.message.activity is undefined.UNDEFINED
+        assert message_update.message.application is undefined.UNDEFINED
+        assert message_update.message.message_reference is undefined.UNDEFINED
+        assert message_update.message.flags is undefined.UNDEFINED
+        assert message_update.message.nonce is undefined.UNDEFINED
 
     def test_deserialize_message_update_event_with_null_fields(self, entity_factory_impl):
         message_update = entity_factory_impl.deserialize_message_update_event(

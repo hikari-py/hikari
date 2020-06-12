@@ -196,7 +196,7 @@ class IEventDispatcher(component.IComponent, abc.ABC):
 
     @abc.abstractmethod
     def listen(
-        self, event_type: typing.Union[undefined.Undefined, typing.Type[_EventT]] = undefined.Undefined(),
+        self, event_type: typing.Union[undefined.UndefinedType, typing.Type[_EventT]] = undefined.UNDEFINED,
     ) -> typing.Callable[[_CallbackT], _CallbackT]:
         """Generate a decorator to subscribe a callback to an event type.
 
@@ -204,7 +204,7 @@ class IEventDispatcher(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        event_type : hikari.utilities.undefined.Undefined or typing.Type[hikari.events.base.HikariEvent]
+        event_type : hikari.utilities.undefined.UndefinedType or typing.Type[hikari.events.base.HikariEvent]
             The event type to subscribe to. The implementation may allow this
             to be undefined. If this is the case, the event type will be inferred
             instead from the type hints on the function signature.
