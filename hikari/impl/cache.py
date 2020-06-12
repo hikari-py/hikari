@@ -33,9 +33,9 @@ if typing.TYPE_CHECKING:
 class InMemoryCacheImpl(cache.ICache):
     """In-memory cache implementation."""
 
-    def __init__(self, app: app_.IApp) -> None:
+    def __init__(self, app: app_.IRESTApp) -> None:
         self._app = app
 
     @property
-    def app(self) -> app_.IApp:
+    def app(self) -> app_.IRESTApp:
         return self._app

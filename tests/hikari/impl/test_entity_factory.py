@@ -72,8 +72,8 @@ def test__deserialize_max_age_returns_null():
 
 class TestEntityFactoryImpl:
     @pytest.fixture()
-    def mock_app(self) -> app_.IApp:
-        return mock.MagicMock(app_.IApp)
+    def mock_app(self) -> app_.IRESTApp:
+        return mock.MagicMock(app_.IRESTApp)
 
     @pytest.fixture()
     def entity_factory_impl(self, mock_app) -> entity_factory.EntityFactoryImpl:

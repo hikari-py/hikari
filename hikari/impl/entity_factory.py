@@ -89,9 +89,9 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
     This will convert objects to/from JSON compatible representations.
     """
 
-    def __init__(self, app: app_.IApp) -> None:
+    def __init__(self, app: app_.IRESTApp) -> None:
         self._app = app
-        self._audit_log_entry_converters = {
+        self._audit_log_entry_converters: typing.Mapping[str, typing.Callable[[typing.Any], typing.Any]] = {
             audit_log_models.AuditLogChangeKey.OWNER_ID: snowflake.Snowflake,
             audit_log_models.AuditLogChangeKey.AFK_CHANNEL_ID: snowflake.Snowflake,
             audit_log_models.AuditLogChangeKey.AFK_TIMEOUT: _deserialize_seconds_timedelta,
@@ -124,7 +124,10 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
             audit_log_models.AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: self._deserialize_audit_log_change_roles,
             audit_log_models.AuditLogChangeKey.PERMISSION_OVERWRITES: self._deserialize_audit_log_overwrites,
         }
-        self._audit_log_event_mapping = {
+        self._audit_log_event_mapping: typing.Mapping[
+            typing.Union[int, audit_log_models.AuditLogEventType],
+            typing.Callable[[data_binding.JSONObject], audit_log_models.BaseAuditLogEntryInfo],
+        ] = {
             audit_log_models.AuditLogEventType.CHANNEL_OVERWRITE_CREATE: self._deserialize_channel_overwrite_entry_info,
             audit_log_models.AuditLogEventType.CHANNEL_OVERWRITE_UPDATE: self._deserialize_channel_overwrite_entry_info,
             audit_log_models.AuditLogEventType.CHANNEL_OVERWRITE_DELETE: self._deserialize_channel_overwrite_entry_info,
@@ -147,7 +150,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         }
 
     @property
-    def app(self) -> app_.IApp:
+    def app(self) -> app_.IRESTApp:
         return self._app
 
     ######################
@@ -156,10 +159,10 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
 
     def deserialize_own_connection(self, payload: data_binding.JSONObject) -> application_models.OwnConnection:
         own_connection = application_models.OwnConnection()
-        own_connection.id = snowflake.Snowflake(payload["id"])
+        own_connection.id = payload["id"]  # this is not a snowflake!
         own_connection.name = payload["name"]
         own_connection.type = payload["type"]
-        own_connection.is_revoked = payload.get("revoked")
+        own_connection.is_revoked = payload["revoked"]
         own_connection.integrations = [
             self.deserialize_partial_integration(integration) for integration in payload.get("integrations", ())
         ]
@@ -587,8 +590,8 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         self, embed: embed_models.Embed,
     ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource]]:
 
-        payload = {}
-        uploads = []
+        payload: data_binding.JSONObject = {}
+        uploads: typing.List[files.Resource] = []
 
         if embed.title is not None:
             payload["title"] = embed.title
@@ -603,7 +606,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
             payload["timestamp"] = embed.timestamp.isoformat()
 
         if embed.color is not None:
-            payload["color"] = embed.color
+            payload["color"] = str(embed.color)
 
         if embed.footer is not None:
             footer_payload = {}

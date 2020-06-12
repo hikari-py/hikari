@@ -130,7 +130,7 @@ class IEventDispatcher(component.IComponent, abc.ABC):
         self,
         event_type: typing.Type[_EventT],
         callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
-    ) -> None:
+    ) -> typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]]:
         """Subscribe a given callback to a given event type.
 
         Parameters
@@ -157,6 +157,14 @@ class IEventDispatcher(component.IComponent, abc.ABC):
         bot.subscribe(MessageCreateEvent, on_message)
         ```
 
+        Returns
+        -------
+        typing.Callable[[T], typing.Coroutine[None, typing.Any, None]
+            The event callback. If you did not pass a callback that was a
+            coroutine function, then this will be a coroutine function
+            wrapping your callback instead. This enables you to correctly
+            unsubscribe from the event again later.
+
         See Also
         --------
         IEventDispatcher.listen
@@ -167,7 +175,7 @@ class IEventDispatcher(component.IComponent, abc.ABC):
     def unsubscribe(
         self,
         event_type: typing.Type[_EventT],
-        callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
+        callback: typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]],
     ) -> None:
         """Unsubscribe a given callback from a given event type, if present.
 

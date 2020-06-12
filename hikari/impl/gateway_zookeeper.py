@@ -36,6 +36,7 @@ from hikari.net import gateway
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
+    from hikari.events import base as base_events
     from hikari.net import http_settings
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
@@ -293,7 +294,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         *,
         status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
         activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
-        idle_since: typing.Union[undefined.UndefinedType, datetime.datetime] = undefined.UNDEFINED,
+        idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
         is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
     ) -> None:
         await asyncio.gather(
@@ -304,7 +305,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
             )
         )
 
-    async def _init(self):
+    async def _init(self) -> None:
         gw_recs = await self._fetch_gateway_recommendations()
 
         self.logger.info(
@@ -315,7 +316,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         )
 
         self._shard_count = self._shard_count if self._shard_count else gw_recs.shard_count
-        self._shard_ids = self._shard_ids if self._shard_ids else range(self._shard_count)
+        self._shard_ids = self._shard_ids if self._shard_ids else set(range(self._shard_count))
         self._max_concurrency = gw_recs.session_start_limit.max_concurrency
         url = gw_recs.url
 
@@ -385,7 +386,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         await self.start()
         await self.join()
 
-    async def _maybe_dispatch(self, event) -> None:
-        if hasattr(self, "event_dispatcher"):
+    async def _maybe_dispatch(self, event: base_events.HikariEvent) -> None:
+        if isinstance(self, app_.IGatewayDispatcher):
             # noinspection PyUnresolvedReferences
             await self.event_dispatcher.dispatch(event)

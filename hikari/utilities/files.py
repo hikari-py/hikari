@@ -379,6 +379,12 @@ class Resource(abc.ABC):
     async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor]) -> AsyncReader:
         """Return an async iterable of bytes to stream."""
 
+    def __str__(self) -> str:
+        return self.url
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(url={self.url!r}, filename={self.filename!r})"
+
 
 class Bytes(Resource):
     """Representation of in-memory data to upload.

@@ -58,7 +58,7 @@ class ExceptionEvent(base_events.HikariEvent):
     event: base_events.HikariEvent = attr.ib(repr=True)
     """The event that was being invoked when the exception occurred."""
 
-    callback: typing.Callable[[base_events.HikariEvent], typing.Awaitable[None]] = attr.ib(repr=False)
+    callback: typing.Callable[[base_events.HikariEvent], typing.Coroutine[None, typing.Any, None]] = attr.ib(repr=False)
     """The event that was being invoked when the exception occurred."""
 
 

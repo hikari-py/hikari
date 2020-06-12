@@ -287,7 +287,7 @@ class AuditLogEntry(bases.Entity, bases.Unique):
     user_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the user who made this change."""
 
-    action_type: typing.Union[AuditLogEventType, str] = attr.ib(eq=False, hash=False, repr=True)
+    action_type: typing.Union[AuditLogEventType, int] = attr.ib(eq=False, hash=False, repr=True)
     """The type of action this entry represents."""
 
     options: typing.Optional[BaseAuditLogEntryInfo] = attr.ib(eq=False, hash=False, repr=False)
@@ -305,7 +305,7 @@ class AuditLog:
     entries: typing.Mapping[snowflake.Snowflake, AuditLogEntry] = attr.ib(repr=False)
     """A sequence of the audit log's entries."""
 
-    integrations: typing.Mapping[snowflake.Snowflake, guilds.Integration] = attr.ib(repr=False)
+    integrations: typing.Mapping[snowflake.Snowflake, guilds.PartialIntegration] = attr.ib(repr=False)
     """A mapping of the partial objects of integrations found in this audit log."""
 
     users: typing.Mapping[snowflake.Snowflake, users_.User] = attr.ib(repr=False)

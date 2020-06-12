@@ -33,7 +33,7 @@ class IComponent(abc.ABC):
     """A component that makes up part of the application.
 
     Objects that derive from this should usually be attributes on the
-    `hikari.api.app.IApp` object.
+    `hikari.api.app.IRESTApp` object.
 
     Examples
     --------
@@ -46,11 +46,11 @@ class IComponent(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def app(self) -> app.IApp:
+    def app(self) -> app.IRESTApp:
         """Return the Application that owns this component.
 
         Returns
         -------
-        hikari.api.app.IApp
+        hikari.api.app.IRESTApp
             The application implementation that owns this component.
         """
