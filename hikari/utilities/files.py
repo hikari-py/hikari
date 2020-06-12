@@ -49,12 +49,12 @@ import aiohttp.client
 import attr
 
 from hikari.net import http_client
-from hikari.utilities import klass
+from hikari.utilities import reflect
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
 
-_LOGGER: typing.Final[logging.Logger] = klass.get_logger(__name__)
+_LOGGER: typing.Final[logging.Logger] = reflect.get_logger(__name__)
 _MAGIC: typing.Final[int] = 50 * 1024
 
 

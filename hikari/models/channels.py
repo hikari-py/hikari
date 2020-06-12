@@ -45,7 +45,6 @@ import attr
 from hikari.models import bases
 from hikari.models import permissions
 from hikari.models import users
-
 from hikari.utilities import cdn
 from hikari.utilities import files
 

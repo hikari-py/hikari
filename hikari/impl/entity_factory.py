@@ -751,7 +751,7 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         self,
         payload: data_binding.JSONObject,
         *,
-        user: typing.Union[undefined.Undefined, user_models.User] = undefined.Undefined(),
+        user: typing.Union[undefined.UndefinedType, user_models.User] = undefined.UNDEFINED,
     ) -> guild_models.Member:
         guild_member = guild_models.Member(self._app)
         guild_member.user = user or self.deserialize_user(payload["user"])
@@ -760,18 +760,18 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         if (joined_at := payload.get("joined_at")) is not None:
             guild_member.joined_at = date.iso8601_datetime_string_to_datetime(joined_at)
         else:
-            guild_member.joined_at = undefined.Undefined()
+            guild_member.joined_at = undefined.UNDEFINED
 
-        guild_member.nickname = payload["nick"] if "nick" in payload else undefined.Undefined()
+        guild_member.nickname = payload["nick"] if "nick" in payload else undefined.UNDEFINED
 
         if (premium_since := payload.get("premium_since", ...)) is not None and premium_since is not ...:
             premium_since = date.iso8601_datetime_string_to_datetime(premium_since)
         elif premium_since is ...:
-            premium_since = undefined.Undefined()
+            premium_since = undefined.UNDEFINED
         guild_member.premium_since = premium_since
 
-        guild_member.is_deaf = payload["deaf"] if "deaf" in payload else undefined.Undefined()
-        guild_member.is_mute = payload["mute"] if "mute" in payload else undefined.Undefined()
+        guild_member.is_deaf = payload["deaf"] if "deaf" in payload else undefined.UNDEFINED
+        guild_member.is_mute = payload["mute"] if "mute" in payload else undefined.UNDEFINED
         return guild_member
 
     def deserialize_role(self, payload: data_binding.JSONObject) -> guild_models.Role:
@@ -1142,16 +1142,16 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         user_payload = payload["user"]
         user = user_models.PartialUser(self._app)
         user.id = snowflake.Snowflake(user_payload["id"])
-        user.discriminator = user_payload["discriminator"] if "discriminator" in user_payload else undefined.Undefined()
-        user.username = user_payload["username"] if "username" in user_payload else undefined.Undefined()
-        user.avatar_hash = user_payload["avatar"] if "avatar" in user_payload else undefined.Undefined()
-        user.is_bot = user_payload["bot"] if "bot" in user_payload else undefined.Undefined()
-        user.is_system = user_payload["system"] if "system" in user_payload else undefined.Undefined()
+        user.discriminator = user_payload["discriminator"] if "discriminator" in user_payload else undefined.UNDEFINED
+        user.username = user_payload["username"] if "username" in user_payload else undefined.UNDEFINED
+        user.avatar_hash = user_payload["avatar"] if "avatar" in user_payload else undefined.UNDEFINED
+        user.is_bot = user_payload["bot"] if "bot" in user_payload else undefined.UNDEFINED
+        user.is_system = user_payload["system"] if "system" in user_payload else undefined.UNDEFINED
         # noinspection PyArgumentList
         user.flags = (
             user_models.UserFlag(user_payload["public_flags"])
             if "public_flags" in user_payload
-            else undefined.Undefined()
+            else undefined.UNDEFINED
         )
         guild_member_presence.user = user
 
@@ -1538,51 +1538,51 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
         updated_message = message_events.UpdateMessage(self._app)
         updated_message.id = snowflake.Snowflake(payload["id"])
         updated_message.channel_id = (
-            snowflake.Snowflake(payload["channel_id"]) if "channel_id" in payload else undefined.Undefined()
+            snowflake.Snowflake(payload["channel_id"]) if "channel_id" in payload else undefined.UNDEFINED
         )
         updated_message.guild_id = (
-            snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else undefined.Undefined()
+            snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else undefined.UNDEFINED
         )
         updated_message.author = (
-            self.deserialize_user(payload["author"]) if "author" in payload else undefined.Undefined()
+            self.deserialize_user(payload["author"]) if "author" in payload else undefined.UNDEFINED
         )
         # TODO: will we ever be given "member" but not "author"?
         updated_message.member = (
             self.deserialize_member(payload["member"], user=updated_message.author)
             if "member" in payload
-            else undefined.Undefined()
+            else undefined.UNDEFINED
         )
-        updated_message.content = payload["content"] if "content" in payload else undefined.Undefined()
+        updated_message.content = payload["content"] if "content" in payload else undefined.UNDEFINED
         updated_message.timestamp = (
             date.iso8601_datetime_string_to_datetime(payload["timestamp"])
             if "timestamp" in payload
-            else undefined.Undefined()
+            else undefined.UNDEFINED
         )
 
         if (edited_timestamp := payload.get("edited_timestamp", ...)) is not ... and edited_timestamp is not None:
             edited_timestamp = date.iso8601_datetime_string_to_datetime(edited_timestamp)
         elif edited_timestamp is ...:
-            edited_timestamp = undefined.Undefined()
+            edited_timestamp = undefined.UNDEFINED
         updated_message.edited_timestamp = edited_timestamp
 
-        updated_message.is_tts = payload["tts"] if "tts" in payload else undefined.Undefined()
+        updated_message.is_tts = payload["tts"] if "tts" in payload else undefined.UNDEFINED
         updated_message.is_mentioning_everyone = (
-            payload["mention_everyone"] if "mention_everyone" in payload else undefined.Undefined()
+            payload["mention_everyone"] if "mention_everyone" in payload else undefined.UNDEFINED
         )
         updated_message.user_mentions = (
             {snowflake.Snowflake(mention["id"]) for mention in payload["mentions"]}
             if "mentions" in payload
-            else undefined.Undefined()
+            else undefined.UNDEFINED
         )
         updated_message.role_mentions = (
             {snowflake.Snowflake(mention) for mention in payload["mention_roles"]}
             if "mention_roles" in payload
-            else undefined.Undefined()
+            else undefined.UNDEFINED
         )
         updated_message.channel_mentions = (
             {snowflake.Snowflake(mention["id"]) for mention in payload["mention_channels"]}
             if "mention_channels" in payload
-            else undefined.Undefined()
+            else undefined.UNDEFINED
         )
 
         if "attachments" in payload:
@@ -1599,12 +1599,12 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
                 attachments.append(attachment)
             updated_message.attachments = attachments
         else:
-            updated_message.attachments = undefined.Undefined()
+            updated_message.attachments = undefined.UNDEFINED
 
         updated_message.embeds = (
             [self.deserialize_embed(embed) for embed in payload["embeds"]]
             if "embeds" in payload
-            else undefined.Undefined()
+            else undefined.UNDEFINED
         )
 
         if "reactions" in payload:
@@ -1617,16 +1617,14 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
                 reactions.append(reaction)
             updated_message.reactions = reactions
         else:
-            updated_message.reactions = undefined.Undefined()
+            updated_message.reactions = undefined.UNDEFINED
 
-        updated_message.is_pinned = payload["pinned"] if "pinned" in payload else undefined.Undefined()
+        updated_message.is_pinned = payload["pinned"] if "pinned" in payload else undefined.UNDEFINED
         updated_message.webhook_id = (
-            snowflake.Snowflake(payload["webhook_id"]) if "webhook_id" in payload else undefined.Undefined()
+            snowflake.Snowflake(payload["webhook_id"]) if "webhook_id" in payload else undefined.UNDEFINED
         )
         # noinspection PyArgumentList
-        updated_message.type = (
-            message_models.MessageType(payload["type"]) if "type" in payload else undefined.Undefined()
-        )
+        updated_message.type = message_models.MessageType(payload["type"]) if "type" in payload else undefined.UNDEFINED
 
         if (activity_payload := payload.get("activity", ...)) is not ...:
             activity = message_models.MessageActivity()
@@ -1635,10 +1633,10 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
             activity.party_id = activity_payload.get("party_id")
             updated_message.activity = activity
         else:
-            updated_message.activity = undefined.Undefined()
+            updated_message.activity = undefined.UNDEFINED
 
         updated_message.application = (
-            self.deserialize_application(payload["application"]) if "application" in payload else undefined.Undefined()
+            self.deserialize_application(payload["application"]) if "application" in payload else undefined.UNDEFINED
         )
 
         if (crosspost_payload := payload.get("message_reference", ...)) is not ...:
@@ -1652,13 +1650,13 @@ class EntityFactoryImpl(entity_factory.IEntityFactory):
             )
             updated_message.message_reference = crosspost
         else:
-            updated_message.message_reference = undefined.Undefined()
+            updated_message.message_reference = undefined.UNDEFINED
 
         # noinspection PyArgumentList
         updated_message.flags = (
-            message_models.MessageFlag(payload["flags"]) if "flags" in payload else undefined.Undefined()
+            message_models.MessageFlag(payload["flags"]) if "flags" in payload else undefined.UNDEFINED
         )
-        updated_message.nonce = payload["nonce"] if "nonce" in payload else undefined.Undefined()
+        updated_message.nonce = payload["nonce"] if "nonce" in payload else undefined.UNDEFINED
 
         message_update.message = updated_message
         return message_update

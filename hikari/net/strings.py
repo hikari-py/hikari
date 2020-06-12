@@ -27,7 +27,6 @@ import aiohttp
 
 import hikari
 
-
 # Headers.
 ACCEPT_HEADER: typing.Final[str] = "Accept"
 AUTHORIZATION_HEADER: typing.Final[str] = "Authorization"

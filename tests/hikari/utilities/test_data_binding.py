@@ -46,7 +46,7 @@ class TestStringMapBuilder:
 
     def test_put_undefined(self):
         mapping = data_binding.StringMapBuilder()
-        mapping.put("foo", undefined.Undefined())
+        mapping.put("foo", undefined.UNDEFINED)
         assert dict(mapping) == {}
 
     def test_put_general_value_casts_to_str(self):
@@ -117,7 +117,7 @@ class TestJSONObjectBuilder:
 
     def test_put_undefined(self):
         builder = data_binding.JSONObjectBuilder()
-        builder.put("foo", undefined.Undefined())
+        builder.put("foo", undefined.UNDEFINED)
         assert builder == {}
 
     def test_put_defined(self):
@@ -142,7 +142,7 @@ class TestJSONObjectBuilder:
 
     def test_put_array_undefined(self):
         builder = data_binding.JSONObjectBuilder()
-        builder.put_array("dd", undefined.Undefined())
+        builder.put_array("dd", undefined.UNDEFINED)
         assert builder == {}
 
     def test__put_array_defined(self):
@@ -177,7 +177,7 @@ class TestJSONObjectBuilder:
 
     def test_put_snowflake_undefined(self):
         builder = data_binding.JSONObjectBuilder()
-        builder.put_snowflake("nya!", undefined.Undefined())
+        builder.put_snowflake("nya!", undefined.UNDEFINED)
         assert builder == {}
 
     @pytest.mark.parametrize(

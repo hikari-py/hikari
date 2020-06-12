@@ -25,10 +25,10 @@ import functools
 import io
 import logging
 import time
-import uuid
 
 # noinspection PyUnresolvedReferences
 import typing
+import uuid
 
 import aiohttp.abc
 

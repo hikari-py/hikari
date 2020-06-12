@@ -442,7 +442,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
-        user: typing.Union[undefined.Undefined, user_models.User] = undefined.Undefined(),
+        user: typing.Union[undefined.UndefinedType, user_models.User] = undefined.UNDEFINED,
     ) -> guild_models.Member:
         """Parse a raw payload from Discord into a member object.
 
@@ -450,7 +450,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
-        user : hikari.models.users.User or hikari.utilities.undefined.Undefined
+        user : hikari.models.users.User or hikari.utilities.undefined.UndefinedType
             The user to attach to this member, should only be passed in
             situations where "user" is not included in the payload.
 

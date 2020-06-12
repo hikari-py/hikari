@@ -33,7 +33,6 @@ from hikari.events import other
 from hikari.net import gateway
 from hikari.utilities import aio
 from hikari.utilities import data_binding
-from hikari.utilities import klass
 from hikari.utilities import reflect
 from hikari.utilities import undefined
 
@@ -61,7 +60,7 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
         self._app = app
         self._listeners: _ListenerMapT = {}
         self._waiters: _WaiterMapT = {}
-        self.logger = klass.get_logger(self)
+        self.logger = reflect.get_logger(self)
 
     @property
     def app(self) -> app_.IApp:
@@ -119,7 +118,7 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
                 del self._listeners[event_type]
 
     def listen(
-        self, event_type: typing.Union[undefined.Undefined, typing.Type[_EventT]] = undefined.Undefined(),
+        self, event_type: typing.Union[undefined.UndefinedType, typing.Type[_EventT]] = undefined.UNDEFINED,
     ) -> typing.Callable[[_CallbackT], _CallbackT]:
         def decorator(callback: _CallbackT) -> _CallbackT:
             nonlocal event_type
@@ -132,7 +131,7 @@ class EventManagerCore(event_dispatcher.IEventDispatcher, event_consumer.IEventC
 
             event_param = next(iter(params))
 
-            if event_type is undefined.Undefined():
+            if event_type is undefined.UNDEFINED:
                 if event_param.annotation is event_param.empty:
                     raise TypeError("Must provide the event type in the @listen decorator or as a type hint!")
 

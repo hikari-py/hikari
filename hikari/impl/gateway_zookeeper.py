@@ -31,7 +31,6 @@ import time
 import typing
 
 from hikari.api import app as app_
-from hikari.api import event_dispatcher
 from hikari.events import other
 from hikari.net import gateway
 from hikari.utilities import undefined
@@ -59,21 +58,21 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
     compression : bool
         Defaulting to `True`, if `True`, then zlib transport compression is used
         for each shard connection. If `False`, no compression is used.
-    config : hikari.utilities.undefined.Undefined or hikari.net.http_settings.HTTPSettings
+    config : hikari.utilities.undefined.UndefinedType or hikari.net.http_settings.HTTPSettings
         Optional aiohttp settings to apply to the created shards.
     debug : bool
         Defaulting to `False`, if `True`, then each payload sent and received
         on the gateway will be dumped to debug logs. This will provide useful
         debugging context at the cost of performance. Generally you do not
         need to enable this.
-    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.Undefined
+    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
         The initial activity to have on each shard.
-    initial_activity : hikari.models.presences.Status or hikari.utilities.undefined.Undefined
+    initial_activity : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
         The initial status to have on each shard.
-    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
+    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
         The initial time to show as being idle since, or `None` if not idle,
         for each shard.
-    initial_idle_since : bool or hikari.utilities.undefined.Undefined
+    initial_idle_since : bool or hikari.utilities.undefined.UndefinedType
         If `True`, each shard will appear as being AFK on startup. If `False`,
         each shard will appear as _not_ being AFK.
     intents : hikari.models.intents.Intent or None
@@ -83,11 +82,11 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
     large_threshold : int
         The number of members that need to be in a guild for the guild to be
         considered large. Defaults to the maximum, which is `250`.
-    shard_ids : typing.Set[int] or undefined.Undefined
+    shard_ids : typing.Set[int] or undefined.UndefinedType
         A set of every shard ID that should be created and started on startup.
         If left undefined along with `shard_count`, then auto-sharding is used
         instead, which is the default.
-    shard_count : int or undefined.Undefined
+    shard_count : int or undefined.UndefinedType
         The number of shards in the entire application. If left undefined along
         with `shard_ids`, then auto-sharding is used instead, which is the
         default.
@@ -132,10 +131,10 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         compression: bool,
         config: http_settings.HTTPSettings,
         debug: bool,
-        initial_activity: typing.Union[undefined.Undefined, presences.Activity, None] = undefined.Undefined(),
-        initial_idle_since: typing.Union[undefined.Undefined, datetime.datetime, None] = undefined.Undefined(),
-        initial_is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        initial_status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
+        initial_activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
+        initial_idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
+        initial_is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        initial_status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
         intents: typing.Optional[intents_.Intent],
         large_threshold: int,
         shard_ids: typing.Set[int],
@@ -143,9 +142,9 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         token: str,
         version: int,
     ) -> None:
-        if undefined.Undefined.count(shard_ids, shard_count) == 1:
+        if undefined.count(shard_ids, shard_count) == 1:
             raise TypeError("You must provide values for both shard_ids and shard_count, or neither.")
-        if not isinstance(shard_ids, undefined.Undefined):
+        if not shard_ids is undefined.UNDEFINED:
             if not shard_ids:
                 raise ValueError("At least one shard ID must be specified if provided.")
             if not all(shard_id >= 0 for shard_id in shard_ids):
@@ -292,10 +291,10 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
     async def update_presence(
         self,
         *,
-        status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
-        activity: typing.Union[undefined.Undefined, presences.Activity, None] = undefined.Undefined(),
-        idle_since: typing.Union[undefined.Undefined, datetime.datetime] = undefined.Undefined(),
-        is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
+        activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
+        idle_since: typing.Union[undefined.UndefinedType, datetime.datetime] = undefined.UNDEFINED,
+        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
     ) -> None:
         await asyncio.gather(
             *(

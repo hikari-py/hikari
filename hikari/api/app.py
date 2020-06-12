@@ -253,7 +253,7 @@ class IGatewayDispatcher(IApp, abc.ABC):
     # Do not add type hints to me! I delegate to a documented method elsewhere!
     @functools.wraps(event_dispatcher_.IEventDispatcher.listen)
     def listen(
-        self, event_type: typing.Union[undefined.Undefined, typing.Type[_EventT]] = undefined.Undefined(),
+        self, event_type: typing.Union[undefined.UndefinedType, typing.Type[_EventT]] = undefined.UNDEFINED,
     ) -> typing.Callable[[_CallbackT], _CallbackT]:
         ...
 
@@ -350,10 +350,10 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
     async def update_presence(
         self,
         *,
-        status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
-        activity: typing.Union[undefined.Undefined, presences.Activity, None] = undefined.Undefined(),
-        idle_since: typing.Union[undefined.Undefined, datetime.datetime, None] = undefined.Undefined(),
-        is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
+        activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
+        idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
+        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
     ) -> None:
         """Update the presence of the user for all shards.
 
@@ -371,14 +371,14 @@ class IGatewayZookeeper(IGatewayConsumer, abc.ABC):
 
         Parameters
         ----------
-        status : hikari.models.presences.Status or hikari.utilities.undefined.Undefined
+        status : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
             If defined, the new status to set.
-        activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.Undefined
+        activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
             If defined, the new activity to set.
-        idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
+        idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
             If defined, the time to show up as being idle since, or `None` if
             not applicable. If undefined, then it is not changed.
-        is_afk : bool or hikari.utilities.undefined.Undefined
+        is_afk : bool or hikari.utilities.undefined.UndefinedType
             If defined, `True` if the user should be marked as AFK,
             or `False` if not AFK.
         """
