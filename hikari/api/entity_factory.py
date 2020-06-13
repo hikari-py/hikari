@@ -19,7 +19,7 @@
 """Core interface for an object that serializes/deserializes API objects."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["IEntityFactory"]
+__all__: typing.List[str] = ["IEntityFactoryComponent"]
 
 import abc
 import typing
@@ -53,7 +53,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import files
 
 
-class IEntityFactory(component.IComponent, abc.ABC):
+class IEntityFactoryComponent(component.IComponent, abc.ABC):
     """Interface for components that serialize and deserialize JSON payloads."""
 
     __slots__ = ()

@@ -76,8 +76,8 @@ class TestEntityFactoryImpl:
         return mock.MagicMock(app_.IRESTApp)
 
     @pytest.fixture()
-    def entity_factory_impl(self, mock_app) -> entity_factory.EntityFactoryImpl:
-        return entity_factory.EntityFactoryImpl(app=mock_app)
+    def entity_factory_impl(self, mock_app) -> entity_factory.EntityFactoryComponentImpl:
+        return entity_factory.EntityFactoryComponentImpl(app=mock_app)
 
     def test_app(self, entity_factory_impl, mock_app):
         assert entity_factory_impl.app is mock_app
@@ -2878,7 +2878,7 @@ class TestEntityFactoryImpl:
 
         assert message_update.message.flags == message_models.MessageFlag.IS_CROSSPOST
         assert message_update.message.nonce == "171000788183678976"
-        assert isinstance(message_update.message, message_events.UpdateMessage)
+        assert isinstance(message_update.message, message_events.UpdatedMessage)
         assert isinstance(message_update, message_events.MessageUpdateEvent)
 
     def test_deserialize_message_update_event_with_partial_payload(self, entity_factory_impl):

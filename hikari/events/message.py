@@ -22,7 +22,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "MessageCreateEvent",
-    "UpdateMessage",
+    "UpdatedMessage",
     "MessageUpdateEvent",
     "MessageDeleteEvent",
     "MessageDeleteBulkEvent",
@@ -55,13 +55,13 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageCreateEvent(base_events.HikariEvent):
+class MessageCreateEvent(base_events.Event):
     """Used to represent Message Create gateway events."""
 
     message: messages.Message = attr.ib(repr=True)
 
 
-class UpdateMessage(messages.Message):
+class UpdatedMessage:
     """An arbitrarily partial version of `hikari.models.messages.Message`.
 
     !!! warn
@@ -74,6 +74,8 @@ class UpdateMessage(messages.Message):
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel that the message was sent in."""
 
+    # FIXME: This differs from Message, where the field could only be None or a Snowflake
+    # so this breaks stuff using inheritance.
     guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = attr.ib(repr=True)
     """The ID of the guild that the message was sent in."""
 
@@ -151,7 +153,7 @@ class UpdateMessage(messages.Message):
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageUpdateEvent(base_events.HikariEvent, base_models.Unique):
+class MessageUpdateEvent(base_events.Event, base_models.Unique):
     """Represents Message Update gateway events.
 
     !!! warn
@@ -161,13 +163,13 @@ class MessageUpdateEvent(base_events.HikariEvent, base_models.Unique):
         (a singleton) to indicate that it has not been changed.
     """
 
-    message: UpdateMessage = attr.ib(repr=True)
+    message: UpdatedMessage = attr.ib(repr=True)
     """The partial message object with all updated fields."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageDeleteEvent(base_events.HikariEvent, base_models.Entity):
+class MessageDeleteEvent(base_events.Event, base_models.Entity):
     """Used to represent Message Delete gateway events.
 
     Sent when a message is deleted in a channel we have access to.
@@ -191,7 +193,7 @@ class MessageDeleteEvent(base_events.HikariEvent, base_models.Entity):
 # TODO: if this doesn't apply to DMs then does guild_id need to be nullable here?
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageDeleteBulkEvent(base_events.HikariEvent, base_models.Entity):
+class MessageDeleteBulkEvent(base_events.Event, base_models.Entity):
     """Used to represent Message Bulk Delete gateway events.
 
     Sent when multiple messages are deleted in a channel at once.
@@ -210,7 +212,7 @@ class MessageDeleteBulkEvent(base_events.HikariEvent, base_models.Entity):
     """A collection of the IDs of the messages that were deleted."""
 
 
-class BaseMessageReactionEvent(base_events.HikariEvent, base_models.Entity):
+class BaseMessageReactionEvent(base_events.Event, base_models.Entity):
     """A base class that all message reaction events will inherit from."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)

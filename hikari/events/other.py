@@ -49,46 +49,46 @@ if typing.TYPE_CHECKING:
 # Synthetic event, is not deserialized, and is produced by the dispatcher.
 @base_events.no_catch()
 @attr.s(eq=False, hash=False, init=True, kw_only=True, slots=True)
-class ExceptionEvent(base_events.HikariEvent):
+class ExceptionEvent(base_events.Event):
     """Descriptor for an exception thrown while processing an event."""
 
     exception: Exception = attr.ib(repr=True)
     """The exception that was raised."""
 
-    event: base_events.HikariEvent = attr.ib(repr=True)
+    event: base_events.Event = attr.ib(repr=True)
     """The event that was being invoked when the exception occurred."""
 
-    callback: typing.Callable[[base_events.HikariEvent], typing.Coroutine[None, typing.Any, None]] = attr.ib(repr=False)
+    callback: typing.Callable[[base_events.Event], typing.Coroutine[None, typing.Any, None]] = attr.ib(repr=False)
     """The event that was being invoked when the exception occurred."""
 
 
 # Synthetic event, is not deserialized
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class StartingEvent(base_events.HikariEvent):
+class StartingEvent(base_events.Event):
     """Event that is fired before the gateway client starts all shards."""
 
 
 # Synthetic event, is not deserialized
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class StartedEvent(base_events.HikariEvent):
+class StartedEvent(base_events.Event):
     """Event that is fired when the gateway client starts all shards."""
 
 
 # Synthetic event, is not deserialized
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class StoppingEvent(base_events.HikariEvent):
+class StoppingEvent(base_events.Event):
     """Event that is fired when the gateway client is instructed to disconnect all shards."""
 
 
 # Synthetic event, is not deserialized
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class StoppedEvent(base_events.HikariEvent):
+class StoppedEvent(base_events.Event):
     """Event that is fired when the gateway client has finished disconnecting all shards."""
 
 
 # Synthetic event, is not deserialized
 @attr.s(eq=False, hash=False, init=True, kw_only=True, slots=True)
-class ConnectedEvent(base_events.HikariEvent):
+class ConnectedEvent(base_events.Event):
     """Event invoked each time a shard connects."""
 
     shard: gateway_client.Gateway = attr.ib(repr=True)
@@ -97,7 +97,7 @@ class ConnectedEvent(base_events.HikariEvent):
 
 # Synthetic event, is not deserialized
 @attr.s(eq=False, hash=False, init=True, kw_only=True, slots=True)
-class DisconnectedEvent(base_events.HikariEvent):
+class DisconnectedEvent(base_events.Event):
     """Event invoked each time a shard disconnects."""
 
     shard: gateway_client.Gateway = attr.ib(repr=True)
@@ -105,7 +105,7 @@ class DisconnectedEvent(base_events.HikariEvent):
 
 
 @attr.s(eq=False, hash=False, init=True, kw_only=True, slots=True)
-class ResumedEvent(base_events.HikariEvent):
+class ResumedEvent(base_events.Event):
     """Represents a gateway Resume event."""
 
     shard: gateway_client.Gateway = attr.ib(repr=True)
@@ -113,7 +113,7 @@ class ResumedEvent(base_events.HikariEvent):
 
 
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class ReadyEvent(base_events.HikariEvent):
+class ReadyEvent(base_events.Event):
     """Represents the gateway Ready event.
 
     This is received only when IDENTIFYing with the gateway.
@@ -151,7 +151,7 @@ class ReadyEvent(base_events.HikariEvent):
 
 
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class OwnUserUpdateEvent(base_events.HikariEvent):
+class OwnUserUpdateEvent(base_events.Event):
     """Used to represent User Update gateway events.
 
     Sent when the current user is updated.

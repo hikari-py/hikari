@@ -153,7 +153,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
 
 class ManualRateLimiter(BurstRateLimiter):
-    """Rate limit handler for the global RESTSession rate limit.
+    """Rate limit handler for the global REST rate limit.
 
     This is a non-preemptive rate limiting algorithm that will always return
     completed futures until `ManualRateLimiter.throttle` is invoked. Once this
@@ -166,8 +166,8 @@ class ManualRateLimiter(BurstRateLimiter):
     Triggering a throttle when it is already set will cancel the current
     throttle task that is sleeping and replace it.
 
-    This is used to enforce the global RESTSession rate limit that will occur
-    "randomly" during RESTSession API interaction.
+    This is used to enforce the global REST rate limit that will occur
+    "randomly" during REST API interaction.
 
     Expect random occurrences.
     """

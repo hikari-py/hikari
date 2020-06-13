@@ -277,10 +277,8 @@ class ByteReader(AsyncReader):
 class FileReader(AsyncReader):
     """Asynchronous file reader that reads a resource from local storage."""
 
-    executor: typing.Optional[concurrent.futures.ThreadPoolExecutor]
-    """The associated `concurrent.futures.ThreadPoolExecutor` to use for
-    blocking IO.
-    """
+    executor: typing.Optional[concurrent.futures.Executor]
+    """The associated `concurrent.futures.Executor` to use for blocking IO."""
 
     path: typing.Union[str, pathlib.Path]
     """The path to the resource to read."""
@@ -376,7 +374,7 @@ class Resource(abc.ABC):
     @abc.abstractmethod
     @contextlib.asynccontextmanager
     @typing.no_type_check
-    async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor]) -> AsyncReader:
+    async def stream(self, *, executor: typing.Optional[concurrent.futures.Executor]) -> AsyncReader:
         """Return an async iterable of bytes to stream."""
 
     def __str__(self) -> str:
@@ -460,13 +458,13 @@ class Bytes(Resource):
 
     @contextlib.asynccontextmanager
     @typing.no_type_check
-    async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = None) -> ByteReader:
+    async def stream(self, *, executor: typing.Optional[concurrent.futures.Executor] = None) -> ByteReader:
         """Start streaming the content in chunks.
 
         Parameters
         ----------
-        executor : concurrent.futures.ThreadPoolExecutor or None
-            Not used. Provided only to match the underlying interface.executor
+        executor : concurrent.futures.Executor or None
+            Not used. Provided only to match the underlying interface.
 
         Returns
         -------
@@ -498,7 +496,7 @@ class WebResource(Resource, abc.ABC):
 
     @contextlib.asynccontextmanager
     @typing.no_type_check
-    async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = None) -> WebReader:
+    async def stream(self, *, executor: typing.Optional[concurrent.futures.Executor] = None) -> WebReader:
         """Start streaming the content into memory by downloading it.
 
         You can use this to fetch the entire resource, parts of the resource,
@@ -506,7 +504,7 @@ class WebResource(Resource, abc.ABC):
 
         Parameters
         ----------
-        executor : concurrent.futures.ThreadPoolExecutor or None
+        executor : concurrent.futures.Executor or None
             Not used. Provided only to match the underlying interface.
 
         Examples
@@ -656,15 +654,15 @@ class File(Resource):
 
     @contextlib.asynccontextmanager
     @typing.no_type_check
-    async def stream(self, *, executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = None) -> FileReader:
+    async def stream(self, *, executor: typing.Optional[concurrent.futures.Executor] = None) -> FileReader:
         """Start streaming the resource using a thread pool executor.
 
         Parameters
         ----------
-        executor : typing.Optional[concurrent.futures.ThreadPoolExecutor]
-            The thread pool to run the blocking read operations in. If
-            `None`, the default executor for the running event loop will be
-            used instead.
+        executor : typing.Optional[concurrent.futures.Executor]
+            The executor to run the blocking read operations in. If `None`,
+            the default executor for the running event loop will be used
+            instead.
 
         Returns
         -------

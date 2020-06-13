@@ -26,31 +26,32 @@ import abc
 import typing
 
 if typing.TYPE_CHECKING:
-    from hikari.api import app
+    from hikari.api import rest
 
 
 class IComponent(abc.ABC):
     """A component that makes up part of the application.
 
     Objects that derive from this should usually be attributes on the
-    `hikari.api.app.IRESTApp` object.
+    `hikari.api.rest.IRESTApp` object.
 
     Examples
     --------
-    See the source code for `hikari.api.entity_factory.IEntityFactory`,
-    `hikari.api.cache.ICache`, and
-    `hikari.api.event_dispatcher.IEventDispatcher` for examples of usage.
+    See the source code for `hikari.api.entity_factory.IEntityFactoryComponent`,
+    `hikari.api.cache.ICacheComponent`, and
+    `hikari.api.event_dispatcher.IEventDispatcherComponent`
+    for examples of usage.
     """
 
     __slots__ = ()
 
     @property
     @abc.abstractmethod
-    def app(self) -> app.IRESTApp:
+    def app(self) -> rest.IRESTApp:
         """Return the Application that owns this component.
 
         Returns
         -------
-        hikari.api.app.IRESTApp
+        hikari.api.rest.IRESTApp
             The application implementation that owns this component.
         """

@@ -51,7 +51,7 @@ from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari.api import app as app_
+    from hikari.api import rest
 
     from hikari.models import applications
     from hikari.models import audit_logs
@@ -77,7 +77,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     Parameters
     ----------
-    app : hikari.api.app.IRESTApp
+    app : hikari.api.rest.IRESTApp
         The REST application containing all other application components
         that Hikari uses.
     config : hikari.net.http_settings.HTTPSettings
@@ -112,7 +112,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
     def __init__(
         self,
         *,
-        app: app_.IRESTApp,
+        app: rest.IRESTApp,
         config: http_settings.HTTPSettings,
         debug: bool = False,
         token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
@@ -155,7 +155,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self._rest_url = rest_url.format(self)
 
     @property
-    def app(self) -> app_.IRESTApp:
+    def app(self) -> rest.IRESTApp:
         return self._app
 
     async def _request(
@@ -1110,7 +1110,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
             try:
                 for i, attachment in enumerate(final_attachments):
-                    stream = await stack.enter_async_context(attachment.stream(executor=self._app.thread_pool_executor))
+                    stream = await stack.enter_async_context(attachment.stream(executor=self._app.executor))
                     form.add_field(
                         f"file{i}", stream, filename=stream.filename, content_type=self._APPLICATION_OCTET_STREAM
                     )
@@ -1394,7 +1394,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         if not avatar is undefined.UNDEFINED:
-            async with avatar.stream(executor=self._app.thread_pool_executor) as stream:
+            async with avatar.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
@@ -1455,7 +1455,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         if avatar is None:
             body.put("avatar", None)
         elif not avatar is undefined.UNDEFINED:
-            async with avatar.stream(executor=self._app.thread_pool_executor) as stream:
+            async with avatar.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
@@ -1523,7 +1523,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
             try:
                 for i, attachment in enumerate(attachments):
-                    stream = await stack.enter_async_context(attachment.stream(self._app.thread_pool_executor))
+                    stream = await stack.enter_async_context(attachment.stream(self._app.executor))
                     form.add_field(
                         f"file{i}", stream, filename=stream.filename, content_type=self._APPLICATION_OCTET_STREAM
                     )
@@ -1579,7 +1579,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("username", username)
 
         if isinstance(avatar, files.Resource):
-            async with avatar.stream(executor=self._app.thread_pool_executor) as stream:
+            async with avatar.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
         else:
             body.put("avatar", avatar)
@@ -1726,7 +1726,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         if not image is undefined.UNDEFINED:
-            async with image.stream(executor=self._app.thread_pool_executor) as stream:
+            async with image.stream(executor=self._app.executor) as stream:
                 body.put("image", await stream.data_uri())
 
         body.put_snowflake_array("roles", roles)
@@ -1835,19 +1835,19 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         if icon is None:
             body.put("icon", None)
         elif not icon is undefined.UNDEFINED:
-            async with icon.stream(executor=self._app.thread_pool_executor) as stream:
+            async with icon.stream(executor=self._app.executor) as stream:
                 body.put("icon", await stream.data_uri())
 
         if splash is None:
             body.put("splash", None)
         elif not splash is undefined.UNDEFINED:
-            async with splash.stream(executor=self._app.thread_pool_executor) as stream:
+            async with splash.stream(executor=self._app.executor) as stream:
                 body.put("splash", await stream.data_uri())
 
         if banner is None:
             body.put("banner", None)
         elif not banner is undefined.UNDEFINED:
-            async with banner.stream(executor=self._app.thread_pool_executor) as stream:
+            async with banner.stream(executor=self._app.executor) as stream:
                 body.put("banner", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)

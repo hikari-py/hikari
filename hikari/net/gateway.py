@@ -47,7 +47,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import app as app_
+    from hikari.api import event_consumer
     from hikari.net import http_settings
     from hikari.models import channels
     from hikari.models import guilds
@@ -60,7 +60,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
     Parameters
     ----------
-    app : hikari.api.app.IGatewayConsumer
+    app : hikari.api.event_consumer.IEventConsumerApp
         The base application.
     config : hikari.net.http_settings.HTTPSettings
         The AIOHTTP settings to use for the client session.
@@ -158,7 +158,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     def __init__(
         self,
         *,
-        app: app_.IGatewayConsumer,
+        app: event_consumer.IEventConsumerApp,
         config: http_settings.HTTPSettings,
         debug: bool = False,
         initial_activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
@@ -229,7 +229,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self.url = urllib.parse.urlunparse((scheme, netloc, path, params, new_query, ""))
 
     @property
-    def app(self) -> app_.IGatewayConsumer:
+    def app(self) -> event_consumer.IEventConsumerApp:
         return self._app
 
     @property

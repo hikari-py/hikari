@@ -35,5 +35,5 @@ from hikari._about import __issue_tracker__
 from hikari._about import __license__
 from hikari._about import __url__
 from hikari._about import __version__
-from hikari.impl.bot import BotImpl as Bot
-from hikari.impl.rest_app import RESTAppImpl as RESTClient
+from hikari.impl.bot import BotAppImpl as Bot
+from hikari.impl.rest import RESTAppImpl as RESTClient
