@@ -30,11 +30,11 @@ import logging
 import typing
 from concurrent import futures
 
-from hikari.api import app as app_
+from hikari.api import rest as rest_api
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.net import http_settings as http_settings_
-from hikari.net import rest as rest_
+from hikari.net import rest as rest_component
 from hikari.utilities import reflect
 from hikari.utilities import undefined
 
@@ -43,7 +43,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
 
 
-class RESTAppImpl(app_.IRESTApp):
+class RESTAppImpl(rest_api.IRESTApp):
     """Application that only provides RESTful functionality.
 
     Parameters
@@ -85,30 +85,30 @@ class RESTAppImpl(app_.IRESTApp):
 
         config = http_settings_.HTTPSettings() if config is undefined.UNDEFINED else config
 
-        self._rest = rest_.REST(
+        self._rest = rest_component.REST(
             app=self, config=config, debug=debug, token=token, token_type=token_type, rest_url=url, version=version,
         )
-        self._cache = cache_impl.InMemoryCacheImpl(self)
-        self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)
+        self._cache = cache_impl.InMemoryCacheComponentImpl(self)
+        self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(self)
 
     @property
     def logger(self) -> logging.Logger:
         return self._logger
 
     @property
-    def thread_pool_executor(self) -> typing.Optional[futures.ThreadPoolExecutor]:
+    def executor(self) -> typing.Optional[futures.Executor]:
         return None
 
     @property
-    def rest(self) -> rest_.REST:
+    def rest(self) -> rest_component.REST:
         return self._rest
 
     @property
-    def cache(self) -> cache_.ICache:
+    def cache(self) -> cache_.ICacheComponent:
         return self._cache
 
     @property
-    def entity_factory(self) -> entity_factory_.IEntityFactory:
+    def entity_factory(self) -> entity_factory_.IEntityFactoryComponent:
         return self._entity_factory
 
     async def close(self) -> None:

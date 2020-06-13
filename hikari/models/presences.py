@@ -225,8 +225,8 @@ class RichActivity(Activity):
     is_instance: typing.Optional[bool] = attr.ib(repr=False)
     """Whether this activity is an instanced game session."""
 
-    flags: ActivityFlag = attr.ib(repr=False)
-    """Flags that describe what the activity includes."""
+    flags: typing.Optional[ActivityFlag] = attr.ib(repr=False)
+    """Flags that describe what the activity includes, if present."""
 
 
 class Status(str, enum.Enum):
@@ -275,7 +275,7 @@ class MemberPresence(bases.Entity):
         changed in an event.
     """
 
-    role_ids: typing.Optional[typing.Sequence[snowflake.Snowflake]] = attr.ib(eq=False, hash=False, repr=False)
+    role_ids: typing.Optional[typing.Set[snowflake.Snowflake]] = attr.ib(eq=False, hash=False, repr=False)
     """The ids of the user's current roles in the guild this presence belongs to.
 
     !!! info

@@ -59,7 +59,7 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class GuildEvent(base_events.HikariEvent):
+class GuildEvent(base_events.Event):
     """A base object that all guild events will inherit from."""
 
 

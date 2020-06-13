@@ -226,6 +226,8 @@ class InviteWithMetadata(Invite):
     If set to `0` then this is unlimited.
     """
 
+    # FIXME: can we use a non-None value to represent infinity here somehow, or
+    # make a timedelta that is infinite for comparisons?
     max_age: typing.Optional[datetime.timedelta] = attr.attrib(eq=False, hash=False, repr=False)
     """The timedelta of how long this invite will be valid for.
 

@@ -24,15 +24,16 @@ __all__: typing.List[str] = ["AbstractGatewayZookeeper"]
 
 import abc
 import asyncio
-import contextlib
 import datetime
 import signal
 import time
 import typing
 
-from hikari.api import app as app_
+from hikari.api import event_dispatcher
+from hikari.api import gateway_zookeeper
 from hikari.events import other
 from hikari.net import gateway
+from hikari.utilities import aio
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -43,7 +44,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import presences
 
 
-class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
+class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
     """Provides keep-alive logic for orchestrating multiple shards.
 
     This provides the logic needed to keep multiple shards alive at once, and
@@ -126,6 +127,10 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         If sharding information is not specified correctly.
     """
 
+    # We do not bother with SIGINT here, since we can catch it as a KeyboardInterrupt
+    # instead and provide tidier handling of the stacktrace as a result.
+    _SIGNALS: typing.Final[typing.ClassVar[typing.Sequence[str]]] = ["SIGQUIT", "SIGTERM"]
+
     def __init__(
         self,
         *,
@@ -138,19 +143,19 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         initial_status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
         intents: typing.Optional[intents_.Intent],
         large_threshold: int,
-        shard_ids: typing.Set[int],
-        shard_count: int,
+        shard_ids: typing.Union[typing.Set[int], undefined.UndefinedType] = undefined.UNDEFINED,
+        shard_count: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
         token: str,
         version: int,
     ) -> None:
         if undefined.count(shard_ids, shard_count) == 1:
             raise TypeError("You must provide values for both shard_ids and shard_count, or neither.")
-        if not shard_ids is undefined.UNDEFINED:
+        if shard_ids is not undefined.UNDEFINED:
             if not shard_ids:
                 raise ValueError("At least one shard ID must be specified if provided.")
             if not all(shard_id >= 0 for shard_id in shard_ids):
                 raise ValueError("shard_ids must be greater than or equal to 0.")
-            if not all(shard_id < shard_count for shard_id in shard_ids):
+            if shard_count is not undefined.UNDEFINED and not all(shard_id < shard_count for shard_id in shard_ids):
                 raise ValueError("shard_ids must be less than the total shard_count.")
 
         self._aiohttp_config = config
@@ -164,8 +169,8 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         self._large_threshold = large_threshold
         self._max_concurrency = 1
         self._request_close_event = asyncio.Event()
-        self._shard_count = shard_count
-        self._shard_ids = shard_ids
+        self._shard_count = shard_count if shard_count is not undefined.UNDEFINED else 0
+        self._shard_ids = set() if shard_ids is undefined.UNDEFINED else shard_ids
         self._shards: typing.Dict[int, gateway.Gateway] = {}
         self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
@@ -173,12 +178,33 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         self._version = version
 
     @property
-    def gateway_shards(self) -> typing.Mapping[int, gateway.Gateway]:
+    def shards(self) -> typing.Mapping[int, gateway.Gateway]:
         return self._shards
 
     @property
-    def gateway_shard_count(self) -> int:
+    def shard_count(self) -> int:
         return self._shard_count
+
+    def run(self) -> None:
+        loop = asyncio.get_event_loop()
+
+        def on_interrupt() -> None:
+            loop.create_task(self.close(), name="signal interrupt shutting down application")
+
+        try:
+            self._map_signal_handlers(loop.add_signal_handler, on_interrupt)
+            loop.run_until_complete(self._run())
+        except KeyboardInterrupt as ex:
+            self.logger.info("received signal to shut down client")
+            if self._debug:
+                raise
+            else:
+                # The user won't care where this gets raised from, unless we are
+                # debugging. It just causes a lot of confusing spam.
+                raise ex.with_traceback(None)
+        finally:
+            self._map_signal_handlers(loop.remove_signal_handler)
+            self.logger.info("client has shut down")
 
     async def start(self) -> None:
         self._tasks.clear()
@@ -190,7 +216,10 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
 
         await self._maybe_dispatch(other.StartingEvent())
 
-        self.logger.info("starting %s shard(s)", len(self._shards))
+        if self._shard_count > 1:
+            self.logger.info("starting %s shard(s)", len(self._shards))
+        else:
+            self.logger.info("this application will be single-sharded")
 
         start_time = time.perf_counter()
 
@@ -234,9 +263,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
                 raise
 
             finish_time = time.perf_counter()
-            self._gather_task = asyncio.create_task(
-                self._gather(), name=f"shard zookeeper for {len(self._shards)} shard(s)"
-            )
+            self._gather_task = asyncio.create_task(self._gather(), name=f"zookeeper for {len(self._shards)} shard(s)")
             self.logger.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
 
             await self._maybe_dispatch(other.StartedEvent())
@@ -253,41 +280,11 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
             self.logger.info("stopping %s shard(s)", len(self._tasks))
 
             try:
-                if isinstance(self, app_.IGatewayDispatcher):
-                    # noinspection PyUnresolvedReferences
-                    await self.event_dispatcher.dispatch(other.StoppingEvent())
-
+                await self._maybe_dispatch(other.StoppingEvent())
                 await self._abort()
             finally:
                 self._tasks.clear()
-
-                if isinstance(self, app_.IGatewayDispatcher):
-                    # noinspection PyUnresolvedReferences
-                    await self.event_dispatcher.dispatch(other.StoppedEvent())
-
-    def run(self) -> None:
-        loop = asyncio.get_event_loop()
-
-        def sigterm_handler(*_: typing.Any) -> None:
-            loop.create_task(self.close())
-
-        try:
-            with contextlib.suppress(NotImplementedError):
-                # Not implemented on Windows
-                loop.add_signal_handler(signal.SIGTERM, sigterm_handler)
-
-            loop.run_until_complete(self._run())
-
-        except KeyboardInterrupt:
-            self.logger.info("received signal to shut down client")
-            raise
-
-        finally:
-            loop.run_until_complete(self.close())
-            with contextlib.suppress(NotImplementedError):
-                # Not implemented on Windows
-                loop.remove_signal_handler(signal.SIGTERM)
-            self.logger.info("client has shut down")
+                await self._maybe_dispatch(other.StoppedEvent())
 
     async def update_presence(
         self,
@@ -305,14 +302,25 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
             )
         )
 
+    @abc.abstractmethod
+    async def fetch_sharding_settings(self) -> gateway_models.GatewayBot:
+        """Fetch the recommended sharding settings and gateway URL from Discord.
+
+        Returns
+        -------
+        hikari.models.gateway.GatewayBot
+            The recommended sharding settings and configuration for the
+            bot account.
+        """
+
     async def _init(self) -> None:
-        gw_recs = await self._fetch_gateway_recommendations()
+        gw_recs = await self.fetch_sharding_settings()
 
         self.logger.info(
-            "you have sent an IDENTIFY %s time(s) before now, and have %s remaining. This will reset at %s.",
+            "you have opened %s session(s) recently, you can open %s more before %s",
             gw_recs.session_start_limit.total - gw_recs.session_start_limit.remaining,
-            gw_recs.session_start_limit.remaining,
-            datetime.datetime.now() + gw_recs.session_start_limit.reset_after,
+            gw_recs.session_start_limit.remaining if gw_recs.session_start_limit.remaining > 0 else "no",
+            (datetime.datetime.now() + gw_recs.session_start_limit.reset_after).strftime("%c"),
         )
 
         self._shard_count = self._shard_count if self._shard_count else gw_recs.shard_count
@@ -321,7 +329,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         url = gw_recs.url
 
         self.logger.info(
-            "will connect shards to %s. max_concurrency while connecting is %s, contact Discord to get this increased",
+            "will connect shards to %s at a rate of %s shard(s) per 5 seconds (contact Discord to increase this rate)",
             url,
             self._max_concurrency,
         )
@@ -365,10 +373,6 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
                 yield iter(next_window)
             n += self._max_concurrency
 
-    @abc.abstractmethod
-    async def _fetch_gateway_recommendations(self) -> gateway_models.GatewayBot:
-        ...
-
     async def _abort(self) -> None:
         for shard_id in self._tasks:
             if self._shards[shard_id].is_alive:
@@ -383,10 +387,22 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
             await self.close()
 
     async def _run(self) -> None:
-        await self.start()
-        await self.join()
+        try:
+            await self.start()
+            await self.join()
+        finally:
+            await self.close()
 
-    async def _maybe_dispatch(self, event: base_events.HikariEvent) -> None:
-        if isinstance(self, app_.IGatewayDispatcher):
-            # noinspection PyUnresolvedReferences
-            await self.event_dispatcher.dispatch(event)
+    def _maybe_dispatch(self, event: base_events.Event) -> typing.Awaitable[typing.Any]:
+        if isinstance(self, event_dispatcher.IEventDispatcherApp):
+            return self.event_dispatcher.dispatch(event)
+        else:
+            return aio.completed_future()
+
+    def _map_signal_handlers(
+        self, mapping_function: typing.Callable[..., None], *args: typing.Callable[[], typing.Any],
+    ) -> None:
+        valid_interrupts = signal.valid_signals()
+        for interrupt in self._SIGNALS:
+            if (code := getattr(signal, interrupt, None)) is not None and code in valid_interrupts:
+                mapping_function(code, *args)

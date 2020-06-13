@@ -222,10 +222,10 @@ class Member(bases.Entity):
 
     # TODO: make Member delegate to user and implement a common base class
     # this allows members and users to be used interchangeably.
-    user: users.User = attr.ib(eq=True, hash=True, repr=True)
+    user: typing.Union[undefined.UndefinedType, users.User] = attr.ib(eq=True, hash=True, repr=True)
     """This member's user object.
 
-    This will be `None` when attached to Message Create and Update gateway events.
+    This will be undefined when attached to Message Create and Update gateway events.
     """
 
     nickname: typing.Union[str, None, undefined.UndefinedType] = attr.ib(
@@ -570,13 +570,15 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     owner_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the owner of this guild."""
 
-    my_permissions: permissions_.Permission = attr.ib(eq=False, hash=False, repr=False)
+    my_permissions: typing.Union[undefined.UndefinedType, permissions_.Permission] = attr.ib(
+        eq=False, hash=False, repr=False
+    )
     """The guild-level permissions that apply to the bot user.
 
     This will not take into account permission overwrites or implied
-    permissions (for example, ADMINISTRATOR implies all other permissions).
+    permissions (for example, `ADMINISTRATOR` implies all other permissions).
 
-    This will be `None` when this object is retrieved through a RESTSession request
+    This will be `None` when this object is retrieved through a REST request
     rather than from the gateway.
     """
 
@@ -831,7 +833,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild.
 
-    This information will be provided by RESTSession API calls fetching the guilds that
+    This information will be provided by REST API calls fetching the guilds that
     a bot account is in. For all other purposes, this should be expected to
     remain `None`.
     """
@@ -839,7 +841,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     approximate_active_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild that are not offline.
 
-    This information will be provided by RESTSession API calls fetching the guilds that
+    This information will be provided by REST API calls fetching the guilds that
     a bot account is in. For all other purposes, this should be expected to
     remain `None`.
     """

@@ -27,7 +27,6 @@ import typing
 
 import attr
 
-from hikari.api import app
 from hikari.models import bases
 from hikari.utilities import cdn
 from hikari.utilities import files as files_

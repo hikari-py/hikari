@@ -27,10 +27,10 @@ import typing
 
 import attr
 
-from hikari.api import app as app_
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
+    from hikari.api import rest
     import datetime
 
 
@@ -43,10 +43,10 @@ class Entity(abc.ABC):
     methods directly.
     """
 
-    _app: app_.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    _app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    def __init__(self, app: app_.IRESTApp) -> None:
+    def __init__(self, app: rest.IRESTApp) -> None:
         self._app = app
 
 

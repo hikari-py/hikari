@@ -32,7 +32,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import data_binding
 
 
-class EventManagerImpl(event_manager_core.EventManagerCore):
+class EventManagerImpl(event_manager_core.EventManagerCoreComponent):
     """Provides event handling logic for Discord events."""
 
     async def on_connected(self, shard: gateway.Gateway, _: data_binding.JSONObject) -> None:

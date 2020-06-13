@@ -20,22 +20,22 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["InMemoryCacheImpl"]
+__all__: typing.List[str] = ["InMemoryCacheComponentImpl"]
 
 import typing
 
 from hikari.api import cache
 
 if typing.TYPE_CHECKING:
-    from hikari.api import app as app_
+    from hikari.api import rest
 
 
-class InMemoryCacheImpl(cache.ICache):
+class InMemoryCacheComponentImpl(cache.ICacheComponent):
     """In-memory cache implementation."""
 
-    def __init__(self, app: app_.IRESTApp) -> None:
+    def __init__(self, app: rest.IRESTApp) -> None:
         self._app = app
 
     @property
-    def app(self) -> app_.IRESTApp:
+    def app(self) -> rest.IRESTApp:
         return self._app

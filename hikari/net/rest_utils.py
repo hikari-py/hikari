@@ -40,7 +40,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import types
 
-    from hikari.api import app as app_
+    from hikari.api import rest
     from hikari.models import bases
     from hikari.models import channels
     from hikari.models import colors
@@ -168,7 +168,7 @@ class GuildBuilder:
     """
 
     # Required arguments.
-    _app: app_.IRESTApp
+    _app: rest.IRESTApp
     _name: str
 
     # Optional args that we kept hidden.
@@ -253,7 +253,7 @@ class GuildBuilder:
         payload.put("explicit_content_filter", self.explicit_content_filter_level)
 
         if self.icon is not undefined.UNDEFINED:
-            async with self.icon.stream(self._app.thread_pool_executor) as stream:
+            async with self.icon.stream(self._app.executor) as stream:
                 data_uri = await stream.data_uri()
                 payload.put("icon", data_uri)
 
