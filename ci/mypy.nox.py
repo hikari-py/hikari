@@ -23,8 +23,7 @@ from ci import nox
 
 @nox.session(reuse_venv=True, default=True)
 def mypy(session: nox.Session) -> None:
-    # LXML is used for cobertura reporting.
-    session.install("-r", "requirements.txt", "mypy==0.780", "lxml")
+    session.install("-r", "requirements.txt", "mypy==0.780")
     session.run(
         "mypy",
         "-p",
@@ -33,5 +32,4 @@ def mypy(session: nox.Session) -> None:
         config.MYPY_INI,
         "--junit-xml",
         config.MYPY_JUNIT_OUTPUT_PATH,
-        success_codes=range(0, 256),
     )
