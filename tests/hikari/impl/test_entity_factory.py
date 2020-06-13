@@ -2878,7 +2878,7 @@ class TestEntityFactoryImpl:
 
         assert message_update.message.flags == message_models.MessageFlag.IS_CROSSPOST
         assert message_update.message.nonce == "171000788183678976"
-        assert isinstance(message_update.message, message_events.UpdatedMessage)
+        assert isinstance(message_update.message, message_events.UpdatedMessageFields)
         assert isinstance(message_update, message_events.MessageUpdateEvent)
 
     def test_deserialize_message_update_event_with_partial_payload(self, entity_factory_impl):

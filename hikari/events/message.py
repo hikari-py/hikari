@@ -22,7 +22,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "MessageCreateEvent",
-    "UpdatedMessage",
+    "UpdatedMessageFields",
     "MessageUpdateEvent",
     "MessageDeleteEvent",
     "MessageDeleteBulkEvent",
@@ -61,8 +61,13 @@ class MessageCreateEvent(base_events.Event):
     message: messages.Message = attr.ib(repr=True)
 
 
-class UpdatedMessage:
+@attr.s(slots=True, init=False, repr=True, eq=False)
+class UpdatedMessageFields(base_models.Entity, base_models.Unique):
     """An arbitrarily partial version of `hikari.models.messages.Message`.
+
+    This contains arbitrary fields that may be updated in a
+    `MessageUpdateEvent`, but for all other purposes should be treated as
+    being optionally specified.
 
     !!! warn
         All fields on this model except `channel` and `id` may be set to
@@ -74,16 +79,13 @@ class UpdatedMessage:
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel that the message was sent in."""
 
-    # FIXME: This differs from Message, where the field could only be None or a Snowflake
-    # so this breaks stuff using inheritance.
+    # So this breaks stuff using inheritance.
     guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = attr.ib(repr=True)
     """The ID of the guild that the message was sent in."""
 
     author: typing.Union[users.User, undefined.UndefinedType] = attr.ib(repr=True)
     """The author of this message."""
 
-    # TODO: can we merge member and author together?
-    # We could override deserialize to to this and then reorganise the payload, perhaps?
     member: typing.Union[guilds.Member, undefined.UndefinedType] = attr.ib(repr=False)
     """The member properties for the message's author."""
 
@@ -96,7 +98,7 @@ class UpdatedMessage:
     edited_timestamp: typing.Union[datetime.datetime, undefined.UndefinedType, None] = attr.ib(repr=False)
     """The timestamp that the message was last edited at.
 
-    Will be `None` if the message wasn't ever edited.
+    Will be `None` if the message wasn't ever edited. 
     """
 
     is_tts: typing.Union[bool, undefined.UndefinedType] = attr.ib(repr=False)
@@ -163,7 +165,7 @@ class MessageUpdateEvent(base_events.Event, base_models.Unique):
         (a singleton) to indicate that it has not been changed.
     """
 
-    message: UpdatedMessage = attr.ib(repr=True)
+    message: UpdatedMessageFields = attr.ib(repr=True)
     """The partial message object with all updated fields."""
 
 

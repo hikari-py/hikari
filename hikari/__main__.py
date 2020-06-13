@@ -30,8 +30,8 @@ import typing
 
 from hikari import _about
 
-# noinspection PyTypeChecker
-path: typing.Final[str] = os.path.abspath(os.path.dirname(inspect.getsourcefile(_about)))
+sourcefile = typing.cast(str, inspect.getsourcefile(_about))
+path: typing.Final[str] = os.path.abspath(os.path.dirname(sourcefile))
 version: typing.Final[str] = _about.__version__
 py_impl: typing.Final[str] = platform.python_implementation()
 py_ver: typing.Final[str] = platform.python_version()
