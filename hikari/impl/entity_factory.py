@@ -1550,7 +1550,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def deserialize_message_update_event(self, payload: data_binding.JSONObject) -> message_events.MessageUpdateEvent:
         message_update = message_events.MessageUpdateEvent()
 
-        updated_message = message_events.UpdatedMessage(self._app)
+        updated_message = message_events.UpdatedMessageFields(self._app)
         updated_message.id = snowflake.Snowflake(payload["id"])
         updated_message.channel_id = snowflake.Snowflake(payload["channel_id"])
         updated_message.guild_id = (
