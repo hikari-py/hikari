@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["resolve_signature", "EMPTY", "get_logger", "steal_docstring_from"]
+__all__: typing.List[str] = ["resolve_signature", "EMPTY", "get_logger"]
 
 import inspect
 import logging
@@ -93,11 +93,3 @@ def get_logger(obj: typing.Union[typing.Type[typing.Any], typing.Any], *addition
 
 
 T = typing.TypeVar("T")
-
-
-def steal_docstring_from(source: typing.Any) -> typing.Callable[[T], T]:
-    def decorator(obj: T) -> T:
-        setattr(obj, "__doc__", getattr(source, "__doc__", None))
-        return obj
-
-    return decorator

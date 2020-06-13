@@ -22,6 +22,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = ["BotAppImpl"]
 
+import asyncio
 import concurrent.futures
 import inspect
 import logging
@@ -29,8 +30,6 @@ import os
 import platform
 import sys
 import typing
-
-import asyncio
 
 from hikari.api import bot
 from hikari.impl import cache as cache_impl

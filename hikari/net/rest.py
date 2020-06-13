@@ -33,8 +33,8 @@ import aiohttp
 
 from hikari import errors
 from hikari.api import component
-from hikari.models import emojis
 from hikari.models import embeds as embeds_
+from hikari.models import emojis
 from hikari.net import buckets
 from hikari.net import http_client
 from hikari.net import http_settings
