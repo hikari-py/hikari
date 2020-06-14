@@ -37,10 +37,11 @@
 flake8:
   allow_failure: true
   artifacts:
+    when: always
     paths:
-      - public/
+      - public/flake8
     reports:
-      codequality: public/flake8.json
+      junit: public/flake8-junit.xml
   extends: .lint
   script:
     - nox -s flake8 --no-error-on-external-run

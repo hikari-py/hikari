@@ -17,7 +17,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Dependency scanning."""
 
-from ci import config
 from ci import nox
 
 
