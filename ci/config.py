@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,10 +19,6 @@ import os as _os
 
 IS_CI = "CI" in _os.environ
 
-# PyPI dependencies
-REQUIREMENTS = "requirements.txt"
-DEV_REQUIREMENTS = "dev-requirements.txt"
-
 # Packaging
 MAIN_PACKAGE = "hikari"
 TEST_PACKAGE = "tests"
@@ -35,13 +30,12 @@ DOCUMENTATION_DIRECTORY = "docs"
 ROOT_INDEX_SOURCE = "index.html"
 
 # Linting and test configs.
+FLAKE8_CODECLIMATE = "public/flake8.json"
+FLAKE8_HTML = "public/flake8"
+FLAKE8_TXT = "public/flake8.txt"
 MYPY_INI = "mypy.ini"
 MYPY_JUNIT_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "mypy.xml")
 PYDOCSTYLE_INI = "pydocstyle.ini"
-PYLINT_INI = "pylint.ini"
-PYLINT_JUNIT_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "pylint.xml")
-PYLINT_JSON_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "pylint.json")
-PYLINT_HTML_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "pylint.html")
 PYTEST_INI = "pytest.ini"
 PYTEST_HTML_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "pytest.html")
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
@@ -76,5 +70,6 @@ DOCKER_ENVS = [
     "python:3.8.0",
     "python:3.8.1",
     "python:3.8.2",
+    "python:3.8.3",
     "python:3.9-rc",
 ]

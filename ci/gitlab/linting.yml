@@ -30,45 +30,20 @@
   retry: 0
   stage: test
 
+
 ###
-### Code linting.
+### Flake8 linter.
 ###
-### Looks for code style problems, code smells, and general bad things.
-### Failures are added as warnings to the pipeline.
-###
-pylint:
+flake8:
   allow_failure: true
   artifacts:
     paths:
-      - public/pylint.html
+      - public/
     reports:
-      junit: public/pylint.xml
-    when: always
+      codequality: public/flake8.json
   extends: .lint
   script:
-    - nox -s pylint-junit --no-error-on-external-run
-
-###
-### Documentation linting.
-###
-### If the documentation is clear and formatted correctly. Any failures
-### become warnings on the pipeline.
-###
-pydocstyle:
-  allow_failure: true
-  extends: .lint
-  script:
-    - nox -s pydocstyle --no-error-on-external-run
-
-###
-### Code formatting.
-###
-### If the code style is not the Black code style, fail the pipeline.
-###
-black:
-  extends: .lint
-  script:
-   - nox -s check-formatting --no-error-on-external-run -- --check --diff
+    - nox -s flake8 --no-error-on-external-run
 
 ###
 ### Security checks.

@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -24,6 +23,7 @@ __all__: typing.Final[typing.List[str]] = []
 import inspect
 import os
 import platform
+import sys
 
 # noinspection PyUnresolvedReferences
 import typing
@@ -36,4 +36,4 @@ version: typing.Final[str] = _about.__version__
 py_impl: typing.Final[str] = platform.python_implementation()
 py_ver: typing.Final[str] = platform.python_version()
 py_compiler: typing.Final[str] = platform.python_compiler()
-print(f"hikari v{version} (installed in {path}) ({py_impl} {py_ver} {py_compiler})")
+sys.stderr.write(f"hikari v{version} (installed in {path}) ({py_impl} {py_ver} {py_compiler})\n")
