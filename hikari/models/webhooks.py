@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__ = ["WebhookType", "Webhook"]
+__all__: typing.Final[typing.List[str]] = ["WebhookType", "Webhook"]
 
 import enum
 import typing
@@ -29,12 +28,13 @@ import attr
 
 from hikari.models import bases
 from hikari.utilities import cdn
+from hikari.utilities import files as files_
 from hikari.utilities import snowflake
+from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari.models import channels as channels_
     from hikari.models import embeds as embeds_
-    from hikari.models import files as files_
     from hikari.models import guilds as guilds_
     from hikari.models import messages as messages_
     from hikari.models import users as users_
@@ -69,9 +69,7 @@ class Webhook(bases.Entity, bases.Unique):
     channel_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The channel ID this webhook is for."""
 
-    author: typing.Optional[users_.User] = attr.ib(
-        eq=False, hash=False, repr=True,
-    )
+    author: typing.Optional[users_.User] = attr.ib(eq=False, hash=False, repr=True)
     """The user that created the webhook
 
     !!! info
@@ -82,10 +80,10 @@ class Webhook(bases.Entity, bases.Unique):
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The name of the webhook."""
 
-    avatar_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    avatar_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The avatar hash of the webhook."""
 
-    token: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    token: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The token for the webhook.
 
     !!! info
@@ -95,14 +93,13 @@ class Webhook(bases.Entity, bases.Unique):
 
     async def execute(
         self,
+        text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
         *,
-        content: str = ...,
-        username: str = ...,
-        avatar_url: str = ...,
-        tts: bool = ...,
-        wait: bool = False,
-        files: typing.Sequence[files_.BaseStream] = ...,
-        embeds: typing.Sequence[embeds_.Embed] = ...,
+        username: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        avatar_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        attachments: typing.Union[undefined.UndefinedType, typing.Sequence[files_.Resource]] = undefined.UNDEFINED,
+        embeds: typing.Union[undefined.UndefinedType, typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, users_.User]], bool
@@ -110,27 +107,24 @@ class Webhook(bases.Entity, bases.Unique):
         role_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds_.Role]], bool
         ] = True,
-    ) -> typing.Optional[messages_.Message]:
+    ) -> messages_.Message:
         """Execute the webhook to create a message.
 
         Parameters
         ----------
-        content : str
+        text : str or hikari.utilities.undefined.UndefinedType
             If specified, the message content to send with the message.
-        username : str
+        username : str or hikari.utilities.undefined.UndefinedType
             If specified, the username to override the webhook's username
             for this request.
-        avatar_url : str
+        avatar_url : str or hikari.utilities.undefined.UndefinedType
             If specified, the url of an image to override the webhook's
             avatar with for this request.
-        tts : bool
+        tts : bool or hikari.utilities.undefined.UndefinedType
             If specified, whether the message will be sent as a TTS message.
-        wait : bool
-            If specified, whether this request should wait for the webhook
-            to be executed and return the resultant message object.
-        files : typing.Sequence[hikari.models.files.BaseStream]
-            If specified, a sequence of files to upload.
-        embeds : typing.Sequence[hikari.models.embeds.Embed]
+        attachments : typing.Sequence[hikari.utilities.files.BaseStream] or hikari.utilities.undefined.UndefinedType
+            If specified, a sequence of attachments to upload.
+        embeds : typing.Sequence[hikari.models.embeds.Embed] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of between `1` to `10` embed objects
             (inclusive) to send with the embed.
         mentions_everyone : bool
@@ -147,8 +141,8 @@ class Webhook(bases.Entity, bases.Unique):
 
         Returns
         -------
-        hikari.models.messages.Message or None
-            The created message object, if `wait` is `True`, else `None`.
+        hikari.models.messages.Message
+            The created message object.
 
         Raises
         ------
@@ -172,68 +166,24 @@ class Webhook(bases.Entity, bases.Unique):
 
         return await self._app.rest.execute_webhook(
             webhook=self.id,
-            webhook_token=self.token,
-            content=content,
+            token=self.token,
+            text=text,
             username=username,
             avatar_url=avatar_url,
             tts=tts,
-            wait=wait,
-            files=files,
+            attachments=attachments,
             embeds=embeds,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
         )
 
-    async def safe_execute(
-        self,
-        *,
-        content: str = ...,
-        username: str = ...,
-        avatar_url: str = ...,
-        tts: bool = ...,
-        wait: bool = False,
-        files: typing.Sequence[files_.BaseStream] = ...,
-        embeds: typing.Sequence[embeds_.Embed] = ...,
-        mentions_everyone: bool = True,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users_.User]], bool
-        ] = False,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds_.Role]], bool
-        ] = False,
-    ) -> typing.Optional[messages_.Message]:
-        """Execute the webhook to create a message with mention safety.
-
-        This endpoint has the same signature as
-        `Webhook.execute` with the only difference being
-        that `mentions_everyone`, `user_mentions` and `role_mentions` default to
-        `False`.
-        """
-        if not self.token:
-            raise ValueError("Cannot execute a webhook with a unknown token (set to `None`).")
-
-        return await self._app.rest.safe_webhook_execute(
-            webhook=self.id,
-            webhook_token=self.token,
-            content=content,
-            username=username,
-            avatar_url=avatar_url,
-            tts=tts,
-            wait=wait,
-            files=files,
-            embeds=embeds,
-            mentions_everyone=mentions_everyone,
-            user_mentions=user_mentions,
-            role_mentions=role_mentions,
-        )
-
-    async def delete(self, *, use_token: typing.Optional[bool] = None,) -> None:
+    async def delete(self, *, use_token: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED) -> None:
         """Delete this webhook.
 
         Parameters
         ----------
-        use_token : bool or None
+        use_token : bool or hikari.utilities.undefined.UndefinedType
             If set to `True` then the webhook's token will be used for this
             request; if set to `False` then bot authorization will be used;
             if not specified then the webhook's token will be used for the
@@ -249,40 +199,46 @@ class Webhook(bases.Entity, bases.Unique):
         ValueError
             If `use_token` is passed as `True` when `Webhook.token` is `None`.
         """
-        if use_token and not self.token:
-            raise ValueError("This webhook's token is unknown.")
+        if use_token and self.token is None:
+            raise ValueError("This webhook's token is unknown, so cannot be used.")
 
-        if use_token is None and self.token:
-            use_token = True
+        token: typing.Union[undefined.UndefinedType, str]
 
-        await self._app.rest.delete_webhook(webhook=self.id, webhook_token=self.token if use_token else ...)
+        if use_token:
+            token = typing.cast(str, self.token)
+        else:
+            token = undefined.UNDEFINED
+
+        await self._app.rest.delete_webhook(self.id, token=token)
 
     async def edit(
         self,
         *,
-        name: str = ...,
-        avatar: typing.Optional[files_.BaseStream] = ...,
-        channel: typing.Union[snowflake.Snowflake, int, str, channels_.GuildChannel] = ...,
-        reason: str = ...,
-        use_token: typing.Optional[bool] = None,
+        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        avatar: typing.Union[undefined.UndefinedType, None, files_.Resource] = undefined.UNDEFINED,
+        channel: typing.Union[
+            undefined.UndefinedType, bases.UniqueObject, channels_.GuildChannel
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        use_token: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
     ) -> Webhook:
         """Edit this webhook.
 
         Parameters
         ----------
-        name : str
+        name : str or hikari.utilities.undefined.UndefinedType
             If specified, the new name string.
-        avatar : hikari.models.files.BaseStream or None
+        avatar : hikari.utilities.files.Resource or None or hikari.utilities.undefined.UndefinedType
             If specified, the new avatar image. If `None`, then
-            it is removed.
-        channel : hikari.models.channels.GuildChannel or hikari.utilities.snowflake.Snowflake or int
+            it is removed. If not specified, nothing is changed.
+        channel : hikari.models.channels.GuildChannel or hikari.models.bases.UniqueObject or hikari.utilities.undefined.UndefinedType
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
-        reason : str
+        reason : str or hikari.utilities.undefined.UndefinedType
             If specified, the audit log reason explaining why the operation
             was performed. This field will be used when using the webhook's
             token rather than bot authorization.
-        use_token : bool or None
+        use_token : bool or hikari.utilities.undefined.UndefinedType
             If set to `True` then the webhook's token will be used for this
             request; if set to `False` then bot authorization will be used;
             if not specified then the webhook's token will be used for the
@@ -308,19 +264,18 @@ class Webhook(bases.Entity, bases.Unique):
         ValueError
             If `use_token` is passed as `True` when `Webhook.token` is `None`.
         """
-        if use_token and not self.token:
-            raise ValueError("This webhook's token is unknown.")
+        if use_token and self.token is None:
+            raise ValueError("This webhook's token is unknown, so cannot be used.")
 
-        if use_token is None and self.token:
-            use_token = True
+        token: typing.Union[undefined.UndefinedType, str]
 
-        return await self._app.rest.update_webhook(
-            webhook=self.id,
-            webhook_token=self.token if use_token else ...,
-            name=name,
-            avatar=avatar,
-            channel=channel,
-            reason=reason,
+        if use_token:
+            token = typing.cast(str, self.token)
+        else:
+            token = undefined.UNDEFINED
+
+        return await self._app.rest.edit_webhook(
+            self.id, token=token, name=name, avatar=avatar, channel=channel, reason=reason,
         )
 
     async def fetch_channel(self) -> channels_.PartialChannel:
@@ -338,30 +293,16 @@ class Webhook(bases.Entity, bases.Unique):
         hikari.errors.NotFound
             If the channel this message was created in does not exist.
         """
-        return await self._app.rest.fetch_channel(channel=self.channel_id)
+        return await self._app.rest.fetch_channel(self.channel_id)
 
-    async def fetch_guild(self) -> guilds_.Guild:
-        """Fetch the guild this webhook belongs to.
-
-        Returns
-        -------
-        hikari.models.guilds.Guild
-            The object of the channel this message belongs to.
-
-        Raises
-        ------
-        hikari.errors.Forbidden
-            If you don't have access to the guild this webhook belongs to or it
-            doesn't exist.
-        """
-        return await self._app.rest.fetch_guild(guild=self.guild_id)
-
-    async def fetch_self(self, *, use_token: typing.Optional[bool] = None) -> Webhook:
+    async def fetch_self(
+        self, *, use_token: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED
+    ) -> Webhook:
         """Fetch this webhook.
 
         Parameters
         ----------
-        use_token : bool or None
+        use_token : bool or hikari.utilities.undefined.UndefinedType
             If set to `True` then the webhook's token will be used for this
             request; if set to `False` then bot authorization will be used;
             if not specified then the webhook's token will be used for the
@@ -388,17 +329,28 @@ class Webhook(bases.Entity, bases.Unique):
             If `use_token` is passed as `True` when `Webhook.token` is `None`.
         """
         if use_token and not self.token:
-            raise ValueError("This webhook's token is unknown.")
+            raise ValueError("This webhook's token is unknown, so cannot be used.")
 
-        if use_token is None and self.token:
-            use_token = True
+        token: typing.Union[undefined.UndefinedType, str]
 
-        return await self._app.rest.fetch_webhook(webhook=self.id, webhook_token=self.token if use_token else ...)
+        if use_token:
+            token = typing.cast(str, self.token)
+        else:
+            token = undefined.UNDEFINED
+
+        return await self._app.rest.fetch_webhook(self.id, token=token)
 
     @property
-    def avatar_url(self) -> str:
-        """URL for this webhook's custom avatar if set, else default."""
-        return self.format_avatar_url()
+    def avatar(self) -> files_.URL:
+        """URL for this webhook's custom avatar or default avatar.
+
+        If the webhook has a custom avatar, a URL to this is returned. Otherwise
+        a URL to the default avatar is provided instead.
+        """
+        url = self.format_avatar()
+        if url is None:
+            return self.default_avatar
+        return url
 
     @property
     def default_avatar_index(self) -> int:
@@ -406,11 +358,15 @@ class Webhook(bases.Entity, bases.Unique):
         return 0
 
     @property
-    def default_avatar_url(self) -> str:
-        """URL for this webhook's default avatar."""
-        return cdn.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
+    def default_avatar(self) -> files_.URL:
+        """URL for this webhook's default avatar.
 
-    def format_avatar_url(self, format_: str = "png", size: int = 4096) -> str:
+        This is used if no avatar is set.
+        """
+        url = cdn.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
+        return files_.URL(url)
+
+    def format_avatar(self, format_: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
         """Generate the avatar URL for this webhook's custom avatar if set, else it's default avatar.
 
         Parameters
@@ -426,14 +382,16 @@ class Webhook(bases.Entity, bases.Unique):
 
         Returns
         -------
-        str
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL of the resource. `None` if no avatar is set (in this case,
+            use the `default_avatar` instead).
 
         Raises
         ------
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is not a power of two between 16 and 4096 (inclusive).
         """
-        if not self.avatar_hash:
-            return self.default_avatar_url
-        return cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
+        if self.avatar_hash is not None:
+            url = cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
+            return files_.URL(url)
+        return None

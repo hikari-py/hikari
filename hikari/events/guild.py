@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__ = [
+__all__: typing.Final[typing.List[str]] = [
     "GuildEvent",
     "GuildCreateEvent",
     "GuildUpdateEvent",
@@ -59,7 +58,7 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class GuildEvent(base_events.HikariEvent):
+class GuildEvent(base_events.Event):
     """A base object that all guild events will inherit from."""
 
 
@@ -72,7 +71,7 @@ class GuildCreateEvent(GuildEvent):
     available to a guild (either due to outage or at startup).
     """
 
-    guild: guilds.Guild = attr.ib()
+    guild: guilds.Guild = attr.ib(repr=True)
     """The object of the guild that's being created."""
 
 
@@ -81,7 +80,7 @@ class GuildCreateEvent(GuildEvent):
 class GuildUpdateEvent(GuildEvent):
     """Used to represent Guild Update gateway events."""
 
-    guild: guilds.Guild = attr.ib()
+    guild: guilds.Guild = attr.ib(repr=True)
     """The object of the guild that's being updated."""
 
 
@@ -134,7 +133,7 @@ class GuildBanRemoveEvent(GuildBanEvent):
 class GuildEmojisUpdateEvent(GuildEvent, base_models.Entity):
     """Represents a Guild Emoji Update gateway event."""
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this emoji was updated in."""
 
     emojis: typing.Mapping[snowflake.Snowflake, emojis_models.KnownCustomEmoji] = attr.ib(repr=True)
@@ -176,7 +175,7 @@ class GuildMemberUpdateEvent(GuildMemberEvent):
     Sent when a guild member or their inner user object is updated.
     """
 
-    member: guilds.Member = attr.ib()
+    member: guilds.Member = attr.ib(repr=True)
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
@@ -208,7 +207,7 @@ class GuildRoleCreateEvent(GuildRoleEvent, base_models.Entity):
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild where this role was created."""
 
-    role: guilds.Role = attr.ib()
+    role: guilds.Role = attr.ib(repr=True)
     """The object of the role that was created."""
 
 
@@ -246,5 +245,5 @@ class PresenceUpdateEvent(GuildEvent):
     Sent when a guild member changes their presence.
     """
 
-    presence: presences.MemberPresence = attr.ib()
+    presence: presences.MemberPresence = attr.ib(repr=True)
     """The object of the presence being updated."""

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -19,23 +18,24 @@
 """Core interface for components that consume raw API event payloads."""
 from __future__ import annotations
 
-__all__ = ["IEventConsumer"]
+__all__: typing.Final[typing.List[str]] = ["IEventConsumerComponent", "IEventConsumerApp"]
 
 import abc
 import typing
 
 from hikari.api import component
+from hikari.api import rest
 
 if typing.TYPE_CHECKING:
     from hikari.net import gateway
     from hikari.utilities import data_binding
 
 
-class IEventConsumer(component.IComponent, abc.ABC):
+class IEventConsumerComponent(component.IComponent, abc.ABC):
     """Interface describing a component that can consume raw gateway events.
 
     Implementations will usually want to combine this with a
-    `hikari.api.event_dispatcher.IEventDispatcher` for a basic in-memory
+    `hikari.api.event_dispatcher.IEventDispatcherBase` for a basic in-memory
     single-app event management system. You may in some cases implement this
     separately if you are passing events onto a system such as a message queue.
     """
@@ -54,6 +54,31 @@ class IEventConsumer(component.IComponent, abc.ABC):
             The gateway shard that emitted the event.
         event_name : str
             The event name.
-        payload : hikari.utility.data_binding.JSONObject
+        payload : hikari.utilities.data_binding.JSONObject
             The payload provided with the event.
+        """
+
+
+class IEventConsumerApp(rest.IRESTApp, abc.ABC):
+    """Application specialization that supports consumption of raw events.
+
+    This may be combined with `IGatewayZookeeperApp` for most single-process
+    bots, or may be a specific component for large distributed applications
+    that consume events from a message queue, for example.
+    """
+
+    __slots__ = ()
+
+    @property
+    @abc.abstractmethod
+    def event_consumer(self) -> IEventConsumerComponent:
+        """Raw event consumer.
+
+        This should be passed raw event payloads from your gateway
+        websocket implementation.
+
+        Returns
+        -------
+        IEventConsumerComponent
+            The event consumer implementation in-use.
         """

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__ = [
+__all__: typing.Final[typing.List[str]] = [
     "ChannelType",
     "PermissionOverwrite",
     "PermissionOverwriteType",
@@ -45,8 +44,8 @@ import attr
 from hikari.models import bases
 from hikari.models import permissions
 from hikari.models import users
-
 from hikari.utilities import cdn
+from hikari.utilities import files
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -90,7 +89,7 @@ class PermissionOverwriteType(str, enum.Enum):
     """A permission overwrite that targets a specific guild member."""
 
     def __str__(self) -> str:
-        return self.value
+        return str(self.value)
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True)
@@ -120,19 +119,24 @@ class PermissionOverwrite(bases.Unique):
     ```
     """
 
-    type: PermissionOverwriteType = attr.ib(converter=PermissionOverwriteType, eq=True, hash=True)
+    type: PermissionOverwriteType = attr.ib(converter=PermissionOverwriteType, eq=True, hash=True, repr=True)
     """The type of entity this overwrite targets."""
 
-    allow: permissions.Permission = attr.ib(converter=permissions.Permission, default=0, eq=False, hash=False)
+    allow: permissions.Permission = attr.ib(
+        converter=permissions.Permission, default=permissions.Permission.NONE, eq=False, hash=False, repr=False,
+    )
     """The permissions this overwrite allows."""
 
-    deny: permissions.Permission = attr.ib(converter=permissions.Permission, default=0, eq=False, hash=False)
+    deny: permissions.Permission = attr.ib(
+        converter=permissions.Permission, default=permissions.Permission.NONE, eq=False, hash=False, repr=False
+    )
     """The permissions this overwrite denies."""
 
     @property
     def unset(self) -> permissions.Permission:
         """Bitfield of all permissions not explicitly allowed or denied by this overwrite."""
-        return typing.cast(permissions.Permission, (self.allow | self.deny))
+        # noinspection PyArgumentList
+        return permissions.Permission(~(self.allow | self.deny))
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -161,7 +165,7 @@ class TextChannel(PartialChannel, abc.ABC):
 class DMChannel(TextChannel):
     """Represents a DM channel."""
 
-    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
     !!! warning
@@ -169,9 +173,7 @@ class DMChannel(TextChannel):
         this will always be valid.
     """
 
-    recipients: typing.Mapping[snowflake.Snowflake, users.User] = attr.ib(
-        eq=False, hash=False,
-    )
+    recipients: typing.Mapping[snowflake.Snowflake, users.User] = attr.ib(eq=False, hash=False, repr=False)
     """The recipients of the DM."""
 
 
@@ -182,26 +184,26 @@ class GroupDMChannel(DMChannel):
     owner_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the owner of the group."""
 
-    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The CDN hash of the icon of the group, if an icon is set."""
 
-    nicknames: typing.MutableMapping[snowflake.Snowflake, str] = attr.ib(eq=False, hash=False)
+    nicknames: typing.MutableMapping[snowflake.Snowflake, str] = attr.ib(eq=False, hash=False, repr=False)
     """A mapping of set nicknames within this group DMs to user IDs."""
 
-    application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the application that created the group DM.
 
     If the group DM was not created by a bot, this will be `None`.
     """
 
     @property
-    def icon_url(self) -> typing.Optional[str]:
-        """URL for this DM channel's icon, if set."""
-        return self.format_icon_url()
+    def icon(self) -> typing.Optional[files.URL]:
+        """Icon for this DM channel, if set."""
+        return self.format_icon()
 
     # noinspection PyShadowingBuiltins
-    def format_icon_url(self, *, format: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this group DM's icon, if set.
+    def format_icon(self, *, format: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the icon for this DM, if set.
 
         Parameters
         ----------
@@ -214,8 +216,8 @@ class GroupDMChannel(DMChannel):
 
         Returns
         -------
-        str or None
-            The string URL, or `None` if no icon is present.
+        hikari.utilities.files.URL or None
+            The URL, or `None` if no icon is present.
 
         Raises
         ------
@@ -223,7 +225,8 @@ class GroupDMChannel(DMChannel):
             If `size` is not a power of two between 16 and 4096 (inclusive).
         """
         if self.icon_hash:
-            return cdn.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format, size=size)
+            url = cdn.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format, size=size)
+            return files.URL(url)
         return None
 
 
@@ -239,19 +242,21 @@ class GuildChannel(PartialChannel):
         (e.g Guild Create).
     """
 
-    position: int = attr.ib(eq=False, hash=False)
+    position: int = attr.ib(eq=False, hash=False, repr=False)
     """The sorting position of the channel.
 
     Higher numbers appear further down the channel list.
     """
 
-    permission_overwrites: typing.Mapping[snowflake.Snowflake, PermissionOverwrite] = attr.ib(eq=False, hash=False)
+    permission_overwrites: typing.Mapping[snowflake.Snowflake, PermissionOverwrite] = attr.ib(
+        eq=False, hash=False, repr=False
+    )
     """The permission overwrites for the channel.
 
     This maps the ID of the entity in the overwrite to the overwrite data.
     """
 
-    is_nsfw: typing.Optional[bool] = attr.ib(eq=False, hash=False)
+    is_nsfw: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether the channel is marked as NSFW.
 
     !!! warning
@@ -279,10 +284,10 @@ class GuildCategory(GuildChannel):
 class GuildTextChannel(GuildChannel, TextChannel):
     """Represents a guild text channel."""
 
-    topic: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    topic: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The topic of the channel."""
 
-    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
     !!! warning
@@ -290,7 +295,7 @@ class GuildTextChannel(GuildChannel, TextChannel):
         this will always be valid.
     """
 
-    rate_limit_per_user: datetime.timedelta = attr.ib(eq=False, hash=False)
+    rate_limit_per_user: datetime.timedelta = attr.ib(eq=False, hash=False, repr=False)
     """The delay (in seconds) between a user can send a message to this channel.
 
     !!! note
@@ -299,7 +304,7 @@ class GuildTextChannel(GuildChannel, TextChannel):
         will not be affected by this rate limit.
     """
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False)
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The timestamp of the last-pinned message.
 
     !!! note
@@ -312,10 +317,10 @@ class GuildTextChannel(GuildChannel, TextChannel):
 class GuildNewsChannel(GuildChannel, TextChannel):
     """Represents an news channel."""
 
-    topic: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    topic: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The topic of the channel."""
 
-    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
     !!! warning
@@ -323,7 +328,7 @@ class GuildNewsChannel(GuildChannel, TextChannel):
         this will always be valid.
     """
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False)
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The timestamp of the last-pinned message.
 
     !!! note

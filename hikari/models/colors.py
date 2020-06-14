@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__ = ["Color"]
+__all__: typing.Final[typing.List[str]] = ["Color", "ColorLike"]
 
 import string
 import typing
@@ -125,10 +124,12 @@ class Color(int):
 
     __slots__ = ()
 
-    def __new__(cls, raw_rgb: typing.Union[int, typing.SupportsInt], /) -> Color:
-        if not 0 <= int(raw_rgb) <= 0xFF_FF_FF:
+    def __init__(self, raw_rgb: typing.SupportsInt) -> None:
+        if not (0 <= int(raw_rgb) <= 0xFFFFFF):
             raise ValueError(f"raw_rgb must be in the exclusive range of 0 and {0xFF_FF_FF}")
-        return super(Color, cls).__new__(cls, raw_rgb)
+        # The __new__ for `int` initializes the value for us, this super-call does nothing other
+        # than keeping the linter happy.
+        super().__init__()
 
     def __repr__(self) -> str:
         r, g, b = self.rgb
@@ -323,7 +324,9 @@ class Color(int):
 
     # Partially chose to override these as the docstrings contain typos according to Sphinx.
     @classmethod
-    def from_bytes(cls, bytes_: typing.Sequence[int], byteorder: str, *, signed: bool = True) -> Color:
+    def from_bytes(
+        cls, bytes_: typing.Union[typing.Iterable[int], typing.SupportsBytes], byteorder: str, *, signed: bool = True
+    ) -> Color:
         """Convert the bytes to a `Color`.
 
         Parameters
@@ -346,18 +349,7 @@ class Color(int):
         return Color(int.from_bytes(bytes_, byteorder, signed=signed))
 
     @classmethod
-    def of(
-        cls,
-        *values: typing.Union[
-            Color,
-            typing.SupportsInt,
-            typing.Tuple[typing.SupportsInt, typing.SupportsInt, typing.SupportsInt],
-            typing.Tuple[typing.SupportsFloat, typing.SupportsFloat, typing.SupportsFloat],
-            typing.Sequence[typing.SupportsInt],
-            typing.Sequence[typing.SupportsFloat],
-            str,
-        ],
-    ) -> Color:
+    def of(cls, value: ColorLike, /) -> Color:
         """Convert the value to a `Color`.
 
         This attempts to determine the correct data format based on the
@@ -365,7 +357,7 @@ class Color(int):
 
         Parameters
         ----------
-        values : ColorCompatibleT
+        value : ColorLike
             A color compatible values.
 
         Examples
@@ -378,9 +370,6 @@ class Color(int):
         Color(r=0xff, g=0x5, b=0x1a)
 
         >>> c = Color.of((255, 5, 26))
-        Color(r=0xff, g=0x5, b=1xa)
-
-        >>> c = Color.of(255, 5, 26)
         Color(r=0xff, g=0x5, b=1xa)
 
         >>> c = Color.of([0xFF, 0x5, 0x1a])
@@ -404,32 +393,29 @@ class Color(int):
         Color
             The Color object.
         """
-        if len(values) == 1:
-            values = values[0]
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, int):
+            return cls.from_int(value)
+        if isinstance(value, (list, tuple)):
+            if len(value) != 3:
+                raise ValueError(f"color must be an RGB triplet if set to a {type(value).__name__} type")
 
-        if isinstance(values, cls):
-            return values
-        if isinstance(values, int):
-            return cls.from_int(values)
-        if isinstance(values, (list, tuple)):
-            if len(values) != 3:
-                raise ValueError(f"color must be an RGB triplet if set to a {type(values).__name__} type")
-
-            if any(isinstance(c, float) for c in values):
-                r, g, b = values
+            if any(isinstance(c, float) for c in value):
+                r, g, b = value
                 return cls.from_rgb_float(r, g, b)
 
-            if all(isinstance(c, int) for c in values):
-                r, g, b = values
+            if all(isinstance(c, int) for c in value):
+                r, g, b = value
                 return cls.from_rgb(r, g, b)
 
-        if isinstance(values, str):
-            is_start_hash_or_hex_literal = values.casefold().startswith(("#", "0x"))
-            is_hex_digits = all(c in string.hexdigits for c in values) and len(values) in (3, 6)
+        if isinstance(value, str):
+            is_start_hash_or_hex_literal = value.casefold().startswith(("#", "0x"))
+            is_hex_digits = all(c in string.hexdigits for c in value) and len(value) in (3, 6)
             if is_start_hash_or_hex_literal or is_hex_digits:
-                return cls.from_hex_code(values)
+                return cls.from_hex_code(value)
 
-        raise ValueError(f"Could not transform {values!r} into a {cls.__qualname__} object")
+        raise ValueError(f"Could not transform {value!r} into a {cls.__qualname__} object")
 
     def to_bytes(self, length: int, byteorder: str, *, signed: bool = True) -> bytes:
         """Convert the color code to bytes.
@@ -450,3 +436,15 @@ class Color(int):
             The bytes representation of the Color.
         """
         return int(self).to_bytes(length, byteorder, signed=signed)
+
+
+ColorLike = typing.Union[
+    Color,
+    typing.SupportsInt,
+    typing.Tuple[typing.SupportsInt, typing.SupportsInt, typing.SupportsInt],
+    typing.Tuple[typing.SupportsFloat, typing.SupportsFloat, typing.SupportsFloat],
+    typing.Sequence[typing.SupportsInt],
+    typing.Sequence[typing.SupportsFloat],
+    str,
+]
+"""Type hint representing types of value compatible with a color type."""

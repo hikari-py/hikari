@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -29,6 +28,8 @@ TRASH = [
     "hikari.egg-info",
     "public",
     ".coverage",
+    ".pytest_cache",
+    ".mypy_cache",
 ]
 
 

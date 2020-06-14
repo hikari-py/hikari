@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__ = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji"]
+__all__: typing.Final[typing.List[str]] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji"]
 
 import abc
 import typing
@@ -29,8 +28,8 @@ import unicodedata
 import attr
 
 from hikari.models import bases
-from hikari.models import files
 from hikari.utilities import cdn
+from hikari.utilities import files
 
 if typing.TYPE_CHECKING:
     from hikari.models import users
@@ -44,7 +43,7 @@ _TWEMOJI_SVG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/r
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class Emoji(files.BaseStream, abc.ABC):
+class Emoji(files.WebResource, abc.ABC):
     """Base class for all emojis.
 
     Any emoji implementation supports being used as a `hikari.models.files.BaseStream`
@@ -71,9 +70,6 @@ class Emoji(files.BaseStream, abc.ABC):
     @abc.abstractmethod
     def mention(self) -> str:
         """Mention string to use to mention the emoji with."""
-
-    def __aiter__(self) -> typing.AsyncIterator[bytes]:
-        return files.WebResourceStream(self.filename, self.url).__aiter__()
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -185,7 +181,7 @@ class UnicodeEmoji(Emoji):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class CustomEmoji(Emoji, bases.Entity, bases.Unique):
+class CustomEmoji(bases.Entity, bases.Unique, Emoji):
     """Represents a custom emoji.
 
     This is a custom emoji that is from a guild you might not be part of.
@@ -212,9 +208,7 @@ class CustomEmoji(Emoji, bases.Entity, bases.Unique):
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The name of the emoji."""
 
-    is_animated: typing.Optional[bool] = attr.ib(
-        eq=False, hash=False, repr=True,
-    )
+    is_animated: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=True)
     """Whether the emoji is animated.
 
     Will be `None` when received in Message Reaction Remove and Message
@@ -250,17 +244,13 @@ class KnownCustomEmoji(CustomEmoji):
     _are_ part of. Ass a result, it contains a lot more information with it.
     """
 
-    role_ids: typing.Set[snowflake.Snowflake] = attr.ib(
-        eq=False, hash=False,
-    )
+    role_ids: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The IDs of the roles that are whitelisted to use this emoji.
 
     If this is empty then any user can use this emoji regardless of their roles.
     """
 
-    user: typing.Optional[users.User] = attr.ib(
-        eq=False, hash=False,
-    )
+    user: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=False)
     """The user that created the emoji.
 
     !!! note
@@ -274,13 +264,13 @@ class KnownCustomEmoji(CustomEmoji):
     Unlike in `CustomEmoji`, this information is always known, and will thus never be `None`.
     """
 
-    is_colons_required: bool = attr.ib(eq=False, hash=False)
+    is_colons_required: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this emoji must be wrapped in colons."""
 
-    is_managed: bool = attr.ib(eq=False, hash=False)
+    is_managed: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether the emoji is managed by an integration."""
 
-    is_available: bool = attr.ib(eq=False, hash=False)
+    is_available: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this emoji can currently be used.
 
     May be `False` due to a loss of Sever Boosts on the emoji's guild.

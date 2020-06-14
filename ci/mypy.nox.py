@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -16,15 +15,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Static application security testing."""
 
 from ci import config
 from ci import nox
 
 
-# Do not reuse venv, download new definitions each run.
-@nox.session(reuse_venv=False, default=True)
-def bandit(session: nox.Session) -> None:
-    """Run static application security tests."""
-    session.install("bandit")
-    session.run("bandit", config.MAIN_PACKAGE, "-r")
+@nox.session(reuse_venv=True, default=True)
+def mypy(session: nox.Session) -> None:
+    session.install("-r", "requirements.txt", "-r", "mypy-requirements.txt")
+    session.run(
+        "mypy", "-p", config.MAIN_PACKAGE, "--config", config.MYPY_INI, "--junit-xml", config.MYPY_JUNIT_OUTPUT_PATH,
+    )

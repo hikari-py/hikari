@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -19,7 +18,7 @@
 """Lazy iterators for data that requires repeated API calls to retrieve."""
 from __future__ import annotations
 
-__all__ = ["LazyIterator"]
+__all__: typing.Final[typing.List[str]] = ["LazyIterator"]
 
 import abc
 import typing
@@ -30,21 +29,18 @@ from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari.api import app as app_
+    from hikari.api import rest
+
     from hikari.models import applications
     from hikari.models import audit_logs
     from hikari.models import guilds
     from hikari.models import messages
     from hikari.models import users
 
-_T = typing.TypeVar("_T")
+IteratorT = typing.TypeVar("IteratorT")
 
 
-def _empty_generator():
-    yield from ()
-
-
-class LazyIterator(typing.Generic[_T], abc.ABC):
+class LazyIterator(typing.Generic[IteratorT], abc.ABC):
     """A set of results that are fetched asynchronously from the API as needed.
 
     This is a `typing.AsyncIterable` and `typing.AsyncIterator` with several
@@ -94,7 +90,7 @@ class LazyIterator(typing.Generic[_T], abc.ABC):
 
     __slots__ = ()
 
-    def enumerate(self, *, start: int = 0) -> LazyIterator[typing.Tuple[int, _T]]:
+    def enumerate(self, *, start: int = 0) -> LazyIterator[typing.Tuple[int, IteratorT]]:
         """Enumerate the paginated results lazily.
 
         This behaves as an asyncio-friendly version of `builtins.enumerate`
@@ -138,7 +134,7 @@ class LazyIterator(typing.Generic[_T], abc.ABC):
         """
         return _EnumeratedLazyIterator(self, start=start)
 
-    def limit(self, limit: int) -> LazyIterator[_T]:
+    def limit(self, limit: int) -> LazyIterator[IteratorT]:
         """Limit the number of items you receive from this async iterator.
 
         Parameters
@@ -163,48 +159,45 @@ class LazyIterator(typing.Generic[_T], abc.ABC):
     def _complete(self) -> typing.NoReturn:
         raise StopAsyncIteration("No more items exist in this paginator. It has been exhausted.") from None
 
-    def __aiter__(self) -> LazyIterator[_T]:
+    def __aiter__(self) -> LazyIterator[IteratorT]:
         # We are our own iterator.
         return self
 
-    async def _fetch_all(self) -> typing.Sequence[_T]:
+    async def _fetch_all(self) -> typing.Sequence[IteratorT]:
         return [item async for item in self]
 
-    def __await__(self):
-        return self._fetch_all().__await__()
+    def __await__(self) -> typing.Generator[typing.Sequence[IteratorT], None, None]:
+        yield from self._fetch_all().__await__()
 
     @abc.abstractmethod
-    async def __anext__(self) -> _T:
+    async def __anext__(self) -> IteratorT:
         ...
 
 
-_EnumeratedT = typing.Tuple[int, _T]
-
-
-class _EnumeratedLazyIterator(typing.Generic[_T], LazyIterator[_EnumeratedT]):
+class _EnumeratedLazyIterator(typing.Generic[IteratorT], LazyIterator[typing.Tuple[int, IteratorT]]):
     __slots__ = ("_i", "_paginator")
 
-    def __init__(self, paginator: LazyIterator[_T], *, start: int) -> None:
+    def __init__(self, paginator: LazyIterator[IteratorT], *, start: int) -> None:
         self._i = start
         self._paginator = paginator
 
-    async def __anext__(self) -> typing.Tuple[int, _T]:
+    async def __anext__(self) -> typing.Tuple[int, IteratorT]:
         pair = self._i, await self._paginator.__anext__()
         self._i += 1
         return pair
 
 
-class _LimitedLazyIterator(typing.Generic[_T], LazyIterator[_T]):
+class _LimitedLazyIterator(typing.Generic[IteratorT], LazyIterator[IteratorT]):
     __slots__ = ("_paginator", "_count", "_limit")
 
-    def __init__(self, paginator: LazyIterator[_T], limit: int) -> None:
+    def __init__(self, paginator: LazyIterator[IteratorT], limit: int) -> None:
         if limit <= 0:
             raise ValueError("limit must be positive and non-zero")
         self._paginator = paginator
         self._count = 0
         self._limit = limit
 
-    async def __anext__(self) -> _T:
+    async def __anext__(self) -> IteratorT:
         if self._count >= self._limit:
             self._complete()
 
@@ -213,30 +206,31 @@ class _LimitedLazyIterator(typing.Generic[_T], LazyIterator[_T]):
         return next_item
 
 
-class _BufferedLazyIterator(typing.Generic[_T], LazyIterator[_T]):
+class _BufferedLazyIterator(typing.Generic[IteratorT], LazyIterator[IteratorT]):
     __slots__ = ("_buffer",)
 
     def __init__(self) -> None:
-        self._buffer = _empty_generator()
+        empty_genexp = typing.cast(typing.Generator[IteratorT, None, None], (_ for _ in ()))
+        self._buffer: typing.Optional[typing.Generator[IteratorT, None, None]] = empty_genexp
 
     @abc.abstractmethod
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[typing.Any, None, _T]]:
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[IteratorT, None, None]]:
         ...
 
-    async def __anext__(self) -> _T:
+    async def __anext__(self) -> IteratorT:
         # This sneaky snippet of code lets us use generators rather than lists.
         # This is important, as we can use this to make generators that
         # deserialize loads of items lazy. If we only want 10 messages of
         # history, we can use the same code and prefetch 100 without any
         # performance hit from it other than the JSON string response.
         try:
-            return next(self._buffer)
+            if self._buffer is not None:
+                return next(self._buffer)
         except StopIteration:
             self._buffer = await self._next_chunk()
-            if self._buffer is None:
-                self._complete()
-            else:
+            if self._buffer is not None:
                 return next(self._buffer)
+        self._complete()
 
 
 # We use an explicit forward reference for this, since this breaks potential
@@ -249,11 +243,13 @@ class MessageIterator(_BufferedLazyIterator["messages.Message"]):
 
     def __init__(
         self,
-        app: app_.IRESTApp,
-        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, data_binding.JSONArray]],
-        channel_id: typing.Union[typing.SupportsInt, int],
+        app: rest.IRESTApp,
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
+        channel_id: str,
         direction: str,
-        first_id: typing.Union[typing.SupportsInt, int],
+        first_id: str,
     ) -> None:
         super().__init__()
         self._app = app
@@ -266,7 +262,9 @@ class MessageIterator(_BufferedLazyIterator["messages.Message"]):
         query = data_binding.StringMapBuilder()
         query.put(self._direction, self._first_id)
         query.put("limit", 100)
-        chunk = await self._request_call(self._route, query)
+
+        raw_chunk = await self._request_call(self._route, query)
+        chunk = typing.cast(data_binding.JSONArray, raw_chunk)
 
         if not chunk:
             return None
@@ -287,10 +285,12 @@ class ReactorIterator(_BufferedLazyIterator["users.User"]):
 
     def __init__(
         self,
-        app: app_.IRESTApp,
-        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, data_binding.JSONArray]],
-        channel_id: typing.Union[typing.SupportsInt, int],
-        message_id: typing.Union[typing.SupportsInt, int],
+        app: rest.IRESTApp,
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
+        channel_id: str,
+        message_id: str,
         emoji: str,
     ) -> None:
         super().__init__()
@@ -303,7 +303,9 @@ class ReactorIterator(_BufferedLazyIterator["users.User"]):
         query = data_binding.StringMapBuilder()
         query.put("after", self._first_id)
         query.put("limit", 100)
-        chunk = await self._request_call(self._route, query=query)
+
+        raw_chunk = await self._request_call(self._route, query=query)
+        chunk = typing.cast(data_binding.JSONArray, raw_chunk)
 
         if not chunk:
             return None
@@ -322,10 +324,12 @@ class OwnGuildIterator(_BufferedLazyIterator["applications.OwnGuild"]):
 
     def __init__(
         self,
-        app: app_.IRESTApp,
-        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, data_binding.JSONArray]],
+        app: rest.IRESTApp,
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
         newest_first: bool,
-        first_id: typing.Union[typing.SupportsInt, int],
+        first_id: str,
     ) -> None:
         super().__init__()
         self._app = app
@@ -339,7 +343,8 @@ class OwnGuildIterator(_BufferedLazyIterator["applications.OwnGuild"]):
         query.put("before" if self._newest_first else "after", self._first_id)
         query.put("limit", 100)
 
-        chunk = await self._request_call(self._route, query=query)
+        raw_chunk = await self._request_call(self._route, query=query)
+        chunk = typing.cast(data_binding.JSONArray, raw_chunk)
 
         if not chunk:
             return None
@@ -358,9 +363,11 @@ class MemberIterator(_BufferedLazyIterator["guilds.Member"]):
 
     def __init__(
         self,
-        app: app_.IRESTApp,
-        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, data_binding.JSONArray]],
-        guild_id: typing.Union[typing.SupportsInt, int],
+        app: rest.IRESTApp,
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
+        guild_id: str,
     ) -> None:
         super().__init__()
         self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild_id)
@@ -372,7 +379,9 @@ class MemberIterator(_BufferedLazyIterator["guilds.Member"]):
         query = data_binding.StringMapBuilder()
         query.put("after", self._first_id)
         query.put("limit", 100)
-        chunk = await self._request_call(self._route, query=query)
+
+        raw_chunk = await self._request_call(self._route, query=query)
+        chunk = typing.cast(data_binding.JSONArray, raw_chunk)
 
         if not chunk:
             return None
@@ -391,16 +400,18 @@ class AuditLogIterator(LazyIterator["audit_logs.AuditLog"]):
 
     def __init__(
         self,
-        app: app_.IRESTApp,
-        request_call: typing.Callable[..., typing.Coroutine[None, typing.Any, data_binding.JSONObject]],
-        guild_id: typing.Union[typing.SupportsInt, int],
-        before: typing.Union[typing.SupportsInt, int],
-        user_id: typing.Union[typing.SupportsInt, int, undefined.Undefined],
-        action_type: typing.Union[int, undefined.Undefined],
+        app: rest.IRESTApp,
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
+        guild_id: str,
+        before: str,
+        user_id: typing.Union[str, undefined.UndefinedType],
+        action_type: typing.Union[int, undefined.UndefinedType],
     ) -> None:
         self._action_type = action_type
         self._app = app
-        self._first_id = before
+        self._first_id = str(before)
         self._request_call = request_call
         self._route = routes.GET_GUILD_AUDIT_LOGS.compile(guild=guild_id)
         self._user_id = user_id
@@ -410,7 +421,9 @@ class AuditLogIterator(LazyIterator["audit_logs.AuditLog"]):
         query.put("limit", 100)
         query.put("user_id", self._user_id)
         query.put("event_type", self._action_type)
-        response = await self._request_call(self._route, query=query)
+
+        raw_response = await self._request_call(self._route, query=query)
+        response = typing.cast(data_binding.JSONObject, raw_response)
 
         if not response["entries"]:
             raise StopAsyncIteration()

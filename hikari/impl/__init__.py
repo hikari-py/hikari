@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -26,4 +25,7 @@ implementations.
 
 from __future__ import annotations
 
-__all__ = []
+__all__: typing.Final[typing.List[str]] = []
+
+# noinspection PyUnresolvedReferences
+import typing

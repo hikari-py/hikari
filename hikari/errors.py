@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__ = [
+__all__: typing.Final[typing.List[str]] = [
     "HikariError",
     "HikariWarning",
     "NotFound",
@@ -39,7 +38,10 @@ __all__ = [
 import http
 import typing
 
-import aiohttp.typedefs
+
+if typing.TYPE_CHECKING:
+    from hikari.net import routes
+    from hikari.utilities import data_binding
 
 
 class HikariError(RuntimeError):
@@ -170,9 +172,9 @@ class HTTPErrorResponse(HTTPError):
     ----------
     url : str
         The URL that produced the error message.
-    status : http.HTTPStatus
+    status : int or http.HTTPStatus
         The HTTP status code of the response that caused this error.
-    headers : aiohttp.typedefs.LooseHeaders
+    headers : hikari.utilities.data_binding.Headers
         Any headers that were given in the response.
     raw_body : typing.Any
         The body that was received.
@@ -180,10 +182,10 @@ class HTTPErrorResponse(HTTPError):
 
     __slots__ = ("status", "headers", "raw_body")
 
-    status: http.HTTPStatus
+    status: typing.Union[int, http.HTTPStatus]
     """The HTTP status code for the response."""
 
-    headers: aiohttp.typedefs.LooseHeaders
+    headers: data_binding.Headers
     """The headers received in the error response."""
 
     raw_body: typing.Any
@@ -193,7 +195,7 @@ class HTTPErrorResponse(HTTPError):
         self,
         url: str,
         status: typing.Union[int, http.HTTPStatus],
-        headers: aiohttp.typedefs.LooseHeaders,
+        headers: data_binding.Headers,
         raw_body: typing.Any,
         reason: typing.Optional[str] = None,
     ) -> None:
@@ -209,8 +211,14 @@ class HTTPErrorResponse(HTTPError):
             raw_body = str(self.raw_body)
 
         chomped = len(raw_body) > 200
-        name = self.status.name.replace("_", " ").title()
-        return f"{self.status.value} {name}: {raw_body[:200]}{'...' if chomped else ''}"
+
+        if isinstance(self.status, http.HTTPStatus):
+            name = self.status.name.replace("_", " ").title()
+            name_value = f"{name} {self.status.value}"
+        else:
+            name_value = str(self.status)
+
+        return f"{name_value}: {raw_body[:200]}{'...' if chomped else ''}"
 
 
 class ClientHTTPErrorResponse(HTTPErrorResponse):
@@ -230,7 +238,7 @@ class BadRequest(ClientHTTPErrorResponse):
     ----------
     url : str
         The URL that produced the error message.
-    headers : aiohttp.typedefs.LooseHeaders
+    headers : hikari.utilities.data_binding.Headers
         Any headers that were given in the response.
     raw_body : typing.Any
         The body that was received.
@@ -238,7 +246,7 @@ class BadRequest(ClientHTTPErrorResponse):
 
     __slots__ = ()
 
-    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr) -> None:
+    def __init__(self, url: str, headers: data_binding.Headers, raw_body: typing.AnyStr) -> None:
         status = http.HTTPStatus.BAD_REQUEST
         super().__init__(url, status, headers, raw_body)
 
@@ -252,7 +260,7 @@ class Unauthorized(ClientHTTPErrorResponse):
     ----------
     url : str
         The URL that produced the error message.
-    headers : aiohttp.typedefs.LooseHeaders
+    headers : hikari.utilities.data_binding.Headers
         Any headers that were given in the response.
     raw_body : typing.Any
         The body that was received.
@@ -260,7 +268,7 @@ class Unauthorized(ClientHTTPErrorResponse):
 
     __slots__ = ()
 
-    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr) -> None:
+    def __init__(self, url: str, headers: data_binding.Headers, raw_body: typing.AnyStr) -> None:
         status = http.HTTPStatus.UNAUTHORIZED
         super().__init__(url, status, headers, raw_body)
 
@@ -276,7 +284,7 @@ class Forbidden(ClientHTTPErrorResponse):
     ----------
     url : str
         The URL that produced the error message.
-    headers : aiohttp.typedefs.LooseHeaders
+    headers : hikari.utilities.data_binding.Headers
         Any headers that were given in the response.
     raw_body : typing.Any
         The body that was received.
@@ -284,7 +292,7 @@ class Forbidden(ClientHTTPErrorResponse):
 
     __slots__ = ()
 
-    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr) -> None:
+    def __init__(self, url: str, headers: data_binding.Headers, raw_body: typing.AnyStr) -> None:
         status = http.HTTPStatus.FORBIDDEN
         super().__init__(url, status, headers, raw_body)
 
@@ -296,7 +304,7 @@ class NotFound(ClientHTTPErrorResponse):
     ----------
     url : str
         The URL that produced the error message.
-    headers : aiohttp.typedefs.LooseHeaders
+    headers : hikari.utilities.data_binding.Headers
         Any headers that were given in the response.
     raw_body : typing.Any
         The body that was received.
@@ -304,9 +312,75 @@ class NotFound(ClientHTTPErrorResponse):
 
     __slots__ = ()
 
-    def __init__(self, url: str, headers: aiohttp.typedefs.LooseHeaders, raw_body: typing.AnyStr) -> None:
+    def __init__(self, url: str, headers: data_binding.Headers, raw_body: typing.AnyStr) -> None:
         status = http.HTTPStatus.NOT_FOUND
         super().__init__(url, status, headers, raw_body)
+
+
+class RateLimited(ClientHTTPErrorResponse):
+    """Raised when a non-global ratelimit that cannot be handled occurs.
+
+    This should only ever occur for specific routes that have additional
+    rate-limits applied to them by Discord. At the time of writing, the
+    PATCH CHANNEL endpoint is the only one that knowingly implements this, and
+    does so by implementing rate-limits on the usage of specific fields only.
+
+    If you receive one of these, you should NOT try again until the given
+    time has passed, either discarding the operation you performed, or waiting
+    until the given time has passed first. Note that it may still be valid to
+    send requests with different attributes in them.
+
+    A use case for this by Discord appears to be to stop abuse from bots that
+    change channel names, etc, regularly. This kind of action allegedly causes
+    a fair amount of overhead internally for Discord. In the case you encounter
+    this, you may be able to send different requests that manipulate the same
+    entities (in this case editing the same channel) that do not use the same
+    collection of attributes as the previous request.
+
+    You should not usually see this occur, unless Discord vastly change their
+    ratelimit system without prior warning, which might happen in the future.
+
+    !!! note
+        If you receive this regularly, please file a bug report, or contact
+        Discord with the relevant debug information that can be obtained by
+        enabling debug logs and enabling the debug mode on the REST components.
+
+    Parameters
+    ----------
+    url : str
+        The URL that produced the error message.
+    route : hikari.net.routes.CompiledRoute
+        The route that produced this error.
+    headers : hikari.utilities.data_binding.Headers
+        Any headers that were given in the response.
+    raw_body : typing.Any
+        The body that was received.
+    retry_after : float
+        How many seconds to wait before you can reuse the route with the
+        specific request.
+    """
+
+    __slots__ = ()
+
+    def __init__(
+        self,
+        url: str,
+        route: routes.CompiledRoute,
+        headers: data_binding.Headers,
+        raw_body: typing.Any,
+        retry_after: float,
+    ) -> None:
+        self.retry_after = retry_after
+        self.route = route
+
+        status = http.HTTPStatus.TOO_MANY_REQUESTS
+        super().__init__(
+            url,
+            status,
+            headers,
+            raw_body,
+            f"You are being rate-limited for {self.retry_after:,} seconds on route {route}. Please slow down!",
+        )
 
 
 class ServerHTTPErrorResponse(HTTPErrorResponse):

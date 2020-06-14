@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__ = ["VoiceRegion", "VoiceState"]
+__all__: typing.Final[typing.List[str]] = ["VoiceRegion", "VoiceState"]
 
 import typing
 
@@ -49,28 +48,31 @@ class VoiceState(bases.Entity):
     user_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the user this voice state is for."""
 
-    member: typing.Optional[guilds.Member] = attr.ib(eq=False, hash=False)
+    member: typing.Optional[guilds.Member] = attr.ib(eq=False, hash=False, repr=False)
     """The guild member this voice state is for if the voice state is in a guild."""
 
     session_id: str = attr.ib(eq=True, hash=True, repr=True)
     """The string ID of this voice state's session."""
 
-    is_guild_deafened: bool = attr.ib(eq=False, hash=False)
+    is_guild_deafened: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is deafened by the guild."""
 
-    is_guild_muted: bool = attr.ib(eq=False, hash=False)
+    is_guild_muted: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is muted by the guild."""
 
-    is_self_deafened: bool = attr.ib(eq=False, hash=False)
+    is_self_deafened: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is deafened by their client."""
 
-    is_self_muted: bool = attr.ib(eq=False, hash=False)
+    is_self_muted: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is muted by their client."""
 
-    is_streaming: bool = attr.ib(eq=False, hash=False)
+    is_streaming: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is streaming using "Go Live"."""
 
-    is_suppressed: bool = attr.ib(eq=False, hash=False)
+    is_video_enabled: bool = attr.ib(eq=False, hash=False, repr=False)
+    """Whether this user's camera is enabled."""
+
+    is_suppressed: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is muted by the current user."""
 
 
@@ -89,16 +91,16 @@ class VoiceRegion:
     name: str = attr.ib(eq=False, hash=False, repr=True)
     """The name of this region."""
 
-    is_vip: bool = attr.ib(eq=False, hash=False)
+    is_vip: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this region is vip-only."""
 
-    is_optimal_location: bool = attr.ib(eq=False, hash=False)
+    is_optimal_location: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this region's server is closest to the current user's client."""
 
-    is_deprecated: bool = attr.ib(eq=False, hash=False)
+    is_deprecated: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this region is deprecated."""
 
-    is_custom: bool = attr.ib(eq=False, hash=False)
+    is_custom: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this region is custom (e.g. used for events)."""
 
     def __str__(self) -> str:
