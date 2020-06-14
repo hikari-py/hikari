@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Colour", "ColourLike"]
+__all__: typing.Final[typing.List[str]] = ["Colour", "ColourLike"]
 
 # noinspection PyUnresolvedReferences
 import typing

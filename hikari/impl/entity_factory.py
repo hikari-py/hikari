@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EntityFactoryComponentImpl"]
+__all__: typing.Final[typing.List[str]] = ["EntityFactoryComponentImpl"]
 
 import datetime
 import typing
@@ -65,8 +65,8 @@ def _deserialize_day_timedelta(days: typing.Union[str, int]) -> datetime.timedel
     return datetime.timedelta(days=int(days))
 
 
-def _deserialize_max_uses(age: int) -> typing.Union[int, float]:
-    return age if age > 0 else float("inf")
+def _deserialize_max_uses(age: int) -> typing.Optional[int]:
+    return age if age > 0 else None
 
 
 def _deserialize_max_age(seconds: int) -> typing.Optional[datetime.timedelta]:
@@ -79,15 +79,16 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     This will convert objects to/from JSON compatible representations.
     """
 
-    DMChannelT = typing.TypeVar("DMChannelT", bound=channel_models.DMChannel)
-    GuildChannelT = typing.TypeVar("GuildChannelT", bound=channel_models.GuildChannel)
-    InviteT = typing.TypeVar("InviteT", bound=invite_model.Invite)
-    PartialChannelT = typing.TypeVar("PartialChannelT", bound=channel_models.PartialChannel)
-    PartialGuildT = typing.TypeVar("PartialGuildT", bound=guild_models.PartialGuild)
-    PartialGuildIntegrationT = typing.TypeVar("PartialGuildIntegrationT", bound=guild_models.PartialIntegration)
-    UserT = typing.TypeVar("UserT", bound=user_models.User)
-    ReactionEventT = typing.TypeVar("ReactionEventT", bound=message_events.BaseMessageReactionEvent)
-    GuildBanEventT = typing.TypeVar("GuildBanEventT", bound=guild_events.GuildBanEvent)
+    if typing.TYPE_CHECKING:
+        DMChannelT = typing.TypeVar("DMChannelT", bound=channel_models.DMChannel)
+        GuildChannelT = typing.TypeVar("GuildChannelT", bound=channel_models.GuildChannel)
+        InviteT = typing.TypeVar("InviteT", bound=invite_model.Invite)
+        PartialChannelT = typing.TypeVar("PartialChannelT", bound=channel_models.PartialChannel)
+        PartialGuildT = typing.TypeVar("PartialGuildT", bound=guild_models.PartialGuild)
+        PartialGuildIntegrationT = typing.TypeVar("PartialGuildIntegrationT", bound=guild_models.PartialIntegration)
+        UserT = typing.TypeVar("UserT", bound=user_models.User)
+        ReactionEventT = typing.TypeVar("ReactionEventT", bound=message_events.BaseMessageReactionEvent)
+        GuildBanEventT = typing.TypeVar("GuildBanEventT", bound=guild_events.GuildBanEvent)
 
     def __init__(self, app: rest.IRESTApp) -> None:
         self._app = app
@@ -509,22 +510,22 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         )
         embed.color = color_models.Color(payload["color"]) if "color" in payload else None
 
-        if (footer_payload := payload.get("footer", ...)) is not ...:
+        if footer_payload := payload.get("footer"):
             footer = embed_models.EmbedFooter()
             footer.text = footer_payload["text"]
-            if (icon_url := footer_payload.get("icon")) is not None:
-                footer.icon = embed_models.EmbedImage()
-                footer.icon.resource = files.ensure_resource(icon_url)
+
+            if icon_url := footer_payload.get("icon_url"):
+                footer.icon = embed_models.EmbedResource(resource=files.ensure_resource(icon_url))
                 footer.icon.proxy_resource = files.ensure_resource(footer_payload.get("proxy_icon_url"))
             else:
                 footer.icon = None
+
             embed.footer = footer
         else:
             embed.footer = None
 
-        if (image_payload := payload.get("image", ...)) is not ...:
-            image = embed_models.EmbedImage()
-            image.resource = files.ensure_resource(image_payload.get("url"))
+        if image_payload := payload.get("image"):
+            image = embed_models.EmbedImage(resource=files.ensure_resource(image_payload.get("url")))
             image.proxy_resource = files.ensure_resource(image_payload.get("proxy_url"))
             image.height = int(image_payload["height"]) if "height" in image_payload else None
             image.width = int(image_payload["width"]) if "width" in image_payload else None
@@ -532,9 +533,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         else:
             embed.image = None
 
-        if (thumbnail_payload := payload.get("thumbnail", ...)) is not ...:
-            thumbnail = embed_models.EmbedImage()
-            thumbnail.resource = files.ensure_resource(thumbnail_payload.get("url"))
+        if thumbnail_payload := payload.get("thumbnail"):
+            thumbnail = embed_models.EmbedImage(resource=files.ensure_resource(thumbnail_payload.get("url")))
             thumbnail.proxy_resource = files.ensure_resource(thumbnail_payload.get("proxy_url"))
             thumbnail.height = int(thumbnail_payload["height"]) if "height" in thumbnail_payload else None
             thumbnail.width = int(thumbnail_payload["width"]) if "width" in thumbnail_payload else None
@@ -542,17 +542,17 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         else:
             embed.thumbnail = None
 
-        if (video_payload := payload.get("video", ...)) is not ...:
-            video = embed_models.EmbedVideo()
-            video.resource = files.ensure_resource(thumbnail_payload.get("url"))
-            video.proxy_resource = None
-            video.height = int(video_payload["height"]) if "height" in video_payload else None
-            video.width = int(video_payload["width"]) if "width" in video_payload else None
+        if video_payload := payload.get("video"):
+            video = embed_models.EmbedVideo(
+                resource=files.ensure_resource(video_payload.get("url")),
+                height=int(video_payload["height"]) if "height" in video_payload else None,
+                width=int(video_payload["width"]) if "width" in video_payload else None,
+            )
             embed.video = video
         else:
             embed.video = None
 
-        if (provider_payload := payload.get("provider", ...)) is not ...:
+        if provider_payload := payload.get("provider"):
             provider = embed_models.EmbedProvider()
             provider.name = provider_payload.get("name")
             provider.url = provider_payload.get("url")
@@ -560,27 +560,28 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         else:
             embed.provider = None
 
-        if (author_payload := payload.get("author", ...)) is not ...:
+        if author_payload := payload.get("author"):
             author = embed_models.EmbedAuthor()
             author.name = author_payload.get("name")
             author.url = author_payload.get("url")
-            if (icon_url := author_payload.get("icon")) is not None:
-                author.icon = embed_models.EmbedImage()
-                author.icon.resource = files.ensure_resource(icon_url)
+
+            if (icon_url := author_payload.get("icon_url")) is not None:
+                author.icon = embed_models.EmbedResource(resource=files.ensure_resource(icon_url))
                 author.icon.proxy_resource = files.ensure_resource(author_payload.get("proxy_icon_url"))
             else:
                 author.icon = None
+
             embed.author = author
         else:
             embed.author = None
 
         fields = []
         for field_payload in payload.get("fields", ()):
-            field = embed_models.EmbedField()
-            field.name = field_payload["name"]
-            field.value = field_payload["value"]
-            field.is_inline = field_payload.get("inline", False)
-            fields.append(field)
+            fields.append(
+                embed_models.EmbedField(
+                    name=field_payload["name"], value=field_payload["value"], inline=field_payload.get("inline", False)
+                )
+            )
         embed.fields = fields
 
         return embed
@@ -605,9 +606,9 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             payload["timestamp"] = embed.timestamp.isoformat()
 
         if embed.color is not None:
-            payload["color"] = str(embed.color)
+            payload["color"] = int(embed.color)
 
-        if embed.footer is not None:
+        if embed.footer:
             footer_payload: data_binding.JSONObject = {}
 
             if embed.footer.text is not None:
@@ -615,35 +616,31 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
             if embed.footer.icon is not None:
                 if not isinstance(embed.footer.icon.resource, files.WebResource):
-                    uploads.append(embed.footer.icon)
+                    uploads.append(embed.footer.icon.resource)
 
                 footer_payload["icon_url"] = embed.footer.icon.url
 
             payload["footer"] = footer_payload
 
-        if embed.image is not None:
+        if embed.image:
             image_payload: data_binding.JSONObject = {}
 
-            if embed.image is not None:
-                if not isinstance(embed.image.resource, files.WebResource):
-                    uploads.append(embed.image.resource)
+            if not isinstance(embed.image.resource, files.WebResource):
+                uploads.append(embed.image.resource)
 
-                image_payload["url"] = embed.image.url
-
+            image_payload["url"] = embed.image.url
             payload["image"] = image_payload
 
-        if embed.thumbnail is not None:
+        if embed.thumbnail:
             thumbnail_payload: data_binding.JSONObject = {}
 
-            if embed.thumbnail is not None:
-                if not isinstance(embed.thumbnail.resource, files.WebResource):
-                    uploads.append(embed.thumbnail.resource)
+            if not isinstance(embed.thumbnail.resource, files.WebResource):
+                uploads.append(embed.thumbnail.resource)
 
-                thumbnail_payload["url"] = embed.thumbnail.url
-
+            thumbnail_payload["url"] = embed.thumbnail.url
             payload["thumbnail"] = thumbnail_payload
 
-        if embed.author is not None:
+        if embed.author:
             author_payload: data_binding.JSONObject = {}
 
             if embed.author.name is not None:
@@ -654,7 +651,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
             if embed.author.icon is not None:
                 if not isinstance(embed.author.icon.resource, files.WebResource):
-                    uploads.append(embed.author.icon)
+                    uploads.append(embed.author.icon.resource)
                 author_payload["icon_url"] = embed.author.icon.url
 
             payload["author"] = author_payload
@@ -662,16 +659,11 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         if embed.fields:
             field_payloads: data_binding.JSONArray = []
             for field in embed.fields:
-                field_payload: data_binding.JSONObject = {}
-
-                if field.name:
-                    field_payload["name"] = field.name
-
-                if field.value:
-                    field_payload["value"] = field.value
-
-                field_payload["inline"] = field.is_inline
-                field_payloads.append(field_payload)
+                # Name and value always have to be specified; we can always
+                # send a default `inline` value also just to keep this simpler.
+                field_payloads.append(
+                    {"name": field.name, "value": field.value, "inline": field.is_inline,}
+                )
             payload["fields"] = field_payloads
 
         return payload, uploads
@@ -877,7 +869,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         if (perms := payload.get("permissions")) is not None:
             guild.my_permissions = permission_models.Permission(perms)
         else:
-            guild.my_permissions = undefined.UNDEFINED
+            guild.my_permissions = None
 
         guild.region = payload["region"]
 
@@ -935,7 +927,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild.is_large = payload["large"] if "large" in payload else None
         guild.member_count = int(payload["member_count"]) if "member_count" in payload else None
 
-        if (members := payload.get("members", ...)) is not ...:
+        if members := payload.get("members"):
             guild.members = {}
             for member_payload in members:
                 member = self.deserialize_member(member_payload)
@@ -946,16 +938,15 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             # FIXME: should this be an empty dict instead?
             guild.members = None
 
-        if (channels := payload.get("channels", ...)) is not ...:
+        if channels := payload.get("channels"):
             guild.channels = {}
             for channel_payload in channels:
-                channel = typing.cast("channel_models.GuildChannel", self.deserialize_partial_channel(channel_payload))
+                channel = typing.cast("channel_models.GuildChannel", self.deserialize_channel(channel_payload))
                 guild.channels[channel.id] = channel
         else:
-            # FIXME: should this be an empty dict instead?
             guild.channels = None
 
-        if (presences := payload.get("presences", ...)) is not ...:
+        if presences := payload.get("presences"):
             guild.presences = {}
             for presence_payload in presences:
                 presence = self.deserialize_member_presence(presence_payload)
@@ -1168,10 +1159,9 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         )
         guild_member_presence.user = user
 
-        if (role_ids := payload.get("roles", ...)) is not ...:
+        if (role_ids := payload.get("roles")) is not None:
             guild_member_presence.role_ids = {snowflake.Snowflake(role_id) for role_id in role_ids}
         else:
-            # FIXME: should this be an empty set?
             guild_member_presence.role_ids = None
 
         guild_member_presence.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
@@ -1649,7 +1639,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             updated_message.activity = undefined.UNDEFINED
 
         updated_message.application = (
-            self.deserialize_application(payload["application"]) if "application" in payload else None
+            self.deserialize_application(payload["application"]) if "application" in payload else undefined.UNDEFINED
         )
 
         if (crosspost_payload := payload.get("message_reference", ...)) is not ...:

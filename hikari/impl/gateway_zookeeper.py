@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["AbstractGatewayZookeeper"]
+__all__: typing.Final[typing.List[str]] = ["AbstractGatewayZookeeper"]
 
 import abc
 import asyncio
@@ -404,5 +404,5 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
     ) -> None:
         valid_interrupts = signal.valid_signals()
         for interrupt in self._SIGNALS:
-            if (code := getattr(signal, interrupt, None)) is not None and code in valid_interrupts:
+            if (code := getattr(signal, interrupt, None)) in valid_interrupts:
                 mapping_function(code, *args)

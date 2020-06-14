@@ -19,7 +19,7 @@
 """Provides a command-line entry point that shows the library version and then exits."""
 from __future__ import annotations
 
-__all__: typing.List[str] = []
+__all__: typing.Final[typing.List[str]] = []
 
 import inspect
 import os

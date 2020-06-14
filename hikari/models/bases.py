@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Entity", "Unique"]
+__all__: typing.Final[typing.List[str]] = ["Entity", "Unique"]
 
 import abc
 import typing
@@ -30,8 +30,9 @@ import attr
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest
     import datetime
+
+    from hikari.api import rest
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=False)

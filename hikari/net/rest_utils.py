@@ -22,7 +22,7 @@ You should never need to make any of these objects manually.
 """
 from __future__ import annotations
 
-__all__: typing.List[str] = ["TypingIndicator", "GuildBuilder"]
+__all__: typing.Final[typing.List[str]] = ["TypingIndicator", "GuildBuilder"]
 
 import asyncio
 import contextlib

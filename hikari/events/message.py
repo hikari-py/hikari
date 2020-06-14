@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "MessageCreateEvent",
     "UpdatedMessageFields",
     "MessageUpdateEvent",
@@ -98,7 +98,8 @@ class UpdatedMessageFields(base_models.Entity, base_models.Unique):
     edited_timestamp: typing.Union[datetime.datetime, undefined.UndefinedType, None] = attr.ib(repr=False)
     """The timestamp that the message was last edited at.
 
-    Will be `None` if the message wasn't ever edited. 
+    Will be `None` if the message wasn't ever edited, or `undefined` if the 
+    info is not available.
     """
 
     is_tts: typing.Union[bool, undefined.UndefinedType] = attr.ib(repr=False)
@@ -137,7 +138,7 @@ class UpdatedMessageFields(base_models.Entity, base_models.Unique):
     activity: typing.Union[messages.MessageActivity, undefined.UndefinedType] = attr.ib(repr=False)
     """The message's activity."""
 
-    application: typing.Optional[applications.Application] = attr.ib(repr=False)
+    application: typing.Union[applications.Application, undefined.UndefinedType] = attr.ib(repr=False)
     """The message's application."""
 
     message_reference: typing.Union[messages.MessageCrosspost, undefined.UndefinedType] = attr.ib(repr=False)

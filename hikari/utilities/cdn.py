@@ -20,18 +20,12 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["generate_cdn_url", "get_avatar_url", "get_default_avatar_url", "get_default_avatar_index"]
+__all__: typing.Final[typing.List[str]] = ["generate_cdn_url", "get_default_avatar_url", "get_default_avatar_index"]
 
 import typing
 import urllib.parse
 
-
-if typing.TYPE_CHECKING:
-    pass
-
-
-BASE_CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
-"""The URL for the CDN."""
+from hikari.net import strings
 
 
 def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]) -> str:
@@ -66,7 +60,7 @@ def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]
         raise ValueError("Size must be an integer power of 2")
 
     path = "/".join(urllib.parse.unquote(part) for part in route_parts)
-    url = urllib.parse.urljoin(BASE_CDN_URL, "/" + path) + "." + str(format_)
+    url = urllib.parse.urljoin(strings.CDN_URL, "/" + path) + "." + str(format_)
     query = urllib.parse.urlencode({"size": size}) if size is not None else None
     return f"{url}?{query}" if query else url
 

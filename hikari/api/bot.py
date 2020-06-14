@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["IBotApp"]
+__all__: typing.Final[typing.List[str]] = ["IBotApp"]
 
 import abc
 import typing

@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["GatewayBot", "SessionStartLimit"]
+__all__: typing.Final[typing.List[str]] = ["GatewayBot", "SessionStartLimit"]
 
 import typing
 

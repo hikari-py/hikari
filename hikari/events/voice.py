@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["VoiceStateUpdateEvent", "VoiceServerUpdateEvent"]
+__all__: typing.Final[typing.List[str]] = ["VoiceStateUpdateEvent", "VoiceServerUpdateEvent"]
 
 import typing
 

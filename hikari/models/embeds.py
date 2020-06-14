@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "Embed",
     "EmbedResource",
     "EmbedVideo",
@@ -45,7 +45,16 @@ def _maybe_color(value: typing.Optional[colors.ColorLike]) -> typing.Optional[co
     return colors.Color.of(value) if value is not None else None
 
 
-@attr.s(slots=True, kw_only=True, init=False)
+class _TruthyEmbedComponentMixin:
+    __slots__ = ()
+
+    __attrs_attrs__: typing.ClassVar[typing.Tuple[attr.Attribute, ...]]
+
+    def __bool__(self) -> bool:
+        return any(getattr(self, attrib.name, None) for attrib in self.__attrs_attrs__)
+
+
+@attr.s(eq=True, slots=True, kw_only=True)
 class EmbedResource(files.Resource):
     """A base type for any resource provided in an embed.
 
@@ -56,7 +65,7 @@ class EmbedResource(files.Resource):
     resource: files.Resource = attr.ib(repr=True)
     """The resource this object wraps around."""
 
-    proxy_resource: typing.Optional[files.Resource] = attr.ib(default=None, repr=False)
+    proxy_resource: typing.Optional[files.Resource] = attr.ib(default=None, repr=False, init=False)
     """The proxied version of the resource, or `None` if not present.
 
     !!! note
@@ -80,8 +89,8 @@ class EmbedResource(files.Resource):
             yield stream
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class EmbedFooter:
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+class EmbedFooter(_TruthyEmbedComponentMixin):
     """Represents an embed footer."""
 
     text: typing.Optional[str] = attr.ib(default=None, repr=True)
@@ -91,11 +100,11 @@ class EmbedFooter:
     """The URL of the footer icon, or `None` if not present."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class EmbedImage(EmbedResource):
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+class EmbedImage(EmbedResource, _TruthyEmbedComponentMixin):
     """Represents an embed image."""
 
-    height: typing.Optional[int] = attr.ib(default=None, repr=False)
+    height: typing.Optional[int] = attr.ib(default=None, repr=False, init=False)
     """The height of the image, if present and known, otherwise `None`.
 
     !!! note
@@ -104,7 +113,7 @@ class EmbedImage(EmbedResource):
         any received embed attached to a message event.
     """
 
-    width: typing.Optional[int] = attr.ib(default=None, repr=False)
+    width: typing.Optional[int] = attr.ib(default=None, repr=False, init=False)
     """The width of the image, if present and known, otherwise `None`.
 
     !!! note
@@ -114,14 +123,17 @@ class EmbedImage(EmbedResource):
     """
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class EmbedVideo(EmbedResource):
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+class EmbedVideo(EmbedResource, _TruthyEmbedComponentMixin):
     """Represents an embed video.
 
     !!! note
         This object cannot be set by bots or webhooks while sending an embed and
         will be ignored during serialization. Expect this to be populated on
         any received embed attached to a message event with a video attached.
+
+        **Therefore, you should never need to initialize an instance of this
+        class yourself.**
     """
 
     height: typing.Optional[int] = attr.ib(default=None, repr=False)
@@ -131,8 +143,8 @@ class EmbedVideo(EmbedResource):
     """The width of the video."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class EmbedProvider:
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+class EmbedProvider(_TruthyEmbedComponentMixin):
     """Represents an embed provider.
 
     !!! note
@@ -140,6 +152,9 @@ class EmbedProvider:
         will be ignored during serialization. Expect this to be populated on
         any received embed attached to a message event provided by an external
         source.
+
+        **Therefore, you should never need to initialize an instance of this
+        class yourself.**
     """
 
     name: typing.Optional[str] = attr.ib(default=None, repr=True)
@@ -149,8 +164,8 @@ class EmbedProvider:
     """The URL of the provider."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class EmbedAuthor:
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+class EmbedAuthor(_TruthyEmbedComponentMixin):
     """Represents an author of an embed."""
 
     name: typing.Optional[str] = attr.ib(default=None, repr=True)
@@ -166,18 +181,31 @@ class EmbedAuthor:
     """The author's icon, or `None` if not present."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class EmbedField:
     """Represents a field in a embed."""
 
-    name: typing.Optional[str] = attr.ib(default=None, repr=True)
-    """The name of the field, or `None` if not present."""
+    name: str = attr.ib(repr=True)
+    """The name of the field."""
 
-    value: typing.Optional[str] = attr.ib(default=None, repr=True)
-    """The value of the field, or `None` if not present."""
+    value: str = attr.ib(repr=True)
+    """The value of the field."""
 
-    is_inline: bool = attr.ib(default=False, repr=True)
-    """`True` if the field should display inline. Defaults to `False`."""
+    _inline: bool = attr.ib(default=False, repr=True)
+
+    # Use a property since we then keep the consistency of not using `is_`
+    # in the constructor for `_inline`.
+    @property
+    def is_inline(self) -> bool:
+        """Return `True` if the field should display inline.
+
+        Defaults to False.
+        """
+        return self._inline
+
+    @is_inline.setter
+    def is_inline(self, value: bool) -> None:
+        self._inline = value
 
 
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
@@ -201,10 +229,6 @@ class Embed:
     def colour(self, value: typing.Optional[colors.ColorLike]) -> None:
         # implicit attrs conversion.
         self.color = value  # type: ignore
-
-    @colour.deleter
-    def colour(self) -> None:
-        del self.color
 
     title: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The title of the embed, or `None` if not present."""
@@ -281,7 +305,7 @@ class Embed:
     thumbnail: typing.Optional[EmbedImage] = attr.ib(default=None, repr=False)
     """The thumbnail to show in the embed, or `None` if not present."""
 
-    video: typing.Optional[EmbedVideo] = attr.ib(default=None, repr=False)
+    video: typing.Optional[EmbedVideo] = attr.ib(default=None, repr=False, init=False)
     """The video to show in the embed, or `None` if not present.
 
     !!! note
@@ -290,7 +314,7 @@ class Embed:
         any received embed attached to a message event with a video attached.
     """
 
-    provider: typing.Optional[EmbedProvider] = attr.ib(default=None, repr=False)
+    provider: typing.Optional[EmbedProvider] = attr.ib(default=None, repr=False, init=False)
     """The provider of the embed, or `None if not present.
 
     !!! note
@@ -320,8 +344,7 @@ class Embed:
             self.author.name = name
             self.author.url = url
             if icon is not None:
-                self.author.icon = EmbedResource()
-                self.author.icon.resource = files.ensure_resource(icon)
+                self.author.icon = EmbedResource(resource=files.ensure_resource(icon))
             else:
                 self.author.icon = None
         return self
@@ -335,8 +358,7 @@ class Embed:
             self.footer = EmbedFooter()
             self.footer.text = text
             if icon is not None:
-                self.footer.icon = EmbedResource()
-                self.footer.icon.resource = files.ensure_resource(icon)
+                self.footer.icon = EmbedResource(resource=files.ensure_resource(icon))
             else:
                 self.footer.icon = None
         return self
@@ -345,24 +367,18 @@ class Embed:
         if image is None:
             self.image = None
         else:
-            self.image = EmbedImage()
-            self.image.resource = files.ensure_resource(image)
+            self.image = EmbedImage(resource=files.ensure_resource(image))
         return self
 
     def set_thumbnail(self, image: typing.Union[None, str, files.Resource] = None, /) -> Embed:
         if image is None:
             self.thumbnail = None
         else:
-            self.thumbnail = EmbedImage()
-            self.thumbnail.resource = files.ensure_resource(image)
+            self.thumbnail = EmbedImage(resource=files.ensure_resource(image))
         return self
 
     def add_field(self, name: str, value: str, *, inline: bool = False) -> Embed:
-        field = EmbedField()
-        field.name = name
-        field.value = value
-        field.is_inline = inline
-        self.fields.append(field)
+        self.fields.append(EmbedField(name=name, value=value, inline=inline))
         return self
 
     def edit_field(self, index: int, name: str, value: str, /, *, inline: bool = False) -> Embed:

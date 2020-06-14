@@ -19,14 +19,12 @@
 """Provides logging support for HTTP requests internally."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["BaseTracer", "CFRayTracer", "DebugTracer"]
+__all__: typing.Final[typing.List[str]] = ["BaseTracer", "CFRayTracer", "DebugTracer"]
 
 import functools
 import io
 import logging
 import time
-
-# noinspection PyUnresolvedReferences
 import typing
 import uuid
 

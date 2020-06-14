@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EventManagerCoreComponent"]
+__all__: typing.Final[typing.List[str]] = ["EventManagerCoreComponent"]
 
 import asyncio
 import functools
@@ -196,8 +196,8 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
         tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
 
         for cls in mro[: mro.index(base.Event) + 1]:
-            if cls in self._listeners:
 
+            if cls in self._listeners:
                 for callback in self._listeners[cls]:
                     tasks.append(self._invoke_callback(callback, event))
 

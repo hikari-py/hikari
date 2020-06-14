@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "Guild",
     "GuildWidget",
     "Role",
@@ -449,16 +449,17 @@ class PartialGuild(bases.Entity, bases.Unique):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.icon_hash is not None:
-            if format_ is None:
-                if self.icon_hash.startswith("a_"):
-                    format_ = "gif"
-                else:
-                    format_ = "png"
+        if self.icon_hash is None:
+            return None
 
-            url = cdn.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
-            return files.URL(url)
-        return None
+        if format_ is None:
+            if self.icon_hash.startswith("a_"):
+                format_ = "gif"
+            else:
+                format_ = "png"
+
+        url = cdn.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
+        return files.URL(url)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -510,10 +511,11 @@ class GuildPreview(PartialGuild):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.splash_hash is not None:
-            url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
-            return files.URL(url)
-        return None
+        if self.splash_hash is None:
+            return None
+
+        url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+        return files.URL(url)
 
     @property
     def discovery_splash(self) -> typing.Optional[files.URL]:
@@ -542,12 +544,13 @@ class GuildPreview(PartialGuild):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.discovery_splash_hash is not None:
-            url = cdn.generate_cdn_url(
-                "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
-            )
-            return files.URL(url)
-        return None
+        if self.discovery_splash_hash is None:
+            return None
+
+        url = cdn.generate_cdn_url(
+            "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
+        )
+        return files.URL(url)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -570,9 +573,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     owner_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the owner of this guild."""
 
-    my_permissions: typing.Union[undefined.UndefinedType, permissions_.Permission] = attr.ib(
-        eq=False, hash=False, repr=False
-    )
+    my_permissions: typing.Optional[permissions_.Permission] = attr.ib(eq=False, hash=False, repr=False)
     """The guild-level permissions that apply to the bot user.
 
     This will not take into account permission overwrites or implied
@@ -873,10 +874,11 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.splash_hash is not None:
-            url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
-            return files.URL(url)
-        return None
+        if self.splash_hash is None:
+            return None
+
+        url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+        return files.URL(url)
 
     @property
     def discovery_splash(self) -> typing.Optional[files.URL]:
@@ -905,12 +907,12 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.discovery_splash_hash:
-            url = cdn.generate_cdn_url(
-                "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
-            )
-            return files.URL(url)
-        return None
+        if self.discovery_splash_hash is None:
+            return None
+        url = cdn.generate_cdn_url(
+            "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
+        )
+        return files.URL(url)
 
     @property
     def banner(self) -> typing.Optional[files.URL]:
@@ -939,7 +941,8 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.banner_hash is not None:
-            url = cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
-            return files.URL(url)
-        return None
+        if self.banner_hash is None:
+            return None
+
+        url = cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
+        return files.URL(url)

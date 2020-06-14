@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["UndefinedType", "UNDEFINED"]
+__all__: typing.Final[typing.List[str]] = ["UndefinedType", "UNDEFINED"]
 
 import enum
 
