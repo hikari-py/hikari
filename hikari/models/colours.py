@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -20,9 +19,10 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Colour"]
+__all__: typing.Final[typing.List[str]] = ["Colour", "ColourLike"]
 
 # noinspection PyUnresolvedReferences
 import typing
 
 from hikari.models.colors import Color as Colour
+from hikari.models.colors import ColorLike as ColourLike

@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -23,7 +22,7 @@ See `hikari.net.buckets` for REST-specific rate-limiting logic.
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "BaseRateLimiter",
     "BurstRateLimiter",
     "ManualRateLimiter",
@@ -153,7 +152,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
 
 class ManualRateLimiter(BurstRateLimiter):
-    """Rate limit handler for the global RESTSession rate limit.
+    """Rate limit handler for the global REST rate limit.
 
     This is a non-preemptive rate limiting algorithm that will always return
     completed futures until `ManualRateLimiter.throttle` is invoked. Once this
@@ -166,8 +165,8 @@ class ManualRateLimiter(BurstRateLimiter):
     Triggering a throttle when it is already set will cancel the current
     throttle task that is sleeping and replace it.
 
-    This is used to enforce the global RESTSession rate limit that will occur
-    "randomly" during RESTSession API interaction.
+    This is used to enforce the global REST rate limit that will occur
+    "randomly" during REST API interaction.
 
     Expect random occurrences.
     """
@@ -488,7 +487,7 @@ class ExponentialBackOff:
         if self.maximum is not None and value >= self.maximum:
             raise asyncio.TimeoutError()
 
-        value += random.random() * self.jitter_multiplier  # nosec
+        value += random.random() * self.jitter_multiplier  # # noqa S311 rng for cryptography
         return value
 
     def __iter__(self) -> ExponentialBackOff:

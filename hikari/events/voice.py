@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["VoiceStateUpdateEvent", "VoiceServerUpdateEvent"]
+__all__: typing.Final[typing.List[str]] = ["VoiceStateUpdateEvent", "VoiceServerUpdateEvent"]
 
 import typing
 
@@ -36,7 +35,7 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intent.GUILD_VOICE_STATES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class VoiceStateUpdateEvent(base_events.HikariEvent):
+class VoiceStateUpdateEvent(base_events.Event):
     """Used to represent voice state update gateway events.
 
     Sent when a user joins, leaves or moves voice channel(s).
@@ -47,7 +46,7 @@ class VoiceStateUpdateEvent(base_events.HikariEvent):
 
 
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class VoiceServerUpdateEvent(base_events.HikariEvent):
+class VoiceServerUpdateEvent(base_events.Event):
     """Used to represent voice server update gateway events.
 
     Sent when initially connecting to voice and when the current voice instance

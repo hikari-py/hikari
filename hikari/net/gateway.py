@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Gateway"]
+__all__: typing.Final[typing.List[str]] = ["Gateway"]
 
 import asyncio
 import enum
@@ -39,15 +38,15 @@ from hikari.api import component
 from hikari.models import presences
 from hikari.net import http_client
 from hikari.net import rate_limits
-from hikari.net import user_agents
+from hikari.net import strings
 from hikari.utilities import data_binding
-from hikari.utilities import klass
+from hikari.utilities import reflect
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import app as app_
+    from hikari.api import event_consumer
     from hikari.net import http_settings
     from hikari.models import channels
     from hikari.models import guilds
@@ -60,20 +59,20 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
     Parameters
     ----------
-    app : hikari.api.app.IGatewayConsumer
+    app : hikari.api.event_consumer.IEventConsumerApp
         The base application.
     config : hikari.net.http_settings.HTTPSettings
         The AIOHTTP settings to use for the client session.
     debug : bool
         If `True`, each sent and received payload is dumped to the logs. If
         `False`, only the fact that data has been sent/received will be logged.
-    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.Undefined
+    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
         The initial activity to appear to have for this shard.
-    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
+    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
         The datetime to appear to be idle since.
-    initial_is_afk : bool or hikari.utilities.undefined.Undefined
+    initial_is_afk : bool or hikari.utilities.undefined.UndefinedType
         Whether to appear to be AFK or not on login.
-    initial_status : hikari.models.presences.Status or hikari.utilities.undefined.Undefined
+    initial_status : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
         The initial status to set on login for the shard.
     intents : hikari.models.intents.Intent or None
         Collection of intents to use, or `None` to not use intents at all.
@@ -158,13 +157,13 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     def __init__(
         self,
         *,
-        app: app_.IGatewayConsumer,
+        app: event_consumer.IEventConsumerApp,
         config: http_settings.HTTPSettings,
         debug: bool = False,
-        initial_activity: typing.Union[undefined.Undefined, None, presences.Activity] = undefined.Undefined(),
-        initial_idle_since: typing.Union[undefined.Undefined, None, datetime.datetime] = undefined.Undefined(),
-        initial_is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        initial_status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
+        initial_activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
+        initial_idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = undefined.UNDEFINED,
+        initial_is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        initial_status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
         shard_id: int = 0,
@@ -178,7 +177,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             allow_redirects=config.allow_redirects,
             connector=config.tcp_connector_factory() if config.tcp_connector_factory else None,
             debug=debug,
-            logger=klass.get_logger(self, str(shard_id)),
+            logger=reflect.get_logger(self, str(shard_id)),
             proxy_auth=config.proxy_auth,
             proxy_headers=config.proxy_headers,
             proxy_url=config.proxy_url,
@@ -187,19 +186,19 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             timeout=config.request_timeout,
             trust_env=config.trust_env,
         )
-        self._activity: typing.Union[undefined.Undefined, None, presences.Activity] = initial_activity
+        self._activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = initial_activity
         self._app = app
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         self._handshake_event = asyncio.Event()
-        self._idle_since: typing.Union[undefined.Undefined, None, datetime.datetime] = initial_idle_since
+        self._idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = initial_idle_since
         self._intents: typing.Optional[intents_.Intent] = intents
-        self._is_afk: typing.Union[undefined.Undefined, bool] = initial_is_afk
+        self._is_afk: typing.Union[undefined.UndefinedType, bool] = initial_is_afk
         self._last_run_started_at = float("nan")
         self._request_close_event = asyncio.Event()
         self._seq: typing.Optional[str] = None
         self._shard_id: int = shard_id
         self._shard_count: int = shard_count
-        self._status: typing.Union[undefined.Undefined, presences.Status] = initial_status
+        self._status: typing.Union[undefined.UndefinedType, presences.Status] = initial_status
         self._token = token
         self._use_compression = use_compression
         self._version = version
@@ -229,7 +228,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self.url = urllib.parse.urlunparse((scheme, netloc, path, params, new_query, ""))
 
     @property
-    def app(self) -> app_.IGatewayConsumer:
+    def app(self) -> event_consumer.IEventConsumerApp:
         return self._app
 
     @property
@@ -256,12 +255,12 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             if self.is_alive:
                 self.logger.info("received request to shut down shard")
             else:
-                self.logger.debug("shard marked as closed before it was able to start")
+                self.logger.debug("shard marked as closed when it was not running")
             self._request_close_event.set()
 
             if self._ws is not None:
-                self.logger.warning("gateway client closed by user, will not attempt to restart")
-                await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "user shut down application")
+                self.logger.warning("gateway client closed, will not attempt to restart")
+                await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "client shut down")
 
     async def _run(self) -> None:
         """Start the shard and wait for it to shut down."""
@@ -356,6 +355,16 @@ class Gateway(http_client.HTTPClient, component.IComponent):
                 self._backoff.reset()
             return not self._request_close_event.is_set()
 
+        except errors.GatewayServerClosedConnectionError as ex:
+            if ex.can_reconnect:
+                self.logger.warning(
+                    "server closed the connection with %s (%s), will attempt to reconnect", ex.code, ex.reason,
+                )
+                await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me")
+            else:
+                await self._close_ws(self._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you failed the connection")
+                raise
+
         except Exception as ex:
             self.logger.error("unexpected exception occurred, shard will now die", exc_info=ex)
             await self._close_ws(self._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
@@ -373,34 +382,34 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     async def update_presence(
         self,
         *,
-        idle_since: typing.Union[undefined.Undefined, typing.Optional[datetime.datetime]] = undefined.Undefined(),
-        is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        activity: typing.Union[undefined.Undefined, typing.Optional[presences.Activity]] = undefined.Undefined(),
-        status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
+        idle_since: typing.Union[undefined.UndefinedType, typing.Optional[datetime.datetime]] = undefined.UNDEFINED,
+        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        activity: typing.Union[undefined.UndefinedType, typing.Optional[presences.Activity]] = undefined.UNDEFINED,
+        status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
     ) -> None:
         """Update the presence of the shard user.
 
         Parameters
         ----------
-        idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
+        idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
             The datetime that the user started being idle. If undefined, this
             will not be changed.
-        is_afk : bool or hikari.utilities.undefined.Undefined
+        is_afk : bool or hikari.utilities.undefined.UndefinedType
             If `True`, the user is marked as AFK. If `False`, the user is marked
             as being active. If undefined, this will not be changed.
-        activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.Undefined
+        activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
             The activity to appear to be playing. If undefined, this will not be
             changed.
-        status : hikari.models.presences.Status or hikari.utilities.undefined.Undefined
+        status : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
             The web status to show. If undefined, this will not be changed.
         """
         presence = self._build_presence_payload(idle_since=idle_since, is_afk=is_afk, status=status, activity=activity)
         payload: data_binding.JSONObject = {"op": self._GatewayOpcode.PRESENCE_UPDATE, "d": presence}
         await self._send_json(payload)
-        self._idle_since = idle_since if not isinstance(idle_since, undefined.Undefined) else self._idle_since
-        self._is_afk = is_afk if not isinstance(is_afk, undefined.Undefined) else self._is_afk
-        self._activity = activity if not isinstance(activity, undefined.Undefined) else self._activity
-        self._status = status if not isinstance(status, undefined.Undefined) else self._status
+        self._idle_since = idle_since if idle_since is not undefined.UNDEFINED else self._idle_since
+        self._is_afk = is_afk if is_afk is not undefined.UNDEFINED else self._is_afk
+        self._activity = activity if activity is not undefined.UNDEFINED else self._activity
+        self._status = status if status is not undefined.UNDEFINED else self._status
 
     async def update_voice_state(
         self,
@@ -474,7 +483,11 @@ class Gateway(http_client.HTTPClient, component.IComponent):
                     "token": self._token,
                     "compress": False,
                     "large_threshold": self.large_threshold,
-                    "properties": user_agents.UserAgent().websocket_triplet,
+                    "properties": {
+                        "$os": strings.SYSTEM_TYPE,
+                        "$browser": strings.AIOHTTP_VERSION,
+                        "$device": strings.LIBRARY_VERSION,
+                    },
                     "shard": [self._shard_id, self._shard_count],
                 },
             }
@@ -482,7 +495,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             if self._intents is not None:
                 payload["d"]["intents"] = self._intents
 
-            if undefined.Undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
+            if undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
                 # noinspection PyTypeChecker
                 payload["d"]["presence"] = self._build_presence_payload()
 
@@ -577,7 +590,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             else:
                 reason = f"unknown close code {close_code}"
 
-            can_reconnect = close_code in (
+            can_reconnect = close_code < 4000 or close_code in (
                 self._GatewayCloseCode.DECODE_ERROR,
                 self._GatewayCloseCode.INVALID_SEQ,
                 self._GatewayCloseCode.UNKNOWN_ERROR,
@@ -585,7 +598,8 @@ class Gateway(http_client.HTTPClient, component.IComponent):
                 self._GatewayCloseCode.RATE_LIMITED,
             )
 
-            raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect, False, True)
+            # Always try to resume if possible first.
+            raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect, can_reconnect, True)
 
         elif message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
             raise self._SocketClosed()
@@ -651,22 +665,22 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
     def _build_presence_payload(
         self,
-        idle_since: typing.Union[undefined.Undefined, typing.Optional[datetime.datetime]] = undefined.Undefined(),
-        is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        status: typing.Union[undefined.Undefined, presences.Status] = undefined.Undefined(),
-        activity: typing.Union[undefined.Undefined, typing.Optional[presences.Activity]] = undefined.Undefined(),
+        idle_since: typing.Union[undefined.UndefinedType, typing.Optional[datetime.datetime]] = undefined.UNDEFINED,
+        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
+        activity: typing.Union[undefined.UndefinedType, typing.Optional[presences.Activity]] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
-        if isinstance(idle_since, undefined.Undefined):
+        if idle_since is undefined.UNDEFINED:
             idle_since = self._idle_since
-        if isinstance(is_afk, undefined.Undefined):
+        if is_afk is undefined.UNDEFINED:
             is_afk = self._is_afk
-        if isinstance(status, undefined.Undefined):
+        if status is undefined.UNDEFINED:
             status = self._status
-        if isinstance(activity, undefined.Undefined):
+        if activity is undefined.UNDEFINED:
             activity = self._activity
 
-        if activity is not None and not isinstance(activity, undefined.Undefined):
-            game: typing.Union[undefined.Undefined, None, data_binding.JSONObject] = {
+        if activity is not None and not activity is undefined.UNDEFINED:
+            game: typing.Union[undefined.UndefinedType, None, data_binding.JSONObject] = {
                 "name": activity.name,
                 "url": activity.url,
                 "type": activity.type,

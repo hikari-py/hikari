@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -19,7 +18,7 @@
 """Data binding utilities."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "Headers",
     "Query",
     "JSONObject",
@@ -27,6 +26,7 @@ __all__: typing.List[str] = [
     "JSONAny",
     "URLEncodedForm",
     "MultipartForm",
+    "ContentDisposition",
     "dump_json",
     "load_json",
     "JSONObjectBuilder",
@@ -36,12 +36,12 @@ __all__: typing.List[str] = [
 import json
 import typing
 
+import aiohttp.client_reqrep
 import aiohttp.typedefs
 import multidict
 
 from hikari.models import bases
 from hikari.utilities import undefined
-
 
 T = typing.TypeVar("T", covariant=True)
 
@@ -56,6 +56,9 @@ URLEncodedForm = aiohttp.FormData
 
 MultipartForm = aiohttp.FormData
 """Type hint for content of type multipart/form-data."""
+
+ContentDisposition = aiohttp.client_reqrep.ContentDisposition
+"""Type hint for content disposition information."""
 
 # MyPy does not support recursive types yet. This has been ongoing for a long time, unfortunately.
 # See https://github.com/python/typing/issues/182
@@ -89,7 +92,7 @@ else:
 class StringMapBuilder(multidict.MultiDict[str]):
     """Helper class used to quickly build query strings or header maps.
 
-    This will consume any items that are not `hikari.utilities.undefined.Undefined`.
+    This will consume any items that are not `hikari.utilities.undefined.UndefinedType`.
     If a value _is_ unspecified, it will be ignored when inserting it. This reduces
     the amount of boilerplate needed for generating the headers and query strings for
     low-level HTTP API interaction, amongst other things.
@@ -108,7 +111,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
     def put(
         self,
         key: str,
-        value: typing.Union[undefined.Undefined, typing.Any],
+        value: typing.Union[undefined.UndefinedType, typing.Any],
         /,
         *,
         conversion: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
@@ -119,7 +122,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
         ----------
         key : str
             The string key.
-        value : hikari.utilities.undefined.Undefined or typing.Any
+        value : hikari.utilities.undefined.UndefinedType or typing.Any
             The value to set.
         conversion : typing.Callable[[typing.Any], typing.Any] or None
             An optional conversion to perform.
@@ -130,7 +133,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
             `True` will be translated to `"true"`, `False` will be translated
             to `"false"`, and `None` will be translated to `"null"`.
         """
-        if not isinstance(value, undefined.Undefined):
+        if value is not undefined.UNDEFINED:
             if conversion is not None:
                 value = conversion(value)
 
@@ -152,7 +155,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
 class JSONObjectBuilder(typing.Dict[str, JSONAny]):
     """Helper class used to quickly build JSON objects from various values.
 
-    If provided with any values that are `hikari.utilities.undefined.Undefined`,
+    If provided with any values that are `hikari.utilities.undefined.UndefinedType`,
     then these values will be ignored.
 
     This speeds up generation of JSON payloads for low level HTTP and websocket
@@ -185,14 +188,14 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
         ----------
         key : str
             The key to give the element.
-        value : JSONAny or typing.Any or hikari.utilities.undefined.Undefined
+        value : JSONAny or typing.Any or hikari.utilities.undefined.UndefinedType
             The JSON type to put. This may be a non-JSON type if a conversion
             is also specified. This may alternatively be undefined. In the latter
             case, nothing is performed.
         conversion : typing.Callable[[typing.Any], JSONAny] or None
             Optional conversion to apply.
         """
-        if not isinstance(value, undefined.Undefined):
+        if value is not undefined.UNDEFINED:
             if conversion is not None:
                 self[key] = conversion(value)
             else:
@@ -201,7 +204,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
     def put_array(
         self,
         key: str,
-        values: typing.Union[undefined.Undefined, typing.Iterable[T]],
+        values: typing.Union[undefined.UndefinedType, typing.Iterable[T]],
         /,
         *,
         conversion: typing.Optional[typing.Callable[[T], JSONAny]] = None,
@@ -216,35 +219,35 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
         ----------
         key : str
             The key to give the element.
-        values : JSONAny or Any or hikari.utilities.undefined.Undefined
+        values : JSONAny or Any or hikari.utilities.undefined.UndefinedType
             The JSON types to put. This may be an iterable of non-JSON types if
             a conversion is also specified. This may alternatively be undefined.
             In the latter case, nothing is performed.
         conversion : typing.Callable[[typing.Any], JSONType] or None
             Optional conversion to apply.
         """
-        if not isinstance(values, undefined.Undefined):
+        if values is not undefined.UNDEFINED:
             if conversion is not None:
                 self[key] = [conversion(value) for value in values]
             else:
                 self[key] = list(values)
 
-    def put_snowflake(self, key: str, value: typing.Union[undefined.Undefined, bases.UniqueObject], /) -> None:
+    def put_snowflake(self, key: str, value: typing.Union[undefined.UndefinedType, bases.UniqueObject], /) -> None:
         """Put a key with a snowflake value into the builder.
 
         Parameters
         ----------
         key : str
             The key to give the element.
-        value : JSONAny or hikari.utilities.undefined.Undefined
+        value : JSONAny or hikari.utilities.undefined.UndefinedType
             The JSON type to put. This may alternatively be undefined. In the latter
             case, nothing is performed.
         """
-        if not isinstance(value, undefined.Undefined):
+        if value is not undefined.UNDEFINED:
             self[key] = str(int(value))
 
     def put_snowflake_array(
-        self, key: str, values: typing.Union[undefined.Undefined, typing.Iterable[typing.Union[bases.UniqueObject]]], /
+        self, key: str, values: typing.Union[undefined.UndefinedType, typing.Iterable[bases.UniqueObject]], /,
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
 
@@ -256,11 +259,11 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
         ----------
         key : str
             The key to give the element.
-        values : typing.Iterable[typing.SupportsInt] or hikari.utilities.undefined.Undefined
+        values : typing.Iterable[typing.SupportsInt] or hikari.utilities.undefined.UndefinedType
             The JSON snowflakes to put. This may alternatively be undefined.
             In the latter case, nothing is performed.
         """
-        if not isinstance(values, undefined.Undefined):
+        if values is not undefined.UNDEFINED:
             self[key] = [str(int(value)) for value in values]
 
 

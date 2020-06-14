@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["TargetUserType", "VanityURL", "InviteGuild", "Invite", "InviteWithMetadata"]
+__all__: typing.Final[typing.List[str]] = ["TargetUserType", "VanityURL", "InviteGuild", "Invite", "InviteWithMetadata"]
 
 import enum
 import typing
@@ -30,6 +29,7 @@ import attr
 from hikari.models import bases
 from hikari.models import guilds
 from hikari.utilities import cdn
+from hikari.utilities import files
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -89,8 +89,13 @@ class InviteGuild(guilds.PartialGuild):
     `features` for this guild. If not, this will always be `None`.
     """
 
-    def format_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's splash, if set.
+    @property
+    def splash_url(self) -> typing.Optional[files.URL]:
+        """Splash for the guild, if set."""
+        return self.format_splash()
+
+    def format_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's splash image, if set.
 
         Parameters
         ----------
@@ -103,25 +108,26 @@ class InviteGuild(guilds.PartialGuild):
 
         Returns
         -------
-        str or None
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL to the splash, or `None` if not set.
 
         Raises
         ------
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.splash_hash:
-            return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+        if self.splash_hash is not None:
+            url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+            return files.URL(url)
         return None
 
     @property
-    def splash_url(self) -> typing.Optional[str]:
-        """URL for this guild's splash, if set."""
-        return self.format_splash_url()
+    def banner(self) -> typing.Optional[files.URL]:
+        """Banner for the guild, if set."""
+        return self.format_banner()
 
-    def format_banner_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's banner, if set.
+    def format_banner(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's banner image, if set.
 
         Parameters
         ----------
@@ -134,22 +140,18 @@ class InviteGuild(guilds.PartialGuild):
 
         Returns
         -------
-        str or None
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL of the banner, or `None` if no banner is set.
 
         Raises
         ------
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.banner_hash:
-            return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
+        if self.banner_hash is not None:
+            url = cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
+            return files.URL(url)
         return None
-
-    @property
-    def banner_url(self) -> typing.Optional[str]:
-        """URL for this guild's banner, if set."""
-        return self.format_banner_url()
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -217,12 +219,14 @@ class InviteWithMetadata(Invite):
     uses: int = attr.ib(eq=False, hash=False, repr=True)
     """The amount of times this invite has been used."""
 
-    max_uses: int = attr.attrib(eq=False, hash=False, repr=True)
+    max_uses: typing.Optional[int] = attr.attrib(eq=False, hash=False, repr=True)
     """The limit for how many times this invite can be used before it expires.
 
-    If set to `0` then this is unlimited.
+    If set to `None` then this is unlimited.
     """
 
+    # FIXME: can we use a non-None value to represent infinity here somehow, or
+    # make a timedelta that is infinite for comparisons?
     max_age: typing.Optional[datetime.timedelta] = attr.attrib(eq=False, hash=False, repr=False)
     """The timedelta of how long this invite will be valid for.
 
@@ -241,6 +245,6 @@ class InviteWithMetadata(Invite):
 
         If this invite doesn't have a set expiry then this will be `None`.
         """
-        if self.max_age:
+        if self.max_age is not None:
             return self.created_at + self.max_age
         return None

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["WebhookType", "Webhook"]
+__all__: typing.Final[typing.List[str]] = ["WebhookType", "Webhook"]
 
 import enum
 import typing
@@ -29,13 +28,13 @@ import attr
 
 from hikari.models import bases
 from hikari.utilities import cdn
+from hikari.utilities import files as files_
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari.models import channels as channels_
     from hikari.models import embeds as embeds_
-    from hikari.models import files as files_
     from hikari.models import guilds as guilds_
     from hikari.models import messages as messages_
     from hikari.models import users as users_
@@ -94,13 +93,13 @@ class Webhook(bases.Entity, bases.Unique):
 
     async def execute(
         self,
-        text: typing.Union[undefined.Undefined, typing.Any] = undefined.Undefined(),
+        text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
         *,
-        username: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        avatar_url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        tts: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        attachments: typing.Union[undefined.Undefined, typing.Sequence[files_.BaseStream]] = undefined.Undefined(),
-        embeds: typing.Union[undefined.Undefined, typing.Sequence[embeds_.Embed]] = undefined.Undefined(),
+        username: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        avatar_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        attachments: typing.Union[undefined.UndefinedType, typing.Sequence[files_.Resource]] = undefined.UNDEFINED,
+        embeds: typing.Union[undefined.UndefinedType, typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, users_.User]], bool
@@ -113,19 +112,19 @@ class Webhook(bases.Entity, bases.Unique):
 
         Parameters
         ----------
-        text : str or hikari.utilities.undefined.Undefined
+        text : str or hikari.utilities.undefined.UndefinedType
             If specified, the message content to send with the message.
-        username : str or hikari.utilities.undefined.Undefined
+        username : str or hikari.utilities.undefined.UndefinedType
             If specified, the username to override the webhook's username
             for this request.
-        avatar_url : str or hikari.utilities.undefined.Undefined
+        avatar_url : str or hikari.utilities.undefined.UndefinedType
             If specified, the url of an image to override the webhook's
             avatar with for this request.
-        tts : bool or hikari.utilities.undefined.Undefined
+        tts : bool or hikari.utilities.undefined.UndefinedType
             If specified, whether the message will be sent as a TTS message.
-        attachments : typing.Sequence[hikari.models.files.BaseStream] or hikari.utilities.undefined.Undefined
+        attachments : typing.Sequence[hikari.utilities.files.BaseStream] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of attachments to upload.
-        embeds : typing.Sequence[hikari.models.embeds.Embed] or hikari.utilities.undefined.Undefined
+        embeds : typing.Sequence[hikari.models.embeds.Embed] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of between `1` to `10` embed objects
             (inclusive) to send with the embed.
         mentions_everyone : bool
@@ -179,12 +178,12 @@ class Webhook(bases.Entity, bases.Unique):
             role_mentions=role_mentions,
         )
 
-    async def delete(self, *, use_token: typing.Union[undefined.Undefined, bool] = undefined.Undefined()) -> None:
+    async def delete(self, *, use_token: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED) -> None:
         """Delete this webhook.
 
         Parameters
         ----------
-        use_token : bool or hikari.utilities.undefined.Undefined
+        use_token : bool or hikari.utilities.undefined.UndefinedType
             If set to `True` then the webhook's token will be used for this
             request; if set to `False` then bot authorization will be used;
             if not specified then the webhook's token will be used for the
@@ -203,41 +202,43 @@ class Webhook(bases.Entity, bases.Unique):
         if use_token and self.token is None:
             raise ValueError("This webhook's token is unknown, so cannot be used.")
 
-        token: typing.Union[undefined.Undefined, str]
+        token: typing.Union[undefined.UndefinedType, str]
 
         if use_token:
             token = typing.cast(str, self.token)
         else:
-            token = undefined.Undefined()
+            token = undefined.UNDEFINED
 
         await self._app.rest.delete_webhook(self.id, token=token)
 
     async def edit(
         self,
         *,
-        name: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        avatar: typing.Union[undefined.Undefined, None, files_.BaseStream] = undefined.Undefined(),
-        channel: typing.Union[undefined.Undefined, bases.UniqueObject, channels_.GuildChannel] = undefined.Undefined(),
-        reason: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        use_token: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        avatar: typing.Union[undefined.UndefinedType, None, files_.Resource] = undefined.UNDEFINED,
+        channel: typing.Union[
+            undefined.UndefinedType, bases.UniqueObject, channels_.GuildChannel
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        use_token: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
     ) -> Webhook:
         """Edit this webhook.
 
         Parameters
         ----------
-        name : str or hikari.utilities.undefined.Undefined
+        name : str or hikari.utilities.undefined.UndefinedType
             If specified, the new name string.
-        avatar : hikari.models.files.BaseStream or None or hikari.utilities.undefined.Undefined
+        avatar : hikari.utilities.files.Resource or None or hikari.utilities.undefined.UndefinedType
             If specified, the new avatar image. If `None`, then
-            it is removed.
-        channel : hikari.utilities.undefined.Undefined or hikari.models.channels.GuildChannel or hikari.models.bases.Unique or hikari.utilities.snowflake.Snowflake or str or int
+            it is removed. If not specified, nothing is changed.
+        channel : hikari.models.channels.GuildChannel or hikari.models.bases.UniqueObject or hikari.utilities.undefined.UndefinedType
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
-        reason : str or hikari.utilities.undefined.Undefined
+        reason : str or hikari.utilities.undefined.UndefinedType
             If specified, the audit log reason explaining why the operation
             was performed. This field will be used when using the webhook's
             token rather than bot authorization.
-        use_token : bool or hikari.utilities.undefined.Undefined
+        use_token : bool or hikari.utilities.undefined.UndefinedType
             If set to `True` then the webhook's token will be used for this
             request; if set to `False` then bot authorization will be used;
             if not specified then the webhook's token will be used for the
@@ -266,12 +267,12 @@ class Webhook(bases.Entity, bases.Unique):
         if use_token and self.token is None:
             raise ValueError("This webhook's token is unknown, so cannot be used.")
 
-        token: typing.Union[undefined.Undefined, str]
+        token: typing.Union[undefined.UndefinedType, str]
 
         if use_token:
             token = typing.cast(str, self.token)
         else:
-            token = undefined.Undefined()
+            token = undefined.UNDEFINED
 
         return await self._app.rest.edit_webhook(
             self.id, token=token, name=name, avatar=avatar, channel=channel, reason=reason,
@@ -295,13 +296,13 @@ class Webhook(bases.Entity, bases.Unique):
         return await self._app.rest.fetch_channel(self.channel_id)
 
     async def fetch_self(
-        self, *, use_token: typing.Union[undefined.Undefined, bool] = undefined.Undefined()
+        self, *, use_token: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED
     ) -> Webhook:
         """Fetch this webhook.
 
         Parameters
         ----------
-        use_token : bool or hikari.utilities.undefined.Undefined
+        use_token : bool or hikari.utilities.undefined.UndefinedType
             If set to `True` then the webhook's token will be used for this
             request; if set to `False` then bot authorization will be used;
             if not specified then the webhook's token will be used for the
@@ -330,19 +331,26 @@ class Webhook(bases.Entity, bases.Unique):
         if use_token and not self.token:
             raise ValueError("This webhook's token is unknown, so cannot be used.")
 
-        token: typing.Union[undefined.Undefined, str]
+        token: typing.Union[undefined.UndefinedType, str]
 
         if use_token:
             token = typing.cast(str, self.token)
         else:
-            token = undefined.Undefined()
+            token = undefined.UNDEFINED
 
         return await self._app.rest.fetch_webhook(self.id, token=token)
 
     @property
-    def avatar_url(self) -> str:
-        """URL for this webhook's custom avatar if set, else default."""
-        return self.format_avatar_url()
+    def avatar(self) -> files_.URL:
+        """URL for this webhook's custom avatar or default avatar.
+
+        If the webhook has a custom avatar, a URL to this is returned. Otherwise
+        a URL to the default avatar is provided instead.
+        """
+        url = self.format_avatar()
+        if url is None:
+            return self.default_avatar
+        return url
 
     @property
     def default_avatar_index(self) -> int:
@@ -350,14 +358,15 @@ class Webhook(bases.Entity, bases.Unique):
         return 0
 
     @property
-    def default_avatar_url(self) -> str:
+    def default_avatar(self) -> files_.URL:
         """URL for this webhook's default avatar.
 
         This is used if no avatar is set.
         """
-        return cdn.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
+        url = cdn.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
+        return files_.URL(url)
 
-    def format_avatar_url(self, format_: str = "png", size: int = 4096) -> str:
+    def format_avatar(self, format_: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
         """Generate the avatar URL for this webhook's custom avatar if set, else it's default avatar.
 
         Parameters
@@ -373,14 +382,16 @@ class Webhook(bases.Entity, bases.Unique):
 
         Returns
         -------
-        str
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL of the resource. `None` if no avatar is set (in this case,
+            use the `default_avatar` instead).
 
         Raises
         ------
         ValueError
             If `size` is not a power of two between 16 and 4096 (inclusive).
         """
-        if not self.avatar_hash:
-            return self.default_avatar_url
-        return cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
+        if self.avatar_hash is not None:
+            url = cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
+            return files_.URL(url)
+        return None

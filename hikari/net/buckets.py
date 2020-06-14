@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -204,7 +203,7 @@ and should be used sparingly.
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
+__all__: typing.Final[typing.List[str]] = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
 
 import asyncio
 import datetime
@@ -222,9 +221,9 @@ UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 
 
 class RESTBucket(rate_limits.WindowedBurstRateLimiter):
-    """Represents a rate limit for an RESTSession endpoint.
+    """Represents a rate limit for an REST endpoint.
 
-    Component to represent an active rate limit bucket on a specific RESTSession _route
+    Component to represent an active rate limit bucket on a specific REST _route
     with a specific major parameter combo.
 
     This is somewhat similar to the `WindowedBurstRateLimiter` in how it
@@ -307,9 +306,9 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
 
 class RESTBucketManager:
-    """The main rate limiter implementation for RESTSession clients.
+    """The main rate limiter implementation for REST clients.
 
-    This is designed to provide bucketed rate limiting for Discord RESTSession
+    This is designed to provide bucketed rate limiting for Discord REST
     endpoints that respects the `X-RateLimit-Bucket` rate limit header. To do
     this, it makes the assumption that any limit can change at any time.
     """
@@ -502,7 +501,7 @@ class RESTBucketManager:
         !!! note
             The returned future MUST be awaited, and will complete when your
             turn to make a call comes along. You are expected to await this and
-            then immediately make your RESTSession call. The returned future may
+            then immediately make your REST call. The returned future may
             already be completed if you can make the call immediately.
         """
         # Returns a future to await on to wait to be allowed to send the request, and a

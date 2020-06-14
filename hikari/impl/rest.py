@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -24,18 +23,18 @@ API, such as web dashboards and other OAuth2-based scripts.
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["RESTAppImpl"]
+__all__: typing.Final[typing.List[str]] = ["RESTAppImpl"]
 
 import logging
 import typing
 from concurrent import futures
 
-from hikari.api import app as app_
+from hikari.api import rest as rest_api
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.net import http_settings as http_settings_
-from hikari.net import rest as rest_
-from hikari.utilities import klass
+from hikari.net import rest as rest_component
+from hikari.utilities import reflect
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -43,12 +42,12 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
 
 
-class RESTAppImpl(app_.IRESTApp):
+class RESTAppImpl(rest_api.IRESTApp):
     """Application that only provides RESTful functionality.
 
     Parameters
     ----------
-    config : hikari.utilities.undefined.Undefined or hikari.net.http_settings.HTTPSettings
+    config : hikari.utilities.undefined.UndefinedType or hikari.net.http_settings.HTTPSettings
         Optional aiohttp settings to apply to the REST components. If undefined,
         then sane defaults are used.
     debug : bool
@@ -56,13 +55,13 @@ class RESTAppImpl(app_.IRESTApp):
         in HTTP requests will be dumped to debug logs. This will provide useful
         debugging context at the cost of performance. Generally you do not
         need to enable this.
-    token : hikari.utilities.undefined.Undefined or str
+    token : hikari.utilities.undefined.UndefinedType or str
         If defined, the token to use. If not defined, no token will be injected
         into the `Authorization` header for requests.
-    token_type : hikari.utilities.undefined.Undefined or str
+    token_type : hikari.utilities.undefined.UndefinedType or str
         The token type to use. If undefined, a default is used instead, which
         will be `Bot`. If no `token` is provided, this is ignored.
-    url : hikari.utilities.undefined.Undefined or str
+    url : hikari.utilities.undefined.UndefinedType or str
         The API URL to hit. Generally you can leave this undefined and use the
         default.
     version : int
@@ -74,41 +73,41 @@ class RESTAppImpl(app_.IRESTApp):
 
     def __init__(
         self,
-        config: typing.Union[undefined.Undefined, http_settings_.HTTPSettings] = undefined.Undefined(),
+        config: typing.Union[undefined.UndefinedType, http_settings_.HTTPSettings] = undefined.UNDEFINED,
         debug: bool = False,
-        token: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        token_type: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
-        url: typing.Union[undefined.Undefined, str] = undefined.Undefined(),
+        token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        token_type: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         version: int = 6,
     ) -> None:
-        self._logger = klass.get_logger(self)
+        self._logger = reflect.get_logger(self)
 
-        config = http_settings_.HTTPSettings() if isinstance(config, undefined.Undefined) else config
+        config = http_settings_.HTTPSettings() if config is undefined.UNDEFINED else config
 
-        self._rest = rest_.REST(
+        self._rest = rest_component.REST(
             app=self, config=config, debug=debug, token=token, token_type=token_type, rest_url=url, version=version,
         )
-        self._cache = cache_impl.InMemoryCacheImpl(self)
-        self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)
+        self._cache = cache_impl.InMemoryCacheComponentImpl(self)
+        self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(self)
 
     @property
     def logger(self) -> logging.Logger:
         return self._logger
 
     @property
-    def thread_pool(self) -> typing.Optional[futures.ThreadPoolExecutor]:
+    def executor(self) -> typing.Optional[futures.Executor]:
         return None
 
     @property
-    def rest(self) -> rest_.REST:
+    def rest(self) -> rest_component.REST:
         return self._rest
 
     @property
-    def cache(self) -> cache_.ICache:
+    def cache(self) -> cache_.ICacheComponent:
         return self._cache
 
     @property
-    def entity_factory(self) -> entity_factory_.IEntityFactory:
+    def entity_factory(self) -> entity_factory_.IEntityFactoryComponent:
         return self._entity_factory
 
     async def close(self) -> None:

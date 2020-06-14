@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -17,6 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import typing
+
+import pytest
 
 from hikari.utilities import reflect
 
@@ -108,3 +109,20 @@ class TestResolveSignature:
 
         signature = reflect.resolve_signature(foo)
         assert signature.parameters["bar"].annotation == typing.Optional[typing.Iterator[int]]
+
+
+class Class:
+    pass
+
+
+@pytest.mark.parametrize(
+    ["args", "expected_name"],
+    [
+        ([Class], f"{__name__}.Class"),
+        ([Class()], f"{__name__}.Class"),
+        ([Class, "Foooo", "bar", "123"], f"{__name__}.Class.Foooo.bar.123"),
+        ([Class(), "qux", "QUx", "940"], f"{__name__}.Class.qux.QUx.940"),
+    ],
+)
+def test_get_logger(args, expected_name):
+    assert reflect.get_logger(*args).name == expected_name
