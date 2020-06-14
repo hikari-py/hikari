@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__ = [
+__all__: typing.Final[typing.List[str]] = [
     "Guild",
     "GuildWidget",
     "Role",
@@ -51,6 +50,7 @@ import attr
 from hikari.models import bases
 from hikari.models import users
 from hikari.utilities import cdn
+from hikari.utilities import files
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -221,46 +221,46 @@ class Member(bases.Entity):
 
     # TODO: make Member delegate to user and implement a common base class
     # this allows members and users to be used interchangeably.
-    user: users.User = attr.ib(eq=True, hash=True, repr=True)
+    user: typing.Union[undefined.UndefinedType, users.User] = attr.ib(eq=True, hash=True, repr=True)
     """This member's user object.
 
-    This will be `None` when attached to Message Create and Update gateway events.
+    This will be undefined when attached to Message Create and Update gateway events.
     """
 
-    nickname: typing.Union[str, None, undefined.Undefined] = attr.ib(
+    nickname: typing.Union[str, None, undefined.UndefinedType] = attr.ib(
         eq=False, hash=False, repr=True,
     )
     """This member's nickname.
 
-    This will be `None` if not set and `hikari.utilities.undefined.Undefined`
+    This will be `None` if not set and `hikari.utilities.undefined.UndefinedType`
     if it's state is unknown.
     """
 
-    role_ids: typing.Set[snowflake.Snowflake] = attr.ib(
-        eq=False, hash=False,
-    )
+    role_ids: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """A sequence of the IDs of the member's current roles."""
 
-    joined_at: typing.Union[datetime.datetime, undefined.Undefined] = attr.ib(eq=False, hash=False)
+    joined_at: typing.Union[datetime.datetime, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this member joined the guild they belong to."""
 
-    premium_since: typing.Union[datetime.datetime, None, undefined.Undefined] = attr.ib(eq=False, hash=False)
+    premium_since: typing.Union[datetime.datetime, None, undefined.UndefinedType] = attr.ib(
+        eq=False, hash=False, repr=False
+    )
     """The datetime of when this member started "boosting" this guild.
 
     This will be `None` if they aren't boosting and
-    `hikari.utilities.undefined.Undefined` if their boosting status is unknown.
+    `hikari.utilities.undefined.UndefinedType` if their boosting status is unknown.
     """
 
-    is_deaf: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False)
+    is_deaf: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this member is deafened by this guild in it's voice channels.
 
-    This will be `hikari.utilities.undefined.Undefined if it's state is unknown.
+    This will be `hikari.utilities.undefined.UndefinedType if it's state is unknown.
     """
 
-    is_mute: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False)
+    is_mute: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this member is muted by this guild in it's voice channels.
 
-    This will be `hikari.utilities.undefined.Undefined if it's state is unknown.
+    This will be `hikari.utilities.undefined.UndefinedType if it's state is unknown.
     """
 
 
@@ -276,9 +276,7 @@ class PartialRole(bases.Entity, bases.Unique):
 class Role(PartialRole):
     """Represents a guild bound Role object."""
 
-    color: colors.Color = attr.ib(
-        eq=False, hash=False, repr=True,
-    )
+    color: colors.Color = attr.ib(eq=False, hash=False, repr=True)
     """The colour of this role.
 
     This will be applied to a member's name in chat if it's their top coloured role.
@@ -293,16 +291,16 @@ class Role(PartialRole):
     position: int = attr.ib(eq=False, hash=False, repr=True)
     """The position of this role in the role hierarchy."""
 
-    permissions: permissions_.Permission = attr.ib(eq=False, hash=False)
+    permissions: permissions_.Permission = attr.ib(eq=False, hash=False, repr=False)
     """The guild wide permissions this role gives to the members it's attached to,
 
     This may be overridden by channel overwrites.
     """
 
-    is_managed: bool = attr.ib(eq=False, hash=False)
+    is_managed: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this role is managed by an integration."""
 
-    is_mentionable: bool = attr.ib(eq=False, hash=False)
+    is_mentionable: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this role can be mentioned by all regardless of permissions."""
 
 
@@ -321,10 +319,10 @@ class IntegrationExpireBehaviour(int, enum.Enum):
 class IntegrationAccount:
     """An account that's linked to an integration."""
 
-    id: str = attr.ib(eq=True, hash=True)
+    id: str = attr.ib(eq=True, hash=True, repr=True)
     """The string ID of this (likely) third party account."""
 
-    name: str = attr.ib(eq=False, hash=False)
+    name: str = attr.ib(eq=False, hash=False, repr=True)
     """The name of this account."""
 
 
@@ -338,7 +336,7 @@ class PartialIntegration(bases.Unique):
     type: str = attr.ib(eq=False, hash=False, repr=True)
     """The type of this integration."""
 
-    account: IntegrationAccount = attr.ib(eq=False, hash=False)
+    account: IntegrationAccount = attr.ib(eq=False, hash=False, repr=False)
     """The account connected to this integration."""
 
 
@@ -349,31 +347,31 @@ class Integration(PartialIntegration):
     is_enabled: bool = attr.ib(eq=False, hash=False, repr=True)
     """Whether this integration is enabled."""
 
-    is_syncing: bool = attr.ib(eq=False, hash=False)
+    is_syncing: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this integration is syncing subscribers/emojis."""
 
-    role_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    role_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the managed role used for this integration's subscribers."""
 
-    is_emojis_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False)
+    is_emojis_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether users under this integration are allowed to use it's custom emojis."""
 
-    expire_behavior: IntegrationExpireBehaviour = attr.ib(eq=False, hash=False)
+    expire_behavior: IntegrationExpireBehaviour = attr.ib(eq=False, hash=False, repr=False)
     """How members should be treated after their connected subscription expires.
 
     This won't be enacted until after `GuildIntegration.expire_grace_period`
     passes.
     """
 
-    expire_grace_period: datetime.timedelta = attr.ib(eq=False, hash=False)
+    expire_grace_period: datetime.timedelta = attr.ib(eq=False, hash=False, repr=False)
     """How many days users with expired subscriptions are given until
     `GuildIntegration.expire_behavior` is enacted out on them
     """
 
-    user: users.User = attr.ib(eq=False, hash=False)
+    user: users.User = attr.ib(eq=False, hash=False, repr=False)
     """The user this integration belongs to."""
 
-    last_synced_at: datetime.datetime = attr.ib(eq=False, hash=False)
+    last_synced_at: datetime.datetime = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this integration's subscribers were last synced."""
 
 
@@ -413,62 +411,67 @@ class PartialGuild(bases.Entity, bases.Unique):
     name: str = attr.ib(eq=False, hash=False, repr=True)
     """The name of the guild."""
 
-    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash for the guild icon, if there is one."""
 
-    features: typing.Set[typing.Union[GuildFeature, str]] = attr.ib(eq=False, hash=False)
+    features: typing.Set[typing.Union[GuildFeature, str]] = attr.ib(eq=False, hash=False, repr=False)
     """A set of the features in this guild."""
 
-    def format_icon_url(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's custom icon, if set.
+    @property
+    def icon_url(self) -> typing.Optional[files.URL]:
+        """Icon for the guild, if set; otherwise `None`."""
+        return self.format_icon()
+
+    def format_icon(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's icon, if set.
 
         Parameters
         ----------
-        format_ : str
+        format_ : str or None
             The format to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
+
+            If `None`, then the correct default format is determined based on
+            whether the icon is animated or not.
         size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
-        str or None
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL to the resource, or `None` if no icon is set.
 
         Raises
         ------
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.icon_hash:
-            if format_ is None:
-                format_ = "gif" if self.icon_hash.startswith("a_") else "png"
-            return cdn.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
-        return None
+        if self.icon_hash is None:
+            return None
 
-    @property
-    def icon_url(self) -> typing.Optional[str]:
-        """URL for this guild's icon, if set."""
-        return self.format_icon_url()
+        if format_ is None:
+            if self.icon_hash.startswith("a_"):
+                format_ = "gif"
+            else:
+                format_ = "png"
+
+        url = cdn.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
+        return files.URL(url)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class GuildPreview(PartialGuild):
     """A preview of a guild with the `GuildFeature.PUBLIC` feature."""
 
-    splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash of the splash for the guild, if there is one."""
 
-    discovery_splash_hash: typing.Optional[str] = attr.ib(
-        eq=False, hash=False,
-    )
+    discovery_splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash of the discovery splash for the guild, if there is one."""
 
-    emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(
-        eq=False, hash=False,
-    )
+    emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(eq=False, hash=False, repr=False)
     """The mapping of IDs to the emojis this guild provides."""
 
     approximate_presence_count: int = attr.ib(eq=False, hash=False, repr=True)
@@ -477,11 +480,16 @@ class GuildPreview(PartialGuild):
     approximate_member_count: int = attr.ib(eq=False, hash=False, repr=True)
     """The approximate amount of members in this guild."""
 
-    description: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    description: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The guild's description, if set."""
 
-    def format_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's splash image, if set.
+    @property
+    def splash_url(self) -> typing.Optional[files.URL]:
+        """Splash for the guild, if set."""
+        return self.format_splash()
+
+    def format_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's splash image, if set.
 
         Parameters
         ----------
@@ -494,25 +502,27 @@ class GuildPreview(PartialGuild):
 
         Returns
         -------
-        str or None
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL to the splash, or `None` if not set.
 
         Raises
         ------
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.splash_hash:
-            return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
-        return None
+        if self.splash_hash is None:
+            return None
+
+        url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+        return files.URL(url)
 
     @property
-    def splash_url(self) -> typing.Optional[str]:
-        """URL for this guild's splash, if set."""
-        return self.format_splash_url()
+    def discovery_splash(self) -> typing.Optional[files.URL]:
+        """Discovery splash for the guild, if set."""
+        return self.format_discovery_splash()
 
-    def format_discovery_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's discovery splash image, if set.
+    def format_discovery_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's discovery splash image, if set.
 
         Parameters
         ----------
@@ -525,7 +535,7 @@ class GuildPreview(PartialGuild):
 
         Returns
         -------
-        str or None
+        hikari.utilities.files.URL or None
             The string URL.
 
         Raises
@@ -533,16 +543,13 @@ class GuildPreview(PartialGuild):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.discovery_splash_hash:
-            return cdn.generate_cdn_url(
-                "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
-            )
-        return None
+        if self.discovery_splash_hash is None:
+            return None
 
-    @property
-    def discovery_splash_url(self) -> typing.Optional[str]:
-        """URL for this guild's discovery splash, if set."""
-        return self.format_discovery_splash_url()
+        url = cdn.generate_cdn_url(
+            "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
+        )
+        return files.URL(url)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -551,49 +558,47 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
     !!! note
         If a guild object is considered to be unavailable, then the state of any
-        other fields other than the `Guild.is_unavailable` and `Guild.id` are
+        other fields other than the `is_unavailable` and `id` are
         outdated or incorrect. If a guild is unavailable, then the contents of
         any other fields should be ignored.
     """
 
-    splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash of the splash for the guild, if there is one."""
 
-    discovery_splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    discovery_splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash of the discovery splash for the guild, if there is one."""
 
     owner_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the owner of this guild."""
 
-    my_permissions: permissions_.Permission = attr.ib(
-        eq=False, hash=False,
-    )
+    my_permissions: typing.Optional[permissions_.Permission] = attr.ib(eq=False, hash=False, repr=False)
     """The guild-level permissions that apply to the bot user.
 
     This will not take into account permission overwrites or implied
-    permissions (for example, ADMINISTRATOR implies all other permissions).
+    permissions (for example, `ADMINISTRATOR` implies all other permissions).
 
-    This will be `None` when this object is retrieved through a RESTSession request
+    This will be `None` when this object is retrieved through a REST request
     rather than from the gateway.
     """
 
-    region: str = attr.ib(eq=False, hash=False)
+    region: str = attr.ib(eq=False, hash=False, repr=False)
     """The voice region for the guild."""
 
-    afk_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    afk_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID for the channel that AFK voice users get sent to.
 
     If `None`, then no AFK channel is set up for this guild.
     """
 
-    afk_timeout: datetime.timedelta = attr.ib(eq=False, hash=False)
+    afk_timeout: datetime.timedelta = attr.ib(eq=False, hash=False, repr=False)
     """Timeout for activity before a member is classed as AFK.
 
     How long a voice user has to be AFK for before they are classed as being
     AFK and are moved to the AFK channel (`Guild.afk_channel_id`).
     """
 
-    is_embed_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False)
+    is_embed_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Defines if the guild embed is enabled or not.
 
     This information may not be present, in which case, it will be `None`
@@ -603,7 +608,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
         Use `is_widget_enabled` instead.
     """
 
-    embed_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    embed_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The channel ID that the guild embed will generate an invite to.
 
     Will be `None` if invites are disabled for this guild's embed.
@@ -612,33 +617,31 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
         Use `widget_channel_id` instead.
     """
 
-    verification_level: GuildVerificationLevel = attr.ib(eq=False, hash=False)
+    verification_level: GuildVerificationLevel = attr.ib(eq=False, hash=False, repr=False)
     """The verification level required for a user to participate in this guild."""
 
-    default_message_notifications: GuildMessageNotificationsLevel = attr.ib(eq=False, hash=False)
+    default_message_notifications: GuildMessageNotificationsLevel = attr.ib(eq=False, hash=False, repr=False)
     """The default setting for message notifications in this guild."""
 
-    explicit_content_filter: GuildExplicitContentFilterLevel = attr.ib(eq=False, hash=False)
+    explicit_content_filter: GuildExplicitContentFilterLevel = attr.ib(eq=False, hash=False, repr=False)
     """The setting for the explicit content filter in this guild."""
 
-    roles: typing.Mapping[snowflake.Snowflake, Role] = attr.ib(
-        eq=False, hash=False,
-    )
+    roles: typing.Mapping[snowflake.Snowflake, Role] = attr.ib(eq=False, hash=False, repr=False)
     """The roles in this guild, represented as a mapping of ID to role object."""
 
-    emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(eq=False, hash=False)
+    emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(eq=False, hash=False, repr=False)
     """A mapping of IDs to the objects of the emojis this guild provides."""
 
-    mfa_level: GuildMFALevel = attr.ib(eq=False, hash=False)
+    mfa_level: GuildMFALevel = attr.ib(eq=False, hash=False, repr=False)
     """The required MFA level for users wishing to participate in this guild."""
 
-    application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the application that created this guild.
 
     This will always be `None` for guilds that weren't created by a bot.
     """
 
-    is_unavailable: typing.Optional[bool] = attr.ib(eq=False, hash=False)
+    is_unavailable: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether the guild is unavailable or not.
 
     This information is only available if the guild was sent via a
@@ -649,36 +652,36 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     be outdated if that is the case.
     """
 
-    is_widget_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False)
+    is_widget_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Describes whether the guild widget is enabled or not.
 
     If this information is not present, this will be `None`.
     """
 
-    widget_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    widget_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The channel ID that the widget's generated invite will send the user to.
 
     If this information is unavailable or this isn't enabled for the guild then
     this will be `None`.
     """
 
-    system_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    system_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the system channel or `None` if it is not enabled.
 
     Welcome messages and Nitro boost messages may be sent to this channel.
     """
 
-    system_channel_flags: GuildSystemChannelFlag = attr.ib(eq=False, hash=False)
+    system_channel_flags: GuildSystemChannelFlag = attr.ib(eq=False, hash=False, repr=False)
     """Flags for the guild system channel to describe which notifications are suppressed."""
 
-    rules_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    rules_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the channel where guilds with the `GuildFeature.PUBLIC`
     `features` display rules and guidelines.
 
     If the `GuildFeature.PUBLIC` feature is not defined, then this is `None`.
     """
 
-    joined_at: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False)
+    joined_at: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The date and time that the bot user joined this guild.
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
@@ -686,7 +689,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     `None`.
     """
 
-    is_large: typing.Optional[bool] = attr.ib(eq=False, hash=False)
+    is_large: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether the guild is considered to be large or not.
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
@@ -697,7 +700,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     sent about members who are offline or invisible.
     """
 
-    member_count: typing.Optional[int] = attr.ib(eq=False, hash=False)
+    member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The number of members in this guild.
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
@@ -705,7 +708,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     `None`.
     """
 
-    members: typing.Optional[typing.Mapping[snowflake.Snowflake, Member]] = attr.ib(eq=False, hash=False)
+    members: typing.Optional[typing.Mapping[snowflake.Snowflake, Member]] = attr.ib(eq=False, hash=False, repr=False)
     """A mapping of ID to the corresponding guild members in this guild.
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
@@ -725,7 +728,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     """
 
     channels: typing.Optional[typing.Mapping[snowflake.Snowflake, channels_.GuildChannel]] = attr.ib(
-        eq=False, hash=False,
+        eq=False, hash=False, repr=False
     )
     """A mapping of ID to the corresponding guild channels in this guild.
 
@@ -744,7 +747,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     """
 
     presences: typing.Optional[typing.Mapping[snowflake.Snowflake, presences.MemberPresence]] = attr.ib(
-        eq=False, hash=False,
+        eq=False, hash=False, repr=False
     )
     """A mapping of member ID to the corresponding presence information for
     the given member, if available.
@@ -763,62 +766,62 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     appropriate API call to retrieve this information.
     """
 
-    max_presences: typing.Optional[int] = attr.ib(eq=False, hash=False)
+    max_presences: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The maximum number of presences for the guild.
 
     If this is `None`, then the default value is used (currently 25000).
     """
 
-    max_members: typing.Optional[int] = attr.ib(eq=False, hash=False)
+    max_members: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The maximum number of members allowed in this guild.
 
     This information may not be present, in which case, it will be `None`.
     """
 
-    max_video_channel_users: typing.Optional[int] = attr.ib(eq=False, hash=False)
+    max_video_channel_users: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The maximum number of users allowed in a video channel together.
 
     This information may not be present, in which case, it will be `None`.
     """
 
-    vanity_url_code: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    vanity_url_code: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The vanity URL code for the guild's vanity URL.
 
     This is only present if `GuildFeature.VANITY_URL` is in `Guild.features` for
     this guild. If not, this will always be `None`.
     """
 
-    description: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    description: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The guild's description.
 
     This is only present if certain `GuildFeature`'s are set in
     `Guild.features` for this guild. Otherwise, this will always be `None`.
     """
 
-    banner_hash: typing.Optional[str] = attr.ib(eq=False, hash=False)
+    banner_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash for the guild's banner.
 
     This is only present if the guild has `GuildFeature.BANNER` in
     `Guild.features` for this guild. For all other purposes, it is `None`.
     """
 
-    premium_tier: GuildPremiumTier = attr.ib(eq=False, hash=False)
+    premium_tier: GuildPremiumTier = attr.ib(eq=False, hash=False, repr=False)
     """The premium tier for this guild."""
 
-    premium_subscription_count: typing.Optional[int] = attr.ib(eq=False, hash=False)
+    premium_subscription_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The number of nitro boosts that the server currently has.
 
     This information may not be present, in which case, it will be `None`.
     """
 
-    preferred_locale: str = attr.ib(eq=False, hash=False)
+    preferred_locale: str = attr.ib(eq=False, hash=False, repr=False)
     """The preferred locale to use for this guild.
 
     This can only be change if `GuildFeature.PUBLIC` is in `Guild.features`
     for this guild and will otherwise default to `en-US`.
     """
 
-    public_updates_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False)
+    public_updates_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The channel ID of the channel where admins and moderators receive notices
     from Discord.
 
@@ -827,24 +830,29 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     """
 
     # TODO: if this is `None`, then should we attempt to look at the known member count if present?
-    approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False)
+    approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild.
 
-    This information will be provided by RESTSession API calls fetching the guilds that
+    This information will be provided by REST API calls fetching the guilds that
     a bot account is in. For all other purposes, this should be expected to
     remain `None`.
     """
 
-    approximate_active_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False)
+    approximate_active_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild that are not offline.
 
-    This information will be provided by RESTSession API calls fetching the guilds that
+    This information will be provided by REST API calls fetching the guilds that
     a bot account is in. For all other purposes, this should be expected to
     remain `None`.
     """
 
-    def format_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's splash image, if set.
+    @property
+    def splash_url(self) -> typing.Optional[files.URL]:
+        """Splash for the guild, if set."""
+        return self.format_splash()
+
+    def format_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's splash image, if set.
 
         Parameters
         ----------
@@ -857,25 +865,27 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
         Returns
         -------
-        str or None
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL to the splash, or `None` if not set.
 
         Raises
         ------
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.splash_hash:
-            return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
-        return None
+        if self.splash_hash is None:
+            return None
+
+        url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+        return files.URL(url)
 
     @property
-    def splash_url(self) -> typing.Optional[str]:
-        """URL for this guild's splash, if set."""
-        return self.format_splash_url()
+    def discovery_splash(self) -> typing.Optional[files.URL]:
+        """Discovery splash for the guild, if set."""
+        return self.format_discovery_splash()
 
-    def format_discovery_splash_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's discovery splash image, if set.
+    def format_discovery_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's discovery splash image, if set.
 
         Parameters
         ----------
@@ -888,7 +898,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
         Returns
         -------
-        str or None
+        hikari.utilities.files.URL or None
             The string URL.
 
         Raises
@@ -896,19 +906,20 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.discovery_splash_hash:
-            return cdn.generate_cdn_url(
-                "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
-            )
-        return None
+        if self.discovery_splash_hash is None:
+            return None
+        url = cdn.generate_cdn_url(
+            "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
+        )
+        return files.URL(url)
 
     @property
-    def discovery_splash_url(self) -> typing.Optional[str]:
-        """URL for this guild's discovery splash, if set."""
-        return self.format_discovery_splash_url()
+    def banner(self) -> typing.Optional[files.URL]:
+        """Banner for the guild, if set."""
+        return self.format_banner()
 
-    def format_banner_url(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[str]:
-        """Generate the URL for this guild's banner image, if set.
+    def format_banner(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's banner image, if set.
 
         Parameters
         ----------
@@ -921,19 +932,16 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
 
         Returns
         -------
-        str or None
-            The string URL.
+        hikari.utilities.files.URL or None
+            The URL of the banner, or `None` if no banner is set.
 
         Raises
         ------
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.banner_hash:
-            return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
-        return None
+        if self.banner_hash is None:
+            return None
 
-    @property
-    def banner_url(self) -> typing.Optional[str]:
-        """URL for this guild's banner, if set."""
-        return self.format_banner_url()
+        url = cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
+        return files.URL(url)

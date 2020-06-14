@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -19,15 +18,18 @@
 """Provides logging support for HTTP requests internally."""
 from __future__ import annotations
 
-__all__ = ["BaseTracer", "CFRayTracer", "DebugTracer"]
+__all__: typing.Final[typing.List[str]] = ["BaseTracer", "CFRayTracer", "DebugTracer"]
 
 import functools
 import io
 import logging
 import time
+import typing
 import uuid
 
 import aiohttp.abc
+
+from hikari.net import strings
 
 
 class BaseTracer:
@@ -37,7 +39,7 @@ class BaseTracer:
         self.logger = logger
 
     @functools.cached_property
-    def trace_config(self):
+    def trace_config(self) -> aiohttp.TraceConfig:
         """Generate a trace config for aiohttp."""
         tc = aiohttp.TraceConfig()
 
@@ -55,40 +57,51 @@ class CFRayTracer(BaseTracer):
     Cloudflare rays in the response.
     """
 
+    @typing.no_type_check
     async def on_request_start(self, _, ctx, params):
         """Log an outbound request."""
         ctx.identifier = f"request_id:{uuid.uuid4()}"
         ctx.start_time = time.perf_counter()
 
         self.logger.debug(
-            "%s %s [content-type:%s, accept:%s] [%s]",
+            "%s %s [%s:%s, %s:%s] [%s]",
             params.method,
             params.url,
-            params.headers.get("content-type"),
-            params.headers.get("accept"),
+            strings.CONTENT_TYPE_HEADER,
+            params.headers.get(strings.CONTENT_TYPE_HEADER),
+            strings.ACCEPT_HEADER,
+            params.headers.get(strings.ACCEPT_HEADER),
             ctx.identifier,
         )
 
+    @typing.no_type_check
     async def on_request_end(self, _, ctx, params):
         """Log an inbound response."""
         latency = round((time.perf_counter() - ctx.start_time) * 1_000, 1)
         response = params.response
         self.logger.debug(
-            "%s %s after %sms [content-type:%s, size:%s, cf-ray:%s, cf-request-id:%s] [%s]",
+            "%s %s after %sms [%s:%s, %s:%s, %s:%s, %s:%s] [%s]",
             response.status,
             response.reason,
             latency,
-            response.headers.get("content-type"),
-            response.headers.get("content-length", 0),
-            response.headers.get("cf-ray"),
-            response.headers.get("cf-request-id"),
+            strings.CONTENT_TYPE_HEADER,
+            response.headers.get(strings.CONTENT_TYPE_HEADER),
+            strings.CONTENT_LENGTH_HEADER,
+            response.headers.get(strings.CONTENT_LENGTH_HEADER, 0),
+            strings.CF_RAY_HEADER,
+            response.headers.get(strings.CF_RAY_HEADER),
+            strings.CF_REQUEST_ID_HEADER,
+            response.headers.get(strings.CF_REQUEST_ID_HEADER),
             ctx.identifier,
         )
 
 
-class _ByteStreamWriter(io.BytesIO, aiohttp.abc.AbstractStreamWriter):
-    async def write(self, data) -> None:
-        io.BytesIO.write(self, data)
+class _ByteStreamWriter(aiohttp.abc.AbstractStreamWriter):
+    def __init__(self) -> None:
+        self.bio = io.BytesIO()
+
+    async def write(self, data: typing.Union[bytes, bytearray]) -> None:
+        self.bio.write(data)
 
     write_eof = NotImplemented
     drain = NotImplemented
@@ -113,7 +126,7 @@ class DebugTracer(BaseTracer):
     """
 
     @staticmethod
-    async def _format_body(body):
+    async def _format_body(body: typing.Any) -> str:
         if isinstance(body, aiohttp.FormData):
             # We have to either copy the internal multipart writer, or we have
             # to make a dummy second instance and read from that. I am putting
@@ -124,9 +137,10 @@ class DebugTracer(BaseTracer):
             setattr(copy_of_data, "_fields", getattr(copy_of_data, "_fields"))
             byte_writer = _ByteStreamWriter()
             await copy_of_data().write(byte_writer)
-            return repr(byte_writer.read())
+            return repr(byte_writer.bio.read())
         return repr(body)
 
+    @typing.no_type_check
     async def on_request_start(self, _, ctx, params):
         """Log an outbound request."""
         ctx.identifier = f"request_id:{uuid.uuid4()}"
@@ -147,10 +161,17 @@ class DebugTracer(BaseTracer):
             body,
         )
 
+    @typing.no_type_check
     async def on_request_end(self, _, ctx, params):
         """Log an inbound response."""
         latency = round((time.perf_counter() - ctx.start_time) * 1_000, 2)
         response = params.response
+
+        if strings.CONTENT_TYPE_HEADER in response.headers:
+            body = await self._format_body(await response.read())
+        else:
+            body = "no-content"
+
         self.logger.debug(
             "%s %s %s after %sms [%s]\n  response headers: %s\n  response body: %s",
             response.real_url,
@@ -159,38 +180,46 @@ class DebugTracer(BaseTracer):
             latency,
             ctx.identifier,
             dict(response.headers),
-            await self._format_body(await response.read()) if "content-type" in response.headers else "<no content>",
+            body,
         )
 
+    @typing.no_type_check
     async def on_request_exception(self, _, ctx, params):
         """Log an error while making a request."""
         self.logger.debug("encountered exception [%s]", ctx.identifier, exc_info=params.exception)
 
+    @typing.no_type_check
     async def on_connection_queued_start(self, _, ctx, __):
         """Log when we have to wait for a new connection in the pool."""
         self.logger.debug("is waiting for a connection [%s]", ctx.identifier)
 
+    @typing.no_type_check
     async def on_connection_reuseconn(self, _, ctx, __):
         """Log when we re-use an existing connection in the pool."""
         self.logger.debug("has acquired an existing connection [%s]", ctx.identifier)
 
+    @typing.no_type_check
     async def on_connection_create_end(self, _, ctx, __):
         """Log when we create a new connection in the pool."""
         self.logger.debug("has created a new connection [%s]", ctx.identifier)
 
+    @typing.no_type_check
     async def on_dns_cache_hit(self, _, ctx, params):
         """Log when we reuse the DNS cache and do not have to look up an IP."""
         self.logger.debug("has retrieved the IP of %s from the DNS cache [%s]", params.host, ctx.identifier)
 
+    @typing.no_type_check
     async def on_dns_cache_miss(self, _, ctx, params):
         """Log when we have to query a DNS server for an IP address."""
-        self.logger.debug("will perform DNS lookup of new host %s  [%s]", params.host, ctx.identifier)
+        self.logger.debug("will perform DNS lookup of new host %s [%s]", params.host, ctx.identifier)
 
     # noinspection PyMethodMayBeStatic
+    @typing.no_type_check
     async def on_dns_resolvehost_start(self, _, ctx, __):
         """Store the time the DNS lookup started at."""
         ctx.dns_start_time = time.perf_counter()
 
+    @typing.no_type_check
     async def on_dns_resolvehost_end(self, _, ctx, params):
         """Log how long a DNS lookup of an IP took to perform."""
         latency = round((time.perf_counter() - ctx.dns_start_time) * 1_000, 2)

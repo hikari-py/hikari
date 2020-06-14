@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -20,15 +19,12 @@
 
 from __future__ import annotations
 
-__all__ = [
-    "generate_cdn_url",
-]
+__all__: typing.Final[typing.List[str]] = ["generate_cdn_url", "get_default_avatar_url", "get_default_avatar_index"]
 
 import typing
 import urllib.parse
 
-BASE_CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
-"""The URL for the CDN."""
+from hikari.net import strings
 
 
 def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]) -> str:
@@ -63,6 +59,38 @@ def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]
         raise ValueError("Size must be an integer power of 2")
 
     path = "/".join(urllib.parse.unquote(part) for part in route_parts)
-    url = urllib.parse.urljoin(BASE_CDN_URL, "/" + path) + "." + str(format_)
+    url = urllib.parse.urljoin(strings.CDN_URL, "/" + path) + "." + str(format_)
     query = urllib.parse.urlencode({"size": size}) if size is not None else None
     return f"{url}?{query}" if query else url
+
+
+def get_default_avatar_index(discriminator: str) -> int:
+    """Get the index of the default avatar for the given discriminator.
+
+    Parameters
+    ----------
+    discriminator : str
+        The integer discriminator, as a string.
+
+    Returns
+    -------
+    int
+        The index.
+    """
+    return int(discriminator) % 5
+
+
+def get_default_avatar_url(discriminator: str) -> str:
+    """URL for this user's default avatar.
+
+    Parameters
+    ----------
+    discriminator : str
+        The integer discriminator, as a string.
+
+    Returns
+    -------
+    str
+        The avatar URL.
+    """
+    return generate_cdn_url("embed", "avatars", str(get_default_avatar_index(discriminator)), format_="png", size=None,)

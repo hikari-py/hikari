@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -190,25 +189,3 @@ class TestIsAsyncIterable:
                 return ...
 
         assert not aio.is_async_iterable(AsyncIterator)
-
-
-# noinspection PyProtocol
-@pytest.mark.asyncio
-class TestFuture:
-    async def test_is_instance(self, event_loop):
-        assert isinstance(event_loop.create_future(), aio.Future)
-
-        async def nil():
-            pass
-
-        assert isinstance(asyncio.create_task(nil()), aio.Future)
-
-
-# noinspection PyProtocol
-@pytest.mark.asyncio
-class TestTask:
-    async def test_is_instance(self, event_loop):
-        async def nil():
-            pass
-
-        assert isinstance(asyncio.create_task(nil()), aio.Task)

@@ -27,47 +27,24 @@
     - .cpython
     - .reactive-job
   interruptible: true
-  retry: 2
+  retry: 0
   stage: test
 
+
 ###
-### Code linting.
+### Flake8 linter.
 ###
-### Looks for code style problems, code smells, and general bad things.
-### Failures are added as warnings to the pipeline.
-###
-pylint:
+flake8:
   allow_failure: true
   artifacts:
+    when: always
     paths:
-      - public/pylint.html
+      - public/flake8
     reports:
-      junit: public/pylint.xml
+      junit: public/flake8-junit.xml
   extends: .lint
   script:
-    - nox -s pylint --no-error-on-external-run
-
-###
-### Documentation linting.
-###
-### If the documentation is clear and formatted correctly. Any failures
-### become warnings on the pipeline.
-###
-pydocstyle:
-  allow_failure: true
-  extends: .lint
-  script:
-    - nox -s pydocstyle --no-error-on-external-run
-
-###
-### Code formatting.
-###
-### If the code style is not the Black code style, fail the pipeline.
-###
-black:
-  extends: .lint
-  script:
-   - nox -s check-formatting --no-error-on-external-run -- --check --diff
+    - nox -s flake8 --no-error-on-external-run
 
 ###
 ### Security checks.
@@ -80,3 +57,15 @@ safety:
   script:
    - nox -s safety --no-error-on-external-run
 
+###
+### MyPy static type checker.
+###
+mypy:
+  allow_failure: true
+  extends: .lint
+  script:
+    - nox -s mypy --no-error-on-external-run
+  artifacts:
+    reports:
+      junit: public/mypy.xml
+    when: always

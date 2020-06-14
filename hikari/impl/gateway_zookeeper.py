@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,30 +19,31 @@
 
 from __future__ import annotations
 
-__all__ = ["AbstractGatewayZookeeper"]
+__all__: typing.Final[typing.List[str]] = ["AbstractGatewayZookeeper"]
 
 import abc
 import asyncio
-import contextlib
 import datetime
 import signal
 import time
 import typing
 
-from hikari.api import app as app_
 from hikari.api import event_dispatcher
+from hikari.api import gateway_zookeeper
 from hikari.events import other
 from hikari.net import gateway
+from hikari.utilities import aio
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
+    from hikari.events import base as base_events
     from hikari.net import http_settings
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
     from hikari.models import presences
 
 
-class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
+class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
     """Provides keep-alive logic for orchestrating multiple shards.
 
     This provides the logic needed to keep multiple shards alive at once, and
@@ -59,21 +59,21 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
     compression : bool
         Defaulting to `True`, if `True`, then zlib transport compression is used
         for each shard connection. If `False`, no compression is used.
-    config : hikari.utilities.undefined.Undefined or hikari.net.http_settings.HTTPSettings
+    config : hikari.utilities.undefined.UndefinedType or hikari.net.http_settings.HTTPSettings
         Optional aiohttp settings to apply to the created shards.
     debug : bool
         Defaulting to `False`, if `True`, then each payload sent and received
         on the gateway will be dumped to debug logs. This will provide useful
         debugging context at the cost of performance. Generally you do not
         need to enable this.
-    initial_activity : hikari.models.presences.OwnActivity or None or hikari.utilities.undefined.Undefined
+    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
         The initial activity to have on each shard.
-    initial_activity : hikari.models.presences.PresenceStatus or hikari.utilities.undefined.Undefined
+    initial_activity : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
         The initial status to have on each shard.
-    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.Undefined
+    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
         The initial time to show as being idle since, or `None` if not idle,
         for each shard.
-    initial_idle_since : bool or hikari.utilities.undefined.Undefined
+    initial_idle_since : bool or hikari.utilities.undefined.UndefinedType
         If `True`, each shard will appear as being AFK on startup. If `False`,
         each shard will appear as _not_ being AFK.
     intents : hikari.models.intents.Intent or None
@@ -83,11 +83,11 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
     large_threshold : int
         The number of members that need to be in a guild for the guild to be
         considered large. Defaults to the maximum, which is `250`.
-    shard_ids : typing.Set[int] or undefined.Undefined
+    shard_ids : typing.Set[int] or undefined.UndefinedType
         A set of every shard ID that should be created and started on startup.
         If left undefined along with `shard_count`, then auto-sharding is used
         instead, which is the default.
-    shard_count : int or undefined.Undefined
+    shard_count : int or undefined.UndefinedType
         The number of shards in the entire application. If left undefined along
         with `shard_ids`, then auto-sharding is used instead, which is the
         default.
@@ -126,36 +126,40 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         If sharding information is not specified correctly.
     """
 
+    # We do not bother with SIGINT here, since we can catch it as a KeyboardInterrupt
+    # instead and provide tidier handling of the stacktrace as a result.
+    _SIGNALS: typing.Final[typing.ClassVar[typing.Sequence[str]]] = ["SIGQUIT", "SIGTERM"]
+
     def __init__(
         self,
         *,
         compression: bool,
         config: http_settings.HTTPSettings,
         debug: bool,
-        initial_activity: typing.Union[undefined.Undefined, presences.OwnActivity, None] = undefined.Undefined(),
-        initial_idle_since: typing.Union[undefined.Undefined, datetime.datetime, None] = undefined.Undefined(),
-        initial_is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
-        initial_status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
+        initial_activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
+        initial_idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
+        initial_is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        initial_status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
         intents: typing.Optional[intents_.Intent],
         large_threshold: int,
-        shard_ids: typing.Set[int],
-        shard_count: int,
+        shard_ids: typing.Union[typing.Set[int], undefined.UndefinedType] = undefined.UNDEFINED,
+        shard_count: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
         token: str,
         version: int,
     ) -> None:
-        if undefined.Undefined.count(shard_ids, shard_count) == 1:
+        if undefined.count(shard_ids, shard_count) == 1:
             raise TypeError("You must provide values for both shard_ids and shard_count, or neither.")
-        if not isinstance(shard_ids, undefined.Undefined):
+        if shard_ids is not undefined.UNDEFINED:
             if not shard_ids:
                 raise ValueError("At least one shard ID must be specified if provided.")
             if not all(shard_id >= 0 for shard_id in shard_ids):
                 raise ValueError("shard_ids must be greater than or equal to 0.")
-            if not all(shard_id < shard_count for shard_id in shard_ids):
+            if shard_count is not undefined.UNDEFINED and not all(shard_id < shard_count for shard_id in shard_ids):
                 raise ValueError("shard_ids must be less than the total shard_count.")
 
         self._aiohttp_config = config
         self._debug = debug
-        self._gather_task = None
+        self._gather_task: typing.Optional[asyncio.Task[None]] = None
         self._initial_activity = initial_activity
         self._initial_idle_since = initial_idle_since
         self._initial_is_afk = initial_is_afk
@@ -164,21 +168,42 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
         self._large_threshold = large_threshold
         self._max_concurrency = 1
         self._request_close_event = asyncio.Event()
-        self._shard_count = shard_count
-        self._shard_ids = shard_ids
-        self._shards = {}
-        self._tasks = {}
+        self._shard_count = shard_count if shard_count is not undefined.UNDEFINED else 0
+        self._shard_ids = set() if shard_ids is undefined.UNDEFINED else shard_ids
+        self._shards: typing.Dict[int, gateway.Gateway] = {}
+        self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
         self._use_compression = compression
         self._version = version
 
     @property
-    def gateway_shards(self) -> typing.Mapping[int, gateway.Gateway]:
+    def shards(self) -> typing.Mapping[int, gateway.Gateway]:
         return self._shards
 
     @property
-    def gateway_shard_count(self) -> int:
+    def shard_count(self) -> int:
         return self._shard_count
+
+    def run(self) -> None:
+        loop = asyncio.get_event_loop()
+
+        def on_interrupt() -> None:
+            loop.create_task(self.close(), name="signal interrupt shutting down application")
+
+        try:
+            self._map_signal_handlers(loop.add_signal_handler, on_interrupt)
+            loop.run_until_complete(self._run())
+        except KeyboardInterrupt as ex:
+            self.logger.info("received signal to shut down client")
+            if self._debug:
+                raise
+            else:
+                # The user won't care where this gets raised from, unless we are
+                # debugging. It just causes a lot of confusing spam.
+                raise ex.with_traceback(None)
+        finally:
+            self._map_signal_handlers(loop.remove_signal_handler)
+            self.logger.info("client has shut down")
 
     async def start(self) -> None:
         self._tasks.clear()
@@ -190,7 +215,10 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
 
         await self._maybe_dispatch(other.StartingEvent())
 
-        self.logger.info("starting %s shard(s)", len(self._shards))
+        if self._shard_count > 1:
+            self.logger.info("starting %s shard(s)", len(self._shards))
+        else:
+            self.logger.info("this application will be single-sharded")
 
         start_time = time.perf_counter()
 
@@ -206,8 +234,9 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
                         self._tasks.values(), timeout=5, return_when=asyncio.FIRST_COMPLETED
                     )
 
-                    if completed:
-                        raise completed.pop().exception()
+                    while completed:
+                        if (ex := completed.pop().exception()) is not None:
+                            raise ex
 
                 window = {}
                 for shard_id in shard_ids:
@@ -233,9 +262,7 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
                 raise
 
             finish_time = time.perf_counter()
-            self._gather_task = asyncio.create_task(
-                self._gather(), name=f"shard zookeeper for {len(self._shards)} shard(s)"
-            )
+            self._gather_task = asyncio.create_task(self._gather(), name=f"zookeeper for {len(self._shards)} shard(s)")
             self.logger.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
 
             await self._maybe_dispatch(other.StartedEvent())
@@ -251,54 +278,20 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
 
             self.logger.info("stopping %s shard(s)", len(self._tasks))
 
-            has_event_dispatcher = hasattr(self, "event_dispatcher") and isinstance(
-                self.event_dispatcher, event_dispatcher.IEventDispatcher
-            )
-
             try:
-                if has_event_dispatcher:
-                    # noinspection PyUnresolvedReferences
-                    await self.event_dispatcher.dispatch(other.StoppingEvent())
-
+                await self._maybe_dispatch(other.StoppingEvent())
                 await self._abort()
             finally:
                 self._tasks.clear()
-
-                if has_event_dispatcher:
-                    # noinspection PyUnresolvedReferences
-                    await self.event_dispatcher.dispatch(other.StoppedEvent())
-
-    def run(self) -> None:
-        loop = asyncio.get_event_loop()
-
-        def sigterm_handler(*_):
-            loop.create_task(self.close())
-
-        try:
-            with contextlib.suppress(NotImplementedError):
-                # Not implemented on Windows
-                loop.add_signal_handler(signal.SIGTERM, sigterm_handler)
-
-            loop.run_until_complete(self._run())
-
-        except KeyboardInterrupt:
-            self.logger.info("received signal to shut down client")
-            raise
-
-        finally:
-            loop.run_until_complete(self.close())
-            with contextlib.suppress(NotImplementedError):
-                # Not implemented on Windows
-                loop.remove_signal_handler(signal.SIGTERM)
-            self.logger.info("client has shut down")
+                await self._maybe_dispatch(other.StoppedEvent())
 
     async def update_presence(
         self,
         *,
-        status: typing.Union[undefined.Undefined, presences.PresenceStatus] = undefined.Undefined(),
-        activity: typing.Union[undefined.Undefined, presences.OwnActivity, None] = undefined.Undefined(),
-        idle_since: typing.Union[undefined.Undefined, datetime.datetime] = undefined.Undefined(),
-        is_afk: typing.Union[undefined.Undefined, bool] = undefined.Undefined(),
+        status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
+        activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
+        idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
+        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
     ) -> None:
         await asyncio.gather(
             *(
@@ -308,23 +301,34 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
             )
         )
 
-    async def _init(self):
-        gw_recs = await self._fetch_gateway_recommendations()
+    @abc.abstractmethod
+    async def fetch_sharding_settings(self) -> gateway_models.GatewayBot:
+        """Fetch the recommended sharding settings and gateway URL from Discord.
+
+        Returns
+        -------
+        hikari.models.gateway.GatewayBot
+            The recommended sharding settings and configuration for the
+            bot account.
+        """
+
+    async def _init(self) -> None:
+        gw_recs = await self.fetch_sharding_settings()
 
         self.logger.info(
-            "you have sent an IDENTIFY %s time(s) before now, and have %s remaining. This will reset at %s.",
+            "you have opened %s session(s) recently, you can open %s more before %s",
             gw_recs.session_start_limit.total - gw_recs.session_start_limit.remaining,
-            gw_recs.session_start_limit.remaining,
-            datetime.datetime.now() + gw_recs.session_start_limit.reset_after,
+            gw_recs.session_start_limit.remaining if gw_recs.session_start_limit.remaining > 0 else "no",
+            (datetime.datetime.now() + gw_recs.session_start_limit.reset_after).strftime("%c"),
         )
 
         self._shard_count = self._shard_count if self._shard_count else gw_recs.shard_count
-        self._shard_ids = self._shard_ids if self._shard_ids else range(self._shard_count)
+        self._shard_ids = self._shard_ids if self._shard_ids else set(range(self._shard_count))
         self._max_concurrency = gw_recs.session_start_limit.max_concurrency
         url = gw_recs.url
 
         self.logger.info(
-            "will connect shards to %s. max_concurrency while connecting is %s, contact Discord to get this increased",
+            "will connect shards to %s at a rate of %s shard(s) per 5 seconds (contact Discord to increase this rate)",
             url,
             self._max_concurrency,
         )
@@ -368,13 +372,10 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
                 yield iter(next_window)
             n += self._max_concurrency
 
-    @abc.abstractmethod
-    async def _fetch_gateway_recommendations(self) -> gateway_models.GatewayBot:
-        ...
-
     async def _abort(self) -> None:
         for shard_id in self._tasks:
-            await self._shards[shard_id].close()
+            if self._shards[shard_id].is_alive:
+                await self._shards[shard_id].close()
         await asyncio.gather(*self._tasks.values(), return_exceptions=True)
 
     async def _gather(self) -> None:
@@ -385,10 +386,22 @@ class AbstractGatewayZookeeper(app_.IGatewayZookeeper, abc.ABC):
             await self.close()
 
     async def _run(self) -> None:
-        await self.start()
-        await self.join()
+        try:
+            await self.start()
+            await self.join()
+        finally:
+            await self.close()
 
-    async def _maybe_dispatch(self, event) -> None:
-        if hasattr(self, "event_dispatcher"):
-            # noinspection PyUnresolvedReferences
-            await self.event_dispatcher.dispatch(event)
+    def _maybe_dispatch(self, event: base_events.Event) -> typing.Awaitable[typing.Any]:
+        if isinstance(self, event_dispatcher.IEventDispatcherApp):
+            return self.event_dispatcher.dispatch(event)
+        else:
+            return aio.completed_future()
+
+    def _map_signal_handlers(
+        self, mapping_function: typing.Callable[..., None], *args: typing.Callable[[], typing.Any],
+    ) -> None:
+        valid_interrupts = signal.valid_signals()
+        for interrupt in self._SIGNALS:
+            if (code := getattr(signal, interrupt, None)) in valid_interrupts:
+                mapping_function(code, *args)

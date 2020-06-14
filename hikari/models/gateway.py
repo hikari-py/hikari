@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__ = ["GatewayBot", "SessionStartLimit"]
+__all__: typing.Final[typing.List[str]] = ["GatewayBot", "SessionStartLimit"]
 
 import typing
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -19,20 +18,33 @@
 """Base functionality for any HTTP-based network component."""
 from __future__ import annotations
 
-__all__ = ["HTTPClient"]
+__all__: typing.Final[typing.List[str]] = ["HTTPClient"]
 
 import abc
-import contextlib
+import http
 import json
 import logging
 import ssl
 import types
 import typing
 
+import aiohttp.client
 import aiohttp.typedefs
-import multidict
 
+from hikari import errors
 from hikari.net import tracing
+from hikari.utilities import data_binding
+
+try:
+    # noinspection PyProtectedMember
+    RequestContextManager = aiohttp.client._RequestContextManager
+    """Type hint for an AIOHTTP session context manager.
+
+    This is stored as aiohttp does not expose the type-hint directly, despite
+    exposing the rest of the API it is part of.
+    """
+except NameError:
+    RequestContextManager = typing.Any  # type: ignore
 
 
 class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
@@ -79,7 +91,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
 
     __slots__ = (
         "logger",
-        "__client_session",
+        "_client_session",
         "_allow_redirects",
         "_connector",
         "_debug",
@@ -168,14 +180,14 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
     ) -> None:
         self.logger = logger
 
-        self.__client_session = None
+        self._client_session: typing.Optional[aiohttp.ClientSession] = None
         self._allow_redirects = allow_redirects
         self._connector = connector
         self._debug = debug
         self._proxy_auth = proxy_auth
         self._proxy_headers = proxy_headers
         self._proxy_url = proxy_url
-        self._ssl_context: ssl.SSLContext = ssl_context
+        self._ssl_context = ssl_context
         self._request_timeout = timeout
         self._trust_env = trust_env
         self._tracers = [(tracing.DebugTracer(self.logger) if debug else tracing.CFRayTracer(self.logger))]
@@ -191,39 +203,48 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
 
     async def close(self) -> None:
         """Close the client safely."""
-        with contextlib.suppress(Exception):
-            await self.__client_session.close()
-            self.logger.debug("closed client session object %r", self.__client_session)
-            self.__client_session = None
+        if self._client_session is not None:
+            await self._client_session.close()
+            self.logger.debug("closed client session object %r", self._client_session)
+            self._client_session = None
 
-    def _acquire_client_session(self) -> aiohttp.ClientSession:
+    def client_session(self) -> aiohttp.ClientSession:
         """Acquire a client session to make requests with.
+
+        !!! warning
+            This must be invoked within a coroutine running in an event loop,
+            or the behaviour will be undefined.
+
+            Generally you should not need to use this unless you are interfacing
+            with the Hikari API directly.
 
         Returns
         -------
         aiohttp.ClientSession
             The client session to use for requests.
         """
-        if self.__client_session is None:
-            self.__client_session = aiohttp.ClientSession(
+        if self._client_session is None:
+            self._client_session = aiohttp.ClientSession(
                 connector=self._connector,
                 trust_env=self._trust_env,
                 version=aiohttp.HttpVersion11,
                 json_serialize=json.dumps,
                 trace_configs=[t.trace_config for t in self._tracers],
             )
-            self.logger.debug("acquired new client session object %r", self.__client_session)
-        return self.__client_session
+            self.logger.debug("acquired new client session object %r", self._client_session)
+        return self._client_session
 
-    async def _perform_request(
+    def _perform_request(
         self,
         *,
         method: str,
         url: str,
-        headers: aiohttp.typedefs.LooseHeaders,
-        body: typing.Union[aiohttp.FormData, dict, list, None],
-        query: typing.Union[typing.Dict[str, str], multidict.MultiDict[str, str]],
-    ) -> aiohttp.ClientResponse:
+        headers: data_binding.Headers = typing.cast(data_binding.Headers, types.MappingProxyType({})),
+        body: typing.Union[
+            data_binding.JSONObjectBuilder, aiohttp.FormData, data_binding.JSONObject, data_binding.JSONArray, None
+        ] = None,
+        query: typing.Union[data_binding.Query, data_binding.StringMapBuilder, None] = None,
+    ) -> RequestContextManager:
         """Make an HTTP request and return the response.
 
         Parameters
@@ -247,19 +268,18 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         aiohttp.ClientResponse
             The HTTP response.
         """
+        kwargs: typing.Dict[str, typing.Any] = {}
+
         if isinstance(body, (dict, list)):
-            kwargs = {"json": body}
+            kwargs["json"] = body
 
         elif isinstance(body, aiohttp.FormData):
-            kwargs = {"data": body}
-
-        else:
-            kwargs = {}
+            kwargs["data"] = body
 
         trace_request_ctx = types.SimpleNamespace()
         trace_request_ctx.request_body = body
 
-        return await self._acquire_client_session().request(
+        return self.client_session().request(
             method=method,
             url=url,
             params=query,
@@ -300,7 +320,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
             The websocket to use.
         """
         self.logger.debug("creating underlying websocket object from HTTP session")
-        return await self._acquire_client_session().ws_connect(
+        return await self.client_session().ws_connect(
             url=url,
             compress=compress,
             autoping=auto_ping,
@@ -311,3 +331,31 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
             verify_ssl=self._verify_ssl,
             ssl_context=self._ssl_context,
         )
+
+
+async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HTTPError:
+    """Given an erroneous HTTP response, return a corresponding exception."""
+    real_url = str(response.real_url)
+    raw_body = await response.read()
+
+    if response.status == http.HTTPStatus.BAD_REQUEST:
+        return errors.BadRequest(real_url, response.headers, raw_body)
+    if response.status == http.HTTPStatus.UNAUTHORIZED:
+        return errors.Unauthorized(real_url, response.headers, raw_body)
+    if response.status == http.HTTPStatus.FORBIDDEN:
+        return errors.Forbidden(real_url, response.headers, raw_body)
+    if response.status == http.HTTPStatus.NOT_FOUND:
+        return errors.NotFound(real_url, response.headers, raw_body)
+
+    # noinspection PyArgumentList
+    status = http.HTTPStatus(response.status)
+
+    cls: typing.Type[errors.HikariError]
+    if 400 <= status < 500:
+        cls = errors.ClientHTTPErrorResponse
+    elif 500 <= status < 600:
+        cls = errors.ServerHTTPErrorResponse
+    else:
+        cls = errors.HTTPErrorResponse
+
+    return cls(real_url, status, response.headers, raw_body)
