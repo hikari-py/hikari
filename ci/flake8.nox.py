@@ -25,12 +25,25 @@ from ci import nox
 def flake8(session: nox.Session) -> None:
     session.install("-r", "requirements.txt", "-r", "flake-requirements.txt")
 
+    session.run(
+        "flake8",
+        "--format=html",
+        f"--htmldir={config.FLAKE8_HTML}",
+        config.MAIN_PACKAGE,
+        success_codes=range(0, 256),
+    )
+
     if "GITLAB_CI" in os.environ or "--gitlab" in session.posargs:
         print("Detected GitLab, will output CodeClimate report instead!")
-        format_args = ["--format=gl-codeclimate", f"--output-file={config.FLAKE8_CODECLIMATE}"]
+        # If we add the args for --statistics or --show-source, the thing breaks
+        # silently, and I cant find another decent package that actually works
+        # in any of the gitlab-supported formats :(
+        format_args = ["--format=junit-xml", f"--output-file={config.FLAKE8_JUNIT}"]
     else:
         format_args = [f"--output-file={config.FLAKE8_TXT}", "--statistics", "--show-source"]
 
     session.run(
-        "flake8", "--exit-zero", "--format=html", f"--htmldir={config.FLAKE8_HTML}", *format_args, config.MAIN_PACKAGE,
+        "flake8",
+        *format_args,
+        config.MAIN_PACKAGE,
     )

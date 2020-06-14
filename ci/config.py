@@ -30,7 +30,7 @@ DOCUMENTATION_DIRECTORY = "docs"
 ROOT_INDEX_SOURCE = "index.html"
 
 # Linting and test configs.
-FLAKE8_CODECLIMATE = "public/flake8.json"
+FLAKE8_JUNIT = "public/flake8-junit.xml"
 FLAKE8_HTML = "public/flake8"
 FLAKE8_TXT = "public/flake8.txt"
 MYPY_INI = "mypy.ini"
