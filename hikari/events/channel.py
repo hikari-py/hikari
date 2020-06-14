@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "BaseChannelEvent",
     "ChannelCreateEvent",
     "ChannelUpdateEvent",
@@ -51,7 +50,7 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intent.GUILDS)  # TODO: this intent doesn't account for DM channels.
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class BaseChannelEvent(base_events.HikariEvent, abc.ABC):
+class BaseChannelEvent(base_events.Event, abc.ABC):
     """A base object that Channel events will inherit from."""
 
     channel: channels.PartialChannel = attr.ib(repr=True)
@@ -82,7 +81,7 @@ class ChannelDeleteEvent(BaseChannelEvent):
 
 @base_events.requires_intents(intents.Intent.GUILDS)  # TODO: this intent doesn't account for DM channels.
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class ChannelPinsUpdateEvent(base_events.HikariEvent, base_models.Entity):
+class ChannelPinsUpdateEvent(base_events.Event, base_models.Entity):
     """Used to represent the Channel Pins Update gateway event.
 
     Sent when a message is pinned or unpinned in a channel but not
@@ -107,7 +106,7 @@ class ChannelPinsUpdateEvent(base_events.HikariEvent, base_models.Entity):
 
 @base_events.requires_intents(intents.Intent.GUILD_WEBHOOKS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class WebhookUpdateEvent(base_events.HikariEvent, base_models.Entity):
+class WebhookUpdateEvent(base_events.Event, base_models.Entity):
     """Used to represent webhook update gateway events.
 
     Sent when a webhook is updated, created or deleted in a guild.
@@ -122,7 +121,7 @@ class WebhookUpdateEvent(base_events.HikariEvent, base_models.Entity):
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_TYPING, intents.Intent.DIRECT_MESSAGE_TYPING)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class TypingStartEvent(base_events.HikariEvent, base_models.Entity):
+class TypingStartEvent(base_events.Event, base_models.Entity):
     """Used to represent typing start gateway events.
 
     Received when a user or bot starts "typing" in a channel.
@@ -152,7 +151,7 @@ class TypingStartEvent(base_events.HikariEvent, base_models.Entity):
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class InviteCreateEvent(base_events.HikariEvent):
+class InviteCreateEvent(base_events.Event):
     """Represents a gateway Invite Create event."""
 
     invite: invites.InviteWithMetadata = attr.ib(repr=True)
@@ -161,7 +160,7 @@ class InviteCreateEvent(base_events.HikariEvent):
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class InviteDeleteEvent(base_events.HikariEvent, base_models.Entity):
+class InviteDeleteEvent(base_events.Event, base_models.Entity):
     """Used to represent Invite Delete gateway events.
 
     Sent when an invite is deleted for a channel we can access.

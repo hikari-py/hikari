@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -18,12 +17,11 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Dependency scanning."""
 
-from ci import config
 from ci import nox
 
 
 @nox.session(reuse_venv=True, default=True)
 def safety(session: nox.Session) -> None:
     """Perform dependency scanning."""
-    session.install("safety", "-Ur", config.REQUIREMENTS)
+    session.install("safety", "-Ur", "requirements.txt")
     session.run("safety", "check", "--full-report")

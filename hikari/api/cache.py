@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -19,7 +18,7 @@
 """Core interface for a cache implementation."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ICache"]
+__all__: typing.Final[typing.List[str]] = ["ICacheComponent"]
 
 import abc
 
@@ -29,7 +28,7 @@ import typing
 from hikari.api import component
 
 
-class ICache(component.IComponent, abc.ABC):
+class ICacheComponent(component.IComponent, abc.ABC):
     """Interface describing the operations a cache component should provide.
 
     This will be used by the gateway and REST API to cache specific types of

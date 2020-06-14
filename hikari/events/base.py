@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,8 +19,8 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
-    "HikariEvent",
+__all__: typing.Final[typing.List[str]] = [
+    "Event",
     "get_required_intents_for",
     "requires_intents",
     "no_catch",
@@ -39,21 +38,21 @@ if typing.TYPE_CHECKING:
 
 # Base event, is not deserialized
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class HikariEvent(abc.ABC):
+class Event(abc.ABC):
     """The base class that all events inherit from."""
 
 
-_HikariEventT = typing.TypeVar("_HikariEventT", contravariant=True)
+_EventT = typing.TypeVar("_EventT", contravariant=True)
 _REQUIRED_INTENTS_ATTR: typing.Final[str] = "___required_intents___"
 _NO_THROW_ATTR: typing.Final[str] = "___no_throw___"
 
 
-def get_required_intents_for(event_type: typing.Type[HikariEvent]) -> typing.Collection[intents.Intent]:
+def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intent]:
     """Retrieve the intents that are required to listen to an event type.
 
     Parameters
     ----------
-    event_type : typing.Type[HikariEvent]
+    event_type : typing.Type[Event]
         The event type to get required intents for.
 
     Returns
@@ -67,7 +66,7 @@ def get_required_intents_for(event_type: typing.Type[HikariEvent]) -> typing.Col
 
 def requires_intents(
     first: intents.Intent, *rest: intents.Intent
-) -> typing.Callable[[typing.Type[_HikariEventT]], typing.Type[_HikariEventT]]:
+) -> typing.Callable[[typing.Type[_EventT]], typing.Type[_EventT]]:
     """Decorate an event type to define what intents it requires.
 
     Parameters
@@ -81,27 +80,27 @@ def requires_intents(
 
     """
 
-    def decorator(cls: typing.Type[_HikariEventT]) -> typing.Type[_HikariEventT]:
+    def decorator(cls: typing.Type[_EventT]) -> typing.Type[_EventT]:
         setattr(cls, _REQUIRED_INTENTS_ATTR, [first, *rest])
         return cls
 
     return decorator
 
 
-def no_catch() -> typing.Callable[[typing.Type[_HikariEventT]], typing.Type[_HikariEventT]]:
+def no_catch() -> typing.Callable[[typing.Type[_EventT]], typing.Type[_EventT]]:
     """Decorate an event type to indicate errors should not be handled.
 
     This is useful for exception event types that you do not want to
     have invoked recursively.
     """
 
-    def decorator(cls: typing.Type[_HikariEventT]) -> typing.Type[_HikariEventT]:
+    def decorator(cls: typing.Type[_EventT]) -> typing.Type[_EventT]:
         setattr(cls, _NO_THROW_ATTR, True)
         return cls
 
     return decorator
 
 
-def is_no_catch_event(obj: typing.Union[_HikariEventT, typing.Type[_HikariEventT]]) -> bool:
+def is_no_catch_event(obj: typing.Union[_EventT, typing.Type[_EventT]]) -> bool:
     """Return True if this event is marked as `no_catch`."""
     return typing.cast(bool, getattr(obj, _NO_THROW_ATTR, False))

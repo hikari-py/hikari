@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -19,21 +18,22 @@
 """Provides a command-line entry point that shows the library version and then exits."""
 from __future__ import annotations
 
-__all__: typing.List[str] = []
+__all__: typing.Final[typing.List[str]] = []
 
 import inspect
 import os
 import platform
+import sys
 
 # noinspection PyUnresolvedReferences
 import typing
 
 from hikari import _about
 
-# noinspection PyTypeChecker
-path: typing.Final[str] = os.path.abspath(os.path.dirname(inspect.getsourcefile(_about)))
+sourcefile = typing.cast(str, inspect.getsourcefile(_about))
+path: typing.Final[str] = os.path.abspath(os.path.dirname(sourcefile))
 version: typing.Final[str] = _about.__version__
 py_impl: typing.Final[str] = platform.python_implementation()
 py_ver: typing.Final[str] = platform.python_version()
 py_compiler: typing.Final[str] = platform.python_compiler()
-print(f"hikari v{version} (installed in {path}) ({py_impl} {py_ver} {py_compiler})")
+sys.stderr.write(f"hikari v{version} (installed in {path}) ({py_impl} {py_ver} {py_compiler})\n")

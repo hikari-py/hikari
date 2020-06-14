@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["User", "OwnUser", "UserFlag", "PremiumType"]
+__all__: typing.Final[typing.List[str]] = ["User", "OwnUser", "UserFlag", "PremiumType"]
 
 import enum
 import typing
@@ -29,6 +28,7 @@ import attr
 
 from hikari.models import bases
 from hikari.utilities import cdn
+from hikari.utilities import files
 from hikari.utilities import undefined
 
 
@@ -101,22 +101,22 @@ class PartialUser(bases.Entity, bases.Unique):
     present.
     """
 
-    discriminator: typing.Union[str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=True)
+    discriminator: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)
     """This user's discriminator."""
 
-    username: typing.Union[str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=True)
+    username: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)
     """This user's username."""
 
-    avatar_hash: typing.Union[None, str, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=False)
+    avatar_hash: typing.Union[None, str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
     """This user's avatar hash, if set."""
 
-    is_bot: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False, repr=False)
+    is_bot: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is a bot account."""
 
-    is_system: typing.Union[bool, undefined.Undefined] = attr.ib(eq=False, hash=False)
+    is_system: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False)
     """Whether this user is a system account."""
 
-    flags: typing.Union[UserFlag, undefined.Undefined] = attr.ib(eq=False, hash=False)
+    flags: typing.Union[UserFlag, undefined.UndefinedType] = attr.ib(eq=False, hash=False)
     """The public flags for this user."""
 
 
@@ -162,12 +162,12 @@ class User(PartialUser):
         return await self._app.rest.fetch_user(user=self.id)
 
     @property
-    def avatar_url(self) -> typing.Optional[str]:
-        """URL for this user's custom avatar if set, else `None`."""
-        return self.format_avatar_url()
+    def avatar(self) -> typing.Optional[files.URL]:
+        """Avatar for the user if set, else `None`."""
+        return self.format_avatar()
 
-    def format_avatar_url(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[str]:
-        """Generate the avatar URL for this user's custom avatar if set.
+    def format_avatar(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the avatar for this user, if set.
 
         If no custom avatar is set, this returns `None`. You can then use the
         `User.default_avatar_url` attribute instead to fetch the displayed
@@ -175,11 +175,14 @@ class User(PartialUser):
 
         Parameters
         ----------
-        format_ : str
+        format_ : str or `None`
             The format to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated). Will be ignored for default avatars which can only be
             `png`.
+
+            If `None`, then the correct default format is determined based on
+            whether the icon is animated or not.
         size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
@@ -187,27 +190,36 @@ class User(PartialUser):
 
         Returns
         -------
-        str
-            The string URL, or `None` if not present.
+        hikari.utilities.files.URL
+            The URL to the avatar, or `None` if not present.
 
         Raises
         ------
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.avatar_hash is not None:
-            return cdn.get_avatar_url(self.id, self.avatar_hash, format_=format_, size=size)
-        return None
+        if self.avatar_hash is None:
+            return None
+
+        if format_ is None:
+            if self.avatar_hash.startswith("a_"):
+                format_ = "gif"
+            else:
+                format_ = "png"
+
+        url = cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
+        return files.URL(url)
+
+    @property
+    def default_avatar(self) -> files.URL:  # noqa: D401 imperative mood check
+        """Placeholder default avatar for the user."""
+        url = cdn.get_default_avatar_url(self.discriminator)
+        return files.URL(url)
 
     @property
     def default_avatar_index(self) -> int:
         """Integer representation of this user's default avatar."""
         return cdn.get_default_avatar_index(self.discriminator)
-
-    @property
-    def default_avatar_url(self) -> str:
-        """URL for this user's default avatar."""
-        return cdn.get_default_avatar_url(self.discriminator)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

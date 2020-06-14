@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -19,7 +18,7 @@
 """Core interface for an object that serializes/deserializes API objects."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["IEntityFactory"]
+__all__: typing.Final[typing.List[str]] = ["IEntityFactoryComponent"]
 
 import abc
 import typing
@@ -46,13 +45,12 @@ if typing.TYPE_CHECKING:
     from hikari.models import users as user_models
     from hikari.models import voices as voice_models
     from hikari.models import webhooks as webhook_models
-
     from hikari.net import gateway
-
     from hikari.utilities import data_binding
+    from hikari.utilities import files
 
 
-class IEntityFactory(component.IComponent, abc.ABC):
+class IEntityFactoryComponent(component.IComponent, abc.ABC):
     """Interface for components that serialize and deserialize JSON payloads."""
 
     __slots__ = ()
@@ -314,7 +312,9 @@ class IEntityFactory(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def serialize_embed(self, embed: embed_models.Embed) -> data_binding.JSONObject:
+    def serialize_embed(
+        self, embed: embed_models.Embed
+    ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource]]:
         """Serialize an embed object to a json serializable dict.
 
         Parameters
@@ -324,8 +324,10 @@ class IEntityFactory(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.utilities.data_binding.JSONObject
-            The serialized object representation.
+        typing.Tuple[hikari.utilities.data_binding.JSONObject, typing.List[hikari.utilities.files.Resource]]
+            A tuple with two items in it. The first item will be the serialized
+            embed representation. The second item will be a list of resources
+            to upload with the embed.
         """
 
     ################
@@ -437,7 +439,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
-        user: typing.Union[undefined.Undefined, user_models.User] = undefined.Undefined(),
+        user: typing.Union[undefined.UndefinedType, user_models.User] = undefined.UNDEFINED,
     ) -> guild_models.Member:
         """Parse a raw payload from Discord into a member object.
 
@@ -445,7 +447,7 @@ class IEntityFactory(component.IComponent, abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
-        user : hikari.models.users.User or hikari.utilities.undefined.Undefined
+        user : hikari.models.users.User or hikari.utilities.undefined.UndefinedType
             The user to attach to this member, should only be passed in
             situations where "user" is not included in the payload.
 

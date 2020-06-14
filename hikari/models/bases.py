@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -20,18 +19,19 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Entity", "Unique"]
+__all__: typing.Final[typing.List[str]] = ["Entity", "Unique"]
 
 import abc
 import typing
 
 import attr
 
-from hikari.api import app as app_
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     import datetime
+
+    from hikari.api import rest
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=False)
@@ -43,12 +43,10 @@ class Entity(abc.ABC):
     methods directly.
     """
 
-    _AppT = typing.Union[app_.IRESTApp, app_.IBot]
-
-    _app: _AppT = attr.ib(default=None, repr=False, eq=False, hash=False)
+    _app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    def __init__(self, app: _AppT) -> None:
+    def __init__(self, app: rest.IRESTApp) -> None:
         self._app = app
 
 
@@ -60,7 +58,9 @@ class Unique(typing.SupportsInt):
     integer ID of the object.
     """
 
-    id: snowflake.Snowflake = attr.ib(converter=snowflake.Snowflake, eq=True, hash=True, repr=True)
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
     """The ID of this entity."""
 
     @property

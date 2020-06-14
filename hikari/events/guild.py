@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "GuildEvent",
     "GuildCreateEvent",
     "GuildUpdateEvent",
@@ -59,7 +58,7 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class GuildEvent(base_events.HikariEvent):
+class GuildEvent(base_events.Event):
     """A base object that all guild events will inherit from."""
 
 

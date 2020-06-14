@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EventManagerImpl"]
+__all__: typing.Final[typing.List[str]] = ["EventManagerImpl"]
 
 import typing
 
@@ -32,10 +31,10 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import data_binding
 
 
-class EventManagerImpl(event_manager_core.EventManagerCore):
+class EventManagerImpl(event_manager_core.EventManagerCoreComponent):
     """Provides event handling logic for Discord events."""
 
-    async def on_connect(self, shard: gateway.Gateway, _: data_binding.JSONObject) -> None:
+    async def on_connected(self, shard: gateway.Gateway, _: data_binding.JSONObject) -> None:
         """Handle connection events.
 
         This is a synthetic event produced by the gateway implementation in
@@ -44,7 +43,7 @@ class EventManagerImpl(event_manager_core.EventManagerCore):
         # FIXME: this should be in entity factory
         await self.dispatch(other.ConnectedEvent(shard=shard))
 
-    async def on_disconnect(self, shard: gateway.Gateway, _: data_binding.JSONObject) -> None:
+    async def on_disconnected(self, shard: gateway.Gateway, _: data_binding.JSONObject) -> None:
         """Handle disconnection events.
 
         This is a synthetic event produced by the gateway implementation in

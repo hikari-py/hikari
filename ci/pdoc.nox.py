@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -25,7 +24,7 @@ from ci import nox
 @nox.inherit_environment_vars
 def pdoc(session: nox.Session) -> None:
     """Generate documentation with pdoc."""
-    session.install("-r", config.REQUIREMENTS)
+    session.install("-r", "requirements.txt")
     session.install("pdoc3")
     session.install("sphobjinv")
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -26,6 +25,7 @@ from nox.sessions import Session
 from nox import session as _session
 from nox import options as _options
 
+from ci import config
 
 _options.sessions = []
 
@@ -55,3 +55,7 @@ def shell(arg, *args):
     command = " ".join((arg, *args))
     print("\033[35mnox > shell >\033[0m", command)
     return subprocess.check_call(command, shell=True)
+
+
+if not os.path.isdir(config.ARTIFACT_DIRECTORY):
+    os.mkdir(config.ARTIFACT_DIRECTORY)

@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -24,7 +23,7 @@ __author__ = "Nekokatt"
 __ci__ = "https://gitlab.com/nekokatt/hikari/pipelines"
 __copyright__ = "© 2019-2020 Nekokatt"
 __discord_invite__ = "https://discord.gg/Jx4cNGG"
-__docs__ = "https://nekokatt.gitlab.io/hikari/index.html"
+__docs__ = "https://nekokatt.gitlab.io/hikari"
 __email__ = "3903853-nekokatt@users.noreply.gitlab.com"
 __issue_tracker__ = "https://gitlab.com/nekokatt/hikari/issues"
 __license__ = "LGPL-3.0-ONLY"

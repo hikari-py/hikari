@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -50,7 +49,7 @@ FLAGS = [
 def pytest(session: nox.Session) -> None:
     """Run unit tests and measure code coverage."""
     session.install(
-        "-r", config.REQUIREMENTS, "-r", config.DEV_REQUIREMENTS,
+        "-r", "requirements.txt", "-r", "dev-requirements.txt",
     )
     shutil.rmtree(".coverage", ignore_errors=True)
     session.run("python", "-m", "pytest", *FLAGS)

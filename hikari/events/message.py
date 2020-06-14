@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -20,9 +19,9 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "MessageCreateEvent",
-    "UpdateMessage",
+    "UpdatedMessageFields",
     "MessageUpdateEvent",
     "MessageDeleteEvent",
     "MessageDeleteBulkEvent",
@@ -38,8 +37,8 @@ import attr
 
 from hikari.events import base as base_events
 from hikari.models import bases as base_models
-from hikari.models import messages
 from hikari.models import intents
+from hikari.models import messages
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -55,18 +54,23 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageCreateEvent(base_events.HikariEvent):
+class MessageCreateEvent(base_events.Event):
     """Used to represent Message Create gateway events."""
 
     message: messages.Message = attr.ib(repr=True)
 
 
-class UpdateMessage(messages.Message):
+@attr.s(slots=True, init=False, repr=True, eq=False)
+class UpdatedMessageFields(base_models.Entity, base_models.Unique):
     """An arbitrarily partial version of `hikari.models.messages.Message`.
+
+    This contains arbitrary fields that may be updated in a
+    `MessageUpdateEvent`, but for all other purposes should be treated as
+    being optionally specified.
 
     !!! warn
         All fields on this model except `channel` and `id` may be set to
-        `hikari.utilities.undefined.Undefined` (a singleton) if we have not
+        `hikari.utilities.undefined.UndefinedType` (a singleton) if we have not
         received information about their state from Discord alongside field
         nullability.
     """
@@ -74,75 +78,75 @@ class UpdateMessage(messages.Message):
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel that the message was sent in."""
 
-    guild_id: typing.Union[snowflake.Snowflake, undefined.Undefined] = attr.ib(repr=True)
+    # So this breaks stuff using inheritance.
+    guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = attr.ib(repr=True)
     """The ID of the guild that the message was sent in."""
 
-    author: typing.Union[users.User, undefined.Undefined] = attr.ib(repr=True)
+    author: typing.Union[users.User, undefined.UndefinedType] = attr.ib(repr=True)
     """The author of this message."""
 
-    # TODO: can we merge member and author together?
-    # We could override deserialize to to this and then reorganise the payload, perhaps?
-    member: typing.Union[guilds.Member, undefined.Undefined] = attr.ib(repr=False)
+    member: typing.Union[guilds.Member, undefined.UndefinedType] = attr.ib(repr=False)
     """The member properties for the message's author."""
 
-    content: typing.Union[str, undefined.Undefined] = attr.ib(repr=False)
+    content: typing.Union[str, undefined.UndefinedType] = attr.ib(repr=False)
     """The content of the message."""
 
-    timestamp: typing.Union[datetime.datetime, undefined.Undefined] = attr.ib(repr=False)
+    timestamp: typing.Union[datetime.datetime, undefined.UndefinedType] = attr.ib(repr=False)
     """The timestamp that the message was sent at."""
 
-    edited_timestamp: typing.Union[datetime.datetime, undefined.Undefined, None] = attr.ib(repr=False)
+    edited_timestamp: typing.Union[datetime.datetime, undefined.UndefinedType, None] = attr.ib(repr=False)
     """The timestamp that the message was last edited at.
 
-    Will be `None` if the message wasn't ever edited.
+    Will be `None` if the message wasn't ever edited, or `undefined` if the 
+    info is not available.
     """
 
-    is_tts: typing.Union[bool, undefined.Undefined] = attr.ib(repr=False)
+    is_tts: typing.Union[bool, undefined.UndefinedType] = attr.ib(repr=False)
     """Whether the message is a TTS message."""
 
-    is_mentioning_everyone: typing.Union[bool, undefined.Undefined] = attr.ib(repr=False)
+    is_mentioning_everyone: typing.Union[bool, undefined.UndefinedType] = attr.ib(repr=False)
     """Whether the message mentions `@everyone` or `@here`."""
 
-    user_mentions: typing.Union[typing.Set[snowflake.Snowflake], undefined.Undefined] = attr.ib(repr=False)
+    user_mentions: typing.Union[typing.Set[snowflake.Snowflake], undefined.UndefinedType] = attr.ib(repr=False)
     """The users the message mentions."""
 
-    role_mentions: typing.Union[typing.Set[snowflake.Snowflake], undefined.Undefined] = attr.ib(repr=False)
+    role_mentions: typing.Union[typing.Set[snowflake.Snowflake], undefined.UndefinedType] = attr.ib(repr=False)
     """The roles the message mentions."""
 
-    channel_mentions: typing.Union[typing.Set[snowflake.Snowflake], undefined.Undefined] = attr.ib(repr=False)
+    channel_mentions: typing.Union[typing.Set[snowflake.Snowflake], undefined.UndefinedType] = attr.ib(repr=False)
     """The channels the message mentions."""
 
-    attachments: typing.Union[typing.Sequence[messages.Attachment], undefined.Undefined] = attr.ib(repr=False)
+    attachments: typing.Union[typing.Sequence[messages.Attachment], undefined.UndefinedType] = attr.ib(repr=False)
     """The message attachments."""
 
-    embeds: typing.Union[typing.Sequence[embed_models.Embed], undefined.Undefined] = attr.ib(repr=False)
+    embeds: typing.Union[typing.Sequence[embed_models.Embed], undefined.UndefinedType] = attr.ib(repr=False)
     """The message's embeds."""
 
-    reactions: typing.Union[typing.Sequence[messages.Reaction], undefined.Undefined] = attr.ib(repr=False)
+    reactions: typing.Union[typing.Sequence[messages.Reaction], undefined.UndefinedType] = attr.ib(repr=False)
     """The message's reactions."""
 
-    is_pinned: typing.Union[bool, undefined.Undefined] = attr.ib(repr=False)
+    is_pinned: typing.Union[bool, undefined.UndefinedType] = attr.ib(repr=False)
     """Whether the message is pinned."""
 
-    webhook_id: typing.Union[snowflake.Snowflake, undefined.Undefined] = attr.ib(repr=False)
+    webhook_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = attr.ib(repr=False)
     """If the message was generated by a webhook, the webhook's ID."""
 
-    type: typing.Union[messages.MessageType, undefined.Undefined] = attr.ib(repr=False)
+    type: typing.Union[messages.MessageType, undefined.UndefinedType] = attr.ib(repr=False)
     """The message's type."""
 
-    activity: typing.Union[messages.MessageActivity, undefined.Undefined] = attr.ib(repr=False)
+    activity: typing.Union[messages.MessageActivity, undefined.UndefinedType] = attr.ib(repr=False)
     """The message's activity."""
 
-    application: typing.Optional[applications.Application] = attr.ib(repr=False)
+    application: typing.Union[applications.Application, undefined.UndefinedType] = attr.ib(repr=False)
     """The message's application."""
 
-    message_reference: typing.Union[messages.MessageCrosspost, undefined.Undefined] = attr.ib(repr=False)
+    message_reference: typing.Union[messages.MessageCrosspost, undefined.UndefinedType] = attr.ib(repr=False)
     """The message's cross-posted reference data."""
 
-    flags: typing.Union[messages.MessageFlag, undefined.Undefined] = attr.ib(repr=False)
+    flags: typing.Union[messages.MessageFlag, undefined.UndefinedType] = attr.ib(repr=False)
     """The message's flags."""
 
-    nonce: typing.Union[str, undefined.Undefined] = attr.ib(repr=False)
+    nonce: typing.Union[str, undefined.UndefinedType] = attr.ib(repr=False)
     """The message nonce.
 
     This is a string used for validating a message was sent.
@@ -151,23 +155,23 @@ class UpdateMessage(messages.Message):
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageUpdateEvent(base_events.HikariEvent, base_models.Unique):
+class MessageUpdateEvent(base_events.Event, base_models.Unique):
     """Represents Message Update gateway events.
 
     !!! warn
         Unlike `MessageCreateEvent`, `MessageUpdateEvent.message` is an
         arbitrarily partial version of `hikari.models.messages.Message` where
-        any field except `id` may be set to `hikari.utilities.undefined.Undefined`
+        any field except `id` may be set to `hikari.utilities.undefined.UndefinedType`
         (a singleton) to indicate that it has not been changed.
     """
 
-    message: UpdateMessage = attr.ib(repr=True)
+    message: UpdatedMessageFields = attr.ib(repr=True)
     """The partial message object with all updated fields."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageDeleteEvent(base_events.HikariEvent, base_models.Entity):
+class MessageDeleteEvent(base_events.Event, base_models.Entity):
     """Used to represent Message Delete gateway events.
 
     Sent when a message is deleted in a channel we have access to.
@@ -191,7 +195,7 @@ class MessageDeleteEvent(base_events.HikariEvent, base_models.Entity):
 # TODO: if this doesn't apply to DMs then does guild_id need to be nullable here?
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageDeleteBulkEvent(base_events.HikariEvent, base_models.Entity):
+class MessageDeleteBulkEvent(base_events.Event, base_models.Entity):
     """Used to represent Message Bulk Delete gateway events.
 
     Sent when multiple messages are deleted in a channel at once.
@@ -210,7 +214,7 @@ class MessageDeleteBulkEvent(base_events.HikariEvent, base_models.Entity):
     """A collection of the IDs of the messages that were deleted."""
 
 
-class BaseMessageReactionEvent(base_events.HikariEvent, base_models.Entity):
+class BaseMessageReactionEvent(base_events.Event, base_models.Entity):
     """A base class that all message reaction events will inherit from."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -24,7 +23,7 @@ relying on a distributed event bus or cache.
 """
 from __future__ import annotations
 
-__all__: typing.List[str] = []
+__all__: typing.Final[typing.List[str]] = []
 
 # noinspection PyUnresolvedReferences
 import typing
