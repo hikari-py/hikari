@@ -19,18 +19,19 @@
 """Lazy iterators for data that requires repeated API calls to retrieve."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["LazyIterator"]
+__all__: typing.Final[typing.List[str]] = ["LazyIterator"]
 
 import abc
 import typing
 
-from hikari.api import rest
 from hikari.net import routes
 from hikari.utilities import data_binding
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
+    from hikari.api import rest
+
     from hikari.models import applications
     from hikari.models import audit_logs
     from hikari.models import guilds

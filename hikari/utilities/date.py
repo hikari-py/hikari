@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "DISCORD_EPOCH",
     "rfc7231_datetime_string_to_datetime",
     "datetime_to_discord_epoch",

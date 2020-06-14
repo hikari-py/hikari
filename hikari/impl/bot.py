@@ -20,10 +20,9 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["BotAppImpl"]
+__all__: typing.Final[typing.List[str]] = ["BotAppImpl"]
 
 import asyncio
-import concurrent.futures
 import inspect
 import logging
 import os
@@ -43,6 +42,7 @@ from hikari.utilities import reflect
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
+    import concurrent.futures
     import datetime
 
     from hikari.api import cache as cache_

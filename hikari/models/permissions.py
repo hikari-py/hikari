@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Permission"]
+__all__: typing.Final[typing.List[str]] = ["Permission"]
 
 import enum
 

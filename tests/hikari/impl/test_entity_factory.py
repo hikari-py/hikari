@@ -21,7 +21,8 @@ import datetime
 import mock
 import pytest
 
-from hikari.api import app as app_
+
+from hikari.api import rest
 from hikari.impl import entity_factory
 from hikari.events import channel as channel_events
 from hikari.events import guild as guild_events
@@ -40,9 +41,10 @@ from hikari.models import invites as invite_models
 from hikari.models import messages as message_models
 from hikari.models import permissions as permission_models
 from hikari.models import presences as presence_models
-from hikari.models import webhooks as webhook_models
 from hikari.models import users as user_models
 from hikari.models import voices as voice_models
+from hikari.models import webhooks as webhook_models
+from hikari.utilities import files
 from hikari.utilities import undefined
 
 
@@ -58,8 +60,11 @@ def test__deserialize_max_uses_returns_int():
     assert entity_factory._deserialize_max_uses(120) == 120
 
 
-def test__deserialize_max_uses_returns_infinity():
-    assert entity_factory._deserialize_max_uses(0) == float("inf")
+def test__deserialize_max_uses_returns_none_when_zero():
+    # Yes, I changed this from float("inf") so that it returns None. I did this
+    # to provide some level of consistency with `max_age`. We need to revisit
+    # this if possible.
+    assert entity_factory._deserialize_max_uses(0) is None
 
 
 def test__deserialize_max_age_returns_timedelta():
@@ -72,8 +77,8 @@ def test__deserialize_max_age_returns_null():
 
 class TestEntityFactoryImpl:
     @pytest.fixture()
-    def mock_app(self) -> app_.IRESTApp:
-        return mock.MagicMock(app_.IRESTApp)
+    def mock_app(self) -> rest.IRESTApp:
+        return mock.MagicMock(rest.IRESTApp)
 
     @pytest.fixture()
     def entity_factory_impl(self, mock_app) -> entity_factory.EntityFactoryComponentImpl:
@@ -99,7 +104,7 @@ class TestEntityFactoryImpl:
     def own_connection_payload(self, partial_integration):
         return {
             "friend_sync": False,
-            "id": "2513849648",
+            "id": "2513849648abc",
             "integrations": [partial_integration],
             "name": "FS",
             "revoked": False,
@@ -113,7 +118,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, own_connection_payload, partial_integration
     ):
         own_connection = entity_factory_impl.deserialize_own_connection(own_connection_payload)
-        assert own_connection.id == 2513849648
+        assert own_connection.id == "2513849648abc"
         assert own_connection.name == "FS"
         assert own_connection.type == "twitter"
         assert own_connection.is_revoked is False
@@ -892,7 +897,7 @@ class TestEntityFactoryImpl:
             "provider": {"name": "some name", "url": "https://somewhere.com/provider"},
             "author": {
                 "name": "some name",
-                "url": "https://somewhere.com/author",
+                "url": "https://somewhere.com/author-url",
                 "icon_url": "https://somewhere.com/author.png",
                 "proxy_icon_url": "https://media.somewhere.com/author.png",
             },
@@ -909,21 +914,21 @@ class TestEntityFactoryImpl:
         assert isinstance(embed.color, color_models.Color)
         # EmbedFooter
         assert embed.footer.text == "footer text"
-        assert embed.footer.icon_url == "https://somewhere.com/footer.png"
-        assert embed.footer.proxy_icon_url == "https://media.somewhere.com/footer.png"
+        assert embed.footer.icon.resource.url == "https://somewhere.com/footer.png"
+        assert embed.footer.icon.proxy_resource.url == "https://media.somewhere.com/footer.png"
         assert isinstance(embed.footer, embed_models.EmbedFooter)
         # EmbedImage
         assert embed.image.url == "https://somewhere.com/image.png"
-        assert embed.image.proxy_url == "https://media.somewhere.com/image.png"
+        assert embed.image.proxy_resource.url == "https://media.somewhere.com/image.png"
         assert embed.image.height == 122
         assert embed.image.width == 133
         assert isinstance(embed.image, embed_models.EmbedImage)
         # EmbedThumbnail
         assert embed.thumbnail.url == "https://somewhere.com/thumbnail.png"
-        assert embed.thumbnail.proxy_url == "https://media.somewhere.com/thumbnail.png"
+        assert embed.thumbnail.proxy_resource.url == "https://media.somewhere.com/thumbnail.png"
         assert embed.thumbnail.height == 123
         assert embed.thumbnail.width == 456
-        assert isinstance(embed.thumbnail, embed_models.EmbedThumbnail)
+        assert isinstance(embed.thumbnail, embed_models.EmbedImage)
         # EmbedVideo
         assert embed.video.url == "https://somewhere.com/video.mp4"
         assert embed.video.height == 1234
@@ -935,9 +940,9 @@ class TestEntityFactoryImpl:
         assert isinstance(embed.provider, embed_models.EmbedProvider)
         # EmbedAuthor
         assert embed.author.name == "some name"
-        assert embed.author.url == "https://somewhere.com/author"
-        assert embed.author.icon_url == "https://somewhere.com/author.png"
-        assert embed.author.proxy_icon_url == "https://media.somewhere.com/author.png"
+        assert embed.author.url == "https://somewhere.com/author-url"
+        assert embed.author.icon.url == "https://somewhere.com/author.png"
+        assert embed.author.icon.proxy_resource.url == "https://media.somewhere.com/author.png"
         assert isinstance(embed.author, embed_models.EmbedAuthor)
         # EmbedField
         assert len(embed.fields) == 1
@@ -961,36 +966,17 @@ class TestEntityFactoryImpl:
         )
         # EmbedFooter
         assert embed.footer.text == "footer text"
-        assert embed.footer.icon_url is None
-        assert embed.footer.proxy_icon_url is None
-        assert isinstance(embed.footer, embed_models.EmbedFooter)
+        assert embed.footer.icon is None
         # EmbedImage
-        assert embed.image.url is None
-        assert embed.image.proxy_url is None
-        assert embed.image.height is None
-        assert embed.image.width is None
-        assert isinstance(embed.image, embed_models.EmbedImage)
+        assert embed.image is None
         # EmbedThumbnail
-        assert embed.thumbnail.url is None
-        assert embed.thumbnail.proxy_url is None
-        assert embed.thumbnail.height is None
-        assert embed.thumbnail.width is None
-        assert isinstance(embed.thumbnail, embed_models.EmbedThumbnail)
+        assert embed.thumbnail is None
         # EmbedVideo
-        assert embed.video.url is None
-        assert embed.video.height is None
-        assert embed.video.width is None
-        assert isinstance(embed.video, embed_models.EmbedVideo)
+        assert embed.video is None
         # EmbedProvider
-        assert embed.provider.name is None
-        assert embed.provider.url is None
-        assert isinstance(embed.provider, embed_models.EmbedProvider)
+        assert embed.provider is None
         # EmbedAuthor
-        assert embed.author.name is None
-        assert embed.author.url is None
-        assert embed.author.icon_url is None
-        assert embed.author.proxy_icon_url is None
-        assert isinstance(embed.author, embed_models.EmbedAuthor)
+        assert embed.author is None
         # EmbedField
         assert len(embed.fields) == 1
         field = embed.fields[0]
@@ -1014,36 +1000,99 @@ class TestEntityFactoryImpl:
         assert embed.author is None
         assert embed.fields == []
 
-    def test_serialize_embed(self, entity_factory_impl):
-        payload = entity_factory_impl.serialize_embed(
+    def test_serialize_embed_with_non_url_resources_provides_attachments(self, entity_factory_impl):
+        footer_icon = embed_models.EmbedResource(resource=files.File("cat.png"))
+        thumbnail = embed_models.EmbedImage(resource=files.File("dog.png"))
+        image = embed_models.EmbedImage(resource=files.Bytes(b"potato kung fu", filename="sushi.pdf"))
+        author_icon = embed_models.EmbedResource(resource=files.Bytes(b"potato kung fu^2", filename="sushi².jpg"))
+
+        payload, resources = entity_factory_impl.serialize_embed(
             embed_models.Embed(
                 title="Title",
                 description="Nyaa",
                 url="https://some-url",
                 timestamp=datetime.datetime(2020, 5, 29, 20, 37, 22, 865139),
                 color=color_models.Color(321321),
-                footer=embed_models.EmbedFooter(text="TEXT", icon_url="httppppp"),
-                image=embed_models.EmbedImage(url="https://///"),
-                thumbnail=embed_models.EmbedThumbnail(url="wss://not-a-valid-url"),
-                author=embed_models.EmbedAuthor(name="AUTH ME", url="wss://\\_/-_-\\_/", icon_url="icon://"),
-                fields=[embed_models.EmbedField(value="VALUE", name="NAME", is_inline=True)],
+                footer=embed_models.EmbedFooter(text="TEXT", icon=footer_icon),
+                image=image,
+                thumbnail=thumbnail,
+                author=embed_models.EmbedAuthor(name="AUTH ME", url="wss://\\_/-_-\\_/", icon=author_icon),
+                fields=[embed_models.EmbedField(value="VALUE", name="NAME", inline=True)],
             )
         )
+
+        # Non URL bois should be returned in the resources container.
+        assert len(resources) == 4
+        assert footer_icon.resource in resources
+        assert thumbnail.resource in resources
+        assert image.resource in resources
+        assert author_icon.resource in resources
+
         assert payload == {
             "title": "Title",
             "description": "Nyaa",
             "url": "https://some-url",
             "timestamp": "2020-05-29T20:37:22.865139",
             "color": 321321,
-            "footer": {"text": "TEXT", "icon_url": "httppppp"},
-            "image": {"url": "https://///"},
-            "thumbnail": {"url": "wss://not-a-valid-url"},
-            "author": {"name": "AUTH ME", "url": "wss://\\_/-_-\\_/", "icon_url": "icon://"},
+            "footer": {"text": "TEXT", "icon_url": footer_icon.url},
+            "image": {"url": image.url},
+            "thumbnail": {"url": thumbnail.url},
+            "author": {"name": "AUTH ME", "url": "wss://\\_/-_-\\_/", "icon_url": author_icon.url},
+            "fields": [{"value": "VALUE", "name": "NAME", "inline": True}],
+        }
+
+    def test_serialize_embed_with_url_resources_does_not_provide_attachments(self, entity_factory_impl):
+        class DummyWebResource(files.WebResource):
+            @property
+            def url(self) -> str:
+                return "http://lolbook.com"
+
+            @property
+            def filename(self) -> str:
+                return "lolbook.png"
+
+        footer_icon = embed_models.EmbedResource(resource=files.URL("http://http.cat"))
+        thumbnail = embed_models.EmbedImage(resource=DummyWebResource())
+        image = embed_models.EmbedImage(resource=files.URL("http://bazbork.com"))
+        author_icon = embed_models.EmbedResource(resource=files.URL("http://foobar.com"))
+
+        payload, resources = entity_factory_impl.serialize_embed(
+            embed_models.Embed(
+                title="Title",
+                description="Nyaa",
+                url="https://some-url",
+                timestamp=datetime.datetime(2020, 5, 29, 20, 37, 22, 865139),
+                color=color_models.Color(321321),
+                footer=embed_models.EmbedFooter(text="TEXT", icon=footer_icon),
+                image=image,
+                thumbnail=thumbnail,
+                author=embed_models.EmbedAuthor(name="AUTH ME", url="wss://\\_/-_-\\_/", icon=author_icon),
+                fields=[embed_models.EmbedField(value="VALUE", name="NAME", inline=True)],
+            )
+        )
+
+        # Non URL bois should be returned in the resources container.
+        assert footer_icon.resource not in resources
+        assert thumbnail.resource not in resources
+        assert image.resource not in resources
+        assert author_icon.resource not in resources
+        assert not resources
+
+        assert payload == {
+            "title": "Title",
+            "description": "Nyaa",
+            "url": "https://some-url",
+            "timestamp": "2020-05-29T20:37:22.865139",
+            "color": 321321,
+            "footer": {"text": "TEXT", "icon_url": footer_icon.url},
+            "image": {"url": image.url},
+            "thumbnail": {"url": thumbnail.url},
+            "author": {"name": "AUTH ME", "url": "wss://\\_/-_-\\_/", "icon_url": author_icon.url},
             "fields": [{"value": "VALUE", "name": "NAME", "inline": True}],
         }
 
     def test_serialize_embed_with_null_sub_fields(self, entity_factory_impl):
-        payload = entity_factory_impl.serialize_embed(
+        payload, resources = entity_factory_impl.serialize_embed(
             embed_models.Embed(
                 title="Title",
                 description="Nyaa",
@@ -1051,10 +1100,9 @@ class TestEntityFactoryImpl:
                 timestamp=datetime.datetime(2020, 5, 29, 20, 37, 22, 865139),
                 color=color_models.Color(321321),
                 footer=embed_models.EmbedFooter(),
-                image=embed_models.EmbedImage(),
-                thumbnail=embed_models.EmbedThumbnail(),
+                image=None,
+                thumbnail=None,
                 author=embed_models.EmbedAuthor(),
-                fields=[embed_models.EmbedField()],
             )
         )
         assert payload == {
@@ -1063,15 +1111,11 @@ class TestEntityFactoryImpl:
             "url": "https://some-url",
             "timestamp": "2020-05-29T20:37:22.865139",
             "color": 321321,
-            "footer": {},
-            "image": {},
-            "thumbnail": {},
-            "author": {},
-            "fields": [{"inline": False}],
         }
+        assert resources == []
 
     def test_serialize_embed_with_null_attributes(self, entity_factory_impl):
-        assert entity_factory_impl.serialize_embed(embed_models.Embed()) == {}
+        assert entity_factory_impl.serialize_embed(embed_models.Embed()) == ({}, [])
 
     ################
     # EMOJI MODELS #
@@ -1675,7 +1719,7 @@ class TestEntityFactoryImpl:
         )
         assert guild.icon_hash is None
         assert guild.splash_hash is None
-        assert guild.discovery_splash_url is None
+        assert guild.discovery_splash_hash is None
         assert guild.afk_channel_id is None
         assert guild.embed_channel_id is None
         assert guild.application_id is None
@@ -1976,17 +2020,20 @@ class TestEntityFactoryImpl:
         assert attachment.height == 2638
         assert isinstance(attachment, message_models.Attachment)
 
-        assert message.embeds == [entity_factory_impl.deserialize_embed(embed_payload)]
+        expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
+        assert message.embeds == [expected_embed]
         # Reaction
         reaction = message.reactions[0]
         assert reaction.count == 100
         assert reaction.is_reacted_by_me is True
-        assert reaction.emoji == entity_factory_impl.deserialize_emoji(custom_emoji_payload)
+        expected_emoji = entity_factory_impl.deserialize_emoji(custom_emoji_payload)
+        assert reaction.emoji == expected_emoji
         assert isinstance(reaction, message_models.Reaction)
 
         assert message.is_pinned is True
         assert message.webhook_id == 1234
         assert message.type == message_models.MessageType.DEFAULT
+
         # Activity
         assert message.activity.type == message_models.MessageActivityType.JOIN_REQUEST
         assert message.activity.party_id == "ae488379-351d-4a4f-ad32-2b9b01c91657"
@@ -2628,9 +2675,11 @@ class TestEntityFactoryImpl:
         assert typing_start.guild_id is None
         assert typing_start.member is None
 
-    def test_deserialize_invite_create_event(self, entity_factory_impl, invite_payload):
-        invite_create = entity_factory_impl.deserialize_invite_create_event(invite_payload)
-        assert invite_create.invite == entity_factory_impl.deserialize_invite(invite_payload)
+    def test_deserialize_invite_create_event(self, entity_factory_impl, invite_with_metadata_payload):
+        invite_create = entity_factory_impl.deserialize_invite_create_event(invite_with_metadata_payload)
+        assert invite_create.invite == entity_factory_impl.deserialize_invite_with_metadata(
+            invite_with_metadata_payload
+        )
         assert isinstance(invite_create, channel_events.InviteCreateEvent)
 
     @pytest.fixture()
@@ -2882,10 +2931,10 @@ class TestEntityFactoryImpl:
         assert isinstance(message_update, message_events.MessageUpdateEvent)
 
     def test_deserialize_message_update_event_with_partial_payload(self, entity_factory_impl):
-        message_update = entity_factory_impl.deserialize_message_update_event({"id": "42424242"})
+        message_update = entity_factory_impl.deserialize_message_update_event({"id": "42424242", "channel_id": "99420"})
 
         assert message_update.message.id == 42424242
-        assert message_update.message.channel_id is undefined.UNDEFINED
+        assert message_update.message.channel_id == 99420
         assert message_update.message.guild_id is undefined.UNDEFINED
         assert message_update.message.author is undefined.UNDEFINED
         assert message_update.message.member is undefined.UNDEFINED
@@ -2911,7 +2960,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_message_update_event_with_null_fields(self, entity_factory_impl):
         message_update = entity_factory_impl.deserialize_message_update_event(
-            {"id": "42424242", "edited_timestamp": None}
+            {"id": "42424242", "edited_timestamp": None, "channel_id": "69420"}
         )
         assert message_update.message.edited_timestamp is None
 

@@ -23,7 +23,7 @@ See `hikari.net.buckets` for REST-specific rate-limiting logic.
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "BaseRateLimiter",
     "BurstRateLimiter",
     "ManualRateLimiter",

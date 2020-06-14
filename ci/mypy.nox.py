@@ -25,11 +25,5 @@ from ci import nox
 def mypy(session: nox.Session) -> None:
     session.install("-r", "requirements.txt", "mypy==0.780")
     session.run(
-        "mypy",
-        "-p",
-        config.MAIN_PACKAGE,
-        "--config",
-        config.MYPY_INI,
-        "--junit-xml",
-        config.MYPY_JUNIT_OUTPUT_PATH,
+        "mypy", "-p", config.MAIN_PACKAGE, "--config", config.MYPY_INI, "--junit-xml", config.MYPY_JUNIT_OUTPUT_PATH,
     )

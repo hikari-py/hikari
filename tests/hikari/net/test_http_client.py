@@ -61,9 +61,9 @@ class TestAcquireClientSession:
         client._connector = mock.MagicMock()
         client._trust_env = mock.MagicMock()
 
-        _helpers.set_private_attr(client, "client_session", None)
-        cs = client._acquire_client_session()
-        assert _helpers.get_private_attr(client, "client_session") is cs
+        client._client_session = None
+        cs = client.client_session()
+        assert client._client_session is cs
         aiohttp.ClientSession.assert_called_once_with(
             connector=client._connector,
             trust_env=client._trust_env,
@@ -73,25 +73,25 @@ class TestAcquireClientSession:
         )
 
     async def test_acquire_repeated_calls_caches_client_session(self, client):
-        cs = client._acquire_client_session()
+        cs = client.client_session()
 
         for i in range(10):
             aiohttp.ClientSession.reset_mock()
-            assert cs is client._acquire_client_session()
+            assert cs is client.client_session()
             aiohttp.ClientSession.assert_not_called()
 
 
 @pytest.mark.asyncio
 class TestClose:
     async def test_close_when_not_running(self, client, client_session):
-        _helpers.set_private_attr(client, "client_session", None)
+        client._client_session = None
         await client.close()
-        assert _helpers.get_private_attr(client, "client_session") is None
+        assert client._client_session is None
 
     async def test_close_when_running(self, client, client_session):
-        _helpers.set_private_attr(client, "client_session", client_session)
+        client._client_session = client_session
         await client.close()
-        assert _helpers.get_private_attr(client, "client_session") is None
+        assert client._client_session is None
         client_session.close.assert_awaited_once_with()
 
 

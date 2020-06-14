@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["REST"]
+__all__: typing.Final[typing.List[str]] = ["REST"]
 
 import asyncio
 import contextlib
@@ -959,11 +959,11 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         if undefined.count(before, after, around) < 2:
             raise TypeError("Expected no kwargs, or maximum of one of 'before', 'after', 'around'")
 
-        if not before is undefined.UNDEFINED:
+        if before is not undefined.UNDEFINED:
             direction, timestamp = "before", before
-        elif not after is undefined.UNDEFINED:
+        elif after is not undefined.UNDEFINED:
             direction, timestamp = "after", after
-        elif not around is undefined.UNDEFINED:
+        elif around is not undefined.UNDEFINED:
             direction, timestamp = "around", around
         else:
             direction, timestamp = "before", snowflake.Snowflake.max()
@@ -1097,7 +1097,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         else:
             final_attachments = [files.ensure_resource(a) for a in attachments]
 
-        if not embed is undefined.UNDEFINED:
+        if embed is not undefined.UNDEFINED:
             embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
             body.put("embed", embed_payload)
             final_attachments.extend(embed_attachments)
@@ -1393,7 +1393,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         route = routes.POST_WEBHOOK.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
-        if not avatar is undefined.UNDEFINED:
+        if avatar is not undefined.UNDEFINED:
             async with avatar.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
@@ -1454,7 +1454,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         if avatar is None:
             body.put("avatar", None)
-        elif not avatar is undefined.UNDEFINED:
+        elif avatar is not undefined.UNDEFINED:
             async with avatar.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
@@ -1497,14 +1497,18 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
             no_auth = True
 
-        attachments = [] if attachments is undefined.UNDEFINED else [a for a in attachments]
+        if attachments is undefined.UNDEFINED:
+            final_attachments: typing.List[files.Resource] = []
+        else:
+            final_attachments = [files.ensure_resource(a) for a in attachments]
+
         serialized_embeds = []
 
-        if not embeds is undefined.UNDEFINED:
+        if embeds is not undefined.UNDEFINED:
             for embed in embeds:
                 embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
                 serialized_embeds.append(embed_payload)
-                attachments.extend(embed_attachments)
+                final_attachments.extend(embed_attachments)
 
         body = data_binding.JSONObjectBuilder()
         body.put("mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions))
@@ -1515,14 +1519,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("tts", tts)
         body.put("wait", True)
 
-        if attachments:
+        if final_attachments:
             form = data_binding.URLEncodedForm()
             form.add_field("payload_json", data_binding.dump_json(body), content_type=self._APPLICATION_JSON)
 
             stack = contextlib.AsyncExitStack()
 
             try:
-                for i, attachment in enumerate(attachments):
+                for i, attachment in enumerate(final_attachments):
                     stream = await stack.enter_async_context(attachment.stream(self._app.executor))
                     form.add_field(
                         f"file{i}", stream, filename=stream.filename, content_type=self._APPLICATION_OCTET_STREAM
@@ -1685,7 +1689,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         else:
             before = str(int(before))
 
-        if not user is undefined.UNDEFINED:
+        if user is not undefined.UNDEFINED:
             user = str(int(user))
 
         return iterators.AuditLogIterator(self._app, self._request, guild, before, user, event_type)
@@ -1725,7 +1729,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         route = routes.POST_GUILD_EMOJIS.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
-        if not image is undefined.UNDEFINED:
+        if image is not undefined.UNDEFINED:
             async with image.stream(executor=self._app.executor) as stream:
                 body.put("image", await stream.data_uri())
 
@@ -1834,19 +1838,19 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         if icon is None:
             body.put("icon", None)
-        elif not icon is undefined.UNDEFINED:
+        elif icon is not undefined.UNDEFINED:
             async with icon.stream(executor=self._app.executor) as stream:
                 body.put("icon", await stream.data_uri())
 
         if splash is None:
             body.put("splash", None)
-        elif not splash is undefined.UNDEFINED:
+        elif splash is not undefined.UNDEFINED:
             async with splash.stream(executor=self._app.executor) as stream:
                 body.put("splash", await stream.data_uri())
 
         if banner is None:
             body.put("banner", None)
-        elif not banner is undefined.UNDEFINED:
+        elif banner is not undefined.UNDEFINED:
             async with banner.stream(executor=self._app.executor) as stream:
                 body.put("banner", await stream.data_uri())
 
@@ -2073,7 +2077,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         if voice_channel is None:
             body.put("channel_id", None)
-        elif not voice_channel is undefined.UNDEFINED:
+        elif voice_channel is not undefined.UNDEFINED:
             body.put_snowflake("channel_id", voice_channel)
 
         await self._request(route, body=body, reason=reason)
@@ -2352,7 +2356,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         body.put("enabled", enabled)
         if channel is None:
             body.put("channel", None)
-        elif not channel is undefined.UNDEFINED:
+        elif channel is not undefined.UNDEFINED:
             body.put_snowflake("channel", channel)
 
         raw_response = await self._request(route, body=body, reason=reason)

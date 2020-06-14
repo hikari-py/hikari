@@ -19,7 +19,7 @@
 """Base functionality for any HTTP-based network component."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["HTTPClient"]
+__all__: typing.Final[typing.List[str]] = ["HTTPClient"]
 
 import abc
 import http

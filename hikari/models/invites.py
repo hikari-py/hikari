@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["TargetUserType", "VanityURL", "InviteGuild", "Invite", "InviteWithMetadata"]
+__all__: typing.Final[typing.List[str]] = ["TargetUserType", "VanityURL", "InviteGuild", "Invite", "InviteWithMetadata"]
 
 import enum
 import typing
@@ -220,10 +220,10 @@ class InviteWithMetadata(Invite):
     uses: int = attr.ib(eq=False, hash=False, repr=True)
     """The amount of times this invite has been used."""
 
-    max_uses: int = attr.attrib(eq=False, hash=False, repr=True)
+    max_uses: typing.Optional[int] = attr.attrib(eq=False, hash=False, repr=True)
     """The limit for how many times this invite can be used before it expires.
 
-    If set to `0` then this is unlimited.
+    If set to `None` then this is unlimited.
     """
 
     # FIXME: can we use a non-None value to represent infinity here somehow, or

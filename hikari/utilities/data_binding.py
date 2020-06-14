@@ -19,7 +19,7 @@
 """Data binding utilities."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "Headers",
     "Query",
     "JSONObject",
@@ -134,7 +134,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
             `True` will be translated to `"true"`, `False` will be translated
             to `"false"`, and `None` will be translated to `"null"`.
         """
-        if not value is undefined.UNDEFINED:
+        if value is not undefined.UNDEFINED:
             if conversion is not None:
                 value = conversion(value)
 
@@ -196,7 +196,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
         conversion : typing.Callable[[typing.Any], JSONAny] or None
             Optional conversion to apply.
         """
-        if not value is undefined.UNDEFINED:
+        if value is not undefined.UNDEFINED:
             if conversion is not None:
                 self[key] = conversion(value)
             else:

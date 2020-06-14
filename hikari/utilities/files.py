@@ -90,13 +90,15 @@ def ensure_resource(url_or_resource: typing.Union[None, str, Resource], /) -> ty
     """
     if isinstance(url_or_resource, Resource):
         return url_or_resource
-    elif url_or_resource is not None:
-        if url_or_resource.startswith(("https://", "http://")):
-            return URL(url_or_resource)
-        else:
-            path = pathlib.Path(url_or_resource)
-            return File(path, path.name)
-    return None
+
+    if url_or_resource is None:
+        return None
+
+    if url_or_resource.startswith(("https://", "http://")):
+        return URL(url_or_resource)
+
+    path = pathlib.Path(url_or_resource)
+    return File(path, path.name)
 
 
 def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
@@ -137,14 +139,13 @@ def guess_mimetype_from_data(data: bytes, /) -> typing.Optional[str]:
     """
     if data.startswith(b"\211PNG\r\n\032\n"):
         return "image/png"
-    elif data[6:].startswith((b"Exif", b"JFIF")):
+    if data[6:].startswith((b"Exif", b"JFIF")):
         return "image/jpeg"
-    elif data.startswith((b"GIF87a", b"GIF89a")):
+    if data.startswith((b"GIF87a", b"GIF89a")):
         return "image/gif"
-    elif data.startswith(b"RIFF") and data[8:].startswith(b"WEBP"):
+    if data.startswith(b"RIFF") and data[8:].startswith(b"WEBP"):
         return "image/webp"
-    else:
-        return None
+    return None
 
 
 def guess_file_extension(mimetype: str) -> typing.Optional[str]:
@@ -383,6 +384,14 @@ class Resource(abc.ABC):
     def __repr__(self) -> str:
         return f"{type(self).__name__}(url={self.url!r}, filename={self.filename!r})"
 
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, Resource):
+            return self.url == other.url
+        return False
+
+    def __hash__(self) -> int:
+        return hash(self.url)
+
 
 class Bytes(Resource):
     """Representation of in-memory data to upload.
@@ -440,6 +449,7 @@ class Bytes(Resource):
             extension = guess_file_extension(mimetype)
 
         if mimetype is None:
+            # TODO: should I just default to application/octet-stream here?
             if extension is None:
                 raise TypeError("Cannot infer data type details, please specify a mimetype or an extension")
             raise TypeError("Cannot infer data type details from extension. Please specify a mimetype")
@@ -638,7 +648,7 @@ class File(Resource):
     path: typing.Union[str, pathlib.Path]
     _filename: typing.Optional[str]
 
-    def __init__(self, path: typing.Union[str, pathlib.Path], filename: typing.Optional[str]) -> None:
+    def __init__(self, path: typing.Union[str, pathlib.Path], filename: typing.Optional[str] = None) -> None:
         self.path = path
         self._filename = filename
 

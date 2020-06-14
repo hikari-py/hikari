@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["CompiledRoute", "Route"]
+__all__: typing.Final[typing.List[str]] = ["CompiledRoute", "Route"]
 
 import re
 import typing

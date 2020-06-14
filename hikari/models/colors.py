@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Color", "ColorLike"]
+__all__: typing.Final[typing.List[str]] = ["Color", "ColorLike"]
 
 import string
 import typing

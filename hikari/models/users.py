@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["User", "OwnUser", "UserFlag", "PremiumType"]
+__all__: typing.Final[typing.List[str]] = ["User", "OwnUser", "UserFlag", "PremiumType"]
 
 import enum
 import typing
@@ -199,16 +199,17 @@ class User(PartialUser):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.avatar_hash is not None:
-            if format_ is None:
-                if self.avatar_hash.startswith("a_"):
-                    format_ = "gif"
-                else:
-                    format_ = "png"
+        if self.avatar_hash is None:
+            return None
 
-            url = cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
-            return files.URL(url)
-        return None
+        if format_ is None:
+            if self.avatar_hash.startswith("a_"):
+                format_ = "gif"
+            else:
+                format_ = "png"
+
+        url = cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
+        return files.URL(url)
 
     @property
     def default_avatar(self) -> files.URL:  # noqa: D401 imperative mood check

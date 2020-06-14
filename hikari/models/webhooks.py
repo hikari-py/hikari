@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["WebhookType", "Webhook"]
+__all__: typing.Final[typing.List[str]] = ["WebhookType", "Webhook"]
 
 import enum
 import typing

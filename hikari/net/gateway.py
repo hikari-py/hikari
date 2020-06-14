@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Gateway"]
+__all__: typing.Final[typing.List[str]] = ["Gateway"]
 
 import asyncio
 import enum
@@ -407,10 +407,10 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         presence = self._build_presence_payload(idle_since=idle_since, is_afk=is_afk, status=status, activity=activity)
         payload: data_binding.JSONObject = {"op": self._GatewayOpcode.PRESENCE_UPDATE, "d": presence}
         await self._send_json(payload)
-        self._idle_since = idle_since if not idle_since is undefined.UNDEFINED else self._idle_since
-        self._is_afk = is_afk if not is_afk is undefined.UNDEFINED else self._is_afk
-        self._activity = activity if not activity is undefined.UNDEFINED else self._activity
-        self._status = status if not status is undefined.UNDEFINED else self._status
+        self._idle_since = idle_since if idle_since is not undefined.UNDEFINED else self._idle_since
+        self._is_afk = is_afk if is_afk is not undefined.UNDEFINED else self._is_afk
+        self._activity = activity if activity is not undefined.UNDEFINED else self._activity
+        self._status = status if status is not undefined.UNDEFINED else self._status
 
     async def update_voice_state(
         self,
