@@ -1,4 +1,4 @@
-## Copyright © Nekokatt 2019-2020
+## Copyright © Nekoka.tt 2019-2020
 ##
 ## This file is part of Hikari.
 ##

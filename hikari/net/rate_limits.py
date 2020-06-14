@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright © Nekokatt 2019-2020
+# Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
 #
@@ -488,7 +487,7 @@ class ExponentialBackOff:
         if self.maximum is not None and value >= self.maximum:
             raise asyncio.TimeoutError()
 
-        value += random.random() * self.jitter_multiplier  # nosec
+        value += random.random() * self.jitter_multiplier  # # noqa S311 rng for cryptography
         return value
 
     def __iter__(self) -> ExponentialBackOff:

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -183,7 +182,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         self._config = config
         self._event_manager = event_manager.EventManagerImpl(app=self)
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
-        self._rest = rest.REST(  # nosec
+        self._rest = rest.REST(  # noqa S106 possible hardcoded password
             app=self,
             config=config,
             debug=debug,

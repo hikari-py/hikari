@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -23,7 +22,7 @@ from ci import nox
 
 @nox.session(reuse_venv=True, default=True)
 def mypy(session: nox.Session) -> None:
-    session.install("-r", "requirements.txt", "mypy==0.780")
+    session.install("-r", "requirements.txt", "-r", "mypy-requirements.txt")
     session.run(
         "mypy", "-p", config.MAIN_PACKAGE, "--config", config.MYPY_INI, "--junit-xml", config.MYPY_JUNIT_OUTPUT_PATH,
     )

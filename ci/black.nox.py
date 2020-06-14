@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -36,10 +35,3 @@ def reformat_code(session: nox.Session) -> None:
     """Run black code formatter."""
     session.install("black")
     session.run("black", *PATHS)
-
-
-@nox.session(reuse_venv=True)
-def check_formatting(session: nox.Session) -> None:
-    """Check that the code matches the black code style."""
-    session.install("black")
-    session.run("black", *PATHS, "--check")

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright © Nekoka.tt 2019-2020
 #
@@ -16,15 +15,22 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Static application security testing."""
+import os
 
 from ci import config
 from ci import nox
 
 
-# Do not reuse venv, download new definitions each run.
-@nox.session(reuse_venv=False, default=True)
-def bandit(session: nox.Session) -> None:
-    """Run static application security tests."""
-    session.install("bandit")
-    session.run("bandit", config.MAIN_PACKAGE, "-r")
+@nox.session(reuse_venv=True, default=True)
+def flake8(session: nox.Session) -> None:
+    session.install("-r", "requirements.txt", "-r", "flake-requirements.txt")
+
+    if "GITLAB_CI" in os.environ or "--gitlab" in session.posargs:
+        print("Detected GitLab, will output CodeClimate report instead!")
+        format_args = ["--format=gl-codeclimate", f"--output-file={config.FLAKE8_CODECLIMATE}"]
+    else:
+        format_args = [f"--output-file={config.FLAKE8_TXT}", "--statistics", "--show-source"]
+
+    session.run(
+        "flake8", "--exit-zero", "--format=html", f"--htmldir={config.FLAKE8_HTML}", *format_args, config.MAIN_PACKAGE,
+    )
