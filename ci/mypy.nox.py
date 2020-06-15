@@ -22,6 +22,7 @@ from ci import nox
 
 @nox.session(reuse_venv=True, default=True)
 def mypy(session: nox.Session) -> None:
+    """Perform static type analysis on Python source code."""
     session.install("-r", "requirements.txt", "-r", "mypy-requirements.txt")
     session.run(
         "mypy", "-p", config.MAIN_PACKAGE, "--config", config.MYPY_INI, "--junit-xml", config.MYPY_JUNIT_OUTPUT_PATH,

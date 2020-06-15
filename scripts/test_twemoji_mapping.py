@@ -81,7 +81,7 @@ async def try_fetch(i, n, emoji_surrogates, name):
     ex = None
     for _ in range(5):
         try:
-            async with emoji.stream():
+            async with emoji.stream(head_only=True):
                 pass
         except Exception as _ex:
             ex = _ex
