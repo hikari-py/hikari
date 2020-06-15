@@ -35,6 +35,8 @@ from hikari.net import strings
 class BaseTracer:
     """Base type for tracing HTTP requests."""
 
+    __slots__ = ("logger",)
+
     def __init__(self, logger: logging.Logger) -> None:
         self.logger = logger
 

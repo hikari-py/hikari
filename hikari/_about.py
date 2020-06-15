@@ -19,6 +19,9 @@
 
 from __future__ import annotations
 
+# DO NOT ADD TYPE HINTS TO THESE FIELDS. THESE ARE AUTOMATICALLY UPDATED
+# FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE DEPLOY PROCESS FAILING.
+
 __author__ = "Nekokatt"
 __ci__ = "https://gitlab.com/nekokatt/hikari/pipelines"
 __copyright__ = "© 2019-2020 Nekokatt"

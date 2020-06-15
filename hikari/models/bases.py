@@ -68,6 +68,7 @@ class Unique(typing.SupportsInt):
         """When the object was created."""
         return self.id.created_at
 
+    @typing.final
     def __int__(self) -> int:
         return int(self.id)
 

@@ -8,8 +8,10 @@ level may be! :-)
 
 # _hikari_
 
-An opinionated Discord API for Python 3 and asyncio. Built on good intentions 
-and the hope that it will be extendable and reusable, rather than an obstacle.
+An opinionated, static typed Discord API for Python3 and asyncio. 
+
+Built on good intentions and the hope that it will be extendable and reusable, 
+rather than an obstacle for future development.
 
 ```py
 import hikari
@@ -18,7 +20,7 @@ from hikari.events.message import MessageCreateEvent
 bot = hikari.Bot(token="...")
 
 
-@bot.event(MessageCreateEvent)
+@bot.listen(MessageCreateEvent)
 async def ping(event):
     # If a non-bot user sends a message "hk.ping", respond with "Pong!"
 
@@ -28,6 +30,46 @@ async def ping(event):
 
 bot.run()
 ```
+
+----
+
+## Installation
+
+Install hikari from PyPI with the following command:
+
+```bash
+python -m pip install hikari -U --pre
+# Windows users may need to run this instead...
+py -3 -m pip install hikari -U --pre 
+```
+
+### Moar poweeeerrrr
+
+If you wish to get the most out of your bot, you should opt-in to
+installing the speedups extensions. 
+
+```bash
+python -m pip install hikari[speedups] -U --pre
+```
+
+This may take a little longer to install, but will replace several dependencies 
+with much faster alternatives, including:
+
+- [`aiodns`](https://pypi.org/project/aiodns/) - Asynchronous DNS lookups using
+    `pycares` (`libcares` Python bindings).
+- [`cchardet`](https://pypi.org/project/cchardet/) - a compiled C implementation
+    of the [`chardet`](https://pypi.org/project/chardet/) module. Claims
+    to handle almost 1468 calls per second in a benchmark, compared to
+    0.35 calls per second from the default `chardet` module, which is around
+    4193x faster.\*
+  
+\* _`cchardet` v2.1.6 Python 3.6.1, Intel(R) Core(TM) i5-4690 CPU @ 3.50GHz, 
+16GB 1.6GHz DDR3, Ubuntu 16.04 AMD64._
+     
+Note that you may find you need to install a C compiler on your machine to make
+use of these extensions.
+
+----
 
 ## What does _hikari_ aim to do?
 
@@ -49,7 +91,9 @@ bot.run()
   fix, and quickly. You do not want to wait for weeks for a usable solution to 
   be released. _hikari_ is developed using a fully automated CI pipeline with
   extensive quality assurance. This enables bugfixes and new features to be 
-  shipped within 30 minutes, not 30 days. 
+  shipped within 30 minutes of coding them, not 30 days. 
+  
+----
  
 ## What does _hikari_ currently support?
 
@@ -110,6 +154,8 @@ to utilize these components as a black box where necessary.
   where you want them. Let _hikari_ work out how to put it together!)
 - Full voice transcoding support, natively in your application. Do not rely on invoking ffmpeg
   in a subprocess ever again!
+  
+----
 
 ## Getting started
 

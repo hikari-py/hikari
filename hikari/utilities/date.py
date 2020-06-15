@@ -34,6 +34,7 @@ import email.utils
 import re
 import typing
 
+
 TimeSpan = typing.Union[int, float, datetime.timedelta]
 """Type hint representing a naive time period or time span.
 
@@ -42,7 +43,7 @@ where `int` and `float` types are interpreted as a number of seconds.
 """
 
 DISCORD_EPOCH: typing.Final[int] = 1_420_070_400
-"""The Discord epoch used within snowflake identifiers.
+"""Discord epoch used within snowflake identifiers.
 
 This is defined as the number of seconds between
 `1/1/1970 00:00:00 UTC` and `1/1/2015 00:00:00 UTC`.
@@ -52,9 +53,12 @@ References
 * [Discord API documentation - Snowflakes](https://discord.com/developers/docs/reference#snowflakes)
 """
 
-ISO_8601_DATE_PART: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
-ISO_8601_TIME_PART: typing.Final[typing.Pattern[str]] = re.compile(r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I)
-ISO_8601_TZ_PART: typing.Final[typing.Pattern[str]] = re.compile(r"([+-])(\d{2}):(\d{2})$")
+# FS003 - f-string missing prefix.
+_ISO_8601_DATE: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")  # noqa: FS003
+_ISO_8601_TIME: typing.Final[typing.Pattern[str]] = re.compile(
+    r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I
+)  # noqa: FS003
+_ISO_8601_TZ: typing.Final[typing.Pattern[str]] = re.compile(r"([+-])(\d{2}):(\d{2})$")  # noqa: FS003
 
 
 def rfc7231_datetime_string_to_datetime(date_str: str, /) -> datetime.datetime:
@@ -96,9 +100,9 @@ def iso8601_datetime_string_to_datetime(date_string: str, /) -> datetime.datetim
     ----------
     * [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)
     """
-    year, month, day = map(int, ISO_8601_DATE_PART.findall(date_string)[0])
+    year, month, day = map(int, _ISO_8601_DATE.findall(date_string)[0])
 
-    time_part = ISO_8601_TIME_PART.findall(date_string)[0]
+    time_part = _ISO_8601_TIME.findall(date_string)[0]
     hour, minute, second, partial = time_part
 
     # Pad the millisecond part if it is not in microseconds, otherwise Python will complain.
@@ -107,7 +111,7 @@ def iso8601_datetime_string_to_datetime(date_string: str, /) -> datetime.datetim
     if date_string.endswith(("Z", "z")):
         timezone = datetime.timezone.utc
     else:
-        sign, tz_hour, tz_minute = ISO_8601_TZ_PART.findall(date_string)[0]
+        sign, tz_hour, tz_minute = _ISO_8601_TZ.findall(date_string)[0]
         tz_hour, tz_minute = int(tz_hour), int(tz_minute)
         offset = datetime.timedelta(hours=tz_hour, minutes=tz_minute)
         if sign == "-":

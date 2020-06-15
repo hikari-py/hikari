@@ -30,7 +30,6 @@ __all__: typing.Final[typing.List[str]] = [
     "EmbedField",
 ]
 
-import contextlib
 import datetime
 import typing
 
@@ -38,6 +37,10 @@ import attr
 
 from hikari.models import colors
 from hikari.utilities import files
+
+
+if typing.TYPE_CHECKING:
+    import concurrent.futures
 
 
 def _maybe_color(value: typing.Optional[colors.ColorLike]) -> typing.Optional[colors.Color]:
@@ -74,6 +77,7 @@ class EmbedResource(files.Resource):
     """
 
     @property
+    @typing.final
     def url(self) -> str:
         return self.resource.url
 
@@ -81,11 +85,23 @@ class EmbedResource(files.Resource):
     def filename(self) -> str:
         return self.resource.filename
 
-    @contextlib.asynccontextmanager
-    @typing.no_type_check
-    async def stream(self) -> files.AsyncReader:
-        async with self.resource.stream() as stream:
-            yield stream
+    def stream(
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
+    ) -> files.AsyncReaderContextManager[files.ReaderImplT]:
+        """Produce a stream of data for the resource.
+
+        Parameters
+        ----------
+        executor : concurrent.futures.Executor or None
+            The executor to run in for blocking operations.
+            If `None`, then the default executor is used for the current
+            event loop.
+        head_only : bool
+            Defaults to `False`. If `True`, then the implementation may
+            only retrieve HEAD information if supported. This currently
+            only has any effect for web requests.
+        """
+        return self.resource.stream(executor=executor, head_only=head_only)
 
 
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)

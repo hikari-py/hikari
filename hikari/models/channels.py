@@ -53,6 +53,7 @@ if typing.TYPE_CHECKING:
 
 
 @enum.unique
+@typing.final
 class ChannelType(int, enum.Enum):
     """The known channel types that are exposed to us by the API."""
 
@@ -79,6 +80,7 @@ class ChannelType(int, enum.Enum):
 
 
 @enum.unique
+@typing.final
 class PermissionOverwriteType(str, enum.Enum):
     """The type of entity a Permission Overwrite targets."""
 

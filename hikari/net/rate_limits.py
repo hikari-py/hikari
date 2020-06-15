@@ -151,6 +151,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         return len(self.queue) == 0
 
 
+@typing.final
 class ManualRateLimiter(BurstRateLimiter):
     """Rate limit handler for the global REST rate limit.
 
@@ -420,6 +421,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.throttle_task = None
 
 
+@typing.final
 class ExponentialBackOff:
     r"""Implementation of an asyncio-compatible exponential back-off algorithm with random jitter.
 

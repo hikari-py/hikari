@@ -47,6 +47,7 @@ if typing.TYPE_CHECKING:
 
 
 @enum.unique
+@typing.final
 class OAuth2Scope(str, enum.Enum):
     """OAuth2 Scopes that Discord allows.
 
@@ -175,6 +176,7 @@ class OAuth2Scope(str, enum.Enum):
 
 
 @enum.unique
+@typing.final
 class ConnectionVisibility(int, enum.Enum):
     """Describes who can see a connection with a third party account."""
 

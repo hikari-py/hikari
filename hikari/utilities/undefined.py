@@ -45,6 +45,7 @@ class _UndefinedType:
 # whereas using a constant value does not provide that. In short, this allows
 # MyPy to determine it can statically cast a value to a different type when
 # we do `is` and `is not` checks on values, which removes the need for casts.
+@typing.final
 class _UndefinedTypeWrapper(_UndefinedType, enum.Enum):
     UNDEFINED_VALUE = _UndefinedType()
 

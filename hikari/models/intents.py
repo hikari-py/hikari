@@ -28,6 +28,7 @@ import typing
 
 
 @enum.unique
+@typing.final
 class Intent(enum.IntFlag):
     """Represents an intent on the gateway.
 
