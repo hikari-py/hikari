@@ -23,6 +23,7 @@ import mock
 import pytest
 
 from hikari.net import http_client
+from hikari.net import http_settings
 from hikari.net import tracing
 from tests.hikari import _helpers
 
@@ -57,26 +58,27 @@ class TestInit:
 @pytest.mark.asyncio
 class TestAcquireClientSession:
     async def test_acquire_creates_new_session_if_one_does_not_exist(self, client):
-        client._connector = mock.MagicMock()
-        client._trust_env = mock.MagicMock()
+        client._config = http_settings.HTTPSettings()
+        client._config.tcp_connector_factory = mock.MagicMock()
+        client._config.trust_env = mock.MagicMock()
 
         client._client_session = None
-        cs = client.client_session()
+        cs = client.get_client_session()
         assert client._client_session is cs
         aiohttp.ClientSession.assert_called_once_with(
-            connector=client._connector,
-            trust_env=client._trust_env,
+            connector=client._config.tcp_connector_factory(),
+            trust_env=client._config.trust_env,
             version=aiohttp.HttpVersion11,
             json_serialize=json.dumps,
             trace_configs=[t.trace_config for t in client._tracers],
         )
 
     async def test_acquire_repeated_calls_caches_client_session(self, client):
-        cs = client.client_session()
+        cs = client.get_client_session()
 
         for i in range(10):
             aiohttp.ClientSession.reset_mock()
-            assert cs is client.client_session()
+            assert cs is client.get_client_session()
             aiohttp.ClientSession.assert_not_called()
 
 
@@ -97,13 +99,14 @@ class TestClose:
 @pytest.mark.asyncio
 class TestPerformRequest:
     async def test_perform_request_form_data(self, client, client_session):
-        client._allow_redirects = mock.MagicMock()
-        client._proxy_url = mock.MagicMock()
-        client._proxy_auth = mock.MagicMock()
-        client._proxy_headers = mock.MagicMock()
-        client._verify_ssl = mock.MagicMock()
-        client._ssl_context = mock.MagicMock()
-        client._request_timeout = mock.MagicMock()
+        client._config = http_settings.HTTPSettings()
+        client._config.allow_redirects = mock.MagicMock()
+        client._config.proxy_url = mock.MagicMock()
+        client._config.proxy_auth = mock.MagicMock()
+        client._config.proxy_headers = mock.MagicMock()
+        client._config.verify_ssl = mock.MagicMock()
+        client._config.ssl_context = mock.MagicMock()
+        client._config.request_timeout = mock.MagicMock()
 
         form_data = aiohttp.FormData()
 
@@ -124,24 +127,25 @@ class TestPerformRequest:
             params={"foo": "bar"},
             headers={"X-Foo-Count": "122"},
             data=form_data,
-            allow_redirects=client._allow_redirects,
-            proxy=client._proxy_url,
-            proxy_auth=client._proxy_auth,
-            proxy_headers=client._proxy_headers,
-            verify_ssl=client._verify_ssl,
-            ssl_context=client._ssl_context,
-            timeout=client._request_timeout,
+            allow_redirects=client._config.allow_redirects,
+            proxy=client._config.proxy_url,
+            proxy_auth=client._config.proxy_auth,
+            proxy_headers=client._config.proxy_headers,
+            verify_ssl=client._config.verify_ssl,
+            ssl_context=client._config.ssl_context,
+            timeout=client._config.request_timeout,
             trace_request_ctx=trace_request_ctx,
         )
 
     async def test_perform_request_json(self, client, client_session):
-        client._allow_redirects = mock.MagicMock()
-        client._proxy_url = mock.MagicMock()
-        client._proxy_auth = mock.MagicMock()
-        client._proxy_headers = mock.MagicMock()
-        client._verify_ssl = mock.MagicMock()
-        client._ssl_context = mock.MagicMock()
-        client._request_timeout = mock.MagicMock()
+        client._config = http_settings.HTTPSettings()
+        client._config.allow_redirects = mock.MagicMock()
+        client._config.proxy_url = mock.MagicMock()
+        client._config.proxy_auth = mock.MagicMock()
+        client._config.proxy_headers = mock.MagicMock()
+        client._config.verify_ssl = mock.MagicMock()
+        client._config.ssl_context = mock.MagicMock()
+        client._config.request_timeout = mock.MagicMock()
 
         req = {"hello": "world"}
 
@@ -162,13 +166,13 @@ class TestPerformRequest:
             params={"foo": "bar"},
             headers={"X-Foo-Count": "122"},
             json=req,
-            allow_redirects=client._allow_redirects,
-            proxy=client._proxy_url,
-            proxy_auth=client._proxy_auth,
-            proxy_headers=client._proxy_headers,
-            verify_ssl=client._verify_ssl,
-            ssl_context=client._ssl_context,
-            timeout=client._request_timeout,
+            allow_redirects=client._config.allow_redirects,
+            proxy=client._config.proxy_url,
+            proxy_auth=client._config.proxy_auth,
+            proxy_headers=client._config.proxy_headers,
+            verify_ssl=client._config.verify_ssl,
+            ssl_context=client._config.ssl_context,
+            timeout=client._config.request_timeout,
             trace_request_ctx=trace_request_ctx,
         )
 
@@ -176,13 +180,14 @@ class TestPerformRequest:
 @pytest.mark.asyncio
 class TestCreateWs:
     async def test_create_ws(self, client, client_session):
-        client._allow_redirects = mock.MagicMock()
-        client._proxy_url = mock.MagicMock()
-        client._proxy_auth = mock.MagicMock()
-        client._proxy_headers = mock.MagicMock()
-        client._verify_ssl = mock.MagicMock()
-        client._ssl_context = mock.MagicMock()
-        client._request_timeout = mock.MagicMock()
+        client._config = http_settings.HTTPSettings()
+        client._config.allow_redirects = mock.MagicMock()
+        client._config.proxy_url = mock.MagicMock()
+        client._config.proxy_auth = mock.MagicMock()
+        client._config.proxy_headers = mock.MagicMock()
+        client._config.verify_ssl = mock.MagicMock()
+        client._config.ssl_context = mock.MagicMock()
+        client._config.request_timeout = mock.MagicMock()
 
         expected_ws = mock.MagicMock()
         client_session.ws_connect = mock.AsyncMock(return_value=expected_ws)
@@ -196,9 +201,9 @@ class TestCreateWs:
             compress=5,
             autoping=True,
             max_msg_size=3,
-            proxy=client._proxy_url,
-            proxy_auth=client._proxy_auth,
-            proxy_headers=client._proxy_headers,
-            verify_ssl=client._verify_ssl,
-            ssl_context=client._ssl_context,
+            proxy=client._config.proxy_url,
+            proxy_auth=client._config.proxy_auth,
+            proxy_headers=client._config.proxy_headers,
+            verify_ssl=client._config.verify_ssl,
+            ssl_context=client._config.ssl_context,
         )

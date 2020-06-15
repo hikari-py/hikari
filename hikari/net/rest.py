@@ -119,19 +119,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         rest_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         version: int,
     ) -> None:
-        super().__init__(
-            allow_redirects=config.allow_redirects,
-            connector=config.tcp_connector_factory() if config.tcp_connector_factory else None,
-            debug=debug,
-            logger=reflect.get_logger(self),
-            proxy_auth=config.proxy_auth,
-            proxy_headers=config.proxy_headers,
-            proxy_url=config.proxy_url,
-            ssl_context=config.ssl_context,
-            verify_ssl=config.verify_ssl,
-            timeout=config.request_timeout,
-            trust_env=config.trust_env,
-        )
+        super().__init__(config=config, debug=debug, logger=reflect.get_logger(self))
         self.buckets = buckets.RESTBucketManager()
         self.global_rate_limit = rate_limits.ManualRateLimiter()
         self.version = version

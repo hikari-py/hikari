@@ -173,19 +173,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         use_compression: bool = True,
         version: int = 6,
     ) -> None:
-        super().__init__(
-            allow_redirects=config.allow_redirects,
-            connector=config.tcp_connector_factory() if config.tcp_connector_factory else None,
-            debug=debug,
-            logger=reflect.get_logger(self, str(shard_id)),
-            proxy_auth=config.proxy_auth,
-            proxy_headers=config.proxy_headers,
-            proxy_url=config.proxy_url,
-            ssl_context=config.ssl_context,
-            verify_ssl=config.verify_ssl,
-            timeout=config.request_timeout,
-            trust_env=config.trust_env,
-        )
+        super().__init__(config=config, debug=debug, logger=reflect.get_logger(self, str(shard_id)))
         self._activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = initial_activity
         self._app = app
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
