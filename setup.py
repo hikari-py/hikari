@@ -45,8 +45,8 @@ def parse_meta():
     return types.SimpleNamespace(**groups)
 
 
-def parse_requirements():
-    with open("requirements.txt") as fp:
+def parse_requirements_file(path):
+    with open(path) as fp:
         dependencies = (d.strip() for d in fp.read().split("\n") if d.strip())
         return [d for d in dependencies if not d.startswith("#")]
 
@@ -72,7 +72,7 @@ setuptools.setup(
     },
     packages=setuptools.find_namespace_packages(include=[name + "*"]),
     python_requires=">=3.8.0,<3.10",
-    install_requires=parse_requirements(),
+    install_requires=parse_requirements_file("requirements.txt"),
     include_package_data=True,
     test_suite="tests",
     zip_safe=False,
@@ -85,14 +85,14 @@ setuptools.setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: Implementation :: CPython",
-        "Programming Language :: Python :: 3 :: Only",
         "Topic :: Communications :: Chat",
         "Topic :: Internet :: WWW/HTTP",
-        "Topic :: Software Development :: Libraries :: Application Frameworks",
         "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Application Frameworks",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Typing :: Typed",
     ],
-    entry_points={"console_scripts": ["hikari = hikari.__main__:main", "hikari-test = hikari.clients.test:main"]},
+    entry_points={"console_scripts": ["hikari = hikari.__main__:main"]},
+    extras_require={"speedups": parse_requirements_file("speedup-requirements.txt"),},
     provides="hikari",
 )
