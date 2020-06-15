@@ -23,6 +23,7 @@ __all__: typing.Final[typing.List[str]] = ["AbstractGatewayZookeeper"]
 
 import abc
 import asyncio
+import contextlib
 import datetime
 import signal
 import time
@@ -404,4 +405,5 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         valid_interrupts = signal.valid_signals()
         for interrupt in self._SIGNALS:
             if (code := getattr(signal, interrupt, None)) in valid_interrupts:
-                mapping_function(code, *args)
+                with contextlib.suppress(NotImplementedError):
+                    mapping_function(code, *args)
