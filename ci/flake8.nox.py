@@ -26,11 +26,7 @@ def flake8(session: nox.Session) -> None:
     session.install("-r", "requirements.txt", "-r", "flake-requirements.txt")
 
     session.run(
-        "flake8",
-        "--format=html",
-        f"--htmldir={config.FLAKE8_HTML}",
-        config.MAIN_PACKAGE,
-        success_codes=range(0, 256),
+        "flake8", "--format=html", f"--htmldir={config.FLAKE8_HTML}", config.MAIN_PACKAGE, success_codes=range(0, 256),
     )
 
     if "GITLAB_CI" in os.environ or "--gitlab" in session.posargs:
@@ -43,7 +39,5 @@ def flake8(session: nox.Session) -> None:
         format_args = [f"--output-file={config.FLAKE8_TXT}", "--statistics", "--show-source"]
 
     session.run(
-        "flake8",
-        *format_args,
-        config.MAIN_PACKAGE,
+        "flake8", *format_args, config.MAIN_PACKAGE,
     )

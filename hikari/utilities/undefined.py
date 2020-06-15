@@ -54,7 +54,7 @@ setattr(_UndefinedType, "__new__", NotImplemented)
 setattr(_UndefinedTypeWrapper, "__new__", NotImplemented)
 
 UndefinedType = typing.Literal[_UndefinedTypeWrapper.UNDEFINED_VALUE]
-"""A type hint for the literal `UNDEFINED` object."""
+"""Type hint for the literal `UNDEFINED` object."""
 
 # noinspection PyTypeChecker
 UNDEFINED: typing.Final[UndefinedType] = _UndefinedTypeWrapper.UNDEFINED_VALUE
