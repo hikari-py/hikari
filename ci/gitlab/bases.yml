@@ -70,6 +70,8 @@
 ### Shared windows runner.
 ###
 .win32:
+  extends:
+    - .reactive-job
   tags:
     - shared-windows
     - windows

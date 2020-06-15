@@ -25,6 +25,7 @@ __all__ = [
     "ByteReader",
     "FileReader",
     "WebReader",
+    "AsyncReaderContextManager",
     "Resource",
     "Bytes",
     "File",
@@ -35,7 +36,6 @@ __all__ = [
 import abc
 import asyncio
 import base64
-import contextlib
 import logging
 import mimetypes
 import os
@@ -52,6 +52,7 @@ from hikari.utilities import reflect
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
+    import types
 
 _LOGGER: typing.Final[logging.Logger] = reflect.get_logger(__name__)
 _MAGIC: typing.Final[int] = 50 * 1024
@@ -261,6 +262,9 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
         return buff
 
 
+ReaderImplT = typing.TypeVar("ReaderImplT", bound=AsyncReader)
+
+
 @attr.s(auto_attribs=True, slots=True)
 class ByteReader(AsyncReader):
     """Asynchronous file reader that operates on in-memory data."""
@@ -271,53 +275,6 @@ class ByteReader(AsyncReader):
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         for i in range(0, len(self.data), _MAGIC):
             yield self.data[i : i + _MAGIC]
-
-
-@attr.s(auto_attribs=True, slots=True)
-class FileReader(AsyncReader):
-    """Asynchronous file reader that reads a resource from local storage."""
-
-    executor: typing.Optional[concurrent.futures.Executor]
-    """The associated `concurrent.futures.Executor` to use for blocking IO."""
-
-    path: typing.Union[str, pathlib.Path]
-    """The path to the resource to read."""
-
-    loop: asyncio.AbstractEventLoop = attr.ib(factory=asyncio.get_running_loop)
-    """The event loop to use."""
-
-    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
-        path = self.path
-        if isinstance(path, pathlib.Path):
-            path = await self.loop.run_in_executor(self.executor, self._expand, self.path)
-
-        fp = await self.loop.run_in_executor(self.executor, self._open, path)
-        try:
-            while True:
-                chunk = await self.loop.run_in_executor(self.executor, self._read_chunk, fp, _MAGIC)
-                yield chunk
-                if len(chunk) < _MAGIC:
-                    break
-        finally:
-            await self.loop.run_in_executor(self.executor, self._close, fp)
-
-    @staticmethod
-    def _expand(path: pathlib.Path) -> pathlib.Path:
-        # .expanduser is Platform dependent. Will expand stuff like ~ to /home/<user> on posix.
-        # .resolve will follow symlinks and what-have-we to translate stuff like `..` to proper paths.
-        return path.expanduser().resolve()
-
-    @staticmethod
-    def _read_chunk(fp: typing.IO[bytes], n: int = 10_000) -> bytes:
-        return fp.read(n)
-
-    @staticmethod
-    def _open(path: typing.Union[str, os.PathLike]) -> typing.IO[bytes]:
-        return open(path, "rb")
-
-    @staticmethod
-    def _close(fp: typing.IO[bytes]) -> None:
-        fp.close()
 
 
 @attr.s(auto_attribs=True, slots=True)
@@ -342,16 +299,173 @@ class WebReader(AsyncReader):
     size: typing.Optional[int]
     """The size of the resource, if known."""
 
+    head_only: bool
+    """If `True`, then only the HEAD was requested. 
+    
+    In this case, neither `__aiter__` nor `read` would return anything other
+    than an empty byte string.
+    """
+
     async def read(self) -> bytes:
-        return await self.stream.read()
+        return b"" if self.head_only else await self.stream.read()
 
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
-        while not self.stream.at_eof():
-            chunk = await self.stream.readchunk()
-            yield chunk[0]
+        if self.head_only:
+            yield b""
+        else:
+            while not self.stream.at_eof():
+                chunk, _ = await self.stream.readchunk()
+                yield chunk
 
 
-class Resource(abc.ABC):
+@attr.s(auto_attribs=True, slots=True)
+class FileReader(AsyncReader):
+    """Asynchronous file reader that reads a resource from local storage."""
+
+    executor: typing.Optional[concurrent.futures.Executor]
+    """The associated `concurrent.futures.Executor` to use for blocking IO."""
+
+    path: typing.Union[str, pathlib.Path]
+    """The path to the resource to read."""
+
+    loop: asyncio.AbstractEventLoop = attr.ib(factory=asyncio.get_running_loop)
+    """The event loop to use."""
+
+    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
+        path = self.path
+        if isinstance(path, pathlib.Path):
+            path = await self.loop.run_in_executor(self.executor, self._expand, self.path)
+
+        fp = await self.loop.run_in_executor(self.executor, self._open, path)
+
+        try:
+            while True:
+                chunk = await self.loop.run_in_executor(self.executor, self._read_chunk, fp, _MAGIC)
+                yield chunk
+                if len(chunk) < _MAGIC:
+                    break
+
+        finally:
+            await self.loop.run_in_executor(self.executor, self._close, fp)
+
+    @staticmethod
+    def _expand(path: pathlib.Path) -> pathlib.Path:
+        # .expanduser is Platform dependent. Will expand stuff like ~ to /home/<user> on posix.
+        # .resolve will follow symlinks and what-have-we to translate stuff like `..` to proper paths.
+        return path.expanduser().resolve()
+
+    @staticmethod
+    def _read_chunk(fp: typing.IO[bytes], n: int = 10_000) -> bytes:
+        return fp.read(n)
+
+    @staticmethod
+    def _open(path: typing.Union[str, os.PathLike]) -> typing.IO[bytes]:
+        return open(path, "rb")
+
+    @staticmethod
+    def _close(fp: typing.IO[bytes]) -> None:
+        fp.close()
+
+
+class AsyncReaderContextManager(typing.Generic[ReaderImplT]):
+    """Context manager that returns a reader."""
+
+    __slots__ = ()
+
+    @abc.abstractmethod
+    async def __aenter__(self) -> ReaderImplT:
+        ...
+
+    @abc.abstractmethod
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        ...
+
+
+class _NoOpAsyncReaderContextManagerImpl(typing.Generic[ReaderImplT], AsyncReaderContextManager[ReaderImplT]):
+    __slots__ = ("impl",)
+
+    def __init__(self, impl: ReaderImplT) -> None:
+        self.impl = impl
+
+    async def __aenter__(self) -> ReaderImplT:
+        return self.impl
+
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        pass
+
+
+class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReader]):
+    __slots__ = ("_web_resource", "_head_only", "_client_response_ctx", "_client_session")
+
+    def __init__(self, web_resource: WebResource, head_only: bool) -> None:
+        self._web_resource = web_resource
+        self._head_only = head_only
+        self._client_session: aiohttp.ClientSession = NotImplemented
+        self._client_response_ctx: typing.AsyncContextManager = NotImplemented
+
+    async def __aenter__(self) -> WebReader:
+        client_session = aiohttp.ClientSession()
+
+        method = "HEAD" if self._head_only else "GET"
+
+        ctx = client_session.request(method, self._web_resource.url, raise_for_status=False)
+
+        try:
+            resp: aiohttp.ClientResponse = await ctx.__aenter__()
+
+            if 200 <= resp.status < 400:
+                mimetype = None
+                filename = self._web_resource.filename
+
+                if resp.content_disposition is not None:
+                    mimetype = resp.content_disposition.type
+
+                if mimetype is None:
+                    mimetype = resp.content_type
+
+                self._client_response_ctx = ctx
+                self._client_session = client_session
+
+                return WebReader(
+                    stream=resp.content,
+                    url=str(resp.real_url),
+                    status=resp.status,
+                    reason=str(resp.reason),
+                    filename=filename,
+                    charset=resp.charset,
+                    mimetype=mimetype,
+                    size=resp.content_length,
+                    head_only=self._head_only,
+                )
+            else:
+                raise await http_client.generate_error_response(resp)
+
+        except Exception as ex:
+            await ctx.__aexit__(type(ex), ex, ex.__traceback__)
+            await client_session.close()
+            raise
+
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        await self._client_response_ctx.__aexit__(exc_type, exc, exc_tb)
+        await self._client_session.close()
+
+
+class Resource(typing.Generic[ReaderImplT], abc.ABC):
     """Base for any uploadable or downloadable representation of information.
 
     These representations can be streamed using bit inception for performance,
@@ -372,10 +486,27 @@ class Resource(abc.ABC):
         """Filename of the resource."""
 
     @abc.abstractmethod
-    @contextlib.asynccontextmanager
-    @typing.no_type_check
-    async def stream(self, *, executor: typing.Optional[concurrent.futures.Executor]) -> AsyncReader:
-        """Return an async iterable of bytes to stream."""
+    def stream(
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
+    ) -> AsyncReaderContextManager[ReaderImplT]:
+        """Produce a stream of data for the resource.
+
+        Parameters
+        ----------
+        executor : concurrent.futures.Executor or None
+            The executor to run in for blocking operations.
+            If `None`, then the default executor is used for the current
+            event loop.
+        head_only : bool
+            Defaults to `False`. If `True`, then the implementation may
+            only retrieve HEAD information if supported. This currently
+            only has any effect for web requests.
+
+        Returns
+        -------
+        AsyncReaderContextManager[AsyncReader]
+            An async iterable of bytes to stream.
+        """
 
     def __str__(self) -> str:
         return self.url
@@ -392,7 +523,7 @@ class Resource(abc.ABC):
         return hash(self.url)
 
 
-class Bytes(Resource):
+class Bytes(Resource[ByteReader]):
     """Representation of in-memory data to upload.
 
     Parameters
@@ -465,25 +596,28 @@ class Bytes(Resource):
     def filename(self) -> str:
         return self._filename
 
-    @contextlib.asynccontextmanager
-    @typing.no_type_check
-    async def stream(self, *, executor: typing.Optional[concurrent.futures.Executor] = None) -> ByteReader:
+    def stream(
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
+    ) -> AsyncReaderContextManager[ByteReader]:
         """Start streaming the content in chunks.
 
         Parameters
         ----------
         executor : concurrent.futures.Executor or None
             Not used. Provided only to match the underlying interface.
+        head_only : bool
+            Not used. Provided only to match the underlying interface.
 
         Returns
         -------
-        ByteReader
-            The byte stream.
+        AsyncReaderContextManager[ByteReader]
+            An async context manager that when entered, produces the
+            data stream.
         """
-        yield ByteReader(self.filename, self.mimetype, self.data)
+        return _NoOpAsyncReaderContextManagerImpl(ByteReader(self.filename, self.mimetype, self.data))
 
 
-class WebResource(Resource, abc.ABC):
+class WebResource(Resource[WebReader], abc.ABC):
     """Base class for a resource that resides on the internet.
 
     The logic for identifying this resource is left to each implementation
@@ -503,9 +637,9 @@ class WebResource(Resource, abc.ABC):
 
     __slots__ = ()
 
-    @contextlib.asynccontextmanager
-    @typing.no_type_check
-    async def stream(self, *, executor: typing.Optional[concurrent.futures.Executor] = None) -> WebReader:
+    def stream(
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
+    ) -> AsyncReaderContextManager[WebReader]:
         """Start streaming the content into memory by downloading it.
 
         You can use this to fetch the entire resource, parts of the resource,
@@ -515,6 +649,10 @@ class WebResource(Resource, abc.ABC):
         ----------
         executor : concurrent.futures.Executor or None
             Not used. Provided only to match the underlying interface.
+        head_only : bool
+            Defaults to `False`. If `True`, then the implementation may
+            only retrieve HEAD information if supported. This currently
+            only has any effect for web requests.
 
         Examples
         --------
@@ -543,8 +681,9 @@ class WebResource(Resource, abc.ABC):
 
         Returns
         -------
-        WebReader
-            The download stream.
+        AsyncReaderContextManager[WebReader]
+            An async context manager that when entered, produces the
+            data stream.
 
         Raises
         ------
@@ -563,30 +702,7 @@ class WebResource(Resource, abc.ABC):
         hikari.errors.HTTPErrorResponse
             If any other unexpected response code is returned.
         """
-        async with aiohttp.ClientSession() as session:
-            async with session.request("get", self.url, raise_for_status=False) as resp:
-                if 200 <= resp.status < 400:
-                    mimetype = None
-                    filename = self.filename
-
-                    if resp.content_disposition is not None:
-                        mimetype = resp.content_disposition.type
-
-                    if mimetype is None:
-                        mimetype = resp.content_type
-
-                    yield WebReader(
-                        stream=resp.content,
-                        url=str(resp.real_url),
-                        status=resp.status,
-                        reason=resp.reason,
-                        filename=filename,
-                        charset=resp.charset,
-                        mimetype=mimetype,
-                        size=resp.content_length,
-                    )
-                else:
-                    raise await http_client.generate_error_response(resp)
+        return _WebReaderAsyncReaderContextManagerImpl(self, head_only)
 
 
 class URL(WebResource):
@@ -621,7 +737,7 @@ class URL(WebResource):
         return os.path.basename(url.path)
 
 
-class File(Resource):
+class File(Resource[FileReader]):
     """A resource that exists on the local machine's storage to be uploaded.
 
     Parameters
@@ -661,9 +777,9 @@ class File(Resource):
             return os.path.basename(self.path)
         return self._filename
 
-    @contextlib.asynccontextmanager
-    @typing.no_type_check
-    async def stream(self, *, executor: typing.Optional[concurrent.futures.Executor] = None) -> FileReader:
+    def stream(
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
+    ) -> AsyncReaderContextManager[FileReader]:
         """Start streaming the resource using a thread pool executor.
 
         Parameters
@@ -672,10 +788,13 @@ class File(Resource):
             The executor to run the blocking read operations in. If `None`,
             the default executor for the running event loop will be used
             instead.
+        head_only : bool
+            Not used. Provided only to match the underlying interface.
 
         Returns
         -------
-        FileReader
-            The file reader object.
+        AsyncReaderContextManager[FileReader]
+            An async context manager that when entered, produces the
+            data stream.
         """
-        yield FileReader(self.filename, None, executor, self.path)
+        return _NoOpAsyncReaderContextManagerImpl(FileReader(self.filename, None, executor, self.path))

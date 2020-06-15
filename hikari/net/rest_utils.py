@@ -252,7 +252,7 @@ class GuildBuilder:
         payload.put("explicit_content_filter", self.explicit_content_filter_level)
 
         if self.icon is not undefined.UNDEFINED:
-            async with self.icon.stream(self._app.executor) as stream:
+            async with self.icon.stream(executor=self._app.executor) as stream:
                 data_uri = await stream.data_uri()
                 payload.put("icon", data_uri)
 

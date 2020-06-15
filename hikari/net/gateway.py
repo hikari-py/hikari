@@ -301,6 +301,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         try:
             self.logger.debug("creating websocket connection to %s", self.url)
             self._ws = await self._create_ws(self.url)
+
             self.connected_at = self._now()
 
             self._zlib = zlib.decompressobj()
@@ -353,6 +354,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
                 self.logger.warning("unexpected socket closure, will attempt to reconnect")
             else:
                 self._backoff.reset()
+
             return not self._request_close_event.is_set()
 
         except errors.GatewayServerClosedConnectionError as ex:
@@ -463,7 +465,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         self.heartbeat_interval = message["d"]["heartbeat_interval"] / 1_000.0
 
-        self.logger.debug("received HELLO, heartbeat interval is %s", self.heartbeat_interval)
+        self.logger.info("received HELLO, heartbeat interval is %s", self.heartbeat_interval)
 
         if self.session_id is not None:
             # RESUME!
@@ -577,11 +579,19 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         if message.type == aiohttp.WSMsgType.BINARY:
             n, string = await self._receive_zlib_message(message.data)
-            self._log_debug_payload(string, "received %s zlib encoded packets", n)
-        elif message.type == aiohttp.WSMsgType.TEXT:
+            payload: data_binding.JSONObject = data_binding.load_json(string)  # type: ignore
+            self._log_debug_payload(
+                string, "received %s zlib encoded packets [t:%s, op:%s]", n, payload.get("t"), payload.get("op"),
+            )
+            return payload
+
+        if message.type == aiohttp.WSMsgType.TEXT:
             string = message.data
-            self._log_debug_payload(string, "received text payload")
-        elif message.type == aiohttp.WSMsgType.CLOSE:
+            payload: data_binding.JSONObject = data_binding.load_json(string)  # type: ignore
+            self._log_debug_payload(string, "received text payload [t:%s, op:%s]", payload.get("t"), payload.get("op"))
+            return payload
+
+        if message.type == aiohttp.WSMsgType.CLOSE:
             close_code = self._ws.close_code
             self.logger.debug("connection closed with code %s", close_code)
 
@@ -601,17 +611,13 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             # Always try to resume if possible first.
             raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect, can_reconnect, True)
 
-        elif message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
+        if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
             raise self._SocketClosed()
-        else:
-            # Assume exception for now.
-            ex = self._ws.exception()
-            self.logger.debug("encountered unexpected error", exc_info=ex)
-            raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
 
-        # We assume this is always a JSON object, I'd rather not cast here and waste
-        # CPU time as this is somewhat performance critical for large bots.
-        return data_binding.load_json(string)  # type: ignore
+        # Assume exception for now.
+        ex = self._ws.exception()
+        self.logger.debug("encountered unexpected error", exc_info=ex)
+        raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
 
     async def _receive_zlib_message(self, first_packet: bytes) -> typing.Tuple[int, str]:
         # Alloc new array each time; this prevents consuming a large amount of
@@ -639,7 +645,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     async def _send_json(self, payload: data_binding.JSONObject) -> None:
         await self.ratelimiter.acquire()
         message = data_binding.dump_json(payload)
-        self._log_debug_payload(message, "sending json payload")
+        self._log_debug_payload(message, "sending json payload [t:%s]", payload.get("t"))
         await self._ws.send_str(message)
 
     def _dispatch(self, event_name: str, event: data_binding.JSONObject) -> typing.Coroutine[None, typing.Any, None]:
