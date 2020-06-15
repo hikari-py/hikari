@@ -52,12 +52,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
 
-    _EventT = typing.TypeVar("_EventT", bound=base_events.Event)
-    _PredicateT = typing.Callable[[base_events.Event], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
-    _SyncCallbackT = typing.Callable[[base_events.Event], None]
-    _AsyncCallbackT = typing.Callable[[base_events.Event], typing.Coroutine[None, typing.Any, None]]
-    _CallbackT = typing.Union[_SyncCallbackT, _AsyncCallbackT]
-
 
 class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
     """Implementation of an auto-sharded bot application.
@@ -147,6 +141,13 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
     ValueError
         If sharding information is provided, but is unfeasible or invalid.
     """
+
+    if typing.TYPE_CHECKING:
+        EventT = typing.TypeVar("EventT", bound=base_events.Event)
+        PredicateT = typing.Callable[[base_events.Event], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
+        SyncCallbackT = typing.Callable[[base_events.Event], None]
+        AsyncCallbackT = typing.Callable[[base_events.Event], typing.Coroutine[None, typing.Any, None]]
+        CallbackT = typing.Union[SyncCallbackT, AsyncCallbackT]
 
     def __init__(
         self,
@@ -242,27 +243,27 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         return self._config
 
     def listen(
-        self, event_type: typing.Union[undefined.UndefinedType, typing.Type[_EventT]] = undefined.UNDEFINED,
-    ) -> typing.Callable[[_CallbackT], _CallbackT]:
+        self, event_type: typing.Union[undefined.UndefinedType, typing.Type[EventT]] = undefined.UNDEFINED,
+    ) -> typing.Callable[[CallbackT], CallbackT]:
         return self.event_dispatcher.listen(event_type)
 
     def subscribe(
         self,
-        event_type: typing.Type[_EventT],
-        callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
-    ) -> typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]]:
+        event_type: typing.Type[EventT],
+        callback: typing.Callable[[EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
+    ) -> typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]:
         return self.event_dispatcher.subscribe(event_type, callback)
 
     def unsubscribe(
         self,
-        event_type: typing.Type[_EventT],
-        callback: typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]],
+        event_type: typing.Type[EventT],
+        callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
     ) -> None:
         return self.event_dispatcher.unsubscribe(event_type, callback)
 
     async def wait_for(
-        self, event_type: typing.Type[_EventT], predicate: _PredicateT, timeout: typing.Union[float, int, None],
-    ) -> _EventT:
+        self, event_type: typing.Type[EventT], predicate: PredicateT, timeout: typing.Union[float, int, None],
+    ) -> EventT:
         return await self.event_dispatcher.wait_for(event_type, predicate, timeout)
 
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:

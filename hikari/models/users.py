@@ -33,6 +33,7 @@ from hikari.utilities import undefined
 
 
 @enum.unique
+@typing.final
 class UserFlag(enum.IntFlag):
     """The known user flags that represent account badges."""
 
@@ -80,6 +81,7 @@ class UserFlag(enum.IntFlag):
 
 
 @enum.unique
+@typing.final
 class PremiumType(int, enum.Enum):
     """The types of Nitro."""
 

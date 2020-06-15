@@ -89,6 +89,3 @@ def get_logger(obj: typing.Union[typing.Type[typing.Any], typing.Any], *addition
 
     obj = obj if isinstance(obj, type) else type(obj)
     return logging.getLogger(".".join((obj.__module__, obj.__qualname__, *additional_args)))
-
-
-T = typing.TypeVar("T")

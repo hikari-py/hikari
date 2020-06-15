@@ -77,11 +77,6 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         "_tracers",
     )
 
-    _APPLICATION_JSON: typing.Final[str] = "application/json"
-    _APPLICATION_X_WWW_FORM_URLENCODED: typing.Final[str] = "application/x-www-form-urlencoded"
-    _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
-    _MULTIPART_FORM_DATA: typing.Final[str] = "multipart/form-data"
-
     logger: logging.Logger
     """The logger to use for this object."""
 
@@ -114,9 +109,11 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
         self._debug = debug
         self._tracers = [(tracing.DebugTracer(self.logger) if debug else tracing.CFRayTracer(self.logger))]
 
+    @typing.final
     async def __aenter__(self) -> HTTPClient:
         return self
 
+    @typing.final
     async def __aexit__(
         self, exc_type: typing.Type[BaseException], exc_val: BaseException, exc_tb: types.TracebackType
     ) -> None:
@@ -129,6 +126,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
             self.logger.debug("closed client session object %r", self._client_session)
             self._client_session = None
 
+    @typing.final
     def get_client_session(self) -> aiohttp.ClientSession:
         """Acquire a client session to make requests with.
 
@@ -158,6 +156,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
             self.logger.debug("acquired new client session object %r", self._client_session)
         return self._client_session
 
+    @typing.final
     def _perform_request(
         self,
         *,
@@ -219,6 +218,7 @@ class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
             **kwargs,
         )
 
+    @typing.final
     async def _create_ws(
         self, url: str, *, compress: int = 0, auto_ping: bool = True, max_msg_size: int = 0
     ) -> aiohttp.ClientWebSocketResponse:

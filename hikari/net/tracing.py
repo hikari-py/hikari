@@ -35,6 +35,8 @@ from hikari.net import strings
 class BaseTracer:
     """Base type for tracing HTTP requests."""
 
+    __slots__ = ("logger",)
+
     def __init__(self, logger: logging.Logger) -> None:
         self.logger = logger
 
@@ -56,6 +58,8 @@ class CFRayTracer(BaseTracer):
     Logs information about endpoints being hit, response latency, and any
     Cloudflare rays in the response.
     """
+
+    __slots__ = ()
 
     @typing.no_type_check
     async def on_request_start(self, _, ctx, params):
@@ -124,6 +128,8 @@ class DebugTracer(BaseTracer):
         tokens, so ensure those are removed from _debug logs before proceeding
         to send logs to anyone.
     """
+
+    __slots__ = ()
 
     @staticmethod
     async def _format_body(body: typing.Any) -> str:

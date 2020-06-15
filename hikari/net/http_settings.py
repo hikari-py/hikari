@@ -31,6 +31,7 @@ if typing.TYPE_CHECKING:
 
 
 @attr.s(kw_only=True, repr=False, auto_attribs=True)
+@typing.final
 class HTTPSettings:
     """Config for application that use AIOHTTP."""
 

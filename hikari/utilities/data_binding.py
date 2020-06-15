@@ -89,6 +89,7 @@ else:
     """Convert a JSON string to a Python type."""
 
 
+@typing.final
 class StringMapBuilder(multidict.MultiDict[str]):
     """Helper class used to quickly build query strings or header maps.
 
@@ -152,6 +153,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
             self.add(key, value)
 
 
+@typing.final
 class JSONObjectBuilder(typing.Dict[str, JSONAny]):
     """Helper class used to quickly build JSON objects from various values.
 

@@ -52,6 +52,7 @@ if typing.TYPE_CHECKING:
 
 
 @enum.unique
+@typing.final
 class MessageType(int, enum.Enum):
     """The type of a message."""
 
@@ -96,6 +97,7 @@ class MessageType(int, enum.Enum):
 
 
 @enum.unique
+@typing.final
 class MessageFlag(enum.IntFlag):
     """Additional flags for message options."""
 
@@ -119,6 +121,7 @@ class MessageFlag(enum.IntFlag):
 
 
 @enum.unique
+@typing.final
 class MessageActivityType(int, enum.Enum):
     """The type of a rich presence message activity."""
 

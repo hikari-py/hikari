@@ -29,6 +29,7 @@ import typing
 from hikari.utilities import date
 
 
+@typing.final
 class Snowflake(int):
     """A concrete representation of a unique identifier for an object on Discord.
 
