@@ -23,6 +23,7 @@ from ci import nox
 
 @nox.session(reuse_venv=True, default=True)
 def flake8(session: nox.Session) -> None:
+    """Run code linting, SAST, and analysis."""
     session.install("-r", "requirements.txt", "-r", "flake-requirements.txt")
 
     session.run(

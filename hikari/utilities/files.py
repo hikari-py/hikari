@@ -299,13 +299,23 @@ class WebReader(AsyncReader):
     size: typing.Optional[int]
     """The size of the resource, if known."""
 
+    head_only: bool
+    """If `True`, then only the HEAD was requested. 
+    
+    In this case, neither `__aiter__` nor `read` would return anything other
+    than an empty byte string.
+    """
+
     async def read(self) -> bytes:
-        return await self.stream.read()
+        return b"" if self.head_only else await self.stream.read()
 
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
-        while not self.stream.at_eof():
-            chunk = await self.stream.readchunk()
-            yield chunk[0]
+        if self.head_only:
+            yield b""
+        else:
+            while not self.stream.at_eof():
+                chunk, _ = await self.stream.readchunk()
+                yield chunk
 
 
 @attr.s(auto_attribs=True, slots=True)
@@ -327,12 +337,14 @@ class FileReader(AsyncReader):
             path = await self.loop.run_in_executor(self.executor, self._expand, self.path)
 
         fp = await self.loop.run_in_executor(self.executor, self._open, path)
+
         try:
             while True:
                 chunk = await self.loop.run_in_executor(self.executor, self._read_chunk, fp, _MAGIC)
                 yield chunk
                 if len(chunk) < _MAGIC:
                     break
+
         finally:
             await self.loop.run_in_executor(self.executor, self._close, fp)
 
@@ -433,6 +445,7 @@ class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReade
                     charset=resp.charset,
                     mimetype=mimetype,
                     size=resp.content_length,
+                    head_only=self._head_only,
                 )
             else:
                 raise await http_client.generate_error_response(resp)
