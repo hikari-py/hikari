@@ -1526,7 +1526,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
             try:
                 for i, attachment in enumerate(final_attachments):
-                    stream = await stack.enter_async_context(attachment.stream(self._app.executor))
+                    stream = await stack.enter_async_context(attachment.stream(executor=self._app.executor))
                     form.add_field(
                         f"file{i}", stream, filename=stream.filename, content_type=self._APPLICATION_OCTET_STREAM
                     )
