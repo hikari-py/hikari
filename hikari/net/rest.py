@@ -105,6 +105,16 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     __slots__ = ("buckets", "global_rate_limit", "version", "_app", "_rest_url", "_token")
 
+    buckets: buckets.RESTBucketManager
+    """Bucket ratelimiter manager."""
+
+    global_rate_limit: rate_limits.ManualRateLimiter
+    """Global ratelimiter."""
+
+    version: int
+    """API version in-use."""
+
+    @typing.final
     class _RetryRequest(RuntimeError):
         __slots__ = ()
 
@@ -142,9 +152,11 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self._rest_url = rest_url.format(self)
 
     @property
+    @typing.final
     def app(self) -> rest.IRESTApp:
         return self._app
 
+    @typing.final
     async def _request(
         self,
         compiled_route: routes.CompiledRoute,
@@ -190,6 +202,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             except self._RetryRequest:
                 pass
 
+    @typing.final
     async def _request_once(
         self,
         compiled_route: routes.CompiledRoute,
@@ -218,7 +231,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         # Handle the response.
         if 200 <= response.status < 300:
-            if response.content_type == self._APPLICATION_JSON:
+            if response.content_type == strings.APPLICATION_JSON:
                 # Only deserializing here stops Cloudflare shenanigans messing us around.
                 return data_binding.load_json(await response.read())
 
@@ -228,9 +241,11 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         return await self._handle_error_response(response)
 
     @staticmethod
+    @typing.final
     async def _handle_error_response(response: aiohttp.ClientResponse) -> typing.NoReturn:
         raise await http_client.generate_error_response(response)
 
+    @typing.final
     async def _parse_ratelimits(self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse) -> None:
         # Worth noting there is some bug on V6 that rate limits me immediately if I have an invalid token.
         # https://github.com/discord/discord-api-docs/issues/1569
@@ -259,7 +274,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         if not is_rate_limited:
             return
 
-        if response.content_type != self._APPLICATION_JSON:
+        if response.content_type != strings.APPLICATION_JSON:
             # We don't know exactly what this could imply. It is likely Cloudflare interfering
             # but I'd rather we just give up than do something resulting in multiple failed
             # requests repeatedly.
@@ -316,6 +331,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         raise errors.RateLimited(str(response.real_url), compiled_route, response.headers, body, body_retry_after)
 
     @staticmethod
+    @typing.final
     def _generate_allowed_mentions(
         mentions_everyone: typing.Union[undefined.UndefinedType, bool],
         user_mentions: typing.Union[
@@ -352,6 +368,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         return allowed_mentions
 
+    @typing.final
     async def close(self) -> None:
         """Close the REST client and any open HTTP connections."""
         await super().close()
@@ -1091,7 +1108,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         if attachments:
             form = data_binding.URLEncodedForm()
-            form.add_field("payload_json", data_binding.dump_json(body), content_type=self._APPLICATION_JSON)
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=strings.APPLICATION_JSON)
 
             stack = contextlib.AsyncExitStack()
 
@@ -1099,7 +1116,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
                 for i, attachment in enumerate(final_attachments):
                     stream = await stack.enter_async_context(attachment.stream(executor=self._app.executor))
                     form.add_field(
-                        f"file{i}", stream, filename=stream.filename, content_type=self._APPLICATION_OCTET_STREAM
+                        f"file{i}", stream, filename=stream.filename, content_type=strings.APPLICATION_OCTET_STREAM
                     )
 
                 raw_response = await self._request(route, body=form)
@@ -1508,7 +1525,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         if final_attachments:
             form = data_binding.URLEncodedForm()
-            form.add_field("payload_json", data_binding.dump_json(body), content_type=self._APPLICATION_JSON)
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=strings.APPLICATION_JSON)
 
             stack = contextlib.AsyncExitStack()
 
@@ -1516,7 +1533,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
                 for i, attachment in enumerate(final_attachments):
                     stream = await stack.enter_async_context(attachment.stream(executor=self._app.executor))
                     form.add_field(
-                        f"file{i}", stream, filename=stream.filename, content_type=self._APPLICATION_OCTET_STREAM
+                        f"file{i}", stream, filename=stream.filename, content_type=strings.APPLICATION_OCTET_STREAM
                     )
 
                 raw_response = await self._request(route, body=form, no_auth=no_auth)

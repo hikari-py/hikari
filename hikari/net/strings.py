@@ -65,10 +65,10 @@ HTTP_USER_AGENT: typing.Final[str] = (
 PYTHON_PLATFORM_VERSION: typing.Final[str] = (
     f"{platform.python_implementation()} {platform.python_version()} "
     f"{platform.python_branch()} {platform.python_compiler()}"
-).replace("  ", " ")
+).replace(" " * 2, " ")
 
 # URLs
-REST_API_URL: typing.Final[str] = "https://discord.com/api/v{0.version}"
+REST_API_URL: typing.Final[str] = "https://discord.com/api/v{0.version}"  # noqa: FS003  fstring missing prefix
 OAUTH2_API_URL: typing.Final[str] = f"{REST_API_URL}/oauth2"
 CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
 

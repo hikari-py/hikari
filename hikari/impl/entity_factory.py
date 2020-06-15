@@ -150,6 +150,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         }
 
     @property
+    @typing.final
     def app(self) -> rest.IRESTApp:
         return self._app
 

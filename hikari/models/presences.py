@@ -49,6 +49,7 @@ if typing.TYPE_CHECKING:
 
 
 @enum.unique
+@typing.final
 class ActivityType(int, enum.Enum):
     """The activity type."""
 
@@ -133,6 +134,7 @@ class ActivitySecret:
 
 
 @enum.unique
+@typing.final
 class ActivityFlag(enum.IntFlag):
     """Flags that describe what an activity includes.
 
@@ -228,6 +230,7 @@ class RichActivity(Activity):
     """Flags that describe what the activity includes, if present."""
 
 
+@typing.final
 class Status(str, enum.Enum):
     """The status of a member."""
 

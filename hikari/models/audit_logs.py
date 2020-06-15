@@ -53,6 +53,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
+@typing.final
 class AuditLogChangeKey(str, enum.Enum):
     """Commonly known and documented keys for audit log change objects.
 
@@ -135,6 +136,7 @@ class AuditLogChange:
 
 
 @enum.unique
+@typing.final
 class AuditLogEventType(enum.IntEnum):
     """The type of event that occurred."""
 

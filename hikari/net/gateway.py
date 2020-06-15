@@ -100,6 +100,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     """
 
     @enum.unique
+    @typing.final
     class _GatewayCloseCode(enum.IntEnum):
         RFC_6455_NORMAL_CLOSURE = 1000
         RFC_6455_GOING_AWAY = 1001
@@ -131,6 +132,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         DISALLOWED_INTENT = 4014
 
     @enum.unique
+    @typing.final
     class _GatewayOpcode(enum.IntEnum):
         DISPATCH = 0
         HEARTBEAT = 1
@@ -144,9 +146,11 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         HELLO = 10
         HEARTBEAT_ACK = 11
 
+    @typing.final
     class _Reconnect(RuntimeError):
         __slots__ = ()
 
+    @typing.final
     class _SocketClosed(RuntimeError):
         __slots__ = ()
 
@@ -216,6 +220,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self.url = urllib.parse.urlunparse((scheme, netloc, path, params, new_query, ""))
 
     @property
+    @typing.final
     def app(self) -> event_consumer.IEventConsumerApp:
         return self._app
 

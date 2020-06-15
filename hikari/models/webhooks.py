@@ -41,6 +41,7 @@ if typing.TYPE_CHECKING:
 
 
 @enum.unique
+@typing.final
 class WebhookType(int, enum.Enum):
     """Types of webhook."""
 

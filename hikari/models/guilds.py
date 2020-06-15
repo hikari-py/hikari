@@ -65,6 +65,7 @@ if typing.TYPE_CHECKING:
 
 
 @enum.unique
+@typing.final
 class GuildExplicitContentFilterLevel(int, enum.Enum):
     """Represents the explicit content filter setting for a guild."""
 
@@ -79,6 +80,7 @@ class GuildExplicitContentFilterLevel(int, enum.Enum):
 
 
 @enum.unique
+@typing.final
 class GuildFeature(str, enum.Enum):
     """Features that a guild can provide."""
 
@@ -135,6 +137,7 @@ class GuildFeature(str, enum.Enum):
 
 
 @enum.unique
+@typing.final
 class GuildMessageNotificationsLevel(int, enum.Enum):
     """Represents the default notification level for new messages in a guild."""
 
@@ -146,6 +149,7 @@ class GuildMessageNotificationsLevel(int, enum.Enum):
 
 
 @enum.unique
+@typing.final
 class GuildMFALevel(int, enum.Enum):
     """Represents the multi-factor authorization requirement for a guild."""
 
@@ -157,6 +161,7 @@ class GuildMFALevel(int, enum.Enum):
 
 
 @enum.unique
+@typing.final
 class GuildPremiumTier(int, enum.Enum):
     """Tier for Discord Nitro boosting in a guild."""
 
@@ -174,6 +179,7 @@ class GuildPremiumTier(int, enum.Enum):
 
 
 @enum.unique
+@typing.final
 class GuildSystemChannelFlag(enum.IntFlag):
     """Defines which features are suppressed in the system channel."""
 
@@ -185,6 +191,7 @@ class GuildSystemChannelFlag(enum.IntFlag):
 
 
 @enum.unique
+@typing.final
 class GuildVerificationLevel(int, enum.Enum):
     """Represents the level of verification of a guild."""
 
@@ -305,6 +312,7 @@ class Role(PartialRole):
 
 
 @enum.unique
+@typing.final
 class IntegrationExpireBehaviour(int, enum.Enum):
     """Behavior for expiring integration subscribers."""
 
@@ -387,6 +395,7 @@ class GuildMemberBan:
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@typing.final
 class UnavailableGuild(bases.Entity, bases.Unique):
     """An unavailable guild object, received during gateway events such as READY.
 
