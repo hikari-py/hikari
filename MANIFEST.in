@@ -2,6 +2,7 @@ graft hikari
 include COPYING.md
 include COPYING.LESSER.md
 include requirements.txt
+include speedup-requirements.txt
 include setup.py
 include README.md
 include CONTRIBUTING.md
