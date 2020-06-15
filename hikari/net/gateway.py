@@ -579,7 +579,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         if message.type == aiohttp.WSMsgType.BINARY:
             n, string = await self._receive_zlib_message(message.data)
-            payload = data_binding.load_json(string)  # type: ignore
+            payload: data_binding.JSONObject = data_binding.load_json(string)  # type: ignore
             self._log_debug_payload(
                 string, "received %s zlib encoded packets [t:%s, op:%s]", n, payload.get("t"), payload.get("op"),
             )
@@ -587,7 +587,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         if message.type == aiohttp.WSMsgType.TEXT:
             string = message.data
-            payload = data_binding.load_json(string)  # type: ignore
+            payload: data_binding.JSONObject = data_binding.load_json(string)  # type: ignore
             self._log_debug_payload(string, "received text payload [t:%s, op:%s]", payload.get("t"), payload.get("op"))
             return payload
 
