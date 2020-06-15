@@ -38,7 +38,7 @@ def client_session():
 @pytest.fixture
 def client(client_session):
     assert client_session, "this param is needed, it ensures aiohttp is patched for the test"
-    client = http_client.HTTPClient(mock.MagicMock())
+    client = _helpers.unslot_class(http_client.HTTPClient)(mock.MagicMock())
     yield client
 
 
