@@ -59,8 +59,6 @@ class CFRayTracer(BaseTracer):
     Cloudflare rays in the response.
     """
 
-    __slots__ = ()
-
     @typing.no_type_check
     async def on_request_start(self, _, ctx, params):
         """Log an outbound request."""
@@ -128,8 +126,6 @@ class DebugTracer(BaseTracer):
         tokens, so ensure those are removed from _debug logs before proceeding
         to send logs to anyone.
     """
-
-    __slots__ = ()
 
     @staticmethod
     async def _format_body(body: typing.Any) -> str:
