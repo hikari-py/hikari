@@ -36,5 +36,6 @@ class InMemoryCacheComponentImpl(cache.ICacheComponent):
         self._app = app
 
     @property
+    @typing.final
     def app(self) -> rest.IRESTApp:
         return self._app

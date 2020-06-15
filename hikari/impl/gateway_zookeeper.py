@@ -129,7 +129,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
 
     # We do not bother with SIGINT here, since we can catch it as a KeyboardInterrupt
     # instead and provide tidier handling of the stacktrace as a result.
-    _SIGNALS: typing.Final[typing.ClassVar[typing.Sequence[str]]] = ["SIGQUIT", "SIGTERM"]
+    _SIGNALS: typing.Final[typing.ClassVar[typing.Sequence[str]]] = ("SIGQUIT", "SIGTERM")
 
     def __init__(
         self,

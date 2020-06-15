@@ -48,6 +48,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import files
 
 
+@typing.final
 class TypingIndicator:
     """Result type of `hiarki.net.rest.trigger_typing`.
 

@@ -35,11 +35,12 @@ if typing.TYPE_CHECKING:
     from hikari.models import users
     from hikari.utilities import snowflake
 
+
 _TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/72x72/"
-"""The URL for Twemoji PNG artwork for built-in emojis."""
+"""URL for Twemoji PNG artwork for built-in emojis."""
 
 _TWEMOJI_SVG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/svg/"
-"""The URL for Twemoji SVG artwork for built-in emojis."""
+"""URL for Twemoji SVG artwork for built-in emojis."""
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -96,6 +97,7 @@ class UnicodeEmoji(Emoji):
     """The code points that form the emoji."""
 
     @property
+    @typing.final
     def url_name(self) -> str:
         return self.name
 
@@ -104,6 +106,7 @@ class UnicodeEmoji(Emoji):
         return self.name
 
     @property
+    @typing.final
     def codepoints(self) -> typing.Sequence[int]:
         """Integer codepoints that make up this emoji, as UTF-8."""
         return [ord(c) for c in self.name]
@@ -145,6 +148,7 @@ class UnicodeEmoji(Emoji):
         return _TWEMOJI_PNG_BASE_URL + self.filename
 
     @property
+    @typing.final
     def unicode_names(self) -> typing.Sequence[str]:
         """Get the unicode name of the emoji as a sequence.
 
@@ -154,11 +158,13 @@ class UnicodeEmoji(Emoji):
         return [unicodedata.name(c) for c in self.name]
 
     @property
+    @typing.final
     def unicode_escape(self) -> str:
         """Get the unicode escape string for this emoji."""
         return bytes(self.name, "unicode_escape").decode("utf-8")
 
     @classmethod
+    @typing.final
     def from_codepoints(cls, codepoint: int, *codepoints: int) -> UnicodeEmoji:
         """Create a unicode emoji from one or more UTF-32 codepoints."""
         unicode_emoji = cls()
@@ -166,6 +172,7 @@ class UnicodeEmoji(Emoji):
         return unicode_emoji
 
     @classmethod
+    @typing.final
     def from_emoji(cls, emoji: str) -> UnicodeEmoji:
         """Create a unicode emoji from a raw emoji."""
         unicode_emoji = cls()
@@ -173,6 +180,7 @@ class UnicodeEmoji(Emoji):
         return unicode_emoji
 
     @classmethod
+    @typing.final
     def from_unicode_escape(cls, escape: str) -> UnicodeEmoji:
         """Create a unicode emoji from a unicode escape string."""
         unicode_emoji = cls()
@@ -220,10 +228,12 @@ class CustomEmoji(bases.Entity, bases.Unique, Emoji):
         return str(self.id) + (".gif" if self.is_animated else ".png")
 
     @property
+    @typing.final
     def url_name(self) -> str:
         return f"{self.name}:{self.id}"
 
     @property
+    @typing.final
     def mention(self) -> str:
         return f"<{'a' if self.is_animated else ''}:{self.url_name}>"
 
@@ -232,6 +242,7 @@ class CustomEmoji(bases.Entity, bases.Unique, Emoji):
         return self.is_animated is not None
 
     @property
+    @typing.final
     def url(self) -> str:
         return cdn.generate_cdn_url("emojis", str(self.id), format_="gif" if self.is_animated else "png", size=None)
 

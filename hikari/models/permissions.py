@@ -28,6 +28,7 @@ import typing
 
 
 @enum.unique
+@typing.final
 class Permission(enum.IntFlag):
     """Represents the permissions available in a given channel or guild.
 

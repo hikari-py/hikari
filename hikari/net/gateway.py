@@ -100,6 +100,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     """
 
     @enum.unique
+    @typing.final
     class _GatewayCloseCode(enum.IntEnum):
         RFC_6455_NORMAL_CLOSURE = 1000
         RFC_6455_GOING_AWAY = 1001
@@ -131,6 +132,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         DISALLOWED_INTENT = 4014
 
     @enum.unique
+    @typing.final
     class _GatewayOpcode(enum.IntEnum):
         DISPATCH = 0
         HEARTBEAT = 1
@@ -144,9 +146,11 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         HELLO = 10
         HEARTBEAT_ACK = 11
 
+    @typing.final
     class _Reconnect(RuntimeError):
         __slots__ = ()
 
+    @typing.final
     class _SocketClosed(RuntimeError):
         __slots__ = ()
 
@@ -173,19 +177,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         use_compression: bool = True,
         version: int = 6,
     ) -> None:
-        super().__init__(
-            allow_redirects=config.allow_redirects,
-            connector=config.tcp_connector_factory() if config.tcp_connector_factory else None,
-            debug=debug,
-            logger=reflect.get_logger(self, str(shard_id)),
-            proxy_auth=config.proxy_auth,
-            proxy_headers=config.proxy_headers,
-            proxy_url=config.proxy_url,
-            ssl_context=config.ssl_context,
-            verify_ssl=config.verify_ssl,
-            timeout=config.request_timeout,
-            trust_env=config.trust_env,
-        )
+        super().__init__(config=config, debug=debug, logger=reflect.get_logger(self, str(shard_id)))
         self._activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = initial_activity
         self._app = app
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
@@ -228,6 +220,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self.url = urllib.parse.urlunparse((scheme, netloc, path, params, new_query, ""))
 
     @property
+    @typing.final
     def app(self) -> event_consumer.IEventConsumerApp:
         return self._app
 

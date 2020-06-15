@@ -355,6 +355,7 @@ class FileReader(AsyncReader):
         return path.expanduser().resolve()
 
     @staticmethod
+    @typing.final
     def _read_chunk(fp: typing.IO[bytes], n: int = 10_000) -> bytes:
         return fp.read(n)
 
@@ -386,6 +387,7 @@ class AsyncReaderContextManager(typing.Generic[ReaderImplT]):
         ...
 
 
+@typing.final
 class _NoOpAsyncReaderContextManagerImpl(typing.Generic[ReaderImplT], AsyncReaderContextManager[ReaderImplT]):
     __slots__ = ("impl",)
 
@@ -404,6 +406,7 @@ class _NoOpAsyncReaderContextManagerImpl(typing.Generic[ReaderImplT], AsyncReade
         pass
 
 
+@typing.final
 class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReader]):
     __slots__ = ("_web_resource", "_head_only", "_client_response_ctx", "_client_session")
 
@@ -520,7 +523,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         return False
 
     def __hash__(self) -> int:
-        return hash(self.url)
+        return hash((self.__class__, self.url))
 
 
 class Bytes(Resource[ByteReader]):
@@ -705,6 +708,7 @@ class WebResource(Resource[WebReader], abc.ABC):
         return _WebReaderAsyncReaderContextManagerImpl(self, head_only)
 
 
+@typing.final
 class URL(WebResource):
     """A URL that represents a web resource.
 
@@ -768,6 +772,7 @@ class File(Resource[FileReader]):
         self._filename = filename
 
     @property
+    @typing.final
     def url(self) -> str:
         return f"attachment://{self.filename}"
 

@@ -29,12 +29,6 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     from hikari.events import base
 
-    _EventT = typing.TypeVar("_EventT", bound=base.Event)
-    _PredicateT = typing.Callable[[base.Event], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
-    _SyncCallbackT = typing.Callable[[base.Event], None]
-    _AsyncCallbackT = typing.Callable[[base.Event], typing.Coroutine[None, typing.Any, None]]
-    _CallbackT = typing.Union[_SyncCallbackT, _AsyncCallbackT]
-
 
 class IEventDispatcherBase(abc.ABC):
     """Base interface for event dispatcher implementations.
@@ -45,6 +39,13 @@ class IEventDispatcherBase(abc.ABC):
     """
 
     __slots__ = ()
+
+    if typing.TYPE_CHECKING:
+        EventT = typing.TypeVar("EventT", bound=base.Event)
+        PredicateT = typing.Callable[[base.Event], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
+        SyncCallbackT = typing.Callable[[base.Event], None]
+        AsyncCallbackT = typing.Callable[[base.Event], typing.Coroutine[None, typing.Any, None]]
+        CallbackT = typing.Union[SyncCallbackT, AsyncCallbackT]
 
     @abc.abstractmethod
     def dispatch(self, event: base.Event) -> asyncio.Future[typing.Any]:
@@ -126,9 +127,9 @@ class IEventDispatcherBase(abc.ABC):
     @abc.abstractmethod
     def subscribe(
         self,
-        event_type: typing.Type[_EventT],
-        callback: typing.Callable[[_EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
-    ) -> typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]]:
+        event_type: typing.Type[EventT],
+        callback: typing.Callable[[EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
+    ) -> typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]:
         """Subscribe a given callback to a given event type.
 
         Parameters
@@ -172,8 +173,8 @@ class IEventDispatcherBase(abc.ABC):
     @abc.abstractmethod
     def unsubscribe(
         self,
-        event_type: typing.Type[_EventT],
-        callback: typing.Callable[[_EventT], typing.Coroutine[None, typing.Any, None]],
+        event_type: typing.Type[EventT],
+        callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
     ) -> None:
         """Unsubscribe a given callback from a given event type, if present.
 
@@ -202,8 +203,8 @@ class IEventDispatcherBase(abc.ABC):
 
     @abc.abstractmethod
     def listen(
-        self, event_type: typing.Union[undefined.UndefinedType, typing.Type[_EventT]] = undefined.UNDEFINED,
-    ) -> typing.Callable[[_CallbackT], _CallbackT]:
+        self, event_type: typing.Union[undefined.UndefinedType, typing.Type[EventT]] = undefined.UNDEFINED,
+    ) -> typing.Callable[[CallbackT], CallbackT]:
         """Generate a decorator to subscribe a callback to an event type.
 
         This is a second-order decorator.
@@ -232,8 +233,8 @@ class IEventDispatcherBase(abc.ABC):
 
     @abc.abstractmethod
     async def wait_for(
-        self, event_type: typing.Type[_EventT], predicate: _PredicateT, timeout: typing.Union[float, int, None],
-    ) -> _EventT:
+        self, event_type: typing.Type[EventT], predicate: PredicateT, timeout: typing.Union[float, int, None],
+    ) -> EventT:
         """Wait for a given event to occur once, then return the event.
 
         Parameters

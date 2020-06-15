@@ -42,7 +42,7 @@ class Event(abc.ABC):
     """The base class that all events inherit from."""
 
 
-_EventT = typing.TypeVar("_EventT", contravariant=True)
+EventT = typing.TypeVar("EventT", contravariant=True)
 _REQUIRED_INTENTS_ATTR: typing.Final[str] = "___required_intents___"
 _NO_THROW_ATTR: typing.Final[str] = "___no_throw___"
 
@@ -66,7 +66,7 @@ def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collectio
 
 def requires_intents(
     first: intents.Intent, *rest: intents.Intent
-) -> typing.Callable[[typing.Type[_EventT]], typing.Type[_EventT]]:
+) -> typing.Callable[[typing.Type[EventT]], typing.Type[EventT]]:
     """Decorate an event type to define what intents it requires.
 
     Parameters
@@ -80,27 +80,27 @@ def requires_intents(
 
     """
 
-    def decorator(cls: typing.Type[_EventT]) -> typing.Type[_EventT]:
+    def decorator(cls: typing.Type[EventT]) -> typing.Type[EventT]:
         setattr(cls, _REQUIRED_INTENTS_ATTR, [first, *rest])
         return cls
 
     return decorator
 
 
-def no_catch() -> typing.Callable[[typing.Type[_EventT]], typing.Type[_EventT]]:
+def no_catch() -> typing.Callable[[typing.Type[EventT]], typing.Type[EventT]]:
     """Decorate an event type to indicate errors should not be handled.
 
     This is useful for exception event types that you do not want to
     have invoked recursively.
     """
 
-    def decorator(cls: typing.Type[_EventT]) -> typing.Type[_EventT]:
+    def decorator(cls: typing.Type[EventT]) -> typing.Type[EventT]:
         setattr(cls, _NO_THROW_ATTR, True)
         return cls
 
     return decorator
 
 
-def is_no_catch_event(obj: typing.Union[_EventT, typing.Type[_EventT]]) -> bool:
+def is_no_catch_event(obj: typing.Union[EventT, typing.Type[EventT]]) -> bool:
     """Return True if this event is marked as `no_catch`."""
     return typing.cast(bool, getattr(obj, _NO_THROW_ATTR, False))
