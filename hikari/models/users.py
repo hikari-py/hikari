@@ -209,14 +209,12 @@ class User(PartialUser):
             else:
                 format_ = "png"
 
-        url = cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
-        return files.URL(url)
+        return cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
 
     @property
     def default_avatar(self) -> files.URL:  # noqa: D401 imperative mood check
         """Placeholder default avatar for the user."""
-        url = cdn.get_default_avatar_url(self.discriminator)
-        return files.URL(url)
+        return cdn.get_default_avatar_url(self.discriminator)
 
     @property
     def default_avatar_index(self) -> int:

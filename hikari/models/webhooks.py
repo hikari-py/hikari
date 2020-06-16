@@ -364,8 +364,7 @@ class Webhook(bases.Entity, bases.Unique):
 
         This is used if no avatar is set.
         """
-        url = cdn.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
-        return files_.URL(url)
+        return cdn.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
 
     def format_avatar(self, format_: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
         """Generate the avatar URL for this webhook's custom avatar if set, else it's default avatar.
@@ -392,7 +391,7 @@ class Webhook(bases.Entity, bases.Unique):
         ValueError
             If `size` is not a power of two between 16 and 4096 (inclusive).
         """
-        if self.avatar_hash is not None:
-            url = cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
-            return files_.URL(url)
-        return None
+        if self.avatar_hash is None:
+            return None
+
+        return cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
