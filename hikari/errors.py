@@ -218,7 +218,7 @@ class HTTPErrorResponse(HTTPError):
         else:
             name_value = str(self.status)
 
-        return f"{name_value}: {raw_body[:200]}{'...' if chomped else ''}"
+        return f"{name_value}: {raw_body[:200]}{'...' if chomped else ''} for {self.url}"
 
 
 class ClientHTTPErrorResponse(HTTPErrorResponse):
