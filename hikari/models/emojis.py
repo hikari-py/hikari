@@ -244,7 +244,8 @@ class CustomEmoji(bases.Entity, bases.Unique, Emoji):
     @property
     @typing.final
     def url(self) -> str:
-        return cdn.generate_cdn_url("emojis", str(self.id), format_="gif" if self.is_animated else "png", size=None)
+        # TODO, change this as it is a bad line of code and I don't like it.
+        return cdn.generate_cdn_url("emojis", str(self.id), format_="gif" if self.is_animated else "png", size=None).url
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

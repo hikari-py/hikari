@@ -226,10 +226,10 @@ class GroupDMChannel(DMChannel):
         ValueError
             If `size` is not a power of two between 16 and 4096 (inclusive).
         """
-        if self.icon_hash:
-            url = cdn.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format, size=size)
-            return files.URL(url)
-        return None
+        if self.icon_hash is None:
+            return None
+
+        return cdn.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format, size=size)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

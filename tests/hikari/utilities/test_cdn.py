@@ -17,17 +17,18 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import pytest
 
+from hikari.utilities import files
 from hikari.utilities import cdn
 
 
 def test_generate_cdn_url():
     url = cdn.generate_cdn_url("not", "a", "path", format_="neko", size=16)
-    assert url == "https://cdn.discordapp.com/not/a/path.neko?size=16"
+    assert url == files.URL("https://cdn.discordapp.com/not/a/path.neko?size=16")
 
 
 def test_generate_cdn_url_with_size_set_to_none():
     url = cdn.generate_cdn_url("not", "a", "path", format_="neko", size=None)
-    assert url == "https://cdn.discordapp.com/not/a/path.neko"
+    assert url == files.URL("https://cdn.discordapp.com/not/a/path.neko")
 
 
 def test_generate_cdn_url_with_invalid_size_out_of_limits():

@@ -466,8 +466,7 @@ class PartialGuild(bases.Entity, bases.Unique):
             else:
                 format_ = "png"
 
-        url = cdn.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
-        return files.URL(url)
+        return cdn.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -522,8 +521,7 @@ class GuildPreview(PartialGuild):
         if self.splash_hash is None:
             return None
 
-        url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
-        return files.URL(url)
+        return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
 
     @property
     def discovery_splash(self) -> typing.Optional[files.URL]:
@@ -555,10 +553,9 @@ class GuildPreview(PartialGuild):
         if self.discovery_splash_hash is None:
             return None
 
-        url = cdn.generate_cdn_url(
+        return cdn.generate_cdn_url(
             "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
         )
-        return files.URL(url)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -885,8 +882,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
         if self.splash_hash is None:
             return None
 
-        url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
-        return files.URL(url)
+        return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
 
     @property
     def discovery_splash(self) -> typing.Optional[files.URL]:
@@ -917,10 +913,10 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
         """
         if self.discovery_splash_hash is None:
             return None
-        url = cdn.generate_cdn_url(
+
+        return cdn.generate_cdn_url(
             "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
         )
-        return files.URL(url)
 
     @property
     def banner(self) -> typing.Optional[files.URL]:
@@ -952,5 +948,4 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
         if self.banner_hash is None:
             return None
 
-        url = cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
-        return files.URL(url)
+        return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)

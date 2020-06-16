@@ -46,8 +46,24 @@
   image: busybox:1.31.1-musl
 
 ###
-### CPython 3.8.2 configuration.
+### CPython 3.8 configurations.
 ###
+.cpython:3.8.0:
+  extends: .any-job
+  image: python:3.8.0
+
+.cpython:3.8.1:
+  extends: .any-job
+  image: python:3.8.1
+
+.cpython:3.8.2:
+  extends: .any-job
+  image: python:3.8.2
+
+.cpython:3.8.3:
+  extends: .any-job
+  image: python:3.8.3
+
 .cpython:3.8:
   extends: .any-job
   image: python:3.8
