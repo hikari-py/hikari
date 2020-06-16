@@ -78,13 +78,28 @@ test:win32:
   stage: test
 
 ###
-### Run CPython 3.8.2 unit tests and collect test coverage stats.
+### Run CPython 3.8 unit tests and collect test coverage stats.
 ###
 ### Coverage is exported as an artifact with a name matching the job name.
 ###
-test:3.8:
+test:3.8.0:
   extends:
-    - .cpython:3.8
+    - .cpython:3.8.0
+    - .test
+
+test:3.8.1:
+  extends:
+    - .cpython:3.8.1
+    - .test
+
+test:3.8.2:
+  extends:
+    - .cpython:3.8.2
+    - .test
+
+test:3.8.3:
+  extends:
+    - .cpython:3.8.3
     - .test
 
 ###
