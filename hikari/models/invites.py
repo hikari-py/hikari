@@ -117,10 +117,10 @@ class InviteGuild(guilds.PartialGuild):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.splash_hash is not None:
-            url = cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
-            return files.URL(url)
-        return None
+        if self.splash_hash is None:
+            return None
+
+        return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
 
     @property
     def banner(self) -> typing.Optional[files.URL]:
@@ -149,10 +149,10 @@ class InviteGuild(guilds.PartialGuild):
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.banner_hash is not None:
-            url = cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
-            return files.URL(url)
-        return None
+        if self.banner_hash is None:
+            return None
+
+        return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
