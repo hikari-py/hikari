@@ -25,9 +25,10 @@ import typing
 import urllib.parse
 
 from hikari.net import strings
+from hikari.utilities import files
 
 
-def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]) -> str:
+def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]) -> files.URL:
     """Generate a link for a Discord CDN media resource.
 
     Parameters
@@ -45,7 +46,7 @@ def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]
 
     Returns
     -------
-    str
+    hikari.utilities.files.URL
         The URL to the resource on the Discord CDN.
 
     Raises
@@ -61,7 +62,7 @@ def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]
     path = "/".join(urllib.parse.unquote(part) for part in route_parts)
     url = urllib.parse.urljoin(strings.CDN_URL, "/" + path) + "." + str(format_)
     query = urllib.parse.urlencode({"size": size}) if size is not None else None
-    return f"{url}?{query}" if query else url
+    return files.URL(f"{url}?{query}" if query else url)
 
 
 def get_default_avatar_index(discriminator: str) -> int:
@@ -80,7 +81,7 @@ def get_default_avatar_index(discriminator: str) -> int:
     return int(discriminator) % 5
 
 
-def get_default_avatar_url(discriminator: str) -> str:
+def get_default_avatar_url(discriminator: str) -> files.URL:
     """URL for this user's default avatar.
 
     Parameters
@@ -90,7 +91,7 @@ def get_default_avatar_url(discriminator: str) -> str:
 
     Returns
     -------
-    str
+    hikari.utilities.files.URL
         The avatar URL.
     """
-    return generate_cdn_url("embed", "avatars", str(get_default_avatar_index(discriminator)), format_="png", size=None,)
+    return generate_cdn_url("embed", "avatars", str(get_default_avatar_index(discriminator)), format_="png", size=None)
