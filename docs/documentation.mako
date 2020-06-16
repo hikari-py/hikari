@@ -45,6 +45,22 @@
         except KeyError:
             print("blacklisting", fqn, "as it cannot be dereferenced from external documentation")
             unlocatable_external_refs.add(fqn)
+
+    project_inventory = sphobjinv.Inventory()
+
+    import atexit
+
+    @atexit.register
+    def dump_inventory():
+        import hikari
+
+        project_inventory.project = "hikari"
+        project_inventory.version = hikari.__version__
+
+        text = project_inventory.data_file(contract=True)
+        ztext = sphobjinv.compress(text)
+        sphobjinv.writebytes('public/hikari/objects.inv', ztext)
+
 %>
 
 <%
@@ -256,6 +272,17 @@
             parent = v.cls.obj if v.cls is not None else v.module.obj
             if hasattr(parent, "__annotations__") and v.name in parent.__annotations__:
                 return_type = get_annotation(lambda *_, **__: parent.__annotations__[v.name])
+
+        project_inventory.objects.append(
+            sphobjinv.DataObjStr(
+                name = v.name,
+                domain = "py",
+                role = "var",
+                uri = v.url(),
+                priority = "1",
+                dispname = "-",
+            )
+        )
     %>
     <dt>
         <pre><code class="python">${link(v, with_prefixes=True, anchor=True)}${return_type}</code></pre>
@@ -291,6 +318,18 @@
                 redirect = False
         else:
             redirect = False
+
+        if not redirect:
+            project_inventory.objects.append(
+                sphobjinv.DataObjStr(
+                    name = f.name,
+                    domain = "py",
+                    role = "func",
+                    uri = f.url(),
+                    priority = "1",
+                    dispname = "-",
+                )
+            )
     %>
     <dt>
         <pre><code id="${f.refname}" class="hljs python">${representation}</code></pre>
@@ -343,6 +382,18 @@
                 redirect = False
         else:
             redirect = False
+
+        if not redirect:
+            project_inventory.objects.append(
+                sphobjinv.DataObjStr(
+                    name = c.name,
+                    domain = "py",
+                    role = "class",
+                    uri = c.url(),
+                    priority = "1",
+                    dispname = "-",
+                )
+            )
     %>
     <dt>
         <%
@@ -437,7 +488,6 @@
 </%def>
 
 <%def name="show_desc(d, short=False)">
-    
     <%
         inherits = ' inherited' if d.inherits else ''
         docstring = d.docstring
@@ -495,6 +545,17 @@
             functions = module.functions(sort=sort_identifiers)
             submodules = module.submodules()
             supermodule = module.supermodule
+
+            project_inventory.objects.append(
+                sphobjinv.DataObjStr(
+                    name = module.name,
+                    domain = "py",
+                    role = "module",
+                    uri = module.url(),
+                    priority = "1",
+                    dispname = "-",
+                )
+        )
         %>
 
         <div class="d-md-none d-lg-block col-lg-5 col-xl-4">
