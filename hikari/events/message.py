@@ -58,6 +58,7 @@ class MessageCreateEvent(base_events.Event):
     """Used to represent Message Create gateway events."""
 
     message: messages.Message = attr.ib(repr=True)
+    """The message that was sent."""
 
 
 @attr.s(slots=True, init=False, repr=True, eq=False)
