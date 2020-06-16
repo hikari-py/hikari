@@ -304,11 +304,12 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         top_line = "//" + ("=" * line_len) + r"\\"
         bottom_line = r"\\" + ("=" * line_len) + "//"
 
-        # The \r at the start will return to the start of the line for Unix
-        # consoles; for anything else that is logged, it will just act as
-        # a newline still.
+        # Start on a newline, this prevents logging formatting messing with the
+        # layout of the banner; before we used \r but this probably isn't great
+        # since with systems like docker-compose that prepend to each line of
+        # logs, we end up with a mess.
         self.logger.info(
-            "\r%s\n%s\n%s\n%s\n%s\n%s\n%s",
+            "\n%s\n%s\n%s\n%s\n%s\n%s\n%s",
             top_line,
             version_str,
             copyright_str,
