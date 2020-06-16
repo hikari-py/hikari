@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = [
+    "BaseMessageReactionEvent",
     "MessageCreateEvent",
     "UpdatedMessageFields",
     "MessageUpdateEvent",
