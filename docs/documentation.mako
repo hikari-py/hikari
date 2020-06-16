@@ -98,18 +98,27 @@
             if isinstance(dobj, pdoc.Function):
                 qual = dobj.funcdef()
 
-                prefix = "<small class='text-muted'><em>" + qual + "</em></small>"
+                if getattr(dobj.obj, "__isabstractmethod__", False):
+                    prefix = f"{QUAL_ABC} "
+                else:
+                    prefix = ""
+
+                prefix = "<small class='text-muted'><em>" + prefix + qual + "</em></small>"
 
             elif isinstance(dobj, pdoc.Variable):
-                if hasattr(dobj.cls, "obj") and (descriptor := dobj.cls.obj.__dict__.get(dobj.name)) and isinstance(descriptor, property):
-                    prefix = f"<small class='text-muted'><em>{QUAL_PROPERTY}</em></small>"
-
-                elif dobj.module.name == "typing" or dobj.docstring and dobj.docstring.casefold().startswith(("type hint", "typehint", "type alias")):
-                    prefix = F"<small class='text-muted'><em>{QUAL_TYPEHINT} </em></small>"
-                elif all(not c.isalpha() or c.isupper() for c in dobj.name):
-                    prefix = f"<small class='text-muted'><em>{QUAL_CONST}</em></small>"
+                if getattr(dobj.obj, "__isabstractmethod__", False):
+                    prefix = f"{QUAL_ABC} "
                 else:
-                    prefix = f"<small class='text-muted'><em>{QUAL_VAR}</em></small>"
+                    prefix = ""
+
+                if hasattr(dobj.cls, "obj") and (descriptor := dobj.cls.obj.__dict__.get(dobj.name)) and isinstance(descriptor, property):
+                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_PROPERTY}</em></small>"
+                elif dobj.module.name == "typing" or dobj.docstring and dobj.docstring.casefold().startswith(("type hint", "typehint", "type alias")):
+                    prefix = F"<small class='text-muted'><em>{prefix}{QUAL_TYPEHINT} </em></small>"
+                elif all(not c.isalpha() or c.isupper() for c in dobj.name):
+                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_CONST}</em></small>"
+                else:
+                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_VAR}</em></small>"
 
             elif isinstance(dobj, pdoc.Class):
                 qual = ""
@@ -177,7 +186,7 @@
 
         anchor = "" if not anchor else f'id="{dobj.refname}"'
 
-        return '{} <a title="{}" href="{}" {} {}>{}</a>'.format(prefix, glimpse(dobj.docstring), url, anchor, class_str, name)
+        return '{} <a title="{}" href="{}" {} {}>{}</a>'.format(prefix, dobj.name + " -- " + glimpse(dobj.docstring), url, anchor, class_str, name)
 
     def simple_name(s):
         _, _, name = s.rpartition(".")
@@ -284,9 +293,12 @@
         <pre><code id="${f.refname}" class="hljs python">${representation}</code></pre>
     </dt>
     <dd>
+        % if inspect.isabstract(f.obj):
+            <strong>This function is abstract!</strong>
+        % endif
         % if redirect:
-            ${show_desc(f) | glimpse, to_html}
-            <strong>This class is defined explicitly at ${link(ref, with_prefixes=False, fully_qualified=True)}. Visit that link to view the full documentation!</strong>
+            ${show_desc(f, short=True)}
+            <strong>This function is defined explicitly at ${link(ref, with_prefixes=False, fully_qualified=True)}. Visit that link to view the full documentation!</strong>
         % else:
             ${show_desc(f)}
 
@@ -319,30 +331,33 @@
             representation = f"{QUAL_CLASS} {c.name} (" + ", ".join(params) + "): ..."
         else:
             representation = f"{QUAL_CLASS} {c.name}: ..."
+
+        if c.module.name != c.obj.__module__:
+            try:
+                ref = pdoc._global_context[c.obj.__module__ + "." + c.obj.__qualname__]
+                redirect = True
+            except KeyError:
+                redirect = False
+        else:
+            redirect = False
     %>
     <dt>
-        <h4>${link(c, with_prefixes=True, simple_names=True)}</h4>
+        <h4>reference to ${link(c, with_prefixes=True, simple_names=True)}</h4>
     </dt>
     <dd>
-        <pre><code id="${c.refname}" class="hljs python">${representation}</code></pre>
-
-        <% 
-            if c.module.name != c.obj.__module__:
-                try:
-                    ref = pdoc._global_context[c.obj.__module__ + "." + c.obj.__qualname__]
-                    redirect = True
-                except KeyError:
-                    redirect = False
-            else:
-                redirect = False
-        %>
-
+        % if redirect:
+            <details>
+                <summary>
+                    <span>Expand signature</span>
+                </summary>
+        % endif
+                <pre><code id="${c.refname}" class="hljs python">${representation}</code></pre>
 
         % if redirect:
-            ${show_desc(c) | glimpse, to_html}
+            </details>
+            ${show_desc(c, short=True)}
             <strong>This class is defined explicitly at ${link(ref, with_prefixes=False, fully_qualified=True)}. Visit that link to view the full documentation!</strong>
         % else:
-
             ${show_desc(c)}
             <div class="sep"></div>
             ${show_source(c)}
@@ -419,21 +434,24 @@
     
     <%
         inherits = ' inherited' if d.inherits else ''
-        # docstring = glimpse(d.docstring) if short or inherits else d.docstring
         docstring = d.docstring
     %>
-    % if d.inherits:
-        <p class="inheritance">
-            <em>Inherited from:</em>
-            % if hasattr(d.inherits, 'cls'):
-                <code>${link(d.inherits.cls, with_prefixes=False)}</code>.<code>${link(d.inherits, name=d.name, with_prefixes=False)}</code>
-            % else:
-                <code>${link(d.inherits, with_prefixes=False)}</code>
-            % endif
-        </p>
-    % endif
+    % if not short:
+        % if d.inherits:
+            <p class="inheritance">
+                <em>Inherited from:</em>
+                % if hasattr(d.inherits, 'cls'):
+                    <code>${link(d.inherits.cls, with_prefixes=False)}</code>.<code>${link(d.inherits, name=d.name, with_prefixes=False)}</code>
+                % else:
+                    <code>${link(d.inherits, with_prefixes=False)}</code>
+                % endif
+            </p>
+        % endif
 
-    ${docstring | to_html}
+        ${docstring | to_html}
+    % else:
+        ${docstring | glimpse, to_html}
+    % endif
 </%def>
 
 <%def name="show_source(d)">
@@ -474,11 +492,11 @@
         %>
 
         <div class="d-md-none d-lg-block col-lg-5 col-xl-4">
-            <nav class="nav flex-column" id="content-nav">               
+            <!--<nav class="nav" id="content-nav">-->
                 % if submodules:
-                    <ul class="list-unstyled">
+                    <ul class="list-unstyled text-truncate">
                         % for child_module in submodules:
-                            <li><code>${link(child_module, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</code></li>
+                            <li class="text-truncate"><code>${link(child_module, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</code></li>
                         % endfor
                     </ul>
                 % endif
@@ -488,17 +506,17 @@
                 % endif
 
                 % if variables:
-                    <ul class="list-unstyled">
+                    <ul class="list-unstyled text-truncate">
                         % for variable in variables:
-                            <li><code>${link(variable, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</code></li>
+                            <li class="text-truncate">${link(variable, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
                         % endfor
                     </ul>
                 % endif
 
                 % if functions:
-                    <ul class="list-unstyled">
+                    <ul class="list-unstyled text-truncate">
                         % for function in functions:
-                            <li><code>${link(function, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</code></li>
+                            <li class="text-truncate">${link(function, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
                         % endfor
                     </ul>
                 % endif
@@ -506,9 +524,9 @@
                 % if classes:
                     % for c in classes:
                         ## Purposely using one item per list for layout reasons.
-                        <ul class="list-unstyled">
+                        <ul class="list-unstyled text-truncate">
                             <li>
-                                <code>${link(c, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</code>
+                                ${link(c, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}
 
                                 <%
                                     members = c.functions(sort=sort_identifiers) + c.methods(sort=sort_identifiers)
@@ -523,10 +541,10 @@
                                         members = sorted(members)
                                 %>
 
-                                <ul class="list-unstyled nested">
+                                <ul class="list-unstyled nested text-truncate">
                                     % if members:
                                         % for member in members:
-                                            <li><code>${link(member, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</code></li>
+                                            <li class="text-truncate">${link(member, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
                                         % endfor
                                     % endif
                                 </ul>
@@ -535,7 +553,7 @@
                         </ul>
                     % endfor
                 % endif
-            </nav>
+            <!--</nav>-->
         </div>
 
         <div class="col-xs-12 col-lg-7 col-xl-8">
@@ -606,10 +624,8 @@
 
                 <dt><code>${QUAL_ABC}</code></dt>
                 <dd>
-                    Abstract base class. These are partially implemented classes that require
-                    additional implementation details to be fully usable. Generally these are
-                    used to represet a subset of behaviour common between different
-                    implementations.
+                    Abstract member. These must be subclassed/overridden with a
+                    concrete implementation elsewhere to be used.
                 </dd>
 
                 <dt><code>${QUAL_DATACLASS}</code></dt>
