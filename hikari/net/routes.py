@@ -34,7 +34,7 @@ HASH_SEPARATOR: typing.Final[str] = ";"
 
 # This could be frozen, except attrs' docs advise against this for performance
 # reasons when using slotted classes.
-@attr.s(slots=True)
+@attr.s(init=True, slots=True, hash=True)
 @typing.final
 class CompiledRoute:
     """A compiled representation of a route to a specific resource.
@@ -43,11 +43,11 @@ class CompiledRoute:
     `Route` is treated as a template, this is treated as an instance.
     """
 
-    route: Route = attr.ib()
-    """The route this compiled route was created from."""
-
     major_param_hash: str = attr.ib()
     """The major parameters in a bucket hash-compatible representation."""
+
+    route: Route = attr.ib()
+    """The route this compiled route was created from."""
 
     compiled_path: str = attr.ib()
     """The compiled route path to use."""
@@ -96,7 +96,7 @@ class CompiledRoute:
         return f"{self.method} {self.compiled_path}"
 
 
-@attr.s(init=False, slots=True)
+@attr.s(hash=True, init=False, slots=True)
 @typing.final
 class Route:
     """A template used to create compiled routes for specific parameters.
@@ -155,7 +155,9 @@ class Route:
             data.put(k, v)
 
         return CompiledRoute(
-            self, self.path_template.format_map(data), data[self.major_param] if self.major_param is not None else "-",
+            route=self,
+            compiled_path=self.path_template.format_map(data),
+            major_param_hash=data[self.major_param] if self.major_param is not None else "-",
         )
 
     def __str__(self) -> str:
@@ -167,8 +169,6 @@ PATCH: typing.Final[str] = "PATCH"
 DELETE: typing.Final[str] = "DELETE"
 PUT: typing.Final[str] = "PUT"
 POST: typing.Final[str] = "POST"
-
-_R = typing.Final[Route]
 
 # Channels
 GET_CHANNEL: typing.Final[Route] = Route(GET, "/channels/{channel}")
@@ -205,7 +205,7 @@ DELETE_ALL_REACTIONS: typing.Final[Route] = Route(DELETE, "/channels/{channel}/m
 
 DELETE_REACTION_EMOJI: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}")
 DELETE_REACTION_USER: typing.Final[Route] = Route(
-    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/{used}"
+    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/{user}"
 )
 GET_REACTIONS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/{message}/reactions/{emoji}")
 
