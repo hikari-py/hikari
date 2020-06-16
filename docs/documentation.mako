@@ -44,7 +44,7 @@
             return located_external_refs[fqn]
         except KeyError:
             print("blacklisting", fqn, "as it cannot be dereferenced from external documentation")
-            unlocatable_external_refs.add(fqn)        
+            unlocatable_external_refs.add(fqn)
 %>
 
 <%
@@ -155,21 +155,24 @@
         if fully_qualified and not simple_names:
             name = dobj.module.name + "." + dobj.obj.__qualname__
 
-        url = dobj.url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
-
         if isinstance(dobj, pdoc.External):
             if dobj.module:
                 fqn = dobj.module.name + "." + dobj.obj.__qualname__
             else:
                 fqn = dobj.name
 
-                
             url = discover_source(fqn)
             if url is None:
                 url = discover_source(name)
 
             if url is None:
                 return name if not with_prefixes else f"{QUAL_EXTERNAL} {name}"
+        else:
+            try:
+                ref = dobj if not hasattr(dobj.obj, "__module__") else pdoc._global_context[dobj.obj.__module__ + "." + dobj.obj.__qualname__]
+                url = ref.url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+            except Exception:
+                url = dobj.url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
 
         if simple_names:
             name = simple_name(name)
@@ -342,7 +345,10 @@
             redirect = False
     %>
     <dt>
-        <h4>reference to ${link(c, with_prefixes=True, simple_names=True)}</h4>
+        <%
+            prefix = "<small class='text-muted'>reference to </small>" if redirect else ""
+        %>
+        <h4>${prefix}${link(c, with_prefixes=True, simple_names=True)}</h4>
     </dt>
     <dd>
         % if redirect:
