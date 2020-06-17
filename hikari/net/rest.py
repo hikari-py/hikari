@@ -31,7 +31,6 @@ import typing
 import aiohttp
 
 from hikari import errors
-from hikari.api import component
 from hikari.models import embeds as embeds_
 from hikari.models import emojis
 from hikari.net import buckets
@@ -402,7 +401,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             If an internal error occurs on Discord while handling the request.
         """
         route = routes.GET_CHANNEL.compile(channel=channel)
-        raw_response = self._request(route)
+        raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_channel(response)
 
