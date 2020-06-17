@@ -59,7 +59,7 @@
 
         text = project_inventory.data_file(contract=True)
         ztext = sphobjinv.compress(text)
-        sphobjinv.writebytes('public/hikari/objects.inv', ztext)
+        sphobjinv.writebytes('public/objects.inv', ztext)
 
 %>
 
