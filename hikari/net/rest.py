@@ -31,6 +31,7 @@ import typing
 import aiohttp
 
 from hikari import errors
+from hikari.api import component
 from hikari.models import embeds as embeds_
 from hikari.models import emojis
 from hikari.net import buckets
