@@ -78,17 +78,6 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     This will convert objects to/from JSON compatible representations.
     """
 
-    if typing.TYPE_CHECKING:
-        DMChannelT = typing.TypeVar("DMChannelT", bound=channel_models.DMChannel)
-        GuildChannelT = typing.TypeVar("GuildChannelT", bound=channel_models.GuildChannel)
-        InviteT = typing.TypeVar("InviteT", bound=invite_models.Invite)
-        PartialChannelT = typing.TypeVar("PartialChannelT", bound=channel_models.PartialChannel)
-        PartialGuildT = typing.TypeVar("PartialGuildT", bound=guild_models.PartialGuild)
-        PartialGuildIntegrationT = typing.TypeVar("PartialGuildIntegrationT", bound=guild_models.PartialIntegration)
-        UserT = typing.TypeVar("UserT", bound=user_models.User)
-        ReactionEventT = typing.TypeVar("ReactionEventT", bound=message_events.MessageReactionEvent)
-        GuildBanEventT = typing.TypeVar("GuildBanEventT", bound=guild_events.GuildBanEvent)
-
     def __init__(self, app: rest.IRESTApp) -> None:
         self._app = app
         self._audit_log_entry_converters: typing.Mapping[str, typing.Callable[[typing.Any], typing.Any]] = {
