@@ -47,20 +47,20 @@ import typing
 
 import attr
 
-from hikari.models import bases
 from hikari.models import users
 from hikari.utilities import cdn
 from hikari.utilities import files
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.api import rest
     from hikari.models import channels as channels_
     from hikari.models import colors
     from hikari.models import emojis as emojis_
     from hikari.models import permissions as permissions_
     from hikari.models import presences
-    from hikari.utilities import snowflake
     from hikari.utilities import undefined
 
 
@@ -212,8 +212,11 @@ class GuildVerificationLevel(int, enum.Enum):
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class GuildWidget(bases.Entity):
+class GuildWidget:
     """Represents a guild embed."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the channel the invite for this embed targets, if enabled."""
@@ -223,8 +226,11 @@ class GuildWidget(bases.Entity):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class Member(bases.Entity):
+class Member:
     """Used to represent a guild bound member."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     # TODO: make Member delegate to user and implement a common base class
     # this allows members and users to be used interchangeably.
@@ -272,8 +278,16 @@ class Member(bases.Entity):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class PartialRole(bases.Entity, bases.Unique):
+class PartialRole(snowflake.Unique):
     """Represents a partial guild bound Role object."""
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
     """The role's name."""
@@ -335,8 +349,13 @@ class IntegrationAccount:
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class PartialIntegration(bases.Unique):
+class PartialIntegration(snowflake.Unique):
     """A partial representation of an integration, found in audit logs."""
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
     """The name of this integration."""
@@ -396,12 +415,17 @@ class GuildMemberBan:
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 @typing.final
-class UnavailableGuild(bases.Entity, bases.Unique):
+class UnavailableGuild(snowflake.Unique):
     """An unavailable guild object, received during gateway events such as READY.
 
     An unavailable guild cannot be interacted with, and most information may
     be outdated if that is the case.
     """
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
 
     # Ignore docstring not starting in an imperative mood
     @property
@@ -414,8 +438,16 @@ class UnavailableGuild(bases.Entity, bases.Unique):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class PartialGuild(bases.Entity, bases.Unique):
+class PartialGuild(snowflake.Unique):
     """Base object for any partial guild objects."""
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
     """The name of the guild."""

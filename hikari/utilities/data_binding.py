@@ -40,7 +40,7 @@ import aiohttp.client_reqrep
 import aiohttp.typedefs
 import multidict
 
-from hikari.models import bases
+from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 T = typing.TypeVar("T", covariant=True)
@@ -144,7 +144,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
                 value = "false"
             elif value is None:
                 value = "null"
-            elif isinstance(value, bases.Unique):
+            elif isinstance(value, snowflake.Unique):
                 value = str(value.id)
             else:
                 value = str(value)
@@ -234,7 +234,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
             else:
                 self[key] = list(values)
 
-    def put_snowflake(self, key: str, value: typing.Union[undefined.UndefinedType, bases.UniqueObject], /) -> None:
+    def put_snowflake(self, key: str, value: typing.Union[undefined.UndefinedType, snowflake.UniqueObject], /) -> None:
         """Put a key with a snowflake value into the builder.
 
         Parameters
@@ -249,7 +249,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
             self[key] = str(int(value))
 
     def put_snowflake_array(
-        self, key: str, values: typing.Union[undefined.UndefinedType, typing.Iterable[bases.UniqueObject]], /,
+        self, key: str, values: typing.Union[undefined.UndefinedType, typing.Iterable[snowflake.UniqueObject]], /,
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
 

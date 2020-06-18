@@ -38,7 +38,6 @@ import attr
 from hikari.models import colors
 from hikari.utilities import files
 
-
 if typing.TYPE_CHECKING:
     import concurrent.futures
 

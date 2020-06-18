@@ -41,15 +41,15 @@ import typing
 
 import attr
 
-from hikari.models import bases
 from hikari.models import permissions
 from hikari.models import users
 from hikari.utilities import cdn
 from hikari.utilities import files
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     import datetime
-    from hikari.utilities import snowflake
+    from hikari.api import rest
 
 
 @enum.unique
@@ -95,7 +95,7 @@ class PermissionOverwriteType(str, enum.Enum):
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True)
-class PermissionOverwrite(bases.Unique):
+class PermissionOverwrite(snowflake.Unique):
     """Represents permission overwrites for a channel or role in a channel.
 
     You may sometimes need to make instances of this object to add/edit
@@ -121,6 +121,11 @@ class PermissionOverwrite(bases.Unique):
     ```
     """
 
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
+
     type: PermissionOverwriteType = attr.ib(converter=PermissionOverwriteType, eq=True, hash=True, repr=True)
     """The type of entity this overwrite targets."""
 
@@ -142,12 +147,20 @@ class PermissionOverwrite(bases.Unique):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class PartialChannel(bases.Entity, bases.Unique):
+class PartialChannel(snowflake.Unique):
     """Channel representation for cases where further detail is not provided.
 
     This is commonly received in REST API responses where full information is
     not available from Discord.
     """
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The channel's name. This will be missing for DM channels."""

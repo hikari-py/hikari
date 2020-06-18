@@ -196,7 +196,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, application_information_payload, owner_payload, user_payload
     ):
         application = entity_factory_impl.deserialize_application(application_information_payload)
-        assert application._app is mock_app
+        assert application.app is mock_app
         assert application.id == 209333111222
         assert application.name == "Dream Sweet in Sea Major"
         assert application.description == "I am an application"
@@ -432,7 +432,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_partial_channel(self, entity_factory_impl, mock_app, partial_channel_payload):
         partial_channel = entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
-        assert partial_channel._app is mock_app
+        assert partial_channel.app is mock_app
         assert partial_channel.id == 561884984214814750
         assert partial_channel.name == "general"
         assert partial_channel.type == channel_models.ChannelType.GUILD_TEXT
@@ -452,7 +452,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_dm_channel(self, entity_factory_impl, mock_app, dm_channel_payload, user_payload):
         dm_channel = entity_factory_impl.deserialize_dm_channel(dm_channel_payload)
-        assert dm_channel._app is mock_app
+        assert dm_channel.app is mock_app
         assert dm_channel.id == 123
         assert dm_channel.name is None
         assert dm_channel.last_message_id == 456
@@ -482,7 +482,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_group_dm_channel(self, entity_factory_impl, mock_app, group_dm_channel_payload, user_payload):
         group_dm = entity_factory_impl.deserialize_group_dm_channel(group_dm_channel_payload)
-        assert group_dm._app is mock_app
+        assert group_dm.app is mock_app
         assert group_dm.id == 123
         assert group_dm.name == "Secret Developer Group"
         assert group_dm.icon_hash == "123asdf123adsf"
@@ -525,7 +525,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, guild_category_payload, permission_overwrite_payload
     ):
         guild_category = entity_factory_impl.deserialize_guild_category(guild_category_payload)
-        assert guild_category._app is mock_app
+        assert guild_category.app is mock_app
         assert guild_category.id == 123
         assert guild_category.name == "Test"
         assert guild_category.type == channel_models.ChannelType.GUILD_CATEGORY
@@ -588,7 +588,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, guild_text_channel_payload, permission_overwrite_payload
     ):
         guild_text_channel = entity_factory_impl.deserialize_guild_text_channel(guild_text_channel_payload)
-        assert guild_text_channel._app is mock_app
+        assert guild_text_channel.app is mock_app
         assert guild_text_channel.id == 123
         assert guild_text_channel.name == "general"
         assert guild_text_channel.type == channel_models.ChannelType.GUILD_TEXT
@@ -667,7 +667,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, guild_news_channel_payload, permission_overwrite_payload
     ):
         news_channel = entity_factory_impl.deserialize_guild_news_channel(guild_news_channel_payload)
-        assert news_channel._app is mock_app
+        assert news_channel.app is mock_app
         assert news_channel.id == 7777
         assert news_channel.name == "Important Announcements"
         assert news_channel.type == channel_models.ChannelType.GUILD_NEWS
@@ -1131,7 +1131,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_custom_emoji(self, entity_factory_impl, mock_app, custom_emoji_payload):
         emoji = entity_factory_impl.deserialize_custom_emoji(custom_emoji_payload)
-        assert emoji._app is mock_app
+        assert emoji.app is mock_app
         assert emoji.id == 691225175349395456
         assert emoji.name == "test"
         assert emoji.is_animated is True
@@ -1161,7 +1161,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, user_payload, known_custom_emoji_payload
     ):
         emoji = entity_factory_impl.deserialize_known_custom_emoji(known_custom_emoji_payload)
-        assert emoji._app is mock_app
+        assert emoji.app is mock_app
         assert emoji.id == 12345
         assert emoji.name == "testing"
         assert emoji.is_animated is False
@@ -1227,7 +1227,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_widget_embed(self, entity_factory_impl, mock_app, guild_embed_payload):
         guild_embed = entity_factory_impl.deserialize_guild_widget(guild_embed_payload)
-        assert guild_embed._app is mock_app
+        assert guild_embed.app is mock_app
         assert guild_embed.channel_id == 123123123
         assert guild_embed.is_enabled is True
         assert isinstance(guild_embed, guild_models.GuildWidget)
@@ -1249,7 +1249,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_member(self, entity_factory_impl, mock_app, member_payload, user_payload):
         member = entity_factory_impl.deserialize_member(member_payload)
-        assert member._app is mock_app
+        assert member.app is mock_app
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.nickname == "foobarbaz"
         assert member.role_ids == {11111, 22222, 33333, 44444}
@@ -1321,7 +1321,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_role(self, entity_factory_impl, mock_app, guild_role_payload):
         guild_role = entity_factory_impl.deserialize_role(guild_role_payload)
-        assert guild_role._app is mock_app
+        assert guild_role.app is mock_app
         assert guild_role.id == 41771983423143936
         assert guild_role.name == "WE DEM BOYZZ!!!!!!"
         assert guild_role.color == color_models.Color(3_447_003)
@@ -1425,7 +1425,6 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_unavailable_guild(self, entity_factory_impl, mock_app):
         unavailable_guild = entity_factory_impl.deserialize_unavailable_guild({"id": "42069", "unavailable": True})
-        assert unavailable_guild._app is mock_app
         assert unavailable_guild.id == 42069
         assert unavailable_guild.is_unavailable is True
         assert isinstance(unavailable_guild, guild_models.UnavailableGuild)
@@ -1449,7 +1448,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, guild_preview_payload, known_custom_emoji_payload
     ):
         guild_preview = entity_factory_impl.deserialize_guild_preview(guild_preview_payload)
-        assert guild_preview._app is mock_app
+        assert guild_preview.app is mock_app
         assert guild_preview.id == 152559372126519269
         assert guild_preview.name == "Isopropyl"
         assert guild_preview.icon_hash == "d4a983885dsaa7691ce8bcaaf945a"
@@ -1559,7 +1558,7 @@ class TestEntityFactoryImpl:
         voice_state_payload,
     ):
         guild = entity_factory_impl.deserialize_guild(guild_payload)
-        assert guild._app is mock_app
+        assert guild.app is mock_app
         assert guild.id == 265828729970753537
         assert guild.name == "L33t guild"
         assert guild.icon_hash == "1a2b3c4d"
@@ -1742,7 +1741,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_vanity_url(self, entity_factory_impl, mock_app, vanity_url_payload):
         vanity_url = entity_factory_impl.deserialize_vanity_url(vanity_url_payload)
-        assert vanity_url._app is mock_app
+        assert vanity_url.app is mock_app
         assert vanity_url.code == "iamacode"
         assert vanity_url.uses == 42
         assert isinstance(vanity_url, invite_models.VanityURL)
@@ -1784,7 +1783,7 @@ class TestEntityFactoryImpl:
         alternative_user_payload,
     ):
         invite = entity_factory_impl.deserialize_invite(invite_payload)
-        assert invite._app is mock_app
+        assert invite.app is mock_app
         assert invite.code == "aCode"
         # InviteGuild
         assert invite.guild.id == 56188492224814744
@@ -1863,7 +1862,7 @@ class TestEntityFactoryImpl:
         alternative_user_payload,
     ):
         invite_with_metadata = entity_factory_impl.deserialize_invite_with_metadata(invite_with_metadata_payload)
-        assert invite_with_metadata._app is mock_app
+        assert invite_with_metadata.app is mock_app
         assert invite_with_metadata.code == "aCode"
         # InviteGuild
         assert invite_with_metadata.guild.id == 56188492224814744
@@ -1991,7 +1990,7 @@ class TestEntityFactoryImpl:
         embed_payload,
     ):
         message = entity_factory_impl.deserialize_message(message_payload)
-        assert message._app is mock_app
+        assert message.app is mock_app
         assert message.id == 123
         assert message.channel_id == 456
         assert message.guild_id == 678
@@ -2040,7 +2039,7 @@ class TestEntityFactoryImpl:
 
         assert message.application == entity_factory_impl.deserialize_application(partial_application_payload)
         # MessageCrosspost
-        assert message.message_reference._app is mock_app
+        assert message.message_reference.app is mock_app
         assert message.message_reference.id == 306588351130107906
         assert message.message_reference.channel_id == 278325129692446722
         assert message.message_reference.guild_id == 278325129692446720
@@ -2069,7 +2068,7 @@ class TestEntityFactoryImpl:
         }
 
         message = entity_factory_impl.deserialize_message(message_payload)
-        assert message._app is mock_app
+        assert message.app is mock_app
         assert message.guild_id is None
         assert message.member is None
         assert message.edited_timestamp is None
@@ -2131,9 +2130,9 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, member_presence_payload, custom_emoji_payload, user_payload
     ):
         presence = entity_factory_impl.deserialize_member_presence(member_presence_payload)
-        assert presence._app is mock_app
+        assert presence.app is mock_app
         # PresenceUser
-        assert presence.user._app is mock_app
+        assert presence.user.app is mock_app
         assert presence.user.id == 115590097100865541
         assert presence.user.discriminator == "6127"
         assert presence.user.username == "nyaa"
@@ -2375,7 +2374,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_user(self, entity_factory_impl, mock_app, user_payload):
         user = entity_factory_impl.deserialize_user(user_payload)
-        assert user._app is mock_app
+        assert user.app is mock_app
         assert user.id == 115590097100865541
         assert user.username == "nyaa"
         assert user.avatar_hash == "b3b24c6d7cbcdec129d5d537067061a8"
@@ -2418,7 +2417,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_my_user(self, entity_factory_impl, mock_app, my_user_payload):
         my_user = entity_factory_impl.deserialize_my_user(my_user_payload)
-        assert my_user._app is mock_app
+        assert my_user.app is mock_app
         assert my_user.id == 379953393319542784
         assert my_user.username == "qt pi"
         assert my_user.avatar_hash == "820d0e50543216e812ad94e6ab7"
@@ -2447,7 +2446,7 @@ class TestEntityFactoryImpl:
                 "premium_type": 1,
             }
         )
-        assert my_user._app is mock_app
+        assert my_user.app is mock_app
         assert my_user.is_bot is False
         assert my_user.is_system is False
         assert my_user.is_verified is None
@@ -2477,7 +2476,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_voice_state(self, entity_factory_impl, mock_app, voice_state_payload, member_payload):
         voice_state = entity_factory_impl.deserialize_voice_state(voice_state_payload)
-        assert voice_state._app is mock_app
+        assert voice_state.app is mock_app
         assert voice_state.guild_id == 929292929292992
         assert voice_state.channel_id == 157733188964188161
         assert voice_state.user_id == 80351110224678912
@@ -2622,7 +2621,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_channel_pins_update_event(self, entity_factory_impl, mock_app, channel_pins_update_payload):
         channel_pins_update = entity_factory_impl.deserialize_channel_pins_update_event(channel_pins_update_payload)
-        assert channel_pins_update._app is mock_app
+        assert channel_pins_update.app is mock_app
         assert channel_pins_update.channel_id == 123123
         assert channel_pins_update.guild_id == 9439494
         assert channel_pins_update.last_pin_timestamp == datetime.datetime(
@@ -2632,7 +2631,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_channel_pins_update_event_with_unset_fields(self, entity_factory_impl, mock_app):
         channel_pins_update = entity_factory_impl.deserialize_channel_pins_update_event({"channel_id": "123123"})
-        assert channel_pins_update._app is mock_app
+        assert channel_pins_update.app is mock_app
         assert channel_pins_update.guild_id is None
         assert channel_pins_update.last_pin_timestamp is None
 
@@ -2642,7 +2641,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_webhook_update_event(self, entity_factory_impl, mock_app, webhook_update_payload):
         webhook_update = entity_factory_impl.deserialize_webhook_update_event(webhook_update_payload)
-        assert webhook_update._app is mock_app
+        assert webhook_update.app is mock_app
         assert webhook_update.guild_id == 123123123
         assert webhook_update.channel_id == 93493939
         assert isinstance(webhook_update, channel_events.WebhookUpdateEvent)
@@ -2659,7 +2658,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_typing_start_event(self, entity_factory_impl, mock_app, typing_start_payload, member_payload):
         typing_start = entity_factory_impl.deserialize_typing_start_event(typing_start_payload)
-        assert typing_start._app is mock_app
+        assert typing_start.app is mock_app
         assert typing_start.channel_id == 123123
         assert typing_start.guild_id == 4542242
         assert typing_start.user_id == 29292929
@@ -2687,7 +2686,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_invite_delete_event(self, entity_factory_impl, mock_app, invite_delete_payload):
         invite_delete = entity_factory_impl.deserialize_invite_delete_event(invite_delete_payload)
-        assert invite_delete._app is mock_app
+        assert invite_delete.app is mock_app
         assert invite_delete.code == "Heck"
         assert invite_delete.channel_id == 123123
         assert invite_delete.guild_id == 93939393
@@ -2725,7 +2724,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_guild_unavailable_event(self, entity_factory_impl, mock_app, guild_unavailable_payload):
         guild_unavailable = entity_factory_impl.deserialize_guild_unavailable_event(guild_unavailable_payload)
-        assert guild_unavailable._app is mock_app
+        assert guild_unavailable.app is mock_app
         assert guild_unavailable.id == 4123123
         assert isinstance(guild_unavailable, guild_events.GuildUnavailableEvent)
 
@@ -2735,14 +2734,14 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_guild_ban_add_event(self, entity_factory_impl, mock_app, guild_ban_payload, user_payload):
         guild_ban_add = entity_factory_impl.deserialize_guild_ban_add_event(guild_ban_payload)
-        assert guild_ban_add._app is mock_app
+        assert guild_ban_add.app is mock_app
         assert guild_ban_add.guild_id == 2002020202022
         assert guild_ban_add.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(guild_ban_add, guild_events.GuildBanAddEvent)
 
     def test_deserialize_guild_ban_remove_event(self, entity_factory_impl, mock_app, guild_ban_payload, user_payload):
         guild_ban_add = entity_factory_impl.deserialize_guild_ban_remove_event(guild_ban_payload)
-        assert guild_ban_add._app is mock_app
+        assert guild_ban_add.app is mock_app
         assert guild_ban_add.guild_id == 2002020202022
         assert guild_ban_add.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(guild_ban_add, guild_events.GuildBanRemoveEvent)
@@ -2755,7 +2754,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, guild_emojis_update_payload, known_custom_emoji_payload
     ):
         guild_emoji_update = entity_factory_impl.deserialize_guild_emojis_update_event(guild_emojis_update_payload)
-        assert guild_emoji_update._app is mock_app
+        assert guild_emoji_update.app is mock_app
         assert guild_emoji_update.guild_id == 424242
         assert guild_emoji_update.emojis == {
             12345: entity_factory_impl.deserialize_known_custom_emoji(known_custom_emoji_payload)
@@ -2772,7 +2771,7 @@ class TestEntityFactoryImpl:
         guild_integrations_update = entity_factory_impl.deserialize_guild_integrations_update_event(
             guild_integrations_update_payload
         )
-        assert guild_integrations_update._app is mock_app
+        assert guild_integrations_update.app is mock_app
         assert guild_integrations_update.guild_id == 439399393
         assert isinstance(guild_integrations_update, guild_events.GuildIntegrationsUpdateEvent)
 
@@ -2784,7 +2783,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, guild_member_add_payload, member_payload
     ):
         guild_member_add = entity_factory_impl.deserialize_guild_member_add_event(guild_member_add_payload)
-        assert guild_member_add._app is mock_app
+        assert guild_member_add.app is mock_app
         assert guild_member_add.guild_id == 20202020202020
         assert guild_member_add.member == entity_factory_impl.deserialize_member(member_payload)
         assert isinstance(guild_member_add, guild_events.GuildMemberAddEvent)
@@ -2802,7 +2801,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, guild_member_remove_payload, user_payload
     ):
         guild_member_remove = entity_factory_impl.deserialize_guild_member_remove_event(guild_member_remove_payload)
-        assert guild_member_remove._app is mock_app
+        assert guild_member_remove.app is mock_app
         assert guild_member_remove.guild_id == 20202020
         assert guild_member_remove.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(guild_member_remove, guild_events.GuildMemberRemoveEvent)
@@ -2815,7 +2814,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, guild_role_create_update_payload, guild_role_payload
     ):
         guild_role_create = entity_factory_impl.deserialize_guild_role_create_event(guild_role_create_update_payload)
-        assert guild_role_create._app is mock_app
+        assert guild_role_create.app is mock_app
         assert guild_role_create.guild_id == 303030300303
         assert guild_role_create.role == entity_factory_impl.deserialize_role(guild_role_payload)
         assert isinstance(guild_role_create, guild_events.GuildRoleCreateEvent)
@@ -2824,7 +2823,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, guild_role_create_update_payload, guild_role_payload
     ):
         guild_role_create = entity_factory_impl.deserialize_guild_role_update_event(guild_role_create_update_payload)
-        assert guild_role_create._app is mock_app
+        assert guild_role_create.app is mock_app
         assert guild_role_create.guild_id == 303030300303
         assert guild_role_create.role == entity_factory_impl.deserialize_role(guild_role_payload)
         assert isinstance(guild_role_create, guild_events.GuildRoleUpdateEvent)
@@ -2835,7 +2834,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_guild_role_delete_event(self, entity_factory_impl, mock_app, guild_role_delete_payload):
         guild_role_delete = entity_factory_impl.deserialize_guild_role_delete_event(guild_role_delete_payload)
-        assert guild_role_delete._app is mock_app
+        assert guild_role_delete.app is mock_app
         assert guild_role_delete.guild_id == 93939393939
         assert guild_role_delete.role_id == 8383483848484848
         assert isinstance(guild_role_delete, guild_events.GuildRoleDeleteEvent)
@@ -2867,7 +2866,7 @@ class TestEntityFactoryImpl:
     ):
         message_update = entity_factory_impl.deserialize_message_update_event(message_payload)
 
-        assert message_update.message._app is mock_app
+        assert message_update.message.app is mock_app
         assert message_update.message.id == 123
         assert message_update.message.channel_id == 456
         assert message_update.message.guild_id == 678
@@ -2919,7 +2918,7 @@ class TestEntityFactoryImpl:
             partial_application_payload
         )
         # MessageCrosspost
-        assert message_update.message.message_reference._app is mock_app
+        assert message_update.message.message_reference.app is mock_app
         assert message_update.message.message_reference.id == 306588351130107906
         assert message_update.message.message_reference.channel_id == 278325129692446722
         assert message_update.message.message_reference.guild_id == 278325129692446720
@@ -2969,7 +2968,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_message_delete_event(self, entity_factory_impl, mock_app, message_delete_payload):
         message_delete = entity_factory_impl.deserialize_message_delete_event(message_delete_payload)
-        assert message_delete._app is mock_app
+        assert message_delete.app is mock_app
         assert message_delete.message_id == 123123
         assert message_delete.channel_id == 9292929
         assert message_delete.guild_id == 202020202
@@ -2981,7 +2980,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_message_delete_bulk_event(self, entity_factory_impl, mock_app, message_delete_bulk_payload):
         message_delete_bulk = entity_factory_impl.deserialize_message_delete_bulk_event(message_delete_bulk_payload)
-        assert message_delete_bulk._app is mock_app
+        assert message_delete_bulk.app is mock_app
         assert message_delete_bulk.message_ids == {123123, 9349299}
         assert message_delete_bulk.channel_id == 92392929
         assert message_delete_bulk.guild_id == 92929292
@@ -3002,7 +3001,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, message_reaction_add_payload, member_payload, custom_emoji_payload
     ):
         message_reaction_add = entity_factory_impl.deserialize_message_reaction_add_event(message_reaction_add_payload)
-        assert message_reaction_add._app is mock_app
+        assert message_reaction_add.app is mock_app
         assert message_reaction_add.user_id == 202020
         assert message_reaction_add.channel_id == 23848774
         assert message_reaction_add.message_id == 484848
@@ -3034,7 +3033,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, reaction_remove_payload, custom_emoji_payload
     ):
         reaction_remove = entity_factory_impl.deserialize_message_reaction_remove_event(reaction_remove_payload)
-        assert reaction_remove._app is mock_app
+        assert reaction_remove.app is mock_app
         assert reaction_remove.user_id == 945939389393939393
         assert reaction_remove.channel_id == 92903893923
         assert reaction_remove.message_id == 222222222
@@ -3065,7 +3064,7 @@ class TestEntityFactoryImpl:
         message_reaction_remove_all = entity_factory_impl.deserialize_message_reaction_remove_all_event(
             message_reaction_remove_all_payload
         )
-        assert message_reaction_remove_all._app is mock_app
+        assert message_reaction_remove_all.app is mock_app
         assert message_reaction_remove_all.channel_id == 222293844884
         assert message_reaction_remove_all.message_id == 93493939
         assert message_reaction_remove_all.guild_id == 939393939390
@@ -3092,7 +3091,7 @@ class TestEntityFactoryImpl:
         message_reaction_remove_emoji = entity_factory_impl.deserialize_message_reaction_remove_emoji_event(
             message_reaction_remove_emoji_payload
         )
-        assert message_reaction_remove_emoji._app is mock_app
+        assert message_reaction_remove_emoji.app is mock_app
         assert message_reaction_remove_emoji.channel_id == 123123
         assert message_reaction_remove_emoji.guild_id == 495485494945
         assert message_reaction_remove_emoji.message_id == 93999328484

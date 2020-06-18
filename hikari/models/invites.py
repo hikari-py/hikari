@@ -26,17 +26,17 @@ import typing
 
 import attr
 
-from hikari.models import bases
 from hikari.models import guilds
 from hikari.utilities import cdn
 from hikari.utilities import files
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.api import rest
     from hikari.models import channels
     from hikari.models import users
-    from hikari.utilities import snowflake
 
 
 @enum.unique
@@ -49,8 +49,11 @@ class TargetUserType(int, enum.Enum):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class VanityURL(bases.Entity):
+class VanityURL:
     """A special case invite object, that represents a guild's vanity url."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
     """The code for this invite."""
@@ -156,8 +159,11 @@ class InviteGuild(guilds.PartialGuild):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class Invite(bases.Entity):
+class Invite:
     """Represents an invite that's used to add users to a guild or group dm."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
     """The code for this invite."""
