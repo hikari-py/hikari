@@ -768,6 +768,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     channels: typing.Optional[typing.Mapping[snowflake.Snowflake, channels_.GuildChannel]] = attr.ib(
         eq=False, hash=False, repr=False
     )
+
     """A mapping of ID to the corresponding guild channels in this guild.
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
@@ -787,6 +788,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     presences: typing.Optional[typing.Mapping[snowflake.Snowflake, presences.MemberPresence]] = attr.ib(
         eq=False, hash=False, repr=False
     )
+
     """A mapping of member ID to the corresponding presence information for
     the given member, if available.
 

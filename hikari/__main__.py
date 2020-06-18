@@ -16,27 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Provides a command-line entry point that shows the library version and then exits."""
-from __future__ import annotations
+from hikari import cli
 
-__all__: typing.Final[typing.List[str]] = []
 
-import inspect
-import os
-import platform
-import sys
-
-# noinspection PyUnresolvedReferences
-import typing
-
-from hikari import _about
-
-def main():
-    pass  # exists to keep setup.py happy for entrypoint 
-
-sourcefile = typing.cast(str, inspect.getsourcefile(_about))
-path: typing.Final[str] = os.path.abspath(os.path.dirname(sourcefile))
-version: typing.Final[str] = _about.__version__
-py_impl: typing.Final[str] = platform.python_implementation()
-py_ver: typing.Final[str] = platform.python_version()
-py_compiler: typing.Final[str] = platform.python_compiler()
-sys.stderr.write(f"hikari v{version} (installed in {path}) ({py_impl} {py_ver} {py_compiler})\n")
+cli.main()
