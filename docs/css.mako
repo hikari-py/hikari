@@ -30,6 +30,10 @@ h4 {
     margin-top: 2em;
 }
 
+.monospaced {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
 a.sidebar-nav-pill,
 a.sidebar-nav-pill:active,
 a.sidebar-nav-pill:hover {
