@@ -201,7 +201,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
             else:
                 # The user won't care where this gets raised from, unless we are
                 # debugging. It just causes a lot of confusing spam.
-                raise ex.with_traceback(None)
+                raise ex.with_traceback(None)  # noqa: R100 raise in except handler without fromflake8
         finally:
             self._map_signal_handlers(loop.remove_signal_handler)
             self.logger.info("client has shut down")
@@ -355,7 +355,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
             )
             shard_clients[shard_id] = shard
 
-        self._shards = shard_clients  # pylint: disable=attribute-defined-outside-init
+        self._shards = shard_clients
 
     def _max_concurrency_chunker(self) -> typing.Iterator[typing.Iterator[int]]:
         """Yield generators of shard IDs.

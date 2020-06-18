@@ -374,7 +374,7 @@ class GuildBuilder:
 
             When the guild is created, this will be replaced with a different
             ID.
-        """
+        """  # noqa: E501 - Line too long
         snowflake = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake)
@@ -438,7 +438,7 @@ class GuildBuilder:
 
             When the guild is created, this will be replaced with a different
             ID.
-        """
+        """  # noqa: E501 - Line too long
         snowflake = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake)
@@ -505,7 +505,7 @@ class GuildBuilder:
 
             When the guild is created, this will be replaced with a different
             ID.
-        """
+        """  # noqa: E501 - Line too long
         snowflake = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake)

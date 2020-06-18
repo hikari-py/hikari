@@ -43,7 +43,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_consumer as event_consumer_
-    from hikari.api import event_dispatcher
+    from hikari.api import event_dispatcher as event_dispatcher_
     from hikari.events import base as base_events
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
@@ -193,7 +193,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         )
 
     @property
-    def event_dispatcher(self) -> event_dispatcher.IEventDispatcherComponent:
+    def event_dispatcher(self) -> event_dispatcher_.IEventDispatcherComponent:
         return self._event_manager
 
     @property

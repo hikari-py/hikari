@@ -60,7 +60,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import colors
     from hikari.models import emojis as emojis_
     from hikari.models import permissions as permissions_
-    from hikari.models import presences
+    from hikari.models import presences as presences_
     from hikari.utilities import undefined
 
 
@@ -591,7 +591,7 @@ class GuildPreview(PartialGuild):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
+class Guild(PartialGuild):
     """A representation of a guild on Discord.
 
     !!! note
@@ -785,7 +785,7 @@ class Guild(PartialGuild):  # pylint:disable=too-many-instance-attributes
     appropriate API call to retrieve this information.
     """
 
-    presences: typing.Optional[typing.Mapping[snowflake.Snowflake, presences.MemberPresence]] = attr.ib(
+    presences: typing.Optional[typing.Mapping[snowflake.Snowflake, presences_.MemberPresence]] = attr.ib(
         eq=False, hash=False, repr=False
     )
 

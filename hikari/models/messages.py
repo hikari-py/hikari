@@ -336,7 +336,7 @@ class Message(snowflake.Unique):
         """
         return await self.app.rest.fetch_channel(self.channel_id)
 
-    async def edit(  # pylint:disable=line-too-long
+    async def edit(
         self,
         text: typing.Union[undefined.UndefinedType, str, None] = undefined.UNDEFINED,
         *,
@@ -398,7 +398,7 @@ class Message(snowflake.Unique):
         ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
-        """
+        """  # noqa: E501 - Line too long
         return await self.app.rest.edit_message(
             message=self.id,
             channel=self.channel_id,
@@ -409,7 +409,7 @@ class Message(snowflake.Unique):
             role_mentions=role_mentions,
         )
 
-    async def reply(  # pylint:disable=line-too-long
+    async def reply(
         self,
         text: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         *,
@@ -479,7 +479,7 @@ class Message(snowflake.Unique):
         ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
-        """
+        """  # noqa: E501 - Line too long
         return await self.app.rest.create_message(
             channel=self.channel_id,
             text=text,

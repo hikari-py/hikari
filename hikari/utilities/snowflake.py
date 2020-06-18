@@ -98,7 +98,7 @@ class Unique(abc.ABC):
     @property
     @abc.abstractmethod
     def id(self) -> Snowflake:
-        """The ID of this entity."""
+        """The ID of this entity."""  # noqa: D401 - Not imperative mood
 
     @id.setter
     def id(self, value: Snowflake) -> None:

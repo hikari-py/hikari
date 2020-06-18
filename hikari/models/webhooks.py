@@ -169,14 +169,13 @@ class Webhook(snowflake.Unique):
         ValueError
             If either `Webhook.token` is `None` or more than 100 unique
             objects/entities are passed for `role_mentions` or `user_mentions.
-        """
+        """  # noqa: E501 - Line too long
         if not self.token:
             raise ValueError("Cannot send a message using a webhook where we don't know it's token.")
 
         return await self.app.rest.execute_webhook(
             webhook=self.id,
             token=self.token,
-            text=text,
             username=username,
             avatar_url=avatar_url,
             tts=tts,
@@ -212,11 +211,7 @@ class Webhook(snowflake.Unique):
             raise ValueError("This webhook's token is unknown, so cannot be used.")
 
         token: typing.Union[undefined.UndefinedType, str]
-
-        if use_token:
-            token = typing.cast(str, self.token)
-        else:
-            token = undefined.UNDEFINED
+        token = typing.cast(str, self.token) if use_token else undefined.UNDEFINED
 
         await self.app.rest.delete_webhook(self.id, token=token)
 
@@ -272,16 +267,12 @@ class Webhook(snowflake.Unique):
             If you pass a token that's invalid for the target webhook.
         ValueError
             If `use_token` is passed as `True` when `Webhook.token` is `None`.
-        """
+        """  # noqa: E501 - Line too long
         if use_token and self.token is None:
             raise ValueError("This webhook's token is unknown, so cannot be used.")
 
         token: typing.Union[undefined.UndefinedType, str]
-
-        if use_token:
-            token = typing.cast(str, self.token)
-        else:
-            token = undefined.UNDEFINED
+        token = typing.cast(str, self.token) if use_token else undefined.UNDEFINED
 
         return await self.app.rest.edit_webhook(
             self.id, token=token, name=name, avatar=avatar, channel=channel, reason=reason,
@@ -341,11 +332,7 @@ class Webhook(snowflake.Unique):
             raise ValueError("This webhook's token is unknown, so cannot be used.")
 
         token: typing.Union[undefined.UndefinedType, str]
-
-        if use_token:
-            token = typing.cast(str, self.token)
-        else:
-            token = undefined.UNDEFINED
+        token = typing.cast(str, self.token) if use_token else undefined.UNDEFINED
 
         return await self.app.rest.fetch_webhook(self.id, token=token)
 

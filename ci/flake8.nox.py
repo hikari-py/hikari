@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import os
+import shutil
 
 from ci import config
 from ci import nox
@@ -27,7 +28,7 @@ def flake8(session: nox.Session) -> None:
     session.install("-r", "requirements.txt", "-r", "flake-requirements.txt")
 
     session.run(
-        "flake8", "--format=html", f"--htmldir={config.FLAKE8_HTML}", config.MAIN_PACKAGE, success_codes=range(0, 256),
+        "flake8", "--exit-zero", "--format=html", f"--htmldir={config.FLAKE8_HTML}", config.MAIN_PACKAGE,
     )
 
     if "GITLAB_CI" in os.environ or "--gitlab" in session.posargs:
@@ -38,6 +39,9 @@ def flake8(session: nox.Session) -> None:
         format_args = ["--format=junit-xml", f"--output-file={config.FLAKE8_JUNIT}"]
     else:
         format_args = [f"--output-file={config.FLAKE8_TXT}", "--statistics", "--show-source"]
+        # This is because flake8 just appends to the file, so you can end up with
+        # a huge file with the same errors if you run it a couple of times.
+        shutil.rmtree(config.FLAKE8_TXT, ignore_errors=True)
 
     session.run(
         "flake8", *format_args, config.MAIN_PACKAGE,
