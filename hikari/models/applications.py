@@ -35,15 +35,15 @@ import typing
 
 import attr
 
-from hikari.models import bases
 from hikari.models import guilds
 from hikari.utilities import cdn
 from hikari.utilities import files
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
+    from hikari.api import rest
     from hikari.models import permissions as permissions_
     from hikari.models import users
-    from hikari.utilities import snowflake
 
 
 @enum.unique
@@ -249,8 +249,11 @@ class TeamMembershipState(int, enum.Enum):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class TeamMember(bases.Entity):
+class TeamMember:
     """Represents a member of a Team."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     membership_state: TeamMembershipState = attr.ib(eq=False, hash=False, repr=False)
     """The state of this user's membership."""
@@ -270,8 +273,16 @@ class TeamMember(bases.Entity):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class Team(bases.Entity, bases.Unique):
+class Team(snowflake.Unique):
     """Represents a development team, along with all its members."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
 
     icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The CDN hash of this team's icon.
@@ -330,8 +341,16 @@ class Team(bases.Entity, bases.Unique):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class Application(bases.Entity, bases.Unique):
+class Application(snowflake.Unique):
     """Represents the information of an Oauth2 Application."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
     """The name of this application."""

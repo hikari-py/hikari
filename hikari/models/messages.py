@@ -35,20 +35,20 @@ import typing
 
 import attr
 
-from hikari.models import bases
 from hikari.utilities import files as files_
+from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.api import rest
     from hikari.models import applications
     from hikari.models import channels
     from hikari.models import embeds as embeds_
     from hikari.models import emojis as emojis_
     from hikari.models import guilds
     from hikari.models import users
-    from hikari.utilities import snowflake
 
 
 @enum.unique
@@ -142,13 +142,18 @@ class MessageActivityType(int, enum.Enum):
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class Attachment(bases.Unique, files_.WebResource):
+class Attachment(snowflake.Unique, files_.WebResource):
     """Represents a file attached to a message.
 
     You can use this object in the same way as a
     `hikari.models.files.BaseStream`, by passing it as an attached file when creating a
     message, etc.
     """
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
 
     url: str = attr.ib(repr=True)
     """The source URL of file."""
@@ -195,12 +200,15 @@ class MessageActivity:
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class MessageCrosspost(bases.Entity):
+class MessageCrosspost:
     """Represents information about a cross-posted message.
 
     This is a message that is sent in one channel/guild and may be
     "published" to another.
     """
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the message.
@@ -225,8 +233,16 @@ class MessageCrosspost(bases.Entity):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class Message(bases.Entity, bases.Unique):
+class Message(snowflake.Unique):
     """Represents a message."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
 
     channel_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the channel that the message was sent in."""
@@ -318,7 +334,7 @@ class Message(bases.Entity, bases.Unique):
         hikari.errors.NotFound
             If the channel this message was created in does not exist.
         """
-        return await self._app.rest.fetch_channel(self.channel_id)
+        return await self.app.rest.fetch_channel(self.channel_id)
 
     async def edit(  # pylint:disable=line-too-long
         self,
@@ -383,7 +399,7 @@ class Message(bases.Entity, bases.Unique):
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
         """
-        return await self._app.rest.edit_message(
+        return await self.app.rest.edit_message(
             message=self.id,
             channel=self.channel_id,
             text=text,
@@ -464,7 +480,7 @@ class Message(bases.Entity, bases.Unique):
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
         """
-        return await self._app.rest.create_message(
+        return await self.app.rest.create_message(
             channel=self.channel_id,
             text=text,
             nonce=nonce,
@@ -487,7 +503,7 @@ class Message(bases.Entity, bases.Unique):
         hikari.errors.Forbidden
             If you lack the permissions to delete the message.
         """
-        await self._app.rest.delete_message(self.channel_id, self.id)
+        await self.app.rest.delete_message(self.channel_id, self.id)
 
     async def add_reaction(self, emoji: typing.Union[str, emojis_.Emoji]) -> None:
         r"""Add a reaction to this message.
@@ -527,7 +543,7 @@ class Message(bases.Entity, bases.Unique):
             guild you are not part of if no one else has previously
             reacted with the same emoji.
         """
-        await self._app.rest.add_reaction(channel=self.channel_id, message=self.id, emoji=emoji)
+        await self.app.rest.add_reaction(channel=self.channel_id, message=self.id, emoji=emoji)
 
     async def remove_reaction(
         self,
@@ -576,9 +592,9 @@ class Message(bases.Entity, bases.Unique):
             found.
         """
         if user is undefined.UNDEFINED:
-            await self._app.rest.delete_my_reaction(channel=self.channel_id, message=self.id, emoji=emoji)
+            await self.app.rest.delete_my_reaction(channel=self.channel_id, message=self.id, emoji=emoji)
         else:
-            await self._app.rest.delete_reaction(channel=self.channel_id, message=self.id, emoji=emoji, user=user)
+            await self.app.rest.delete_reaction(channel=self.channel_id, message=self.id, emoji=emoji, user=user)
 
     async def remove_all_reactions(
         self, emoji: typing.Union[str, emojis_.Emoji, undefined.UndefinedType] = undefined.UNDEFINED
@@ -614,6 +630,6 @@ class Message(bases.Entity, bases.Unique):
             due to it being outside of the range of a 64 bit integer.
         """
         if emoji is undefined.UNDEFINED:
-            await self._app.rest.delete_all_reactions(channel=self.channel_id, message=self.id)
+            await self.app.rest.delete_all_reactions(channel=self.channel_id, message=self.id)
         else:
-            await self._app.rest.delete_all_reactions_for_emoji(channel=self.channel_id, message=self.id, emoji=emoji)
+            await self.app.rest.delete_all_reactions_for_emoji(channel=self.channel_id, message=self.id, emoji=emoji)

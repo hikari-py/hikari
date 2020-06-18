@@ -26,10 +26,13 @@ import typing
 
 import attr
 
-from hikari.models import bases
 from hikari.utilities import cdn
 from hikari.utilities import files
+from hikari.utilities import snowflake
 from hikari.utilities import undefined
+
+if typing.TYPE_CHECKING:
+    from hikari.api import rest
 
 
 @enum.unique
@@ -96,12 +99,20 @@ class PremiumType(int, enum.Enum):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class PartialUser(bases.Entity, bases.Unique):
+class PartialUser(snowflake.Unique):
     """Represents partial information about a user.
 
     This is pretty much the same as a normal user, but information may not be
     present.
     """
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     discriminator: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)
     """This user's discriminator."""
@@ -161,7 +172,7 @@ class User(PartialUser):
         hikari.errors.NotFound
             If the user is not found.
         """
-        return await self._app.rest.fetch_user(user=self.id)
+        return await self.app.rest.fetch_user(user=self.id)
 
     @property
     def avatar(self) -> typing.Optional[files.URL]:
@@ -263,4 +274,4 @@ class OwnUser(User):
         hikari.models.users.User
             The requested user object.
         """
-        return await self._app.rest.fetch_my_user()
+        return await self.app.rest.fetch_my_user()
