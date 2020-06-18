@@ -47,7 +47,7 @@ except NameError:
     RequestContextManager = typing.Any  # type: ignore
 
 
-class HTTPClient(abc.ABC):  # pylint:disable=too-many-instance-attributes
+class HTTPClient(abc.ABC):
     """An HTTP client base for Hikari.
 
     The purpose of this is to provide a consistent interface for any network

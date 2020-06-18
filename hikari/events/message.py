@@ -107,7 +107,7 @@ class UpdatedMessageFields(snowflake.Unique):
     edited_timestamp: typing.Union[datetime.datetime, undefined.UndefinedType, None] = attr.ib(repr=False)
     """The timestamp that the message was last edited at.
 
-    Will be `None` if the message wasn't ever edited, or `undefined` if the 
+    Will be `None` if the message wasn't ever edited, or `undefined` if the
     info is not available.
     """
 

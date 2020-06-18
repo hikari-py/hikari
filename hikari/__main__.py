@@ -18,5 +18,4 @@
 """Provides a command-line entry point that shows the library version and then exits."""
 from hikari import cli
 
-
 cli.main()
