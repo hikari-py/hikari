@@ -122,18 +122,15 @@ class Route:
     """The optional major parameter name."""
 
     # noinspection RegExpRedundantEscape
-    _MAJOR_PARAM_REGEX: typing.Final[typing.ClassVar[typing.Pattern[str]]] = re.compile(r"\{(.*?)\}")  # noqa: FS003
+    _MAJOR_PARAM_REGEX: typing.Final[typing.ClassVar[typing.Pattern[str]]] = re.compile(r"\{(.*?)\}")
 
     def __init__(self, method: str, path_template: str) -> None:
         self.method = method
         self.path_template = path_template
 
-        major_param: typing.Optional[str]
-        if match := self._MAJOR_PARAM_REGEX.search(path_template):
-            major_param = match.group(1)
-        else:
-            major_param = None
-        self.major_param = major_param
+        self.major_param: typing.Optional[str]
+        match = self._MAJOR_PARAM_REGEX.search(path_template)
+        self.major_param = match.group(1) if match else None
 
     def compile(self, **kwargs: typing.Any) -> CompiledRoute:
         """Generate a formatted `CompiledRoute` for this route.

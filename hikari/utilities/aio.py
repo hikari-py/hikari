@@ -53,13 +53,13 @@ def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future
 # On Python3.8.2, there appears to be a bug with the typing module:
 
 # >>> class Aiterable:
-# ...     async def __aiter__(self):
+# ...     async def __aiter__(self):  # noqa: E800
 # ...         yield ...
 # >>> isinstance(Aiterable(), typing.AsyncIterable)
 # True
 
 # >>> class Aiterator:
-# ...     async def __anext__(self):
+# ...     async def __anext__(self):  # noqa: E800
 # ...         return ...
 # >>> isinstance(Aiterator(), typing.AsyncIterator)
 # False

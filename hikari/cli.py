@@ -31,6 +31,7 @@ from hikari import _about
 
 
 def main() -> None:
+    """Print package info and exit."""
     # noinspection PyTypeChecker
     sourcefile = typing.cast(str, inspect.getsourcefile(_about))
     path: typing.Final[str] = os.path.abspath(os.path.dirname(sourcefile))
