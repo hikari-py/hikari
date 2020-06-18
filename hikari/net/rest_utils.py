@@ -40,7 +40,6 @@ if typing.TYPE_CHECKING:
     import types
 
     from hikari.api import rest
-    from hikari.models import bases
     from hikari.models import channels
     from hikari.models import colors
     from hikari.models import guilds
@@ -61,7 +60,7 @@ class TypingIndicator:
 
     def __init__(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake_.UniqueObject],
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],

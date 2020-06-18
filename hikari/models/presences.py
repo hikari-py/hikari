@@ -38,14 +38,14 @@ import typing
 
 import attr
 
-from hikari.models import bases
 from hikari.models import users
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.api import rest
     from hikari.models import emojis as emojis_
-    from hikari.utilities import snowflake
 
 
 @enum.unique
@@ -265,8 +265,11 @@ class ClientStatus:
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class MemberPresence(bases.Entity):
+class MemberPresence:
     """Used to represent a guild member's presence."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     user: users.PartialUser = attr.ib(eq=True, hash=True, repr=True)
     """The object of the user who this presence is for.

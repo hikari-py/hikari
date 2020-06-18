@@ -39,7 +39,7 @@ from hikari.models import embeds as embed_models
 from hikari.models import emojis as emoji_models
 from hikari.models import gateway as gateway_models
 from hikari.models import guilds as guild_models
-from hikari.models import invites as invite_model
+from hikari.models import invites as invite_models
 from hikari.models import messages as message_models
 from hikari.models import permissions as permission_models
 from hikari.models import presences as presence_models
@@ -81,12 +81,12 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     if typing.TYPE_CHECKING:
         DMChannelT = typing.TypeVar("DMChannelT", bound=channel_models.DMChannel)
         GuildChannelT = typing.TypeVar("GuildChannelT", bound=channel_models.GuildChannel)
-        InviteT = typing.TypeVar("InviteT", bound=invite_model.Invite)
+        InviteT = typing.TypeVar("InviteT", bound=invite_models.Invite)
         PartialChannelT = typing.TypeVar("PartialChannelT", bound=channel_models.PartialChannel)
         PartialGuildT = typing.TypeVar("PartialGuildT", bound=guild_models.PartialGuild)
         PartialGuildIntegrationT = typing.TypeVar("PartialGuildIntegrationT", bound=guild_models.PartialIntegration)
         UserT = typing.TypeVar("UserT", bound=user_models.User)
-        ReactionEventT = typing.TypeVar("ReactionEventT", bound=message_events.BaseMessageReactionEvent)
+        ReactionEventT = typing.TypeVar("ReactionEventT", bound=message_events.MessageReactionEvent)
         GuildBanEventT = typing.TypeVar("GuildBanEventT", bound=guild_events.GuildBanEvent)
 
     def __init__(self, app: rest.IRESTApp) -> None:
@@ -175,14 +175,17 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return own_connection
 
     def deserialize_own_guild(self, payload: data_binding.JSONObject) -> application_models.OwnGuild:
-        own_guild = self._set_partial_guild_attributes(payload, application_models.OwnGuild(self._app))
+        own_guild = application_models.OwnGuild()
+        own_guild.app = self._app
+        self._set_partial_guild_attributes(payload, own_guild)
         own_guild.is_owner = bool(payload["owner"])
         # noinspection PyArgumentList
         own_guild.my_permissions = permission_models.Permission(payload["permissions"])
         return own_guild
 
     def deserialize_application(self, payload: data_binding.JSONObject) -> application_models.Application:
-        application = application_models.Application(self._app)
+        application = application_models.Application()
+        application.app = self._app
         application.id = snowflake.Snowflake(payload["id"])
         application.name = payload["name"]
         application.description = payload["description"]
@@ -195,13 +198,15 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         application.icon_hash = payload.get("icon")
 
         if (team_payload := payload.get("team")) is not None:
-            team = application_models.Team(self._app)
+            team = application_models.Team()
+            team.app = self._app
             team.id = snowflake.Snowflake(team_payload["id"])
             team.icon_hash = team_payload["icon"]
 
             members = {}
             for member_payload in team_payload["members"]:
-                team_member = application_models.TeamMember(self._app)
+                team_member = application_models.TeamMember()
+                team_member.app = self.app
                 # noinspection PyArgumentList
                 team_member.membership_state = application_models.TeamMembershipState(
                     member_payload["membership_state"]
@@ -234,7 +239,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ) -> typing.Mapping[snowflake.Snowflake, guild_models.PartialRole]:
         roles = {}
         for role_payload in payload:
-            role = guild_models.PartialRole(self._app)
+            role = guild_models.PartialRole()
+            role.app = self._app
             role.id = snowflake.Snowflake(role_payload["id"])
             role.name = role_payload["name"]
             roles[role.id] = role
@@ -316,7 +322,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         entries = {}
         for entry_payload in payload["audit_log_entries"]:
-            entry = audit_log_models.AuditLogEntry(self._app)
+            entry = audit_log_models.AuditLogEntry()
+            entry.app = self._app
             entry.id = snowflake.Snowflake(entry_payload["id"])
 
             if (target_id := entry_payload["target_id"]) is not None:
@@ -395,33 +402,43 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return {"id": str(overwrite.id), "type": overwrite.type, "allow": overwrite.allow, "deny": overwrite.deny}
 
     @staticmethod
-    def _set_partial_channel_attributes(payload: data_binding.JSONObject, channel: PartialChannelT) -> PartialChannelT:
+    def _set_partial_channel_attributes(
+        payload: data_binding.JSONObject, channel: channel_models.PartialChannel
+    ) -> None:
         channel.id = snowflake.Snowflake(payload["id"])
         channel.name = payload.get("name")
         # noinspection PyArgumentList
         channel.type = channel_models.ChannelType(payload["type"])
-        return channel
 
     def deserialize_partial_channel(self, payload: data_binding.JSONObject) -> channel_models.PartialChannel:
-        return self._set_partial_channel_attributes(payload, channel_models.PartialChannel(self._app))
+        partial_channel = channel_models.PartialChannel()
+        partial_channel.app = self._app
+        self._set_partial_channel_attributes(payload, partial_channel)
+        return partial_channel
 
-    def _set_dm_channel_attributes(self, payload: data_binding.JSONObject, channel: DMChannelT) -> DMChannelT:
-        channel = self._set_partial_channel_attributes(payload, channel)
+    def _set_dm_channel_attributes(
+        self, payload: data_binding.JSONObject, dm_channel: channel_models.DMChannel
+    ) -> None:
+        self._set_partial_channel_attributes(payload, dm_channel)
 
         if (last_message_id := payload["last_message_id"]) is not None:
             last_message_id = snowflake.Snowflake(last_message_id)
 
-        channel.last_message_id = last_message_id
-        channel.recipients = {
+        dm_channel.last_message_id = last_message_id
+        dm_channel.recipients = {
             snowflake.Snowflake(user["id"]): self.deserialize_user(user) for user in payload["recipients"]
         }
-        return channel
 
     def deserialize_dm_channel(self, payload: data_binding.JSONObject) -> channel_models.DMChannel:
-        return self._set_dm_channel_attributes(payload, channel_models.DMChannel(self._app))
+        dm_channel = channel_models.DMChannel()
+        dm_channel.app = self._app
+        self._set_dm_channel_attributes(payload, dm_channel)
+        return dm_channel
 
     def deserialize_group_dm_channel(self, payload: data_binding.JSONObject) -> channel_models.GroupDMChannel:
-        group_dm_channel = self._set_dm_channel_attributes(payload, channel_models.GroupDMChannel(self._app))
+        group_dm_channel = channel_models.GroupDMChannel()
+        group_dm_channel.app = self._app
+        self._set_dm_channel_attributes(payload, group_dm_channel)
         group_dm_channel.owner_id = snowflake.Snowflake(payload["owner_id"])
         group_dm_channel.icon_hash = payload["icon"]
         group_dm_channel.nicknames = {
@@ -432,29 +449,34 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         )
         return group_dm_channel
 
-    def _set_guild_channel_attributes(self, payload: data_binding.JSONObject, channel: GuildChannelT) -> GuildChannelT:
-        channel = self._set_partial_channel_attributes(payload, channel)
-        channel.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
-        channel.position = int(payload["position"])
-        channel.permission_overwrites = {
+    def _set_guild_channel_attributes(
+        self, payload: data_binding.JSONObject, guild_channel: channel_models.GuildChannel
+    ) -> None:
+        self._set_partial_channel_attributes(payload, guild_channel)
+        guild_channel.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
+        guild_channel.position = int(payload["position"])
+        guild_channel.permission_overwrites = {
             snowflake.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
             for overwrite in payload["permission_overwrites"]
         }  # TODO: while snowflakes are guaranteed to be unique within their own resource, there is no guarantee for
         # across between resources (user and role in this case); while in practice we won't get overlap there is a
         # chance that this may happen in the future, would it be more sensible to use a Sequence here?
-        channel.is_nsfw = payload.get("nsfw")
+        guild_channel.is_nsfw = payload.get("nsfw")
 
         if (parent_id := payload.get("parent_id")) is not None:
             parent_id = snowflake.Snowflake(parent_id)
-        channel.parent_id = parent_id
-
-        return channel
+        guild_channel.parent_id = parent_id
 
     def deserialize_guild_category(self, payload: data_binding.JSONObject) -> channel_models.GuildCategory:
-        return self._set_guild_channel_attributes(payload, channel_models.GuildCategory(self._app))
+        category = channel_models.GuildCategory()
+        category.app = self._app
+        self._set_guild_channel_attributes(payload, category)
+        return category
 
     def deserialize_guild_text_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildTextChannel:
-        guild_text_category = self._set_guild_channel_attributes(payload, channel_models.GuildTextChannel(self._app))
+        guild_text_category = channel_models.GuildTextChannel()
+        guild_text_category.app = self._app
+        self._set_guild_channel_attributes(payload, guild_text_category)
         guild_text_category.topic = payload["topic"]
 
         if (last_message_id := payload["last_message_id"]) is not None:
@@ -470,7 +492,9 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return guild_text_category
 
     def deserialize_guild_news_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildNewsChannel:
-        guild_news_channel = self._set_guild_channel_attributes(payload, channel_models.GuildNewsChannel(self._app))
+        guild_news_channel = channel_models.GuildNewsChannel()
+        guild_news_channel.app = self._app
+        self._set_guild_channel_attributes(payload, guild_news_channel)
         guild_news_channel.topic = payload["topic"]
 
         if (last_message_id := payload["last_message_id"]) is not None:
@@ -484,10 +508,15 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return guild_news_channel
 
     def deserialize_guild_store_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildStoreChannel:
-        return self._set_guild_channel_attributes(payload, channel_models.GuildStoreChannel(self._app))
+        guild_store_channel = channel_models.GuildStoreChannel()
+        guild_store_channel.app = self._app
+        self._set_guild_channel_attributes(payload, guild_store_channel)
+        return guild_store_channel
 
     def deserialize_guild_voice_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildVoiceChannel:
-        guild_voice_channel = self._set_guild_channel_attributes(payload, channel_models.GuildVoiceChannel(self._app))
+        guild_voice_channel = channel_models.GuildVoiceChannel()
+        guild_voice_channel.app = self._app
+        self._set_guild_channel_attributes(payload, guild_voice_channel)
         guild_voice_channel.bitrate = int(payload["bitrate"])
         guild_voice_channel.user_limit = int(payload["user_limit"])
         return guild_voice_channel
@@ -678,14 +707,16 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return unicode_emoji
 
     def deserialize_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.CustomEmoji:
-        custom_emoji = emoji_models.CustomEmoji(self._app)
+        custom_emoji = emoji_models.CustomEmoji()
+        custom_emoji.app = self._app
         custom_emoji.id = snowflake.Snowflake(payload["id"])
         custom_emoji.name = payload["name"]
         custom_emoji.is_animated = payload.get("animated", False)
         return custom_emoji
 
     def deserialize_known_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.KnownCustomEmoji:
-        known_custom_emoji = emoji_models.KnownCustomEmoji(self._app)
+        known_custom_emoji = emoji_models.KnownCustomEmoji()
+        known_custom_emoji.app = self._app
         known_custom_emoji.id = snowflake.Snowflake(payload["id"])
         known_custom_emoji.name = payload["name"]
         known_custom_emoji.is_animated = payload.get("animated", False)
@@ -732,14 +763,15 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ################
 
     def deserialize_guild_widget(self, payload: data_binding.JSONObject) -> guild_models.GuildWidget:
-        guild_embed = guild_models.GuildWidget(self._app)
+        guild_widget = guild_models.GuildWidget()
+        guild_widget.app = self._app
 
         if (channel_id := payload["channel_id"]) is not None:
             channel_id = snowflake.Snowflake(channel_id)
-        guild_embed.channel_id = channel_id
+        guild_widget.channel_id = channel_id
 
-        guild_embed.is_enabled = payload["enabled"]
-        return guild_embed
+        guild_widget.is_enabled = payload["enabled"]
+        return guild_widget
 
     def deserialize_member(
         self,
@@ -747,7 +779,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         *,
         user: typing.Union[undefined.UndefinedType, user_models.User] = undefined.UNDEFINED,
     ) -> guild_models.Member:
-        guild_member = guild_models.Member(self._app)
+        guild_member = guild_models.Member()
+        guild_member.app = self._app
         guild_member.user = user or self.deserialize_user(payload["user"])
         guild_member.role_ids = {snowflake.Snowflake(role_id) for role_id in payload["roles"]}
 
@@ -769,7 +802,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return guild_member
 
     def deserialize_role(self, payload: data_binding.JSONObject) -> guild_models.Role:
-        guild_role = guild_models.Role(self._app)
+        guild_role = guild_models.Role()
+        guild_role.app = self._app
         guild_role.id = snowflake.Snowflake(payload["id"])
         guild_role.name = payload["name"]
         guild_role.color = color_models.Color(payload["color"])
@@ -783,8 +817,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
     @staticmethod
     def _set_partial_integration_attributes(
-        payload: data_binding.JSONObject, integration: PartialGuildIntegrationT
-    ) -> PartialGuildIntegrationT:
+        payload: data_binding.JSONObject, integration: guild_models.PartialIntegration
+    ) -> None:
         integration.id = snowflake.Snowflake(payload["id"])
         integration.name = payload["name"]
         integration.type = payload["type"]
@@ -793,13 +827,15 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         account.id = account_payload["id"]
         account.name = account_payload["name"]
         integration.account = account
-        return integration
 
     def deserialize_partial_integration(self, payload: data_binding.JSONObject) -> guild_models.PartialIntegration:
-        return self._set_partial_integration_attributes(payload, guild_models.PartialIntegration())
+        partial_integration = guild_models.PartialIntegration()
+        self._set_partial_integration_attributes(payload, partial_integration)
+        return partial_integration
 
     def deserialize_integration(self, payload: data_binding.JSONObject) -> guild_models.Integration:
-        guild_integration = self._set_partial_integration_attributes(payload, guild_models.Integration())
+        guild_integration = guild_models.Integration()
+        self._set_partial_integration_attributes(payload, guild_integration)
         guild_integration.is_enabled = payload["enabled"]
         guild_integration.is_syncing = payload["syncing"]
 
@@ -826,12 +862,12 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return guild_member_ban
 
     def deserialize_unavailable_guild(self, payload: data_binding.JSONObject) -> guild_models.UnavailableGuild:
-        unavailable_guild = guild_models.UnavailableGuild(self._app)
+        unavailable_guild = guild_models.UnavailableGuild()
         unavailable_guild.id = snowflake.Snowflake(payload["id"])
         return unavailable_guild
 
     @staticmethod
-    def _set_partial_guild_attributes(payload: data_binding.JSONObject, guild: PartialGuildT) -> PartialGuildT:
+    def _set_partial_guild_attributes(payload: data_binding.JSONObject, guild: guild_models.PartialGuild) -> None:
         guild.id = snowflake.Snowflake(payload["id"])
         guild.name = payload["name"]
         guild.icon_hash = payload["icon"]
@@ -845,10 +881,10 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
                 features.append(feature)
         guild.features = set(features)
 
-        return guild
-
     def deserialize_guild_preview(self, payload: data_binding.JSONObject) -> guild_models.GuildPreview:
-        guild_preview = self._set_partial_guild_attributes(payload, guild_models.GuildPreview(self._app))
+        guild_preview = guild_models.GuildPreview()
+        guild_preview.app = self._app
+        self._set_partial_guild_attributes(payload, guild_preview)
         guild_preview.splash_hash = payload["splash"]
         guild_preview.discovery_splash_hash = payload["discovery_splash"]
         guild_preview.emojis = {
@@ -860,13 +896,16 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return guild_preview
 
     def deserialize_guild(self, payload: data_binding.JSONObject) -> guild_models.Guild:
-        guild = self._set_partial_guild_attributes(payload, guild_models.Guild(self._app))
+        guild = guild_models.Guild()
+        self._set_partial_guild_attributes(payload, guild)
+        guild.app = self._app
         guild.splash_hash = payload["splash"]
         guild.discovery_splash_hash = payload["discovery_splash"]
         guild.owner_id = snowflake.Snowflake(payload["owner_id"])
         # noinspection PyArgumentList
 
         if (perms := payload.get("permissions")) is not None:
+            # noinspection PyArgumentList
             guild.my_permissions = permission_models.Permission(perms)
         else:
             guild.my_permissions = None
@@ -967,6 +1006,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild.vanity_url_code = payload["vanity_url_code"]
         guild.description = payload["description"]
         guild.banner_hash = payload["banner"]
+        # noinspection PyArgumentList
         guild.premium_tier = guild_models.GuildPremiumTier(payload["premium_tier"])
 
         if (premium_subscription_count := payload.get("premium_subscription_count")) is not None:
@@ -991,17 +1031,20 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     # INVITE MODELS #
     #################
 
-    def deserialize_vanity_url(self, payload: data_binding.JSONObject) -> invite_model.VanityURL:
-        vanity_url = invite_model.VanityURL(self._app)
+    def deserialize_vanity_url(self, payload: data_binding.JSONObject) -> invite_models.VanityURL:
+        vanity_url = invite_models.VanityURL()
+        vanity_url.app = self._app
         vanity_url.code = payload["code"]
         vanity_url.uses = int(payload["uses"])
         return vanity_url
 
-    def _set_invite_attributes(self, payload: data_binding.JSONObject, invite: InviteT) -> InviteT:
+    def _set_invite_attributes(self, payload: data_binding.JSONObject, invite: invite_models.Invite) -> None:
         invite.code = payload["code"]
 
         if (guild_payload := payload.get("guild", ...)) is not ...:
-            guild = self._set_partial_guild_attributes(guild_payload, invite_model.InviteGuild(self._app))
+            guild = invite_models.InviteGuild()
+            guild.app = self._app
+            self._set_partial_guild_attributes(guild_payload, guild)
             guild.splash_hash = guild_payload["splash"]
             guild.banner_hash = guild_payload["banner"]
             guild.description = guild_payload["description"]
@@ -1028,7 +1071,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         invite.target_user = self.deserialize_user(payload["target_user"]) if "target_user" in payload else None
         # noinspection PyArgumentList
         invite.target_user_type = (
-            invite_model.TargetUserType(payload["target_user_type"]) if "target_user_type" in payload else None
+            invite_models.TargetUserType(payload["target_user_type"]) if "target_user_type" in payload else None
         )
         invite.approximate_presence_count = (
             int(payload["approximate_presence_count"]) if "approximate_presence_count" in payload else None
@@ -1036,13 +1079,17 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         invite.approximate_member_count = (
             int(payload["approximate_member_count"]) if "approximate_member_count" in payload else None
         )
+
+    def deserialize_invite(self, payload: data_binding.JSONObject) -> invite_models.Invite:
+        invite = invite_models.Invite()
+        invite.app = self._app
+        self._set_invite_attributes(payload, invite)
         return invite
 
-    def deserialize_invite(self, payload: data_binding.JSONObject) -> invite_model.Invite:
-        return self._set_invite_attributes(payload, invite_model.Invite(self._app))
-
-    def deserialize_invite_with_metadata(self, payload: data_binding.JSONObject) -> invite_model.InviteWithMetadata:
-        invite_with_metadata = self._set_invite_attributes(payload, invite_model.InviteWithMetadata(self._app))
+    def deserialize_invite_with_metadata(self, payload: data_binding.JSONObject) -> invite_models.InviteWithMetadata:
+        invite_with_metadata = invite_models.InviteWithMetadata()
+        invite_with_metadata.app = self._app
+        self._set_invite_attributes(payload, invite_with_metadata)
         invite_with_metadata.uses = int(payload["uses"])
         invite_with_metadata.max_uses = int(payload["max_uses"])
         max_age = payload["max_age"]
@@ -1056,7 +1103,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ##################
 
     def deserialize_message(self, payload: data_binding.JSONObject) -> message_models.Message:
-        message = message_models.Message(self._app)
+        message = message_models.Message()
+        message.app = self._app
         message.id = snowflake.Snowflake(payload["id"])
         message.channel_id = snowflake.Snowflake(payload["channel_id"])
         message.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
@@ -1120,7 +1168,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         message.application = self.deserialize_application(payload["application"]) if "application" in payload else None
 
         if (crosspost_payload := payload.get("message_reference", ...)) is not ...:
-            crosspost = message_models.MessageCrosspost(self._app)
+            crosspost = message_models.MessageCrosspost()
+            crosspost.app = self._app
             crosspost.id = (
                 snowflake.Snowflake(crosspost_payload["message_id"]) if "message_id" in crosspost_payload else None
             )
@@ -1142,9 +1191,11 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ###################
 
     def deserialize_member_presence(self, payload: data_binding.JSONObject) -> presence_models.MemberPresence:
-        guild_member_presence = presence_models.MemberPresence(self._app)
+        guild_member_presence = presence_models.MemberPresence()
+        guild_member_presence.app = self._app
         user_payload = payload["user"]
-        user = user_models.PartialUser(self._app)
+        user = user_models.PartialUser()
+        user.app = self._app
         user.id = snowflake.Snowflake(user_payload["id"])
         user.discriminator = user_payload["discriminator"] if "discriminator" in user_payload else undefined.UNDEFINED
         user.username = user_payload["username"] if "username" in user_payload else undefined.UNDEFINED
@@ -1280,17 +1331,18 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ###############
 
     @staticmethod
-    def _set_user_attributes(payload: data_binding.JSONObject, user: UserT) -> UserT:
+    def _set_user_attributes(payload: data_binding.JSONObject, user: user_models.User) -> None:
         user.id = snowflake.Snowflake(payload["id"])
         user.discriminator = payload["discriminator"]
         user.username = payload["username"]
         user.avatar_hash = payload["avatar"]
         user.is_bot = payload.get("bot", False)
         user.is_system = payload.get("system", False)
-        return user
 
     def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.User:
-        user = self._set_user_attributes(payload, user_models.User(self._app))
+        user = user_models.User()
+        user.app = self._app
+        self._set_user_attributes(payload, user)
         # noinspection PyArgumentList
         user.flags = (
             user_models.UserFlag(payload["public_flags"]) if "public_flags" in payload else user_models.UserFlag.NONE
@@ -1298,7 +1350,9 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return user
 
     def deserialize_my_user(self, payload: data_binding.JSONObject) -> user_models.OwnUser:
-        my_user = self._set_user_attributes(payload, user_models.OwnUser(self._app))
+        my_user = user_models.OwnUser()
+        my_user.app = self._app
+        self._set_user_attributes(payload, my_user)
         my_user.is_mfa_enabled = payload["mfa_enabled"]
         my_user.locale = payload.get("locale")
         my_user.is_verified = payload.get("verified")
@@ -1314,7 +1368,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ################
 
     def deserialize_voice_state(self, payload: data_binding.JSONObject) -> voice_models.VoiceState:
-        voice_state = voice_models.VoiceState(self._app)
+        voice_state = voice_models.VoiceState()
+        voice_state.app = self._app
         voice_state.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
 
         if (channel_id := payload["channel_id"]) is not None:
@@ -1348,7 +1403,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ##################
 
     def deserialize_webhook(self, payload: data_binding.JSONObject) -> webhook_models.Webhook:
-        webhook = webhook_models.Webhook(self._app)
+        webhook = webhook_models.Webhook()
+        webhook.app = self._app
         webhook.id = snowflake.Snowflake(payload["id"])
         # noinspection PyArgumentList
         webhook.type = webhook_models.WebhookType(payload["type"])
@@ -1382,7 +1438,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def deserialize_channel_pins_update_event(
         self, payload: data_binding.JSONObject
     ) -> channel_events.ChannelPinsUpdateEvent:
-        channel_pins_update = channel_events.ChannelPinsUpdateEvent(self._app)
+        channel_pins_update = channel_events.ChannelPinsUpdateEvent()
+        channel_pins_update.app = self._app
         channel_pins_update.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         channel_pins_update.channel_id = snowflake.Snowflake(payload["channel_id"])
 
@@ -1394,13 +1451,15 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return channel_pins_update
 
     def deserialize_webhook_update_event(self, payload: data_binding.JSONObject) -> channel_events.WebhookUpdateEvent:
-        webhook_update = channel_events.WebhookUpdateEvent(self._app)
+        webhook_update = channel_events.WebhookUpdateEvent()
+        webhook_update.app = self._app
         webhook_update.guild_id = snowflake.Snowflake(payload["guild_id"])
         webhook_update.channel_id = snowflake.Snowflake(payload["channel_id"])
         return webhook_update
 
     def deserialize_typing_start_event(self, payload: data_binding.JSONObject) -> channel_events.TypingStartEvent:
-        typing_start = channel_events.TypingStartEvent(self._app)
+        typing_start = channel_events.TypingStartEvent()
+        typing_start.app = self._app
         typing_start.channel_id = snowflake.Snowflake(payload["channel_id"])
         typing_start.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         typing_start.user_id = snowflake.Snowflake(payload["user_id"])
@@ -1416,7 +1475,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return invite_create
 
     def deserialize_invite_delete_event(self, payload: data_binding.JSONObject) -> channel_events.InviteDeleteEvent:
-        invite_delete = channel_events.InviteDeleteEvent(self._app)
+        invite_delete = channel_events.InviteDeleteEvent()
+        invite_delete.app = self._app
         invite_delete.code = payload["code"]
         invite_delete.channel_id = snowflake.Snowflake(payload["channel_id"])
         invite_delete.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
@@ -1444,27 +1504,34 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def deserialize_guild_unavailable_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildUnavailableEvent:
-        guild_unavailable = guild_events.GuildUnavailableEvent(self._app)
+        guild_unavailable = guild_events.GuildUnavailableEvent()
+        guild_unavailable.app = self._app
         guild_unavailable.id = snowflake.Snowflake(payload["id"])
         return guild_unavailable
 
     def _set_base_guild_ban_event_fields(
-        self, payload: data_binding.JSONObject, guild_ban: GuildBanEventT
-    ) -> GuildBanEventT:
+        self, payload: data_binding.JSONObject, guild_ban: guild_events.GuildBanEvent
+    ) -> None:
         guild_ban.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_ban.user = self.deserialize_user(payload["user"])
-        return guild_ban
 
     def deserialize_guild_ban_add_event(self, payload: data_binding.JSONObject) -> guild_events.GuildBanAddEvent:
-        return self._set_base_guild_ban_event_fields(payload, guild_events.GuildBanAddEvent(self._app))
+        guild_ban_add_event = guild_events.GuildBanAddEvent()
+        guild_ban_add_event.app = self._app
+        self._set_base_guild_ban_event_fields(payload, guild_ban_add_event)
+        return guild_ban_add_event
 
     def deserialize_guild_ban_remove_event(self, payload: data_binding.JSONObject) -> guild_events.GuildBanRemoveEvent:
-        return self._set_base_guild_ban_event_fields(payload, guild_events.GuildBanRemoveEvent(self._app))
+        guild_ban_remove_event = guild_events.GuildBanRemoveEvent()
+        guild_ban_remove_event.app = self._app
+        self._set_base_guild_ban_event_fields(payload, guild_ban_remove_event)
+        return guild_ban_remove_event
 
     def deserialize_guild_emojis_update_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildEmojisUpdateEvent:
-        guild_emojis_update = guild_events.GuildEmojisUpdateEvent(self._app)
+        guild_emojis_update = guild_events.GuildEmojisUpdateEvent()
+        guild_emojis_update.app = self._app
         guild_emojis_update.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_emojis_update.emojis = {
             snowflake.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji) for emoji in payload["emojis"]
@@ -1474,12 +1541,14 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def deserialize_guild_integrations_update_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildIntegrationsUpdateEvent:
-        guild_integrations_update = guild_events.GuildIntegrationsUpdateEvent(self._app)
+        guild_integrations_update = guild_events.GuildIntegrationsUpdateEvent()
+        guild_integrations_update.app = self._app
         guild_integrations_update.guild_id = snowflake.Snowflake(payload["guild_id"])
         return guild_integrations_update
 
     def deserialize_guild_member_add_event(self, payload: data_binding.JSONObject) -> guild_events.GuildMemberAddEvent:
-        guild_member_add = guild_events.GuildMemberAddEvent(self._app)
+        guild_member_add = guild_events.GuildMemberAddEvent()
+        guild_member_add.app = self._app
         guild_member_add.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_member_add.member = self.deserialize_member(payload)
         return guild_member_add
@@ -1494,7 +1563,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def deserialize_guild_member_remove_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildMemberRemoveEvent:
-        guild_member_remove = guild_events.GuildMemberRemoveEvent(self._app)
+        guild_member_remove = guild_events.GuildMemberRemoveEvent()
+        guild_member_remove.app = self._app
         guild_member_remove.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_member_remove.user = self.deserialize_user(payload["user"])
         return guild_member_remove
@@ -1502,7 +1572,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def deserialize_guild_role_create_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildRoleCreateEvent:
-        guild_role_create = guild_events.GuildRoleCreateEvent(self._app)
+        guild_role_create = guild_events.GuildRoleCreateEvent()
+        guild_role_create.app = self._app
         guild_role_create.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_role_create.role = self.deserialize_role(payload["role"])
         return guild_role_create
@@ -1510,7 +1581,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def deserialize_guild_role_update_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildRoleUpdateEvent:
-        guild_role_update = guild_events.GuildRoleUpdateEvent(self._app)
+        guild_role_update = guild_events.GuildRoleUpdateEvent()
+        guild_role_update.app = self._app
         guild_role_update.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_role_update.role = self.deserialize_role(payload["role"])
         return guild_role_update
@@ -1518,7 +1590,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def deserialize_guild_role_delete_event(
         self, payload: data_binding.JSONObject
     ) -> guild_events.GuildRoleDeleteEvent:
-        guild_role_delete = guild_events.GuildRoleDeleteEvent(self._app)
+        guild_role_delete = guild_events.GuildRoleDeleteEvent()
+        guild_role_delete.app = self._app
         guild_role_delete.guild_id = snowflake.Snowflake(payload["guild_id"])
         guild_role_delete.role_id = snowflake.Snowflake(payload["role_id"])
         return guild_role_delete
@@ -1540,7 +1613,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def deserialize_message_update_event(self, payload: data_binding.JSONObject) -> message_events.MessageUpdateEvent:
         message_update = message_events.MessageUpdateEvent()
 
-        updated_message = message_events.UpdatedMessageFields(self._app)
+        updated_message = message_events.UpdatedMessageFields()
+        updated_message.app = self._app
         updated_message.id = snowflake.Snowflake(payload["id"])
         updated_message.channel_id = snowflake.Snowflake(payload["channel_id"])
         updated_message.guild_id = (
@@ -1643,7 +1717,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         )
 
         if (crosspost_payload := payload.get("message_reference", ...)) is not ...:
-            crosspost = message_models.MessageCrosspost(self._app)
+            crosspost = message_models.MessageCrosspost()
+            crosspost.app = self._app
             crosspost.id = (
                 snowflake.Snowflake(crosspost_payload["message_id"]) if "message_id" in crosspost_payload else None
             )
@@ -1665,7 +1740,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return message_update
 
     def deserialize_message_delete_event(self, payload: data_binding.JSONObject) -> message_events.MessageDeleteEvent:
-        message_delete = message_events.MessageDeleteEvent(self._app)
+        message_delete = message_events.MessageDeleteEvent()
+        message_delete.app = self._app
         message_delete.channel_id = snowflake.Snowflake(payload["channel_id"])
         message_delete.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         message_delete.message_id = snowflake.Snowflake(payload["id"])
@@ -1674,7 +1750,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def deserialize_message_delete_bulk_event(
         self, payload: data_binding.JSONObject
     ) -> message_events.MessageDeleteBulkEvent:
-        message_delete_bulk = message_events.MessageDeleteBulkEvent(self._app)
+        message_delete_bulk = message_events.MessageDeleteBulkEvent()
+        message_delete_bulk.app = self._app
         message_delete_bulk.channel_id = snowflake.Snowflake(payload["channel_id"])
         message_delete_bulk.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         message_delete_bulk.message_ids = {snowflake.Snowflake(message_id) for message_id in payload["ids"]}
@@ -1682,19 +1759,18 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
     @staticmethod
     def _set_base_message_reaction_fields(
-        payload: data_binding.JSONObject, reaction_event: ReactionEventT
-    ) -> ReactionEventT:
+        payload: data_binding.JSONObject, reaction_event: message_events.MessageReactionEvent
+    ) -> None:
         reaction_event.channel_id = snowflake.Snowflake(payload["channel_id"])
         reaction_event.message_id = snowflake.Snowflake(payload["message_id"])
         reaction_event.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
-        return reaction_event
 
     def deserialize_message_reaction_add_event(
         self, payload: data_binding.JSONObject
     ) -> message_events.MessageReactionAddEvent:
-        message_reaction_add = self._set_base_message_reaction_fields(
-            payload, message_events.MessageReactionAddEvent(self._app)
-        )
+        message_reaction_add = message_events.MessageReactionAddEvent()
+        message_reaction_add.app = self._app
+        self._set_base_message_reaction_fields(payload, message_reaction_add)
         message_reaction_add.user_id = snowflake.Snowflake(payload["user_id"])
         message_reaction_add.member = self.deserialize_member(payload["member"]) if "member" in payload else None
         message_reaction_add.emoji = self.deserialize_emoji(payload["emoji"])
@@ -1703,9 +1779,9 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def deserialize_message_reaction_remove_event(
         self, payload: data_binding.JSONObject
     ) -> message_events.MessageReactionRemoveEvent:
-        message_reaction_remove = self._set_base_message_reaction_fields(
-            payload, message_events.MessageReactionRemoveEvent(self._app)
-        )
+        message_reaction_remove = message_events.MessageReactionRemoveEvent()
+        message_reaction_remove.app = self._app
+        self._set_base_message_reaction_fields(payload, message_reaction_remove)
         message_reaction_remove.user_id = snowflake.Snowflake(payload["user_id"])
         message_reaction_remove.emoji = self.deserialize_emoji(payload["emoji"])
         return message_reaction_remove
@@ -1713,14 +1789,17 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def deserialize_message_reaction_remove_all_event(
         self, payload: data_binding.JSONObject
     ) -> message_events.MessageReactionRemoveAllEvent:
-        return self._set_base_message_reaction_fields(payload, message_events.MessageReactionRemoveAllEvent(self._app))
+        message_reaction_event = message_events.MessageReactionRemoveAllEvent()
+        message_reaction_event.app = self._app
+        self._set_base_message_reaction_fields(payload, message_reaction_event)
+        return message_reaction_event
 
     def deserialize_message_reaction_remove_emoji_event(
         self, payload: data_binding.JSONObject
     ) -> message_events.MessageReactionRemoveEmojiEvent:
-        message_reaction_remove_emoji = self._set_base_message_reaction_fields(
-            payload, message_events.MessageReactionRemoveEmojiEvent(self._app)
-        )
+        message_reaction_remove_emoji = message_events.MessageReactionRemoveEmojiEvent()
+        message_reaction_remove_emoji.app = self._app
+        self._set_base_message_reaction_fields(payload, message_reaction_remove_emoji)
         message_reaction_remove_emoji.emoji = self.deserialize_emoji(payload["emoji"])
         return message_reaction_remove_emoji
 

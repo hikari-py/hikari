@@ -38,14 +38,14 @@ import typing
 import attr
 
 from hikari.events import base as base_events
-from hikari.models import bases as base_models
 from hikari.models import intents
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
+    from hikari.api import rest
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import invites
-    from hikari.utilities import snowflake
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)  # TODO: this intent doesn't account for DM channels.
@@ -81,12 +81,15 @@ class ChannelDeleteEvent(BaseChannelEvent):
 
 @base_events.requires_intents(intents.Intent.GUILDS)  # TODO: this intent doesn't account for DM channels.
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class ChannelPinsUpdateEvent(base_events.Event, base_models.Entity):
+class ChannelPinsUpdateEvent(base_events.Event):
     """Used to represent the Channel Pins Update gateway event.
 
     Sent when a message is pinned or unpinned in a channel but not
     when a pinned message is deleted.
     """
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild where this event happened.
@@ -106,11 +109,14 @@ class ChannelPinsUpdateEvent(base_events.Event, base_models.Entity):
 
 @base_events.requires_intents(intents.Intent.GUILD_WEBHOOKS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class WebhookUpdateEvent(base_events.Event, base_models.Entity):
+class WebhookUpdateEvent(base_events.Event):
     """Used to represent webhook update gateway events.
 
     Sent when a webhook is updated, created or deleted in a guild.
     """
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this webhook is being updated in."""
@@ -121,11 +127,14 @@ class WebhookUpdateEvent(base_events.Event, base_models.Entity):
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_TYPING, intents.Intent.DIRECT_MESSAGE_TYPING)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class TypingStartEvent(base_events.Event, base_models.Entity):
+class TypingStartEvent(base_events.Event):
     """Used to represent typing start gateway events.
 
     Received when a user or bot starts "typing" in a channel.
     """
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel this typing event is occurring in."""
@@ -160,11 +169,14 @@ class InviteCreateEvent(base_events.Event):
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class InviteDeleteEvent(base_events.Event, base_models.Entity):
+class InviteDeleteEvent(base_events.Event):
     """Used to represent Invite Delete gateway events.
 
     Sent when an invite is deleted for a channel we can access.
     """
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel this ID was attached to."""

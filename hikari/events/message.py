@@ -20,7 +20,7 @@
 from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = [
-    "BaseMessageReactionEvent",
+    "MessageReactionEvent",
     "MessageCreateEvent",
     "UpdatedMessageFields",
     "MessageUpdateEvent",
@@ -37,19 +37,19 @@ import typing
 import attr
 
 from hikari.events import base as base_events
-from hikari.models import bases as base_models
 from hikari.models import intents
 from hikari.models import messages
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.api import rest
     from hikari.models import applications
     from hikari.models import embeds as embed_models
     from hikari.models import emojis
     from hikari.models import guilds
     from hikari.models import users
-    from hikari.utilities import snowflake
     from hikari.utilities import undefined
 
 
@@ -62,8 +62,8 @@ class MessageCreateEvent(base_events.Event):
     """The message that was sent."""
 
 
-@attr.s(slots=True, init=False, repr=True, eq=False)
-class UpdatedMessageFields(base_models.Entity, base_models.Unique):
+@attr.s(slots=True, kw_only=True, init=False, repr=True, eq=False)
+class UpdatedMessageFields(snowflake.Unique):
     """An arbitrarily partial version of `hikari.models.messages.Message`.
 
     This contains arbitrary fields that may be updated in a
@@ -76,6 +76,14 @@ class UpdatedMessageFields(base_models.Entity, base_models.Unique):
         received information about their state from Discord alongside field
         nullability.
     """
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel that the message was sent in."""
@@ -157,7 +165,7 @@ class UpdatedMessageFields(base_models.Entity, base_models.Unique):
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageUpdateEvent(base_events.Event, base_models.Unique):
+class MessageUpdateEvent(base_events.Event, snowflake.Unique):
     """Represents Message Update gateway events.
 
     !!! warn
@@ -167,17 +175,25 @@ class MessageUpdateEvent(base_events.Event, base_models.Unique):
         (a singleton) to indicate that it has not been changed.
     """
 
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
+
     message: UpdatedMessageFields = attr.ib(repr=True)
     """The partial message object with all updated fields."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageDeleteEvent(base_events.Event, base_models.Entity):
+class MessageDeleteEvent(base_events.Event):
     """Used to represent Message Delete gateway events.
 
     Sent when a message is deleted in a channel we have access to.
     """
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     # TODO: common base class for Message events.
 
@@ -197,11 +213,14 @@ class MessageDeleteEvent(base_events.Event, base_models.Entity):
 # TODO: if this doesn't apply to DMs then does guild_id need to be nullable here?
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageDeleteBulkEvent(base_events.Event, base_models.Entity):
+class MessageDeleteBulkEvent(base_events.Event):
     """Used to represent Message Bulk Delete gateway events.
 
     Sent when multiple messages are deleted in a channel at once.
     """
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel these messages have been deleted in."""
@@ -216,8 +235,11 @@ class MessageDeleteBulkEvent(base_events.Event, base_models.Entity):
     """A collection of the IDs of the messages that were deleted."""
 
 
-class BaseMessageReactionEvent(base_events.Event, base_models.Entity):
+class MessageReactionEvent(base_events.Event):
     """A base class that all message reaction events will inherit from."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel where this reaction is happening."""
@@ -234,7 +256,7 @@ class BaseMessageReactionEvent(base_events.Event, base_models.Entity):
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageReactionAddEvent(BaseMessageReactionEvent):
+class MessageReactionAddEvent(MessageReactionEvent):
     """Used to represent Message Reaction Add gateway events."""
 
     user_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -253,7 +275,7 @@ class MessageReactionAddEvent(BaseMessageReactionEvent):
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageReactionRemoveEvent(BaseMessageReactionEvent):
+class MessageReactionRemoveEvent(MessageReactionEvent):
     """Used to represent Message Reaction Remove gateway events."""
 
     user_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -265,7 +287,7 @@ class MessageReactionRemoveEvent(BaseMessageReactionEvent):
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageReactionRemoveAllEvent(BaseMessageReactionEvent):
+class MessageReactionRemoveAllEvent(MessageReactionEvent):
     """Used to represent Message Reaction Remove All gateway events.
 
     Sent when all the reactions are removed from a message, regardless of emoji.
@@ -274,7 +296,7 @@ class MessageReactionRemoveAllEvent(BaseMessageReactionEvent):
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class MessageReactionRemoveEmojiEvent(BaseMessageReactionEvent):
+class MessageReactionRemoveEmojiEvent(MessageReactionEvent):
     """Represents Message Reaction Remove Emoji events.
 
     Sent when all the reactions for a single emoji are removed from a message.
