@@ -780,11 +780,13 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         guild_member.nickname = payload["nick"] if "nick" in payload else undefined.UNDEFINED
 
-        if (premium_since := payload.get("premium_since", ...)) is not None and premium_since is not ...:
-            premium_since = date.iso8601_datetime_string_to_datetime(premium_since)
-        elif premium_since is ...:
-            premium_since = undefined.UNDEFINED
-        guild_member.premium_since = premium_since
+        if "premium_since" in payload:
+            raw_premium_since = payload["premium_since"]
+            guild_member.premium_since = (
+                date.iso8601_datetime_string_to_datetime(raw_premium_since) if raw_premium_since is not None else None
+            )
+        else:
+            guild_member.premium_since = undefined.UNDEFINED
 
         guild_member.is_deaf = payload["deaf"] if "deaf" in payload else undefined.UNDEFINED
         guild_member.is_mute = payload["mute"] if "mute" in payload else undefined.UNDEFINED
@@ -1030,7 +1032,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def _set_invite_attributes(self, payload: data_binding.JSONObject, invite: invite_models.Invite) -> None:
         invite.code = payload["code"]
 
-        if (guild_payload := payload.get("guild", ...)) is not ...:
+        if "guild" in payload:
+            guild_payload = payload["guild"]
             guild = invite_models.InviteGuild()
             guild.app = self._app
             self._set_partial_guild_attributes(guild_payload, guild)
@@ -1042,9 +1045,9 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             guild.vanity_url_code = guild_payload["vanity_url_code"]
             invite.guild = guild
             invite.guild_id = guild.id
-        elif (guild_id := payload.get("guild_id", ...)) is not ...:
+        elif "guild_id" in payload:
             invite.guild = None
-            invite.guild_id = snowflake.Snowflake(guild_id)
+            invite.guild_id = snowflake.Snowflake(payload["guild_id"])
         else:
             invite.guild = invite.guild_id = None
 
@@ -1145,7 +1148,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         # noinspection PyArgumentList
         message.type = message_models.MessageType(payload["type"])
 
-        if (activity_payload := payload.get("activity", ...)) is not ...:
+        if "activity" in payload:
+            activity_payload = payload["activity"]
             activity = message_models.MessageActivity()
             # noinspection PyArgumentList
             activity.type = message_models.MessageActivityType(activity_payload["type"])
@@ -1156,7 +1160,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         message.application = self.deserialize_application(payload["application"]) if "application" in payload else None
 
-        if (crosspost_payload := payload.get("message_reference", ...)) is not ...:
+        if "message_reference" in payload:
+            crosspost_payload = payload["message_reference"]
             crosspost = message_models.MessageCrosspost()
             crosspost.app = self._app
             crosspost.id = (
@@ -1219,7 +1224,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
             activity.created_at = date.unix_epoch_to_datetime(activity_payload["created_at"])
 
-            if (timestamps_payload := activity_payload.get("timestamps", ...)) is not ...:
+            if "timestamps" in activity_payload:
+                timestamps_payload = activity_payload["timestamps"]
                 timestamps = presence_models.ActivityTimestamps()
                 timestamps.start = (
                     date.unix_epoch_to_datetime(timestamps_payload["start"]) if "start" in timestamps_payload else None
@@ -1241,15 +1247,18 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
             if (emoji := activity_payload.get("emoji")) is not None:
                 emoji = self.deserialize_emoji(emoji)
+
             activity.emoji = emoji
 
-            if (party_payload := activity_payload.get("party", ...)) is not ...:
+            if "party" in activity_payload:
+                party_payload = activity_payload["party"]
                 party = presence_models.ActivityParty()
                 party.id = party_payload.get("id")
 
-                if (size := party_payload.get("size", ...)) is not ...:
-                    party.current_size = int(size[0])
-                    party.max_size = int(size[1])
+                if "size" in party_payload:
+                    current_size, max_size = party_payload["size"]
+                    party.current_size = int(current_size)
+                    party.max_size = int(max_size)
                 else:
                     party.current_size = party.max_size = None
 
@@ -1257,7 +1266,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             else:
                 activity.party = None
 
-            if (assets_payload := activity_payload.get("assets", ...)) is not ...:
+            if "assets" in activity_payload:
+                assets_payload = activity_payload["assets"]
                 assets = presence_models.ActivityAssets()
                 assets.large_image = assets_payload.get("large_image")
                 assets.large_text = assets_payload.get("large_text")
@@ -1267,7 +1277,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             else:
                 activity.assets = None
 
-            if (secrets_payload := activity_payload.get("secrets", ...)) is not ...:
+            if "secrets" in activity_payload:
+                secrets_payload = activity_payload["secrets"]
                 secret = presence_models.ActivitySecret()
                 secret.join = secrets_payload.get("join")
                 secret.spectate = secrets_payload.get("spectate")
@@ -1432,8 +1443,10 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         channel_pins_update.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         channel_pins_update.channel_id = snowflake.Snowflake(payload["channel_id"])
 
-        if (last_pin_timestamp := payload.get("last_pin_timestamp", ...)) is not ...:
-            channel_pins_update.last_pin_timestamp = date.iso8601_datetime_string_to_datetime(last_pin_timestamp)
+        if "last_pin_timestamp" in payload:
+            channel_pins_update.last_pin_timestamp = date.iso8601_datetime_string_to_datetime(
+                payload["last_pin_timestamp"]
+            )
         else:
             channel_pins_update.last_pin_timestamp = None
 
@@ -1625,10 +1638,14 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             else undefined.UNDEFINED
         )
 
-        if (edited_timestamp := payload.get("edited_timestamp", ...)) is not ... and edited_timestamp is not None:
-            edited_timestamp = date.iso8601_datetime_string_to_datetime(edited_timestamp)
-        elif edited_timestamp is ...:
+        if "edited_timestamp" in payload:
+            if (edited_timestamp := payload["edited_timestamp"]) is not None:
+                edited_timestamp = date.iso8601_datetime_string_to_datetime(edited_timestamp)
+            else:
+                edited_timestamp = None
+        else:
             edited_timestamp = undefined.UNDEFINED
+
         updated_message.edited_timestamp = edited_timestamp
 
         updated_message.is_tts = payload["tts"] if "tts" in payload else undefined.UNDEFINED
@@ -1692,7 +1709,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         # noinspection PyArgumentList
         updated_message.type = message_models.MessageType(payload["type"]) if "type" in payload else undefined.UNDEFINED
 
-        if (activity_payload := payload.get("activity", ...)) is not ...:
+        if "activity" in payload:
+            activity_payload = payload["activity"]
             activity = message_models.MessageActivity()
             # noinspection PyArgumentList
             activity.type = message_models.MessageActivityType(activity_payload["type"])
@@ -1705,7 +1723,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             self.deserialize_application(payload["application"]) if "application" in payload else undefined.UNDEFINED
         )
 
-        if (crosspost_payload := payload.get("message_reference", ...)) is not ...:
+        if "message_reference" in payload:
+            crosspost_payload = payload["message_reference"]
             crosspost = message_models.MessageCrosspost()
             crosspost.app = self._app
             crosspost.id = (
@@ -1808,7 +1827,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         }
         ready_event.session_id = payload["session_id"]
 
-        if (shard_data := payload.get("shard", ...)) is not ...:
+        # Shouldn't ever be none, but if it is, we don't care.
+        if (shard_data := payload.get("shard")) is not None:
             ready_event.shard_id = int(shard_data[0])
             ready_event.shard_count = int(shard_data[1])
         else:

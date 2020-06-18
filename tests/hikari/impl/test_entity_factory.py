@@ -2165,17 +2165,20 @@ class TestEntityFactoryImpl:
         assert activity.state == "STATED"
         assert activity.emoji == entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         # ActivityParty
+        assert activity.party is not None
         assert activity.party.id == "spotify:3234234234"
         assert activity.party.current_size == 2
         assert activity.party.max_size == 5
         assert isinstance(activity.party, presence_models.ActivityParty)
         # ActivityAssets
+        assert activity.assets is not None
         assert activity.assets.large_image == "34234234234243"
         assert activity.assets.large_text == "LARGE TEXT"
         assert activity.assets.small_image == "3939393"
         assert activity.assets.small_text == "small text"
         assert isinstance(activity.assets, presence_models.ActivityAssets)
         # ActivitySecrets
+        assert activity.secrets is not None
         assert activity.secrets.join == "who's a good secret?"
         assert activity.secrets.spectate == "I'm a good secret"
         assert activity.secrets.match == "No."
@@ -2340,18 +2343,22 @@ class TestEntityFactoryImpl:
         )
         activity = presence.activities[0]
         # ActivityTimestamps
+        assert activity.timestamps is not None
         assert activity.timestamps.start is None
         assert activity.timestamps.end is None
         # ActivityParty
+        assert activity.party is not None
         assert activity.party.id is None
         assert activity.party.max_size is None
         assert activity.party.current_size is None
         # ActivityAssets
+        assert activity.assets is not None
         assert activity.assets.small_text is None
         assert activity.assets.small_image is None
         assert activity.assets.large_text is None
         assert activity.assets.large_image is None
         # ActivitySecrets
+        assert activity.secrets is not None
         assert activity.secrets.join is None
         assert activity.secrets.spectate is None
         assert activity.secrets.match is None
