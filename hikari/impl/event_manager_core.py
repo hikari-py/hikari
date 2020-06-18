@@ -135,7 +135,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
             params = signature.parameters.values()
 
             if len(params) != 1:
-                raise TypeError("Event listener must have one parameter, the event object.")
+                raise TypeError("Event listener must have exactly one parameter, the event object.")
 
             event_param = next(iter(params))
 

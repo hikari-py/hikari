@@ -1646,7 +1646,7 @@ class TestEntityFactoryImpl:
                 "verification_level": 4,
             }
         )
-        assert guild.channels is None
+        assert guild.channels == {}
         assert guild.embed_channel_id is None
         assert guild.is_embed_enabled is False
         assert guild.joined_at is None
@@ -1655,10 +1655,10 @@ class TestEntityFactoryImpl:
         assert guild.max_presences is None
         assert guild.max_video_channel_users is None
         assert guild.member_count is None
-        assert guild.members is None
+        assert guild.members == {}
         assert guild.my_permissions is None
         assert guild.premium_subscription_count is None
-        assert guild.presences is None
+        assert guild.presences == {}
         assert guild.is_unavailable is None
         assert guild.widget_channel_id is None
         assert guild.is_widget_enabled is None

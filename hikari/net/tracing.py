@@ -169,10 +169,11 @@ class DebugTracer(BaseTracer):
         latency = round((time.perf_counter() - ctx.start_time) * 1_000, 2)
         response = params.response
 
-        if strings.CONTENT_TYPE_HEADER in response.headers:
-            body = await self._format_body(await response.read())
-        else:
-            body = "no-content"
+        body = (
+            (await self._format_body(await response.read()))
+            if strings.CONTENT_TYPE_HEADER in response.headers
+            else "no-content"
+        )
 
         self.logger.debug(
             "%s %s %s after %sms [%s]\n  response headers: %s\n  response body: %s",
