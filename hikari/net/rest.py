@@ -2138,10 +2138,13 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         user: typing.Union[users.User, snowflake.UniqueObject],
         *,
+        delete_message_days: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
+        body = data_binding.JSONObjectBuilder()
+        body.put("delete_message_days", delete_message_days)
         route = routes.PUT_GUILD_BAN.compile(guild=guild, user=user)
-        await self._request(route, reason=reason)
+        await self._request(route, reason=reason, body=body)
 
     async def unban_user(
         self,
@@ -2256,11 +2259,52 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         await self._request(route)
 
     async def estimate_guild_prune_count(
-        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject], days: int,
+        self,
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        *,
+        days: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
+        include_roles: typing.Union[
+            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
+        ] = undefined.UNDEFINED,
     ) -> int:
+        """Estimate the guild prune count.
+
+        Parameters
+        ----------
+        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.Snowflake or int or str
+            The guild to estimate the guild prune count for. This may be a guild object,
+            or the ID of an existing channel.
+        days : hikari.utilities.undefined.UndefinedType or int
+            If provided, number of days to count prune for.
+        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str]
+            If provided, the role(s) to include. By default, this endpoint will not count
+            users with roles. Providing roles using this attribute will make members with
+            the specified roles also get included into the count.
+
+        Returns
+        -------
+        int
+            The estimated guild prune count.
+
+        Raises
+        ------
+        hikari.errors.BadRequest
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack the `KICK_MEMBERS` permission.
+        hikari.errors.NotFound
+            If the guild is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
         route = routes.GET_GUILD_PRUNE.compile(guild=guild)
         query = data_binding.StringMapBuilder()
         query.put("days", days)
+        if include_roles is not undefined.UNDEFINED:
+            roles = ",".join(str(int(role)) for role in include_roles)
+            query.put("include_roles", roles)
         raw_response = await self._request(route, query=query)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return int(response["pruned"])
@@ -2268,17 +2312,60 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
     async def begin_guild_prune(
         self,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        days: int,
         *,
-        reason: typing.Union[undefined.UndefinedType, str],
-    ) -> int:
+        days: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
+        compute_prune_count: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        include_roles: typing.Union[
+            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+    ) -> typing.Optional[int]:
+        """Begin the guild prune.
+
+        Parameters
+        ----------
+        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.Snowflake or int or str
+            The guild to begin the guild prune in. This may be a guild object,
+            or the ID of an existing channel.
+        days : hikari.utilities.undefined.UndefinedType or int
+            If provided, number of days to count prune for.
+        compute_prune_count: hikari.utilities.undefined.UndefinedType or bool
+            If provided, whether to return the prune count. This is discouraged for large
+            guilds.
+        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str]
+            If provided, the role(s) to include. By default, this endpoint will not count
+            users with roles. Providing roles using this attribute will make members with
+            the specified roles also get included into the count.
+        reason : hikari.utilities.undefined.UndefinedType or str
+            If provided, the reason that will be recorded in the audit logs.
+
+        Returns
+        -------
+        int or None
+            If `compute_prune_count` is not provided or `True`, the number of members pruned.
+
+        Raises
+        ------
+        hikari.errors.BadRequest
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack the `KICK_MEMBERS` permission.
+        hikari.errors.NotFound
+            If the guild is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
         route = routes.POST_GUILD_PRUNE.compile(guild=guild)
-        query = data_binding.StringMapBuilder()
-        query.put("compute_prune_count", True)
-        query.put("days", days)
-        raw_response = await self._request(route, query=query, reason=reason)
+        body = data_binding.JSONObjectBuilder()
+        body.put("days", days)
+        body.put("compute_prune_count", compute_prune_count)
+        body.put_snowflake_array("include_roles", include_roles)
+        raw_response = await self._request(route, body=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return int(response["pruned"])
+        pruned = response.get("pruned")
+        return int(pruned) if pruned is not None else None
 
     async def fetch_guild_voice_regions(
         self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject], /
