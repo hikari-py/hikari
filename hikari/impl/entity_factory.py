@@ -957,9 +957,9 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild.is_large = payload["large"] if "large" in payload else None
         guild.member_count = int(payload["member_count"]) if "member_count" in payload else None
 
-        if members := payload.get("members"):
+        if "members" in payload:
             guild.members = {}
-            for member_payload in members:
+            for member_payload in payload["members"]:
                 member = self.deserialize_member(member_payload)
                 # Could be None, so cast to avoid.
                 user_id = typing.cast("user_models.User", member.user).id
@@ -968,17 +968,17 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             # FIXME: should this be an empty dict instead?
             guild.members = None
 
-        if channels := payload.get("channels"):
+        if "channels" in payload:
             guild.channels = {}
-            for channel_payload in channels:
+            for channel_payload in payload["channels"]:
                 channel = typing.cast("channel_models.GuildChannel", self.deserialize_channel(channel_payload))
                 guild.channels[channel.id] = channel
         else:
             guild.channels = None
 
-        if presences := payload.get("presences"):
+        if "presences" in payload:
             guild.presences = {}
-            for presence_payload in presences:
+            for presence_payload in payload["presences"]:
                 presence = self.deserialize_member_presence(presence_payload)
                 guild.presences[presence.user.id] = presence
         else:
