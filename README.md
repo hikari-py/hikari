@@ -43,32 +43,6 @@ python -m pip install hikari -U --pre
 py -3 -m pip install hikari -U --pre 
 ```
 
-### Moar poweeeerrrr
-
-If you wish to get the most out of your bot, you should opt-in to
-installing the speedups extensions. 
-
-```bash
-python -m pip install hikari[speedups] -U --pre
-```
-
-This may take a little longer to install, but will replace several dependencies 
-with much faster alternatives, including:
-
-- [`aiodns`](https://pypi.org/project/aiodns/) - Asynchronous DNS lookups using
-    `pycares` (`libcares` Python bindings).
-- [`cchardet`](https://pypi.org/project/cchardet/) - a compiled C implementation
-    of the [`chardet`](https://pypi.org/project/chardet/) module. Claims
-    to handle almost 1468 calls per second in a benchmark, compared to
-    0.35 calls per second from the default `chardet` module, which is around
-    4193x faster.\*
-  
-\* _`cchardet` v2.1.6 Python 3.6.1, Intel(R) Core(TM) i5-4690 CPU @ 3.50GHz, 
-16GB 1.6GHz DDR3, Ubuntu 16.04 AMD64._
-     
-Note that you may find you need to install a C compiler on your machine to make
-use of these extensions.
-
 ----
 
 ## What does _hikari_ aim to do?

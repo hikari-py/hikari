@@ -40,7 +40,6 @@ if typing.TYPE_CHECKING:
     import types
 
     from hikari.api import rest
-    from hikari.models import bases
     from hikari.models import channels
     from hikari.models import colors
     from hikari.models import guilds
@@ -61,7 +60,7 @@ class TypingIndicator:
 
     def __init__(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake_.UniqueObject],
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -375,7 +374,7 @@ class GuildBuilder:
 
             When the guild is created, this will be replaced with a different
             ID.
-        """
+        """  # noqa: E501 - Line too long
         snowflake = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake)
@@ -439,7 +438,7 @@ class GuildBuilder:
 
             When the guild is created, this will be replaced with a different
             ID.
-        """
+        """  # noqa: E501 - Line too long
         snowflake = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake)
@@ -506,7 +505,7 @@ class GuildBuilder:
 
             When the guild is created, this will be replaced with a different
             ID.
-        """
+        """  # noqa: E501 - Line too long
         snowflake = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake)

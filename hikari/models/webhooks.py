@@ -26,13 +26,13 @@ import typing
 
 import attr
 
-from hikari.models import bases
 from hikari.utilities import cdn
 from hikari.utilities import files as files_
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
+    from hikari.api import rest
     from hikari.models import channels as channels_
     from hikari.models import embeds as embeds_
     from hikari.models import guilds as guilds_
@@ -53,13 +53,21 @@ class WebhookType(int, enum.Enum):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class Webhook(bases.Entity, bases.Unique):
+class Webhook(snowflake.Unique):
     """Represents a webhook object on Discord.
 
     This is an endpoint that can have messages sent to it using standard
     HTTP requests, which enables external services that are not bots to
     send informational messages to specific channels.
     """
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
 
     type: WebhookType = attr.ib(eq=False, hash=False, repr=True)
     """The type of the webhook."""
@@ -161,14 +169,13 @@ class Webhook(bases.Entity, bases.Unique):
         ValueError
             If either `Webhook.token` is `None` or more than 100 unique
             objects/entities are passed for `role_mentions` or `user_mentions.
-        """
+        """  # noqa: E501 - Line too long
         if not self.token:
             raise ValueError("Cannot send a message using a webhook where we don't know it's token.")
 
-        return await self._app.rest.execute_webhook(
+        return await self.app.rest.execute_webhook(
             webhook=self.id,
             token=self.token,
-            text=text,
             username=username,
             avatar_url=avatar_url,
             tts=tts,
@@ -204,13 +211,9 @@ class Webhook(bases.Entity, bases.Unique):
             raise ValueError("This webhook's token is unknown, so cannot be used.")
 
         token: typing.Union[undefined.UndefinedType, str]
+        token = typing.cast(str, self.token) if use_token else undefined.UNDEFINED
 
-        if use_token:
-            token = typing.cast(str, self.token)
-        else:
-            token = undefined.UNDEFINED
-
-        await self._app.rest.delete_webhook(self.id, token=token)
+        await self.app.rest.delete_webhook(self.id, token=token)
 
     async def edit(
         self,
@@ -218,7 +221,7 @@ class Webhook(bases.Entity, bases.Unique):
         name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         avatar: typing.Union[undefined.UndefinedType, None, files_.Resource] = undefined.UNDEFINED,
         channel: typing.Union[
-            undefined.UndefinedType, bases.UniqueObject, channels_.GuildChannel
+            undefined.UndefinedType, snowflake.UniqueObject, channels_.GuildChannel
         ] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         use_token: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
@@ -232,7 +235,7 @@ class Webhook(bases.Entity, bases.Unique):
         avatar : hikari.utilities.files.Resource or None or hikari.utilities.undefined.UndefinedType
             If specified, the new avatar image. If `None`, then
             it is removed. If not specified, nothing is changed.
-        channel : hikari.models.channels.GuildChannel or hikari.models.bases.UniqueObject or hikari.utilities.undefined.UndefinedType
+        channel : hikari.models.channels.GuildChannel or hikari.models.snowflake.UniqueObject or hikari.utilities.undefined.UndefinedType
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
         reason : str or hikari.utilities.undefined.UndefinedType
@@ -264,18 +267,14 @@ class Webhook(bases.Entity, bases.Unique):
             If you pass a token that's invalid for the target webhook.
         ValueError
             If `use_token` is passed as `True` when `Webhook.token` is `None`.
-        """
+        """  # noqa: E501 - Line too long
         if use_token and self.token is None:
             raise ValueError("This webhook's token is unknown, so cannot be used.")
 
         token: typing.Union[undefined.UndefinedType, str]
+        token = typing.cast(str, self.token) if use_token else undefined.UNDEFINED
 
-        if use_token:
-            token = typing.cast(str, self.token)
-        else:
-            token = undefined.UNDEFINED
-
-        return await self._app.rest.edit_webhook(
+        return await self.app.rest.edit_webhook(
             self.id, token=token, name=name, avatar=avatar, channel=channel, reason=reason,
         )
 
@@ -294,7 +293,7 @@ class Webhook(bases.Entity, bases.Unique):
         hikari.errors.NotFound
             If the channel this message was created in does not exist.
         """
-        return await self._app.rest.fetch_channel(self.channel_id)
+        return await self.app.rest.fetch_channel(self.channel_id)
 
     async def fetch_self(
         self, *, use_token: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED
@@ -333,13 +332,9 @@ class Webhook(bases.Entity, bases.Unique):
             raise ValueError("This webhook's token is unknown, so cannot be used.")
 
         token: typing.Union[undefined.UndefinedType, str]
+        token = typing.cast(str, self.token) if use_token else undefined.UNDEFINED
 
-        if use_token:
-            token = typing.cast(str, self.token)
-        else:
-            token = undefined.UNDEFINED
-
-        return await self._app.rest.fetch_webhook(self.id, token=token)
+        return await self.app.rest.fetch_webhook(self.id, token=token)
 
     @property
     def avatar(self) -> files_.URL:

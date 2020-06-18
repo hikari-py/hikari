@@ -263,7 +263,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
                 pass
 
             # Allow zookeepers to stop gathering tasks for each shard.
-            raise errors.GatewayClientClosedError()
+            raise errors.GatewayClientClosedError
         finally:
             # This is set to ensure that the `start' waiter does not deadlock if
             # we cannot connect successfully. It is a hack, but it works.
@@ -558,7 +558,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
             elif op == self._GatewayOpcode.RECONNECT:
                 self.logger.debug("RECONNECT")
-                raise self._Reconnect()
+                raise self._Reconnect
 
             elif op == self._GatewayOpcode.INVALID_SESSION:
                 self.logger.debug("INVALID SESSION [resume:%s]", data)
@@ -605,7 +605,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect, can_reconnect, True)
 
         if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
-            raise self._SocketClosed()
+            raise self._SocketClosed
 
         # Assume exception for now.
         ex = self._ws.exception()
@@ -678,7 +678,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         if activity is undefined.UNDEFINED:
             activity = self._activity
 
-        if activity is not None and not activity is undefined.UNDEFINED:
+        if activity is not None and activity is not undefined.UNDEFINED:
             game: typing.Union[undefined.UndefinedType, None, data_binding.JSONObject] = {
                 "name": activity.name,
                 "url": activity.url,

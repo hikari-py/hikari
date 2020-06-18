@@ -54,7 +54,6 @@ if typing.TYPE_CHECKING:
 
     from hikari.models import applications
     from hikari.models import audit_logs
-    from hikari.models import bases
     from hikari.models import channels
     from hikari.models import colors
     from hikari.models import gateway
@@ -67,7 +66,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import webhooks
 
 
-class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-many-public-methods
+class REST(http_client.HTTPClient, component.IComponent):
     """Implementation of the V6 and V7-compatible Discord REST API.
 
     This manages making HTTP/1.1 requests to the API and using the entity
@@ -293,7 +292,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             self.global_rate_limit.throttle(body_retry_after)
 
             self.logger.warning("you are being rate-limited globally - trying again after %ss", body_retry_after)
-            raise self._RetryRequest()
+            raise self._RetryRequest
 
         # Discord have started applying ratelimits to operations on some endpoints
         # based on specific fields used in the JSON body.
@@ -326,7 +325,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         # safe to retry the request, as they are likely the same value just with some
         # measuring difference. 20% was used as a rounded figure.
         if math.isclose(body_retry_after, reset_after, rel_tol=0.20):
-            raise self._RetryRequest()
+            raise self._RetryRequest
 
         raise errors.RateLimited(str(response.real_url), compiled_route, response.headers, body, body_retry_after)
 
@@ -335,10 +334,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
     def _generate_allowed_mentions(
         mentions_everyone: typing.Union[undefined.UndefinedType, bool],
         user_mentions: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[bases.UniqueObject, users.User]], bool
+            undefined.UndefinedType, typing.Collection[typing.Union[snowflake.UniqueObject, users.User]], bool
         ],
         role_mentions: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool
+            undefined.UndefinedType, typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool
         ],
     ) -> typing.Union[undefined.UndefinedType, data_binding.JSONObject]:
         parsed_mentions = []
@@ -375,7 +374,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         self.buckets.close()
 
     async def fetch_channel(
-        self, channel: typing.Union[channels.PartialChannel, bases.UniqueObject], /,
+        self, channel: typing.Union[channels.PartialChannel, snowflake.UniqueObject]
     ) -> channels.PartialChannel:
         """Fetch a channel.
 
@@ -402,7 +401,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             If an internal error occurs on Discord while handling the request.
         """
         route = routes.GET_CHANNEL.compile(channel=channel)
-        raw_response = self._request(route)
+        raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_channel(response)
 
@@ -411,7 +410,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def edit_channel(
         self,
-        channel: typing.Union[channels.PartialChannel, bases.UniqueObject],
+        channel: typing.Union[channels.PartialChannel, snowflake.UniqueObject],
         /,
         *,
         name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
@@ -425,7 +424,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             undefined.UndefinedType, typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         parent_category: typing.Union[
-            undefined.UndefinedType, channels.GuildCategory, bases.UniqueObject
+            undefined.UndefinedType, channels.GuildCategory, snowflake.UniqueObject
         ] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> channels.PartialChannel:
@@ -475,7 +474,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             If the channel is not found.
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
-        """
+        """  # noqa: E501 - Line too long
         route = routes.PATCH_CHANNEL.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
@@ -496,7 +495,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_channel(response)
 
-    async def delete_channel(self, channel: typing.Union[channels.PartialChannel, bases.UniqueObject], /) -> None:
+    async def delete_channel(self, channel: typing.Union[channels.PartialChannel, snowflake.UniqueObject]) -> None:
         """Delete a channel in a guild, or close a DM.
 
         Parameters
@@ -526,7 +525,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
     @typing.overload
     async def edit_permission_overwrites(
         self,
-        channel: typing.Union[channels.GuildChannel, bases.UniqueObject],
+        channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
         target: typing.Union[channels.PermissionOverwrite, users.User, guilds.Role],
         *,
         allow: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
@@ -538,7 +537,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
     @typing.overload
     async def edit_permission_overwrites(
         self,
-        channel: typing.Union[channels.GuildChannel, bases.UniqueObject],
+        channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
         target: typing.Union[int, str, snowflake.Snowflake],
         *,
         target_type: typing.Union[channels.PermissionOverwriteType, str],
@@ -550,8 +549,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def edit_permission_overwrites(
         self,
-        channel: typing.Union[channels.GuildChannel, bases.UniqueObject],
-        target: typing.Union[bases.UniqueObject, users.User, guilds.Role, channels.PermissionOverwrite],
+        channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
+        target: typing.Union[snowflake.UniqueObject, users.User, guilds.Role, channels.PermissionOverwrite],
         *,
         target_type: typing.Union[undefined.UndefinedType, channels.PermissionOverwriteType, str] = undefined.UNDEFINED,
         allow: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
@@ -594,7 +593,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             a role.
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
-        """
+        """  # noqa: E501 - Line too long
         if target_type is undefined.UNDEFINED:
             if isinstance(target, users.User):
                 target_type = channels.PermissionOverwriteType.MEMBER
@@ -617,8 +616,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def delete_permission_overwrite(
         self,
-        channel: typing.Union[channels.GuildChannel, bases.UniqueObject],
-        target: typing.Union[channels.PermissionOverwrite, guilds.Role, users.User, bases.UniqueObject],
+        channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
+        target: typing.Union[channels.PermissionOverwrite, guilds.Role, users.User, snowflake.UniqueObject],
     ) -> None:
         """Delete a custom permission for an entity in a given guild channel.
 
@@ -640,12 +639,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             If the channel is not found or the target is not found.
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
-        """
+        """  # noqa: E501 - Line too long
         route = routes.DELETE_CHANNEL_PERMISSIONS.compile(channel=channel, overwrite=target)
         await self._request(route)
 
     async def fetch_channel_invites(
-        self, channel: typing.Union[channels.GuildChannel, bases.UniqueObject], /
+        self, channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         """Fetch all invites pointing to the given guild channel.
 
@@ -678,14 +677,13 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def create_invite(
         self,
-        channel: typing.Union[channels.GuildChannel, bases.UniqueObject],
-        /,
+        channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
         *,
         max_age: typing.Union[undefined.UndefinedType, int, float, datetime.timedelta] = undefined.UNDEFINED,
         max_uses: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
         temporary: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         unique: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        target_user: typing.Union[undefined.UndefinedType, users.User, bases.UniqueObject] = undefined.UNDEFINED,
+        target_user: typing.Union[undefined.UndefinedType, users.User, snowflake.UniqueObject] = undefined.UNDEFINED,
         target_user_type: typing.Union[undefined.UndefinedType, invites.TargetUserType] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
@@ -730,7 +728,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             if specified.
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
-        """
+        """  # noqa: E501 - Line too long
         route = routes.POST_CHANNEL_INVITES.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("max_age", max_age, conversion=date.timespan_to_int)
@@ -744,7 +742,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         return self._app.entity_factory.deserialize_invite_with_metadata(response)
 
     def trigger_typing(
-        self, channel: typing.Union[channels.TextChannel, bases.UniqueObject], /
+        self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
     ) -> rest_utils.TypingIndicator:
         """Trigger typing in a text channel.
 
@@ -779,7 +777,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         return rest_utils.TypingIndicator(channel, self._request)
 
     async def fetch_pins(
-        self, channel: typing.Union[channels.TextChannel, bases.UniqueObject], /
+        self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
     ) -> typing.Sequence[messages_.Message]:
         """Fetch the pinned messages in this text channel.
 
@@ -813,8 +811,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def pin_message(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        message: typing.Union[messages_.Message, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        message: typing.Union[messages_.Message, snowflake.UniqueObject],
     ) -> None:
         """Pin an existing message in the given text channel.
 
@@ -844,8 +842,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def unpin_message(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        message: typing.Union[messages_.Message, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        message: typing.Union[messages_.Message, snowflake.UniqueObject],
     ) -> None:
         """Unpin a given message from a given text channel.
 
@@ -875,48 +873,44 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     @typing.overload
     def fetch_messages(
-        self, channel: typing.Union[channels.TextChannel, bases.UniqueObject], /
+        self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
     ) -> iterators.LazyIterator[messages_.Message]:
         """Fetch messages, newest first, sent in the given channel."""
 
     @typing.overload
     def fetch_messages(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        /,
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         *,
-        before: typing.Union[datetime.datetime, bases.UniqueObject],
+        before: typing.Union[datetime.datetime, snowflake.UniqueObject],
     ) -> iterators.LazyIterator[messages_.Message]:
         """Fetch messages, newest first, sent before a timestamp in the channel."""
 
     @typing.overload
     def fetch_messages(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        /,
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         *,
-        around: typing.Union[datetime.datetime, bases.UniqueObject],
+        around: typing.Union[datetime.datetime, snowflake.UniqueObject],
     ) -> iterators.LazyIterator[messages_.Message]:
         """Fetch messages sent around a given time in the channel."""
 
     @typing.overload
     def fetch_messages(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        /,
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         *,
-        after: typing.Union[datetime.datetime, bases.UniqueObject],
+        after: typing.Union[datetime.datetime, snowflake.UniqueObject],
     ) -> iterators.LazyIterator[messages_.Message]:
         """Fetch messages, oldest first, sent after a timestamp in the channel."""
 
     def fetch_messages(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        /,
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         *,
-        before: typing.Union[undefined.UndefinedType, datetime.datetime, bases.UniqueObject] = undefined.UNDEFINED,
-        after: typing.Union[undefined.UndefinedType, datetime.datetime, bases.UniqueObject] = undefined.UNDEFINED,
-        around: typing.Union[undefined.UndefinedType, datetime.datetime, bases.UniqueObject] = undefined.UNDEFINED,
+        before: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
+        after: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
+        around: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[messages_.Message]:
         """Browse the message history for a given text channel.
 
@@ -959,7 +953,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             be raised once the result is awaited or interacted with. Invoking
             this function itself will not raise anything (other than
             `TypeError`).
-        """
+        """  # noqa: E501 - Line too long
         if undefined.count(before, after, around) < 2:
             raise TypeError("Expected no kwargs, or maximum of one of 'before', 'after', 'around'")
 
@@ -979,8 +973,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def fetch_message(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        message: typing.Union[messages_.Message, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        message: typing.Union[messages_.Message, snowflake.UniqueObject],
     ) -> messages_.Message:
         """Fetch a specific message in the given text channel.
 
@@ -1018,7 +1012,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def create_message(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
         *,
         embed: typing.Union[undefined.UndefinedType, embeds_.Embed] = undefined.UNDEFINED,
@@ -1028,8 +1022,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]], bool] = True,
+        user_mentions: typing.Union[typing.Collection[typing.Union[users.User, snowflake.UniqueObject]], bool] = True,
+        role_mentions: typing.Union[typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]], bool] = True,
     ) -> messages_.Message:
         """Create a message in the given channel.
 
@@ -1087,7 +1081,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         !!! warning
             You are expected to make a connection to the gateway and identify
             once before being able to use this endpoint for a bot.
-        """
+        """  # noqa: E501 - Line too long
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
 
         body = data_binding.JSONObjectBuilder()
@@ -1130,17 +1124,17 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def edit_message(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        message: typing.Union[messages_.Message, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        message: typing.Union[messages_.Message, snowflake.UniqueObject],
         text: typing.Union[undefined.UndefinedType, None, typing.Any] = undefined.UNDEFINED,
         *,
         embed: typing.Union[undefined.UndefinedType, None, embeds_.Embed] = undefined.UNDEFINED,
         mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         user_mentions: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool
+            undefined.UndefinedType, typing.Collection[typing.Union[users.User, snowflake.UniqueObject]], bool
         ] = undefined.UNDEFINED,
         role_mentions: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool
+            undefined.UndefinedType, typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool
         ] = undefined.UNDEFINED,
         flags: typing.Union[undefined.UndefinedType, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
@@ -1208,8 +1202,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def delete_message(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        message: typing.Union[messages_.Message, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        message: typing.Union[messages_.Message, snowflake.UniqueObject],
     ) -> None:
         """Delete a given message in a given channel.
 
@@ -1235,9 +1229,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def delete_messages(
         self,
-        channel: typing.Union[channels.GuildTextChannel, bases.UniqueObject],
+        channel: typing.Union[channels.GuildTextChannel, snowflake.UniqueObject],
         /,
-        *messages: typing.Union[messages_.Message, bases.UniqueObject],
+        *messages: typing.Union[messages_.Message, snowflake.UniqueObject],
     ) -> None:
         """Bulk-delete between 2 and 100 messages from the given guild channel.
 
@@ -1270,8 +1264,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def add_reaction(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        message: typing.Union[messages_.Message, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        message: typing.Union[messages_.Message, snowflake.UniqueObject],
         emoji: typing.Union[str, emojis.Emoji],
     ) -> None:
         """Add a reaction emoji to a message in a given channel.
@@ -1305,8 +1299,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def delete_my_reaction(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        message: typing.Union[messages_.Message, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        message: typing.Union[messages_.Message, snowflake.UniqueObject],
         emoji: typing.Union[str, emojis.Emoji],
     ) -> None:
         """Delete a reaction that your application user created.
@@ -1338,8 +1332,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def delete_all_reactions_for_emoji(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        message: typing.Union[messages_.Message, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        message: typing.Union[messages_.Message, snowflake.UniqueObject],
         emoji: typing.Union[str, emojis.Emoji],
     ) -> None:
         route = routes.DELETE_REACTION_EMOJI.compile(
@@ -1351,10 +1345,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def delete_reaction(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        message: typing.Union[messages_.Message, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        message: typing.Union[messages_.Message, snowflake.UniqueObject],
         emoji: typing.Union[str, emojis.Emoji],
-        user: typing.Union[users.User, bases.UniqueObject],
+        user: typing.Union[users.User, snowflake.UniqueObject],
     ) -> None:
         route = routes.DELETE_REACTION_USER.compile(
             emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
@@ -1366,16 +1360,16 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def delete_all_reactions(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        message: typing.Union[messages_.Message, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        message: typing.Union[messages_.Message, snowflake.UniqueObject],
     ) -> None:
         route = routes.DELETE_ALL_REACTIONS.compile(channel=channel, message=message)
         await self._request(route)
 
     def fetch_reactions_for_emoji(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
-        message: typing.Union[messages_.Message, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        message: typing.Union[messages_.Message, snowflake.UniqueObject],
         emoji: typing.Union[str, emojis.Emoji],
     ) -> iterators.LazyIterator[users.User]:
         return iterators.ReactorIterator(
@@ -1388,7 +1382,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def create_webhook(
         self,
-        channel: typing.Union[channels.TextChannel, bases.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         name: str,
         *,
         avatar: typing.Union[undefined.UndefinedType, files.Resource] = undefined.UNDEFINED,
@@ -1407,21 +1401,21 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def fetch_webhook(
         self,
-        webhook: typing.Union[webhooks.Webhook, bases.UniqueObject],
-        /,
+        webhook: typing.Union[webhooks.Webhook, snowflake.UniqueObject],
         *,
         token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
-        if token is undefined.UNDEFINED:
-            route = routes.GET_WEBHOOK.compile(webhook=webhook)
-        else:
-            route = routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+        route = (
+            routes.GET_WEBHOOK.compile(webhook=webhook)
+            if token is undefined.UNDEFINED
+            else routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+        )
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_webhook(response)
 
     async def fetch_channel_webhooks(
-        self, channel: typing.Union[channels.TextChannel, bases.UniqueObject], /
+        self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
     ) -> typing.Sequence[webhooks.Webhook]:
         route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=channel)
         raw_response = await self._request(route)
@@ -1429,7 +1423,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_webhook)
 
     async def fetch_guild_webhooks(
-        self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
+        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
     ) -> typing.Sequence[webhooks.Webhook]:
         route = routes.GET_GUILD_WEBHOOKS.compile(channel=guild)
         raw_response = await self._request(route)
@@ -1438,20 +1432,21 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def edit_webhook(
         self,
-        webhook: typing.Union[webhooks.Webhook, bases.UniqueObject],
-        /,
+        webhook: typing.Union[webhooks.Webhook, snowflake.UniqueObject],
         *,
         token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         avatar: typing.Union[None, undefined.UndefinedType, files.Resource] = undefined.UNDEFINED,
-        channel: typing.Union[undefined.UndefinedType, channels.TextChannel, bases.UniqueObject] = undefined.UNDEFINED,
+        channel: typing.Union[
+            undefined.UndefinedType, channels.TextChannel, snowflake.UniqueObject
+        ] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
-        if token is undefined.UNDEFINED:
-            route = routes.PATCH_WEBHOOK.compile(webhook=webhook)
-        else:
-            route = routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-
+        route = (
+            routes.PATCH_WEBHOOK.compile(webhook=webhook)
+            if token is undefined.UNDEFINED
+            else routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+        )
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put_snowflake("channel", channel)
@@ -1468,20 +1463,20 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def delete_webhook(
         self,
-        webhook: typing.Union[webhooks.Webhook, bases.UniqueObject],
-        /,
+        webhook: typing.Union[webhooks.Webhook, snowflake.UniqueObject],
         *,
         token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
-        if token is undefined.UNDEFINED:
-            route = routes.DELETE_WEBHOOK.compile(webhook=webhook)
-        else:
-            route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+        route = (
+            routes.DELETE_WEBHOOK.compile(webhook=webhook)
+            if token is undefined.UNDEFINED
+            else routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+        )
         await self._request(route)
 
     async def execute_webhook(
         self,
-        webhook: typing.Union[webhooks.Webhook, bases.UniqueObject],
+        webhook: typing.Union[webhooks.Webhook, snowflake.UniqueObject],
         text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
         *,
         token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
@@ -1491,8 +1486,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         attachments: typing.Union[undefined.UndefinedType, typing.Sequence[files.Resource]] = undefined.UNDEFINED,
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[typing.Union[users.User, bases.UniqueObject]], bool] = True,
-        role_mentions: typing.Union[typing.Collection[typing.Union[bases.UniqueObject, guilds.Role]], bool] = True,
+        user_mentions: typing.Union[typing.Collection[typing.Union[users.User, snowflake.UniqueObject]], bool] = True,
+        role_mentions: typing.Union[typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool] = True,
     ) -> messages_.Message:
         if token is undefined.UNDEFINED:
             route = routes.POST_WEBHOOK.compile(webhook=webhook)
@@ -1607,7 +1602,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         *,
         newest_first: bool = False,
         start_at: typing.Union[
-            undefined.UndefinedType, guilds.PartialGuild, bases.UniqueObject, datetime.datetime
+            undefined.UndefinedType, guilds.PartialGuild, snowflake.UniqueObject, datetime.datetime
         ] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[applications.OwnGuild]:
         if start_at is undefined.UNDEFINED:
@@ -1617,11 +1612,11 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
         return iterators.OwnGuildIterator(self._app, self._request, newest_first, str(start_at))
 
-    async def leave_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /) -> None:
+    async def leave_guild(self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject], /) -> None:
         route = routes.DELETE_MY_GUILD.compile(guild=guild)
         await self._request(route)
 
-    async def create_dm_channel(self, user: typing.Union[users.User, bases.UniqueObject], /) -> channels.DMChannel:
+    async def create_dm_channel(self, user: typing.Union[users.User, snowflake.UniqueObject], /) -> channels.DMChannel:
         route = routes.POST_MY_CHANNELS.compile()
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("recipient_id", user)
@@ -1638,12 +1633,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
     async def add_user_to_guild(
         self,
         access_token: str,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        user: typing.Union[users.User, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        user: typing.Union[users.User, snowflake.UniqueObject],
         *,
         nick: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         roles: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]]
+            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
         ] = undefined.UNDEFINED,
         mute: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         deaf: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
@@ -1669,7 +1664,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_voice_region)
 
-    async def fetch_user(self, user: typing.Union[users.User, bases.UniqueObject]) -> users.User:
+    async def fetch_user(self, user: typing.Union[users.User, snowflake.UniqueObject]) -> users.User:
         route = routes.GET_USER.compile(user=user)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
@@ -1677,11 +1672,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     def fetch_audit_log(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        /,
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         *,
-        before: typing.Union[undefined.UndefinedType, datetime.datetime, bases.UniqueObject] = undefined.UNDEFINED,
-        user: typing.Union[undefined.UndefinedType, users.User, bases.UniqueObject] = undefined.UNDEFINED,
+        before: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
+        user: typing.Union[undefined.UndefinedType, users.User, snowflake.UniqueObject] = undefined.UNDEFINED,
         event_type: typing.Union[undefined.UndefinedType, audit_logs.AuditLogEventType] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         guild = str(int(guild))
@@ -1700,9 +1694,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def fetch_emoji(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
-        emoji: typing.Union[emojis.CustomEmoji, bases.UniqueObject],
+        emoji: typing.Union[emojis.CustomEmoji, snowflake.UniqueObject],
     ) -> emojis.KnownCustomEmoji:
         route = routes.GET_GUILD_EMOJI.compile(
             guild=guild, emoji=emoji.id if isinstance(emoji, emojis.CustomEmoji) else emoji,
@@ -1712,7 +1706,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         return self._app.entity_factory.deserialize_known_custom_emoji(response)
 
     async def fetch_guild_emojis(
-        self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
+        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
     ) -> typing.Set[emojis.KnownCustomEmoji]:
         route = routes.GET_GUILD_EMOJIS.compile(guild=guild)
         raw_response = await self._request(route)
@@ -1721,12 +1715,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def create_emoji(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         name: str,
         image: files.Resource,
         *,
         roles: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]]
+            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
         ] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
@@ -1745,13 +1739,13 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def edit_emoji(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
-        emoji: typing.Union[emojis.CustomEmoji, bases.UniqueObject],
+        emoji: typing.Union[emojis.CustomEmoji, snowflake.UniqueObject],
         *,
         name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         roles: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]]
+            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
         ] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
@@ -1768,9 +1762,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def delete_emoji(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
-        emoji: typing.Union[emojis.CustomEmoji, bases.UniqueObject],
+        emoji: typing.Union[emojis.CustomEmoji, snowflake.UniqueObject],
         # Reason is not currently supported for some reason. See
     ) -> None:
         route = routes.DELETE_GUILD_EMOJI.compile(
@@ -1781,14 +1775,14 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
     def guild_builder(self, name: str, /) -> rest_utils.GuildBuilder:
         return rest_utils.GuildBuilder(app=self._app, name=name, request_call=self._request)
 
-    async def fetch_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /) -> guilds.Guild:
+    async def fetch_guild(self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]) -> guilds.Guild:
         route = routes.GET_GUILD.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild(response)
 
     async def fetch_guild_preview(
-        self, guild: typing.Union[guilds.PartialGuild, bases.UniqueObject], /
+        self, guild: typing.Union[guilds.PartialGuild, snowflake.UniqueObject]
     ) -> guilds.GuildPreview:
         route = routes.GET_GUILD_PREVIEW.compile(guild=guild)
         raw_response = await self._request(route)
@@ -1797,8 +1791,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def edit_guild(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        /,
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         *,
         name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         region: typing.Union[undefined.UndefinedType, voices.VoiceRegion, str] = undefined.UNDEFINED,
@@ -1810,11 +1803,11 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             undefined.UndefinedType, guilds.GuildExplicitContentFilterLevel
         ] = undefined.UNDEFINED,
         afk_channel: typing.Union[
-            undefined.UndefinedType, channels.GuildVoiceChannel, bases.UniqueObject
+            undefined.UndefinedType, channels.GuildVoiceChannel, snowflake.UniqueObject
         ] = undefined.UNDEFINED,
         afk_timeout: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
         icon: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
-        owner: typing.Union[undefined.UndefinedType, users.User, bases.UniqueObject] = undefined.UNDEFINED,
+        owner: typing.Union[undefined.UndefinedType, users.User, snowflake.UniqueObject] = undefined.UNDEFINED,
         splash: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
         banner: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
         system_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
@@ -1862,12 +1855,12 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild(response)
 
-    async def delete_guild(self, guild: typing.Union[guilds.Guild, bases.UniqueObject]) -> None:
+    async def delete_guild(self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]) -> None:
         route = routes.DELETE_GUILD.compile(guild=guild)
         await self._request(route)
 
     async def fetch_guild_channels(
-        self, guild: typing.Union[guilds.Guild, bases.UniqueObject]
+        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
     ) -> typing.Sequence[channels.GuildChannel]:
         route = routes.GET_GUILD_CHANNELS.compile(guild=guild)
         raw_response = await self._request(route)
@@ -1878,7 +1871,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def create_guild_text_channel(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         name: str,
         *,
         position: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
@@ -1889,7 +1882,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             typing.Sequence[channels.PermissionOverwrite], undefined.UndefinedType
         ] = undefined.UNDEFINED,
         category: typing.Union[
-            channels.GuildCategory, bases.UniqueObject, undefined.UndefinedType
+            channels.GuildCategory, snowflake.UniqueObject, undefined.UndefinedType
         ] = undefined.UNDEFINED,
         reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channels.GuildTextChannel:
@@ -1909,7 +1902,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def create_guild_news_channel(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         name: str,
         *,
         position: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
@@ -1920,7 +1913,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             typing.Sequence[channels.PermissionOverwrite], undefined.UndefinedType
         ] = undefined.UNDEFINED,
         category: typing.Union[
-            channels.GuildCategory, bases.UniqueObject, undefined.UndefinedType
+            channels.GuildCategory, snowflake.UniqueObject, undefined.UndefinedType
         ] = undefined.UNDEFINED,
         reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channels.GuildNewsChannel:
@@ -1940,7 +1933,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def create_guild_voice_channel(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         name: str,
         *,
         position: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
@@ -1951,7 +1944,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             typing.Sequence[channels.PermissionOverwrite], undefined.UndefinedType
         ] = undefined.UNDEFINED,
         category: typing.Union[
-            channels.GuildCategory, bases.UniqueObject, undefined.UndefinedType
+            channels.GuildCategory, snowflake.UniqueObject, undefined.UndefinedType
         ] = undefined.UNDEFINED,
         reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channels.GuildVoiceChannel:
@@ -1971,7 +1964,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def create_guild_category(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         name: str,
         *,
         position: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
@@ -1994,7 +1987,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def _create_guild_channel(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         name: str,
         type_: channels.ChannelType,
         *,
@@ -2008,7 +2001,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
             typing.Sequence[channels.PermissionOverwrite], undefined.UndefinedType
         ] = undefined.UNDEFINED,
         category: typing.Union[
-            channels.GuildCategory, bases.UniqueObject, undefined.UndefinedType
+            channels.GuildCategory, snowflake.UniqueObject, undefined.UndefinedType
         ] = undefined.UNDEFINED,
         reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channels.GuildChannel:
@@ -2036,15 +2029,17 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def reposition_channels(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        positions: typing.Mapping[int, typing.Union[channels.GuildChannel, bases.UniqueObject]],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        positions: typing.Mapping[int, typing.Union[channels.GuildChannel, snowflake.UniqueObject]],
     ) -> None:
         route = routes.POST_GUILD_CHANNELS.compile(guild=guild)
         body = [{"id": str(int(channel)), "position": pos} for pos, channel in positions.items()]
         await self._request(route, body=body)
 
     async def fetch_member(
-        self, guild: typing.Union[guilds.Guild, bases.UniqueObject], user: typing.Union[users.User, bases.UniqueObject],
+        self,
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        user: typing.Union[users.User, snowflake.UniqueObject],
     ) -> guilds.Member:
         route = routes.GET_GUILD_MEMBER.compile(guild=guild, user=user)
         raw_response = await self._request(route)
@@ -2052,23 +2047,23 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         return self._app.entity_factory.deserialize_member(response)
 
     def fetch_members(
-        self, guild: typing.Union[guilds.Guild, bases.UniqueObject],
+        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
     ) -> iterators.LazyIterator[guilds.Member]:
         return iterators.MemberIterator(self._app, self._request, str(int(guild)))
 
     async def edit_member(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        user: typing.Union[users.User, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        user: typing.Union[users.User, snowflake.UniqueObject],
         *,
         nick: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         roles: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, bases.UniqueObject]]
+            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
         ] = undefined.UNDEFINED,
         mute: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         deaf: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         voice_channel: typing.Union[
-            undefined.UndefinedType, channels.GuildVoiceChannel, bases.UniqueObject, None
+            undefined.UndefinedType, channels.GuildVoiceChannel, snowflake.UniqueObject, None
         ] = undefined.UNDEFINED,
         reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> None:
@@ -2088,7 +2083,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def edit_my_nick(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         nick: typing.Optional[str],
         *,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
@@ -2100,9 +2095,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def add_role_to_member(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        user: typing.Union[users.User, bases.UniqueObject],
-        role: typing.Union[guilds.Role, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        user: typing.Union[users.User, snowflake.UniqueObject],
+        role: typing.Union[guilds.Role, snowflake.UniqueObject],
         *,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
@@ -2111,9 +2106,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def remove_role_from_member(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        user: typing.Union[users.User, bases.UniqueObject],
-        role: typing.Union[guilds.Role, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        user: typing.Union[users.User, snowflake.UniqueObject],
+        role: typing.Union[guilds.Role, snowflake.UniqueObject],
         *,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
@@ -2122,8 +2117,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def kick_member(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        user: typing.Union[users.User, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        user: typing.Union[users.User, snowflake.UniqueObject],
         *,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
@@ -2132,18 +2127,21 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def ban_user(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        user: typing.Union[users.User, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        user: typing.Union[users.User, snowflake.UniqueObject],
         *,
+        delete_message_days: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
+        body = data_binding.JSONObjectBuilder()
+        body.put("delete_message_days", delete_message_days)
         route = routes.PUT_GUILD_BAN.compile(guild=guild, user=user)
-        await self._request(route, reason=reason)
+        await self._request(route, reason=reason, body=body)
 
     async def unban_user(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        user: typing.Union[users.User, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        user: typing.Union[users.User, snowflake.UniqueObject],
         *,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
@@ -2151,7 +2149,9 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         await self._request(route, reason=reason)
 
     async def fetch_ban(
-        self, guild: typing.Union[guilds.Guild, bases.UniqueObject], user: typing.Union[users.User, bases.UniqueObject],
+        self,
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        user: typing.Union[users.User, snowflake.UniqueObject],
     ) -> guilds.GuildMemberBan:
         route = routes.GET_GUILD_BAN.compile(guild=guild, user=user)
         raw_response = await self._request(route)
@@ -2159,7 +2159,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         return self._app.entity_factory.deserialize_guild_member_ban(response)
 
     async def fetch_bans(
-        self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
+        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
     ) -> typing.Sequence[guilds.GuildMemberBan]:
         route = routes.GET_GUILD_BANS.compile(guild=guild)
         raw_response = await self._request(route)
@@ -2167,7 +2167,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_guild_member_ban)
 
     async def fetch_roles(
-        self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
+        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
     ) -> typing.Sequence[guilds.Role]:
         route = routes.GET_GUILD_ROLES.compile(guild=guild)
         raw_response = await self._request(route)
@@ -2176,8 +2176,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def create_role(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        /,
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         *,
         name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         permissions: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
@@ -2205,8 +2204,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def reposition_roles(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        positions: typing.Mapping[int, typing.Union[guilds.Role, bases.UniqueObject]],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        positions: typing.Mapping[int, typing.Union[guilds.Role, snowflake.UniqueObject]],
     ) -> None:
         route = routes.POST_GUILD_ROLES.compile(guild=guild)
         body = [{"id": str(int(role)), "position": pos} for pos, role in positions.items()]
@@ -2214,8 +2213,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def edit_role(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        role: typing.Union[guilds.Role, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        role: typing.Union[guilds.Role, snowflake.UniqueObject],
         *,
         name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         permissions: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
@@ -2244,39 +2243,123 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def delete_role(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        role: typing.Union[guilds.Role, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        role: typing.Union[guilds.Role, snowflake.UniqueObject],
     ) -> None:
         route = routes.DELETE_GUILD_ROLE.compile(guild=guild, role=role)
         await self._request(route)
 
     async def estimate_guild_prune_count(
-        self, guild: typing.Union[guilds.Guild, bases.UniqueObject], days: int,
+        self,
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        *,
+        days: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
+        include_roles: typing.Union[
+            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
+        ] = undefined.UNDEFINED,
     ) -> int:
+        """Estimate the guild prune count.
+
+        Parameters
+        ----------
+        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.Snowflake or int or str
+            The guild to estimate the guild prune count for. This may be a guild object,
+            or the ID of an existing channel.
+        days : hikari.utilities.undefined.UndefinedType or int
+            If provided, number of days to count prune for.
+        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str]
+            If provided, the role(s) to include. By default, this endpoint will not count
+            users with roles. Providing roles using this attribute will make members with
+            the specified roles also get included into the count.
+
+        Returns
+        -------
+        int
+            The estimated guild prune count.
+
+        Raises
+        ------
+        hikari.errors.BadRequest
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack the `KICK_MEMBERS` permission.
+        hikari.errors.NotFound
+            If the guild is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
         route = routes.GET_GUILD_PRUNE.compile(guild=guild)
         query = data_binding.StringMapBuilder()
         query.put("days", days)
+        if include_roles is not undefined.UNDEFINED:
+            roles = ",".join(str(int(role)) for role in include_roles)
+            query.put("include_roles", roles)
         raw_response = await self._request(route, query=query)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return int(response["pruned"])
 
     async def begin_guild_prune(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        days: int,
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         *,
-        reason: typing.Union[undefined.UndefinedType, str],
-    ) -> int:
+        days: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
+        compute_prune_count: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        include_roles: typing.Union[
+            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
+        ] = undefined.UNDEFINED,
+        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+    ) -> typing.Optional[int]:
+        """Begin the guild prune.
+
+        Parameters
+        ----------
+        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.Snowflake or int or str
+            The guild to begin the guild prune in. This may be a guild object,
+            or the ID of an existing channel.
+        days : hikari.utilities.undefined.UndefinedType or int
+            If provided, number of days to count prune for.
+        compute_prune_count: hikari.utilities.undefined.UndefinedType or bool
+            If provided, whether to return the prune count. This is discouraged for large
+            guilds.
+        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str]
+            If provided, the role(s) to include. By default, this endpoint will not count
+            users with roles. Providing roles using this attribute will make members with
+            the specified roles also get included into the count.
+        reason : hikari.utilities.undefined.UndefinedType or str
+            If provided, the reason that will be recorded in the audit logs.
+
+        Returns
+        -------
+        int or None
+            If `compute_prune_count` is not provided or `True`, the number of members pruned.
+
+        Raises
+        ------
+        hikari.errors.BadRequest
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack the `KICK_MEMBERS` permission.
+        hikari.errors.NotFound
+            If the guild is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
         route = routes.POST_GUILD_PRUNE.compile(guild=guild)
-        query = data_binding.StringMapBuilder()
-        query.put("compute_prune_count", True)
-        query.put("days", days)
-        raw_response = await self._request(route, query=query, reason=reason)
+        body = data_binding.JSONObjectBuilder()
+        body.put("days", days)
+        body.put("compute_prune_count", compute_prune_count)
+        body.put_snowflake_array("include_roles", include_roles)
+        raw_response = await self._request(route, body=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return int(response["pruned"])
+        pruned = response.get("pruned")
+        return int(pruned) if pruned is not None else None
 
     async def fetch_guild_voice_regions(
-        self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
+        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
     ) -> typing.Sequence[voices.VoiceRegion]:
         route = routes.GET_GUILD_VOICE_REGIONS.compile(guild=guild)
         raw_response = await self._request(route)
@@ -2284,7 +2367,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_voice_region)
 
     async def fetch_guild_invites(
-        self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
+        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         route = routes.GET_GUILD_INVITES.compile(guild=guild)
         raw_response = await self._request(route)
@@ -2292,7 +2375,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_invite_with_metadata)
 
     async def fetch_integrations(
-        self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /
+        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
     ) -> typing.Sequence[guilds.Integration]:
         route = routes.GET_GUILD_INTEGRATIONS.compile(guild=guild)
         raw_response = await self._request(route)
@@ -2301,8 +2384,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def edit_integration(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        integration: typing.Union[guilds.Integration, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        integration: typing.Union[guilds.Integration, snowflake.UniqueObject],
         *,
         expire_behaviour: typing.Union[
             undefined.UndefinedType, guilds.IntegrationExpireBehaviour
@@ -2321,8 +2404,8 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def delete_integration(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        integration: typing.Union[guilds.Integration, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        integration: typing.Union[guilds.Integration, snowflake.UniqueObject],
         *,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
@@ -2331,13 +2414,13 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def sync_integration(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        integration: typing.Union[guilds.Integration, bases.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        integration: typing.Union[guilds.Integration, snowflake.UniqueObject],
     ) -> None:
         route = routes.POST_GUILD_INTEGRATION_SYNC.compile(guild=guild, integration=integration)
         await self._request(route)
 
-    async def fetch_widget(self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /) -> guilds.GuildWidget:
+    async def fetch_widget(self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]) -> guilds.GuildWidget:
         route = routes.GET_GUILD_WIDGET.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
@@ -2345,11 +2428,10 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
 
     async def edit_widget(
         self,
-        guild: typing.Union[guilds.Guild, bases.UniqueObject],
-        /,
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         *,
         channel: typing.Union[
-            undefined.UndefinedType, channels.GuildChannel, bases.UniqueObject, None
+            undefined.UndefinedType, channels.GuildChannel, snowflake.UniqueObject, None
         ] = undefined.UNDEFINED,
         enabled: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
@@ -2367,7 +2449,7 @@ class REST(http_client.HTTPClient, component.IComponent):  # pylint:disable=too-
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild_widget(response)
 
-    async def fetch_vanity_url(self, guild: typing.Union[guilds.Guild, bases.UniqueObject], /) -> invites.VanityURL:
+    async def fetch_vanity_url(self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]) -> invites.VanityURL:
         route = routes.GET_GUILD_VANITY_URL.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)

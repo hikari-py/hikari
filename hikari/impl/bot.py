@@ -22,11 +22,7 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = ["BotAppImpl"]
 
 import asyncio
-import inspect
 import logging
-import os
-import platform
-import sys
 import typing
 
 from hikari.api import bot
@@ -47,7 +43,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_consumer as event_consumer_
-    from hikari.api import event_dispatcher
+    from hikari.api import event_dispatcher as event_dispatcher_
     from hikari.events import base as base_events
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
@@ -91,14 +87,6 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
     large_threshold : int
         The number of members that need to be in a guild for the guild to be
         considered large. Defaults to the maximum, which is `250`.
-    logging_level : str or None
-        If not `None`, then this will be the logging level set if you have not
-        enabled logging already. In this case, it should be a valid
-        `logging` level that can be passed to `logging.basicConfig`. If you have
-        already initialized logging, then this is irrelevant and this
-        parameter can be safely ignored. If you set this to `None`, then no
-        logging will initialize if you have a reason to not use any logging
-        or simply wish to initialize it in your own time instead.
     rest_version : int
         The version of the REST API to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
@@ -162,7 +150,6 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         initial_status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
-        logging_level: typing.Optional[str] = "INFO",
         rest_version: int = 6,
         rest_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         shard_ids: typing.Union[typing.Set[int], undefined.UndefinedType] = undefined.UNDEFINED,
@@ -171,11 +158,6 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         token: str,
     ) -> None:
         self._logger = reflect.get_logger(self)
-
-        # If logging is already configured, then this does nothing.
-        if logging_level is not None:
-            logging.basicConfig(level=logging_level, format=self.__get_logging_format())
-        self.__print_banner()
 
         config = http_settings_.HTTPSettings() if config is undefined.UNDEFINED else config
 
@@ -211,7 +193,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         )
 
     @property
-    def event_dispatcher(self) -> event_dispatcher.IEventDispatcherComponent:
+    def event_dispatcher(self) -> event_dispatcher_.IEventDispatcherComponent:
         return self._event_manager
 
     @property
@@ -275,82 +257,3 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
 
     async def fetch_sharding_settings(self) -> gateway_models.GatewayBot:
         return await self.rest.fetch_gateway_bot()
-
-    def __print_banner(self) -> None:
-        from hikari import _about
-
-        version = _about.__version__
-        sourcefile = typing.cast(str, inspect.getsourcefile(_about))
-        path = os.path.abspath(os.path.dirname(sourcefile))
-        python_implementation = platform.python_implementation()
-        python_version = platform.python_version()
-        operating_system = " ".join((platform.system(), *platform.architecture()))
-        python_compiler = platform.python_compiler()
-
-        copyright_str = f"{_about.__copyright__}, licensed under {_about.__license__}"
-        version_str = f"hikari v{version} (installed in {path})"
-        impl_str = f"Running on {python_implementation} v{python_version}, {python_compiler}, ({operating_system})"
-        doc_line = f"Documentation: {_about.__docs__}"
-        guild_line = f"Support: {_about.__discord_invite__}"
-        line_len = max(len(version_str), len(copyright_str), len(impl_str), len(guild_line), len(doc_line))
-
-        copyright_str = f"|*   {copyright_str:^{line_len}}   *|"
-        impl_str = f"|*   {impl_str:^{line_len}}   *|"
-        version_str = f"|*   {version_str:^{line_len}}   *|"
-        doc_line = f"|*   {doc_line:^{line_len}}   *|"
-        guild_line = f"|*   {guild_line:^{line_len}}   *|"
-        line_len = max(len(version_str), len(copyright_str), len(impl_str), len(guild_line), len(doc_line)) - 4
-
-        top_line = "//" + ("=" * line_len) + r"\\"
-        bottom_line = r"\\" + ("=" * line_len) + "//"
-
-        # Start on a newline, this prevents logging formatting messing with the
-        # layout of the banner; before we used \r but this probably isn't great
-        # since with systems like docker-compose that prepend to each line of
-        # logs, we end up with a mess.
-        self.logger.info(
-            "\n%s\n%s\n%s\n%s\n%s\n%s\n%s",
-            top_line,
-            version_str,
-            copyright_str,
-            impl_str,
-            doc_line,
-            guild_line,
-            bottom_line,
-        )
-
-    @staticmethod
-    def __get_logging_format() -> str:
-        # Modified from
-        # https://github.com/django/django/blob/master/django/core/management/color.py
-
-        plat = sys.platform
-        supports_color = False
-
-        # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
-        is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
-
-        if plat != "Pocket PC":
-            if plat == "win32":
-                supports_color |= os.getenv("TERM_PROGRAM", None) == "mintty"
-                supports_color |= "ANSICON" in os.environ
-                supports_color |= is_a_tty
-            else:
-                supports_color = is_a_tty
-
-            supports_color |= bool(os.getenv("PYCHARM_HOSTED", ""))
-
-        if supports_color:
-            blue = "\033[1;35m"
-            gray = "\033[1;37m"
-            green = "\033[1;32m"
-            red = "\033[1;31m"
-            yellow = "\033[1;33m"
-            default = "\033[0m"
-        else:
-            blue = gray = green = red = yellow = default = ""
-
-        return (
-            f"{red}%(levelname)4.4s {yellow}%(name)-20.20s {green}#%(lineno)-4d {blue}%(asctime)23.23s "
-            f"{default}:: {gray}%(message)s{default}"
-        )

@@ -274,7 +274,7 @@ class ByteReader(AsyncReader):
 
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         for i in range(0, len(self.data), _MAGIC):
-            yield self.data[i : i + _MAGIC]
+            yield self.data[i : i + _MAGIC]  # noqa: E203
 
 
 @attr.s(auto_attribs=True, slots=True)
@@ -300,8 +300,8 @@ class WebReader(AsyncReader):
     """The size of the resource, if known."""
 
     head_only: bool
-    """If `True`, then only the HEAD was requested. 
-    
+    """If `True`, then only the HEAD was requested.
+
     In this case, neither `__aiter__` nor `read` would return anything other
     than an empty byte string.
     """

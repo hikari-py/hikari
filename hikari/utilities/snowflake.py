@@ -21,6 +21,7 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = ["Snowflake"]
 
+import abc
 import datetime
 
 # noinspection PyUnresolvedReferences
@@ -87,3 +88,37 @@ class Snowflake(int):
         return cls(
             (date.datetime_to_discord_epoch(timestamp) << 22) | (worker_id << 17) | (process_id << 12) | increment
         )
+
+
+class Unique(abc.ABC):
+    """Mixin for a class that enforces uniqueness by a snowflake ID."""
+
+    __slots__ = ()
+
+    @property
+    @abc.abstractmethod
+    def id(self) -> Snowflake:
+        """The ID of this entity."""  # noqa: D401 - Not imperative mood
+
+    @id.setter
+    def id(self, value: Snowflake) -> None:
+        """Set the ID on this entity."""
+
+    @property
+    def created_at(self) -> datetime.datetime:
+        """When the object was created."""
+        return self.id.created_at
+
+    @typing.final
+    def __int__(self) -> int:
+        return int(self.id)
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    def __eq__(self, other: typing.Any) -> bool:
+        return type(self) is type(other) and self.id == other.id
+
+
+UniqueObject = typing.Union[Unique, Snowflake, int, str]
+"""Type hint representing a unique object entity."""

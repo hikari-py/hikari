@@ -426,7 +426,7 @@ class AuditLogIterator(LazyIterator["audit_logs.AuditLog"]):
         response = typing.cast(data_binding.JSONObject, raw_response)
 
         if not response["entries"]:
-            raise StopAsyncIteration()
+            raise StopAsyncIteration
 
         log = self._app.entity_factory.deserialize_audit_log(response)
         self._first_id = str(min(log.entries.keys()))

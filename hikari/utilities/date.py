@@ -53,12 +53,9 @@ References
 * [Discord API documentation - Snowflakes](https://discord.com/developers/docs/reference#snowflakes)
 """
 
-# FS003 - f-string missing prefix.
-_ISO_8601_DATE: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")  # noqa: FS003
-_ISO_8601_TIME: typing.Final[typing.Pattern[str]] = re.compile(
-    r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I
-)  # noqa: FS003
-_ISO_8601_TZ: typing.Final[typing.Pattern[str]] = re.compile(r"([+-])(\d{2}):(\d{2})$")  # noqa: FS003
+_ISO_8601_DATE: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
+_ISO_8601_TIME: typing.Final[typing.Pattern[str]] = re.compile(r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I)
+_ISO_8601_TZ: typing.Final[typing.Pattern[str]] = re.compile(r"([+-])(\d{2}):(\d{2})$")
 
 
 def rfc7231_datetime_string_to_datetime(date_str: str, /) -> datetime.datetime:
