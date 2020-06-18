@@ -92,7 +92,6 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Typing :: Typed",
     ],
-    entry_points={"console_scripts": ["hikari = hikari.__main__:main"]},
-    extras_require={"speedups": parse_requirements_file("speedup-requirements.txt"),},
+    entry_points={"console_scripts": ["hikari = hikari.cli:main"]},
     provides="hikari",
 )

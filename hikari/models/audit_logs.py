@@ -43,14 +43,14 @@ import typing
 
 import attr
 
-from hikari.models import bases
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
+    from hikari.api import rest
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import users as users_
     from hikari.models import webhooks as webhooks_
-    from hikari.utilities import snowflake
 
 
 @typing.final
@@ -186,12 +186,17 @@ class BaseAuditLogEntryInfo(abc.ABC):
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, bases.Unique):
+class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflake.Unique):
     """Represents the extra information for overwrite related audit log entries.
 
     Will be attached to the overwrite create, update and delete audit log
     entries.
     """
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
 
     type: channels.PermissionOverwriteType = attr.ib(repr=True)
     """The type of entity this overwrite targets."""
@@ -276,8 +281,16 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class AuditLogEntry(bases.Entity, bases.Unique):
+class AuditLogEntry(snowflake.Unique):
     """Represents an entry in a guild's audit log."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
 
     target_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the entity affected by this change, if applicable."""

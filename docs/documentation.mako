@@ -275,7 +275,7 @@
 
         project_inventory.objects.append(
             sphobjinv.DataObjStr(
-                name = v.name,
+                name = f"{v.module.name}.{v.name}",
                 domain = "py",
                 role = "var",
                 uri = v.url(),
@@ -322,7 +322,7 @@
         if not redirect:
             project_inventory.objects.append(
                 sphobjinv.DataObjStr(
-                    name = f.name,
+                    name = f"{f.module.name}.{f.name}",
                     domain = "py",
                     role = "func",
                     uri = f.url(),
@@ -386,7 +386,7 @@
         if not redirect:
             project_inventory.objects.append(
                 sphobjinv.DataObjStr(
-                    name = c.name,
+                    name = f"{c.module.name}.{c.name}",
                     domain = "py",
                     role = "class",
                     uri = c.url(),
@@ -563,7 +563,7 @@
                 % if submodules:
                     <ul class="list-unstyled text-truncate">
                         % for child_module in submodules:
-                            <li class="text-truncate"><code>${link(child_module, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</code></li>
+                            <li class="text-truncate monospaced">${link(child_module, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
                         % endfor
                     </ul>
                 % endif
@@ -575,7 +575,7 @@
                 % if variables:
                     <ul class="list-unstyled text-truncate">
                         % for variable in variables:
-                            <li class="text-truncate">${link(variable, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
+                            <li class="text-truncate monospaced">${link(variable, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
                         % endfor
                     </ul>
                 % endif
@@ -583,7 +583,7 @@
                 % if functions:
                     <ul class="list-unstyled text-truncate">
                         % for function in functions:
-                            <li class="text-truncate">${link(function, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
+                            <li class="text-truncate monospaced">${link(function, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
                         % endfor
                     </ul>
                 % endif
@@ -592,7 +592,7 @@
                     % for c in classes:
                         ## Purposely using one item per list for layout reasons.
                         <ul class="list-unstyled text-truncate">
-                            <li>
+                            <li class="monospaced">
                                 ${link(c, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}
 
                                 <%
@@ -611,7 +611,7 @@
                                 <ul class="list-unstyled nested text-truncate">
                                     % if members:
                                         % for member in members:
-                                            <li class="text-truncate">${link(member, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
+                                            <li class="text-truncate monospaced">${link(member, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
                                         % endfor
                                     % endif
                                 </ul>

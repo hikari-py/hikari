@@ -38,7 +38,6 @@ import attr
 from hikari.models import colors
 from hikari.utilities import files
 
-
 if typing.TYPE_CHECKING:
     import concurrent.futures
 
@@ -379,17 +378,11 @@ class Embed:
         return self
 
     def set_image(self, image: typing.Union[None, str, files.Resource] = None, /) -> Embed:
-        if image is None:
-            self.image = None
-        else:
-            self.image = EmbedImage(resource=files.ensure_resource(image))
+        self.image = EmbedImage(resource=files.ensure_resource(image)) if image is not None else None
         return self
 
     def set_thumbnail(self, image: typing.Union[None, str, files.Resource] = None, /) -> Embed:
-        if image is None:
-            self.thumbnail = None
-        else:
-            self.thumbnail = EmbedImage(resource=files.ensure_resource(image))
+        self.thumbnail = EmbedImage(resource=files.ensure_resource(image)) if image is not None else None
         return self
 
     def add_field(self, name: str, value: str, *, inline: bool = False) -> Embed:
