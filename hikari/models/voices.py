@@ -25,16 +25,18 @@ import typing
 
 import attr
 
-from hikari.models import bases
-
 if typing.TYPE_CHECKING:
+    from hikari.api import rest
     from hikari.models import guilds
     from hikari.utilities import snowflake
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class VoiceState(bases.Entity):
+class VoiceState:
     """Represents a user's voice connection status."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the guild this voice state is in, if applicable."""

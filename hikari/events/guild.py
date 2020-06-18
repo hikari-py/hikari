@@ -45,15 +45,15 @@ import typing
 import attr
 
 from hikari.events import base as base_events
-from hikari.models import bases as base_models
 from hikari.models import intents
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
+    from hikari.api import rest
     from hikari.models import emojis as emojis_models
     from hikari.models import guilds
     from hikari.models import presences
     from hikari.models import users
-    from hikari.utilities import snowflake
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
@@ -86,28 +86,44 @@ class GuildUpdateEvent(GuildEvent):
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class GuildLeaveEvent(GuildEvent, base_models.Unique):
+class GuildLeaveEvent(GuildEvent, snowflake.Unique):
     """Fired when the current user leaves the guild or is kicked/banned from it.
 
     !!! note
         This is fired based on Discord's Guild Delete gateway event.
     """
 
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
+
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class GuildUnavailableEvent(GuildEvent, base_models.Entity, base_models.Unique):
+class GuildUnavailableEvent(GuildEvent, snowflake.Unique):
     """Fired when a guild becomes temporarily unavailable due to an outage.
 
     !!! note
         This is fired based on Discord's Guild Delete gateway event.
     """
 
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
+
 
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class GuildBanEvent(GuildEvent, base_models.Entity, abc.ABC):
+class GuildBanEvent(GuildEvent, abc.ABC):
     """A base object that guild ban events will inherit from."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this ban is in."""
@@ -130,8 +146,11 @@ class GuildBanRemoveEvent(GuildBanEvent):
 
 @base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class GuildEmojisUpdateEvent(GuildEvent, base_models.Entity):
+class GuildEmojisUpdateEvent(GuildEvent):
     """Represents a Guild Emoji Update gateway event."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this emoji was updated in."""
@@ -142,8 +161,11 @@ class GuildEmojisUpdateEvent(GuildEvent, base_models.Entity):
 
 @base_events.requires_intents(intents.Intent.GUILD_INTEGRATIONS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class GuildIntegrationsUpdateEvent(GuildEvent, base_models.Entity):
+class GuildIntegrationsUpdateEvent(GuildEvent):
     """Used to represent Guild Integration Update gateway events."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild the integration was updated in."""
@@ -157,8 +179,11 @@ class GuildMemberEvent(GuildEvent):
 
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class GuildMemberAddEvent(GuildMemberEvent, base_models.Entity):
+class GuildMemberAddEvent(GuildMemberEvent):
     """Used to represent a Guild Member Add gateway event."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)  # TODO: do we want to have guild_id on all members?
     """The ID of the guild where this member was added."""
@@ -180,11 +205,14 @@ class GuildMemberUpdateEvent(GuildMemberEvent):
 
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class GuildMemberRemoveEvent(GuildMemberEvent, base_models.Entity):
+class GuildMemberRemoveEvent(GuildMemberEvent):
     """Used to represent Guild Member Remove gateway events.
 
     Sent when a member is kicked, banned or leaves a guild.
     """
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     # TODO: make GuildMember event into common base class.
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -201,8 +229,11 @@ class GuildRoleEvent(GuildEvent):
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class GuildRoleCreateEvent(GuildRoleEvent, base_models.Entity):
+class GuildRoleCreateEvent(GuildRoleEvent):
     """Used to represent a Guild Role Create gateway event."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild where this role was created."""
@@ -213,8 +244,11 @@ class GuildRoleCreateEvent(GuildRoleEvent, base_models.Entity):
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class GuildRoleUpdateEvent(GuildRoleEvent, base_models.Entity):
+class GuildRoleUpdateEvent(GuildRoleEvent):
     """Used to represent a Guild Role Create gateway event."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     # TODO: make any event with a guild ID into a custom base event.
     # https://pypi.org/project/stupid/ could this work around the multiple inheritance problem?
@@ -227,8 +261,11 @@ class GuildRoleUpdateEvent(GuildRoleEvent, base_models.Entity):
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class GuildRoleDeleteEvent(GuildRoleEvent, base_models.Entity):
+class GuildRoleDeleteEvent(GuildRoleEvent):
     """Represents a gateway Guild Role Delete Event."""
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild where this role is being deleted."""

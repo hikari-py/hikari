@@ -27,13 +27,13 @@ import unicodedata
 
 import attr
 
-from hikari.models import bases
 from hikari.utilities import cdn
 from hikari.utilities import files
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
+    from hikari.api import rest
     from hikari.models import users
-    from hikari.utilities import snowflake
 
 
 _TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/72x72/"
@@ -189,7 +189,7 @@ class UnicodeEmoji(Emoji):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class CustomEmoji(bases.Entity, bases.Unique, Emoji):
+class CustomEmoji(snowflake.Unique, Emoji):
     """Represents a custom emoji.
 
     This is a custom emoji that is from a guild you might not be part of.
@@ -212,6 +212,14 @@ class CustomEmoji(bases.Entity, bases.Unique, Emoji):
         Track this issue here:
         https://github.com/discord/discord-api-docs/issues/1614
     """
+
+    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False, init=True)
+    """The client application that models may use for procedures."""
+
+    id: snowflake.Snowflake = attr.ib(
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+    )
+    """The ID of this entity."""
 
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The name of the emoji."""

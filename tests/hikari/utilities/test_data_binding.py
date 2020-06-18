@@ -17,19 +17,19 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import typing
 
+import attr
 import mock
 import multidict
 import pytest
 
-from hikari.models import bases
 from hikari.utilities import data_binding
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 
-class MyUnique(bases.Unique):
-    def __init__(self, value):
-        self.id = snowflake.Snowflake(value)
+@attr.s(slots=True)
+class MyUnique(snowflake.Unique):
+    id: snowflake.Snowflake = attr.ib(converter=snowflake.Snowflake)
 
 
 class TestStringMapBuilder:

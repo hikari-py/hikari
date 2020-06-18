@@ -34,8 +34,6 @@ import async_timeout
 import mock
 import pytest
 
-from hikari.models import bases
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -227,54 +225,6 @@ def _maybe_mock_type_name(value):
         if any(mro.__name__ == "MagicMock" for mro in type(value).mro())
         else type(value).__name__
     )
-
-
-def _parameterize_ids_id(param_name):
-    def ids(param):
-        type_name = type(param).__name__ if isinstance(param, (str, int)) else _maybe_mock_type_name(param)
-        return f" type({param_name}) is {type_name} "
-
-    return ids
-
-
-def parametrize_valid_id_formats_for_models(param_name, id, model_type1, *model_types, **kwargs):
-    """
-    @pytest.mark.parameterize for a param that is an id-able object, but could be the ID in a string, the ID in an int,
-    or the ID in a given model type...
-
-    For example
-
-    >>> @parametrize_valid_id_formats_for_models("guild", 1234, guilds.Guild, unavailable=False)
-
-    ...would be the same as...
-
-    >>> @pytest.mark.parametrize(
-    ...     "guild",
-    ...     [
-    ...         1234,
-    ...         snowflakes.Snowflake(1234),
-    ...         mock_model(guilds.Guild, id=snowflakes.Snowflake(1234), unavailable=False)
-    ...     ],
-    ...     id=lambda ...: ...
-    ... )
-
-    These are stackable as long as the parameter name is unique, as expected.
-    """
-    model_types = [model_type1, *model_types]
-
-    def decorator(func):
-        mock_models = []
-        for model_type in model_types:
-            assert bases.Unique.__name__ in map(
-                lambda mro: mro.__name__, model_type.mro()
-            ), f"model must be a {bases.Unique.__name__} derivative"
-            mock_models.append(mock_model(model_type, id=bases.Snowflake(id), **kwargs))
-
-        return pytest.mark.parametrize(
-            param_name, [int(id), bases.Snowflake(id), *mock_models], ids=_parameterize_ids_id(param_name)
-        )(func)
-
-    return decorator
 
 
 def todo_implement(fn=...):
