@@ -30,6 +30,9 @@ import typing
 
 from hikari import _about
 
+def main():
+    pass  # exists to keep setup.py happy for entrypoint 
+
 sourcefile = typing.cast(str, inspect.getsourcefile(_about))
 path: typing.Final[str] = os.path.abspath(os.path.dirname(sourcefile))
 version: typing.Final[str] = _about.__version__
