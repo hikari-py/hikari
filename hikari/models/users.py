@@ -183,8 +183,7 @@ class User(PartialUser):
         """Generate the avatar for this user, if set.
 
         If no custom avatar is set, this returns `None`. You can then use the
-        `User.default_avatar_url` attribute instead to fetch the displayed
-        URL.
+        `default_avatar_url` attribute instead to fetch the displayed URL.
 
         Parameters
         ----------
