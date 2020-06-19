@@ -47,9 +47,9 @@ _TWEMOJI_SVG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/r
 class Emoji(files.WebResource, abc.ABC):
     """Base class for all emojis.
 
-    Any emoji implementation supports being used as a `hikari.models.files.BaseStream`
+    Any emoji implementation supports being used as a `hikari.utilities.files.Resource`
     when uploading an attachment to the API. This is achieved in the same
-    way as using a `hikari.models.files.WebResourceStream` would achieve this.
+    way as using a `hikari.utilities.files.WebResource` would achieve this.
     """
 
     @property
@@ -195,7 +195,7 @@ class CustomEmoji(snowflake.Unique, Emoji):
     This is a custom emoji that is from a guild you might not be part of.
 
     All CustomEmoji objects and their derivatives act as valid
-    `hikari.models.files.BaseStream` objects. This means you can use them as a
+    `hikari.utilities.files.Resource` objects. This means you can use them as a
     file when sending a message.
 
         >>> emojis = await bot.rest.fetch_guild_emojis(12345)
@@ -252,8 +252,8 @@ class CustomEmoji(snowflake.Unique, Emoji):
     @property
     @typing.final
     def url(self) -> str:
-        # TODO, change this as it is a bad line of code and I don't like it.
-        return cdn.generate_cdn_url("emojis", str(self.id), format_="gif" if self.is_animated else "png", size=None).url
+        ext = "gif" if self.is_animated else "png"
+        return cdn.generate_cdn_url("emojis", str(self.id), format_=ext, size=None).url
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
