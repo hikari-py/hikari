@@ -21,6 +21,7 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = ["LazyIterator"]
 
 import abc
+import operator
 import typing
 
 from hikari.net import routes
@@ -37,10 +38,34 @@ if typing.TYPE_CHECKING:
     from hikari.models import messages
     from hikari.models import users
 
-IteratorT = typing.TypeVar("IteratorT")
+ValueT = typing.TypeVar("ValueT")
+AnotherValueT = typing.TypeVar("AnotherValueT")
 
 
-class LazyIterator(typing.Generic[IteratorT], abc.ABC):
+class _AllConditions(typing.Generic[ValueT]):
+    __slots__ = ("conditions",)
+
+    def __init__(self, conditions: typing.Collection[typing.Callable[[ValueT], bool]]) -> None:
+        self.conditions = conditions
+
+    def __call__(self, item: ValueT) -> bool:
+        return all(condition(item) for condition in self.conditions)
+
+
+class _AttrComparator(typing.Generic[ValueT]):
+    __slots__ = ("getter", "expected_value")
+
+    def __init__(self, attr_name: str, expected_value: typing.Any) -> None:
+        if attr_name.startswith("."):
+            attr_name = attr_name[1:]
+        self.getter = operator.attrgetter(attr_name)
+        self.expected_value = expected_value
+
+    def __call__(self, item: ValueT) -> bool:
+        return bool(self.getter(item) == self.expected_value)
+
+
+class LazyIterator(typing.Generic[ValueT], abc.ABC):
     """A set of results that are fetched asynchronously from the API as needed.
 
     This is a `typing.AsyncIterable` and `typing.AsyncIterator` with several
@@ -90,7 +115,78 @@ class LazyIterator(typing.Generic[IteratorT], abc.ABC):
 
     __slots__ = ()
 
-    def enumerate(self, *, start: int = 0) -> LazyIterator[typing.Tuple[int, IteratorT]]:
+    def map(
+        self, transformation: typing.Union[typing.Callable[[ValueT], AnotherValueT], str],
+    ) -> LazyIterator[AnotherValueT]:
+        """Map the values to a different value.
+
+        Parameters
+        ----------
+        transformation : typing.Callable[[ValueT], bool] or str
+            The function to use to map the attribute. This may alternatively
+            be a string attribute name to replace the input value with. You
+            can provide nested attributes using the `.` operator.
+
+        Returns
+        -------
+        LazyIterator[AnotherValueT]
+            LazyIterator that maps each value to another value.
+        """
+        if isinstance(transformation, str):
+            if transformation.startswith("."):
+                transformation = transformation[1:]
+            transformation = operator.attrgetter(transformation)
+        return _MappingLazyIterator(self, transformation)
+
+    def filter(
+        self,
+        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[ValueT], bool]],
+        **attrs: typing.Any,
+    ) -> LazyIterator[ValueT]:
+        """Filter the items by one or more conditions that must all be `True`.
+
+        Parameters
+        ----------
+        *predicates : typing.Callable[[ValueT], bool] or typing.Tuple[str, typing.Any]
+            Predicates to invoke. These are functions that take a value and
+            return `True` if it is of interest, or `False` otherwise. These
+            may instead include 2-`tuple` objects consisting of a `str`
+            attribute name (nested attributes are referred to using the `.`
+            operator), and values to compare for equality. This allows you
+            to specify conditions such as `members.filter(("user.bot", True))`.
+        **attrs : typing.Any
+            Alternative to passing 2-tuples. Cannot specify nested attributes
+            using this method.
+
+        Returns
+        -------
+        LazyIterator[ValueT]
+            LazyIterator that only emits values where all conditions are
+            matched.
+        """
+        if not predicates and not attrs:
+            raise TypeError("You should provide at least one predicate to filter()")
+
+        conditions: typing.List[typing.Callable[[ValueT], bool]] = []
+
+        for p in predicates:
+            if isinstance(p, tuple):
+                name, value = p
+                tuple_comparator: _AttrComparator[ValueT] = _AttrComparator(name, value)
+                conditions.append(tuple_comparator)
+            else:
+                conditions.append(p)
+
+        for name, value in attrs.items():
+            attr_comparator: _AttrComparator[ValueT] = _AttrComparator(name, value)
+            conditions.append(attr_comparator)
+
+        if len(conditions) > 1:
+            return _FilteredLazyIterator(self, _AllConditions(conditions))
+        else:
+            return _FilteredLazyIterator(self, conditions[0])
+
+    def enumerate(self, *, start: int = 0) -> LazyIterator[typing.Tuple[int, ValueT]]:
         """Enumerate the paginated results lazily.
 
         This behaves as an asyncio-friendly version of `builtins.enumerate`
@@ -134,7 +230,7 @@ class LazyIterator(typing.Generic[IteratorT], abc.ABC):
         """
         return _EnumeratedLazyIterator(self, start=start)
 
-    def limit(self, limit: int) -> LazyIterator[IteratorT]:
+    def limit(self, limit: int) -> LazyIterator[ValueT]:
         """Limit the number of items you receive from this async iterator.
 
         Parameters
@@ -159,45 +255,45 @@ class LazyIterator(typing.Generic[IteratorT], abc.ABC):
     def _complete(self) -> typing.NoReturn:
         raise StopAsyncIteration("No more items exist in this paginator. It has been exhausted.") from None
 
-    def __aiter__(self) -> LazyIterator[IteratorT]:
+    def __aiter__(self) -> LazyIterator[ValueT]:
         # We are our own iterator.
         return self
 
-    async def _fetch_all(self) -> typing.Sequence[IteratorT]:
+    async def _fetch_all(self) -> typing.Sequence[ValueT]:
         return [item async for item in self]
 
-    def __await__(self) -> typing.Generator[typing.Sequence[IteratorT], None, None]:
-        yield from self._fetch_all().__await__()
+    def __await__(self) -> typing.Generator[None, None, typing.Sequence[ValueT]]:
+        return self._fetch_all().__await__()
 
     @abc.abstractmethod
-    async def __anext__(self) -> IteratorT:
+    async def __anext__(self) -> ValueT:
         ...
 
 
-class _EnumeratedLazyIterator(typing.Generic[IteratorT], LazyIterator[typing.Tuple[int, IteratorT]]):
+class _EnumeratedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Tuple[int, ValueT]]):
     __slots__ = ("_i", "_paginator")
 
-    def __init__(self, paginator: LazyIterator[IteratorT], *, start: int) -> None:
+    def __init__(self, paginator: LazyIterator[ValueT], *, start: int) -> None:
         self._i = start
         self._paginator = paginator
 
-    async def __anext__(self) -> typing.Tuple[int, IteratorT]:
+    async def __anext__(self) -> typing.Tuple[int, ValueT]:
         pair = self._i, await self._paginator.__anext__()
         self._i += 1
         return pair
 
 
-class _LimitedLazyIterator(typing.Generic[IteratorT], LazyIterator[IteratorT]):
+class _LimitedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
     __slots__ = ("_paginator", "_count", "_limit")
 
-    def __init__(self, paginator: LazyIterator[IteratorT], limit: int) -> None:
+    def __init__(self, paginator: LazyIterator[ValueT], limit: int) -> None:
         if limit <= 0:
             raise ValueError("limit must be positive and non-zero")
         self._paginator = paginator
         self._count = 0
         self._limit = limit
 
-    async def __anext__(self) -> IteratorT:
+    async def __anext__(self) -> ValueT:
         if self._count >= self._limit:
             self._complete()
 
@@ -206,18 +302,45 @@ class _LimitedLazyIterator(typing.Generic[IteratorT], LazyIterator[IteratorT]):
         return next_item
 
 
-class _BufferedLazyIterator(typing.Generic[IteratorT], LazyIterator[IteratorT]):
+class _FilteredLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+    __slots__ = ("_paginator", "_predicate")
+
+    def __init__(self, paginator: LazyIterator[ValueT], predicate: typing.Callable[[ValueT], bool]) -> None:
+        self._paginator = paginator
+        self._predicate = predicate
+
+    async def __anext__(self) -> ValueT:
+        async for item in self._paginator:
+            if self._predicate(item):
+                return item
+        raise StopAsyncIteration
+
+
+class _MappingLazyIterator(typing.Generic[AnotherValueT, ValueT], LazyIterator[ValueT]):
+    __slots__ = ("_paginator", "_transformation")
+
+    def __init__(
+        self, paginator: LazyIterator[AnotherValueT], transformation: typing.Callable[[AnotherValueT], ValueT],
+    ) -> None:
+        self._paginator = paginator
+        self._transformation = transformation
+
+    async def __anext__(self) -> ValueT:
+        return self._transformation(await self._paginator.__anext__())
+
+
+class _BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
     __slots__ = ("_buffer",)
 
     def __init__(self) -> None:
-        empty_genexp = typing.cast(typing.Generator[IteratorT, None, None], (_ for _ in ()))
-        self._buffer: typing.Optional[typing.Generator[IteratorT, None, None]] = empty_genexp
+        empty_genexp = typing.cast(typing.Generator[ValueT, None, None], (_ for _ in ()))
+        self._buffer: typing.Optional[typing.Generator[ValueT, None, None]] = empty_genexp
 
     @abc.abstractmethod
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[IteratorT, None, None]]:
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[ValueT, None, None]]:
         ...
 
-    async def __anext__(self) -> IteratorT:
+    async def __anext__(self) -> ValueT:
         # This sneaky snippet of code lets us use generators rather than lists.
         # This is important, as we can use this to make generators that
         # deserialize loads of items lazy. If we only want 10 messages of
