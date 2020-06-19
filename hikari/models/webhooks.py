@@ -131,7 +131,7 @@ class Webhook(snowflake.Unique):
             avatar with for this request.
         tts : bool or hikari.utilities.undefined.UndefinedType
             If specified, whether the message will be sent as a TTS message.
-        attachments : typing.Sequence[hikari.utilities.files.BaseStream] or hikari.utilities.undefined.UndefinedType
+        attachments : typing.Sequence[hikari.utilities.files.Resource] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of attachments to upload.
         embeds : typing.Sequence[hikari.models.embeds.Embed] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of between `1` to `10` embed objects
@@ -235,7 +235,7 @@ class Webhook(snowflake.Unique):
         avatar : hikari.utilities.files.Resource or None or hikari.utilities.undefined.UndefinedType
             If specified, the new avatar image. If `None`, then
             it is removed. If not specified, nothing is changed.
-        channel : hikari.models.channels.GuildChannel or hikari.models.snowflake.UniqueObject or hikari.utilities.undefined.UndefinedType
+        channel : hikari.models.channels.GuildChannel or hikari.utilities.snowflake.Snowflake or str or int or hikari.utilities.undefined.UndefinedType
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
         reason : str or hikari.utilities.undefined.UndefinedType

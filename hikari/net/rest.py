@@ -2267,7 +2267,7 @@ class REST(http_client.HTTPClient, component.IComponent):
             or the ID of an existing channel.
         days : hikari.utilities.undefined.UndefinedType or int
             If provided, number of days to count prune for.
-        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str]
+        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str]
             If provided, the role(s) to include. By default, this endpoint will not count
             users with roles. Providing roles using this attribute will make members with
             the specified roles also get included into the count.
@@ -2323,7 +2323,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         compute_prune_count: hikari.utilities.undefined.UndefinedType or bool
             If provided, whether to return the prune count. This is discouraged for large
             guilds.
-        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str]
+        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str]
             If provided, the role(s) to include. By default, this endpoint will not count
             users with roles. Providing roles using this attribute will make members with
             the specified roles also get included into the count.
