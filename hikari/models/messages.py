@@ -145,9 +145,8 @@ class MessageActivityType(int, enum.Enum):
 class Attachment(snowflake.Unique, files_.WebResource):
     """Represents a file attached to a message.
 
-    You can use this object in the same way as a
-    `hikari.models.files.BaseStream`, by passing it as an attached file when creating a
-    message, etc.
+    You can use this object in the same way as a `hikari.utilities.files.WebResource`,
+    by passing it as an attached file when creating a message, etc.
     """
 
     id: snowflake.Snowflake = attr.ib(
@@ -437,7 +436,7 @@ class Message(snowflake.Unique):
             and can usually be ignored.
         tts : bool or hikari.utilities.undefined.UndefinedType
             If specified, whether the message will be sent as a TTS message.
-        attachments : typing.Sequence[hikari.models.files.BaseStream] or hikari.utilities.undefined.UndefinedType
+        attachments : typing.Sequence[hikari.utilities.files.Resource] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of attachments to upload, if desired.
             Should be between 1 and 10 objects in size (inclusive), also
             including embed attachments.
