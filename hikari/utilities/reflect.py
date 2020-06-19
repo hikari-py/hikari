@@ -44,8 +44,8 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
 
     Returns
     -------
-    typing.Signature
-        A `typing.Signature` object with all forward reference annotations
+    inspect.Signature
+        A `inspect.Signature` object with all forward reference annotations
         resolved.
     """
     signature = inspect.signature(func)
