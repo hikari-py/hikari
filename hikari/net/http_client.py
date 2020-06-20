@@ -28,12 +28,14 @@ import types
 import typing
 
 import aiohttp.client
+import aiohttp.connector
+import aiohttp.http_writer
 import aiohttp.typedefs
 
 from hikari import errors
 from hikari.net import http_settings
-from hikari.net import tracing
 from hikari.utilities import data_binding
+
 
 try:
     # noinspection PyProtectedMember
@@ -65,7 +67,7 @@ class HTTPClient(abc.ABC):
         If `None`, defaults are used.
     debug : bool
         Defaults to `False`. If `True`, then a lot of contextual information
-        regarding low-level HTTP communication will be logged to the _debug
+        regarding low-level HTTP communication will be logged to the debug
         logger on this class.
     """
 
@@ -84,13 +86,7 @@ class HTTPClient(abc.ABC):
     """HTTP settings in-use."""
 
     _debug: bool
-    """`True` if _debug mode is enabled. `False` otherwise."""
-
-    _tracers: typing.List[tracing.BaseTracer]
-    """Request _tracers.
-
-    These can be used to intercept HTTP request events on a low level.
-    """
+    """`True` if debug mode is enabled. `False` otherwise."""
 
     def __init__(
         self,
@@ -107,7 +103,6 @@ class HTTPClient(abc.ABC):
         self._client_session: typing.Optional[aiohttp.ClientSession] = None
         self._config = config
         self._debug = debug
-        self._tracers = [(tracing.DebugTracer(self.logger) if debug else tracing.CFRayTracer(self.logger))]
 
     @typing.final
     async def __aenter__(self) -> HTTPClient:
@@ -151,7 +146,6 @@ class HTTPClient(abc.ABC):
                 trust_env=self._config.trust_env,
                 version=aiohttp.HttpVersion11,
                 json_serialize=json.dumps,
-                trace_configs=[t.trace_config for t in self._tracers],
             )
             self.logger.debug("acquired new client session object %r", self._client_session)
         return self._client_session
@@ -199,9 +193,6 @@ class HTTPClient(abc.ABC):
         elif isinstance(body, aiohttp.FormData):
             kwargs["data"] = body
 
-        trace_request_ctx = types.SimpleNamespace()
-        trace_request_ctx.request_body = body
-
         return self.get_client_session().request(
             method=method,
             url=url,
@@ -214,7 +205,6 @@ class HTTPClient(abc.ABC):
             verify_ssl=self._config.verify_ssl,
             ssl_context=self._config.ssl_context,
             timeout=self._config.request_timeout,
-            trace_request_ctx=trace_request_ctx,
             **kwargs,
         )
 
