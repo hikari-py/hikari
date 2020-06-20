@@ -89,6 +89,10 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         fragments.
     use_compression : bool
         If `True`, then transport compression is enabled.
+    use_etf : bool
+        If `True`, ETF is used to receive payloads instead of JSON. Defaults to
+        `False`. Currently, setting this to `True` will raise a
+        `NotImplementedError`.
     version : int
         Gateway API version to use.
 
@@ -175,6 +179,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         token: str,
         url: str,
         use_compression: bool = True,
+        use_etf: bool = False,
         version: int = 6,
     ) -> None:
         super().__init__(config=config, debug=debug, logger=reflect.get_logger(self, str(shard_id)))
@@ -210,7 +215,10 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         scheme, netloc, path, params, _, _ = urllib.parse.urlparse(url, allow_fragments=True)
 
-        new_query = dict(v=int(version), encoding="json")
+        if use_etf:
+            raise NotImplementedError("ETF support is not available currently")
+
+        new_query = dict(v=int(version), encoding="etf" if use_etf else "json")
         if use_compression:
             # payload compression
             new_query["compress"] = "zlib-stream"
