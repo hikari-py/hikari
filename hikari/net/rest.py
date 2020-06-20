@@ -27,6 +27,7 @@ import datetime
 import http
 import math
 import typing
+import uuid
 
 import aiohttp
 
@@ -214,11 +215,36 @@ class REST(http_client.HTTPClient, component.IComponent):
         # Wait for any ratelimits to finish.
         await asyncio.gather(self.buckets.acquire(compiled_route), self.global_rate_limit.acquire())
 
+        uuid4 = str(uuid.uuid4())
+
+        if self._debug:
+            headers_str = "\n".join(f"\t\t{name}:{value}" for name, value in headers.items())
+            self.logger.debug(
+                "%s %s %s\n\theaders:\n%s\n\tbody:\n\t\t%r", uuid4, compiled_route.method, url, headers_str, body
+            )
+        else:
+            self.logger.debug("%s %s %s", uuid4, compiled_route.method, url)
+
         # Make the request.
         # noinspection PyUnresolvedReferences
         response = await self._perform_request(
             method=compiled_route.method, url=url, headers=headers, body=body, query=query
         )
+
+        if self._debug:
+            headers_str = "\n".join(
+                f"\t\t{name.decode('utf-8')}:{value.decode('utf-8')}" for name, value in response.raw_headers
+            )
+            self.logger.debug(
+                "%s %s %s\n\theaders:\n%s\n\tbody:\n\t\t%r",
+                uuid4,
+                response.status,
+                response.reason,
+                headers_str,
+                await response.read(),
+            )
+        else:
+            self.logger.debug("%s %s %s", uuid4, response.status, response.reason)
 
         # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
         await self._parse_ratelimits(compiled_route, response)

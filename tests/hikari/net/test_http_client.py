@@ -24,7 +24,6 @@ import pytest
 
 from hikari.net import http_client
 from hikari.net import http_settings
-from hikari.net import tracing
 from tests.hikari import _helpers
 
 
@@ -43,19 +42,6 @@ def client(client_session):
 
 
 @pytest.mark.asyncio
-class TestInit:
-    async def test_CFRayTracer_used_for_non_debug(self):
-        async with http_client.HTTPClient(debug=False, logger=mock.MagicMock()) as client:
-            assert len(client._tracers) == 1
-            assert isinstance(client._tracers[0], tracing.CFRayTracer)
-
-    async def test_DebugTracer_used_for_debug(self):
-        async with http_client.HTTPClient(debug=True, logger=mock.MagicMock()) as client:
-            assert len(client._tracers) == 1
-            assert isinstance(client._tracers[0], tracing.DebugTracer)
-
-
-@pytest.mark.asyncio
 class TestAcquireClientSession:
     async def test_acquire_creates_new_session_if_one_does_not_exist(self, client):
         client._config = http_settings.HTTPSettings()
@@ -70,7 +56,6 @@ class TestAcquireClientSession:
             trust_env=client._config.trust_env,
             version=aiohttp.HttpVersion11,
             json_serialize=json.dumps,
-            trace_configs=[t.trace_config for t in client._tracers],
         )
 
     async def test_acquire_repeated_calls_caches_client_session(self, client):
@@ -110,9 +95,6 @@ class TestPerformRequest:
 
         form_data = aiohttp.FormData()
 
-        trace_request_ctx = types.SimpleNamespace()
-        trace_request_ctx.request_body = form_data
-
         expected_response = mock.MagicMock()
         client_session.request = mock.AsyncMock(return_value=expected_response)
 
@@ -134,7 +116,6 @@ class TestPerformRequest:
             verify_ssl=client._config.verify_ssl,
             ssl_context=client._config.ssl_context,
             timeout=client._config.request_timeout,
-            trace_request_ctx=trace_request_ctx,
         )
 
     async def test_perform_request_json(self, client, client_session):
@@ -148,9 +129,6 @@ class TestPerformRequest:
         client._config.request_timeout = mock.MagicMock()
 
         req = {"hello": "world"}
-
-        trace_request_ctx = types.SimpleNamespace()
-        trace_request_ctx.request_body = req
 
         expected_response = mock.MagicMock()
         client_session.request = mock.AsyncMock(return_value=expected_response)
@@ -173,7 +151,6 @@ class TestPerformRequest:
             verify_ssl=client._config.verify_ssl,
             ssl_context=client._config.ssl_context,
             timeout=client._config.request_timeout,
-            trace_request_ctx=trace_request_ctx,
         )
 
 
