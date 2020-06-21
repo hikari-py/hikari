@@ -19,7 +19,6 @@ import asyncio
 import contextlib
 import math
 
-import async_timeout
 import mock
 import pytest
 
@@ -350,4 +349,27 @@ class TestRunOnce:
 
     @hikari_test_helpers.timeout()
     async def test_zlib_decompressobj_set(self, client):
-        pass
+        assert client._zlib is None
+        await client._run_once()
+        assert client._zlib is not None
+
+    @hikari_test_helpers.timeout()
+    async def test_handshake_event_cleared(self, client):
+        client._handshake_event = asyncio.Event()
+        client._handshake_event.set()
+        await client._run_once()
+        assert not client._handshake_event.is_set()
+
+    @hikari_test_helpers.timeout()
+    async def test_handshake_invoked(self, client):
+        await client._run_once()
+        client._handshake.assert_awaited_once_with()
+
+    @hikari_test_helpers.timeout()
+    async def test_poll_events_invoked(self, client):
+        await client._run_once()
+        client._poll_events.assert_awaited_once_with()
+
+    @hikari_test_helpers.timeout()
+    async def test_happy_path_returns_False(self, client):
+        assert await client._run_once() is False
