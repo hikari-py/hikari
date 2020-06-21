@@ -26,7 +26,7 @@ import mock
 import pytest
 
 from hikari.net import rate_limits
-from tests.hikari import _helpers
+from tests.hikari import hikari_test_helpers
 
 
 class TestBaseRateLimiter:
@@ -123,7 +123,7 @@ class TestManualRateLimiter:
 
     @pytest.mark.asyncio
     async def test_lock_schedules_throttle(self):
-        with _helpers.unslot_class(rate_limits.ManualRateLimiter)() as limiter:
+        with hikari_test_helpers.unslot_class(rate_limits.ManualRateLimiter)() as limiter:
             limiter.unlock_later = mock.AsyncMock()
             limiter.throttle(0)
             await limiter.throttle_task
@@ -153,7 +153,7 @@ class TestManualRateLimiter:
                 popped_at.append(time.perf_counter())
                 return event_loop.create_future()
 
-        with _helpers.unslot_class(rate_limits.ManualRateLimiter)() as limiter:
+        with hikari_test_helpers.unslot_class(rate_limits.ManualRateLimiter)() as limiter:
             with mock.patch("asyncio.sleep", wraps=mock_sleep):
                 limiter.queue = MockList()
 
@@ -175,7 +175,7 @@ class TestManualRateLimiter:
 class TestWindowedBurstRateLimiter:
     @pytest.fixture
     def ratelimiter(self):
-        inst = _helpers.unslot_class(rate_limits.WindowedBurstRateLimiter)(__name__, 3, 3)
+        inst = hikari_test_helpers.unslot_class(rate_limits.WindowedBurstRateLimiter)(__name__, 3, 3)
         yield inst
         with contextlib.suppress(Exception):
             inst.close()
@@ -222,7 +222,7 @@ class TestWindowedBurstRateLimiter:
         try:
             assert ratelimiter.throttle_task is not None
 
-            await asyncio.sleep(0.01)
+            await hikari_test_helpers.idle()
 
             ratelimiter.throttle.assert_called()
         finally:
@@ -272,7 +272,7 @@ class TestWindowedBurstRateLimiter:
             assert future.done(), f"future {i} was incomplete!"
 
     @pytest.mark.asyncio
-    @_helpers.retry(5)
+    @hikari_test_helpers.retry(5)
     async def test_throttle_when_limited_sleeps_then_bursts_repeatedly(self, event_loop):
         limit = 5
         period = 3
@@ -337,12 +337,12 @@ class TestWindowedBurstRateLimiter:
         assert rl.throttle_task is None
 
     def test_get_time_until_reset_if_not_rate_limited(self):
-        with _helpers.unslot_class(rate_limits.WindowedBurstRateLimiter)(__name__, 0.01, 1) as rl:
+        with hikari_test_helpers.unslot_class(rate_limits.WindowedBurstRateLimiter)(__name__, 0.01, 1) as rl:
             rl.is_rate_limited = mock.MagicMock(return_value=False)
             assert rl.get_time_until_reset(420) == 0.0
 
     def test_get_time_until_reset_if_rate_limited(self):
-        with _helpers.unslot_class(rate_limits.WindowedBurstRateLimiter)(__name__, 0.01, 1) as rl:
+        with hikari_test_helpers.unslot_class(rate_limits.WindowedBurstRateLimiter)(__name__, 0.01, 1) as rl:
             rl.is_rate_limited = mock.MagicMock(return_value=True)
             rl.reset_at = 420.4
             assert rl.get_time_until_reset(69.8) == 420.4 - 69.8

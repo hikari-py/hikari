@@ -24,7 +24,7 @@ import pytest
 
 from hikari.net import buckets
 from hikari.net import routes
-from tests.hikari import _helpers
+from tests.hikari import hikari_test_helpers
 
 
 class TestRESTBucket:
@@ -114,32 +114,32 @@ class TestRESTBucketManager:
             mgr.start(0.01)
             assert mgr.gc_task is not None
             assert not mgr.gc_task.done()
-            await asyncio.sleep(0.1)
+            await hikari_test_helpers.idle()
             assert mgr.gc_task is not None
             assert not mgr.gc_task.done()
-            await asyncio.sleep(0.1)
+            await hikari_test_helpers.idle()
             mgr.closed_event.set()
             assert mgr.gc_task is not None
             assert not mgr.gc_task.done()
             task = mgr.gc_task
-            await asyncio.sleep(0.1)
+            await hikari_test_helpers.idle()
             assert mgr.gc_task is None
             assert task.done()
 
     @pytest.mark.asyncio
     async def test_gc_calls_do_pass(self):
-        with _helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
+        with hikari_test_helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
             mgr.do_gc_pass = mock.MagicMock()
             mgr.start(0.01, 33)
             try:
-                await asyncio.sleep(0.1)
+                await hikari_test_helpers.idle()
                 mgr.do_gc_pass.assert_called_with(33)
             finally:
                 mgr.gc_task.cancel()
 
     @pytest.mark.asyncio
     async def test_do_gc_pass_any_buckets_that_are_empty_but_still_rate_limited_are_kept_alive(self):
-        with _helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
+        with hikari_test_helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
             bucket = mock.MagicMock()
             bucket.is_empty = True
             bucket.is_unknown = False
@@ -154,7 +154,7 @@ class TestRESTBucketManager:
 
     @pytest.mark.asyncio
     async def test_do_gc_pass_any_buckets_that_are_empty_but_not_rate_limited_and_not_expired_are_kept_alive(self):
-        with _helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
+        with hikari_test_helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
             bucket = mock.MagicMock()
             bucket.is_empty = True
             bucket.is_unknown = False
@@ -169,7 +169,7 @@ class TestRESTBucketManager:
 
     @pytest.mark.asyncio
     async def test_do_gc_pass_any_buckets_that_are_empty_but_not_rate_limited_and_expired_are_closed(self):
-        with _helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
+        with hikari_test_helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
             bucket = mock.MagicMock()
             bucket.is_empty = True
             bucket.is_unknown = False
@@ -184,7 +184,7 @@ class TestRESTBucketManager:
 
     @pytest.mark.asyncio
     async def test_do_gc_pass_any_buckets_that_are_not_empty_are_kept_alive(self):
-        with _helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
+        with hikari_test_helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
             bucket = mock.MagicMock()
             bucket.is_empty = False
             bucket.is_unknown = True
