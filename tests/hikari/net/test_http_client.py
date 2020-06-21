@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import json
-import types
+import weakref
 
 import aiohttp
 import mock
@@ -24,7 +24,7 @@ import pytest
 
 from hikari.net import http_client
 from hikari.net import http_settings
-from tests.hikari import _helpers
+from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture
@@ -37,8 +37,24 @@ def client_session():
 @pytest.fixture
 def client(client_session):
     assert client_session, "this param is needed, it ensures aiohttp is patched for the test"
-    client = _helpers.unslot_class(http_client.HTTPClient)(mock.MagicMock())
+    client = hikari_test_helpers.unslot_class(http_client.HTTPClient)(mock.MagicMock())
     yield client
+
+
+class TestFinalizer:
+    def test_when_existing_client_session(self, client):
+        client._client_session = mock.MagicMock()
+        client._client_session_ref = weakref.proxy(client._client_session)
+        client.__del__()
+        assert client._client_session is None
+        assert client._client_session_ref is None
+
+    def test_when_no_client_session(self, client):
+        client._client_session = None
+        client._client_session_ref = None
+        client.__del__()
+        assert client._client_session is None
+        assert client._client_session_ref is None
 
 
 @pytest.mark.asyncio
@@ -50,7 +66,10 @@ class TestAcquireClientSession:
 
         client._client_session = None
         cs = client.get_client_session()
-        assert client._client_session is cs
+
+        assert client._client_session == cs
+        assert cs in weakref.getweakrefs(client._client_session), "did not return correct weakref"
+
         aiohttp.ClientSession.assert_called_once_with(
             connector=client._config.tcp_connector_factory(),
             trust_env=client._config.trust_env,

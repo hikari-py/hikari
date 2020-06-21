@@ -26,6 +26,7 @@ import json
 import logging
 import types
 import typing
+import weakref
 
 import aiohttp.client
 import aiohttp.connector
@@ -74,6 +75,7 @@ class HTTPClient(abc.ABC):
     __slots__ = (
         "logger",
         "_client_session",
+        "_client_session_ref",
         "_config",
         "_debug",
         "_tracers",
@@ -101,6 +103,7 @@ class HTTPClient(abc.ABC):
             config = http_settings.HTTPSettings()
 
         self._client_session: typing.Optional[aiohttp.ClientSession] = None
+        self._client_session_ref: typing.Optional[weakref.ProxyType] = None
         self._config = config
         self._debug = debug
 
@@ -113,6 +116,11 @@ class HTTPClient(abc.ABC):
         self, exc_type: typing.Type[BaseException], exc_val: BaseException, exc_tb: types.TracebackType
     ) -> None:
         await self.close()
+
+    def __del__(self) -> None:
+        # Let the client session get garbage collected.
+        self._client_session = None
+        self._client_session_ref = None
 
     async def close(self) -> None:
         """Close the client safely."""
@@ -136,7 +144,7 @@ class HTTPClient(abc.ABC):
 
         Returns
         -------
-        aiohttp.ClientSession
+        weakref.proxy of aiohttp.ClientSession
             The client session to use for requests.
         """
         if self._client_session is None:
@@ -147,8 +155,11 @@ class HTTPClient(abc.ABC):
                 version=aiohttp.HttpVersion11,
                 json_serialize=json.dumps,
             )
+            self._client_session_ref = weakref.proxy(self._client_session)
             self.logger.debug("acquired new client session object %r", self._client_session)
-        return self._client_session
+
+        # Only return a weakref, to prevent callees obtaining ownership.
+        return typing.cast(aiohttp.ClientSession, self._client_session_ref)
 
     @typing.final
     def _perform_request(
