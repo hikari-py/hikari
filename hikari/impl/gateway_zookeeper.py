@@ -25,6 +25,7 @@ import abc
 import asyncio
 import contextlib
 import datetime
+import logging
 import signal
 import time
 import typing
@@ -42,6 +43,9 @@ if typing.TYPE_CHECKING:
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
     from hikari.models import presences
+
+
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 
 
 class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
@@ -195,7 +199,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
             self._map_signal_handlers(loop.add_signal_handler, on_interrupt)
             loop.run_until_complete(self._run())
         except KeyboardInterrupt as ex:
-            self.logger.info("received signal to shut down client")
+            _LOGGER.info("received signal to shut down client")
             if self._debug:
                 raise
             else:
@@ -204,7 +208,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
                 raise ex.with_traceback(None)  # noqa: R100 raise in except handler without fromflake8
         finally:
             self._map_signal_handlers(loop.remove_signal_handler)
-            self.logger.info("client has shut down")
+            _LOGGER.info("client has shut down")
 
     async def start(self) -> None:
         self._tasks.clear()
@@ -217,9 +221,9 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         await self._maybe_dispatch(other.StartingEvent())
 
         if self._shard_count > 1:
-            self.logger.info("starting %s shard(s)", len(self._shards))
+            _LOGGER.info("starting %s shard(s)", len(self._shards))
         else:
-            self.logger.info("this application will be single-sharded")
+            _LOGGER.info("this application will be single-sharded")
 
         start_time = time.perf_counter()
 
@@ -229,7 +233,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
                     break
 
                 if i > 0:
-                    self.logger.info("waiting for 5 seconds until next shard can start")
+                    _LOGGER.info("waiting for 5 seconds until next shard can start")
 
                     completed, _ = await asyncio.wait(
                         self._tasks.values(), timeout=5, return_when=asyncio.FIRST_COMPLETED
@@ -253,7 +257,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
 
         finally:
             if len(self._tasks) != len(self._shards):
-                self.logger.warning(
+                _LOGGER.warning(
                     "application aborted midway through initialization, will begin shutting down %s shard(s)",
                     len(self._tasks),
                 )
@@ -264,7 +268,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
 
             finish_time = time.perf_counter()
             self._gather_task = asyncio.create_task(self._gather(), name=f"zookeeper for {len(self._shards)} shard(s)")
-            self.logger.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
+            _LOGGER.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
 
             await self._maybe_dispatch(other.StartedEvent())
 
@@ -277,7 +281,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
             # This way if we cancel the stopping task, we still shut down properly.
             self._request_close_event.set()
 
-            self.logger.info("stopping %s shard(s)", len(self._tasks))
+            _LOGGER.info("stopping %s shard(s)", len(self._tasks))
 
             try:
                 await self._maybe_dispatch(other.StoppingEvent())
@@ -316,7 +320,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
     async def _init(self) -> None:
         gw_recs = await self.fetch_sharding_settings()
 
-        self.logger.info(
+        _LOGGER.info(
             "you have opened %s session(s) recently, you can open %s more before %s",
             gw_recs.session_start_limit.total - gw_recs.session_start_limit.remaining,
             gw_recs.session_start_limit.remaining if gw_recs.session_start_limit.remaining > 0 else "no",
@@ -328,7 +332,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         self._max_concurrency = gw_recs.session_start_limit.max_concurrency
         url = gw_recs.url
 
-        self.logger.info(
+        _LOGGER.info(
             "will connect shards to %s at a rate of %s shard(s) per 5 seconds (contact Discord to increase this rate)",
             url,
             self._max_concurrency,
@@ -383,7 +387,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         try:
             await asyncio.gather(*self._tasks.values())
         finally:
-            self.logger.debug("gather failed, shutting down shard(s)")
+            _LOGGER.debug("gather failed, shutting down shard(s)")
             await self.close()
 
     async def _run(self) -> None:

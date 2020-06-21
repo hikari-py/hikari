@@ -37,13 +37,11 @@ import random
 import time
 import typing
 
-
 if typing.TYPE_CHECKING:
     import types
 
 
-UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
-"""The hash used for an unknown bucket that has not yet been resolved."""
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 
 
 class BaseRateLimiter(abc.ABC):
@@ -86,7 +84,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     complete logic for safely aborting any pending tasks when being shut down.
     """
 
-    __slots__ = ("name", "throttle_task", "queue", "logger", "_closed")
+    __slots__ = ("name", "throttle_task", "queue", "_closed")
 
     name: typing.Final[str]
     """The name of the rate limiter."""
@@ -97,14 +95,10 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     queue: typing.Final[typing.List[asyncio.Future[typing.Any]]]
     """The queue of any futures under a rate limit."""
 
-    logger: typing.Final[logging.Logger]
-    """The logger used by this rate limiter."""
-
     def __init__(self, name: str) -> None:
         self.name = name
         self.throttle_task = None
         self.queue = []
-        self.logger = logging.getLogger(f"hikari.utilities.ratelimits.{type(self).__qualname__}.{name}")
         self._closed = False
 
     @abc.abstractmethod
@@ -140,9 +134,9 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
             future.cancel()
 
         if failed_tasks:
-            self.logger.debug("%s rate limiter closed with %s pending tasks!", self.name, failed_tasks)
+            _LOGGER.debug("%s rate limiter closed with %s pending tasks!", self.name, failed_tasks)
         else:
-            self.logger.debug("%s rate limiter closed", self.name)
+            _LOGGER.debug("%s rate limiter closed", self.name)
         self._closed = True
 
     @property
@@ -244,7 +238,7 @@ class ManualRateLimiter(BurstRateLimiter):
             `None`. This means you can check if throttling is occurring by
             checking if `throttle_task` is not `None`.
         """
-        self.logger.warning("you are being globally rate limited for %ss", retry_after)
+        _LOGGER.warning("you are being globally rate limited for %ss", retry_after)
         await asyncio.sleep(retry_after)
         while self.queue:
             next_future = self.queue.pop(0)
@@ -404,7 +398,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
             `throttle_task` to `None`. This means you can check if throttling
             is occurring by checking if `throttle_task` is not `None`.
         """
-        self.logger.debug(
+        _LOGGER.debug(
             "you are being rate limited on bucket %s, backing off for %ss",
             self.name,
             self.get_time_until_reset(time.perf_counter()),
