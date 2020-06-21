@@ -233,7 +233,7 @@ class TestRunOnce:
         client = hikari_test_helpers.mock_methods_on(
             client,
             except_=("_run_once", "_InvalidSession", "_Reconnect", "_SocketClosed", "_dispatch", "_now"),
-            also_mock=["_backoff", "_handshake_event", "_request_close_event", "logger",],
+            also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger",],
         )
         client._dispatch = mock.AsyncMock()
         # Disable backoff checking by making the condition a negative tautology.

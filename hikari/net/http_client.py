@@ -48,6 +48,9 @@ try:
     """
 except NameError:
     RequestContextManager = typing.Any  # type: ignore
+    
+    
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 
 
 class HTTPClient(abc.ABC):
@@ -69,20 +72,16 @@ class HTTPClient(abc.ABC):
     debug : bool
         Defaults to `False`. If `True`, then a lot of contextual information
         regarding low-level HTTP communication will be logged to the debug
-        logger on this class.
+        _logger on this class.
     """
 
     __slots__ = (
-        "logger",
         "_client_session",
         "_client_session_ref",
         "_config",
         "_debug",
         "_tracers",
     )
-
-    logger: logging.Logger
-    """The logger to use for this object."""
 
     _config: http_settings.HTTPSettings
     """HTTP settings in-use."""
@@ -92,13 +91,10 @@ class HTTPClient(abc.ABC):
 
     def __init__(
         self,
-        logger: logging.Logger,
         *,
         config: typing.Optional[http_settings.HTTPSettings] = None,
         debug: bool = False,
     ) -> None:
-        self.logger = logger
-
         if config is None:
             config = http_settings.HTTPSettings()
 
@@ -126,7 +122,7 @@ class HTTPClient(abc.ABC):
         """Close the client safely."""
         if self._client_session is not None:
             await self._client_session.close()
-            self.logger.debug("closed client session object %r", self._client_session)
+            _LOGGER.debug("closed client session object %r", self._client_session)
             self._client_session = None
 
     @typing.final
@@ -156,7 +152,7 @@ class HTTPClient(abc.ABC):
                 json_serialize=json.dumps,
             )
             self._client_session_ref = weakref.proxy(self._client_session)
-            self.logger.debug("acquired new client session object %r", self._client_session)
+            _LOGGER.debug("acquired new client session object %r", self._client_session)
 
         # Only return a weakref, to prevent callees obtaining ownership.
         return typing.cast(aiohttp.ClientSession, self._client_session_ref)
@@ -244,7 +240,7 @@ class HTTPClient(abc.ABC):
         aiohttp.ClientWebsocketResponse
             The websocket to use.
         """
-        self.logger.debug("creating underlying websocket object from HTTP session")
+        _LOGGER.debug("creating underlying websocket object from HTTP session")
         return await self.get_client_session().ws_connect(
             url=url,
             compress=compress,

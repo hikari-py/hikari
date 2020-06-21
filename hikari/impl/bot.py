@@ -22,7 +22,6 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = ["BotAppImpl"]
 
 import asyncio
-import logging
 import typing
 
 from hikari.api import bot
@@ -33,7 +32,6 @@ from hikari.impl import gateway_zookeeper
 from hikari.models import presences
 from hikari.net import http_settings as http_settings_
 from hikari.net import rest
-from hikari.utilities import reflect
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -157,8 +155,6 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         thread_pool_executor: typing.Optional[concurrent.futures.Executor] = None,
         token: str,
     ) -> None:
-        self._logger = reflect.get_logger(self)
-
         config = http_settings_.HTTPSettings() if config is undefined.UNDEFINED else config
 
         self._cache = cache_impl.InMemoryCacheComponentImpl(app=self)
@@ -195,10 +191,6 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
     @property
     def event_dispatcher(self) -> event_dispatcher_.IEventDispatcherComponent:
         return self._event_manager
-
-    @property
-    def logger(self) -> logging.Logger:
-        return self._logger
 
     @property
     def cache(self) -> cache_.ICacheComponent:
