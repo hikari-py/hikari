@@ -117,17 +117,16 @@ class GatewayServerClosedConnectionError(GatewayError):
         A string explaining the issue.
     code : int or None
         The close code.
-
+    can_reconnect : bool
+        If `True`, a reconnect will occur after this is raised rather than
+        it being propagated to the caller. If `False`, this will be raised.
     """
 
-    __slots__ = ("code", "can_reconnect", "should_backoff")
+    __slots__ = ("code", "can_reconnect")
 
-    def __init__(
-        self, reason: str, code: typing.Optional[int] = None, can_reconnect: bool = False, should_backoff: bool = True,
-    ) -> None:
+    def __init__(self, reason: str, code: typing.Optional[int] = None, can_reconnect: bool = False) -> None:
         self.code = code
         self.can_reconnect = can_reconnect
-        self.should_backoff = should_backoff
         super().__init__(reason)
 
     def __str__(self) -> str:
