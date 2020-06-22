@@ -323,16 +323,16 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
             self.connected_at = self._now()
 
+            # Technically we are connected after the hello, but this ensures we can send and receive
+            # before firing that event.
+            self._dispatch("CONNECTED", {})
+
             self._zlib = zlib.decompressobj()
 
             self._handshake_event.clear()
             self._request_close_event.clear()
 
             await self._handshake()
-
-            # Technically we are connected after the hello, but this ensures we can send and receive
-            # before firing that event.
-            self._dispatch("CONNECTED", {})
 
             # We should ideally set this after HELLO, but it should be fine
             # here as well. If we don't heartbeat in time, something probably
@@ -388,6 +388,8 @@ class Gateway(http_client.HTTPClient, component.IComponent):
                 await self._close_ws(self._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection")
                 self._seq = None
                 self.session_id = None
+                self._backoff.reset()
+                self._request_close_event.set()
                 raise
 
         except Exception as ex:
@@ -632,7 +634,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             )
 
             # Assume we can always resume first.
-            raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect, True)
+            raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect)
 
         if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
             raise self._SocketClosed
