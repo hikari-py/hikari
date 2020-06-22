@@ -42,14 +42,11 @@ pip-wheel-metadata/
 .pytest/
 .pytest_cache/
 
-# Poetry lockfile
-poetry.lock
-
 # Container logs
 **.container.log
 
 # Docker secrets
 credentials.env
 
-# We don't use this usually, but regardless...
+# Mypy Cache
 .mypy_cache/
