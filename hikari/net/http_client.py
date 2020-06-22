@@ -48,8 +48,8 @@ try:
     """
 except NameError:
     RequestContextManager = typing.Any  # type: ignore
-    
-    
+
+
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 
 
@@ -89,12 +89,7 @@ class HTTPClient(abc.ABC):
     _debug: bool
     """`True` if debug mode is enabled. `False` otherwise."""
 
-    def __init__(
-        self,
-        *,
-        config: typing.Optional[http_settings.HTTPSettings] = None,
-        debug: bool = False,
-    ) -> None:
+    def __init__(self, *, config: typing.Optional[http_settings.HTTPSettings] = None, debug: bool = False,) -> None:
         if config is None:
             config = http_settings.HTTPSettings()
 
