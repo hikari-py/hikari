@@ -91,10 +91,6 @@ class RESTAppImpl(rest_api.IRESTApp):
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(self)
 
     @property
-    def logger(self) -> logging.Logger:
-        return self._logger
-
-    @property
     def executor(self) -> typing.Optional[futures.Executor]:
         return None
 

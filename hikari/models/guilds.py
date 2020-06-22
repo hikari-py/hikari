@@ -196,7 +196,7 @@ class GuildVerificationLevel(int, enum.Enum):
     """Represents the level of verification of a guild."""
 
     NONE = 0
-    """Unrestricted"""
+    """Unrestricted."""
 
     LOW = 1
     """Must have a verified email on their account."""

@@ -220,6 +220,9 @@ UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""
 
 
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
+
+
 class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     """Represents a rate limit for an REST endpoint.
 
@@ -321,7 +324,6 @@ class RESTBucketManager:
         "real_hashes_to_buckets",
         "closed_event",
         "gc_task",
-        "logger",
     )
 
     routes_to_hashes: typing.Final[typing.MutableMapping[routes.Route, str]]
@@ -339,15 +341,11 @@ class RESTBucketManager:
     gc_task: typing.Optional[asyncio.Task[None]]
     """The internal garbage collector task."""
 
-    logger: typing.Final[logging.Logger]
-    """The logger to use for this object."""
-
     def __init__(self) -> None:
         self.routes_to_hashes = {}
         self.real_hashes_to_buckets = {}
         self.closed_event: asyncio.Event = asyncio.Event()
         self.gc_task: typing.Optional[asyncio.Task[None]] = None
-        self.logger = logging.getLogger("hikari.rest.buckets.RESTBucketManager")
 
     def __enter__(self) -> RESTBucketManager:
         return self
@@ -420,12 +418,12 @@ class RESTBucketManager:
         """
         # Prevent filling memory increasingly until we run out by removing dead buckets every 20s
         # Allocations are somewhat cheap if we only do them every so-many seconds, after all.
-        self.logger.debug("rate limit garbage collector started")
+        _LOGGER.debug("rate limit garbage collector started")
         while not self.closed_event.is_set():
             try:
                 await asyncio.wait_for(self.closed_event.wait(), timeout=poll_period)
             except asyncio.TimeoutError:
-                self.logger.debug("performing rate limit garbage collection pass")
+                _LOGGER.debug("performing rate limit garbage collection pass")
                 self.do_gc_pass(expire_after)
         self.gc_task = None
 
@@ -482,7 +480,7 @@ class RESTBucketManager:
             self.real_hashes_to_buckets[full_hash].close()
             del self.real_hashes_to_buckets[full_hash]
 
-        self.logger.debug("purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
+        _LOGGER.debug("purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
 
     def acquire(self, compiled_route: routes.CompiledRoute) -> asyncio.Future[None]:
         """Acquire a bucket for the given _route.
@@ -518,9 +516,9 @@ class RESTBucketManager:
 
         try:
             bucket = self.real_hashes_to_buckets[real_bucket_hash]
-            self.logger.debug("%s is being mapped to existing bucket %s", compiled_route, real_bucket_hash)
+            _LOGGER.debug("%s is being mapped to existing bucket %s", compiled_route, real_bucket_hash)
         except KeyError:
-            self.logger.debug("%s is being mapped to new bucket %s", compiled_route, real_bucket_hash)
+            _LOGGER.debug("%s is being mapped to new bucket %s", compiled_route, real_bucket_hash)
             bucket = RESTBucket(real_bucket_hash, compiled_route)
             self.real_hashes_to_buckets[real_bucket_hash] = bucket
 
@@ -561,7 +559,7 @@ class RESTBucketManager:
 
         if real_bucket_hash in self.real_hashes_to_buckets:
             bucket = self.real_hashes_to_buckets[real_bucket_hash]
-            self.logger.debug(
+            _LOGGER.debug(
                 "updating %s with bucket %s [reset-after:%ss, limit:%s, remaining:%s]",
                 compiled_route,
                 real_bucket_hash,
@@ -572,7 +570,7 @@ class RESTBucketManager:
         else:
             bucket = RESTBucket(real_bucket_hash, compiled_route)
             self.real_hashes_to_buckets[real_bucket_hash] = bucket
-            self.logger.debug(
+            _LOGGER.debug(
                 "remapping %s with bucket %s [reset-after:%ss, limit:%s, remaining:%s]",
                 compiled_route,
                 real_bucket_hash,

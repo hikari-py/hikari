@@ -118,10 +118,10 @@ class Class:
 @pytest.mark.parametrize(
     ["args", "expected_name"],
     [
-        ([Class], f"{__name__}.Class"),
-        ([Class()], f"{__name__}.Class"),
-        ([Class, "Foooo", "bar", "123"], f"{__name__}.Class.Foooo.bar.123"),
-        ([Class(), "qux", "QUx", "940"], f"{__name__}.Class.qux.QUx.940"),
+        ([Class], __name__),
+        ([Class()], __name__),
+        ([Class, "Foooo", "bar", "123"], f"{__name__}.Foooo.bar.123"),
+        ([Class(), "qux", "QUx", "940"], f"{__name__}.qux.QUx.940"),
     ],
 )
 def test_get_logger(args, expected_name):

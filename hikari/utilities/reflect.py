@@ -68,24 +68,25 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
 
 
 def get_logger(obj: typing.Union[typing.Type[typing.Any], typing.Any], *additional_args: str) -> logging.Logger:
-    """Get an appropriately named logger for the given class or object.
+    """Get an appropriately named _LOGGER for the given class or object.
 
     Parameters
     ----------
     obj : typing.Type or object
-        A type or instance of a type to make a logger in the name of.
+        A type or instance of a type to make a _LOGGER in the name of.
     *additional_args : str
-        Additional tokens to append onto the logger name, separated by `.`.
+        Additional tokens to append onto the _LOGGER name, separated by `.`.
         This is useful in some places to append info such as shard ID to each
-        logger to enable shard-specific logging, for example.
+        _LOGGER to enable shard-specific logging, for example.
 
     Returns
     -------
     logging.Logger
-        The logger to use.
+        The _LOGGER to use.
     """
     if isinstance(obj, str):
-        return logging.getLogger(obj)
+        str_obj = obj
+    else:
+        str_obj = (obj if isinstance(obj, type) else type(obj)).__module__
 
-    obj = obj if isinstance(obj, type) else type(obj)
-    return logging.getLogger(".".join((obj.__module__, obj.__qualname__, *additional_args)))
+    return logging.getLogger(".".join((str_obj, *additional_args)))

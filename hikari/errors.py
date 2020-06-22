@@ -120,19 +120,13 @@ class GatewayServerClosedConnectionError(GatewayError):
 
     """
 
-    __slots__ = ("code", "can_reconnect", "can_resume", "should_backoff")
+    __slots__ = ("code", "can_reconnect", "should_backoff")
 
     def __init__(
-        self,
-        reason: str,
-        code: typing.Optional[int] = None,
-        can_reconnect: bool = False,
-        can_resume: bool = False,
-        should_backoff: bool = True,
+        self, reason: str, code: typing.Optional[int] = None, can_reconnect: bool = False, should_backoff: bool = True,
     ) -> None:
         self.code = code
         self.can_reconnect = can_reconnect
-        self.can_resume = can_resume
         self.should_backoff = should_backoff
         super().__init__(reason)
 

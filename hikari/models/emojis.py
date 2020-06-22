@@ -209,8 +209,8 @@ class CustomEmoji(snowflake.Unique, Emoji):
         removed. The side effect of this means that mentions for animated emojis
         will not be correct.
 
-        Track this issue here:
-        https://github.com/discord/discord-api-docs/issues/1614
+        This will not be changed as stated here:
+        https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913
     """
 
     app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False, init=True)
