@@ -26,14 +26,17 @@ import json
 import logging
 import types
 import typing
+import weakref
 
 import aiohttp.client
+import aiohttp.connector
+import aiohttp.http_writer
 import aiohttp.typedefs
 
 from hikari import errors
 from hikari.net import http_settings
-from hikari.net import tracing
 from hikari.utilities import data_binding
+
 
 try:
     # noinspection PyProtectedMember
@@ -45,6 +48,9 @@ try:
     """
 except NameError:
     RequestContextManager = typing.Any  # type: ignore
+
+
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 
 
 class HTTPClient(abc.ABC):
@@ -65,49 +71,32 @@ class HTTPClient(abc.ABC):
         If `None`, defaults are used.
     debug : bool
         Defaults to `False`. If `True`, then a lot of contextual information
-        regarding low-level HTTP communication will be logged to the _debug
-        logger on this class.
+        regarding low-level HTTP communication will be logged to the debug
+        _logger on this class.
     """
 
     __slots__ = (
-        "logger",
         "_client_session",
+        "_client_session_ref",
         "_config",
         "_debug",
         "_tracers",
     )
 
-    logger: logging.Logger
-    """The logger to use for this object."""
-
     _config: http_settings.HTTPSettings
     """HTTP settings in-use."""
 
     _debug: bool
-    """`True` if _debug mode is enabled. `False` otherwise."""
+    """`True` if debug mode is enabled. `False` otherwise."""
 
-    _tracers: typing.List[tracing.BaseTracer]
-    """Request _tracers.
-
-    These can be used to intercept HTTP request events on a low level.
-    """
-
-    def __init__(
-        self,
-        logger: logging.Logger,
-        *,
-        config: typing.Optional[http_settings.HTTPSettings] = None,
-        debug: bool = False,
-    ) -> None:
-        self.logger = logger
-
+    def __init__(self, *, config: typing.Optional[http_settings.HTTPSettings] = None, debug: bool = False,) -> None:
         if config is None:
             config = http_settings.HTTPSettings()
 
         self._client_session: typing.Optional[aiohttp.ClientSession] = None
+        self._client_session_ref: typing.Optional[weakref.ProxyType] = None
         self._config = config
         self._debug = debug
-        self._tracers = [(tracing.DebugTracer(self.logger) if debug else tracing.CFRayTracer(self.logger))]
 
     @typing.final
     async def __aenter__(self) -> HTTPClient:
@@ -119,11 +108,16 @@ class HTTPClient(abc.ABC):
     ) -> None:
         await self.close()
 
+    def __del__(self) -> None:
+        # Let the client session get garbage collected.
+        self._client_session = None
+        self._client_session_ref = None
+
     async def close(self) -> None:
         """Close the client safely."""
         if self._client_session is not None:
             await self._client_session.close()
-            self.logger.debug("closed client session object %r", self._client_session)
+            _LOGGER.debug("closed client session object %r", self._client_session)
             self._client_session = None
 
     @typing.final
@@ -141,7 +135,7 @@ class HTTPClient(abc.ABC):
 
         Returns
         -------
-        aiohttp.ClientSession
+        weakref.proxy of aiohttp.ClientSession
             The client session to use for requests.
         """
         if self._client_session is None:
@@ -151,10 +145,12 @@ class HTTPClient(abc.ABC):
                 trust_env=self._config.trust_env,
                 version=aiohttp.HttpVersion11,
                 json_serialize=json.dumps,
-                trace_configs=[t.trace_config for t in self._tracers],
             )
-            self.logger.debug("acquired new client session object %r", self._client_session)
-        return self._client_session
+            self._client_session_ref = weakref.proxy(self._client_session)
+            _LOGGER.debug("acquired new client session object %r", self._client_session)
+
+        # Only return a weakref, to prevent callees obtaining ownership.
+        return typing.cast(aiohttp.ClientSession, self._client_session_ref)
 
     @typing.final
     def _perform_request(
@@ -199,9 +195,6 @@ class HTTPClient(abc.ABC):
         elif isinstance(body, aiohttp.FormData):
             kwargs["data"] = body
 
-        trace_request_ctx = types.SimpleNamespace()
-        trace_request_ctx.request_body = body
-
         return self.get_client_session().request(
             method=method,
             url=url,
@@ -214,7 +207,6 @@ class HTTPClient(abc.ABC):
             verify_ssl=self._config.verify_ssl,
             ssl_context=self._config.ssl_context,
             timeout=self._config.request_timeout,
-            trace_request_ctx=trace_request_ctx,
             **kwargs,
         )
 
@@ -243,7 +235,7 @@ class HTTPClient(abc.ABC):
         aiohttp.ClientWebsocketResponse
             The websocket to use.
         """
-        self.logger.debug("creating underlying websocket object from HTTP session")
+        _LOGGER.debug("creating underlying websocket object from HTTP session")
         return await self.get_client_session().ws_connect(
             url=url,
             compress=compress,

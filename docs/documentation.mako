@@ -275,7 +275,7 @@
 
         project_inventory.objects.append(
             sphobjinv.DataObjStr(
-                name = f"{v.module.name}.{v.name}",
+                name = f"{v.module.name}.{v.qualname}",
                 domain = "py",
                 role = "var",
                 uri = v.url(),
@@ -322,7 +322,7 @@
         if not redirect:
             project_inventory.objects.append(
                 sphobjinv.DataObjStr(
-                    name = f"{f.module.name}.{f.name}",
+                    name = f"{f.module.name}.{f.qualname}",
                     domain = "py",
                     role = "func",
                     uri = f.url(),
@@ -386,7 +386,7 @@
         if not redirect:
             project_inventory.objects.append(
                 sphobjinv.DataObjStr(
-                    name = f"{c.module.name}.{c.name}",
+                    name = f"{c.module.name}.{c.qualname}",
                     domain = "py",
                     role = "class",
                     uri = c.url(),
@@ -555,7 +555,7 @@
                     priority = "1",
                     dispname = "-",
                 )
-        )
+            )
         %>
 
         <div class="d-md-none d-lg-block col-lg-5 col-xl-4">

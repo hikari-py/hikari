@@ -55,7 +55,7 @@
 release:staging:
   environment:
     name: staging
-    url: https://nekokatt.gitlab.io/hikari  # FIXME: change to staging URL when appropriate.
+    url: https://nekokatt.gitlab.io/hikari
   extends: .release
   script:
     - nox -s deploy --no-error-on-external-run

@@ -89,6 +89,10 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         fragments.
     use_compression : bool
         If `True`, then transport compression is enabled.
+    use_etf : bool
+        If `True`, ETF is used to receive payloads instead of JSON. Defaults to
+        `False`. Currently, setting this to `True` will raise a
+        `NotImplementedError`.
     version : int
         Gateway API version to use.
 
@@ -158,6 +162,15 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     class _InvalidSession(RuntimeError):
         can_resume: bool = False
 
+    _RESTART_RATELIMIT_WINDOW: typing.Final[typing.ClassVar[float]] = 30.0
+    """If the shard restarts more than once within this period of time, then
+    exponentially back-off to prevent spamming the gateway or tanking the CPU.
+    
+    This is potentially important if the internet connection turns off, as the
+    bot will simply attempt to reconnect repeatedly until the connection 
+    resumes.
+    """
+
     def __init__(
         self,
         *,
@@ -175,9 +188,10 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         token: str,
         url: str,
         use_compression: bool = True,
+        use_etf: bool = False,
         version: int = 6,
     ) -> None:
-        super().__init__(config=config, debug=debug, logger=reflect.get_logger(self, str(shard_id)))
+        super().__init__(config=config, debug=debug)
         self._activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = initial_activity
         self._app = app
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
@@ -186,6 +200,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self._intents: typing.Optional[intents_.Intent] = intents
         self._is_afk: typing.Union[undefined.UndefinedType, bool] = initial_is_afk
         self._last_run_started_at = float("nan")
+        self._logger = reflect.get_logger(self, str(shard_id))
         self._request_close_event = asyncio.Event()
         self._seq: typing.Optional[str] = None
         self._shard_id: int = shard_id
@@ -210,7 +225,10 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         scheme, netloc, path, params, _, _ = urllib.parse.urlparse(url, allow_fragments=True)
 
-        new_query = dict(v=int(version), encoding="json")
+        if use_etf:
+            raise NotImplementedError("ETF support is not available currently")
+
+        new_query = dict(v=int(version), encoding="etf" if use_etf else "json")
         if use_compression:
             # payload compression
             new_query["compress"] = "zlib-stream"
@@ -246,13 +264,13 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         """Close the websocket."""
         if not self._request_close_event.is_set():
             if self.is_alive:
-                self.logger.info("received request to shut down shard")
+                self._logger.info("received request to shut down shard")
             else:
-                self.logger.debug("shard marked as closed when it was not running")
+                self._logger.debug("shard marked as closed when it was not running")
             self._request_close_event.set()
 
             if self._ws is not None:
-                self.logger.warning("gateway client closed, will not attempt to restart")
+                self._logger.warning("gateway client closed, will not attempt to restart")
                 await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "client shut down")
 
     async def _run(self) -> None:
@@ -269,21 +287,29 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             # we cannot connect successfully. It is a hack, but it works.
             self._handshake_event.set()
             # Close the aiohttp client session.
-            await super().close()
+            # Didn't use `super` as I can mock this to check without breaking
+            # the entire inheritance conduit in a patch context.
+            await http_client.HTTPClient.close(self)
 
     async def _run_once(self) -> bool:
         # returns `True` if we can reconnect, or `False` otherwise.
         self._request_close_event.clear()
 
-        if self._now() - self._last_run_started_at < 30:
+        self._zombied = False
+
+        if self._now() - self._last_run_started_at < self._RESTART_RATELIMIT_WINDOW:
             # Interrupt sleep immediately if a request to close is fired.
             wait_task = asyncio.create_task(
-                self._request_close_event.wait(), name=f"gateway client {self._shard_id} backing off"
+                self._request_close_event.wait(), name=f"gateway shard {self._shard_id} backing off"
             )
             try:
                 backoff = next(self._backoff)
-                self.logger.debug("backing off for %ss", backoff)
+                self._logger.debug("backing off for %ss", backoff)
                 await asyncio.wait_for(wait_task, timeout=backoff)
+
+                # If this line gets reached, the wait didn't time out, meaning
+                # the user told the client to shut down gracefully before the
+                # backoff completed.
                 return False
             except asyncio.TimeoutError:
                 pass
@@ -292,7 +318,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self._last_run_started_at = self._now()
 
         try:
-            self.logger.debug("creating websocket connection to %s", self.url)
+            self._logger.debug("creating websocket connection to %s", self.url)
             self._ws = await self._create_ws(self.url)
 
             self.connected_at = self._now()
@@ -306,12 +332,14 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
             # Technically we are connected after the hello, but this ensures we can send and receive
             # before firing that event.
-            asyncio.create_task(self._dispatch("CONNECTED", {}), name=f"shard {self._shard_id} CONNECTED")
+            self._dispatch("CONNECTED", {})
 
             # We should ideally set this after HELLO, but it should be fine
             # here as well. If we don't heartbeat in time, something probably
             # went majorly wrong anyway.
-            heartbeat = asyncio.create_task(self._pulse(), name=f"shard {self._shard_id} heartbeat")
+            heartbeat = asyncio.create_task(
+                self._heartbeat_keepalive(), name=f"gateway shard {self._shard_id} heartbeat"
+            )
 
             try:
                 await self._poll_events()
@@ -321,54 +349,56 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             return False
 
         except aiohttp.ClientConnectorError as ex:
-            self.logger.error(
+            self._logger.error(
                 "failed to connect to Discord because %s.%s: %s", type(ex).__module__, type(ex).__qualname__, str(ex),
             )
 
         except self._InvalidSession as ex:
             if ex.can_resume:
-                self.logger.warning("invalid session, so will attempt to resume session %s", self.session_id)
+                self._logger.warning("invalid session, so will attempt to resume session %s", self.session_id)
                 await self._close_ws(self._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
             else:
-                self.logger.warning("invalid session, so will attempt to reconnect with new session")
+                self._logger.warning("invalid session, so will attempt to reconnect with new session")
                 await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
                 self._seq = None
                 self.session_id = None
 
         except self._Reconnect:
-            self.logger.warning("instructed by Discord to reconnect and resume session %s", self.session_id)
+            self._logger.warning("instructed by Discord to reconnect and resume session %s", self.session_id)
             self._backoff.reset()
             await self._close_ws(self._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "reconnecting")
 
         except self._SocketClosed:
             # The socket has already closed, so no need to close it again.
-            if not self._zombied and not self._request_close_event.is_set():
-                # This will occur due to a network issue such as a network adapter going down.
-                self.logger.warning("unexpected socket closure, will attempt to reconnect")
-            else:
+            if self._zombied:
                 self._backoff.reset()
+
+            if not self._request_close_event.is_set():
+                self._logger.warning("unexpected socket closure, will attempt to reconnect")
 
             return not self._request_close_event.is_set()
 
         except errors.GatewayServerClosedConnectionError as ex:
             if ex.can_reconnect:
-                self.logger.warning(
+                self._logger.warning(
                     "server closed the connection with %s (%s), will attempt to reconnect", ex.code, ex.reason,
                 )
                 await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me")
             else:
-                await self._close_ws(self._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you failed the connection")
+                await self._close_ws(self._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection")
+                self._seq = None
+                self.session_id = None
                 raise
 
         except Exception as ex:
-            self.logger.error("unexpected exception occurred, shard will now die", exc_info=ex)
+            self._logger.error("unexpected exception occurred, shard will now die", exc_info=ex)
             await self._close_ws(self._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
             raise
 
         finally:
             if not math.isnan(self.connected_at):
                 # Only dispatch this if we actually connected before we failed!
-                asyncio.create_task(self._dispatch("DISCONNECTED", {}), name=f"shard {self._shard_id} DISCONNECTED")
+                self._dispatch("DISCONNECTED", {})
 
             self.connected_at = float("nan")
 
@@ -443,7 +473,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         await self._send_json(payload)
 
     async def _close_ws(self, code: int, message: str) -> None:
-        self.logger.debug("sending close frame with code %s and message %r", int(code), message)
+        self._logger.debug("sending close frame with code %s and message %r", int(code), message)
         # None if the websocket error'ed on initialization.
         if self._ws is not None:
             await self._ws.close(code=code, message=bytes(message, "utf-8"))
@@ -458,7 +488,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         self.heartbeat_interval = message["d"]["heartbeat_interval"] / 1_000.0
 
-        self.logger.info("received HELLO, heartbeat interval is %s", self.heartbeat_interval)
+        self._logger.info("received HELLO, heartbeat interval is %s", self.heartbeat_interval)
 
         if self.session_id is not None:
             # RESUME!
@@ -496,7 +526,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
             await self._send_json(payload)
 
-    async def _pulse(self) -> None:
+    async def _heartbeat_keepalive(self) -> None:
         try:
             while not self._request_close_event.is_set():
                 now = self._now()
@@ -504,7 +534,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
                 time_since_heartbeat_sent = now - self.last_heartbeat_sent
 
                 if self.heartbeat_interval < time_since_message:
-                    self.logger.error(
+                    self._logger.error(
                         "connection is a zombie, haven't received any message for %ss, last heartbeat sent %ss ago",
                         time_since_message,
                         time_since_heartbeat_sent,
@@ -513,7 +543,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
                     await self._close_ws(self._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "zombie connection")
                     return
 
-                self.logger.debug(
+                self._logger.debug(
                     "preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, self.heartbeat_interval
                 )
                 await self._send_json({"op": self._GatewayOpcode.HEARTBEAT, "d": self._seq})
@@ -540,32 +570,32 @@ class Gateway(http_client.HTTPClient, component.IComponent):
                 self._seq = message["s"]
                 if event == "READY":
                     self.session_id = data["session_id"]
-                    self.logger.info("connection is ready [session:%s]", self.session_id)
+                    self._logger.info("connection is ready [session:%s]", self.session_id)
                     self._handshake_event.set()
                 elif event == "RESUME":
-                    self.logger.info("connection has resumed [session:%s, seq:%s]", self.session_id, self._seq)
+                    self._logger.info("connection has resumed [session:%s, seq:%s]", self.session_id, self._seq)
                     self._handshake_event.set()
 
-                asyncio.create_task(self._dispatch(event, data), name=f"shard {self._shard_id} {event}")
+                self._dispatch(event, data)
 
             elif op == self._GatewayOpcode.HEARTBEAT:
-                self.logger.debug("received HEARTBEAT; sending HEARTBEAT ACK")
+                self._logger.debug("received HEARTBEAT; sending HEARTBEAT ACK")
                 await self._send_json({"op": self._GatewayOpcode.HEARTBEAT_ACK})
 
             elif op == self._GatewayOpcode.HEARTBEAT_ACK:
                 self.heartbeat_latency = self._now() - self.last_heartbeat_sent
-                self.logger.debug("received HEARTBEAT ACK [latency:%ss]", self.heartbeat_latency)
+                self._logger.debug("received HEARTBEAT ACK [latency:%ss]", self.heartbeat_latency)
 
             elif op == self._GatewayOpcode.RECONNECT:
-                self.logger.debug("RECONNECT")
+                self._logger.debug("RECONNECT")
                 raise self._Reconnect
 
             elif op == self._GatewayOpcode.INVALID_SESSION:
-                self.logger.debug("INVALID SESSION [resume:%s]", data)
+                self._logger.debug("INVALID SESSION [resume:%s]", data)
                 raise self._InvalidSession(data)
 
             else:
-                self.logger.debug("ignoring unrecognised opcode %s", op)
+                self._logger.debug("ignoring unrecognised opcode %s", op)
 
     async def _receive_json_payload(self) -> data_binding.JSONObject:
         message = await self._receive_raw()
@@ -586,7 +616,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         if message.type == aiohttp.WSMsgType.CLOSE:
             close_code = self._ws.close_code
-            self.logger.debug("connection closed with code %s", close_code)
+            self._logger.debug("connection closed with code %s", close_code)
 
             if close_code in self._GatewayCloseCode.__members__.values():
                 reason = self._GatewayCloseCode(close_code).name
@@ -601,15 +631,15 @@ class Gateway(http_client.HTTPClient, component.IComponent):
                 self._GatewayCloseCode.RATE_LIMITED,
             )
 
-            # Always try to resume if possible first.
-            raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect, can_reconnect, True)
+            # Assume we can always resume first.
+            raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect, True)
 
         if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
             raise self._SocketClosed
 
         # Assume exception for now.
         ex = self._ws.exception()
-        self.logger.debug("encountered unexpected error", exc_info=ex)
+        self._logger.debug("encountered unexpected error", exc_info=ex)
         raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
 
     async def _receive_zlib_message(self, first_packet: bytes) -> typing.Tuple[int, str]:
@@ -641,8 +671,11 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self._log_debug_payload(message, "sending json payload [t:%s]", payload.get("t"))
         await self._ws.send_str(message)
 
-    def _dispatch(self, event_name: str, event: data_binding.JSONObject) -> typing.Coroutine[None, typing.Any, None]:
-        return self._app.event_consumer.consume_raw_event(self, event_name, event)
+    def _dispatch(self, event_name: str, event: data_binding.JSONObject) -> asyncio.Task[None]:
+        return asyncio.create_task(
+            self._app.event_consumer.consume_raw_event(self, event_name, event),
+            name=f"gateway shard {self._shard_id} dispatch {event}",
+        )
 
     @staticmethod
     def _now() -> float:
@@ -650,7 +683,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
     def _log_debug_payload(self, payload: str, message: str, *args: typing.Any) -> None:
         # Prevent logging these payloads if logging isn't enabled. This aids performance a little.
-        if not self.logger.isEnabledFor(logging.DEBUG):
+        if not self._logger.isEnabledFor(logging.DEBUG):
             return
 
         message = f"{message} [seq:%s, session:%s, size:%s]"
@@ -660,7 +693,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         else:
             args = (*args, self._seq, self.session_id, len(payload))
 
-        self.logger.debug(message, *args)
+        self._logger.debug(message, *args)
 
     def _build_presence_payload(
         self,

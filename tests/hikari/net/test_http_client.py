@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import json
-import types
+import weakref
 
 import aiohttp
 import mock
@@ -24,8 +24,7 @@ import pytest
 
 from hikari.net import http_client
 from hikari.net import http_settings
-from hikari.net import tracing
-from tests.hikari import _helpers
+from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture
@@ -38,21 +37,24 @@ def client_session():
 @pytest.fixture
 def client(client_session):
     assert client_session, "this param is needed, it ensures aiohttp is patched for the test"
-    client = _helpers.unslot_class(http_client.HTTPClient)(mock.MagicMock())
+    client = hikari_test_helpers.unslot_class(http_client.HTTPClient)()
     yield client
 
 
-@pytest.mark.asyncio
-class TestInit:
-    async def test_CFRayTracer_used_for_non_debug(self):
-        async with http_client.HTTPClient(debug=False, logger=mock.MagicMock()) as client:
-            assert len(client._tracers) == 1
-            assert isinstance(client._tracers[0], tracing.CFRayTracer)
+class TestFinalizer:
+    def test_when_existing_client_session(self, client):
+        client._client_session = mock.MagicMock()
+        client._client_session_ref = weakref.proxy(client._client_session)
+        client.__del__()
+        assert client._client_session is None
+        assert client._client_session_ref is None
 
-    async def test_DebugTracer_used_for_debug(self):
-        async with http_client.HTTPClient(debug=True, logger=mock.MagicMock()) as client:
-            assert len(client._tracers) == 1
-            assert isinstance(client._tracers[0], tracing.DebugTracer)
+    def test_when_no_client_session(self, client):
+        client._client_session = None
+        client._client_session_ref = None
+        client.__del__()
+        assert client._client_session is None
+        assert client._client_session_ref is None
 
 
 @pytest.mark.asyncio
@@ -64,13 +66,15 @@ class TestAcquireClientSession:
 
         client._client_session = None
         cs = client.get_client_session()
-        assert client._client_session is cs
+
+        assert client._client_session == cs
+        assert cs in weakref.getweakrefs(client._client_session), "did not return correct weakref"
+
         aiohttp.ClientSession.assert_called_once_with(
             connector=client._config.tcp_connector_factory(),
             trust_env=client._config.trust_env,
             version=aiohttp.HttpVersion11,
             json_serialize=json.dumps,
-            trace_configs=[t.trace_config for t in client._tracers],
         )
 
     async def test_acquire_repeated_calls_caches_client_session(self, client):
@@ -110,9 +114,6 @@ class TestPerformRequest:
 
         form_data = aiohttp.FormData()
 
-        trace_request_ctx = types.SimpleNamespace()
-        trace_request_ctx.request_body = form_data
-
         expected_response = mock.MagicMock()
         client_session.request = mock.AsyncMock(return_value=expected_response)
 
@@ -134,7 +135,6 @@ class TestPerformRequest:
             verify_ssl=client._config.verify_ssl,
             ssl_context=client._config.ssl_context,
             timeout=client._config.request_timeout,
-            trace_request_ctx=trace_request_ctx,
         )
 
     async def test_perform_request_json(self, client, client_session):
@@ -148,9 +148,6 @@ class TestPerformRequest:
         client._config.request_timeout = mock.MagicMock()
 
         req = {"hello": "world"}
-
-        trace_request_ctx = types.SimpleNamespace()
-        trace_request_ctx.request_body = req
 
         expected_response = mock.MagicMock()
         client_session.request = mock.AsyncMock(return_value=expected_response)
@@ -173,7 +170,6 @@ class TestPerformRequest:
             verify_ssl=client._config.verify_ssl,
             ssl_context=client._config.ssl_context,
             timeout=client._config.request_timeout,
-            trace_request_ctx=trace_request_ctx,
         )
 
 

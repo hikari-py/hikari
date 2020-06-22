@@ -22,7 +22,6 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = ["IRESTApp"]
 
 import abc
-import logging
 import typing
 
 
@@ -56,17 +55,6 @@ class IRESTApp(abc.ABC):
         -------
         hikari.net.rest.REST
             The REST API client.
-        """
-
-    @property
-    @abc.abstractmethod
-    def logger(self) -> logging.Logger:
-        """Logger for logging messages.
-
-        Returns
-        -------
-        logging.Logger
-            The application-level logger.
         """
 
     @property

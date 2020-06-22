@@ -20,6 +20,7 @@ import asyncio
 import pytest
 
 from hikari.utilities import aio
+from tests.hikari import hikari_test_helpers
 
 
 class CoroutineStub:
@@ -33,7 +34,7 @@ class CoroutineStub:
 
     def __await__(self):
         self.awaited = True
-        yield from asyncio.sleep(0.01).__await__()
+        return hikari_test_helpers.idle().__await__()
 
     def __repr__(self):
         args = ", ".join(map(repr, self.args))

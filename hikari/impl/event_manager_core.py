@@ -23,6 +23,7 @@ __all__: typing.Final[typing.List[str]] = ["EventManagerCoreComponent"]
 
 import asyncio
 import functools
+import logging
 import typing
 
 from hikari.api import event_consumer
@@ -37,6 +38,9 @@ from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari.api import rest
+
+
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 
 
 if typing.TYPE_CHECKING:
@@ -61,7 +65,6 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
         self._app = app
         self._listeners: ListenerMapT = {}
         self._waiters: WaiterMapT = {}
-        self.logger = reflect.get_logger(self)
 
     @property
     @typing.final
@@ -75,7 +78,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
             callback = getattr(self, "on_" + event_name.lower())
             await callback(shard, payload)
         except AttributeError:
-            self.logger.debug("ignoring unknown event %s", event_name)
+            _LOGGER.debug("ignoring unknown event %s", event_name)
 
     def subscribe(
         self,
@@ -95,7 +98,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
 
             return wrapper
         else:
-            self.logger.debug(
+            _LOGGER.debug(
                 "subscribing callback 'async def %s%s' to event-type %s.%s",
                 getattr(callback, "__name__", "<anon>"),
                 reflect.resolve_signature(callback),
@@ -114,7 +117,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
         callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
     ) -> None:
         if event_type in self._listeners:
-            self.logger.debug(
+            _LOGGER.debug(
                 "unsubscribing callback %s%s from event-type %s.%s",
                 getattr(callback, "__name__", "<anon>"),
                 reflect.resolve_signature(callback),
@@ -221,7 +224,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
             trio = type(ex), ex, ex.__traceback__.tb_next if ex.__traceback__ is not None else None
 
             if base.is_no_catch_event(event):
-                self.logger.error("an exception occurred handling an event, but it has been ignored", exc_info=trio)
+                _LOGGER.error("an exception occurred handling an event, but it has been ignored", exc_info=trio)
             else:
-                self.logger.error("an exception occurred handling an event", exc_info=trio)
+                _LOGGER.error("an exception occurred handling an event", exc_info=trio)
                 await self.dispatch(other.ExceptionEvent(exception=ex, event=event, callback=callback))

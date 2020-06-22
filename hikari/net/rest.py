@@ -25,8 +25,10 @@ import asyncio
 import contextlib
 import datetime
 import http
+import logging
 import math
 import typing
+import uuid
 
 import aiohttp
 
@@ -66,6 +68,11 @@ if typing.TYPE_CHECKING:
     from hikari.models import webhooks
 
 
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
+
+
+# TODO: make a mechanism to allow me to share the same client session but
+# use various tokens for REST-only apps.
 class REST(http_client.HTTPClient, component.IComponent):
     """Implementation of the V6 and V7-compatible Discord REST API.
 
@@ -128,7 +135,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         rest_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         version: int,
     ) -> None:
-        super().__init__(config=config, debug=debug, logger=reflect.get_logger(self))
+        super().__init__(config=config, debug=debug)
         self.buckets = buckets.RESTBucketManager()
         self.global_rate_limit = rate_limits.ManualRateLimiter()
         self.version = version
@@ -214,11 +221,36 @@ class REST(http_client.HTTPClient, component.IComponent):
         # Wait for any ratelimits to finish.
         await asyncio.gather(self.buckets.acquire(compiled_route), self.global_rate_limit.acquire())
 
+        uuid4 = str(uuid.uuid4())
+
+        if self._debug:
+            headers_str = "\n".join(f"\t\t{name}:{value}" for name, value in headers.items())
+            _LOGGER.debug(
+                "%s %s %s\n\theaders:\n%s\n\tbody:\n\t\t%r", uuid4, compiled_route.method, url, headers_str, body
+            )
+        else:
+            _LOGGER.debug("%s %s %s", uuid4, compiled_route.method, url)
+
         # Make the request.
         # noinspection PyUnresolvedReferences
         response = await self._perform_request(
             method=compiled_route.method, url=url, headers=headers, body=body, query=query
         )
+
+        if self._debug:
+            headers_str = "\n".join(
+                f"\t\t{name.decode('utf-8')}:{value.decode('utf-8')}" for name, value in response.raw_headers
+            )
+            _LOGGER.debug(
+                "%s %s %s\n\theaders:\n%s\n\tbody:\n\t\t%r",
+                uuid4,
+                response.status,
+                response.reason,
+                headers_str,
+                await response.read(),
+            )
+        else:
+            _LOGGER.debug("%s %s %s", uuid4, response.status, response.reason)
 
         # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
         await self._parse_ratelimits(compiled_route, response)
@@ -291,7 +323,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         if body.get("global", False) is True:
             self.global_rate_limit.throttle(body_retry_after)
 
-            self.logger.warning("you are being rate-limited globally - trying again after %ss", body_retry_after)
+            _LOGGER.warning("you are being rate-limited globally - trying again after %ss", body_retry_after)
             raise self._RetryRequest
 
         # Discord have started applying ratelimits to operations on some endpoints
@@ -314,7 +346,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         # trust that voodoo type stuff won't ever occur with that value from them...
         if remaining <= 0:
             # We can retry and we will then abide by the updated bucket ratelimits.
-            self.logger.debug(
+            _LOGGER.debug(
                 "rate-limited on bucket %s at %s. This is a bucket discrepancy, so we will retry at %s",
                 bucket,
                 compiled_route,
