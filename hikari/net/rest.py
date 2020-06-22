@@ -66,8 +66,8 @@ if typing.TYPE_CHECKING:
     from hikari.models import users
     from hikari.models import voices
     from hikari.models import webhooks
-    
-    
+
+
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 
 

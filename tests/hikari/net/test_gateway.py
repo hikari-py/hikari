@@ -19,6 +19,7 @@ import asyncio
 import contextlib
 import math
 
+import aiohttp.client_reqrep
 import mock
 import pytest
 
@@ -232,7 +233,16 @@ class TestRunOnce:
         )
         client = hikari_test_helpers.mock_methods_on(
             client,
-            except_=("_run_once", "_InvalidSession", "_Reconnect", "_SocketClosed", "_dispatch", "_now"),
+            except_=(
+                "_run_once",
+                "_InvalidSession",
+                "_Reconnect",
+                "_SocketClosed",
+                "_dispatch",
+                "_now",
+                "_GatewayCloseCode",
+                "_GatewayOpcode",
+            ),
             also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger",],
         )
         client._dispatch = mock.AsyncMock()
@@ -246,10 +256,17 @@ class TestRunOnce:
 
     @hikari_test_helpers.timeout()
     async def test_resets_close_event(self, client):
-        with contextlib.suppress(Exception):
-            await client._run_once()
+        await client._run_once()
 
         client._request_close_event.clear.assert_called_with()
+
+    @hikari_test_helpers.timeout()
+    async def test_resets_zombie_status(self, client):
+        client._zombied = True
+
+        await client._run_once()
+
+        assert client._zombied is False
 
     @hikari_test_helpers.timeout()
     async def test_backoff_and_waits_if_restarted_too_quickly(self, client):
@@ -366,10 +383,147 @@ class TestRunOnce:
         client._handshake.assert_awaited_once_with()
 
     @hikari_test_helpers.timeout()
+    async def test_connected_event_dispatched_before_polling_events(self, client):
+        class Error(Exception):
+            pass
+
+        client._dispatch = mock.MagicMock()
+        client._poll_events = mock.AsyncMock(side_effect=Error)
+
+        with pytest.raises(Error):
+            await client._run_once()
+
+        client._dispatch.assert_any_call("CONNECTED", {})
+
+    @hikari_test_helpers.timeout()
+    async def test_heartbeat_is_not_started_before_handshake_completes(self, client):
+        class Error(Exception):
+            pass
+
+        client._heartbeat_keepalive = mock.MagicMock()
+
+        client._handshake = mock.AsyncMock(side_effect=Error)
+
+        with mock.patch.object(asyncio, "create_task") as create_task:
+            with pytest.raises(Error):
+                await client._run_once()
+
+        call = mock.call(client._heartbeat_keepalive(), name=mock.ANY)
+        assert call not in create_task.call_args_list
+
+    @hikari_test_helpers.timeout()
+    async def test_heartbeat_is_started(self, client):
+        client._heartbeat_keepalive = mock.MagicMock()
+
+        with mock.patch.object(asyncio, "create_task") as create_task:
+            await client._run_once()
+
+        call = mock.call(client._heartbeat_keepalive(), name="gateway shard 3 heartbeat")
+        assert call in create_task.call_args_list
+
+    @hikari_test_helpers.timeout()
     async def test_poll_events_invoked(self, client):
         await client._run_once()
         client._poll_events.assert_awaited_once_with()
 
     @hikari_test_helpers.timeout()
+    async def test_heartbeat_is_stopped_when_poll_events_stops(self, client):
+        client._heartbeat_keepalive = mock.MagicMock()
+        client._poll_events = mock.AsyncMock(side_effect=Exception)
+
+        task = mock.create_autospec(asyncio.Task)
+
+        with mock.patch.object(asyncio, "create_task", return_value=task):
+            with pytest.raises(Exception):
+                await client._run_once()
+
+        task.cancel.assert_called_once_with()
+
+    @hikari_test_helpers.timeout()
     async def test_happy_path_returns_False(self, client):
         assert await client._run_once() is False
+
+    @hikari_test_helpers.timeout()
+    async def test_ClientConnectionError_is_restartable(self, client):
+        key = aiohttp.client_reqrep.ConnectionKey(
+            host="localhost", port=6996, is_ssl=False, ssl=None, proxy=None, proxy_auth=None, proxy_headers_hash=69420,
+        )
+        error = aiohttp.ClientConnectorError(key, OSError())
+
+        client._handshake = mock.AsyncMock(side_effect=error)
+        assert await client._run_once() is True
+
+    @hikari_test_helpers.timeout()
+    async def test_invalid_session_is_restartable(self, client):
+        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession())
+        assert await client._run_once() is True
+
+    @hikari_test_helpers.timeout()
+    async def test_invalid_session_resume_does_not_invalidate_session(self, client):
+        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession(True))
+        await client._run_once()
+        client._close_ws.assert_awaited_once_with(
+            gateway.Gateway._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)"
+        )
+
+    @hikari_test_helpers.timeout()
+    async def test_invalid_session_no_resume_invalidates_session(self, client):
+        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession(False))
+        await client._run_once()
+        client._close_ws.assert_awaited_once_with(
+            gateway.Gateway._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)"
+        )
+
+    @hikari_test_helpers.timeout()
+    async def test_invalid_session_resume_does_not_clear_seq_or_session_id(self, client):
+        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession(True))
+        client._seq = 1234
+        client.session_id = "69420"
+        await client._run_once()
+        assert client._seq == 1234
+        assert client.session_id == "69420"
+
+    @hikari_test_helpers.timeout()
+    async def test_invalid_session_no_resume_clears_seq_and_session_id(self, client):
+        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession(False))
+        client._seq = 1234
+        client.session_id = "69420"
+        await client._run_once()
+        assert client._seq is None
+        assert client.session_id is None
+
+    @hikari_test_helpers.timeout()
+    async def test_reconnect_is_restartable(self, client):
+        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._Reconnect())
+        assert await client._run_once() is True
+
+    @pytest.mark.parametrize("request_close", [True, False])
+    @hikari_test_helpers.timeout()
+    async def test_socket_closed_is_restartable_if_no_closure_request(self, client, request_close):
+        client._request_close_event.is_set = mock.MagicMock(return_value=request_close)
+        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._SocketClosed())
+        assert await client._run_once() is not request_close
+
+    @pytest.mark.parametrize(
+        ["zombied", "request_close", "expect_backoff_called"],
+        [(True, True, True), (True, False, True), (False, True, False), (False, False, False),],
+    )
+    @hikari_test_helpers.timeout()
+    async def test_socket_closed_resets_backoff(self, client, zombied, request_close, expect_backoff_called):
+        client._request_close_event.is_set = mock.MagicMock(return_value=request_close)
+
+        def poll_events():
+            client._zombied = zombied
+            raise gateway.Gateway._SocketClosed()
+
+        client._poll_events = mock.AsyncMock(wraps=poll_events)
+        await client._run_once()
+
+        if expect_backoff_called:
+            client._backoff.reset.assert_called_once_with()
+        else:
+            client._backoff.reset.assert_not_called()
+
+    @hikari_test_helpers.timeout()
+    async def test_server_connection_error_resumes_if_reconnectable(self):
+        ...
