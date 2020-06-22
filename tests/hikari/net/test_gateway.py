@@ -17,6 +17,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import contextlib
+import datetime
 import math
 
 import aiohttp.client_reqrep
@@ -24,6 +25,7 @@ import mock
 import pytest
 
 from hikari import errors
+from hikari.models import presences
 from hikari.net import gateway
 from hikari.net import http_client
 from tests.hikari import hikari_test_helpers
@@ -132,12 +134,7 @@ class TestClose:
             def is_alive(self):
                 return getattr(self, "_is_alive", False)
 
-        return GatewayStub(
-            url="wss://gateway.discord.gg",
-            token="lol",
-            app=mock.MagicMock(),
-            config=mock.MagicMock(),
-        )
+        return GatewayStub(url="wss://gateway.discord.gg", token="lol", app=mock.MagicMock(), config=mock.MagicMock(),)
 
     async def test_when_already_closed_does_nothing(self, client):
         client._request_close_event = mock.MagicMock(asyncio.Event)
@@ -517,7 +514,7 @@ class TestRunOnce:
 
     @pytest.mark.parametrize(
         ["zombied", "request_close", "expect_backoff_called"],
-        [(True, True, True), (True, False, True), (False, True, False), (False, False, False),],
+        [(True, True, True), (True, False, True), (False, True, False), (False, False, False)],
     )
     @hikari_test_helpers.timeout()
     async def test_socket_closed_resets_backoff(self, client, zombied, request_close, expect_backoff_called):
@@ -547,7 +544,9 @@ class TestRunOnce:
     async def test_server_connection_error_closes_websocket_if_reconnectable(self, client):
         client._poll_events = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, True))
         assert await client._run_once() is True
-        client._close_ws.assert_awaited_once_with(gateway.Gateway._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me")
+        client._close_ws.assert_awaited_once_with(
+            gateway.Gateway._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me"
+        )
 
     @hikari_test_helpers.timeout()
     async def test_server_connection_error_does_not_reconnect_if_not_reconnectable(self, client):
@@ -565,7 +564,9 @@ class TestRunOnce:
         client._poll_events = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, False))
         with pytest.raises(errors.GatewayServerClosedConnectionError):
             await client._run_once()
-        client._close_ws.assert_awaited_once_with(gateway.Gateway._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection")
+        client._close_ws.assert_awaited_once_with(
+            gateway.Gateway._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection"
+        )
 
     async def test_other_exception_closes_websocket(self, client):
         client._poll_events = mock.AsyncMock(side_effect=RuntimeError())
@@ -573,7 +574,9 @@ class TestRunOnce:
         with pytest.raises(RuntimeError):
             await client._run_once()
 
-        client._close_ws.assert_awaited_once_with(gateway.Gateway._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
+        client._close_ws.assert_awaited_once_with(
+            gateway.Gateway._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred"
+        )
 
     async def test_dispatches_disconnect_if_connected(self, client):
         await client._run_once()
@@ -589,3 +592,28 @@ class TestRunOnce:
     async def test_connected_at_reset_to_nan_on_exit(self, client):
         await client._run_once()
         assert math.isnan(client.connected_at)
+
+
+@pytest.mark.asyncio
+class TestUpdatePresence:
+    @pytest.fixture
+    def client(self):
+        client = hikari_test_helpers.unslot_class(gateway.Gateway)(
+            url="wss://gateway.discord.gg",
+            token="lol",
+            app=mock.MagicMock(),
+            config=mock.MagicMock(),
+            shard_id=3,
+            shard_count=17,
+        )
+        return hikari_test_helpers.mock_methods_on(client, except_=("update_presence",))
+
+    async def test_update_presence_sends_all_params(self, client):
+        now = datetime.datetime.now()
+
+        await client.update_presence(
+            idle_since=now,
+            is_afk=False,
+            activity=presences.Activity(type=presences.ActivityType.PLAYING, name="with my saxaphone"),
+            status=presences.Status.DO_NOT_DISTURB,
+        )
