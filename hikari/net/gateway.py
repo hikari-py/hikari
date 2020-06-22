@@ -409,9 +409,9 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     async def update_presence(
         self,
         *,
-        idle_since: typing.Union[undefined.UndefinedType, typing.Optional[datetime.datetime]] = undefined.UNDEFINED,
+        idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = undefined.UNDEFINED,
         is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        activity: typing.Union[undefined.UndefinedType, typing.Optional[presences.Activity]] = undefined.UNDEFINED,
+        activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
         status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
     ) -> None:
         """Update the presence of the shard user.
@@ -430,9 +430,24 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         status : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
             The web status to show. If undefined, this will not be changed.
         """
-        presence = self._build_presence_payload(idle_since=idle_since, is_afk=is_afk, status=status, activity=activity)
+        if idle_since is undefined.UNDEFINED:
+            idle_since = self._idle_since
+        if is_afk is undefined.UNDEFINED:
+            is_afk = self._is_afk
+        if status is undefined.UNDEFINED:
+            status = self._status
+        if activity is undefined.UNDEFINED:
+            activity = self._activity
+
+        presence = self._app.entity_factory.serialize_gateway_presence(
+            idle_since=idle_since, is_afk=is_afk, status=status, activity=activity
+        )
+
         payload: data_binding.JSONObject = {"op": self._GatewayOpcode.PRESENCE_UPDATE, "d": presence}
+
         await self._send_json(payload)
+
+        # Update internal status.
         self._idle_since = idle_since if idle_since is not undefined.UNDEFINED else self._idle_since
         self._is_afk = is_afk if is_afk is not undefined.UNDEFINED else self._is_afk
         self._activity = activity if activity is not undefined.UNDEFINED else self._activity
@@ -463,15 +478,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             If `True`, the bot will deafen itself in that voice channel. If
             `False`, then it will undeafen itself.
         """
-        payload: data_binding.JSONObject = {
-            "op": self._GatewayOpcode.VOICE_STATE_UPDATE,
-            "d": {
-                "guild_id": str(int(guild)),
-                "channel_id": str(int(channel)) if channel is not None else None,
-                "self_mute": self_mute,
-                "self_deaf": self_deaf,
-            },
-        }
+        payload = self._app.entity_factory.serialize_gateway_voice_state_update(guild, channel, self_mute, self_deaf)
         await self._send_json(payload)
 
     async def _close_ws(self, code: int, message: str) -> None:
@@ -524,7 +531,9 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
             if undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
                 # noinspection PyTypeChecker
-                payload["d"]["presence"] = self._build_presence_payload()
+                payload["d"]["presence"] = self._app.entity_factory.serialize_gateway_presence(
+                    self._idle_since, self._is_afk, self._status, self._activity,
+                )
 
             await self._send_json(payload)
 
@@ -696,35 +705,3 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             args = (*args, self._seq, self.session_id, len(payload))
 
         self._logger.debug(message, *args)
-
-    def _build_presence_payload(
-        self,
-        idle_since: typing.Union[undefined.UndefinedType, typing.Optional[datetime.datetime]] = undefined.UNDEFINED,
-        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
-        activity: typing.Union[undefined.UndefinedType, typing.Optional[presences.Activity]] = undefined.UNDEFINED,
-    ) -> data_binding.JSONObject:
-        if idle_since is undefined.UNDEFINED:
-            idle_since = self._idle_since
-        if is_afk is undefined.UNDEFINED:
-            is_afk = self._is_afk
-        if status is undefined.UNDEFINED:
-            status = self._status
-        if activity is undefined.UNDEFINED:
-            activity = self._activity
-
-        if activity is not None and activity is not undefined.UNDEFINED:
-            game: typing.Union[undefined.UndefinedType, None, data_binding.JSONObject] = {
-                "name": activity.name,
-                "url": activity.url,
-                "type": activity.type,
-            }
-        else:
-            game = activity
-
-        payload = data_binding.JSONObjectBuilder()
-        payload.put("since", idle_since, conversion=datetime.datetime.timestamp)
-        payload.put("afk", is_afk)
-        payload.put("status", status)
-        payload.put("game", game)
-        return payload
