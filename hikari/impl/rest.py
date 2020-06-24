@@ -25,7 +25,6 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = ["RESTAppImpl"]
 
-import logging
 import typing
 from concurrent import futures
 
