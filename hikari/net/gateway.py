@@ -410,7 +410,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self,
         *,
         idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = undefined.UNDEFINED,
-        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
         status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
     ) -> None:
@@ -421,7 +421,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
             The datetime that the user started being idle. If undefined, this
             will not be changed.
-        is_afk : bool or hikari.utilities.undefined.UndefinedType
+        afk : bool or hikari.utilities.undefined.UndefinedType
             If `True`, the user is marked as AFK. If `False`, the user is marked
             as being active. If undefined, this will not be changed.
         activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
@@ -432,15 +432,15 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         """
         if idle_since is undefined.UNDEFINED:
             idle_since = self._idle_since
-        if is_afk is undefined.UNDEFINED:
-            is_afk = self._is_afk
+        if afk is undefined.UNDEFINED:
+            afk = self._is_afk
         if status is undefined.UNDEFINED:
             status = self._status
         if activity is undefined.UNDEFINED:
             activity = self._activity
 
         presence = self._app.entity_factory.serialize_gateway_presence(
-            idle_since=idle_since, is_afk=is_afk, status=status, activity=activity
+            idle_since=idle_since, afk=afk, status=status, activity=activity
         )
 
         payload: data_binding.JSONObject = {"op": self._GatewayOpcode.PRESENCE_UPDATE, "d": presence}
@@ -449,7 +449,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         # Update internal status.
         self._idle_since = idle_since if idle_since is not undefined.UNDEFINED else self._idle_since
-        self._is_afk = is_afk if is_afk is not undefined.UNDEFINED else self._is_afk
+        self._is_afk = afk if afk is not undefined.UNDEFINED else self._is_afk
         self._activity = activity if activity is not undefined.UNDEFINED else self._activity
         self._status = status if status is not undefined.UNDEFINED else self._status
 

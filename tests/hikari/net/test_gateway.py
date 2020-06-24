@@ -606,14 +606,34 @@ class TestUpdatePresence:
             shard_id=3,
             shard_count=17,
         )
-        return hikari_test_helpers.mock_methods_on(client, except_=("update_presence",))
+        return hikari_test_helpers.mock_methods_on(
+            client,
+            except_=(
+                "update_presence",
+                "_InvalidSession",
+                "_Reconnect",
+                "_SocketClosed",
+                "_GatewayCloseCode",
+                "_GatewayOpcode",
+            ),
+        )
 
-    async def test_update_presence_sends_all_params(self, client):
+    async def test_update_presence_transforms_all_params(self, client):
         now = datetime.datetime.now()
+        idle_since = now
+        afk = False
+        activity = presences.Activity(type=presences.ActivityType.PLAYING, name="with my saxaphone")
+        status = presences.Status.DO_NOT_DISTURB
+
+        result = object()
+        client._app.entity_factory.serialize_gateway_presence = mock.MagicMock(return_value=result)
 
         await client.update_presence(
-            idle_since=now,
-            is_afk=False,
-            activity=presences.Activity(type=presences.ActivityType.PLAYING, name="with my saxaphone"),
-            status=presences.Status.DO_NOT_DISTURB,
+            idle_since=idle_since, afk=afk, activity=activity, status=status,
         )
+
+        client._app.entity_factory.serialize_gateway_presence.assert_called_once_with(
+            idle_since=idle_since, afk=afk, activity=activity, status=status,
+        )
+
+        client._send_json.assert_awaited_once_with({"op": gateway.Gateway._GatewayOpcode.PRESENCE_UPDATE, "d": result})
