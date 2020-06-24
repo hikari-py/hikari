@@ -371,7 +371,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             except asyncio.TimeoutError:
                 pass
 
-        # Do this after; it prevents backing off on the first try.
+        # Do this after. It prevents backing off on the first try.
         self._last_run_started_at = self._now()
 
         self._logger.debug("creating websocket connection to %s", self.url)

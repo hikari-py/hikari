@@ -9,8 +9,7 @@ ignore =
     D105,      # Magic methods not having a docstring.
     E402,      # Module level import not at top of file (isn't compatible with our import style).
     IFSTMT001  # "use a oneliner here"
-    T100,      # FIX ME comments
-    T101,      # TO DO comments
+    T101,      # TO DO comments only
 
 
 per-file-ignores =
