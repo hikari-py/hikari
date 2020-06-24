@@ -1047,6 +1047,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
         *,
         embed: typing.Union[undefined.UndefinedType, embeds_.Embed] = undefined.UNDEFINED,
+        attachment: typing.Union[undefined.UndefinedType, str, files.Resource] = undefined.UNDEFINED,
         attachments: typing.Union[
             undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
         ] = undefined.UNDEFINED,
@@ -1067,6 +1068,9 @@ class REST(http_client.HTTPClient, component.IComponent):
             If specified, the message contents.
         embed : hikari.utilities.undefined.UndefinedType or hikari.models.embeds.Embed
             If specified, the message embed.
+        attachment : hikari.utilities.undefined.UndefinedType or str or hikari.utilities.files.Resource
+            If specified, the message attachment. This can be a resource,
+            or string of a path on your computer or a URL.
         attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[str or hikari.utilities.files.Resource]
             If specified, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
@@ -1108,11 +1112,19 @@ class REST(http_client.HTTPClient, component.IComponent):
             If the channel is not found.
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
+        ValueError
+            If more than 100 unique objects/entities are passed for
+            `role_mentions` or `user_mentions`.
+        TypeError
+            If both `attachment` and `attachments` are specified.
 
         !!! warning
             You are expected to make a connection to the gateway and identify
             once before being able to use this endpoint for a bot.
         """  # noqa: E501 - Line too long
+        if attachment is not undefined.UNDEFINED and attachments is not undefined.UNDEFINED:
+            raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
+
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
 
         body = data_binding.JSONObjectBuilder()
@@ -1121,17 +1133,18 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("nonce", nonce)
         body.put("tts", tts)
 
-        if attachments is undefined.UNDEFINED:
-            final_attachments: typing.List[files.Resource] = []
-        else:
-            final_attachments = [files.ensure_resource(a) for a in attachments]
+        final_attachments: typing.List[files.Resource] = []
+        if attachment is not undefined.UNDEFINED:
+            final_attachments.append(files.ensure_resource(attachment))
+        if attachments is not undefined.UNDEFINED:
+            final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
         if embed is not undefined.UNDEFINED:
             embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
             body.put("embed", embed_payload)
             final_attachments.extend(embed_attachments)
 
-        if attachments:
+        if final_attachments:
             form = data_binding.URLEncodedForm()
             form.add_field("payload_json", data_binding.dump_json(body), content_type=strings.APPLICATION_JSON)
 
@@ -1516,12 +1529,18 @@ class REST(http_client.HTTPClient, component.IComponent):
         username: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         avatar_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         embeds: typing.Union[undefined.UndefinedType, typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        attachments: typing.Union[undefined.UndefinedType, typing.Sequence[files.Resource]] = undefined.UNDEFINED,
+        attachment: typing.Union[undefined.UndefinedType, str, files.Resource] = undefined.UNDEFINED,
+        attachments: typing.Union[
+            undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
+        ] = undefined.UNDEFINED,
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, snowflake.UniqueObject]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool] = True,
     ) -> messages_.Message:
+        if attachment is not undefined.UNDEFINED and attachments is not undefined.UNDEFINED:
+            raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
+
         if token is undefined.UNDEFINED:
             route = routes.POST_WEBHOOK.compile(webhook=webhook)
             no_auth = False
@@ -1529,10 +1548,11 @@ class REST(http_client.HTTPClient, component.IComponent):
             route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
             no_auth = True
 
-        if attachments is undefined.UNDEFINED:
-            final_attachments: typing.List[files.Resource] = []
-        else:
-            final_attachments = [files.ensure_resource(a) for a in attachments]
+        final_attachments: typing.List[files.Resource] = []
+        if attachment is not undefined.UNDEFINED:
+            final_attachments.append(files.ensure_resource(attachment))
+        if attachments is not undefined.UNDEFINED:
+            final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
         serialized_embeds = []
 
