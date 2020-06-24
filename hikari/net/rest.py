@@ -47,7 +47,6 @@ from hikari.net import strings
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
-from hikari.utilities import reflect
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -1417,14 +1416,15 @@ class REST(http_client.HTTPClient, component.IComponent):
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         name: str,
         *,
-        avatar: typing.Union[undefined.UndefinedType, files.Resource] = undefined.UNDEFINED,
+        avatar: typing.Union[undefined.UndefinedType, files.Resource, str] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
         route = routes.POST_WEBHOOK.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         if avatar is not undefined.UNDEFINED:
-            async with avatar.stream(executor=self._app.executor) as stream:
+            avatar_resouce = files.ensure_resource(avatar)
+            async with avatar_resouce.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
@@ -1468,7 +1468,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         *,
         token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        avatar: typing.Union[None, undefined.UndefinedType, files.Resource] = undefined.UNDEFINED,
+        avatar: typing.Union[None, undefined.UndefinedType, files.Resource, str] = undefined.UNDEFINED,
         channel: typing.Union[
             undefined.UndefinedType, channels.TextChannel, snowflake.UniqueObject
         ] = undefined.UNDEFINED,
@@ -1486,7 +1486,8 @@ class REST(http_client.HTTPClient, component.IComponent):
         if avatar is None:
             body.put("avatar", None)
         elif avatar is not undefined.UNDEFINED:
-            async with avatar.stream(executor=self._app.executor) as stream:
+            avatar_resource = files.ensure_resource(avatar)
+            async with avatar_resource.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
@@ -1607,17 +1608,18 @@ class REST(http_client.HTTPClient, component.IComponent):
         self,
         *,
         username: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        avatar: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
+        avatar: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
     ) -> users.OwnUser:
         route = routes.PATCH_MY_USER.compile()
         body = data_binding.JSONObjectBuilder()
         body.put("username", username)
 
-        if isinstance(avatar, files.Resource):
-            async with avatar.stream(executor=self._app.executor) as stream:
+        if avatar is None:
+            body.put("avatar", None)
+        elif avatar is not undefined.UNDEFINED:
+            avatar_resouce = files.ensure_resource(avatar)
+            async with avatar_resouce.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
-        else:
-            body.put("avatar", avatar)
 
         raw_response = await self._request(route, body=body)
         response = typing.cast(data_binding.JSONObject, raw_response)
@@ -1749,7 +1751,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         self,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         name: str,
-        image: files.Resource,
+        image: typing.Union[files.Resource, str],
         *,
         roles: typing.Union[
             undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
@@ -1760,7 +1762,8 @@ class REST(http_client.HTTPClient, component.IComponent):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         if image is not undefined.UNDEFINED:
-            async with image.stream(executor=self._app.executor) as stream:
+            image_resource = files.ensure_resource(image)
+            async with image_resource.stream(executor=self._app.executor) as stream:
                 body.put("image", await stream.data_uri())
 
         body.put_snowflake_array("roles", roles)
@@ -1838,10 +1841,10 @@ class REST(http_client.HTTPClient, component.IComponent):
             undefined.UndefinedType, channels.GuildVoiceChannel, snowflake.UniqueObject
         ] = undefined.UNDEFINED,
         afk_timeout: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
-        icon: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
+        icon: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
         owner: typing.Union[undefined.UndefinedType, users.User, snowflake.UniqueObject] = undefined.UNDEFINED,
-        splash: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
-        banner: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
+        splash: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
+        banner: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
         system_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
         rules_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
         public_updates_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
@@ -1868,19 +1871,22 @@ class REST(http_client.HTTPClient, component.IComponent):
         if icon is None:
             body.put("icon", None)
         elif icon is not undefined.UNDEFINED:
-            async with icon.stream(executor=self._app.executor) as stream:
+            icon_resource = files.ensure_resource(icon)
+            async with icon_resource.stream(executor=self._app.executor) as stream:
                 body.put("icon", await stream.data_uri())
 
         if splash is None:
             body.put("splash", None)
         elif splash is not undefined.UNDEFINED:
-            async with splash.stream(executor=self._app.executor) as stream:
+            splash_resource = files.ensure_resource(splash)
+            async with splash_resource.stream(executor=self._app.executor) as stream:
                 body.put("splash", await stream.data_uri())
 
         if banner is None:
             body.put("banner", None)
         elif banner is not undefined.UNDEFINED:
-            async with banner.stream(executor=self._app.executor) as stream:
+            banner_resource = files.ensure_resource(banner)
+            async with banner_resource.stream(executor=self._app.executor) as stream:
                 body.put("banner", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
