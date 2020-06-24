@@ -93,7 +93,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         as well as information such as DNS cache hits and misses, and other
         information useful for debugging this application. These logs will
         be written as DEBUG log entries. For most purposes, this should be
-        left `False`.eee
+        left `False`.
     global_ratelimit : hikari.net.rate_limits.ManualRateLimiter
         The shared ratelimiter to use for the application.
     token : str or hikari.utilities.undefined.UndefinedType
@@ -1888,7 +1888,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put_snowflake("rules_channel_id", rules_channel)
         body.put_snowflake("public_updates_channel_id", public_updates_channel)
 
-        # FIXME: gather these futures simultaneously for a 3x speedup...
+        # TODO: gather these futures simultaneously for a 3x speedup...
 
         if icon is None:
             body.put("icon", None)

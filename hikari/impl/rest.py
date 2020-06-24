@@ -25,10 +25,9 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = ["RESTClientFactoryImpl", "RESTClientImpl"]
 
+import concurrent.futures
 import copy
 import typing
-
-from concurrent import futures
 
 import aiohttp
 
@@ -104,7 +103,7 @@ class RESTClientImpl(rest_api.IRESTClientContextManager):
         )
 
     @property
-    def executor(self) -> typing.Optional[futures.Executor]:
+    def executor(self) -> typing.Optional[concurrent.futures.Executor]:
         return self._executor
 
     @property

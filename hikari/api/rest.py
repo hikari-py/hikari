@@ -27,9 +27,8 @@ import typing
 from hikari.net import strings
 
 if typing.TYPE_CHECKING:
+    import concurrent.futures
     import types
-
-    from concurrent import futures
 
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
@@ -83,7 +82,7 @@ class IRESTClient(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def executor(self) -> typing.Optional[futures.Executor]:
+    def executor(self) -> typing.Optional[concurrent.futures.Executor]:
         """Thread-pool to utilise for file IO within the library, if set.
 
         Returns
