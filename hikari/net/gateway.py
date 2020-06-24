@@ -165,9 +165,9 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     _RESTART_RATELIMIT_WINDOW: typing.Final[typing.ClassVar[float]] = 30.0
     """If the shard restarts more than once within this period of time, then
     exponentially back-off to prevent spamming the gateway or tanking the CPU.
-    
+
     This is potentially important if the internet connection turns off, as the
-    bot will simply attempt to reconnect repeatedly until the connection 
+    bot will simply attempt to reconnect repeatedly until the connection
     resumes.
     """
 
@@ -291,7 +291,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             # the entire inheritance conduit in a patch context.
             await http_client.HTTPClient.close(self)
 
-    async def _run_once(self) -> bool:
+    async def _run_once(self) -> bool:  # noqa: C901, CFQ001 - Too complex, exceeds max allowed length
         # returns `True` if we can reconnect, or `False` otherwise.
         self._request_close_event.clear()
 

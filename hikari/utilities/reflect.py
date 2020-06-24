@@ -84,7 +84,7 @@ def get_logger(obj: typing.Union[typing.Type[typing.Any], typing.Any], *addition
     logging.Logger
         The _LOGGER to use.
     """
-    if isinstance(obj, str):
+    if isinstance(obj, str):  # noqa: IFSTMT001 - Oneliner (makes it unreadable)
         str_obj = obj
     else:
         str_obj = (obj if isinstance(obj, type) else type(obj)).__module__

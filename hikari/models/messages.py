@@ -413,7 +413,10 @@ class Message(snowflake.Unique):
         text: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         *,
         embed: typing.Union[undefined.UndefinedType, embeds_.Embed] = undefined.UNDEFINED,
-        attachments: typing.Union[undefined.UndefinedType, typing.Sequence[files_.Resource]] = undefined.UNDEFINED,
+        attachment: typing.Union[undefined.UndefinedType, str, files_.Resource] = undefined.UNDEFINED,
+        attachments: typing.Union[
+            undefined.UndefinedType, typing.Sequence[typing.Union[str, files_.Resource]]
+        ] = undefined.UNDEFINED,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
@@ -436,10 +439,14 @@ class Message(snowflake.Unique):
             and can usually be ignored.
         tts : bool or hikari.utilities.undefined.UndefinedType
             If specified, whether the message will be sent as a TTS message.
-        attachments : typing.Sequence[hikari.utilities.files.Resource] or hikari.utilities.undefined.UndefinedType
+        attachment : hikari.utilities.files.Resource or str or hikari.utilities.undefined.UndefinedType
+            If specified, a attachment to upload, if desired. This can
+            be a resource, or string of a path on your computer or a URL.
+        attachments : typing.Sequence[hikari.utilities.files.Resource or str] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of attachments to upload, if desired.
             Should be between 1 and 10 objects in size (inclusive), also
-            including embed attachments.
+            including embed attachments. These can be resources, or
+            strings consisting of paths on your computer or URLs.
         embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
             If specified, the embed object to send with the message.
         mentions_everyone : bool
@@ -478,12 +485,15 @@ class Message(snowflake.Unique):
         ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
+        TypeError
+            If both `attachment` and `attachments` are specified.
         """  # noqa: E501 - Line too long
         return await self.app.rest.create_message(
             channel=self.channel_id,
             text=text,
             nonce=nonce,
             tts=tts,
+            attachment=attachment,
             attachments=attachments,
             embed=embed,
             mentions_everyone=mentions_everyone,

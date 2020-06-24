@@ -107,7 +107,10 @@ class Webhook(snowflake.Unique):
         username: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         avatar_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        attachments: typing.Union[undefined.UndefinedType, typing.Sequence[files_.Resource]] = undefined.UNDEFINED,
+        attachment: typing.Union[undefined.UndefinedType, str, files_.Resource] = undefined.UNDEFINED,
+        attachments: typing.Union[
+            undefined.UndefinedType, typing.Sequence[typing.Union[str, files_.Resource]]
+        ] = undefined.UNDEFINED,
         embeds: typing.Union[undefined.UndefinedType, typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[
@@ -131,8 +134,12 @@ class Webhook(snowflake.Unique):
             avatar with for this request.
         tts : bool or hikari.utilities.undefined.UndefinedType
             If specified, whether the message will be sent as a TTS message.
-        attachments : typing.Sequence[hikari.utilities.files.Resource] or hikari.utilities.undefined.UndefinedType
-            If specified, a sequence of attachments to upload.
+        attachment : hikari.utilities.undefined.UndefinedType or str or hikari.utilities.files.Resource
+            If specified, the message attachment. This can be a resource,
+            or string of a path on your computer or a URL.
+        attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[str or hikari.utilities.files.Resource]
+            If specified, the message attachments. These can be resources, or
+            strings consisting of paths on your computer or URLs.
         embeds : typing.Sequence[hikari.models.embeds.Embed] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of between `1` to `10` embed objects
             (inclusive) to send with the embed.
@@ -169,6 +176,8 @@ class Webhook(snowflake.Unique):
         ValueError
             If either `Webhook.token` is `None` or more than 100 unique
             objects/entities are passed for `role_mentions` or `user_mentions.
+        TypeError
+            If both `attachment` and `attachments` are specified.
         """  # noqa: E501 - Line too long
         if not self.token:
             raise ValueError("Cannot send a message using a webhook where we don't know it's token.")
@@ -179,6 +188,7 @@ class Webhook(snowflake.Unique):
             username=username,
             avatar_url=avatar_url,
             tts=tts,
+            attachment=attachment,
             attachments=attachments,
             embeds=embeds,
             mentions_everyone=mentions_everyone,
