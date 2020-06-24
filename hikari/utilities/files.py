@@ -370,7 +370,7 @@ class FileReader(AsyncReader):
 class AsyncReaderContextManager(typing.Generic[ReaderImplT]):
     """Context manager that returns a reader."""
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
     async def __aenter__(self) -> ReaderImplT:
@@ -388,7 +388,7 @@ class AsyncReaderContextManager(typing.Generic[ReaderImplT]):
 
 @typing.final
 class _NoOpAsyncReaderContextManagerImpl(typing.Generic[ReaderImplT], AsyncReaderContextManager[ReaderImplT]):
-    __slots__ = ("impl",)
+    __slots__: typing.Sequence[str] = ("impl",)
 
     def __init__(self, impl: ReaderImplT) -> None:
         self.impl = impl
@@ -407,7 +407,7 @@ class _NoOpAsyncReaderContextManagerImpl(typing.Generic[ReaderImplT], AsyncReade
 
 @typing.final
 class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReader]):
-    __slots__ = ("_web_resource", "_head_only", "_client_response_ctx", "_client_session")
+    __slots__: typing.Sequence[str] = ("_web_resource", "_head_only", "_client_response_ctx", "_client_session")
 
     def __init__(self, web_resource: WebResource, head_only: bool) -> None:
         self._web_resource = web_resource
@@ -475,7 +475,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
     resources.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -551,7 +551,7 @@ class Bytes(Resource[ByteReader]):
         uploading.
     """
 
-    __slots__ = ("data", "_filename", "mimetype", "extension")
+    __slots__: typing.Sequence[str] = ("data", "_filename", "mimetype", "extension")
 
     data: bytes
     """The raw data to upload."""
@@ -637,7 +637,7 @@ class WebResource(Resource[WebReader], abc.ABC):
         a `Bytes` and pass that instead in these cases.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def stream(
         self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
@@ -725,7 +725,7 @@ class URL(WebResource):
         a `Bytes` and pass that instead in these cases.
     """
 
-    __slots__ = ("_url",)
+    __slots__: typing.Sequence[str] = ("_url",)
 
     def __init__(self, url: str) -> None:
         self._url = url
@@ -761,7 +761,7 @@ class File(Resource[FileReader]):
         from the path instead.
     """
 
-    __slots__ = ("path", "_filename")
+    __slots__: typing.Sequence[str] = ("path", "_filename")
 
     path: typing.Union[str, pathlib.Path]
     _filename: typing.Optional[str]

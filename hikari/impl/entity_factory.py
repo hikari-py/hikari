@@ -78,7 +78,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     This will convert objects to/from JSON compatible representations.
     """
 
-    def __init__(self, app: rest.IRESTApp) -> None:
+    def __init__(self, app: rest.IRESTClient) -> None:
         self._app = app
         self._audit_log_entry_converters: typing.Mapping[str, typing.Callable[[typing.Any], typing.Any]] = {
             audit_log_models.AuditLogChangeKey.OWNER_ID: snowflake.Snowflake,
@@ -140,7 +140,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
     @property
     @typing.final
-    def app(self) -> rest.IRESTApp:
+    def app(self) -> rest.IRESTClient:
         return self._app
 
     ######################

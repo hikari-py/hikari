@@ -88,7 +88,7 @@ class ChannelPinsUpdateEvent(base_events.Event):
     when a pinned message is deleted.
     """
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
@@ -115,7 +115,7 @@ class WebhookUpdateEvent(base_events.Event):
     Sent when a webhook is updated, created or deleted in a guild.
     """
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -133,7 +133,7 @@ class TypingStartEvent(base_events.Event):
     Received when a user or bot starts "typing" in a channel.
     """
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -175,7 +175,7 @@ class InviteDeleteEvent(base_events.Event):
     Sent when an invite is deleted for a channel we can access.
     """
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)

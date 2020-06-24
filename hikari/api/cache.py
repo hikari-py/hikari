@@ -42,4 +42,4 @@ class ICacheComponent(component.IComponent, abc.ABC):
     for cross-process bots.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()

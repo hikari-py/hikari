@@ -61,14 +61,14 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
     is the raw event name being dispatched in lower-case.
     """
 
-    def __init__(self, app: rest.IRESTApp) -> None:
+    def __init__(self, app: rest.IRESTClient) -> None:
         self._app = app
         self._listeners: ListenerMapT = {}
         self._waiters: WaiterMapT = {}
 
     @property
     @typing.final
-    def app(self) -> rest.IRESTApp:
+    def app(self) -> rest.IRESTClient:
         return self._app
 
     async def consume_raw_event(

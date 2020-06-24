@@ -159,7 +159,7 @@ class PartialChannel(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
@@ -173,7 +173,7 @@ class TextChannel(PartialChannel, abc.ABC):
     """A channel that can have text messages in it."""
 
     # This is a mixin, do not add slotted fields.
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

@@ -152,11 +152,11 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
     @typing.final
     class _Reconnect(RuntimeError):
-        __slots__ = ()
+        __slots__: typing.Sequence[str] = ()
 
     @typing.final
     class _SocketClosed(RuntimeError):
-        __slots__ = ()
+        __slots__: typing.Sequence[str] = ()
 
     @attr.s(auto_attribs=True, slots=True)
     class _InvalidSession(RuntimeError):
@@ -277,7 +277,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         """Start the shard and wait for it to shut down."""
         try:
             # This may be set if we are stuck in a reconnect loop.
-            while not self._request_close_event.is_set() and await self._run_once():
+            while not self._request_close_event.is_set() and await self._run_once_shielded():
                 pass
 
             # Allow zookeepers to stop gathering tasks for each shard.
@@ -291,63 +291,12 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             # the entire inheritance conduit in a patch context.
             await http_client.HTTPClient.close(self)
 
-    async def _run_once(self) -> bool:  # noqa: C901, CFQ001 - Too complex, exceeds max allowed length
-        # returns `True` if we can reconnect, or `False` otherwise.
-        self._request_close_event.clear()
-
-        self._zombied = False
-
-        if self._now() - self._last_run_started_at < self._RESTART_RATELIMIT_WINDOW:
-            # Interrupt sleep immediately if a request to close is fired.
-            wait_task = asyncio.create_task(
-                self._request_close_event.wait(), name=f"gateway shard {self._shard_id} backing off"
-            )
-            try:
-                backoff = next(self._backoff)
-                self._logger.debug("backing off for %ss", backoff)
-                await asyncio.wait_for(wait_task, timeout=backoff)
-
-                # If this line gets reached, the wait didn't time out, meaning
-                # the user told the client to shut down gracefully before the
-                # backoff completed.
-                return False
-            except asyncio.TimeoutError:
-                pass
-
-        # Do this after; it prevents backing off on the first try.
-        self._last_run_started_at = self._now()
-
+    async def _run_once_shielded(self) -> bool:
+        # Returns `True` if we can reconnect, or `False` otherwise.
+        # Wraps the runner logic in the standard exception handling mechanisms.
         try:
-            self._logger.debug("creating websocket connection to %s", self.url)
-            self._ws = await self._create_ws(self.url)
-
-            self.connected_at = self._now()
-
-            # Technically we are connected after the hello, but this ensures we can send and receive
-            # before firing that event.
-            self._dispatch("CONNECTED", {})
-
-            self._zlib = zlib.decompressobj()
-
-            self._handshake_event.clear()
-            self._request_close_event.clear()
-
-            await self._handshake()
-
-            # We should ideally set this after HELLO, but it should be fine
-            # here as well. If we don't heartbeat in time, something probably
-            # went majorly wrong anyway.
-            heartbeat = asyncio.create_task(
-                self._heartbeat_keepalive(), name=f"gateway shard {self._shard_id} heartbeat"
-            )
-
-            try:
-                await self._poll_events()
-            finally:
-                heartbeat.cancel()
-
+            await self._run_once()
             return False
-
         except aiohttp.ClientConnectorError as ex:
             self._logger.error(
                 "failed to connect to Discord because %s.%s: %s", type(ex).__module__, type(ex).__qualname__, str(ex),
@@ -397,14 +346,69 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             await self._close_ws(self._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
             raise
 
+        return True
+
+    async def _run_once(self) -> None:
+        # Physical runner logic without error handling.
+        self._request_close_event.clear()
+
+        self._zombied = False
+
+        if self._now() - self._last_run_started_at < self._RESTART_RATELIMIT_WINDOW:
+            # Interrupt sleep immediately if a request to close is fired.
+            wait_task = asyncio.create_task(
+                self._request_close_event.wait(), name=f"gateway shard {self._shard_id} backing off"
+            )
+            try:
+                backoff = next(self._backoff)
+                self._logger.debug("backing off for %ss", backoff)
+                await asyncio.wait_for(wait_task, timeout=backoff)
+
+                # If this line gets reached, the wait didn't time out, meaning
+                # the user told the client to shut down gracefully before the
+                # backoff completed.
+                return
+            except asyncio.TimeoutError:
+                pass
+
+        # Do this after; it prevents backing off on the first try.
+        self._last_run_started_at = self._now()
+
+        self._logger.debug("creating websocket connection to %s", self.url)
+        self._ws = await self._create_ws(self.url)
+
+        self.connected_at = self._now()
+
+        # Technically we are connected after the hello, but this ensures we can send and receive
+        # before firing that event.
+        self._dispatch("CONNECTED", {})
+
+        try:
+
+            self._zlib = zlib.decompressobj()
+
+            self._handshake_event.clear()
+            self._request_close_event.clear()
+
+            await self._handshake()
+
+            # We should ideally set this after HELLO, but it should be fine
+            # here as well. If we don't heartbeat in time, something probably
+            # went majorly wrong anyway.
+            heartbeat = asyncio.create_task(
+                self._heartbeat_keepalive(), name=f"gateway shard {self._shard_id} heartbeat"
+            )
+
+            try:
+                await self._poll_events()
+            finally:
+                heartbeat.cancel()
         finally:
             if not math.isnan(self.connected_at):
                 # Only dispatch this if we actually connected before we failed!
                 self._dispatch("DISCONNECTED", {})
 
             self.connected_at = float("nan")
-
-        return True
 
     async def update_presence(
         self,
