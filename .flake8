@@ -2,12 +2,14 @@
 count = true
 
 ignore =
-    E402,      # Module level import not at top of file (isn't compatible with our import style).
-    D105,      # Magic methods not having a docstring.
-    D102,      # Missing docstring in public method.
     A002,      # Argument is shadowing a python builtin.
     A003,      # Class attribute is shadowing a python builtin.
     CFQ002,    # Function has too many arguments.
+    D102,      # Missing docstring in public method.
+    D105,      # Magic methods not having a docstring.
+    E402,      # Module level import not at top of file (isn't compatible with our import style).
+    IFSTMT001  # "use a oneliner here"
+    T101,      # TO DO comments only
 
 
 per-file-ignores =
@@ -18,7 +20,7 @@ per-file-ignores =
     # complaints about importing stuff and not using it afterwards
     hikari/__init__.py:F401
 
-max-complexity = 15
+max-complexity = 20
 max-line-length = 120
 show_source = False
 statistics = False

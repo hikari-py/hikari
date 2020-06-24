@@ -75,7 +75,7 @@ class HTTPClient(abc.ABC):
         _logger on this class.
     """
 
-    __slots__ = (
+    __slots__: typing.Sequence[str] = (
         "_client_session",
         "_client_session_ref",
         "_config",
@@ -139,12 +139,13 @@ class HTTPClient(abc.ABC):
             The client session to use for requests.
         """
         if self._client_session is None:
-            connector = self._config.tcp_connector_factory() if self._config.tcp_connector_factory is not None else None
+            connector = self._config.tcp_connector if self._config.tcp_connector is not None else None
             self._client_session = aiohttp.ClientSession(
                 connector=connector,
                 trust_env=self._config.trust_env,
                 version=aiohttp.HttpVersion11,
                 json_serialize=json.dumps,
+                connector_owner=self._config.connector_owner if self._config.tcp_connector is not None else True,
             )
             self._client_session_ref = weakref.proxy(self._client_session)
             _LOGGER.debug("acquired new client session object %r", self._client_session)

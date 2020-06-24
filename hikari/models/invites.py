@@ -52,7 +52,7 @@ class TargetUserType(int, enum.Enum):
 class VanityURL:
     """A special case invite object, that represents a guild's vanity url."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
@@ -162,7 +162,7 @@ class InviteGuild(guilds.PartialGuild):
 class Invite:
     """Represents an invite that's used to add users to a guild or group dm."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
@@ -232,7 +232,7 @@ class InviteWithMetadata(Invite):
     If set to `None` then this is unlimited.
     """
 
-    # FIXME: can we use a non-None value to represent infinity here somehow, or
+    # TODO: can we use a non-None value to represent infinity here somehow, or
     # make a timedelta that is infinite for comparisons?
     max_age: typing.Optional[datetime.timedelta] = attr.attrib(eq=False, hash=False, repr=False)
     """The timedelta of how long this invite will be valid for.

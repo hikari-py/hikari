@@ -32,10 +32,10 @@ if typing.TYPE_CHECKING:
 class InMemoryCacheComponentImpl(cache.ICacheComponent):
     """In-memory cache implementation."""
 
-    def __init__(self, app: rest.IRESTApp) -> None:
+    def __init__(self, app: rest.IRESTClient) -> None:
         self._app = app
 
     @property
     @typing.final
-    def app(self) -> rest.IRESTApp:
+    def app(self) -> rest.IRESTClient:
         return self._app

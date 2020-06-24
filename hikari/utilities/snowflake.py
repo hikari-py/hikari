@@ -37,7 +37,7 @@ class Snowflake(int):
     This object can be treated as a regular `int` for most purposes.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     ___MIN___: Snowflake
     ___MAX___: Snowflake
@@ -93,7 +93,7 @@ class Snowflake(int):
 class Unique(abc.ABC):
     """Mixin for a class that enforces uniqueness by a snowflake ID."""
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

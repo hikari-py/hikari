@@ -53,7 +53,7 @@ class BaseRateLimiter(abc.ABC):
         Async context manager support is not supported and will not be supported.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
     def acquire(self) -> asyncio.Future[None]:
@@ -84,7 +84,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     complete logic for safely aborting any pending tasks when being shut down.
     """
 
-    __slots__ = ("name", "throttle_task", "queue", "_closed")
+    __slots__: typing.Sequence[str] = ("name", "throttle_task", "queue", "_closed")
 
     name: typing.Final[str]
     """The name of the rate limiter."""
@@ -166,7 +166,7 @@ class ManualRateLimiter(BurstRateLimiter):
     Expect random occurrences.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def __init__(self) -> None:
         super().__init__("global")
@@ -275,7 +275,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     that a unit has been placed into the bucket.
     """
 
-    __slots__ = ("reset_at", "remaining", "limit", "period")
+    __slots__: typing.Sequence[str] = ("reset_at", "remaining", "limit", "period")
 
     reset_at: float
     """The `time.perf_counter` that the limit window ends at."""
@@ -443,7 +443,7 @@ class ExponentialBackOff:
         The initial increment to start at. Defaults to `0`.
     """
 
-    __slots__ = ("base", "increment", "maximum", "jitter_multiplier")
+    __slots__: typing.Sequence[str] = ("base", "increment", "maximum", "jitter_multiplier")
 
     base: typing.Final[float]
     """The base to use. Defaults to 2."""
