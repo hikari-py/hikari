@@ -100,7 +100,7 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
         status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
         activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
         idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
-        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
     ) -> None:
         """Update the presence of the user for all shards.
 
@@ -125,7 +125,7 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
         idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
             If defined, the time to show up as being idle since, or `None` if
             not applicable. If undefined, then it is not changed.
-        is_afk : bool or hikari.utilities.undefined.UndefinedType
+        afk : bool or hikari.utilities.undefined.UndefinedType
             If defined, `True` if the user should be marked as AFK,
             or `False` if not AFK.
         """

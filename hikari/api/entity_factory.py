@@ -1329,7 +1329,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
     def serialize_gateway_presence(
         self,
         idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = undefined.UNDEFINED,
-        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         status: typing.Union[undefined.UndefinedType, presence_models.Status] = undefined.UNDEFINED,
         activity: typing.Union[undefined.UndefinedType, None, presence_models.Activity] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
@@ -1343,7 +1343,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         idle_since : hikari.utilities.undefined.UndefinedType or None or datetime.datetime
             The time that the user should appear to be idle since. If `None`,
             then the user is marked as not being idle.
-        is_afk : hikari.utilities.undefined.UndefinedType or bool
+        afk : hikari.utilities.undefined.UndefinedType or bool
             If `True`, the user becomes AFK. This will move them
 
         status : hikari.utilities.undefined.UndefinedType or hikari.models.presences.Status
