@@ -27,6 +27,8 @@ from hikari.api import component
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     from hikari.events import channel as channel_events
     from hikari.events import guild as guild_events
     from hikari.events import message as message_events
@@ -48,12 +50,13 @@ if typing.TYPE_CHECKING:
     from hikari.net import gateway
     from hikari.utilities import data_binding
     from hikari.utilities import files
+    from hikari.utilities import snowflake
 
 
 class IEntityFactoryComponent(component.IComponent, abc.ABC):
     """Interface for components that serialize and deserialize JSON payloads."""
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     ######################
     # APPLICATION MODELS #
@@ -1316,4 +1319,68 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         -------
         hikari.events.voice.VoiceServerUpdateEvent
             The parsed voice server update event object.
+        """
+
+    ###############################
+    # GATEWAY-SPECIFIC UTILITIES. #
+    ###############################
+
+    @abc.abstractmethod
+    def serialize_gateway_presence(
+        self,
+        idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = undefined.UNDEFINED,
+        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        status: typing.Union[undefined.UndefinedType, presence_models.Status] = undefined.UNDEFINED,
+        activity: typing.Union[undefined.UndefinedType, None, presence_models.Activity] = undefined.UNDEFINED,
+    ) -> data_binding.JSONObject:
+        """Serialize a set of presence parameters into a raw gateway payload.
+
+        Any parameters that are left to be unspecified are omitted from the
+        generated payload.
+
+        Parameters
+        ----------
+        idle_since : hikari.utilities.undefined.UndefinedType or None or datetime.datetime
+            The time that the user should appear to be idle since. If `None`,
+            then the user is marked as not being idle.
+        afk : hikari.utilities.undefined.UndefinedType or bool
+            If `True`, the user becomes AFK. This will move them
+
+        status : hikari.utilities.undefined.UndefinedType or hikari.models.presences.Status
+        activity : hikari.utilities.undefined.UndefinedType or None or hikari.models.presences.Activity
+
+        Returns
+        -------
+        hikari.utilities.data_binding.JSONObject
+            The serialized presence.
+        """
+
+    @abc.abstractmethod
+    def serialize_gateway_voice_state_update(
+        self,
+        guild: typing.Union[guild_models.Guild, snowflake.UniqueObject],
+        channel: typing.Union[channel_models.GuildVoiceChannel, snowflake.UniqueObject, None],
+        self_mute: bool,
+        self_deaf: bool,
+    ) -> data_binding.JSONObject:
+        """Serialize a voice state update payload into a raw gateway payload.
+
+        Parameters
+        ----------
+        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
+            The guild to update the voice state in.
+        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.UniqueObject or None
+            The voice channel to change to, or `None` if attempting to leave a
+            voice channel and disconnect entirely.
+        self_mute : bool
+            `True` if the user should be muted, `False` if they should be
+            unmuted.
+        self_deaf : bool
+            `True` if the user should be deafened, `False` if they should be
+            able to hear other users.
+
+        Returns
+        -------
+        hikari.utilities.data_binding.JSONObject
+            The serialized payload.
         """

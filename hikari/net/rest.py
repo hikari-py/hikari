@@ -81,7 +81,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
     Parameters
     ----------
-    app : hikari.api.rest.IRESTApp
+    app : hikari.api.rest.IRESTClient
         The REST application containing all other application components
         that Hikari uses.
     config : hikari.net.http_settings.HTTPSettings
@@ -94,13 +94,14 @@ class REST(http_client.HTTPClient, component.IComponent):
         information useful for debugging this application. These logs will
         be written as DEBUG log entries. For most purposes, this should be
         left `False`.
+    global_ratelimit : hikari.net.rate_limits.ManualRateLimiter
+        The shared ratelimiter to use for the application.
     token : str or hikari.utilities.undefined.UndefinedType
         The bot or bearer token. If no token is to be used,
         this can be undefined.
     token_type : str or hikari.utilities.undefined.UndefinedType
         The type of token in use. If no token is used, this can be ignored and
-        left to the default value. This can be `"Bot"` or `"Bearer"`. The
-        default if not provided will be `"Bot"`.
+        left to the default value. This can be `"Bot"` or `"Bearer"`.
     rest_url : str
         The REST API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
@@ -108,7 +109,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         The API version to use.
     """
 
-    __slots__ = ("buckets", "global_rate_limit", "version", "_app", "_rest_url", "_token")
+    __slots__: typing.Sequence[str] = ("buckets", "global_rate_limit", "version", "_app", "_rest_url", "_token")
 
     buckets: buckets.RESTBucketManager
     """Bucket ratelimiter manager."""
@@ -121,22 +122,23 @@ class REST(http_client.HTTPClient, component.IComponent):
 
     @typing.final
     class _RetryRequest(RuntimeError):
-        __slots__ = ()
+        __slots__: typing.Sequence[str] = ()
 
     def __init__(
         self,
         *,
-        app: rest.IRESTApp,
+        app: rest.IRESTClient,
         config: http_settings.HTTPSettings,
-        debug: bool = False,
-        token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        token_type: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        rest_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        global_ratelimit: rate_limits.ManualRateLimiter,
+        debug: bool,
+        token: typing.Union[undefined.UndefinedType, str],
+        token_type: typing.Union[undefined.UndefinedType, str],
+        rest_url: typing.Union[undefined.UndefinedType, str],
         version: int,
     ) -> None:
         super().__init__(config=config, debug=debug)
         self.buckets = buckets.RESTBucketManager()
-        self.global_rate_limit = rate_limits.ManualRateLimiter()
+        self.global_rate_limit = global_ratelimit
         self.version = version
 
         self._app = app
@@ -158,7 +160,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
     @property
     @typing.final
-    def app(self) -> rest.IRESTApp:
+    def app(self) -> rest.IRESTClient:
         return self._app
 
     @typing.final
@@ -1886,7 +1888,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put_snowflake("rules_channel_id", rules_channel)
         body.put_snowflake("public_updates_channel_id", public_updates_channel)
 
-        # FIXME: gather these futures simultaneously for a 3x speedup...
+        # TODO: gather these futures simultaneously for a 3x speedup...
 
         if icon is None:
             body.put("icon", None)

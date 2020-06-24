@@ -122,7 +122,7 @@ class Color(int):
     ```
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def __init__(self, raw_rgb: typing.SupportsInt) -> None:
         if not (0 <= int(raw_rgb) <= 0xFFFFFF):

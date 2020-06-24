@@ -40,7 +40,7 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
     Additionally, bots will contain a collection of Gateway client objects.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

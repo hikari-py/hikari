@@ -38,7 +38,7 @@ class IEventDispatcherBase(abc.ABC):
     appropriate.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     if typing.TYPE_CHECKING:
         EventT = typing.TypeVar("EventT", bound=base.Event)
@@ -309,7 +309,7 @@ class IEventDispatcherApp(IEventDispatcherBase, abc.ABC):
     ```
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

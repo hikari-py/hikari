@@ -36,6 +36,7 @@ from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
 from hikari.models import presences
 from hikari.net import http_settings as http_settings_
+from hikari.net import rate_limits
 from hikari.net import rest
 from hikari.utilities import undefined
 
@@ -188,10 +189,13 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         self._config = config
         self._event_manager = event_manager.EventManagerImpl(app=self)
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
+        self._global_ratelimit = rate_limits.ManualRateLimiter()
+
         self._rest = rest.REST(  # noqa: S106 - Possible hardcoded password
             app=self,
             config=config,
             debug=debug,
+            global_ratelimit=self._global_ratelimit,
             token=token,
             token_type="Bot",
             rest_url=rest_url,
@@ -273,11 +277,13 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
     async def close(self) -> None:
         await super().close()
         await self._rest.close()
+        self._global_ratelimit.close()
 
     async def fetch_sharding_settings(self) -> gateway_models.GatewayBot:
         return await self.rest.fetch_gateway_bot()
 
-    def __print_banner(self) -> None:
+    @staticmethod
+    def __print_banner() -> None:
         from hikari import _about
 
         version = _about.__version__

@@ -43,7 +43,7 @@ AnotherValueT = typing.TypeVar("AnotherValueT")
 
 
 class _AllConditions(typing.Generic[ValueT]):
-    __slots__ = ("conditions",)
+    __slots__: typing.Sequence[str] = ("conditions",)
 
     def __init__(self, conditions: typing.Collection[typing.Callable[[ValueT], bool]]) -> None:
         self.conditions = conditions
@@ -53,7 +53,7 @@ class _AllConditions(typing.Generic[ValueT]):
 
 
 class _AttrComparator(typing.Generic[ValueT]):
-    __slots__ = ("getter", "expected_value")
+    __slots__: typing.Sequence[str] = ("getter", "expected_value")
 
     def __init__(self, attr_name: str, expected_value: typing.Any) -> None:
         if attr_name.startswith("."):
@@ -113,7 +113,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         ...    process(item)
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def map(
         self, transformation: typing.Union[typing.Callable[[ValueT], AnotherValueT], str],
@@ -271,7 +271,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
 
 class _EnumeratedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Tuple[int, ValueT]]):
-    __slots__ = ("_i", "_paginator")
+    __slots__: typing.Sequence[str] = ("_i", "_paginator")
 
     def __init__(self, paginator: LazyIterator[ValueT], *, start: int) -> None:
         self._i = start
@@ -284,7 +284,7 @@ class _EnumeratedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Tuple[
 
 
 class _LimitedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
-    __slots__ = ("_paginator", "_count", "_limit")
+    __slots__: typing.Sequence[str] = ("_paginator", "_count", "_limit")
 
     def __init__(self, paginator: LazyIterator[ValueT], limit: int) -> None:
         if limit <= 0:
@@ -303,7 +303,7 @@ class _LimitedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
 
 
 class _FilteredLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
-    __slots__ = ("_paginator", "_predicate")
+    __slots__: typing.Sequence[str] = ("_paginator", "_predicate")
 
     def __init__(self, paginator: LazyIterator[ValueT], predicate: typing.Callable[[ValueT], bool]) -> None:
         self._paginator = paginator
@@ -317,7 +317,7 @@ class _FilteredLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
 
 
 class _MappingLazyIterator(typing.Generic[AnotherValueT, ValueT], LazyIterator[ValueT]):
-    __slots__ = ("_paginator", "_transformation")
+    __slots__: typing.Sequence[str] = ("_paginator", "_transformation")
 
     def __init__(
         self, paginator: LazyIterator[AnotherValueT], transformation: typing.Callable[[AnotherValueT], ValueT],
@@ -330,7 +330,7 @@ class _MappingLazyIterator(typing.Generic[AnotherValueT, ValueT], LazyIterator[V
 
 
 class _BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
-    __slots__ = ("_buffer",)
+    __slots__: typing.Sequence[str] = ("_buffer",)
 
     def __init__(self) -> None:
         empty_genexp = typing.cast(typing.Generator[ValueT, None, None], (_ for _ in ()))
@@ -362,11 +362,11 @@ class _BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
 class MessageIterator(_BufferedLazyIterator["messages.Message"]):
     """Implementation of an iterator for message history."""
 
-    __slots__ = ("_app", "_request_call", "_direction", "_first_id", "_route")
+    __slots__: typing.Sequence[str] = ("_app", "_request_call", "_direction", "_first_id", "_route")
 
     def __init__(
         self,
-        app: rest.IRESTApp,
+        app: rest.IRESTClient,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -404,11 +404,11 @@ class MessageIterator(_BufferedLazyIterator["messages.Message"]):
 class ReactorIterator(_BufferedLazyIterator["users.User"]):
     """Implementation of an iterator for message reactions."""
 
-    __slots__ = ("_app", "_first_id", "_route", "_request_call")
+    __slots__: typing.Sequence[str] = ("_app", "_first_id", "_route", "_request_call")
 
     def __init__(
         self,
-        app: rest.IRESTApp,
+        app: rest.IRESTClient,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -443,11 +443,11 @@ class ReactorIterator(_BufferedLazyIterator["users.User"]):
 class OwnGuildIterator(_BufferedLazyIterator["applications.OwnGuild"]):
     """Implementation of an iterator for retrieving guilds you are in."""
 
-    __slots__ = ("_app", "_request_call", "_route", "_newest_first", "_first_id")
+    __slots__: typing.Sequence[str] = ("_app", "_request_call", "_route", "_newest_first", "_first_id")
 
     def __init__(
         self,
-        app: rest.IRESTApp,
+        app: rest.IRESTClient,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -482,11 +482,11 @@ class OwnGuildIterator(_BufferedLazyIterator["applications.OwnGuild"]):
 class MemberIterator(_BufferedLazyIterator["guilds.Member"]):
     """Implementation of an iterator for retrieving members in a guild."""
 
-    __slots__ = ("_app", "_request_call", "_route", "_first_id")
+    __slots__: typing.Sequence[str] = ("_app", "_request_call", "_route", "_first_id")
 
     def __init__(
         self,
-        app: rest.IRESTApp,
+        app: rest.IRESTClient,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -523,7 +523,7 @@ class AuditLogIterator(LazyIterator["audit_logs.AuditLog"]):
 
     def __init__(
         self,
-        app: rest.IRESTApp,
+        app: rest.IRESTClient,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
