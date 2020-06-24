@@ -1434,7 +1434,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         avatar: typing.Union[undefined.UndefinedType, files.Resource, str] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
-        route = routes.POST_WEBHOOK.compile(channel=channel)
+        route = routes.POST_CHANNEL_WEBHOOKS.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         if avatar is not undefined.UNDEFINED:
@@ -1452,12 +1452,14 @@ class REST(http_client.HTTPClient, component.IComponent):
         *,
         token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
-        route = (
-            routes.GET_WEBHOOK.compile(webhook=webhook)
-            if token is undefined.UNDEFINED
-            else routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-        )
-        raw_response = await self._request(route)
+        if token is undefined.UNDEFINED:
+            route = routes.GET_WEBHOOK.compile(webhook=webhook)
+            no_auth = False
+        else:
+            route = routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+            no_auth = True
+
+        raw_response = await self._request(route, no_auth=no_auth)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_webhook(response)
 
@@ -1489,11 +1491,13 @@ class REST(http_client.HTTPClient, component.IComponent):
         ] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
-        route = (
-            routes.PATCH_WEBHOOK.compile(webhook=webhook)
-            if token is undefined.UNDEFINED
-            else routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-        )
+        if token is undefined.UNDEFINED:
+            route = routes.PATCH_WEBHOOK.compile(webhook=webhook)
+            no_auth = False
+        else:
+            route = routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+            no_auth = True
+
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put_snowflake("channel", channel)
@@ -1505,7 +1509,7 @@ class REST(http_client.HTTPClient, component.IComponent):
             async with avatar_resource.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
-        raw_response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, body=body, reason=reason, no_auth=no_auth)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_webhook(response)
 
@@ -1515,19 +1519,21 @@ class REST(http_client.HTTPClient, component.IComponent):
         *,
         token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
-        route = (
-            routes.DELETE_WEBHOOK.compile(webhook=webhook)
-            if token is undefined.UNDEFINED
-            else routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-        )
-        await self._request(route)
+        if token is undefined.UNDEFINED:
+            route = routes.DELETE_WEBHOOK.compile(webhook=webhook)
+            no_auth = False
+        else:
+            route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+            no_auth = True
+
+        await self._request(route, no_auth=no_auth)
 
     async def execute_webhook(
         self,
         webhook: typing.Union[webhooks.Webhook, snowflake.UniqueObject],
+        token: str,
         text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
         *,
-        token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         username: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         avatar_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         embeds: typing.Union[undefined.UndefinedType, typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
@@ -1543,12 +1549,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         if attachment is not undefined.UNDEFINED and attachments is not undefined.UNDEFINED:
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
-        if token is undefined.UNDEFINED:
-            route = routes.POST_WEBHOOK.compile(webhook=webhook)
-            no_auth = False
-        else:
-            route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-            no_auth = True
+        route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
 
         final_attachments: typing.List[files.Resource] = []
         if attachment is not undefined.UNDEFINED:
@@ -1586,11 +1587,11 @@ class REST(http_client.HTTPClient, component.IComponent):
                         f"file{i}", stream, filename=stream.filename, content_type=strings.APPLICATION_OCTET_STREAM
                     )
 
-                raw_response = await self._request(route, body=form, no_auth=no_auth)
+                raw_response = await self._request(route, body=form, no_auth=True)
             finally:
                 await stack.aclose()
         else:
-            raw_response = await self._request(route, body=body, no_auth=no_auth)
+            raw_response = await self._request(route, body=body, no_auth=True)
 
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_message(response)

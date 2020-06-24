@@ -304,7 +304,6 @@ GET_VOICE_REGIONS: typing.Final[Route] = Route(GET, "/voice/regions")
 # Webhooks
 GET_WEBHOOK: typing.Final[Route] = Route(GET, "/webhooks/{webhook}")
 PATCH_WEBHOOK: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}")
-POST_WEBHOOK: typing.Final[Route] = Route(POST, "/webhooks/{webhook}")
 DELETE_WEBHOOK: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}")
 
 GET_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(GET, "/webhooks/{webhook}/{token}")
