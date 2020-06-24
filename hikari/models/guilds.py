@@ -215,7 +215,7 @@ class GuildVerificationLevel(int, enum.Enum):
 class GuildWidget:
     """Represents a guild embed."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
@@ -229,7 +229,7 @@ class GuildWidget:
 class Member:
     """Used to represent a guild bound member."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     # TODO: make Member delegate to user and implement a common base class
@@ -286,7 +286,7 @@ class PartialRole(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
@@ -446,7 +446,7 @@ class PartialGuild(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)

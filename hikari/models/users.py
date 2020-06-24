@@ -111,7 +111,7 @@ class PartialUser(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     discriminator: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)

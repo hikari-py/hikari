@@ -245,7 +245,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     which allows dynamically changing the enforced rate limits at any time.
     """
 
-    __slots__ = ("compiled_route",)
+    __slots__: typing.Sequence[str] = ("compiled_route",)
 
     compiled_route: typing.Final[routes.CompiledRoute]
     """The compiled _route that this rate limit is covering."""
@@ -319,7 +319,7 @@ class RESTBucketManager:
     _POLL_PERIOD: typing.Final[typing.ClassVar[int]] = 20
     _EXPIRE_PERIOD: typing.Final[typing.ClassVar[int]] = 10
 
-    __slots__ = (
+    __slots__: typing.Sequence[str] = (
         "routes_to_hashes",
         "real_hashes_to_buckets",
         "closed_event",

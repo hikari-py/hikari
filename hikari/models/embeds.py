@@ -47,7 +47,7 @@ def _maybe_color(value: typing.Optional[colors.ColorLike]) -> typing.Optional[co
 
 
 class _TruthyEmbedComponentMixin:
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     __attrs_attrs__: typing.ClassVar[typing.Tuple[attr.Attribute, ...]]
 

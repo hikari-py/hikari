@@ -182,7 +182,7 @@ class TestClose:
 @pytest.mark.asyncio
 class TestRun:
     @hikari_test_helpers.timeout()
-    async def test_repeatedly_invokes_run_once_while_request_close_event_not_set(self, client):
+    async def test_repeatedly_invokes_run_once_shielded_while_request_close_event_not_set(self, client):
         i = 0
 
         def is_set():
@@ -196,13 +196,13 @@ class TestRun:
 
         client._request_close_event = mock.MagicMock(asyncio.Event)
         client._request_close_event.is_set = is_set
-        client._run_once = mock.AsyncMock()
+        client._run_once_shielded = mock.AsyncMock()
 
         with pytest.raises(errors.GatewayClientClosedError):
             await client._run()
 
         assert i == 5
-        assert client._run_once.call_count == i
+        assert client._run_once_shielded.call_count == i
 
     @hikari_test_helpers.timeout()
     async def test_sets_handshake_event_on_finish(self, client):
@@ -228,6 +228,198 @@ class TestRun:
                 await client._run()
 
         close_mock.assert_awaited_once_with(client)
+
+
+@pytest.mark.asyncio
+class TestRunOnceShielded:
+    @pytest.fixture
+    def client(self):
+        client = hikari_test_helpers.unslot_class(gateway.Gateway)(
+            url="wss://gateway.discord.gg",
+            token="lol",
+            app=mock.MagicMock(),
+            config=mock.MagicMock(),
+            shard_id=3,
+            shard_count=17,
+        )
+        client = hikari_test_helpers.mock_methods_on(
+            client,
+            except_=(
+                "_run_once_shielded",
+                "_InvalidSession",
+                "_Reconnect",
+                "_SocketClosed",
+                "_dispatch",
+                "_now",
+                "_GatewayCloseCode",
+                "_GatewayOpcode",
+            ),
+            also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger",],
+        )
+        client._dispatch = mock.AsyncMock()
+        # Disable backoff checking by making the condition a negative tautology.
+        client._RESTART_RATELIMIT_WINDOW = -1
+        # First call is used for backoff checks, the second call is used
+        # for updating the _last_run_started_at attribute.
+        # 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, ..., ..., ...
+        client._now = mock.MagicMock(side_effect=map(lambda n: n / 2, range(1, 100)))
+        return client
+
+    @hikari_test_helpers.timeout()
+    async def test_invokes_run_once_shielded(self, client):
+        await client._run_once_shielded()
+        client._run_once.assert_awaited_once_with()
+
+    @hikari_test_helpers.timeout()
+    async def test_happy_path_returns_False(self, client):
+        assert await client._run_once_shielded() is False
+
+    @pytest.mark.parametrize(
+        ["zombied", "request_close", "expect_backoff_called"],
+        [(True, True, True), (True, False, True), (False, True, False), (False, False, False),],
+    )
+    @hikari_test_helpers.timeout()
+    async def test_socket_closed_resets_backoff(self, client, zombied, request_close, expect_backoff_called):
+        client._request_close_event.is_set = mock.MagicMock(return_value=request_close)
+
+        def run_once():
+            client._zombied = zombied
+            raise gateway.Gateway._SocketClosed()
+
+        client._run_once = mock.AsyncMock(wraps=run_once)
+        await client._run_once_shielded()
+
+        if expect_backoff_called:
+            client._backoff.reset.assert_called_once_with()
+        else:
+            client._backoff.reset.assert_not_called()
+
+    @hikari_test_helpers.timeout()
+    async def test_invalid_session_resume_does_not_clear_seq_or_session_id(self, client):
+        client._run_once = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession(True))
+        client._seq = 1234
+        client.session_id = "69420"
+        await client._run_once_shielded()
+        assert client._seq == 1234
+        assert client.session_id == "69420"
+
+    @pytest.mark.parametrize("request_close", [True, False])
+    @hikari_test_helpers.timeout()
+    async def test_socket_closed_is_restartable_if_no_closure_request(self, client, request_close):
+        client._request_close_event.is_set = mock.MagicMock(return_value=request_close)
+        client._run_once = mock.AsyncMock(side_effect=gateway.Gateway._SocketClosed())
+        assert await client._run_once_shielded() is not request_close
+
+    @hikari_test_helpers.timeout()
+    async def test_ClientConnectionError_is_restartable(self, client):
+        key = aiohttp.client_reqrep.ConnectionKey(
+            host="localhost", port=6996, is_ssl=False, ssl=None, proxy=None, proxy_auth=None, proxy_headers_hash=69420,
+        )
+        error = aiohttp.ClientConnectorError(key, OSError())
+
+        client._run_once = mock.AsyncMock(side_effect=error)
+        assert await client._run_once_shielded() is True
+
+    @hikari_test_helpers.timeout()
+    async def test_invalid_session_is_restartable(self, client):
+        client._run_once = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession())
+        assert await client._run_once_shielded() is True
+
+    @hikari_test_helpers.timeout()
+    async def test_invalid_session_resume_does_not_invalidate_session(self, client):
+        client._run_once = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession(True))
+        await client._run_once_shielded()
+        client._close_ws.assert_awaited_once_with(
+            gateway.Gateway._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)"
+        )
+
+    @hikari_test_helpers.timeout()
+    async def test_invalid_session_no_resume_invalidates_session(self, client):
+        client._run_once = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession(False))
+        await client._run_once_shielded()
+        client._close_ws.assert_awaited_once_with(
+            gateway.Gateway._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)"
+        )
+
+    @hikari_test_helpers.timeout()
+    async def test_invalid_session_no_resume_clears_seq_and_session_id(self, client):
+        client._run_once = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession(False))
+        client._seq = 1234
+        client.session_id = "69420"
+        await client._run_once_shielded()
+        assert client._seq is None
+        assert client.session_id is None
+
+    @hikari_test_helpers.timeout()
+    async def test_reconnect_is_restartable(self, client):
+        client._run_once = mock.AsyncMock(side_effect=gateway.Gateway._Reconnect())
+        assert await client._run_once_shielded() is True
+
+    @hikari_test_helpers.timeout()
+    async def test_server_connection_error_resumes_if_reconnectable(self, client):
+        client._run_once = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, True))
+        client._seq = 1234
+        client.session_id = "69420"
+        assert await client._run_once_shielded() is True
+        assert client._seq == 1234
+        assert client.session_id == "69420"
+
+    async def test_server_connection_error_closes_websocket_if_reconnectable(self, client):
+        client._run_once = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, True))
+        assert await client._run_once_shielded() is True
+        client._close_ws.assert_awaited_once_with(
+            gateway.Gateway._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me"
+        )
+
+    @hikari_test_helpers.timeout()
+    async def test_server_connection_error_does_not_reconnect_if_not_reconnectable(self, client):
+        client._run_once = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, False))
+        client._seq = 1234
+        client.session_id = "69420"
+        with pytest.raises(errors.GatewayServerClosedConnectionError):
+            await client._run_once_shielded()
+        client._request_close_event.set.assert_called_once_with()
+        assert client._seq is None
+        assert client.session_id is None
+        client._backoff.reset.assert_called_once_with()
+
+    async def test_server_connection_error_closes_websocket_if_not_reconnectable(self, client):
+        client._run_once = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, False))
+        with pytest.raises(errors.GatewayServerClosedConnectionError):
+            await client._run_once_shielded()
+        client._close_ws.assert_awaited_once_with(
+            gateway.Gateway._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection"
+        )
+
+    @pytest.mark.parametrize(
+        ["zombied", "request_close", "expect_backoff_called"],
+        [(True, True, True), (True, False, True), (False, True, False), (False, False, False)],
+    )
+    @hikari_test_helpers.timeout()
+    async def test_socket_closed_resets_backoff(self, client, zombied, request_close, expect_backoff_called):
+        client._request_close_event.is_set = mock.MagicMock(return_value=request_close)
+
+        def poll_events():
+            client._zombied = zombied
+            raise gateway.Gateway._SocketClosed()
+
+        client._run_once = mock.AsyncMock(wraps=poll_events)
+        await client._run_once_shielded()
+
+        if expect_backoff_called:
+            client._backoff.reset.assert_called_once_with()
+        else:
+            client._backoff.reset.assert_not_called()
+
+    async def test_other_exception_closes_websocket(self, client):
+        client._run_once = mock.AsyncMock(side_effect=RuntimeError())
+
+        with pytest.raises(RuntimeError):
+            await client._run_once_shielded()
+
+        client._close_ws.assert_awaited_once_with(
+            gateway.Gateway._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred"
+        )
 
 
 @pytest.mark.asyncio
@@ -317,7 +509,8 @@ class TestRunOnce:
 
             # The false instructs the caller to not restart again, but to just
             # drop everything and stop execution.
-            assert task.result() is False
+            # We never return a value on this task anymore.
+            assert task.result() is None
 
         finally:
             task.cancel()
@@ -356,22 +549,6 @@ class TestRunOnce:
     async def test_ws_gets_created(self, client):
         await client._run_once()
         client._create_ws.assert_awaited_once_with(client.url)
-
-    @hikari_test_helpers.timeout()
-    async def test_connected_at_is_set_before_handshake_and_is_cancelled_after(self, client):
-        assert math.isnan(client.connected_at)
-
-        initial = -2.718281828459045
-        client.connected_at = initial
-
-        def ensure_connected_at_set():
-            assert client.connected_at != initial
-
-        client._handshake = mock.AsyncMock(wraps=ensure_connected_at_set)
-
-        await client._run_once()
-
-        assert math.isnan(client.connected_at)
 
     @hikari_test_helpers.timeout()
     async def test_zlib_decompressobj_set(self, client):
@@ -446,137 +623,6 @@ class TestRunOnce:
                 await client._run_once()
 
         task.cancel.assert_called_once_with()
-
-    @hikari_test_helpers.timeout()
-    async def test_happy_path_returns_False(self, client):
-        assert await client._run_once() is False
-
-    @hikari_test_helpers.timeout()
-    async def test_ClientConnectionError_is_restartable(self, client):
-        key = aiohttp.client_reqrep.ConnectionKey(
-            host="localhost", port=6996, is_ssl=False, ssl=None, proxy=None, proxy_auth=None, proxy_headers_hash=69420,
-        )
-        error = aiohttp.ClientConnectorError(key, OSError())
-
-        client._handshake = mock.AsyncMock(side_effect=error)
-        assert await client._run_once() is True
-
-    @hikari_test_helpers.timeout()
-    async def test_invalid_session_is_restartable(self, client):
-        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession())
-        assert await client._run_once() is True
-
-    @hikari_test_helpers.timeout()
-    async def test_invalid_session_resume_does_not_invalidate_session(self, client):
-        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession(True))
-        await client._run_once()
-        client._close_ws.assert_awaited_once_with(
-            gateway.Gateway._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)"
-        )
-
-    @hikari_test_helpers.timeout()
-    async def test_invalid_session_no_resume_invalidates_session(self, client):
-        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession(False))
-        await client._run_once()
-        client._close_ws.assert_awaited_once_with(
-            gateway.Gateway._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)"
-        )
-
-    @hikari_test_helpers.timeout()
-    async def test_invalid_session_resume_does_not_clear_seq_or_session_id(self, client):
-        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession(True))
-        client._seq = 1234
-        client.session_id = "69420"
-        await client._run_once()
-        assert client._seq == 1234
-        assert client.session_id == "69420"
-
-    @hikari_test_helpers.timeout()
-    async def test_invalid_session_no_resume_clears_seq_and_session_id(self, client):
-        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._InvalidSession(False))
-        client._seq = 1234
-        client.session_id = "69420"
-        await client._run_once()
-        assert client._seq is None
-        assert client.session_id is None
-
-    @hikari_test_helpers.timeout()
-    async def test_reconnect_is_restartable(self, client):
-        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._Reconnect())
-        assert await client._run_once() is True
-
-    @pytest.mark.parametrize("request_close", [True, False])
-    @hikari_test_helpers.timeout()
-    async def test_socket_closed_is_restartable_if_no_closure_request(self, client, request_close):
-        client._request_close_event.is_set = mock.MagicMock(return_value=request_close)
-        client._poll_events = mock.AsyncMock(side_effect=gateway.Gateway._SocketClosed())
-        assert await client._run_once() is not request_close
-
-    @pytest.mark.parametrize(
-        ["zombied", "request_close", "expect_backoff_called"],
-        [(True, True, True), (True, False, True), (False, True, False), (False, False, False)],
-    )
-    @hikari_test_helpers.timeout()
-    async def test_socket_closed_resets_backoff(self, client, zombied, request_close, expect_backoff_called):
-        client._request_close_event.is_set = mock.MagicMock(return_value=request_close)
-
-        def poll_events():
-            client._zombied = zombied
-            raise gateway.Gateway._SocketClosed()
-
-        client._poll_events = mock.AsyncMock(wraps=poll_events)
-        await client._run_once()
-
-        if expect_backoff_called:
-            client._backoff.reset.assert_called_once_with()
-        else:
-            client._backoff.reset.assert_not_called()
-
-    @hikari_test_helpers.timeout()
-    async def test_server_connection_error_resumes_if_reconnectable(self, client):
-        client._poll_events = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, True))
-        client._seq = 1234
-        client.session_id = "69420"
-        assert await client._run_once() is True
-        assert client._seq == 1234
-        assert client.session_id == "69420"
-
-    async def test_server_connection_error_closes_websocket_if_reconnectable(self, client):
-        client._poll_events = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, True))
-        assert await client._run_once() is True
-        client._close_ws.assert_awaited_once_with(
-            gateway.Gateway._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me"
-        )
-
-    @hikari_test_helpers.timeout()
-    async def test_server_connection_error_does_not_reconnect_if_not_reconnectable(self, client):
-        client._poll_events = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, False))
-        client._seq = 1234
-        client.session_id = "69420"
-        with pytest.raises(errors.GatewayServerClosedConnectionError):
-            await client._run_once()
-        client._request_close_event.set.assert_called_once_with()
-        assert client._seq is None
-        assert client.session_id is None
-        client._backoff.reset.assert_called_once_with()
-
-    async def test_server_connection_error_closes_websocket_if_not_reconnectable(self, client):
-        client._poll_events = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, False))
-        with pytest.raises(errors.GatewayServerClosedConnectionError):
-            await client._run_once()
-        client._close_ws.assert_awaited_once_with(
-            gateway.Gateway._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection"
-        )
-
-    async def test_other_exception_closes_websocket(self, client):
-        client._poll_events = mock.AsyncMock(side_effect=RuntimeError())
-
-        with pytest.raises(RuntimeError):
-            await client._run_once()
-
-        client._close_ws.assert_awaited_once_with(
-            gateway.Gateway._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred"
-        )
 
     async def test_dispatches_disconnect_if_connected(self, client):
         await client._run_once()

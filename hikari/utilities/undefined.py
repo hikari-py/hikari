@@ -28,7 +28,7 @@ import typing
 
 
 class _UndefinedType:
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def __bool__(self) -> bool:
         return False

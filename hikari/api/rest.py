@@ -19,13 +19,16 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IRESTApp"]
+__all__: typing.Final[typing.List[str]] = ["IRESTClient", "IRESTClientFactory"]
 
 import abc
 import typing
 
+from hikari.net import strings
 
 if typing.TYPE_CHECKING:
+    import types
+
     from concurrent import futures
 
     from hikari.api import cache as cache_
@@ -33,16 +36,15 @@ if typing.TYPE_CHECKING:
     from hikari.net import rest as rest_
 
 
-class IRESTApp(abc.ABC):
+class IRESTClient(abc.ABC):
     """Component specialization that is used for REST-only applications.
 
-    Examples may include web dashboards, or applications where no gateway
-    connection is required. As a result, no event conduit is provided by
-    these implementations. They do however provide a REST client, and the
-    general components defined in `IRESTApp`
+    This is a specific instance of a REST-only client provided by pooled
+    implementations of `IRESTClientFactory`. It may also be used by bots
+    as a base if they require REST-API access.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -95,3 +97,65 @@ class IRESTApp(abc.ABC):
     @abc.abstractmethod
     async def close(self) -> None:
         """Safely shut down all resources."""
+
+
+class IRESTClientContextManager(IRESTClient):
+    """An IRESTClient that may behave as a context manager."""
+
+    @abc.abstractmethod
+    async def __aenter__(self) -> IRESTClientContextManager:
+        ...
+
+    @abc.abstractmethod
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_val: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        ...
+
+
+class IRESTClientFactory(abc.ABC):
+    """A client factory that emits clients.
+
+    This enables a connection pool to be shared for stateless REST-only
+    applications such as web dashboards, while still using the HTTP architecture
+    that the bot system will use.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @abc.abstractmethod
+    def acquire(self, token: str, token_type: str = strings.BEARER_TOKEN) -> IRESTClient:
+        """Acquire a REST client for the given authentication details.
+
+        Parameters
+        ----------
+        token : str
+            The token to use.
+        token_type : str
+            The token type to use. Defaults to `"Bearer"`.
+
+        Returns
+        -------
+        IRESTClient
+            The REST client to use.
+        """
+
+    @abc.abstractmethod
+    async def close(self) -> None:
+        """Safely shut down all resources."""
+
+    @abc.abstractmethod
+    async def __aenter__(self) -> IRESTClientFactory:
+        ...
+
+    @abc.abstractmethod
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_val: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        ...

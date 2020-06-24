@@ -45,7 +45,7 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
     that feed new events into a message queue, for example.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

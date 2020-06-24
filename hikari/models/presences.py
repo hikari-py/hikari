@@ -268,7 +268,7 @@ class ClientStatus:
 class MemberPresence:
     """Used to represent a guild member's presence."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     user: users.PartialUser = attr.ib(eq=True, hash=True, repr=True)

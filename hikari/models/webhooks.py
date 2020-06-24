@@ -61,7 +61,7 @@ class Webhook(snowflake.Unique):
     send informational messages to specific channels.
     """
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(

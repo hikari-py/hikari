@@ -206,7 +206,7 @@ class MessageCrosspost:
     "published" to another.
     """
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
@@ -235,7 +235,7 @@ class MessageCrosspost:
 class Message(snowflake.Unique):
     """Represents a message."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(

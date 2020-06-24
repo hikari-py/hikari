@@ -213,7 +213,7 @@ class CustomEmoji(snowflake.Unique, Emoji):
         https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913
     """
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False, init=True)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False, init=True)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(

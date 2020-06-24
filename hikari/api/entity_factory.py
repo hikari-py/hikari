@@ -56,7 +56,7 @@ if typing.TYPE_CHECKING:
 class IEntityFactoryComponent(component.IComponent, abc.ABC):
     """Interface for components that serialize and deserialize JSON payloads."""
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     ######################
     # APPLICATION MODELS #
