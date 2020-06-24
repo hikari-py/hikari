@@ -28,6 +28,7 @@
       junit: public/tests.xml
   extends: .reactive-job
   interruptible: true
+  retry: 1
   script:
     - apt-get install -qy git gcc g++ make
     - pip install nox
@@ -68,6 +69,7 @@ test:win32:
     reports:
       junit: public/tests.xml
   extends: .win32
+  retry: 1
   script:
     - choco install --no-progress python -y
     - if (!(test-path "public")) { New-Item -ItemType Directory -Force -Path public }

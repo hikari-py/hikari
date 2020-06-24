@@ -212,7 +212,7 @@
         return name
 
     def get_annotation(bound_method, sep=':'):
-        annot = bound_method(link=link) or 'typing.Any'
+        annot = bound_method(link=link)
         
         annot = annot.replace("NoneType", "None")
         # Remove quotes.
@@ -220,6 +220,9 @@
             annot = annot[1:-1]
         if annot:
             annot = ' ' + sep + '\N{NBSP}' + annot
+
+        annot = annot.replace("[ ", "[")   # FIXME: whatever causes space between [ and link so I don't have to use this hack.
+
         return annot
 
     def to_html(text):
@@ -270,6 +273,14 @@
         return_type = get_annotation(v.type_annotation)
         if return_type == "":
             parent = v.cls.obj if v.cls is not None else v.module.obj
+
+            if hasattr(parent, "mro"):
+                for cls in parent.mro():
+                    if hasattr(cls, "__annotations__") and v.name in cls.__annotations__:
+                        return_type = get_annotation(lambda *_, **__: cls.__annotations__[v.name])
+                        if return_type != "":
+                            break
+
             if hasattr(parent, "__annotations__") and v.name in parent.__annotations__:
                 return_type = get_annotation(lambda *_, **__: parent.__annotations__[v.name])
 
@@ -363,7 +374,7 @@
         params = c.params(annotate=show_type_annotations, link=link)
         example_str = f"{QUAL_CLASS} " + c.name + "(" + ", ".join(params) + ")"
 
-        if len(params) > 4 or len(example_str) > 70:
+        if len(params) > 4 or len(example_str) > 70 and len(params) > 0:
             representation = "\n".join((
                 f"{QUAL_CLASS} {c.name} (",
                 *(f"    {p}," for p in params),
@@ -444,11 +455,21 @@
                 <div class="sep"></div>
             % endif
 
-            % if class_vars:
-                <h5>Class variables</h5>
+            % if methods:
+                <h5>Instance methods</h5>
                 <dl>
-                    % for cv in class_vars:
-                        ${show_var(cv)}
+                    % for m in methods:
+                        ${show_func(m)}
+                    % endfor
+                </dl>
+                <div class="sep"></div>
+            % endif
+
+            % if inst_vars:
+                <h5>Instance variables and properties</h5>
+                <dl>
+                    % for i in inst_vars:
+                        ${show_var(i)}
                     % endfor
                 </dl>
                 <div class="sep"></div>
@@ -464,21 +485,11 @@
                 <div class="sep"></div>
             % endif
 
-            % if inst_vars:
-                <h5>Instance variables</h5>
+            % if class_vars:
+                <h5>Class variables and properties</h5>
                 <dl>
-                    % for i in inst_vars:
-                        ${show_var(i)}
-                    % endfor
-                </dl>
-                <div class="sep"></div>
-            % endif
-
-            % if methods:
-                <h5>Instance methods</h5>
-                <dl>
-                    % for m in methods:
-                        ${show_func(m)}
+                    % for cv in class_vars:
+                        ${show_var(cv)}
                     % endfor
                 </dl>
                 <div class="sep"></div>
