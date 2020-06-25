@@ -1572,7 +1572,8 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("username", username)
         body.put("avatar_url", avatar_url)
         body.put("tts", tts)
-        body.put("wait", True)
+        query = data_binding.StringMapBuilder()
+        query.put("wait", True)
 
         if final_attachments:
             form = data_binding.URLEncodedForm()
@@ -1587,11 +1588,11 @@ class REST(http_client.HTTPClient, component.IComponent):
                         f"file{i}", stream, filename=stream.filename, content_type=strings.APPLICATION_OCTET_STREAM
                     )
 
-                raw_response = await self._request(route, body=form, no_auth=True)
+                raw_response = await self._request(route, query=query, body=form, no_auth=True)
             finally:
                 await stack.aclose()
         else:
-            raw_response = await self._request(route, body=body, no_auth=True)
+            raw_response = await self._request(route, query=query, body=body, no_auth=True)
 
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_message(response)
