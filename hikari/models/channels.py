@@ -50,6 +50,11 @@ from hikari.utilities import snowflake
 if typing.TYPE_CHECKING:
     import datetime
     from hikari.api import rest
+    from hikari.models import embeds
+    from hikari.models import guilds
+    from hikari.models import messages
+    from hikari.net import iterators
+    from hikari.utilities import undefined
 
 
 @enum.unique
@@ -174,6 +179,129 @@ class TextChannel(PartialChannel, abc.ABC):
 
     # This is a mixin, do not add slotted fields.
     __slots__: typing.Sequence[str] = ()
+
+    async def send(
+        self,
+        text: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        *,
+        embed: typing.Union[undefined.UndefinedType, embeds.Embed] = undefined.UNDEFINED,
+        attachment: typing.Union[undefined.UndefinedType, str, files.Resource] = undefined.UNDEFINED,
+        attachments: typing.Union[
+            undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
+        ] = undefined.UNDEFINED,
+        mentions_everyone: bool = False,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
+        ] = True,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
+        ] = True,
+        nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+    ) -> messages.Message:
+        """Create a message in this channel.
+
+        Parameters
+        ----------
+        text : str or hikari.utilities.undefined.UndefinedType
+            If specified, the message text to send with the message.
+        nonce : str or hikari.utilities.undefined.UndefinedType
+            If specified, an optional ID to send for opportunistic message
+            creation. This doesn't serve any real purpose for general use,
+            and can usually be ignored.
+        tts : bool or hikari.utilities.undefined.UndefinedType
+            If specified, whether the message will be sent as a TTS message.
+        attachment : hikari.utilities.files.Resource or str or hikari.utilities.undefined.UndefinedType
+            If specified, a attachment to upload, if desired. This can
+            be a resource, or string of a path on your computer or a URL.
+        attachments : typing.Sequence[hikari.utilities.files.Resource or str] or hikari.utilities.undefined.UndefinedType
+            If specified, a sequence of attachments to upload, if desired.
+            Should be between 1 and 10 objects in size (inclusive), also
+            including embed attachments. These can be resources, or
+            strings consisting of paths on your computer or URLs.
+        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
+            If specified, the embed object to send with the message.
+        mentions_everyone : bool
+            Whether `@everyone` and `@here` mentions should be resolved by
+            discord and lead to actual pings, defaults to `False`.
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str] or bool
+            Either an array of user objects/IDs to allow mentions for,
+            `True` to allow all user mentions or `False` to block all
+            user mentions from resolving, defaults to `True`.
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str] or bool
+            Either an array of guild role objects/IDs to allow mentions for,
+            `True` to allow all role mentions or `False` to block all
+            role mentions from resolving, defaults to `True`.
+
+        Returns
+        -------
+        hikari.models.messages.Message
+            The created message object.
+
+        Raises
+        ------
+        hikari.errors.NotFound
+            If the channel this message was created in is not found.
+        hikari.errors.BadRequest
+            This can be raised if the file is too large; if the embed exceeds
+            the defined limits; if the message content is specified only and
+            empty or greater than `2000` characters; if neither content, files
+            or embed are specified.
+            If any invalid snowflake IDs are passed; a snowflake may be invalid
+            due to it being outside of the range of a 64 bit integer.
+            If you are trying to upload more than 10 files in total (including
+            embed attachments).
+        hikari.errors.Forbidden
+            If you lack permissions to send to the channel this message belongs
+            to.
+        ValueError
+            If more than 100 unique objects/entities are passed for
+            `role_mentions` or `user_mentions`.
+        TypeError
+            If both `attachment` and `attachments` are specified.
+        """  # noqa: E501 - Line too long
+        return await self.app.rest.create_message(
+            channel=self.id,
+            text=text,
+            nonce=nonce,
+            tts=tts,
+            attachment=attachment,
+            attachments=attachments,
+            embed=embed,
+            mentions_everyone=mentions_everyone,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
+        )
+
+    # TODO: examples
+    def history(
+        self,
+        *,
+        before: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
+        after: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
+        around: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[messages.Message]:
+        """Get a lazy iterator across the message history for this channel.
+
+        Parameters
+        ----------
+        before : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
+            The message or object to find messages BEFORE.
+        after : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
+            The message or object to find messages AFTER.
+        around : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
+            The message or object to find messages AROUND.
+
+        !!! warn
+            You may provide a maximum of one of the parameters for this method
+            only.
+
+        Returns
+        -------
+        hikari.net.iterators.LazyIterator[hikari.models.messages.Message]
+            A lazy async iterator across the messages.
+        """  # noqa: E501 - Line too long
+        return self.app.rest.fetch_messages(self.id, before=before, after=after, around=around)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
