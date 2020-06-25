@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Snowflake"]
+__all__: typing.Final[typing.Sequence[str]] = ["Snowflake"]
 
 import abc
 import datetime

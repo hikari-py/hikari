@@ -23,7 +23,7 @@ API, such as web dashboards and other OAuth2-based scripts.
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["RESTClientFactoryImpl", "RESTClientImpl"]
+__all__: typing.Final[typing.Sequence[str]] = ["RESTClientFactoryImpl", "RESTClientImpl"]
 
 import concurrent.futures
 import copy
@@ -33,6 +33,7 @@ import aiohttp
 
 from hikari.api import rest as rest_api
 from hikari.impl import entity_factory as entity_factory_impl
+from hikari.impl import stateless_cache
 from hikari.net import http_settings as http_settings_
 from hikari.net import rate_limits
 from hikari.net import rest as rest_component
@@ -88,7 +89,7 @@ class RESTClientImpl(rest_api.IRESTClientContextManager):
         version: int = 6,
     ) -> None:
         self._logger = reflect.get_logger(self)
-        self._cache: cache_.ICacheComponent = NotImplemented
+        self._cache: cache_.ICacheComponent = stateless_cache.StatelessCacheImpl()
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(self)
         self._executor = None
         self._rest = rest_component.REST(

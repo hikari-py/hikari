@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["BotAppImpl"]
+__all__: typing.Final[typing.Sequence[str]] = ["BotAppImpl"]
 
 import asyncio
 import inspect
@@ -34,6 +34,7 @@ from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
+from hikari.impl import stateless_cache as stateless_cache_impl
 from hikari.models import presences
 from hikari.net import http_settings as http_settings_
 from hikari.net import rate_limits
@@ -118,6 +119,9 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         The number of shards in the entire application. If left undefined along
         with `shard_ids`, then auto-sharding is used instead, which is the
         default.
+    stateless : bool
+        If `True`, the bot will not implement a cache, and will be considered
+        stateless. If `False`, then a cache will be used (this is the default).
     token : str
         The bot token to use. This should not start with a prefix such as
         `Bot `, but instead only contain the token itself.
@@ -174,6 +178,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         rest_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         shard_ids: typing.Union[typing.Set[int], undefined.UndefinedType] = undefined.UNDEFINED,
         shard_count: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
+        stateless: bool = False,
         thread_pool_executor: typing.Optional[concurrent.futures.Executor] = None,
         token: str,
     ) -> None:
@@ -185,7 +190,12 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
 
         config = http_settings_.HTTPSettings() if config is undefined.UNDEFINED else config
 
-        self._cache = cache_impl.InMemoryCacheComponentImpl(app=self)
+        if stateless:
+            self._cache = stateless_cache_impl.StatelessCacheImpl()
+            _LOGGER.info("this application will be stateless! Cache-based operations will be unavailable!")
+        else:
+            self._cache = cache_impl.InMemoryCacheComponentImpl(app=self)
+
         self._config = config
         self._event_manager = event_manager.EventManagerImpl(app=self)
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
@@ -311,20 +321,13 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         top_line = "//" + ("=" * line_len) + r"\\"
         bottom_line = r"\\" + ("=" * line_len) + "//"
 
-        # Start on a newline, this prevents logging formatting messing with the
-        # layout of the banner; before we used \r but this probably isn't great
-        # since with systems like docker-compose that prepend to each line of
-        # logs, we end up with a mess.
-        _LOGGER.info(
-            "\n%s\n%s\n%s\n%s\n%s\n%s\n%s",
-            top_line,
-            version_str,
-            copyright_str,
-            impl_str,
-            doc_line,
-            guild_line,
-            bottom_line,
+        lines = "".join(
+            f"{line}\n" for line in (top_line, version_str, copyright_str, impl_str, doc_line, guild_line, bottom_line)
         )
+
+        for handler in _LOGGER.handlers or ([logging.lastResort] if logging.lastResort is not None else []):
+            if isinstance(handler, logging.StreamHandler):
+                handler.stream.write(lines)
 
     @staticmethod
     def __get_logging_format() -> str:

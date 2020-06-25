@@ -19,7 +19,13 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["TargetUserType", "VanityURL", "InviteGuild", "Invite", "InviteWithMetadata"]
+__all__: typing.Final[typing.Sequence[str]] = [
+    "TargetUserType",
+    "VanityURL",
+    "InviteGuild",
+    "Invite",
+    "InviteWithMetadata",
+]
 
 import enum
 import typing
