@@ -40,7 +40,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest
 
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
 if typing.TYPE_CHECKING:
