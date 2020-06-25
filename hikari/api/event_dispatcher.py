@@ -124,8 +124,8 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        IEventDispatcherBase.subscribe
-        IEventDispatcherBase.wait_for
+        `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
         """
 
     @abc.abstractmethod
@@ -170,8 +170,8 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        IEventDispatcherBase.listen
-        IEventDispatcherBase.wait_for
+        `hikari.api.event_dispatcher.IEventDispatcherBase.listen`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
         """
 
     @abc.abstractmethod
@@ -229,10 +229,10 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        IEventDispatcherBase.dispatch
-        IEventDispatcherBase.subscribe
-        IEventDispatcherBase.unsubscribe
-        IEventDispatcherBase.wait_for
+        `hikari.api.event_dispatcher.IEventDispatcherBase.dispatch`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.unsubscribe`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
         """
 
     @abc.abstractmethod
@@ -270,9 +270,9 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        IEventDispatcherBase.listen
-        IEventDispatcherBase.subscribe
-        IEventDispatcherBase.dispatch
+        `hikari.api.event_dispatcher.IEventDispatcherBase.listen`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.dispatch`
         """
 
 

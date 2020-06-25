@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["IRESTClient", "IRESTClientFactory"]
+__all__: typing.Final[typing.Sequence[str]] = ["IRESTClient", "IRESTClientFactory", "IRESTClientContextManager"]
 
 import abc
 import typing

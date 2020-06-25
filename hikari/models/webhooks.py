@@ -185,6 +185,7 @@ class Webhook(snowflake.Unique):
         return await self.app.rest.execute_webhook(
             webhook=self.id,
             token=self.token,
+            text=text,
             username=username,
             avatar_url=avatar_url,
             tts=tts,
