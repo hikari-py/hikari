@@ -18,7 +18,7 @@
 """Core interface for a cache implementation."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["ICacheComponent"]
+__all__: typing.Final[typing.Sequence[str]] = ["ICacheComponent"]
 
 import abc
 

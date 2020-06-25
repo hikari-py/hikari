@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["User", "OwnUser", "UserFlag", "PremiumType"]
+__all__: typing.Final[typing.Sequence[str]] = ["User", "OwnUser", "UserFlag", "PremiumType"]
 
 import enum
 import typing

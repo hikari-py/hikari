@@ -18,7 +18,7 @@
 """Core interface for components that consume raw API event payloads."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IEventConsumerComponent", "IEventConsumerApp"]
+__all__: typing.Final[typing.Sequence[str]] = ["IEventConsumerComponent", "IEventConsumerApp"]
 
 import abc
 import typing

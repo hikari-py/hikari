@@ -18,7 +18,11 @@
 """Core interface for components that dispatch events to the library."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IEventDispatcherBase", "IEventDispatcherApp", "IEventDispatcherComponent"]
+__all__: typing.Final[typing.Sequence[str]] = [
+    "IEventDispatcherBase",
+    "IEventDispatcherApp",
+    "IEventDispatcherComponent",
+]
 
 import abc
 import asyncio

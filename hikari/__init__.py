@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["RESTClient", "Bot"]
+__all__: typing.Final[typing.Sequence[str]] = ["RESTClient", "Bot"]
 
 # noinspection PyUnresolvedReferences
 import typing

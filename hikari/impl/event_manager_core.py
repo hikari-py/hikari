@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["EventManagerCoreComponent"]
+__all__: typing.Final[typing.Sequence[str]] = ["EventManagerCoreComponent"]
 
 import asyncio
 import functools

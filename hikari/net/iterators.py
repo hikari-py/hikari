@@ -18,7 +18,7 @@
 """Lazy iterators for data that requires repeated API calls to retrieve."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["LazyIterator"]
+__all__: typing.Final[typing.Sequence[str]] = ["LazyIterator"]
 
 import abc
 import operator
