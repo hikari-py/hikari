@@ -904,39 +904,6 @@ class REST(http_client.HTTPClient, component.IComponent):
         route = routes.DELETE_CHANNEL_PIN.compile(channel=channel, message=message)
         await self._request(route)
 
-    @typing.overload
-    def fetch_messages(
-        self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
-    ) -> iterators.LazyIterator[messages_.Message]:
-        """Fetch messages, newest first, sent in the given channel."""
-
-    @typing.overload
-    def fetch_messages(
-        self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        *,
-        before: typing.Union[datetime.datetime, snowflake.UniqueObject],
-    ) -> iterators.LazyIterator[messages_.Message]:
-        """Fetch messages, newest first, sent before a timestamp in the channel."""
-
-    @typing.overload
-    def fetch_messages(
-        self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        *,
-        around: typing.Union[datetime.datetime, snowflake.UniqueObject],
-    ) -> iterators.LazyIterator[messages_.Message]:
-        """Fetch messages sent around a given time in the channel."""
-
-    @typing.overload
-    def fetch_messages(
-        self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        *,
-        after: typing.Union[datetime.datetime, snowflake.UniqueObject],
-    ) -> iterators.LazyIterator[messages_.Message]:
-        """Fetch messages, oldest first, sent after a timestamp in the channel."""
-
     def fetch_messages(
         self,
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
