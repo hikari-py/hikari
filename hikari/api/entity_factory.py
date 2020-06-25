@@ -750,7 +750,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -765,7 +765,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -780,7 +780,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -797,7 +797,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -812,7 +812,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -827,7 +827,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -842,7 +842,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -857,7 +857,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -876,7 +876,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -891,7 +891,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -906,7 +906,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -923,7 +923,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -938,7 +938,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -953,7 +953,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -970,7 +970,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -987,7 +987,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1002,7 +1002,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1019,7 +1019,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1036,7 +1036,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1053,7 +1053,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1070,7 +1070,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1087,7 +1087,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1102,7 +1102,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1121,7 +1121,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1136,7 +1136,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1151,7 +1151,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1168,7 +1168,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1185,7 +1185,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1202,7 +1202,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1219,7 +1219,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1236,7 +1236,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1259,7 +1259,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ----------
         shard : hikari.net.gateway.Gateway
             The shard that was ready.
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1274,7 +1274,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1295,7 +1295,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1312,7 +1312,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : Mapping[str, Any]
+        payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1367,9 +1367,9 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
+        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.Snowflake or str or int
             The guild to update the voice state in.
-        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.UniqueObject or None
+        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.Snowflake or str or int or None
             The voice channel to change to, or `None` if attempting to leave a
             voice channel and disconnect entirely.
         self_mute : bool
