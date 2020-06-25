@@ -41,7 +41,7 @@ if typing.TYPE_CHECKING:
     import types
 
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net.ratelimits")
 
 
 class BaseRateLimiter(abc.ABC):

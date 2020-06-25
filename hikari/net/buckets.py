@@ -220,7 +220,7 @@ UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""
 
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net.rest")
 
 
 class RESTBucket(rate_limits.WindowedBurstRateLimiter):

@@ -40,7 +40,6 @@ from hikari.net import http_client
 from hikari.net import rate_limits
 from hikari.net import strings
 from hikari.utilities import data_binding
-from hikari.utilities import reflect
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -200,7 +199,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self._intents: typing.Optional[intents_.Intent] = intents
         self._is_afk: typing.Union[undefined.UndefinedType, bool] = initial_is_afk
         self._last_run_started_at = float("nan")
-        self._logger = reflect.get_logger(self, str(shard_id))
+        self._logger = logging.getLogger(f"hikari.net.gateway.{shard_id}")
         self._request_close_event = asyncio.Event()
         self._seq: typing.Optional[str] = None
         self._shard_id: int = shard_id

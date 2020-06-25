@@ -37,7 +37,6 @@ from hikari import errors
 from hikari.net import http_settings
 from hikari.utilities import data_binding
 
-
 try:
     # noinspection PyProtectedMember
     RequestContextManager = aiohttp.client._RequestContextManager
@@ -50,7 +49,7 @@ except NameError:
     RequestContextManager = typing.Any  # type: ignore
 
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net")
 
 
 class HTTPClient(abc.ABC):

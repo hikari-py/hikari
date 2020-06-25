@@ -361,6 +361,6 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
             blue = gray = green = red = yellow = default = ""
 
         return (
-            f"{red}%(levelname)-8.8s {yellow}%(name)-30.30s {green}#%(lineno)-4d {blue}%(asctime)23.23s"
-            f"{default}:: {gray}%(message)s{default}"
+            f"{red}%(levelname)-1.1s {yellow}%(name)-25.25s {green}#%(lineno)-4d {blue}%(asctime)23.23s"
+            f"{default} :: {gray}%(message)s{default}"
         )

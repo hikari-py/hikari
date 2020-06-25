@@ -38,7 +38,6 @@ from hikari.net import http_settings as http_settings_
 from hikari.net import rate_limits
 from hikari.net import rest as rest_component
 from hikari.net import strings
-from hikari.utilities import reflect
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -88,7 +87,6 @@ class RESTClientImpl(rest_api.IRESTClientContextManager):
         url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         version: int = 6,
     ) -> None:
-        self._logger = reflect.get_logger(self)
         self._cache: cache_.ICacheComponent = stateless_cache.StatelessCacheImpl()
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(self)
         self._executor = None

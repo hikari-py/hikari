@@ -67,7 +67,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import webhooks
 
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net.rest")
 
 
 # TODO: make a mechanism to allow me to share the same client session but
