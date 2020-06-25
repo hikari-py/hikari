@@ -113,8 +113,8 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
 
         !!! note
             If you wish to update a presence for a specific shard, you can do
-            this by using the `gateway_shards` `typing.Mapping` to find the
-            shard you wish to update.
+            this by using `gateway_shards` to find the shard you wish to
+            update.
 
         Parameters
         ----------

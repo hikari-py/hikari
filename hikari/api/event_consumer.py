@@ -79,6 +79,6 @@ class IEventConsumerApp(rest.IRESTClient, abc.ABC):
 
         Returns
         -------
-        IEventConsumerComponent
+        hikari.api.event_consumer.IEventConsumerComponent
             The event consumer implementation in-use.
         """
