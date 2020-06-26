@@ -25,7 +25,7 @@ from ci import nox
 def pdoc(session: nox.Session) -> None:
     """Generate documentation with pdoc."""
     session.install("-r", "requirements.txt")
-    session.install("pdoc3")
+    session.install("git+https://github.com/pdoc3/pdoc@83a8c400bcf9109d4753c46ad2f71a4e57114871")
     session.install("sphobjinv")
 
     session.run(

@@ -66,6 +66,7 @@
 <%
     import abc
     import enum
+    import functools
     import inspect
     import textwrap
     import typing
@@ -78,6 +79,7 @@
     QUAL_ASYNC_DEF = "async def"
     QUAL_CLASS = "class"
     QUAL_DATACLASS = "dataclass"
+    QUAL_CACHED_PROPERTY = "cached property"
     QUAL_CONST = "const"
     QUAL_DEF = "def"
     QUAL_ENUM = "enum"
@@ -123,8 +125,12 @@
                 if getattr(dobj.obj, "__isabstractmethod__", False):
                     prefix = f"{QUAL_ABC} "
 
-                if hasattr(dobj.obj, "__get__"):
-                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_PROPERTY}</em></small> "
+                descriptor = None
+                is_descriptor = hasattr(dobj.cls, "obj") and (descriptor := dobj.cls.obj.__dict__.get(dobj.name))
+
+                if is_descriptor and isinstance(descriptor, (property, functools.cached_property)):
+                    qual = QUAL_CACHED_PROPERTY if isinstance(descriptor, functools.cached_property) else QUAL_PROPERTY
+                    prefix = f"<small class='text-muted'><em>{prefix}{qual}</em></small> "
                 elif dobj.module.name == "typing" or dobj.docstring and dobj.docstring.casefold().startswith(("type hint", "typehint", "type alias")):
                     prefix = f"<small class='text-muted'><em>{prefix}{QUAL_TYPEHINT} </em></small> "
                 elif all(not c.isalpha() or c.isupper() for c in dobj.name):

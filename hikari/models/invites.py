@@ -33,8 +33,8 @@ import typing
 import attr
 
 from hikari.models import guilds
-from hikari.utilities import cdn
 from hikari.utilities import files
+from hikari.utilities import cdn
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
