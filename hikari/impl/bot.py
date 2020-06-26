@@ -39,6 +39,7 @@ from hikari.models import presences
 from hikari.net import http_settings as http_settings_
 from hikari.net import rate_limits
 from hikari.net import rest
+from hikari.net import strings
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -207,7 +208,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
             debug=debug,
             global_ratelimit=self._global_ratelimit,
             token=token,
-            token_type="Bot",
+            token_type=strings.BOT_TOKEN,  # nosec
             rest_url=rest_url,
             version=rest_version,
         )
