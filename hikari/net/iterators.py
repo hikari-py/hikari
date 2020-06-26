@@ -386,7 +386,7 @@ class MessageIterator(_BufferedLazyIterator["messages.Message"]):
         query.put(self._direction, self._first_id)
         query.put("limit", 100)
 
-        raw_chunk = await self._request_call(self._route, query)
+        raw_chunk = await self._request_call(compiled_route=self._route, query=query)
         chunk = typing.cast(data_binding.JSONArray, raw_chunk)
 
         if not chunk:
@@ -427,7 +427,7 @@ class ReactorIterator(_BufferedLazyIterator["users.User"]):
         query.put("after", self._first_id)
         query.put("limit", 100)
 
-        raw_chunk = await self._request_call(self._route, query=query)
+        raw_chunk = await self._request_call(compiled_route=self._route, query=query)
         chunk = typing.cast(data_binding.JSONArray, raw_chunk)
 
         if not chunk:
@@ -466,7 +466,7 @@ class OwnGuildIterator(_BufferedLazyIterator["applications.OwnGuild"]):
         query.put("before" if self._newest_first else "after", self._first_id)
         query.put("limit", 100)
 
-        raw_chunk = await self._request_call(self._route, query=query)
+        raw_chunk = await self._request_call(compiled_route=self._route, query=query)
         chunk = typing.cast(data_binding.JSONArray, raw_chunk)
 
         if not chunk:
@@ -503,7 +503,7 @@ class MemberIterator(_BufferedLazyIterator["guilds.Member"]):
         query.put("after", self._first_id)
         query.put("limit", 100)
 
-        raw_chunk = await self._request_call(self._route, query=query)
+        raw_chunk = await self._request_call(compiled_route=self._route, query=query)
         chunk = typing.cast(data_binding.JSONArray, raw_chunk)
 
         if not chunk:
@@ -545,7 +545,7 @@ class AuditLogIterator(LazyIterator["audit_logs.AuditLog"]):
         query.put("user_id", self._user_id)
         query.put("event_type", self._action_type)
 
-        raw_response = await self._request_call(self._route, query=query)
+        raw_response = await self._request_call(compiled_route=self._route, query=query)
         response = typing.cast(data_binding.JSONObject, raw_response)
 
         if not response["entries"]:
