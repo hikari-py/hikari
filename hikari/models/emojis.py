@@ -96,6 +96,9 @@ class UnicodeEmoji(Emoji):
     name: str = attr.ib(eq=True, hash=True, repr=True)
     """The code points that form the emoji."""
 
+    def __str__(self) -> str:
+        return self.name
+
     @property
     @typing.final
     def url_name(self) -> str:
@@ -230,6 +233,9 @@ class CustomEmoji(snowflake.Unique, Emoji):
     Will be `None` when received in Message Reaction Remove and Message
     Reaction Remove Emoji events.
     """
+
+    def __str__(self) -> str:
+        return self.name if self.name is not None else f"Unnamed emoji ID {self.id}"
 
     @property
     def filename(self) -> str:

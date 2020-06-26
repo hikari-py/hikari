@@ -53,6 +53,9 @@ class TargetUserType(int, enum.Enum):
     STREAM = 1
     """This invite is targeting a "Go Live" stream."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class VanityURL:
@@ -66,6 +69,9 @@ class VanityURL:
 
     uses: int = attr.ib(eq=False, hash=False, repr=True)
     """The amount of times this invite has been used."""
+
+    def __str__(self) -> str:
+        return f"https://discord.gg/{self.code}"
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -219,6 +225,9 @@ class Invite:
     This is only present when `with_counts` is passed as `True` to the GET
     Invites endpoint.
     """
+
+    def __str__(self) -> str:
+        return f"https://discord.gg/{self.code}"
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

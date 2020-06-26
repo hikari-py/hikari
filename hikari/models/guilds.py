@@ -78,6 +78,9 @@ class GuildExplicitContentFilterLevel(int, enum.Enum):
     ALL_MEMBERS = 2
     """Filter all posts."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @enum.unique
 @typing.final
@@ -135,6 +138,9 @@ class GuildFeature(str, enum.Enum):
     WELCOME_SCREEN_ENABLED = "WELCOME_SCREEN_ENABLED"
     """Guild has enabled the welcome screen."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @enum.unique
 @typing.final
@@ -147,6 +153,9 @@ class GuildMessageNotificationsLevel(int, enum.Enum):
     ONLY_MENTIONS = 1
     """Only notify users when they are @mentioned."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @enum.unique
 @typing.final
@@ -158,6 +167,9 @@ class GuildMFALevel(int, enum.Enum):
 
     ELEVATED = 1
     """MFA requirement."""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @enum.unique
@@ -177,6 +189,9 @@ class GuildPremiumTier(int, enum.Enum):
     TIER_3 = 3
     """Level 3 Nitro boost."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @enum.unique
 @typing.final
@@ -188,6 +203,9 @@ class GuildSystemChannelFlag(enum.IntFlag):
 
     SUPPRESS_PREMIUM_SUBSCRIPTION = 1 << 1
     """Display a message when the guild is Nitro boosted."""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @enum.unique
@@ -209,6 +227,9 @@ class GuildVerificationLevel(int, enum.Enum):
 
     VERY_HIGH = 4
     """┻━┻ミヽ(ಠ益ಠ)ﾉ彡┻━┻ - must have a verified phone number."""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
@@ -276,6 +297,9 @@ class Member:
     This will be `hikari.utilities.undefined.UndefinedType if it's state is unknown.
     """
 
+    def __str__(self) -> str:
+        return str(self.user)
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class PartialRole(snowflake.Unique):
@@ -291,6 +315,9 @@ class PartialRole(snowflake.Unique):
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
     """The role's name."""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -347,6 +374,9 @@ class IntegrationAccount:
     name: str = attr.ib(eq=False, hash=False, repr=True)
     """The name of this account."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class PartialIntegration(snowflake.Unique):
@@ -365,6 +395,9 @@ class PartialIntegration(snowflake.Unique):
 
     account: IntegrationAccount = attr.ib(eq=False, hash=False, repr=False)
     """The account connected to this integration."""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -457,6 +490,9 @@ class PartialGuild(snowflake.Unique):
 
     features: typing.Set[typing.Union[GuildFeature, str]] = attr.ib(eq=False, hash=False, repr=False)
     """A set of the features in this guild."""
+
+    def __str__(self) -> str:
+        return self.name
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
