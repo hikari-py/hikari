@@ -49,8 +49,8 @@ APPLICATION_XML: typing.Final[str] = "application/xml"
 APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 
 # Bits of text.
-BEARER_TOKEN: typing.Final[str] = "Bearer"
-BOT_TOKEN: typing.Final[str] = "Bot"
+BEARER_TOKEN: typing.Final[str] = "Bearer"  # nosec
+BOT_TOKEN: typing.Final[str] = "Bot"  # nosec
 MILLISECOND_PRECISION: typing.Final[str] = "millisecond"
 
 # User-agent info.
