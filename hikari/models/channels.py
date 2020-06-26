@@ -83,6 +83,9 @@ class ChannelType(int, enum.Enum):
     GUILD_STORE = 6
     """A channel that show's a game's store page."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @enum.unique
 @typing.final
@@ -96,7 +99,7 @@ class PermissionOverwriteType(str, enum.Enum):
     """A permission overwrite that targets a specific guild member."""
 
     def __str__(self) -> str:
-        return str(self.value)
+        return self.name
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True)
@@ -172,6 +175,9 @@ class PartialChannel(snowflake.Unique):
 
     type: ChannelType = attr.ib(eq=False, hash=False, repr=True)
     """The channel's type."""
+
+    def __str__(self) -> str:
+        return self.name if self.name is not None else f"Unnamed channel ID {self.id}"
 
 
 class TextChannel(PartialChannel, abc.ABC):
@@ -319,6 +325,9 @@ class DMChannel(TextChannel):
     recipients: typing.Mapping[snowflake.Snowflake, users.User] = attr.ib(eq=False, hash=False, repr=False)
     """The recipients of the DM."""
 
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__} with: {', '.join(str(user) for user in self.recipients.values())}"
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class GroupDMChannel(DMChannel):
@@ -338,6 +347,9 @@ class GroupDMChannel(DMChannel):
 
     If the group DM was not created by a bot, this will be `None`.
     """
+
+    def __str__(self) -> str:
+        return self.name if self.name is not None else super().__str__()
 
     @property
     def icon(self) -> typing.Optional[files.URL]:

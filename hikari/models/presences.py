@@ -76,6 +76,9 @@ class ActivityType(int, enum.Enum):
     (`:smiley:`) as the first part of the status activity name.
     """
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class ActivityTimestamps:
@@ -159,6 +162,9 @@ class ActivityFlag(enum.IntFlag):
     PLAY = 1 << 5
     """Play"""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 # TODO: add strict type checking to gateway for this type in an invariant way.
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)
@@ -184,6 +190,9 @@ class Activity:
 
     type: ActivityType = attr.ib(converter=ActivityType)
     """The activity type."""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
@@ -248,6 +257,9 @@ class Status(str, enum.Enum):
 
     OFFLINE = "offline"
     """Offline or invisible/grey."""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
