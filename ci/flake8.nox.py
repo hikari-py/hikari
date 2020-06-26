@@ -38,7 +38,7 @@ def flake8(session: nox.Session) -> None:
         # in any of the gitlab-supported formats :(
         format_args = ["--format=junit-xml", f"--output-file={config.FLAKE8_JUNIT}"]
     else:
-        format_args = [f"--output-file={config.FLAKE8_TXT}", "--statistics", "--show-source"]
+        format_args = [f"--output-file={config.FLAKE8_TXT}", "--statistics", "--show-source", "--tee"]
         # This is because flake8 just appends to the file, so you can end up with
         # a huge file with the same errors if you run it a couple of times.
         shutil.rmtree(config.FLAKE8_TXT, ignore_errors=True)

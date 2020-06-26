@@ -21,7 +21,7 @@ You should never need to make any of these objects manually.
 """
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["TypingIndicator", "GuildBuilder"]
+__all__: typing.Final[typing.Sequence[str]] = ["TypingIndicator", "GuildBuilder"]
 
 import asyncio
 import contextlib
@@ -56,7 +56,7 @@ class TypingIndicator:
     the typing indicator repeatedly until the context finishes.
     """
 
-    __slots__ = ("_channel", "_request_call", "_task")
+    __slots__: typing.Sequence[str] = ("_channel", "_request_call", "_task")
 
     def __init__(
         self,
@@ -167,7 +167,7 @@ class GuildBuilder:
     """
 
     # Required arguments.
-    _app: rest.IRESTApp
+    _app: rest.IRESTClient
     _name: str
 
     # Optional args that we kept hidden.

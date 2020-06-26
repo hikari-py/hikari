@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["EventManagerImpl"]
+__all__: typing.Final[typing.Sequence[str]] = ["EventManagerImpl"]
 
 import typing
 
@@ -40,7 +40,7 @@ class EventManagerImpl(event_manager_core.EventManagerCoreComponent):
         This is a synthetic event produced by the gateway implementation in
         Hikari.
         """
-        # FIXME: this should be in entity factory
+        # TODO: this should be in entity factory
         await self.dispatch(other.ConnectedEvent(shard=shard))
 
     async def on_disconnected(self, shard: gateway.Gateway, _: data_binding.JSONObject) -> None:
@@ -49,7 +49,7 @@ class EventManagerImpl(event_manager_core.EventManagerCoreComponent):
         This is a synthetic event produced by the gateway implementation in
         Hikari.
         """
-        # FIXME: this should be in entity factory
+        # TODO: this should be in entity factory
         await self.dispatch(other.DisconnectedEvent(shard=shard))
 
     async def on_ready(self, shard: gateway.Gateway, payload: data_binding.JSONObject) -> None:
@@ -58,7 +58,7 @@ class EventManagerImpl(event_manager_core.EventManagerCoreComponent):
 
     async def on_resumed(self, shard: gateway.Gateway, _: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#resumed for more info."""
-        # FIXME: this should be in entity factory
+        # TODO: this should be in entity factory
         await self.dispatch(other.ResumedEvent(shard=shard))
 
     async def on_channel_create(self, _: gateway.Gateway, payload: data_binding.JSONObject) -> None:
@@ -122,7 +122,7 @@ class EventManagerImpl(event_manager_core.EventManagerCoreComponent):
 
     async def on_guild_members_chunk(self, _: gateway.Gateway, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-members-chunk for more info."""
-        # FIXME: implement model for this, and implement chunking components.
+        # TODO: implement model for this, and implement chunking components.
         # await self.dispatch(self.app.entity_factory.deserialize_guild_member_chunk_event(payload))
 
     async def on_guild_role_create(self, _: gateway.Gateway, payload: data_binding.JSONObject) -> None:

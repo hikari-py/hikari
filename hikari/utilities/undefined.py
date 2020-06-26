@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["UndefinedType", "UNDEFINED"]
+__all__: typing.Final[typing.Sequence[str]] = ["UndefinedType", "UNDEFINED"]
 
 import enum
 
@@ -28,7 +28,7 @@ import typing
 
 
 class _UndefinedType:
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def __bool__(self) -> bool:
         return False

@@ -203,7 +203,7 @@ and should be used sparingly.
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
+__all__: typing.Final[typing.Sequence[str]] = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
 
 import asyncio
 import datetime
@@ -220,7 +220,7 @@ UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""
 
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net.rest")
 
 
 class RESTBucket(rate_limits.WindowedBurstRateLimiter):
@@ -245,7 +245,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     which allows dynamically changing the enforced rate limits at any time.
     """
 
-    __slots__ = ("compiled_route",)
+    __slots__: typing.Sequence[str] = ("compiled_route",)
 
     compiled_route: typing.Final[routes.CompiledRoute]
     """The compiled _route that this rate limit is covering."""
@@ -319,7 +319,7 @@ class RESTBucketManager:
     _POLL_PERIOD: typing.Final[typing.ClassVar[int]] = 20
     _EXPIRE_PERIOD: typing.Final[typing.ClassVar[int]] = 10
 
-    __slots__ = (
+    __slots__: typing.Sequence[str] = (
         "routes_to_hashes",
         "real_hashes_to_buckets",
         "closed_event",

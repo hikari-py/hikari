@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IComponent"]
+__all__: typing.Final[typing.Sequence[str]] = ["IComponent"]
 
 import abc
 import typing
@@ -32,7 +32,7 @@ class IComponent(abc.ABC):
     """A component that makes up part of the application.
 
     Objects that derive from this should usually be attributes on the
-    `hikari.api.rest.IRESTApp` object.
+    `hikari.api.rest.IRESTClient` object.
 
     Examples
     --------
@@ -42,15 +42,15 @@ class IComponent(abc.ABC):
     for examples of usage.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
-    def app(self) -> rest.IRESTApp:
+    def app(self) -> rest.IRESTClient:
         """Return the Application that owns this component.
 
         Returns
         -------
-        hikari.api.rest.IRESTApp
+        hikari.api.rest.IRESTClient
             The application implementation that owns this component.
         """

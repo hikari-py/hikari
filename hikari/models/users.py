@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["User", "OwnUser", "UserFlag", "PremiumType"]
+__all__: typing.Final[typing.Sequence[str]] = ["User", "OwnUser", "UserFlag", "PremiumType"]
 
 import enum
 import typing
@@ -82,6 +82,9 @@ class UserFlag(enum.IntFlag):
     VERIFIED_BOT_DEVELOPER = 1 << 17
     """Verified Bot Developer"""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @enum.unique
 @typing.final
@@ -97,6 +100,9 @@ class PremiumType(int, enum.Enum):
     NITRO = 2
     """Premium including all perks (e.g. 2 server boosts)."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class PartialUser(snowflake.Unique):
@@ -111,7 +117,7 @@ class PartialUser(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     discriminator: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)
@@ -131,6 +137,9 @@ class PartialUser(snowflake.Unique):
 
     flags: typing.Union[UserFlag, undefined.UndefinedType] = attr.ib(eq=False, hash=False)
     """The public flags for this user."""
+
+    def __str__(self) -> str:
+        return f"{self.username}#{self.discriminator}"
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

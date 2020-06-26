@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["HTTPSettings"]
+__all__: typing.Final[typing.Sequence[str]] = ["HTTPSettings"]
 
 import typing
 
@@ -39,6 +39,19 @@ class HTTPSettings:
     """If `True`, allow following redirects from `3xx` HTTP responses.
 
     Generally you do not want to enable this unless you have a good reason to.
+    """
+
+    connector_owner: bool = True
+    """Determines whether objects take ownership of their connectors.
+
+    If `True`, the component consuming any connector will close the
+    connector when closed.
+
+    If you set this to `False`, and you provide a `tcp_connector_factory`,
+    this will prevent the connector being closed by each component.
+
+    Note that unless you provide a `tcp_connector_factory`, this will be
+    ignored.
     """
 
     proxy_auth: typing.Optional[aiohttp.BasicAuth] = None
@@ -64,9 +77,12 @@ class HTTPSettings:
     ssl_context: typing.Optional[ssl.SSLContext] = None
     """The optional SSL context to use."""
 
-    tcp_connector_factory: typing.Optional[typing.Callable[[], aiohttp.TCPConnector]] = None
-    """An optional TCP connector factory to use. A connector will be created
-    for each component (each shard, and each REST instance).
+    tcp_connector: typing.Optional[aiohttp.TCPConnector] = None
+    """An optional TCP connector to use.
+
+    The client session will default to closing this connector on close unless
+    you set the `connector_owner` to `False`. If you are planning to share
+    the connector between clients, you should set that to `False`.
     """
 
     trust_env: bool = False

@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Permission"]
+__all__: typing.Final[typing.Sequence[str]] = ["Permission"]
 
 import enum
 
@@ -146,7 +146,10 @@ class Permission(enum.IntFlag):
     """
 
     USE_EXTERNAL_EMOJIS = 1 << 18
-    """Allows the usage of custom emojis from other servers."""
+    """Allows the usage of custom emojis from other guilds."""
+
+    VIEW_GUILD_INSIGHTS = 1 << 19
+    """Allows the user to view guild insights for eligible guilds."""
 
     CONNECT = 1 << 20
     """Allows for joining of a voice channel."""
@@ -180,3 +183,6 @@ class Permission(enum.IntFlag):
 
     MANAGE_EMOJIS = 1 << 30
     """Allows management and editing of emojis."""
+
+    def __str__(self) -> str:
+        return self.name

@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.Final[typing.Sequence[str]] = [
     "AuditLog",
     "AuditLogChange",
     "AuditLogChangeKey",
@@ -284,7 +284,7 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
 class AuditLogEntry(snowflake.Unique):
     """Represents an entry in a guild's audit log."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(

@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.Final[typing.Sequence[str]] = [
     "MessageType",
     "MessageFlag",
     "MessageActivityType",
@@ -95,6 +95,9 @@ class MessageType(int, enum.Enum):
     CHANNEL_FOLLOW_ADD = 12
     """Channel follow add."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @enum.unique
 @typing.final
@@ -119,6 +122,9 @@ class MessageFlag(enum.IntFlag):
     URGENT = 1 << 4
     """This message came from the urgent message system."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @enum.unique
 @typing.final
@@ -139,6 +145,9 @@ class MessageActivityType(int, enum.Enum):
 
     JOIN_REQUEST = 5
     """Request to join an activity."""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
@@ -172,6 +181,9 @@ class Attachment(snowflake.Unique, files_.WebResource):
     width: typing.Optional[int] = attr.ib(repr=False)
     """The width of the image (if the file is an image)."""
 
+    def __str__(self) -> str:
+        return self.filename
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class Reaction:
@@ -185,6 +197,9 @@ class Reaction:
 
     is_reacted_by_me: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether the current user reacted using this emoji."""
+
+    def __str__(self) -> str:
+        return str(self.emoji)
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
@@ -206,7 +221,7 @@ class MessageCrosspost:
     "published" to another.
     """
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
@@ -235,7 +250,7 @@ class MessageCrosspost:
 class Message(snowflake.Unique):
     """Represents a message."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(
@@ -314,6 +329,9 @@ class Message(snowflake.Unique):
 
     nonce: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The message nonce. This is a string used for validating a message was sent."""
+
+    def __str__(self) -> str:
+        return self.content
 
     async def fetch_channel(self) -> channels.PartialChannel:
         """Fetch the channel this message was created in.
@@ -413,7 +431,10 @@ class Message(snowflake.Unique):
         text: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         *,
         embed: typing.Union[undefined.UndefinedType, embeds_.Embed] = undefined.UNDEFINED,
-        attachments: typing.Union[undefined.UndefinedType, typing.Sequence[files_.Resource]] = undefined.UNDEFINED,
+        attachment: typing.Union[undefined.UndefinedType, str, files_.Resource] = undefined.UNDEFINED,
+        attachments: typing.Union[
+            undefined.UndefinedType, typing.Sequence[typing.Union[str, files_.Resource]]
+        ] = undefined.UNDEFINED,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
@@ -436,10 +457,14 @@ class Message(snowflake.Unique):
             and can usually be ignored.
         tts : bool or hikari.utilities.undefined.UndefinedType
             If specified, whether the message will be sent as a TTS message.
-        attachments : typing.Sequence[hikari.utilities.files.Resource] or hikari.utilities.undefined.UndefinedType
+        attachment : hikari.utilities.files.Resource or str or hikari.utilities.undefined.UndefinedType
+            If specified, a attachment to upload, if desired. This can
+            be a resource, or string of a path on your computer or a URL.
+        attachments : typing.Sequence[hikari.utilities.files.Resource or str] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of attachments to upload, if desired.
             Should be between 1 and 10 objects in size (inclusive), also
-            including embed attachments.
+            including embed attachments. These can be resources, or
+            strings consisting of paths on your computer or URLs.
         embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
             If specified, the embed object to send with the message.
         mentions_everyone : bool
@@ -478,12 +503,15 @@ class Message(snowflake.Unique):
         ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
+        TypeError
+            If both `attachment` and `attachments` are specified.
         """  # noqa: E501 - Line too long
         return await self.app.rest.create_message(
             channel=self.channel_id,
             text=text,
             nonce=nonce,
             tts=tts,
+            attachment=attachment,
             attachments=attachments,
             embed=embed,
             mentions_everyone=mentions_everyone,

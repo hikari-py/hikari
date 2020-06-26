@@ -18,7 +18,11 @@
 """Core interface for components that dispatch events to the library."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IEventDispatcherBase", "IEventDispatcherApp", "IEventDispatcherComponent"]
+__all__: typing.Final[typing.Sequence[str]] = [
+    "IEventDispatcherBase",
+    "IEventDispatcherApp",
+    "IEventDispatcherComponent",
+]
 
 import abc
 import asyncio
@@ -38,7 +42,7 @@ class IEventDispatcherBase(abc.ABC):
     appropriate.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     if typing.TYPE_CHECKING:
         EventT = typing.TypeVar("EventT", bound=base.Event)
@@ -120,8 +124,8 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        IEventDispatcherBase.subscribe
-        IEventDispatcherBase.wait_for
+        `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
         """
 
     @abc.abstractmethod
@@ -166,8 +170,8 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        IEventDispatcherBase.listen
-        IEventDispatcherBase.wait_for
+        `hikari.api.event_dispatcher.IEventDispatcherBase.listen`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
         """
 
     @abc.abstractmethod
@@ -225,10 +229,10 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        IEventDispatcherBase.dispatch
-        IEventDispatcherBase.subscribe
-        IEventDispatcherBase.unsubscribe
-        IEventDispatcherBase.wait_for
+        `hikari.api.event_dispatcher.IEventDispatcherBase.dispatch`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.unsubscribe`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
         """
 
     @abc.abstractmethod
@@ -266,9 +270,9 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        IEventDispatcherBase.listen
-        IEventDispatcherBase.subscribe
-        IEventDispatcherBase.dispatch
+        `hikari.api.event_dispatcher.IEventDispatcherBase.listen`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
+        `hikari.api.event_dispatcher.IEventDispatcherBase.dispatch`
         """
 
 
@@ -309,7 +313,7 @@ class IEventDispatcherApp(IEventDispatcherBase, abc.ABC):
     ```
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

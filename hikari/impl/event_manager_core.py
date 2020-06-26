@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["EventManagerCoreComponent"]
+__all__: typing.Final[typing.Sequence[str]] = ["EventManagerCoreComponent"]
 
 import asyncio
 import functools
@@ -40,7 +40,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest
 
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
 if typing.TYPE_CHECKING:
@@ -61,14 +61,14 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
     is the raw event name being dispatched in lower-case.
     """
 
-    def __init__(self, app: rest.IRESTApp) -> None:
+    def __init__(self, app: rest.IRESTClient) -> None:
         self._app = app
         self._listeners: ListenerMapT = {}
         self._waiters: WaiterMapT = {}
 
     @property
     @typing.final
-    def app(self) -> rest.IRESTApp:
+    def app(self) -> rest.IRESTClient:
         return self._app
 
     async def consume_raw_event(

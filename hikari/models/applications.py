@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.Final[typing.Sequence[str]] = [
     "Application",
     "ConnectionVisibility",
     "OAuth2Scope",
@@ -174,6 +174,9 @@ class OAuth2Scope(str, enum.Enum):
     This is used during authorization code grants.
     """
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @enum.unique
 @typing.final
@@ -185,6 +188,9 @@ class ConnectionVisibility(int, enum.Enum):
 
     EVERYONE = 1
     """Everyone can see the connection."""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -247,12 +253,15 @@ class TeamMembershipState(int, enum.Enum):
     ACCEPTED = 2
     """Denotes the user has accepted the invite and is now a member."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class TeamMember:
     """Represents a member of a Team."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     membership_state: TeamMembershipState = attr.ib(eq=False, hash=False, repr=False)
@@ -271,12 +280,15 @@ class TeamMember:
     user: users.User = attr.ib(eq=True, hash=True, repr=True)
     """The user representation of this team member."""
 
+    def __str__(self) -> str:
+        return str(self.user)
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class Team(snowflake.Unique):
     """Represents a development team, along with all its members."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(
@@ -299,6 +311,9 @@ class Team(snowflake.Unique):
 
     owner_user_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of this team's owner."""
+
+    def __str__(self) -> str:
+        return f"Team {self.id}"
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
@@ -344,7 +359,7 @@ class Team(snowflake.Unique):
 class Application(snowflake.Unique):
     """Represents the information of an Oauth2 Application."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(
@@ -413,6 +428,9 @@ class Application(snowflake.Unique):
 
     cover_image_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's cover image, used on the store."""
+
+    def __str__(self) -> str:
+        return self.name
 
     @property
     def icon(self) -> typing.Optional[files.URL]:

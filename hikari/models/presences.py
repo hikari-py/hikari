@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.Final[typing.Sequence[str]] = [
     "Activity",
     "ActivityAssets",
     "ActivityFlag",
@@ -75,6 +75,9 @@ class ActivityType(int, enum.Enum):
     To set an emoji with the status, place a unicode emoji or Discord emoji
     (`:smiley:`) as the first part of the status activity name.
     """
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
@@ -159,6 +162,9 @@ class ActivityFlag(enum.IntFlag):
     PLAY = 1 << 5
     """Play"""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 # TODO: add strict type checking to gateway for this type in an invariant way.
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)
@@ -184,6 +190,9 @@ class Activity:
 
     type: ActivityType = attr.ib(converter=ActivityType)
     """The activity type."""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
@@ -249,6 +258,9 @@ class Status(str, enum.Enum):
     OFFLINE = "offline"
     """Offline or invisible/grey."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class ClientStatus:
@@ -268,7 +280,7 @@ class ClientStatus:
 class MemberPresence:
     """Used to represent a guild member's presence."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     user: users.PartialUser = attr.ib(eq=True, hash=True, repr=True)

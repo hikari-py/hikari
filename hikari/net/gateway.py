@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Gateway"]
+__all__: typing.Final[typing.Sequence[str]] = ["Gateway"]
 
 import asyncio
 import enum
@@ -40,7 +40,6 @@ from hikari.net import http_client
 from hikari.net import rate_limits
 from hikari.net import strings
 from hikari.utilities import data_binding
-from hikari.utilities import reflect
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -152,11 +151,11 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
     @typing.final
     class _Reconnect(RuntimeError):
-        __slots__ = ()
+        __slots__: typing.Sequence[str] = ()
 
     @typing.final
     class _SocketClosed(RuntimeError):
-        __slots__ = ()
+        __slots__: typing.Sequence[str] = ()
 
     @attr.s(auto_attribs=True, slots=True)
     class _InvalidSession(RuntimeError):
@@ -165,9 +164,9 @@ class Gateway(http_client.HTTPClient, component.IComponent):
     _RESTART_RATELIMIT_WINDOW: typing.Final[typing.ClassVar[float]] = 30.0
     """If the shard restarts more than once within this period of time, then
     exponentially back-off to prevent spamming the gateway or tanking the CPU.
-    
+
     This is potentially important if the internet connection turns off, as the
-    bot will simply attempt to reconnect repeatedly until the connection 
+    bot will simply attempt to reconnect repeatedly until the connection
     resumes.
     """
 
@@ -200,7 +199,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self._intents: typing.Optional[intents_.Intent] = intents
         self._is_afk: typing.Union[undefined.UndefinedType, bool] = initial_is_afk
         self._last_run_started_at = float("nan")
-        self._logger = reflect.get_logger(self, str(shard_id))
+        self._logger = logging.getLogger(f"hikari.net.gateway.{shard_id}")
         self._request_close_event = asyncio.Event()
         self._seq: typing.Optional[str] = None
         self._shard_id: int = shard_id
@@ -277,7 +276,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         """Start the shard and wait for it to shut down."""
         try:
             # This may be set if we are stuck in a reconnect loop.
-            while not self._request_close_event.is_set() and await self._run_once():
+            while not self._request_close_event.is_set() and await self._run_once_shielded():
                 pass
 
             # Allow zookeepers to stop gathering tasks for each shard.
@@ -291,63 +290,12 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             # the entire inheritance conduit in a patch context.
             await http_client.HTTPClient.close(self)
 
-    async def _run_once(self) -> bool:
-        # returns `True` if we can reconnect, or `False` otherwise.
-        self._request_close_event.clear()
-
-        self._zombied = False
-
-        if self._now() - self._last_run_started_at < self._RESTART_RATELIMIT_WINDOW:
-            # Interrupt sleep immediately if a request to close is fired.
-            wait_task = asyncio.create_task(
-                self._request_close_event.wait(), name=f"gateway shard {self._shard_id} backing off"
-            )
-            try:
-                backoff = next(self._backoff)
-                self._logger.debug("backing off for %ss", backoff)
-                await asyncio.wait_for(wait_task, timeout=backoff)
-
-                # If this line gets reached, the wait didn't time out, meaning
-                # the user told the client to shut down gracefully before the
-                # backoff completed.
-                return False
-            except asyncio.TimeoutError:
-                pass
-
-        # Do this after; it prevents backing off on the first try.
-        self._last_run_started_at = self._now()
-
+    async def _run_once_shielded(self) -> bool:
+        # Returns `True` if we can reconnect, or `False` otherwise.
+        # Wraps the runner logic in the standard exception handling mechanisms.
         try:
-            self._logger.debug("creating websocket connection to %s", self.url)
-            self._ws = await self._create_ws(self.url)
-
-            self.connected_at = self._now()
-
-            self._zlib = zlib.decompressobj()
-
-            self._handshake_event.clear()
-            self._request_close_event.clear()
-
-            await self._handshake()
-
-            # Technically we are connected after the hello, but this ensures we can send and receive
-            # before firing that event.
-            self._dispatch("CONNECTED", {})
-
-            # We should ideally set this after HELLO, but it should be fine
-            # here as well. If we don't heartbeat in time, something probably
-            # went majorly wrong anyway.
-            heartbeat = asyncio.create_task(
-                self._heartbeat_keepalive(), name=f"gateway shard {self._shard_id} heartbeat"
-            )
-
-            try:
-                await self._poll_events()
-            finally:
-                heartbeat.cancel()
-
+            await self._run_once()
             return False
-
         except aiohttp.ClientConnectorError as ex:
             self._logger.error(
                 "failed to connect to Discord because %s.%s: %s", type(ex).__module__, type(ex).__qualname__, str(ex),
@@ -388,6 +336,8 @@ class Gateway(http_client.HTTPClient, component.IComponent):
                 await self._close_ws(self._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection")
                 self._seq = None
                 self.session_id = None
+                self._backoff.reset()
+                self._request_close_event.set()
                 raise
 
         except Exception as ex:
@@ -395,6 +345,63 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             await self._close_ws(self._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
             raise
 
+        return True
+
+    async def _run_once(self) -> None:
+        # Physical runner logic without error handling.
+        self._request_close_event.clear()
+
+        self._zombied = False
+
+        if self._now() - self._last_run_started_at < self._RESTART_RATELIMIT_WINDOW:
+            # Interrupt sleep immediately if a request to close is fired.
+            wait_task = asyncio.create_task(
+                self._request_close_event.wait(), name=f"gateway shard {self._shard_id} backing off"
+            )
+            try:
+                backoff = next(self._backoff)
+                self._logger.debug("backing off for %ss", backoff)
+                await asyncio.wait_for(wait_task, timeout=backoff)
+
+                # If this line gets reached, the wait didn't time out, meaning
+                # the user told the client to shut down gracefully before the
+                # backoff completed.
+                return
+            except asyncio.TimeoutError:
+                pass
+
+        # Do this after. It prevents backing off on the first try.
+        self._last_run_started_at = self._now()
+
+        self._logger.debug("creating websocket connection to %s", self.url)
+        self._ws = await self._create_ws(self.url)
+
+        self.connected_at = self._now()
+
+        # Technically we are connected after the hello, but this ensures we can send and receive
+        # before firing that event.
+        self._dispatch("CONNECTED", {})
+
+        try:
+
+            self._zlib = zlib.decompressobj()
+
+            self._handshake_event.clear()
+            self._request_close_event.clear()
+
+            await self._handshake()
+
+            # We should ideally set this after HELLO, but it should be fine
+            # here as well. If we don't heartbeat in time, something probably
+            # went majorly wrong anyway.
+            heartbeat = asyncio.create_task(
+                self._heartbeat_keepalive(), name=f"gateway shard {self._shard_id} heartbeat"
+            )
+
+            try:
+                await self._poll_events()
+            finally:
+                heartbeat.cancel()
         finally:
             if not math.isnan(self.connected_at):
                 # Only dispatch this if we actually connected before we failed!
@@ -402,14 +409,12 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
             self.connected_at = float("nan")
 
-        return True
-
     async def update_presence(
         self,
         *,
-        idle_since: typing.Union[undefined.UndefinedType, typing.Optional[datetime.datetime]] = undefined.UNDEFINED,
-        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        activity: typing.Union[undefined.UndefinedType, typing.Optional[presences.Activity]] = undefined.UNDEFINED,
+        idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = undefined.UNDEFINED,
+        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
         status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
     ) -> None:
         """Update the presence of the shard user.
@@ -419,7 +424,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
             The datetime that the user started being idle. If undefined, this
             will not be changed.
-        is_afk : bool or hikari.utilities.undefined.UndefinedType
+        afk : bool or hikari.utilities.undefined.UndefinedType
             If `True`, the user is marked as AFK. If `False`, the user is marked
             as being active. If undefined, this will not be changed.
         activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
@@ -428,11 +433,26 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         status : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
             The web status to show. If undefined, this will not be changed.
         """
-        presence = self._build_presence_payload(idle_since=idle_since, is_afk=is_afk, status=status, activity=activity)
+        if idle_since is undefined.UNDEFINED:
+            idle_since = self._idle_since
+        if afk is undefined.UNDEFINED:
+            afk = self._is_afk
+        if status is undefined.UNDEFINED:
+            status = self._status
+        if activity is undefined.UNDEFINED:
+            activity = self._activity
+
+        presence = self._app.entity_factory.serialize_gateway_presence(
+            idle_since=idle_since, afk=afk, status=status, activity=activity
+        )
+
         payload: data_binding.JSONObject = {"op": self._GatewayOpcode.PRESENCE_UPDATE, "d": presence}
+
         await self._send_json(payload)
+
+        # Update internal status.
         self._idle_since = idle_since if idle_since is not undefined.UNDEFINED else self._idle_since
-        self._is_afk = is_afk if is_afk is not undefined.UNDEFINED else self._is_afk
+        self._is_afk = afk if afk is not undefined.UNDEFINED else self._is_afk
         self._activity = activity if activity is not undefined.UNDEFINED else self._activity
         self._status = status if status is not undefined.UNDEFINED else self._status
 
@@ -461,15 +481,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             If `True`, the bot will deafen itself in that voice channel. If
             `False`, then it will undeafen itself.
         """
-        payload: data_binding.JSONObject = {
-            "op": self._GatewayOpcode.VOICE_STATE_UPDATE,
-            "d": {
-                "guild_id": str(int(guild)),
-                "channel_id": str(int(channel)) if channel is not None else None,
-                "self_mute": self_mute,
-                "self_deaf": self_deaf,
-            },
-        }
+        payload = self._app.entity_factory.serialize_gateway_voice_state_update(guild, channel, self_mute, self_deaf)
         await self._send_json(payload)
 
     async def _close_ws(self, code: int, message: str) -> None:
@@ -522,7 +534,9 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
             if undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
                 # noinspection PyTypeChecker
-                payload["d"]["presence"] = self._build_presence_payload()
+                payload["d"]["presence"] = self._app.entity_factory.serialize_gateway_presence(
+                    self._idle_since, self._is_afk, self._status, self._activity,
+                )
 
             await self._send_json(payload)
 
@@ -632,7 +646,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             )
 
             # Assume we can always resume first.
-            raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect, True)
+            raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect)
 
         if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
             raise self._SocketClosed
@@ -694,35 +708,3 @@ class Gateway(http_client.HTTPClient, component.IComponent):
             args = (*args, self._seq, self.session_id, len(payload))
 
         self._logger.debug(message, *args)
-
-    def _build_presence_payload(
-        self,
-        idle_since: typing.Union[undefined.UndefinedType, typing.Optional[datetime.datetime]] = undefined.UNDEFINED,
-        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
-        activity: typing.Union[undefined.UndefinedType, typing.Optional[presences.Activity]] = undefined.UNDEFINED,
-    ) -> data_binding.JSONObject:
-        if idle_since is undefined.UNDEFINED:
-            idle_since = self._idle_since
-        if is_afk is undefined.UNDEFINED:
-            is_afk = self._is_afk
-        if status is undefined.UNDEFINED:
-            status = self._status
-        if activity is undefined.UNDEFINED:
-            activity = self._activity
-
-        if activity is not None and activity is not undefined.UNDEFINED:
-            game: typing.Union[undefined.UndefinedType, None, data_binding.JSONObject] = {
-                "name": activity.name,
-                "url": activity.url,
-                "type": activity.type,
-            }
-        else:
-            game = activity
-
-        payload = data_binding.JSONObjectBuilder()
-        payload.put("since", idle_since, conversion=datetime.datetime.timestamp)
-        payload.put("afk", is_afk)
-        payload.put("status", status)
-        payload.put("game", game)
-        return payload

@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Intent"]
+__all__: typing.Final[typing.Sequence[str]] = ["Intent"]
 
 import enum
 
@@ -172,6 +172,9 @@ class Intent(enum.IntFlag):
 
     * TYPING_START
     """
+
+    def __str__(self) -> str:
+        return self.name
 
     @property
     def is_privileged(self) -> bool:
