@@ -174,6 +174,9 @@ class OAuth2Scope(str, enum.Enum):
     This is used during authorization code grants.
     """
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @enum.unique
 @typing.final
@@ -185,6 +188,9 @@ class ConnectionVisibility(int, enum.Enum):
 
     EVERYONE = 1
     """Everyone can see the connection."""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -247,6 +253,9 @@ class TeamMembershipState(int, enum.Enum):
     ACCEPTED = 2
     """Denotes the user has accepted the invite and is now a member."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class TeamMember:
@@ -270,6 +279,9 @@ class TeamMember:
 
     user: users.User = attr.ib(eq=True, hash=True, repr=True)
     """The user representation of this team member."""
+
+    def __str__(self) -> str:
+        return str(self.user)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -299,6 +311,9 @@ class Team(snowflake.Unique):
 
     owner_user_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of this team's owner."""
+
+    def __str__(self) -> str:
+        return f"Team {self.id}"
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
@@ -413,6 +428,9 @@ class Application(snowflake.Unique):
 
     cover_image_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's cover image, used on the store."""
+
+    def __str__(self) -> str:
+        return self.name
 
     @property
     def icon(self) -> typing.Optional[files.URL]:

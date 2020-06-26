@@ -51,6 +51,9 @@ class WebhookType(int, enum.Enum):
     CHANNEL_FOLLOWER = 2
     """Channel Follower webhook."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class Webhook(snowflake.Unique):
@@ -99,6 +102,9 @@ class Webhook(snowflake.Unique):
         This is only available for incoming webhooks that are created in the
         channel settings.
     """
+
+    def __str__(self) -> str:
+        return self.name if self.name is not None else f"Unnamed webhook ID {self.id}"
 
     async def execute(
         self,

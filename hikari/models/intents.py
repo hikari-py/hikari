@@ -173,6 +173,9 @@ class Intent(enum.IntFlag):
     * TYPING_START
     """
 
+    def __str__(self) -> str:
+        return self.name
+
     @property
     def is_privileged(self) -> bool:
         """Whether the intent requires elevated privileges.
