@@ -34,9 +34,7 @@ import aiohttp
 import attr
 
 from hikari import errors
-from hikari.api import component
 from hikari.models import presences
-from hikari.net import http_client
 from hikari.net import rate_limits
 from hikari.net import strings
 from hikari.utilities import data_binding
@@ -46,25 +44,25 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari.api import event_consumer
-    from hikari.net import http_settings
+    from hikari.net import config
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import intents as intents_
     from hikari.utilities import snowflake
 
 
-class Gateway(http_client.HTTPClient, component.IComponent):
+class Gateway:
     """Implementation of a V6 and V7 compatible gateway.
 
     Parameters
     ----------
     app : hikari.api.event_consumer.IEventConsumerApp
         The base application.
-    config : hikari.net.http_settings.HTTPSettings
-        The AIOHTTP settings to use for the client session.
     debug : bool
         If `True`, each sent and received payload is dumped to the logs. If
         `False`, only the fact that data has been sent/received will be logged.
+    http_settings : hikari.net.config.HTTPSettings
+        The HTTP-related settings to use while negotiating a websocket.
     initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
         The initial activity to appear to have for this shard.
     initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
@@ -77,6 +75,8 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         Collection of intents to use, or `None` to not use intents at all.
     large_threshold : int
         The number of members to have in a guild for it to be considered large.
+    proxy_settings : hikari.net.config.ProxySettings
+        The proxy settings to use while negotiating a websocket.
     shard_id : int
         The shard ID.
     shard_count : int
@@ -174,14 +174,15 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self,
         *,
         app: event_consumer.IEventConsumerApp,
-        config: http_settings.HTTPSettings,
         debug: bool = False,
+        http_settings: config.HTTPSettings,
         initial_activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
         initial_idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = undefined.UNDEFINED,
         initial_is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         initial_status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
+        proxy_settings: config.ProxySettings,
         shard_id: int = 0,
         shard_count: int = 1,
         token: str,
@@ -190,16 +191,18 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         use_etf: bool = False,
         version: int = 6,
     ) -> None:
-        super().__init__(config=config, debug=debug)
         self._activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = initial_activity
         self._app = app
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
+        self._debug = debug
         self._handshake_event = asyncio.Event()
+        self._http_settings = http_settings
         self._idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = initial_idle_since
         self._intents: typing.Optional[intents_.Intent] = intents
         self._is_afk: typing.Union[undefined.UndefinedType, bool] = initial_is_afk
         self._last_run_started_at = float("nan")
         self._logger = logging.getLogger(f"hikari.net.gateway.{shard_id}")
+        self._proxy_settings = proxy_settings
         self._request_close_event = asyncio.Event()
         self._seq: typing.Optional[str] = None
         self._shard_id: int = shard_id
@@ -274,27 +277,41 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
     async def _run(self) -> None:
         """Start the shard and wait for it to shut down."""
-        try:
-            # This may be set if we are stuck in a reconnect loop.
-            while not self._request_close_event.is_set() and await self._run_once_shielded():
-                pass
+        async with aiohttp.ClientSession(
+            connector_owner=True,
+            connector=aiohttp.TCPConnector(
+                verify_ssl=self._http_settings.verify_ssl,
+                # We are never going to want more than one connection. This will be spammy on
+                # big sharded bots and waste a lot of time, so theres no reason to bother.
+                limit=1,
+                limit_per_host=1,
+            ),
+            version=aiohttp.HttpVersion11,
+            timeout=aiohttp.ClientTimeout(
+                total=self._http_settings.timeouts.total,
+                connect=self._http_settings.timeouts.acquire_and_connect,
+                sock_read=self._http_settings.timeouts.request_socket_read,
+                sock_connect=self._http_settings.timeouts.request_socket_connect,
+            ),
+            trust_env=self._proxy_settings.trust_env,
+        ) as client_session:
+            try:
+                # This may be set if we are stuck in a reconnect loop.
+                while not self._request_close_event.is_set() and await self._run_once_shielded(client_session):
+                    pass
 
-            # Allow zookeepers to stop gathering tasks for each shard.
-            raise errors.GatewayClientClosedError
-        finally:
-            # This is set to ensure that the `start' waiter does not deadlock if
-            # we cannot connect successfully. It is a hack, but it works.
-            self._handshake_event.set()
-            # Close the aiohttp client session.
-            # Didn't use `super` as I can mock this to check without breaking
-            # the entire inheritance conduit in a patch context.
-            await http_client.HTTPClient.close(self)
+                # Allow zookeepers to stop gathering tasks for each shard.
+                raise errors.GatewayClientClosedError
+            finally:
+                # This is set to ensure that the `start' waiter does not deadlock if
+                # we cannot connect successfully. It is a hack, but it works.
+                self._handshake_event.set()
 
-    async def _run_once_shielded(self) -> bool:
+    async def _run_once_shielded(self, client_session: aiohttp.ClientSession) -> bool:
         # Returns `True` if we can reconnect, or `False` otherwise.
         # Wraps the runner logic in the standard exception handling mechanisms.
         try:
-            await self._run_once()
+            await self._run_once(client_session)
             return False
         except aiohttp.ClientConnectorError as ex:
             self._logger.error(
@@ -347,7 +364,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         return True
 
-    async def _run_once(self) -> None:
+    async def _run_once(self, client_session: aiohttp.ClientSession) -> None:
         # Physical runner logic without error handling.
         self._request_close_event.clear()
 
@@ -374,7 +391,18 @@ class Gateway(http_client.HTTPClient, component.IComponent):
         self._last_run_started_at = self._now()
 
         self._logger.debug("creating websocket connection to %s", self.url)
-        self._ws = await self._create_ws(self.url)
+        self._ws = await client_session.ws_connect(
+            url=self.url,
+            autoping=True,
+            autoclose=True,
+            proxy=self._proxy_settings.url,
+            proxy_headers=self._proxy_settings.all_headers,
+            verify_ssl=self._http_settings.verify_ssl,
+            # Discord can send massive messages that lead us to being disconnected
+            # without this. It is a bit shit that there is no guarantee of the size
+            # of these messages, but there isn't much we can do about this one.
+            max_msg_size=0,
+        )
 
         self.connected_at = self._now()
 
@@ -500,7 +528,7 @@ class Gateway(http_client.HTTPClient, component.IComponent):
 
         self.heartbeat_interval = message["d"]["heartbeat_interval"] / 1_000.0
 
-        self._logger.info("received HELLO, heartbeat interval is %s", self.heartbeat_interval)
+        self._logger.info("received HELLO, heartbeat interval is %ss", self.heartbeat_interval)
 
         if self.session_id is not None:
             # RESUME!

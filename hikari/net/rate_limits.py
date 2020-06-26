@@ -483,7 +483,7 @@ class ExponentialBackOff:
         if self.maximum is not None and value >= self.maximum:
             raise asyncio.TimeoutError
 
-        value += random.random() * self.jitter_multiplier  # # noqa S311 rng for cryptography
+        value += random.random() * self.jitter_multiplier  # nosec  # noqa S311 rng for cryptography
         return value
 
     def __iter__(self) -> ExponentialBackOff:

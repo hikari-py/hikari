@@ -43,8 +43,8 @@ import attr
 
 from hikari.models import permissions
 from hikari.models import users
-from hikari.utilities import cdn
 from hikari.utilities import files
+from hikari.utilities import cdn
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -54,7 +54,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import embeds
     from hikari.models import guilds
     from hikari.models import messages
-    from hikari.net import iterators
+    from hikari.utilities import iterators
 
 
 @enum.unique
