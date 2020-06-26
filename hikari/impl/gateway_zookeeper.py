@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["AbstractGatewayZookeeper"]
+__all__: typing.Final[typing.Sequence[str]] = ["AbstractGatewayZookeeper"]
 
 import abc
 import asyncio
@@ -45,7 +45,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import presences
 
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
 class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
@@ -296,11 +296,11 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
         activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
         idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
-        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
     ) -> None:
         await asyncio.gather(
             *(
-                s.update_presence(status=status, activity=activity, idle_since=idle_since, is_afk=is_afk)
+                s.update_presence(status=status, activity=activity, idle_since=idle_since, afk=afk)
                 for s in self._shards.values()
                 if s.is_alive
             )

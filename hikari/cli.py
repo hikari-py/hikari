@@ -23,8 +23,6 @@ import inspect
 import os
 import platform
 import sys
-
-# noinspection PyUnresolvedReferences
 import typing
 
 from hikari import _about

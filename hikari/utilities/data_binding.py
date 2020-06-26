@@ -18,7 +18,7 @@
 """Data binding utilities."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.Final[typing.Sequence[str]] = [
     "Headers",
     "Query",
     "JSONObject",
@@ -104,7 +104,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
         form of validation on the type. Use the `put*` methods instead.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def __init__(self) -> None:
         super().__init__()
@@ -169,7 +169,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
         form of validation on the type. Use the `put*` methods instead.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def __init__(self) -> None:
         super().__init__()

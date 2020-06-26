@@ -18,7 +18,7 @@
 """Base functionality for any HTTP-based network component."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["HTTPClient"]
+__all__: typing.Final[typing.Sequence[str]] = ["HTTPClient"]
 
 import abc
 import http
@@ -37,7 +37,6 @@ from hikari import errors
 from hikari.net import http_settings
 from hikari.utilities import data_binding
 
-
 try:
     # noinspection PyProtectedMember
     RequestContextManager = aiohttp.client._RequestContextManager
@@ -50,7 +49,7 @@ except NameError:
     RequestContextManager = typing.Any  # type: ignore
 
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net")
 
 
 class HTTPClient(abc.ABC):
@@ -75,7 +74,7 @@ class HTTPClient(abc.ABC):
         _logger on this class.
     """
 
-    __slots__ = (
+    __slots__: typing.Sequence[str] = (
         "_client_session",
         "_client_session_ref",
         "_config",
@@ -139,12 +138,13 @@ class HTTPClient(abc.ABC):
             The client session to use for requests.
         """
         if self._client_session is None:
-            connector = self._config.tcp_connector_factory() if self._config.tcp_connector_factory is not None else None
+            connector = self._config.tcp_connector if self._config.tcp_connector is not None else None
             self._client_session = aiohttp.ClientSession(
                 connector=connector,
                 trust_env=self._config.trust_env,
                 version=aiohttp.HttpVersion11,
                 json_serialize=json.dumps,
+                connector_owner=self._config.connector_owner if self._config.tcp_connector is not None else True,
             )
             self._client_session_ref = weakref.proxy(self._client_session)
             _LOGGER.debug("acquired new client session object %r", self._client_session)

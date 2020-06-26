@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["EntityFactoryComponentImpl"]
+__all__: typing.Final[typing.Sequence[str]] = ["EntityFactoryComponentImpl"]
 
 import datetime
 import typing
@@ -78,7 +78,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     This will convert objects to/from JSON compatible representations.
     """
 
-    def __init__(self, app: rest.IRESTApp) -> None:
+    def __init__(self, app: rest.IRESTClient) -> None:
         self._app = app
         self._audit_log_entry_converters: typing.Mapping[str, typing.Callable[[typing.Any], typing.Any]] = {
             audit_log_models.AuditLogChangeKey.OWNER_ID: snowflake.Snowflake,
@@ -140,7 +140,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
     @property
     @typing.final
-    def app(self) -> rest.IRESTApp:
+    def app(self) -> rest.IRESTClient:
         return self._app
 
     ######################
@@ -1836,3 +1836,42 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         voice_server_update.guild_id = snowflake.Snowflake(payload["guild_id"])
         voice_server_update.endpoint = payload["endpoint"]
         return voice_server_update
+
+    def serialize_gateway_presence(
+        self,
+        idle_since: typing.Union[undefined.UndefinedType, typing.Optional[datetime.datetime]] = undefined.UNDEFINED,
+        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        status: typing.Union[undefined.UndefinedType, presence_models.Status] = undefined.UNDEFINED,
+        activity: typing.Union[
+            undefined.UndefinedType, typing.Optional[presence_models.Activity]
+        ] = undefined.UNDEFINED,
+    ) -> data_binding.JSONObject:
+        if activity is not None and activity is not undefined.UNDEFINED:
+            game: typing.Union[undefined.UndefinedType, None, data_binding.JSONObject] = {
+                "name": activity.name,
+                "url": activity.url,
+                "type": activity.type,
+            }
+        else:
+            game = activity
+
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("since", idle_since, conversion=datetime.datetime.timestamp)
+        payload.put("afk", is_afk)
+        payload.put("status", status)
+        payload.put("game", game)
+        return payload
+
+    def serialize_gateway_voice_state_update(
+        self,
+        guild: typing.Union[guild_models.Guild, snowflake.UniqueObject],
+        channel: typing.Union[channel_models.GuildVoiceChannel, snowflake.UniqueObject, None],
+        self_mute: bool,
+        self_deaf: bool,
+    ) -> data_binding.JSONObject:
+        return {
+            "guild_id": str(int(guild)),
+            "channel_id": str(int(channel)) if channel is not None else None,
+            "self_mute": self_mute,
+            "self_deaf": self_deaf,
+        }

@@ -18,7 +18,7 @@
 """Core interface for components that consume raw API event payloads."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IEventConsumerComponent", "IEventConsumerApp"]
+__all__: typing.Final[typing.Sequence[str]] = ["IEventConsumerComponent", "IEventConsumerApp"]
 
 import abc
 import typing
@@ -40,7 +40,7 @@ class IEventConsumerComponent(component.IComponent, abc.ABC):
     separately if you are passing events onto a system such as a message queue.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
     async def consume_raw_event(
@@ -59,7 +59,7 @@ class IEventConsumerComponent(component.IComponent, abc.ABC):
         """
 
 
-class IEventConsumerApp(rest.IRESTApp, abc.ABC):
+class IEventConsumerApp(rest.IRESTClient, abc.ABC):
     """Application specialization that supports consumption of raw events.
 
     This may be combined with `IGatewayZookeeperApp` for most single-process
@@ -67,7 +67,7 @@ class IEventConsumerApp(rest.IRESTApp, abc.ABC):
     that consume events from a message queue, for example.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -79,6 +79,6 @@ class IEventConsumerApp(rest.IRESTApp, abc.ABC):
 
         Returns
         -------
-        IEventConsumerComponent
+        hikari.api.event_consumer.IEventConsumerComponent
             The event consumer implementation in-use.
         """

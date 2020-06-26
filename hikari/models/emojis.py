@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji"]
+__all__: typing.Final[typing.Sequence[str]] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji"]
 
 import abc
 import typing
@@ -95,6 +95,9 @@ class UnicodeEmoji(Emoji):
 
     name: str = attr.ib(eq=True, hash=True, repr=True)
     """The code points that form the emoji."""
+
+    def __str__(self) -> str:
+        return self.name
 
     @property
     @typing.final
@@ -213,7 +216,7 @@ class CustomEmoji(snowflake.Unique, Emoji):
         https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913
     """
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False, init=True)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False, init=True)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(
@@ -230,6 +233,9 @@ class CustomEmoji(snowflake.Unique, Emoji):
     Will be `None` when received in Message Reaction Remove and Message
     Reaction Remove Emoji events.
     """
+
+    def __str__(self) -> str:
+        return self.name if self.name is not None else f"Unnamed emoji ID {self.id}"
 
     @property
     def filename(self) -> str:

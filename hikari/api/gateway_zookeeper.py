@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IGatewayZookeeperApp"]
+__all__: typing.Final[typing.Sequence[str]] = ["IGatewayZookeeperApp"]
 
 import abc
 import typing
@@ -45,7 +45,7 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
     that feed new events into a message queue, for example.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -100,7 +100,7 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
         status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
         activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
         idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
-        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
     ) -> None:
         """Update the presence of the user for all shards.
 
@@ -113,8 +113,8 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
 
         !!! note
             If you wish to update a presence for a specific shard, you can do
-            this by using the `gateway_shards` `typing.Mapping` to find the
-            shard you wish to update.
+            this by using `gateway_shards` to find the shard you wish to
+            update.
 
         Parameters
         ----------
@@ -125,7 +125,7 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
         idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
             If defined, the time to show up as being idle since, or `None` if
             not applicable. If undefined, then it is not changed.
-        is_afk : bool or hikari.utilities.undefined.UndefinedType
+        afk : bool or hikari.utilities.undefined.UndefinedType
             If defined, `True` if the user should be marked as AFK,
             or `False` if not AFK.
         """

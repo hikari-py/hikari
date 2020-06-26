@@ -18,7 +18,7 @@
 """Core interface for a cache implementation."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["ICacheComponent"]
+__all__: typing.Final[typing.Sequence[str]] = ["ICacheComponent"]
 
 import abc
 
@@ -42,4 +42,4 @@ class ICacheComponent(component.IComponent, abc.ABC):
     for cross-process bots.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()

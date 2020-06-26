@@ -28,7 +28,7 @@
             return
 
         if fqn not in located_external_refs:
-            print("attempting to find intersphinx reference for", fqn)
+            # print("attempting to find intersphinx reference for", fqn)
             for base_url, inv in inventories.items():
                 for obj in inv.values():
                     if isinstance(obj, dict) and obj["name"] == fqn:
@@ -37,7 +37,7 @@
                             uri_frag = uri_frag[:-1] + fqn
 
                         url = base_url + uri_frag
-                        print("discovered", fqn, "at", url)
+                        # print("discovered", fqn, "at", url)
                         located_external_refs[fqn] = url
                         break
         try:
@@ -116,25 +116,21 @@
 
                 if getattr(dobj.obj, "__isabstractmethod__", False):
                     prefix = f"{QUAL_ABC} "
-                else:
-                    prefix = ""
 
-                prefix = "<small class='text-muted'><em>" + prefix + qual + "</em></small>"
+                prefix = "<small class='text-muted'><em>" + prefix + qual + "</em></small> "
 
             elif isinstance(dobj, pdoc.Variable):
                 if getattr(dobj.obj, "__isabstractmethod__", False):
                     prefix = f"{QUAL_ABC} "
-                else:
-                    prefix = ""
 
-                if hasattr(dobj.cls, "obj") and (descriptor := dobj.cls.obj.__dict__.get(dobj.name)) and isinstance(descriptor, property):
-                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_PROPERTY}</em></small>"
+                if hasattr(dobj.obj, "__get__"):
+                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_PROPERTY}</em></small> "
                 elif dobj.module.name == "typing" or dobj.docstring and dobj.docstring.casefold().startswith(("type hint", "typehint", "type alias")):
-                    prefix = F"<small class='text-muted'><em>{prefix}{QUAL_TYPEHINT} </em></small>"
+                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_TYPEHINT} </em></small> "
                 elif all(not c.isalpha() or c.isupper() for c in dobj.name):
-                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_CONST}</em></small>"
+                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_CONST}</em></small> "
                 else:
-                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_VAR}</em></small>"
+                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_VAR}</em></small> "
 
             elif isinstance(dobj, pdoc.Class):
                 qual = ""
@@ -205,14 +201,14 @@
 
         anchor = "" if not anchor else f'id="{dobj.refname}"'
 
-        return '{} <a title="{}" href="{}" {} {}>{}</a>'.format(prefix, dobj.name + " -- " + glimpse(dobj.docstring), url, anchor, class_str, name)
+        return '{}<a title="{}" href="{}" {} {}>{}</a>'.format(prefix, dobj.name + " -- " + glimpse(dobj.docstring), url, anchor, class_str, name)
 
     def simple_name(s):
         _, _, name = s.rpartition(".")
         return name
 
     def get_annotation(bound_method, sep=':'):
-        annot = bound_method(link=link) or 'typing.Any'
+        annot = bound_method(link=link)
         
         annot = annot.replace("NoneType", "None")
         # Remove quotes.
@@ -220,6 +216,7 @@
             annot = annot[1:-1]
         if annot:
             annot = ' ' + sep + '\N{NBSP}' + annot
+
         return annot
 
     def to_html(text):
@@ -270,6 +267,14 @@
         return_type = get_annotation(v.type_annotation)
         if return_type == "":
             parent = v.cls.obj if v.cls is not None else v.module.obj
+
+            if hasattr(parent, "mro"):
+                for cls in parent.mro():
+                    if hasattr(cls, "__annotations__") and v.name in cls.__annotations__:
+                        return_type = get_annotation(lambda *_, **__: cls.__annotations__[v.name])
+                        if return_type != "":
+                            break
+
             if hasattr(parent, "__annotations__") and v.name in parent.__annotations__:
                 return_type = get_annotation(lambda *_, **__: parent.__annotations__[v.name])
 
@@ -363,7 +368,7 @@
         params = c.params(annotate=show_type_annotations, link=link)
         example_str = f"{QUAL_CLASS} " + c.name + "(" + ", ".join(params) + ")"
 
-        if len(params) > 4 or len(example_str) > 70:
+        if len(params) > 4 or len(example_str) > 70 and len(params) > 0:
             representation = "\n".join((
                 f"{QUAL_CLASS} {c.name} (",
                 *(f"    {p}," for p in params),
@@ -444,11 +449,21 @@
                 <div class="sep"></div>
             % endif
 
-            % if class_vars:
-                <h5>Class variables</h5>
+            % if methods:
+                <h5>Instance methods</h5>
                 <dl>
-                    % for cv in class_vars:
-                        ${show_var(cv)}
+                    % for m in methods:
+                        ${show_func(m)}
+                    % endfor
+                </dl>
+                <div class="sep"></div>
+            % endif
+
+            % if inst_vars:
+                <h5>Instance variables and properties</h5>
+                <dl>
+                    % for i in inst_vars:
+                        ${show_var(i)}
                     % endfor
                 </dl>
                 <div class="sep"></div>
@@ -464,21 +479,11 @@
                 <div class="sep"></div>
             % endif
 
-            % if inst_vars:
-                <h5>Instance variables</h5>
+            % if class_vars:
+                <h5>Class variables and properties</h5>
                 <dl>
-                    % for i in inst_vars:
-                        ${show_var(i)}
-                    % endfor
-                </dl>
-                <div class="sep"></div>
-            % endif
-
-            % if methods:
-                <h5>Instance methods</h5>
-                <dl>
-                    % for m in methods:
-                        ${show_func(m)}
+                    % for cv in class_vars:
+                        ${show_var(cv)}
                     % endfor
                 </dl>
                 <div class="sep"></div>

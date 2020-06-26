@@ -19,7 +19,13 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["TargetUserType", "VanityURL", "InviteGuild", "Invite", "InviteWithMetadata"]
+__all__: typing.Final[typing.Sequence[str]] = [
+    "TargetUserType",
+    "VanityURL",
+    "InviteGuild",
+    "Invite",
+    "InviteWithMetadata",
+]
 
 import enum
 import typing
@@ -47,12 +53,15 @@ class TargetUserType(int, enum.Enum):
     STREAM = 1
     """This invite is targeting a "Go Live" stream."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class VanityURL:
     """A special case invite object, that represents a guild's vanity url."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
@@ -60,6 +69,9 @@ class VanityURL:
 
     uses: int = attr.ib(eq=False, hash=False, repr=True)
     """The amount of times this invite has been used."""
+
+    def __str__(self) -> str:
+        return f"https://discord.gg/{self.code}"
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -162,7 +174,7 @@ class InviteGuild(guilds.PartialGuild):
 class Invite:
     """Represents an invite that's used to add users to a guild or group dm."""
 
-    app: rest.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
@@ -214,6 +226,9 @@ class Invite:
     Invites endpoint.
     """
 
+    def __str__(self) -> str:
+        return f"https://discord.gg/{self.code}"
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class InviteWithMetadata(Invite):
@@ -232,7 +247,7 @@ class InviteWithMetadata(Invite):
     If set to `None` then this is unlimited.
     """
 
-    # FIXME: can we use a non-None value to represent infinity here somehow, or
+    # TODO: can we use a non-None value to represent infinity here somehow, or
     # make a timedelta that is infinite for comparisons?
     max_age: typing.Optional[datetime.timedelta] = attr.attrib(eq=False, hash=False, repr=False)
     """The timedelta of how long this invite will be valid for.

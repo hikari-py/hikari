@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["REST"]
+__all__: typing.Final[typing.Sequence[str]] = ["REST"]
 
 import asyncio
 import contextlib
@@ -47,7 +47,6 @@ from hikari.net import strings
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
-from hikari.utilities import reflect
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -68,7 +67,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import webhooks
 
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net.rest")
 
 
 # TODO: make a mechanism to allow me to share the same client session but
@@ -82,7 +81,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
     Parameters
     ----------
-    app : hikari.api.rest.IRESTApp
+    app : hikari.api.rest.IRESTClient
         The REST application containing all other application components
         that Hikari uses.
     config : hikari.net.http_settings.HTTPSettings
@@ -95,13 +94,14 @@ class REST(http_client.HTTPClient, component.IComponent):
         information useful for debugging this application. These logs will
         be written as DEBUG log entries. For most purposes, this should be
         left `False`.
+    global_ratelimit : hikari.net.rate_limits.ManualRateLimiter
+        The shared ratelimiter to use for the application.
     token : str or hikari.utilities.undefined.UndefinedType
         The bot or bearer token. If no token is to be used,
         this can be undefined.
     token_type : str or hikari.utilities.undefined.UndefinedType
         The type of token in use. If no token is used, this can be ignored and
-        left to the default value. This can be `"Bot"` or `"Bearer"`. The
-        default if not provided will be `"Bot"`.
+        left to the default value. This can be `"Bot"` or `"Bearer"`.
     rest_url : str
         The REST API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
@@ -109,7 +109,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         The API version to use.
     """
 
-    __slots__ = ("buckets", "global_rate_limit", "version", "_app", "_rest_url", "_token")
+    __slots__: typing.Sequence[str] = ("buckets", "global_rate_limit", "version", "_app", "_rest_url", "_token")
 
     buckets: buckets.RESTBucketManager
     """Bucket ratelimiter manager."""
@@ -122,22 +122,23 @@ class REST(http_client.HTTPClient, component.IComponent):
 
     @typing.final
     class _RetryRequest(RuntimeError):
-        __slots__ = ()
+        __slots__: typing.Sequence[str] = ()
 
     def __init__(
         self,
         *,
-        app: rest.IRESTApp,
+        app: rest.IRESTClient,
         config: http_settings.HTTPSettings,
-        debug: bool = False,
-        token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        token_type: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        rest_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        global_ratelimit: rate_limits.ManualRateLimiter,
+        debug: bool,
+        token: typing.Union[undefined.UndefinedType, str],
+        token_type: typing.Union[undefined.UndefinedType, str],
+        rest_url: typing.Union[undefined.UndefinedType, str],
         version: int,
     ) -> None:
         super().__init__(config=config, debug=debug)
         self.buckets = buckets.RESTBucketManager()
-        self.global_rate_limit = rate_limits.ManualRateLimiter()
+        self.global_rate_limit = global_ratelimit
         self.version = version
 
         self._app = app
@@ -159,7 +160,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
     @property
     @typing.final
-    def app(self) -> rest.IRESTApp:
+    def app(self) -> rest.IRESTClient:
         return self._app
 
     @typing.final
@@ -903,39 +904,6 @@ class REST(http_client.HTTPClient, component.IComponent):
         route = routes.DELETE_CHANNEL_PIN.compile(channel=channel, message=message)
         await self._request(route)
 
-    @typing.overload
-    def fetch_messages(
-        self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
-    ) -> iterators.LazyIterator[messages_.Message]:
-        """Fetch messages, newest first, sent in the given channel."""
-
-    @typing.overload
-    def fetch_messages(
-        self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        *,
-        before: typing.Union[datetime.datetime, snowflake.UniqueObject],
-    ) -> iterators.LazyIterator[messages_.Message]:
-        """Fetch messages, newest first, sent before a timestamp in the channel."""
-
-    @typing.overload
-    def fetch_messages(
-        self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        *,
-        around: typing.Union[datetime.datetime, snowflake.UniqueObject],
-    ) -> iterators.LazyIterator[messages_.Message]:
-        """Fetch messages sent around a given time in the channel."""
-
-    @typing.overload
-    def fetch_messages(
-        self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        *,
-        after: typing.Union[datetime.datetime, snowflake.UniqueObject],
-    ) -> iterators.LazyIterator[messages_.Message]:
-        """Fetch messages, oldest first, sent after a timestamp in the channel."""
-
     def fetch_messages(
         self,
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
@@ -1048,6 +1016,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
         *,
         embed: typing.Union[undefined.UndefinedType, embeds_.Embed] = undefined.UNDEFINED,
+        attachment: typing.Union[undefined.UndefinedType, str, files.Resource] = undefined.UNDEFINED,
         attachments: typing.Union[
             undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
         ] = undefined.UNDEFINED,
@@ -1068,6 +1037,9 @@ class REST(http_client.HTTPClient, component.IComponent):
             If specified, the message contents.
         embed : hikari.utilities.undefined.UndefinedType or hikari.models.embeds.Embed
             If specified, the message embed.
+        attachment : hikari.utilities.undefined.UndefinedType or str or hikari.utilities.files.Resource
+            If specified, the message attachment. This can be a resource,
+            or string of a path on your computer or a URL.
         attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[str or hikari.utilities.files.Resource]
             If specified, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
@@ -1109,11 +1081,19 @@ class REST(http_client.HTTPClient, component.IComponent):
             If the channel is not found.
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
+        ValueError
+            If more than 100 unique objects/entities are passed for
+            `role_mentions` or `user_mentions`.
+        TypeError
+            If both `attachment` and `attachments` are specified.
 
         !!! warning
             You are expected to make a connection to the gateway and identify
             once before being able to use this endpoint for a bot.
         """  # noqa: E501 - Line too long
+        if attachment is not undefined.UNDEFINED and attachments is not undefined.UNDEFINED:
+            raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
+
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
 
         body = data_binding.JSONObjectBuilder()
@@ -1122,17 +1102,18 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("nonce", nonce)
         body.put("tts", tts)
 
-        if attachments is undefined.UNDEFINED:
-            final_attachments: typing.List[files.Resource] = []
-        else:
-            final_attachments = [files.ensure_resource(a) for a in attachments]
+        final_attachments: typing.List[files.Resource] = []
+        if attachment is not undefined.UNDEFINED:
+            final_attachments.append(files.ensure_resource(attachment))
+        if attachments is not undefined.UNDEFINED:
+            final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
         if embed is not undefined.UNDEFINED:
             embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
             body.put("embed", embed_payload)
             final_attachments.extend(embed_attachments)
 
-        if attachments:
+        if final_attachments:
             form = data_binding.URLEncodedForm()
             form.add_field("payload_json", data_binding.dump_json(body), content_type=strings.APPLICATION_JSON)
 
@@ -1417,14 +1398,15 @@ class REST(http_client.HTTPClient, component.IComponent):
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         name: str,
         *,
-        avatar: typing.Union[undefined.UndefinedType, files.Resource] = undefined.UNDEFINED,
+        avatar: typing.Union[undefined.UndefinedType, files.Resource, str] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
-        route = routes.POST_WEBHOOK.compile(channel=channel)
+        route = routes.POST_CHANNEL_WEBHOOKS.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         if avatar is not undefined.UNDEFINED:
-            async with avatar.stream(executor=self._app.executor) as stream:
+            avatar_resouce = files.ensure_resource(avatar)
+            async with avatar_resouce.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)
@@ -1437,12 +1419,14 @@ class REST(http_client.HTTPClient, component.IComponent):
         *,
         token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
-        route = (
-            routes.GET_WEBHOOK.compile(webhook=webhook)
-            if token is undefined.UNDEFINED
-            else routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-        )
-        raw_response = await self._request(route)
+        if token is undefined.UNDEFINED:
+            route = routes.GET_WEBHOOK.compile(webhook=webhook)
+            no_auth = False
+        else:
+            route = routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+            no_auth = True
+
+        raw_response = await self._request(route, no_auth=no_auth)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_webhook(response)
 
@@ -1468,17 +1452,19 @@ class REST(http_client.HTTPClient, component.IComponent):
         *,
         token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        avatar: typing.Union[None, undefined.UndefinedType, files.Resource] = undefined.UNDEFINED,
+        avatar: typing.Union[None, undefined.UndefinedType, files.Resource, str] = undefined.UNDEFINED,
         channel: typing.Union[
             undefined.UndefinedType, channels.TextChannel, snowflake.UniqueObject
         ] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
-        route = (
-            routes.PATCH_WEBHOOK.compile(webhook=webhook)
-            if token is undefined.UNDEFINED
-            else routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-        )
+        if token is undefined.UNDEFINED:
+            route = routes.PATCH_WEBHOOK.compile(webhook=webhook)
+            no_auth = False
+        else:
+            route = routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+            no_auth = True
+
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put_snowflake("channel", channel)
@@ -1486,10 +1472,11 @@ class REST(http_client.HTTPClient, component.IComponent):
         if avatar is None:
             body.put("avatar", None)
         elif avatar is not undefined.UNDEFINED:
-            async with avatar.stream(executor=self._app.executor) as stream:
+            avatar_resource = files.ensure_resource(avatar)
+            async with avatar_resource.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
-        raw_response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, body=body, reason=reason, no_auth=no_auth)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_webhook(response)
 
@@ -1499,39 +1486,43 @@ class REST(http_client.HTTPClient, component.IComponent):
         *,
         token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
-        route = (
-            routes.DELETE_WEBHOOK.compile(webhook=webhook)
-            if token is undefined.UNDEFINED
-            else routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-        )
-        await self._request(route)
+        if token is undefined.UNDEFINED:
+            route = routes.DELETE_WEBHOOK.compile(webhook=webhook)
+            no_auth = False
+        else:
+            route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+            no_auth = True
+
+        await self._request(route, no_auth=no_auth)
 
     async def execute_webhook(
         self,
         webhook: typing.Union[webhooks.Webhook, snowflake.UniqueObject],
+        token: str,
         text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
         *,
-        token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         username: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         avatar_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         embeds: typing.Union[undefined.UndefinedType, typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        attachments: typing.Union[undefined.UndefinedType, typing.Sequence[files.Resource]] = undefined.UNDEFINED,
+        attachment: typing.Union[undefined.UndefinedType, str, files.Resource] = undefined.UNDEFINED,
+        attachments: typing.Union[
+            undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
+        ] = undefined.UNDEFINED,
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, snowflake.UniqueObject]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool] = True,
     ) -> messages_.Message:
-        if token is undefined.UNDEFINED:
-            route = routes.POST_WEBHOOK.compile(webhook=webhook)
-            no_auth = False
-        else:
-            route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-            no_auth = True
+        if attachment is not undefined.UNDEFINED and attachments is not undefined.UNDEFINED:
+            raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
-        if attachments is undefined.UNDEFINED:
-            final_attachments: typing.List[files.Resource] = []
-        else:
-            final_attachments = [files.ensure_resource(a) for a in attachments]
+        route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+
+        final_attachments: typing.List[files.Resource] = []
+        if attachment is not undefined.UNDEFINED:
+            final_attachments.append(files.ensure_resource(attachment))
+        if attachments is not undefined.UNDEFINED:
+            final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
         serialized_embeds = []
 
@@ -1548,7 +1539,8 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("username", username)
         body.put("avatar_url", avatar_url)
         body.put("tts", tts)
-        body.put("wait", True)
+        query = data_binding.StringMapBuilder()
+        query.put("wait", True)
 
         if final_attachments:
             form = data_binding.URLEncodedForm()
@@ -1563,11 +1555,11 @@ class REST(http_client.HTTPClient, component.IComponent):
                         f"file{i}", stream, filename=stream.filename, content_type=strings.APPLICATION_OCTET_STREAM
                     )
 
-                raw_response = await self._request(route, body=form, no_auth=no_auth)
+                raw_response = await self._request(route, query=query, body=form, no_auth=True)
             finally:
                 await stack.aclose()
         else:
-            raw_response = await self._request(route, body=body, no_auth=no_auth)
+            raw_response = await self._request(route, query=query, body=body, no_auth=True)
 
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_message(response)
@@ -1607,17 +1599,18 @@ class REST(http_client.HTTPClient, component.IComponent):
         self,
         *,
         username: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        avatar: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
+        avatar: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
     ) -> users.OwnUser:
         route = routes.PATCH_MY_USER.compile()
         body = data_binding.JSONObjectBuilder()
         body.put("username", username)
 
-        if isinstance(avatar, files.Resource):
-            async with avatar.stream(executor=self._app.executor) as stream:
+        if avatar is None:
+            body.put("avatar", None)
+        elif avatar is not undefined.UNDEFINED:
+            avatar_resouce = files.ensure_resource(avatar)
+            async with avatar_resouce.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
-        else:
-            body.put("avatar", avatar)
 
         raw_response = await self._request(route, body=body)
         response = typing.cast(data_binding.JSONObject, raw_response)
@@ -1749,7 +1742,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         self,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         name: str,
-        image: files.Resource,
+        image: typing.Union[files.Resource, str],
         *,
         roles: typing.Union[
             undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
@@ -1760,7 +1753,8 @@ class REST(http_client.HTTPClient, component.IComponent):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         if image is not undefined.UNDEFINED:
-            async with image.stream(executor=self._app.executor) as stream:
+            image_resource = files.ensure_resource(image)
+            async with image_resource.stream(executor=self._app.executor) as stream:
                 body.put("image", await stream.data_uri())
 
         body.put_snowflake_array("roles", roles)
@@ -1838,10 +1832,10 @@ class REST(http_client.HTTPClient, component.IComponent):
             undefined.UndefinedType, channels.GuildVoiceChannel, snowflake.UniqueObject
         ] = undefined.UNDEFINED,
         afk_timeout: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
-        icon: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
+        icon: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
         owner: typing.Union[undefined.UndefinedType, users.User, snowflake.UniqueObject] = undefined.UNDEFINED,
-        splash: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
-        banner: typing.Union[undefined.UndefinedType, None, files.Resource] = undefined.UNDEFINED,
+        splash: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
+        banner: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
         system_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
         rules_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
         public_updates_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
@@ -1863,24 +1857,27 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put_snowflake("rules_channel_id", rules_channel)
         body.put_snowflake("public_updates_channel_id", public_updates_channel)
 
-        # FIXME: gather these futures simultaneously for a 3x speedup...
+        # TODO: gather these futures simultaneously for a 3x speedup...
 
         if icon is None:
             body.put("icon", None)
         elif icon is not undefined.UNDEFINED:
-            async with icon.stream(executor=self._app.executor) as stream:
+            icon_resource = files.ensure_resource(icon)
+            async with icon_resource.stream(executor=self._app.executor) as stream:
                 body.put("icon", await stream.data_uri())
 
         if splash is None:
             body.put("splash", None)
         elif splash is not undefined.UNDEFINED:
-            async with splash.stream(executor=self._app.executor) as stream:
+            splash_resource = files.ensure_resource(splash)
+            async with splash_resource.stream(executor=self._app.executor) as stream:
                 body.put("splash", await stream.data_uri())
 
         if banner is None:
             body.put("banner", None)
         elif banner is not undefined.UNDEFINED:
-            async with banner.stream(executor=self._app.executor) as stream:
+            banner_resource = files.ensure_resource(banner)
+            async with banner_resource.stream(executor=self._app.executor) as stream:
                 body.put("banner", await stream.data_uri())
 
         raw_response = await self._request(route, body=body, reason=reason)

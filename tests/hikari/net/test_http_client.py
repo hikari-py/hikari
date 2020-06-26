@@ -59,10 +59,12 @@ class TestFinalizer:
 
 @pytest.mark.asyncio
 class TestAcquireClientSession:
-    async def test_acquire_creates_new_session_if_one_does_not_exist(self, client):
+    @pytest.mark.parametrize("connector_owner", [True, False])
+    async def test_acquire_creates_new_session_if_one_does_not_exist(self, client, connector_owner):
         client._config = http_settings.HTTPSettings()
-        client._config.tcp_connector_factory = mock.MagicMock()
+        client._config.tcp_connector = mock.MagicMock()
         client._config.trust_env = mock.MagicMock()
+        client._config.connector_owner = connector_owner
 
         client._client_session = None
         cs = client.get_client_session()
@@ -71,10 +73,11 @@ class TestAcquireClientSession:
         assert cs in weakref.getweakrefs(client._client_session), "did not return correct weakref"
 
         aiohttp.ClientSession.assert_called_once_with(
-            connector=client._config.tcp_connector_factory(),
+            connector=client._config.tcp_connector,
             trust_env=client._config.trust_env,
             version=aiohttp.HttpVersion11,
             json_serialize=json.dumps,
+            connector_owner=connector_owner,
         )
 
     async def test_acquire_repeated_calls_caches_client_session(self, client):

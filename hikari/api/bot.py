@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IBotApp"]
+__all__: typing.Final[typing.Sequence[str]] = ["IBotApp"]
 
 import abc
 import typing
@@ -40,7 +40,7 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
     Additionally, bots will contain a collection of Gateway client objects.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["RESTClient", "Bot"]
+__all__: typing.Final[typing.Sequence[str]] = ["RESTClientFactory", "Bot"]
 
 # noinspection PyUnresolvedReferences
 import typing
@@ -35,4 +35,4 @@ from hikari._about import __license__
 from hikari._about import __url__
 from hikari._about import __version__
 from hikari.impl.bot import BotAppImpl as Bot
-from hikari.impl.rest import RESTAppImpl as RESTClient
+from hikari.impl.rest import RESTClientFactoryImpl as RESTClientFactory

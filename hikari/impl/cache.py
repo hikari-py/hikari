@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["InMemoryCacheComponentImpl"]
+__all__: typing.Final[typing.Sequence[str]] = ["InMemoryCacheComponentImpl"]
 
 import typing
 
@@ -32,10 +32,10 @@ if typing.TYPE_CHECKING:
 class InMemoryCacheComponentImpl(cache.ICacheComponent):
     """In-memory cache implementation."""
 
-    def __init__(self, app: rest.IRESTApp) -> None:
+    def __init__(self, app: rest.IRESTClient) -> None:
         self._app = app
 
     @property
     @typing.final
-    def app(self) -> rest.IRESTApp:
+    def app(self) -> rest.IRESTClient:
         return self._app

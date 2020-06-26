@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.Final[typing.Sequence[str]] = [
     "HikariError",
     "HikariWarning",
     "NotFound",
@@ -53,7 +53,7 @@ class HikariError(RuntimeError):
         You should never initialize this exception directly.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({str(self)!r})"
@@ -68,7 +68,7 @@ class HikariWarning(RuntimeWarning):
         You should never initialize this warning directly.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
 
 class GatewayError(HikariError):
@@ -80,7 +80,7 @@ class GatewayError(HikariError):
         A string explaining the issue.
     """
 
-    __slots__ = ("reason",)
+    __slots__: typing.Sequence[str] = ("reason",)
 
     reason: str
     """A string to explain the issue."""
@@ -102,7 +102,7 @@ class GatewayClientClosedError(GatewayError):
         A string explaining the issue.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def __init__(self, reason: str = "The gateway client has been closed") -> None:
         super().__init__(reason)
@@ -117,17 +117,16 @@ class GatewayServerClosedConnectionError(GatewayError):
         A string explaining the issue.
     code : int or None
         The close code.
-
+    can_reconnect : bool
+        If `True`, a reconnect will occur after this is raised rather than
+        it being propagated to the caller. If `False`, this will be raised.
     """
 
-    __slots__ = ("code", "can_reconnect", "should_backoff")
+    __slots__: typing.Sequence[str] = ("code", "can_reconnect")
 
-    def __init__(
-        self, reason: str, code: typing.Optional[int] = None, can_reconnect: bool = False, should_backoff: bool = True,
-    ) -> None:
+    def __init__(self, reason: str, code: typing.Optional[int] = None, can_reconnect: bool = False) -> None:
         self.code = code
         self.can_reconnect = can_reconnect
-        self.should_backoff = should_backoff
         super().__init__(reason)
 
     def __str__(self) -> str:
@@ -145,7 +144,7 @@ class HTTPError(HikariError):
         The URL that produced this error.
     """
 
-    __slots__ = ("message", "url")
+    __slots__: typing.Sequence[str] = ("message", "url")
 
     message: str
     """The error message."""
@@ -174,7 +173,7 @@ class HTTPErrorResponse(HTTPError):
         The body that was received.
     """
 
-    __slots__ = ("status", "headers", "raw_body")
+    __slots__: typing.Sequence[str] = ("status", "headers", "raw_body")
 
     status: typing.Union[int, http.HTTPStatus]
     """The HTTP status code for the response."""
@@ -222,7 +221,7 @@ class ClientHTTPErrorResponse(HTTPErrorResponse):
     errors when encountered.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
 
 class BadRequest(ClientHTTPErrorResponse):
@@ -238,7 +237,7 @@ class BadRequest(ClientHTTPErrorResponse):
         The body that was received.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def __init__(self, url: str, headers: data_binding.Headers, raw_body: typing.AnyStr) -> None:
         status = http.HTTPStatus.BAD_REQUEST
@@ -260,7 +259,7 @@ class Unauthorized(ClientHTTPErrorResponse):
         The body that was received.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def __init__(self, url: str, headers: data_binding.Headers, raw_body: typing.AnyStr) -> None:
         status = http.HTTPStatus.UNAUTHORIZED
@@ -284,7 +283,7 @@ class Forbidden(ClientHTTPErrorResponse):
         The body that was received.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def __init__(self, url: str, headers: data_binding.Headers, raw_body: typing.AnyStr) -> None:
         status = http.HTTPStatus.FORBIDDEN
@@ -304,7 +303,7 @@ class NotFound(ClientHTTPErrorResponse):
         The body that was received.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def __init__(self, url: str, headers: data_binding.Headers, raw_body: typing.AnyStr) -> None:
         status = http.HTTPStatus.NOT_FOUND
@@ -354,7 +353,7 @@ class RateLimited(ClientHTTPErrorResponse):
         specific request.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     def __init__(
         self,
@@ -384,7 +383,7 @@ class ServerHTTPErrorResponse(HTTPErrorResponse):
     errors when encountered. If you get one of these, it isn't your fault!
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
 
 class IntentWarning(HikariWarning):
@@ -393,4 +392,4 @@ class IntentWarning(HikariWarning):
     This is caused by your application missing certain intents.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
