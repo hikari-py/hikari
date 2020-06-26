@@ -183,3 +183,6 @@ class Permission(enum.IntFlag):
 
     MANAGE_EMOJIS = 1 << 30
     """Allows management and editing of emojis."""
+
+    def __str__(self) -> str:
+        return self.name

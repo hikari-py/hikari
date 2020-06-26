@@ -95,6 +95,9 @@ class MessageType(int, enum.Enum):
     CHANNEL_FOLLOW_ADD = 12
     """Channel follow add."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @enum.unique
 @typing.final
@@ -119,6 +122,9 @@ class MessageFlag(enum.IntFlag):
     URGENT = 1 << 4
     """This message came from the urgent message system."""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @enum.unique
 @typing.final
@@ -139,6 +145,9 @@ class MessageActivityType(int, enum.Enum):
 
     JOIN_REQUEST = 5
     """Request to join an activity."""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
@@ -172,6 +181,9 @@ class Attachment(snowflake.Unique, files_.WebResource):
     width: typing.Optional[int] = attr.ib(repr=False)
     """The width of the image (if the file is an image)."""
 
+    def __str__(self) -> str:
+        return self.filename
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class Reaction:
@@ -185,6 +197,9 @@ class Reaction:
 
     is_reacted_by_me: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether the current user reacted using this emoji."""
+
+    def __str__(self) -> str:
+        return str(self.emoji)
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
@@ -314,6 +329,9 @@ class Message(snowflake.Unique):
 
     nonce: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The message nonce. This is a string used for validating a message was sent."""
+
+    def __str__(self) -> str:
+        return self.content
 
     async def fetch_channel(self) -> channels.PartialChannel:
         """Fetch the channel this message was created in.

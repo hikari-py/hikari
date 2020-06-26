@@ -82,6 +82,9 @@ class UserFlag(enum.IntFlag):
     VERIFIED_BOT_DEVELOPER = 1 << 17
     """Verified Bot Developer"""
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @enum.unique
 @typing.final
@@ -96,6 +99,9 @@ class PremiumType(int, enum.Enum):
 
     NITRO = 2
     """Premium including all perks (e.g. 2 server boosts)."""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -131,6 +137,9 @@ class PartialUser(snowflake.Unique):
 
     flags: typing.Union[UserFlag, undefined.UndefinedType] = attr.ib(eq=False, hash=False)
     """The public flags for this user."""
+
+    def __str__(self) -> str:
+        return f"{self.username}#{self.discriminator}"
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
