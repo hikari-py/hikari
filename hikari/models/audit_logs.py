@@ -328,8 +328,8 @@ class AuditLog:
     webhooks: typing.Mapping[snowflake.Snowflake, webhooks_.Webhook] = attr.ib(repr=False)
     """A mapping of the objects of webhooks found in this audit log."""
 
-    def __iter__(self) -> typing.Iterable[AuditLogEntry]:
-        return self.entries.values()
+    def __iter__(self) -> typing.Iterator[AuditLogEntry]:
+        return iter(self.entries.values())
 
     def __len__(self) -> int:
         return len(self.entries)

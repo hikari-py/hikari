@@ -34,7 +34,7 @@ class _UndefinedType:
         return False
 
     def __repr__(self) -> str:
-        return "<undefined value>"
+        return "UNDEFINED"
 
     def __str__(self) -> str:
         return "UNDEFINED"
