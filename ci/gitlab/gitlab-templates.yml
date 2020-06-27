@@ -30,6 +30,7 @@ include:
 ###
 dependency_scanning:
   artifacts:
+    expire_in: 3 days
     when: always
   interruptible: true
   retry: 1
@@ -50,6 +51,7 @@ dependency_scanning:
 ###
 license_scanning:
   artifacts:
+    expire_in: 3 days
     when: always
   interruptible: true
   retry: 1
@@ -67,6 +69,7 @@ license_scanning:
 ###
 sast:
   artifacts:
+    expire_in: 3 days
     when: always
   interruptible: true
   retry: 1
