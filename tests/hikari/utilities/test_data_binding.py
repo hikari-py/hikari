@@ -216,6 +216,11 @@ class TestJSONObjectBuilder:
         builder.put_snowflake_array("DESU!", [123, 456, 987, 115])
         assert builder == {"DESU!": ["123", "456", "987", "115"]}
 
+    def test_put_snowflake_array_undefined(self):
+        builder = data_binding.JSONObjectBuilder()
+        builder.put_snowflake_array("test", undefined.UNDEFINED)
+        assert builder == {}
+
 
 class TestCastJSONArray:
     def test_cast_is_invoked_with_each_item(self):

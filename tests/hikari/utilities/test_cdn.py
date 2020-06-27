@@ -39,3 +39,11 @@ def test_generate_cdn_url_with_invalid_size_out_of_limits():
 def test_generate_cdn_url_with_invalid_size_now_power_of_two():
     with pytest.raises(ValueError):
         cdn.generate_cdn_url("not", "a", "path", format_="neko", size=111)
+
+
+def test_get_default_avatar_index():
+    assert cdn.get_default_avatar_index("1234") == 4
+
+
+def test_get_default_avatar_url():
+    assert cdn.get_default_avatar_url("1234") == files.URL("https://cdn.discordapp.com/embed/avatars/4.png")

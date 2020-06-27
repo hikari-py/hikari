@@ -959,7 +959,7 @@ class TestEntityFactoryImpl:
                 "thumbnail": {},
                 "video": {},
                 "provider": {},
-                "author": {},
+                "author": {"name": "author name"},
                 "fields": [{"name": "title", "value": "some value"}],
             }
         )
@@ -975,7 +975,9 @@ class TestEntityFactoryImpl:
         # EmbedProvider
         assert embed.provider is None
         # EmbedAuthor
-        assert embed.author is None
+        assert embed.author.name == "author name"
+        assert embed.author.url is None
+        assert embed.author.icon is None
         # EmbedField
         assert len(embed.fields) == 1
         field = embed.fields[0]
@@ -1099,8 +1101,6 @@ class TestEntityFactoryImpl:
                 timestamp=datetime.datetime(2020, 5, 29, 20, 37, 22, 865139),
                 color=color_models.Color(321321),
                 footer=embed_models.EmbedFooter(),
-                image=None,
-                thumbnail=None,
                 author=embed_models.EmbedAuthor(),
             )
         )
@@ -1110,6 +1110,8 @@ class TestEntityFactoryImpl:
             "url": "https://some-url",
             "timestamp": "2020-05-29T20:37:22.865139",
             "color": 321321,
+            "author": {},
+            "footer": {},
         }
         assert resources == []
 
@@ -1400,7 +1402,7 @@ class TestEntityFactoryImpl:
                 "account": {"id": "6969", "name": "Blaze it"},
                 "enabled": True,
                 "syncing": False,
-                "role_id": "98494949",
+                "role_id": None,
                 "expire_behavior": 1,
                 "expire_grace_period": 7,
                 "user": user_payload,
@@ -1408,6 +1410,7 @@ class TestEntityFactoryImpl:
             }
         )
         assert integration.is_emojis_enabled is None
+        assert integration.role_id is None
         assert integration.last_synced_at is None
 
     @pytest.fixture()

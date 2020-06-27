@@ -583,7 +583,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             author.name = author_payload.get("name")
             author.url = author_payload.get("url")
 
-            if (icon_url := author_payload.get("icon_url")) is not None:
+            if icon_url := author_payload.get("icon_url"):
                 author.icon = embed_models.EmbedResource(resource=files.ensure_resource(icon_url))
                 author.icon.proxy_resource = files.ensure_resource(author_payload.get("proxy_icon_url"))
             else:
@@ -626,7 +626,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         if embed.color is not None:
             payload["color"] = int(embed.color)
 
-        if embed.footer:
+        if embed.footer is not None:
             footer_payload: data_binding.JSONObject = {}
 
             if embed.footer.text is not None:
@@ -640,7 +640,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
             payload["footer"] = footer_payload
 
-        if embed.image:
+        if embed.image is not None:
             image_payload: data_binding.JSONObject = {}
 
             if not isinstance(embed.image.resource, files.WebResource):
@@ -649,7 +649,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             image_payload["url"] = embed.image.url
             payload["image"] = image_payload
 
-        if embed.thumbnail:
+        if embed.thumbnail is not None:
             thumbnail_payload: data_binding.JSONObject = {}
 
             if not isinstance(embed.thumbnail.resource, files.WebResource):
@@ -658,7 +658,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             thumbnail_payload["url"] = embed.thumbnail.url
             payload["thumbnail"] = thumbnail_payload
 
-        if embed.author:
+        if embed.author is not None:
             author_payload: data_binding.JSONObject = {}
 
             if embed.author.name is not None:
@@ -838,7 +838,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild_integration.expire_grace_period = datetime.timedelta(days=payload["expire_grace_period"])
         guild_integration.user = self.deserialize_user(payload["user"])
 
-        if (last_synced_at := payload["synced_at"]) is not None:
+        if (last_synced_at := payload.get("synced_at")) is not None:
             last_synced_at = date.iso8601_datetime_string_to_datetime(last_synced_at)
         guild_integration.last_synced_at = last_synced_at
 

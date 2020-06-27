@@ -22,15 +22,17 @@ import pytest
 from hikari.utilities import snowflake
 
 
+@pytest.fixture()
+def raw_id():
+    return 537_340_989_808_050_216
+
+
+@pytest.fixture()
+def neko_snowflake(raw_id):
+    return snowflake.Snowflake(raw_id)
+
+
 class TestSnowflake:
-    @pytest.fixture()
-    def raw_id(self):
-        return 537_340_989_808_050_216
-
-    @pytest.fixture()
-    def neko_snowflake(self, raw_id):
-        return snowflake.Snowflake(raw_id)
-
     def test_created_at(self, neko_snowflake):
         assert neko_snowflake.created_at == datetime.datetime(
             2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc
@@ -84,3 +86,34 @@ class TestSnowflake:
         sf = snowflake.Snowflake.max()
         assert sf == (1 << 63) - 1
         assert snowflake.Snowflake.max() is sf
+
+
+class TestUnique:
+    @pytest.fixture
+    def neko_unique(self, neko_snowflake):
+        class NekoUnique(snowflake.Unique):
+            id = neko_snowflake
+
+        return NekoUnique()
+
+    def test_created_at(self, neko_unique):
+        assert neko_unique.created_at == datetime.datetime(
+            2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc
+        )
+
+    def test__hash__(self, neko_unique, raw_id):
+        assert hash(neko_unique) == raw_id
+
+    def test__eq__(self, neko_snowflake, raw_id):
+        class NekoUnique(snowflake.Unique):
+            id = neko_snowflake
+
+        class NekoUnique2(snowflake.Unique):
+            id = neko_snowflake
+
+        unique1 = NekoUnique()
+        unique2 = NekoUnique()
+
+        assert unique1 == unique2
+        assert unique1 != NekoUnique2()
+        assert unique1 != raw_id

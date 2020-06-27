@@ -122,6 +122,8 @@ class Class:
         ([Class()], __name__),
         ([Class, "Foooo", "bar", "123"], f"{__name__}.Foooo.bar.123"),
         ([Class(), "qux", "QUx", "940"], f"{__name__}.qux.QUx.940"),
+        (["test"], "test"),
+        (["test", "testing"], "test.testing"),
     ],
 )
 def test_get_logger(args, expected_name):
