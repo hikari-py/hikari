@@ -174,6 +174,23 @@ class IEventDispatcherBase(abc.ABC):
         `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
         """
 
+    def get_listeners(
+        self, event_type: typing.Type[EventT],
+    ) -> typing.Optional[typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]]:
+        """Get the listeners for a given event type, if there are any.
+
+        Parameters
+        ----------
+        event_type : typing.Type[T]
+            The event type to look for.
+
+        Returns
+        -------
+        typing.Optional[typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]
+            A copy of the collection of listeners for the event, or `None` if
+            none are registered.
+        """
+
     def has_listener(
         self,
         event_type: typing.Type[EventT],

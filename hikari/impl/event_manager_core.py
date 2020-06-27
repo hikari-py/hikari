@@ -111,6 +111,14 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
 
             return callback
 
+    def get_listeners(
+        self, event_type: typing.Type[EventT],
+    ) -> typing.Optional[typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]]:
+        items = self._listeners.get(event_type)
+        if items is not None:
+            return items[:]
+        return None
+
     def has_listener(
         self,
         event_type: typing.Type[EventT],
