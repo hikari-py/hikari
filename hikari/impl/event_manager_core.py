@@ -111,6 +111,15 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
 
             return callback
 
+    def has_listener(
+        self,
+        event_type: typing.Type[EventT],
+        callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
+    ) -> bool:
+        if event_type not in self._listeners:
+            return False
+        return callback in self._listeners[event_type]
+
     def unsubscribe(
         self,
         event_type: typing.Type[EventT],
