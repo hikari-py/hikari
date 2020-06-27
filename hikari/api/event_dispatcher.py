@@ -174,6 +174,13 @@ class IEventDispatcherBase(abc.ABC):
         `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
         """
 
+    def has_listener(
+        self,
+        event_type: typing.Type[EventT],
+        callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
+    ) -> bool:
+        """Returns `True` if the callback is subscribed for the given event."""
+
     @abc.abstractmethod
     def unsubscribe(
         self,
