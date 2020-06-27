@@ -21,7 +21,7 @@
 ###
 .test:
   artifacts:
-      expire_in: 2 days
+    expire_in: 2 days
     paths:
       - public/*.coverage
     reports:
