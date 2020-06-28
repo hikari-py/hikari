@@ -126,7 +126,7 @@ class IRESTClientFactory(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def acquire(self, token: str, token_type: str = strings.BEARER_TOKEN) -> IRESTClient:
+    def acquire(self, token: str, token_type: str = strings.BEARER_TOKEN) -> IRESTClientContextManager:
         """Acquire a REST client for the given authentication details.
 
         Parameters
