@@ -206,7 +206,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
                 members[team_member.user.id] = team_member
             team.members = members
 
-            team.owner_user_id = snowflake.Snowflake(team_payload["owner_user_id"])
+            team.owner_id = snowflake.Snowflake(team_payload["owner_user_id"])
             application.team = team
         else:
             application.team = None

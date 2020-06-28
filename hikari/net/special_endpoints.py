@@ -34,8 +34,6 @@ from hikari.net import routes
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import iterators
-from hikari.utilities import snowflake
-from hikari.utilities import snowflake as snowflake_
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -51,6 +49,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import permissions as permissions_
     from hikari.models import users
     from hikari.utilities import files
+    from hikari.utilities import snowflake
 
 
 @typing.final
@@ -66,7 +65,7 @@ class TypingIndicator:
 
     def __init__(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake_.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -277,7 +276,7 @@ class GuildBuilder:
         mentionable: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         permissions: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
         position: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-    ) -> snowflake_.Snowflake:
+    ) -> snowflake.Snowflake:
         """Create a role.
 
         !!! note
@@ -356,7 +355,7 @@ class GuildBuilder:
             undefined.UndefinedType, typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         nsfw: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-    ) -> snowflake_.Snowflake:
+    ) -> snowflake.Snowflake:
         """Create a category channel.
 
         Parameters
@@ -403,7 +402,7 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        parent_id: typing.Union[undefined.UndefinedType, snowflake_.Snowflake] = undefined.UNDEFINED,
+        parent_id: typing.Union[undefined.UndefinedType, snowflake.Snowflake] = undefined.UNDEFINED,
         topic: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         rate_limit_per_user: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
         position: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
@@ -411,7 +410,7 @@ class GuildBuilder:
             undefined.UndefinedType, typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         nsfw: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-    ) -> snowflake_.Snowflake:
+    ) -> snowflake.Snowflake:
         """Create a text channel.
 
         Parameters
@@ -470,7 +469,7 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        parent_id: typing.Union[undefined.UndefinedType, snowflake_.Snowflake] = undefined.UNDEFINED,
+        parent_id: typing.Union[undefined.UndefinedType, snowflake.Snowflake] = undefined.UNDEFINED,
         bitrate: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
         position: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
         permission_overwrites: typing.Union[
@@ -478,7 +477,7 @@ class GuildBuilder:
         ] = undefined.UNDEFINED,
         nsfw: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         user_limit: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-    ) -> snowflake_.Snowflake:
+    ) -> snowflake.Snowflake:
         """Create a voice channel.
 
         Parameters
@@ -532,10 +531,10 @@ class GuildBuilder:
         self._channels.append(payload)
         return snowflake_id
 
-    def _new_snowflake(self) -> snowflake_.Snowflake:
+    def _new_snowflake(self) -> snowflake.Snowflake:
         value = self._counter
         self._counter += 1
-        return snowflake_.Snowflake.from_data(datetime.datetime.now(tz=datetime.timezone.utc), 0, 0, value,)
+        return snowflake.Snowflake.from_data(datetime.datetime.now(tz=datetime.timezone.utc), 0, 0, value,)
 
 
 # We use an explicit forward reference for this, since this breaks potential
@@ -554,7 +553,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
         ],
         channel_id: str,
         direction: str,
-        first_id: str,
+        first_id: typing.Union[str, undefined.UndefinedType],
     ) -> None:
         super().__init__()
         self._app = app
@@ -601,7 +600,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
         super().__init__()
         self._app = app
         self._request_call = request_call
-        self._first_id = snowflake.Snowflake.min()
+        self._first_id = undefined.UNDEFINED
         self._route = routes.GET_REACTIONS.compile(channel=channel_id, message=message_id, emoji=emoji)
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[users.User, typing.Any, None]]:
@@ -678,7 +677,9 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild_id)
         self._request_call = request_call
         self._app = app
-        self._first_id = snowflake.Snowflake.min()
+        # This starts at the default provided by discord instead of the max snowflake
+        # because that caused discord to take about 2 seconds more to return the first response.
+        self._first_id = undefined.UNDEFINED
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.Member, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
@@ -710,13 +711,13 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
         guild_id: str,
-        before: str,
+        before: typing.Union[str, undefined.UndefinedType],
         user_id: typing.Union[str, undefined.UndefinedType],
         action_type: typing.Union[int, undefined.UndefinedType],
     ) -> None:
         self._action_type = action_type
         self._app = app
-        self._first_id = str(before)
+        self._first_id = before
         self._request_call = request_call
         self._route = routes.GET_GUILD_AUDIT_LOGS.compile(guild=guild_id)
         self._user_id = user_id
@@ -726,6 +727,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         query.put("limit", 100)
         query.put("user_id", self._user_id)
         query.put("event_type", self._action_type)
+        query.put("before", self._first_id)
 
         raw_response = await self._request_call(compiled_route=self._route, query=query)
         response = typing.cast(data_binding.JSONObject, raw_response)

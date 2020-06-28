@@ -28,6 +28,7 @@ ARTIFACT_DIRECTORY = "public"
 PAGES_DIRECTORY = "pages"
 DOCUMENTATION_DIRECTORY = "docs"
 ROOT_INDEX_SOURCE = "index.html"
+LOGO_SOURCE = "logo.png"
 
 # Linting and test configs.
 FLAKE8_JUNIT = "public/flake8-junit.xml"
