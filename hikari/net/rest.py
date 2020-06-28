@@ -27,6 +27,7 @@ import datetime
 import http
 import logging
 import math
+import time
 import typing
 import uuid
 
@@ -37,7 +38,6 @@ from hikari.models import embeds as embeds_
 from hikari.models import emojis
 from hikari.net import buckets
 from hikari.net import config
-from hikari.utilities import files
 from hikari.net import helpers
 from hikari.net import rate_limits
 from hikari.net import routes
@@ -45,6 +45,7 @@ from hikari.net import special_endpoints
 from hikari.net import strings
 from hikari.utilities import data_binding
 from hikari.utilities import date
+from hikari.utilities import files
 from hikari.utilities import iterators
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
@@ -64,7 +65,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import users
     from hikari.models import voices
     from hikari.models import webhooks
-
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net.rest")
 
@@ -244,7 +244,9 @@ class REST:
                     _LOGGER.debug("%s %s %s", uuid4, compiled_route.method, url)
 
                 # Make the request.
-                response = await self._acquire_client_session().request(
+                session = self._acquire_client_session()
+                start = time.perf_counter()
+                response = await session.request(
                     compiled_route.method,
                     url,
                     headers=headers,
@@ -257,21 +259,23 @@ class REST:
                     proxy_headers=self._proxy_settings.all_headers,
                     verify_ssl=self._http_settings.verify_ssl,
                 )
+                time_taken = (time.perf_counter() - start) * 1_000
 
                 if self._debug:
                     headers_str = "\n".join(
                         f"\t\t{name.decode('utf-8')}:{value.decode('utf-8')}" for name, value in response.raw_headers
                     )
                     _LOGGER.debug(
-                        "%s %s %s\n\theaders:\n%s\n\tbody:\n\t\t%r",
+                        "%s %s %s in %sms\n\theaders:\n%s\n\tbody:\n\t\t%r",
                         uuid4,
                         response.status,
                         response.reason,
+                        time_taken,
                         headers_str,
                         await response.read(),
                     )
                 else:
-                    _LOGGER.debug("%s %s %s", uuid4, response.status, response.reason)
+                    _LOGGER.debug("%s %s %s in %sms", uuid4, response.status, response.reason, time_taken)
 
                 # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
                 await self._parse_ratelimits(compiled_route, response)
@@ -2175,7 +2179,7 @@ class REST:
         *,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
-        route = routes.DELETE_GUILD_MEMBER.compile(guild=guild, user=user,)
+        route = routes.DELETE_GUILD_MEMBER.compile(guild=guild, user=user, )
         await self._request(route, reason=reason)
 
     async def ban_user(
