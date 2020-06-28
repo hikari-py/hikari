@@ -265,9 +265,6 @@ class OwnUser(User):
     scope. Will always be `None` for bot users.
     """
 
-    flags: UserFlag = attr.ib(eq=False, hash=False, repr=False)
-    """This user account's flags."""
-
     premium_type: typing.Optional[PremiumType] = attr.ib(eq=False, hash=False, repr=False)
     """The type of Nitro Subscription this user account had.
 
