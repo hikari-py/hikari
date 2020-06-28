@@ -116,8 +116,8 @@ class HTTPSettings:
     """
 
     max_redirects: int = 10
-    """The maximum number of redirects to allow. 
-    
+    """The maximum number of redirects to allow.
+
     If `allow_redirects` is `False`, then this is ignored.
     """
 
