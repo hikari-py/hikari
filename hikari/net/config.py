@@ -19,7 +19,12 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["BasicAuthHeader", "ProxySettings", "HTTPSettings"]
+__all__: typing.Final[typing.Sequence[str]] = [
+    "BasicAuthHeader",
+    "ProxySettings",
+    "HTTPTimeoutSettings",
+    "HTTPSettings",
+]
 
 import base64
 import typing
@@ -55,6 +60,8 @@ class BasicAuthHeader:
 
 @attr.s(slots=True, kw_only=True, auto_attribs=True)
 class ProxySettings:
+    """The proxy settings to use."""
+
     auth: typing.Optional[typing.Any] = None
     """An object that when cast to a string, yields the proxy auth header."""
 
@@ -76,7 +83,7 @@ class ProxySettings:
 
     @property
     def all_headers(self) -> typing.Optional[data_binding.Headers]:
-        """Returns all proxy headers."""
+        """Get all proxy headers."""
         if self.headers is None:
             if self.auth is None:
                 return None
@@ -109,6 +116,8 @@ class HTTPTimeoutSettings:
 
 @attr.s(slots=True, kw_only=True, auto_attribs=True)
 class HTTPSettings:
+    """Settings to control the HTTP client."""
+
     allow_redirects: bool = False
     """If `True`, allow following redirects from `3xx` HTTP responses.
 

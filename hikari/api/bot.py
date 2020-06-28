@@ -27,9 +27,6 @@ import typing
 from hikari.api import event_consumer
 from hikari.api import event_dispatcher
 
-if typing.TYPE_CHECKING:
-    pass
-
 
 class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatcherApp, abc.ABC):
     """Base for bot applications.

@@ -16,6 +16,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Pdoc documentation generation."""
+import os
+import shutil
+
 from ci import config
 from ci import nox
 
@@ -25,7 +28,7 @@ from ci import nox
 def pdoc(session: nox.Session) -> None:
     """Generate documentation with pdoc."""
     session.install("-r", "requirements.txt")
-    session.install("git+https://github.com/pdoc3/pdoc@83a8c400bcf9109d4753c46ad2f71a4e57114871")
+    session.install("pdoc3")
     session.install("sphobjinv")
 
     session.run(
@@ -39,4 +42,8 @@ def pdoc(session: nox.Session) -> None:
         "--template-dir",
         config.DOCUMENTATION_DIRECTORY,
         "--force",
+    )
+    shutil.copyfile(
+        os.path.join(config.DOCUMENTATION_DIRECTORY, config.LOGO_SOURCE),
+        os.path.join(config.ARTIFACT_DIRECTORY, config.LOGO_SOURCE),
     )

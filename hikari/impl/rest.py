@@ -25,7 +25,6 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.Sequence[str]] = ["RESTClientFactoryImpl", "RESTClientImpl"]
 
-import concurrent.futures
 import typing
 
 import aiohttp
@@ -39,6 +38,7 @@ from hikari.net import rest as rest_component
 from hikari.net import strings
 
 if typing.TYPE_CHECKING:
+    import concurrent.futures
     import types
 
     from hikari.api import cache as cache_
