@@ -34,6 +34,9 @@ an example. To do this, we append `()` onto the attribute name. For example,
 applying `author.username.islower()` to a `hikari.models.messages.Message`
 object.
 
+All expressions may start with a `.`. You can negate the whole expression
+by instead starting them with `!.`.
+
 You may also want to negate a condition. To do this, prepend `!` to the
 attribute name. For example, to check if a message was not made by a bot,
 you could run `author.!is_bot` on a `Message` object. Likewise, to check if
@@ -53,12 +56,22 @@ ReturnValueT = typing.TypeVar("ReturnValueT")
 
 
 class AttrGetter(typing.Generic[InputValueT, ReturnValueT]):
-    """An attribute getter that can resolve nested attributes and methods."""
+    """An attribute getter that can resolve nested attributes and methods.
 
-    __slots__: typing.Sequence[str] = ("pipeline",)
+    This follows the SPEL definition for how to define expressions. Expressions
+    may be preceeded with an optional `.` to aid in readability.
+    """
+
+    __slots__: typing.Sequence[str] = ("pipeline", "invert_all")
 
     def __init__(self, attr_name: str) -> None:
-        if attr_name.startswith("."):
+        self.invert_all = False
+
+        if attr_name.startswith("!."):
+            attr_name = attr_name[2:]
+            self.invert_all = True
+
+        elif attr_name.startswith("."):
             attr_name = attr_name[1:]
 
         self.pipeline: typing.List[typing.Callable[[typing.Any], typing.Any]] = []
@@ -90,4 +103,7 @@ class AttrGetter(typing.Generic[InputValueT, ReturnValueT]):
         for op in self.pipeline:
             result = op(result)
 
-        return typing.cast(ReturnValueT, result)
+        if self.invert_all:
+            return typing.cast(ReturnValueT, not result)
+        else:
+            return typing.cast(ReturnValueT, result)
