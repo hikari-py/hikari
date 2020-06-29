@@ -26,6 +26,7 @@ import asyncio
 import contextlib
 import datetime
 import logging
+import reprlib
 import signal
 import time
 import typing
@@ -217,11 +218,6 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
 
         await self._maybe_dispatch(other.StartingEvent())
 
-        if self._shard_count > 1:
-            _LOGGER.info("starting %s shard(s)", len(self._shards))
-        else:
-            _LOGGER.info("this application will be single-sharded")
-
         start_time = time.perf_counter()
 
         try:
@@ -265,7 +261,10 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
 
             finish_time = time.perf_counter()
             self._gather_task = asyncio.create_task(self._gather(), name=f"zookeeper for {len(self._shards)} shard(s)")
-            _LOGGER.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
+
+            # Don't bother logging this if we are single sharded. It is useless information.
+            if len(self._shard_ids) > 1:
+                _LOGGER.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
 
             await self._maybe_dispatch(other.StartedEvent())
 
@@ -317,23 +316,12 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
     async def _init(self) -> None:
         gw_recs = await self.fetch_sharding_settings()
 
-        _LOGGER.info(
-            "you have opened %s session(s) recently, you can open %s more before %s",
-            gw_recs.session_start_limit.total - gw_recs.session_start_limit.remaining,
-            gw_recs.session_start_limit.remaining if gw_recs.session_start_limit.remaining > 0 else "no",
-            (datetime.datetime.now() + gw_recs.session_start_limit.reset_after).strftime("%c"),
-        )
-
         self._shard_count = self._shard_count if self._shard_count else gw_recs.shard_count
         self._shard_ids = self._shard_ids if self._shard_ids else set(range(self._shard_count))
         self._max_concurrency = gw_recs.session_start_limit.max_concurrency
         url = gw_recs.url
 
-        _LOGGER.info(
-            "will connect shards to %s at a rate of %s shard(s) per 5 seconds (contact Discord to increase this rate)",
-            url,
-            self._max_concurrency,
-        )
+        reset_at = gw_recs.session_start_limit.reset_at.strftime("%d/%m/%y %H:%M:%S %Z").rstrip()
 
         shard_clients: typing.Dict[int, gateway.Gateway] = {}
         for shard_id in self._shard_ids:
@@ -358,6 +346,28 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
             shard_clients[shard_id] = shard
 
         self._shards = shard_clients
+
+        if len(self._shard_ids) == 1 and self._shard_ids == {0}:
+            _LOGGER.info(
+                "single-sharded configuration -- you have started %s/%s sessions prior to connecting (resets at %s)",
+                gw_recs.session_start_limit.used,
+                gw_recs.session_start_limit.total,
+                reset_at,
+            )
+        else:
+            _LOGGER.info(
+                "max_concurrency: %s (contact Discord for an increase) -- "
+                "will connect %s shards %s; the distributed application should have %s shards in total -- "
+                "you have started %s/%s sessions prior to connecting (resets at %s)",
+                url,
+                gw_recs.session_start_limit.max_concurrency,
+                len(self._shard_ids),
+                reprlib.repr(sorted(self._shard_ids)),
+                self._shard_count,
+                gw_recs.session_start_limit.used,
+                gw_recs.session_start_limit.total,
+                reset_at,
+            )
 
     def _max_concurrency_chunker(self) -> typing.Iterator[typing.Iterator[int]]:
         """Yield generators of shard IDs.
