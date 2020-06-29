@@ -496,9 +496,9 @@ class Gateway:
 
         Parameters
         ----------
-        guild : hikari.models.guilds.PartialGuild or hikari.utilities.snowflake.Snowflake or int or str
+        guild : hikari.models.guilds.PartialGuild or hikari.utilities.snowflake.UniqueObject
             The guild or guild ID to update the voice state for.
-        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.Snowflake or int or str or None
+        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.UniqueObject or None
             The channel or channel ID to update the voice state for. If `None`
             then the bot will leave the voice channel that it is in for the
             given guild.
@@ -716,7 +716,7 @@ class Gateway:
     def _dispatch(self, event_name: str, event: data_binding.JSONObject) -> asyncio.Task[None]:
         return asyncio.create_task(
             self._app.event_consumer.consume_raw_event(self, event_name, event),
-            name=f"gateway shard {self._shard_id} dispatch {event}",
+            name=f"gateway shard {self._shard_id} dispatch {event_name}",
         )
 
     @staticmethod
