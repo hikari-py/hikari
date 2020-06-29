@@ -28,6 +28,10 @@ from hikari.api import event_consumer
 from hikari.api import event_dispatcher
 
 
+if typing.TYPE_CHECKING:
+    import datetime
+
+
 class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatcherApp, abc.ABC):
     """Base for bot applications.
 
@@ -38,3 +42,21 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
     """
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def uptime(self) -> datetime.timedelta:
+        """Return how long the bot has been alive for.
+
+        If the application has not been started, then this will return
+        a `datetime.timedelta` of 0 seconds.
+        """
+
+    @property
+    @abc.abstractmethod
+    def started_at(self) -> typing.Optional[datetime.datetime]:
+        """Return the timestamp when the bot was started.
+
+        If the application has not been started, then this will return
+        `None`.
+        """
