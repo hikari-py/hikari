@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Internal utilities used by the REST API.
+"""Special endpoint implementations.
 
 You should never need to make any of these objects manually.
 """
@@ -33,18 +33,23 @@ import attr
 from hikari.net import routes
 from hikari.utilities import data_binding
 from hikari.utilities import date
-from hikari.utilities import snowflake as snowflake_
+from hikari.utilities import iterators
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import types
 
     from hikari.api import rest
+    from hikari.models import applications
+    from hikari.models import audit_logs
     from hikari.models import channels
     from hikari.models import colors
     from hikari.models import guilds
+    from hikari.models import messages
     from hikari.models import permissions as permissions_
+    from hikari.models import users
     from hikari.utilities import files
+    from hikari.utilities import snowflake
 
 
 @typing.final
@@ -60,7 +65,7 @@ class TypingIndicator:
 
     def __init__(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake_.UniqueObject],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -271,7 +276,7 @@ class GuildBuilder:
         mentionable: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         permissions: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
         position: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-    ) -> snowflake_.Snowflake:
+    ) -> snowflake.Snowflake:
         """Create a role.
 
         !!! note
@@ -327,9 +332,9 @@ class GuildBuilder:
         if not undefined.count(color, colour):
             raise TypeError("Cannot specify 'color' and 'colour' together.")
 
-        snowflake = self._new_snowflake()
+        snowflake_id = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
-        payload.put_snowflake("id", snowflake)
+        payload.put_snowflake("id", snowflake_id)
         payload.put("name", name)
         payload.put("color", color)
         payload.put("color", colour)
@@ -338,7 +343,7 @@ class GuildBuilder:
         payload.put("permissions", permissions)
         payload.put("position", position)
         self._roles.append(payload)
-        return snowflake
+        return snowflake_id
 
     def add_category(
         self,
@@ -350,7 +355,7 @@ class GuildBuilder:
             undefined.UndefinedType, typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         nsfw: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-    ) -> snowflake_.Snowflake:
+    ) -> snowflake.Snowflake:
         """Create a category channel.
 
         Parameters
@@ -375,9 +380,9 @@ class GuildBuilder:
             When the guild is created, this will be replaced with a different
             ID.
         """  # noqa: E501 - Line too long
-        snowflake = self._new_snowflake()
+        snowflake_id = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
-        payload.put_snowflake("id", snowflake)
+        payload.put_snowflake("id", snowflake_id)
         payload.put("name", name)
         payload.put("type", channels.ChannelType.GUILD_CATEGORY)
         payload.put("position", position)
@@ -390,14 +395,14 @@ class GuildBuilder:
         )
 
         self._channels.append(payload)
-        return snowflake
+        return snowflake_id
 
     def add_text_channel(
         self,
         name: str,
         /,
         *,
-        parent_id: typing.Union[undefined.UndefinedType, snowflake_.Snowflake] = undefined.UNDEFINED,
+        parent_id: typing.Union[undefined.UndefinedType, snowflake.Snowflake] = undefined.UNDEFINED,
         topic: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         rate_limit_per_user: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
         position: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
@@ -405,7 +410,7 @@ class GuildBuilder:
             undefined.UndefinedType, typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         nsfw: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-    ) -> snowflake_.Snowflake:
+    ) -> snowflake.Snowflake:
         """Create a text channel.
 
         Parameters
@@ -439,9 +444,9 @@ class GuildBuilder:
             When the guild is created, this will be replaced with a different
             ID.
         """  # noqa: E501 - Line too long
-        snowflake = self._new_snowflake()
+        snowflake_id = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
-        payload.put_snowflake("id", snowflake)
+        payload.put_snowflake("id", snowflake_id)
         payload.put("name", name)
         payload.put("type", channels.ChannelType.GUILD_TEXT)
         payload.put("topic", topic)
@@ -457,14 +462,14 @@ class GuildBuilder:
         )
 
         self._channels.append(payload)
-        return snowflake
+        return snowflake_id
 
     def add_voice_channel(
         self,
         name: str,
         /,
         *,
-        parent_id: typing.Union[undefined.UndefinedType, snowflake_.Snowflake] = undefined.UNDEFINED,
+        parent_id: typing.Union[undefined.UndefinedType, snowflake.Snowflake] = undefined.UNDEFINED,
         bitrate: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
         position: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
         permission_overwrites: typing.Union[
@@ -472,7 +477,7 @@ class GuildBuilder:
         ] = undefined.UNDEFINED,
         nsfw: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         user_limit: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-    ) -> snowflake_.Snowflake:
+    ) -> snowflake.Snowflake:
         """Create a voice channel.
 
         Parameters
@@ -506,9 +511,9 @@ class GuildBuilder:
             When the guild is created, this will be replaced with a different
             ID.
         """  # noqa: E501 - Line too long
-        snowflake = self._new_snowflake()
+        snowflake_id = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
-        payload.put_snowflake("id", snowflake)
+        payload.put_snowflake("id", snowflake_id)
         payload.put("name", name)
         payload.put("type", channels.ChannelType.GUILD_VOICE)
         payload.put("bitrate", bitrate)
@@ -524,9 +529,212 @@ class GuildBuilder:
         )
 
         self._channels.append(payload)
-        return snowflake
+        return snowflake_id
 
-    def _new_snowflake(self) -> snowflake_.Snowflake:
+    def _new_snowflake(self) -> snowflake.Snowflake:
         value = self._counter
         self._counter += 1
-        return snowflake_.Snowflake.from_data(datetime.datetime.now(tz=datetime.timezone.utc), 0, 0, value,)
+        return snowflake.Snowflake.from_data(datetime.datetime.now(tz=datetime.timezone.utc), 0, 0, value,)
+
+
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
+    """Implementation of an iterator for message history."""
+
+    __slots__: typing.Sequence[str] = ("_app", "_request_call", "_direction", "_first_id", "_route")
+
+    def __init__(
+        self,
+        app: rest.IRESTClient,
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
+        channel_id: str,
+        direction: str,
+        first_id: typing.Union[str, undefined.UndefinedType],
+    ) -> None:
+        super().__init__()
+        self._app = app
+        self._request_call = request_call
+        self._direction = direction
+        self._first_id = first_id
+        self._route = routes.GET_CHANNEL_MESSAGES.compile(channel=channel_id)
+
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[messages.Message, typing.Any, None]]:
+        query = data_binding.StringMapBuilder()
+        query.put(self._direction, self._first_id)
+        query.put("limit", 100)
+
+        raw_chunk = await self._request_call(compiled_route=self._route, query=query)
+        chunk = typing.cast(data_binding.JSONArray, raw_chunk)
+
+        if not chunk:
+            return None
+        if self._direction == "after":
+            chunk.reverse()
+
+        self._first_id = chunk[-1]["id"]
+        return (self._app.entity_factory.deserialize_message(m) for m in chunk)
+
+
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
+    """Implementation of an iterator for message reactions."""
+
+    __slots__: typing.Sequence[str] = ("_app", "_first_id", "_route", "_request_call")
+
+    def __init__(
+        self,
+        app: rest.IRESTClient,
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
+        channel_id: str,
+        message_id: str,
+        emoji: str,
+    ) -> None:
+        super().__init__()
+        self._app = app
+        self._request_call = request_call
+        self._first_id = undefined.UNDEFINED
+        self._route = routes.GET_REACTIONS.compile(channel=channel_id, message=message_id, emoji=emoji)
+
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[users.User, typing.Any, None]]:
+        query = data_binding.StringMapBuilder()
+        query.put("after", self._first_id)
+        query.put("limit", 100)
+
+        raw_chunk = await self._request_call(compiled_route=self._route, query=query)
+        chunk = typing.cast(data_binding.JSONArray, raw_chunk)
+
+        if not chunk:
+            return None
+
+        self._first_id = chunk[-1]["id"]
+        return (self._app.entity_factory.deserialize_user(u) for u in chunk)
+
+
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
+    """Implementation of an iterator for retrieving guilds you are in."""
+
+    __slots__: typing.Sequence[str] = ("_app", "_request_call", "_route", "_newest_first", "_first_id")
+
+    def __init__(
+        self,
+        app: rest.IRESTClient,
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
+        newest_first: bool,
+        first_id: str,
+    ) -> None:
+        super().__init__()
+        self._app = app
+        self._newest_first = newest_first
+        self._request_call = request_call
+        self._first_id = first_id
+        self._route = routes.GET_MY_GUILDS.compile()
+
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[applications.OwnGuild, typing.Any, None]]:
+        query = data_binding.StringMapBuilder()
+        query.put("before" if self._newest_first else "after", self._first_id)
+        query.put("limit", 100)
+
+        raw_chunk = await self._request_call(compiled_route=self._route, query=query)
+        chunk = typing.cast(data_binding.JSONArray, raw_chunk)
+
+        if not chunk:
+            return None
+
+        self._first_id = chunk[-1]["id"]
+        return (self._app.entity_factory.deserialize_own_guild(g) for g in chunk)
+
+
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
+    """Implementation of an iterator for retrieving members in a guild."""
+
+    __slots__: typing.Sequence[str] = ("_app", "_request_call", "_route", "_first_id")
+
+    def __init__(
+        self,
+        app: rest.IRESTClient,
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
+        guild_id: str,
+    ) -> None:
+        super().__init__()
+        self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild_id)
+        self._request_call = request_call
+        self._app = app
+        # This starts at the default provided by discord instead of the max snowflake
+        # because that caused discord to take about 2 seconds more to return the first response.
+        self._first_id = undefined.UNDEFINED
+
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.Member, typing.Any, None]]:
+        query = data_binding.StringMapBuilder()
+        query.put("after", self._first_id)
+        query.put("limit", 100)
+
+        raw_chunk = await self._request_call(compiled_route=self._route, query=query)
+        chunk = typing.cast(data_binding.JSONArray, raw_chunk)
+
+        if not chunk:
+            return None
+
+        # noinspection PyTypeChecker
+        self._first_id = chunk[-1]["user"]["id"]
+
+        return (self._app.entity_factory.deserialize_member(m) for m in chunk)
+
+
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
+    """Iterator implementation for an audit log."""
+
+    def __init__(
+        self,
+        app: rest.IRESTClient,
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
+        guild_id: str,
+        before: typing.Union[str, undefined.UndefinedType],
+        user_id: typing.Union[str, undefined.UndefinedType],
+        action_type: typing.Union[int, undefined.UndefinedType],
+    ) -> None:
+        self._action_type = action_type
+        self._app = app
+        self._first_id = before
+        self._request_call = request_call
+        self._route = routes.GET_GUILD_AUDIT_LOGS.compile(guild=guild_id)
+        self._user_id = user_id
+
+    async def __anext__(self) -> audit_logs.AuditLog:
+        query = data_binding.StringMapBuilder()
+        query.put("limit", 100)
+        query.put("user_id", self._user_id)
+        query.put("event_type", self._action_type)
+        query.put("before", self._first_id)
+
+        raw_response = await self._request_call(compiled_route=self._route, query=query)
+        response = typing.cast(data_binding.JSONObject, raw_response)
+
+        if not response["entries"]:
+            raise StopAsyncIteration
+
+        log = self._app.entity_factory.deserialize_audit_log(response)
+        self._first_id = str(min(log.entries.keys()))
+        return log

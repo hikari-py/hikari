@@ -46,9 +46,9 @@ from hikari.models import presences as presence_models
 from hikari.models import users as user_models
 from hikari.models import voices as voice_models
 from hikari.models import webhooks as webhook_models
+from hikari.utilities import files
 from hikari.net import gateway
 from hikari.utilities import date
-from hikari.utilities import files
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -206,7 +206,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
                 members[team_member.user.id] = team_member
             team.members = members
 
-            team.owner_user_id = snowflake.Snowflake(team_payload["owner_user_id"])
+            team.owner_id = snowflake.Snowflake(team_payload["owner_user_id"])
             application.team = team
         else:
             application.team = None
