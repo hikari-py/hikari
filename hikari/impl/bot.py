@@ -23,11 +23,13 @@ __all__: typing.Final[typing.Sequence[str]] = ["BotAppImpl"]
 
 import asyncio
 import contextlib
+import datetime
 import inspect
 import logging
 import os
 import platform
 import sys
+import time
 import typing
 
 from hikari.api import bot
@@ -41,11 +43,11 @@ from hikari.net import config
 from hikari.net import rate_limits
 from hikari.net import rest
 from hikari.net import strings
+from hikari.utilities import date
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
-    import datetime
 
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
@@ -203,6 +205,9 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
         self._global_ratelimit = rate_limits.ManualRateLimiter()
 
+        self._started_at_monotonic: typing.Optional[float] = None
+        self._started_at_timestamp: typing.Optional[datetime.datetime] = None
+
         self._executor = executor
 
         http_settings = config.HTTPSettings() if http_settings is None else http_settings
@@ -271,7 +276,19 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
     def rest(self) -> rest.REST:
         return self._rest
 
+    @property
+    def uptime(self) -> datetime.timedelta:
+        raw_uptime = time.perf_counter() - self._started_at_monotonic if self._started_at_monotonic is not None else 0.0
+        return datetime.timedelta(seconds=raw_uptime)
+
+    @property
+    def started_at(self) -> typing.Optional[datetime.datetime]:
+        return self._started_at_timestamp
+
     def start(self) -> typing.Coroutine[None, typing.Any, None]:
+        self._started_at_monotonic = time.perf_counter()
+        self._started_at_timestamp = date.local_datetime()
+
         if self._debug is True:
             _LOGGER.warning("debug mode is enabled, performance may be affected")
 
