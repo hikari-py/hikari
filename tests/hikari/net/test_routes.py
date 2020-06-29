@@ -15,3 +15,40 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import pytest
+import mock
+
+from hikari.net import routes
+
+
+class TestCompiledRoute:
+    @pytest.fixture
+    def compiled_route(self):
+        return routes.CompiledRoute(
+            major_param_hash="abc123", route=mock.Mock(method="GET"), compiled_path="/some/endpoint"
+        )
+
+    def test_method(self, compiled_route):
+        assert compiled_route.method == "GET"
+
+    def test_create_url(self, compiled_route):
+        assert compiled_route.create_url("https://some.url/api") == "https://some.url/api/some/endpoint"
+
+    def test_create_real_bucket_hash(self, compiled_route):
+        assert compiled_route.create_real_bucket_hash("UNKNOWN") == "UNKNOWN;abc123"
+
+    def test__str__(self, compiled_route):
+        assert str(compiled_route) == "GET /some/endpoint"
+
+
+class TestRoute:
+    @pytest.fixture
+    def route(self):
+        return routes.Route(method="GET", path_template="/some/endpoint/{channel}")
+
+    def test_compile(self, route):
+        expected = routes.CompiledRoute(route=route, compiled_path="/some/endpoint/1234", major_param_hash="1234")
+        assert route.compile(channel=1234) == expected
+
+    def test__str__(self, route):
+        assert str(route) == "/some/endpoint/{channel}"

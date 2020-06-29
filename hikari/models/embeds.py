@@ -46,15 +46,6 @@ def _maybe_color(value: typing.Optional[colors.ColorLike]) -> typing.Optional[co
     return colors.Color.of(value) if value is not None else None
 
 
-class _TruthyEmbedComponentMixin:
-    __slots__: typing.Sequence[str] = ()
-
-    __attrs_attrs__: typing.ClassVar[typing.Tuple[attr.Attribute, ...]]
-
-    def __bool__(self) -> bool:
-        return any(getattr(self, attrib.name, None) for attrib in self.__attrs_attrs__)
-
-
 @attr.s(eq=True, slots=True, kw_only=True)
 class EmbedResource(files.Resource):
     """A base type for any resource provided in an embed.
@@ -104,7 +95,7 @@ class EmbedResource(files.Resource):
 
 
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedFooter(_TruthyEmbedComponentMixin):
+class EmbedFooter:
     """Represents an embed footer."""
 
     text: typing.Optional[str] = attr.ib(default=None, repr=True)
@@ -115,7 +106,7 @@ class EmbedFooter(_TruthyEmbedComponentMixin):
 
 
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedImage(EmbedResource, _TruthyEmbedComponentMixin):
+class EmbedImage(EmbedResource):
     """Represents an embed image."""
 
     height: typing.Optional[int] = attr.ib(default=None, repr=False, init=False)
@@ -138,7 +129,7 @@ class EmbedImage(EmbedResource, _TruthyEmbedComponentMixin):
 
 
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedVideo(EmbedResource, _TruthyEmbedComponentMixin):
+class EmbedVideo(EmbedResource):
     """Represents an embed video.
 
     !!! note
@@ -158,7 +149,7 @@ class EmbedVideo(EmbedResource, _TruthyEmbedComponentMixin):
 
 
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedProvider(_TruthyEmbedComponentMixin):
+class EmbedProvider:
     """Represents an embed provider.
 
     !!! note
@@ -179,7 +170,7 @@ class EmbedProvider(_TruthyEmbedComponentMixin):
 
 
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)
-class EmbedAuthor(_TruthyEmbedComponentMixin):
+class EmbedAuthor:
     """Represents an author of an embed."""
 
     name: typing.Optional[str] = attr.ib(default=None, repr=True)

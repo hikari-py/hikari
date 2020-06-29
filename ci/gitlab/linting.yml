@@ -37,11 +37,10 @@
 flake8:
   allow_failure: true
   artifacts:
-    when: always
-    paths:
-      - public/flake8
+    expire_in: 2 days
     reports:
       junit: public/flake8-junit.xml
+    when: always
   extends: .lint
   script:
     - nox -s flake8 --no-error-on-external-run
@@ -66,6 +65,7 @@ mypy:
   script:
     - nox -s mypy --no-error-on-external-run
   artifacts:
+    expire_in: 2 days
     reports:
       junit: public/mypy.xml
     when: always

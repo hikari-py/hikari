@@ -22,6 +22,7 @@ from __future__ import annotations
 __all__: typing.Final[typing.Sequence[str]] = ["BotAppImpl"]
 
 import asyncio
+import contextlib
 import inspect
 import logging
 import os
@@ -36,7 +37,7 @@ from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
 from hikari.impl import stateless_cache as stateless_cache_impl
 from hikari.models import presences
-from hikari.net import http_settings as http_settings_
+from hikari.net import config
 from hikari.net import rate_limits
 from hikari.net import rest
 from hikari.net import strings
@@ -62,9 +63,6 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
 
     Parameters
     ----------
-    config : hikari.utilities.undefined.UndefinedType or hikari.net.http_settings.HTTPSettings
-        Optional aiohttp settings to apply to the REST components, gateway
-        shards, and voice websockets. If undefined, then sane defaults are used.
     debug : bool
         Defaulting to `False`, if `True`, then each payload sent and received
         on the gateway will be dumped to debug logs, and every REST API request
@@ -78,6 +76,8 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         The version of the gateway to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to using v6.
+    http_settings : hikari.net.config.HTTPSettings or None
+        The HTTP-related settings to use.
     initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
         The initial activity to have on each shard.
     initial_activity : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
@@ -108,18 +108,20 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
             Initializating logging means already have a handler in the root logger.
             This is usually achived by calling `logging.basicConfig` or adding the
             handler another way.
+    proxy_settings : hikari.net.config.ProxySettings or None
+        Settings to use for the proxy.
     rest_version : int
         The version of the REST API to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to v6.
-    shard_ids : typing.Set[int] or undefined.UndefinedType
+    shard_ids : typing.Set[int] or None
         A set of every shard ID that should be created and started on startup.
-        If left undefined along with `shard_count`, then auto-sharding is used
+        If left to `None` along with `shard_count`, then auto-sharding is used
         instead, which is the default.
-    shard_count : int or undefined.UndefinedType
-        The number of shards in the entire application. If left undefined along
-        with `shard_ids`, then auto-sharding is used instead, which is the
-        default.
+    shard_count : int or None
+        The number of shards in the entire application. If left to `None`
+        along with `shard_ids`, then auto-sharding is used instead, which is
+        the default.
     stateless : bool
         If `True`, the bot will not implement a cache, and will be considered
         stateless. If `False`, then a cache will be used (this is the default).
@@ -164,10 +166,11 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
     def __init__(
         self,
         *,
-        config: typing.Union[undefined.UndefinedType, http_settings_.HTTPSettings] = undefined.UNDEFINED,
         debug: bool = False,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
         gateway_compression: bool = True,
         gateway_version: int = 6,
+        http_settings: typing.Optional[config.HTTPSettings] = None,
         initial_activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
         initial_idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
         initial_is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
@@ -175,12 +178,12 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
         logging_level: typing.Union[str, int, None] = "INFO",
+        proxy_settings: typing.Optional[config.ProxySettings] = None,
         rest_version: int = 6,
-        rest_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        shard_ids: typing.Union[typing.Set[int], undefined.UndefinedType] = undefined.UNDEFINED,
-        shard_count: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
+        rest_url: typing.Optional[str] = None,
+        shard_ids: typing.Optional[typing.Set[int]] = None,
+        shard_count: typing.Optional[int] = None,
         stateless: bool = False,
-        thread_pool_executor: typing.Optional[concurrent.futures.Executor] = None,
         token: str,
     ) -> None:
         if logging_level is not None and not _LOGGER.hasHandlers():
@@ -189,11 +192,9 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
 
         self.__print_banner()
 
-        config = http_settings_.HTTPSettings() if config is undefined.UNDEFINED else config
-
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl()
-            _LOGGER.info("this application will be stateless! Cache-based operations will be unavailable!")
+            _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
             self._cache = cache_impl.InMemoryCacheComponentImpl(app=self)
 
@@ -202,32 +203,40 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
         self._global_ratelimit = rate_limits.ManualRateLimiter()
 
-        self._rest = rest.REST(  # noqa: S106 - Possible hardcoded password
-            app=self,
-            config=config,
-            debug=debug,
-            global_ratelimit=self._global_ratelimit,
-            token=token,
-            token_type=strings.BOT_TOKEN,  # nosec
-            rest_url=rest_url,
-            version=rest_version,
-        )
-        self._thread_pool_executor = thread_pool_executor
+        self._executor = executor
+
+        http_settings = config.HTTPSettings() if http_settings is None else http_settings
+        proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
 
         super().__init__(
-            config=config,
             debug=debug,
+            http_settings=http_settings,
             initial_activity=initial_activity,
             initial_idle_since=initial_idle_since,
             initial_is_afk=initial_is_afk,
             initial_status=initial_status,
             intents=intents,
             large_threshold=large_threshold,
+            proxy_settings=proxy_settings,
             shard_ids=shard_ids,
             shard_count=shard_count,
             token=token,
             compression=gateway_compression,
             version=gateway_version,
+        )
+
+        self._rest = rest.REST(  # noqa: S106 - Possible hardcoded password
+            app=self,
+            connector=None,
+            connector_owner=True,
+            debug=debug,
+            http_settings=self._http_settings,
+            global_ratelimit=self._global_ratelimit,
+            proxy_settings=self._proxy_settings,
+            token=token,
+            token_type=strings.BOT_TOKEN,  # nosec
+            rest_url=rest_url,
+            version=rest_version,
         )
 
     @property
@@ -243,25 +252,59 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         return self._entity_factory
 
     @property
+    def event_consumer(self) -> event_consumer_.IEventConsumerComponent:
+        return self._event_manager
+
+    @property
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
-        return self._thread_pool_executor
+        return self._executor
+
+    @property
+    def http_settings(self) -> config.HTTPSettings:
+        return self._http_settings
+
+    @property
+    def proxy_settings(self) -> config.ProxySettings:
+        return self._proxy_settings
 
     @property
     def rest(self) -> rest.REST:
         return self._rest
 
-    @property
-    def event_consumer(self) -> event_consumer_.IEventConsumerComponent:
-        return self._event_manager
+    def start(self) -> typing.Coroutine[None, typing.Any, None]:
+        if self._debug is True:
+            _LOGGER.warning("debug mode is enabled, performance may be affected")
 
-    @property
-    def http_settings(self) -> http_settings_.HTTPSettings:
-        return self._config
+            # If possible, set the coroutine origin tracking depth to a larger value.
+            # This feature is provisional, so don't hold your breath if it doesn't
+            # exist.
+            with contextlib.suppress(AttributeError, NameError):
+                # noinspection PyUnresolvedReferences
+                sys.set_coroutine_origin_tracking_depth(40)  # type: ignore[attr-defined]
+
+            # Set debugging on the event loop.
+            asyncio.get_event_loop().set_debug(True)
+
+        return super().start()
 
     def listen(
         self, event_type: typing.Union[undefined.UndefinedType, typing.Type[EventT]] = undefined.UNDEFINED,
     ) -> typing.Callable[[CallbackT], CallbackT]:
         return self.event_dispatcher.listen(event_type)
+
+    def get_listeners(
+        self, event_type: typing.Type[EventT], *, polymorphic: bool = True,
+    ) -> typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]:
+        return self.event_dispatcher.get_listeners(event_type, polymorphic=polymorphic)
+
+    def has_listener(
+        self,
+        event_type: typing.Type[EventT],
+        callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
+        *,
+        polymorphic: bool = True,
+    ) -> bool:
+        return self.event_dispatcher.has_listener(event_type, callback, polymorphic=polymorphic)
 
     def subscribe(
         self,
@@ -298,6 +341,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         from hikari import _about
 
         version = _about.__version__
+        # noinspection PyTypeChecker
         sourcefile = typing.cast(str, inspect.getsourcefile(_about))
         path = os.path.abspath(os.path.dirname(sourcefile))
         python_implementation = platform.python_implementation()

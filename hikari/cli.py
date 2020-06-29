@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Provides the `python -m hikari` and `hikari` commands to the shell."""
-
 from __future__ import annotations
 
 import inspect

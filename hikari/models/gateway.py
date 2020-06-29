@@ -25,11 +25,13 @@ import typing
 
 import attr
 
+from hikari.utilities import date
+
 if typing.TYPE_CHECKING:
     import datetime
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
 class SessionStartLimit:
     """Used to represent information about the current session start limits."""
 
@@ -56,8 +58,20 @@ class SessionStartLimit:
     more information.
     """
 
+    _created_at: datetime.datetime = attr.ib(factory=date.local_datetime, init=False)
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+    @property
+    def used(self) -> int:
+        """Return how many times you have sent an IDENTIFY in the window."""
+        return self.total - self.remaining
+
+    @property
+    def reset_at(self) -> datetime.datetime:
+        """Return the approximate time that the IDENTIFY limit resets at."""
+        return self._created_at + self.reset_after
+
+
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
 class GatewayBot:
     """Used to represent gateway information for the connected bot."""
 

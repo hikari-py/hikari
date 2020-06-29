@@ -17,6 +17,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 
+import mock
 import pytest
 
 from hikari.utilities import date as date_
@@ -133,3 +134,39 @@ def test_unix_epoch_to_datetime_with_out_of_range_negative_timestamp():
 )
 def test_timespan_to_int(input_value, expected_result):
     assert date_.timespan_to_int(input_value) == expected_result
+
+
+def test_utc_datetime():
+    current_datetime = datetime.datetime.now(tz=datetime.timezone.utc)
+
+    # We can't mock datetime normally as it is a C module :(
+    class datetime_module:
+        timezone = datetime.timezone
+
+        class datetime:
+            now = mock.MagicMock(return_value=current_datetime)
+
+    with mock.patch.object(date_, "datetime", datetime_module):
+        result = date_.utc_datetime()
+
+    datetime_module.datetime.now.assert_called_once_with(tz=datetime.timezone.utc)
+
+    assert result == current_datetime
+
+
+def test_local_datetime():
+    current_datetime = datetime.datetime.now(tz=datetime.timezone.utc)
+
+    # We can't mock datetime normally as it is a C module :(
+    class datetime_module:
+        timezone = datetime.timezone
+
+        class datetime:
+            now = mock.MagicMock(return_value=current_datetime)
+
+    with mock.patch.object(date_, "datetime", datetime_module):
+        result = date_.local_datetime()
+
+    datetime_module.datetime.now.assert_called_once_with(tz=datetime.timezone.utc)
+
+    assert result == current_datetime.astimezone()

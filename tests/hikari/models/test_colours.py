@@ -15,29 +15,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-
-from hikari.models import audit_logs
-
-
-def test_AuditLogChangeKey_str_operator():
-    change_key = audit_logs.AuditLogChangeKey("owner_id")
-    assert str(change_key) == "OWNER_ID"
+from hikari.models import colors
+from hikari.models import colours
 
 
-def test_AuditLogEventType_str_operator():
-    event_type = audit_logs.AuditLogEventType(80)
-    assert str(event_type) == "INTEGRATION_CREATE"
-
-
-def test_AuditLog_itter():
-    entry = audit_logs.AuditLogEntry()
-    entry.id = 1
-    entry2 = audit_logs.AuditLogEntry()
-    entry2.id = 2
-    entry3 = audit_logs.AuditLogEntry()
-    entry3.id = 3
-    audit_log = audit_logs.AuditLog()
-    audit_log.entries = {1: entry, 2: entry2, 3: entry3}
-
-    assert len(audit_log) == 3
-    assert [*audit_log] == [entry, entry2, entry3]
+def test_colours():
+    assert colors.Color is colours.Colour

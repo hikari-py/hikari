@@ -61,6 +61,7 @@ pdoc3:
 ###
 pages:
   artifacts:
+    expire_in: 2 days
     paths:
       - public/
   dependencies:

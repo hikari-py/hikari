@@ -15,9 +15,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import datetime
+
+import pytest
+import mock
 
 from hikari.models import channels
 from hikari.models import users
+from hikari.models import permissions
+from hikari.utilities import files
+from tests.hikari import hikari_test_helpers
 
 
 def test_ChannelType_str_operator():
@@ -68,3 +75,100 @@ def test_GroupDMChannel_str_operator_when_name_is_None():
     other_user.username = "nice"
     channel.recipients = {1: user, 2: other_user}
     assert str(channel) == "GroupDMChannel with: snoop#0420, nice#6969"
+
+
+def test_PermissionOverwrite_unset():
+    overwrite = channels.PermissionOverwrite(type=channels.PermissionOverwriteType.MEMBER)
+    overwrite.allow = permissions.Permission.CREATE_INSTANT_INVITE
+    overwrite.deny = permissions.Permission.CHANGE_NICKNAME
+    assert overwrite.unset == permissions.Permission(-67108866)
+
+
+@pytest.mark.asyncio
+async def test_TextChannel_send():
+    channel = channels.TextChannel()
+    channel.id = 123
+    channel.app = mock.Mock()
+    channel.app.rest.create_message = mock.AsyncMock()
+    mock_attachment = mock.Mock()
+    mock_embed = mock.Mock()
+    mock_attachments = [mock.Mock(), mock.Mock(), mock.Mock()]
+
+    await channel.send(
+        text="test content",
+        nonce="abc123",
+        tts=True,
+        attachment=mock_attachment,
+        attachments=mock_attachments,
+        embed=mock_embed,
+        mentions_everyone=False,
+        user_mentions=[123, 456],
+        role_mentions=[789, 567],
+    )
+
+    channel.app.rest.create_message.assert_called_once_with(
+        channel=123,
+        text="test content",
+        nonce="abc123",
+        tts=True,
+        attachment=mock_attachment,
+        attachments=mock_attachments,
+        embed=mock_embed,
+        mentions_everyone=False,
+        user_mentions=[123, 456],
+        role_mentions=[789, 567],
+    )
+
+
+@pytest.mark.asyncio
+async def test_TextChannel_history():
+    channel = channels.TextChannel()
+    channel.id = 123
+    channel.app = mock.Mock()
+    channel.app.rest.fetch_messages = mock.AsyncMock()
+
+    await channel.history(
+        before=datetime.datetime(2020, 4, 1, 1, 0, 0),
+        after=datetime.datetime(2020, 4, 1, 0, 0, 0),
+        around=datetime.datetime(2020, 4, 1, 0, 30, 0),
+    )
+
+    channel.app.rest.fetch_messages.assert_called_once_with(
+        123,
+        before=datetime.datetime(2020, 4, 1, 1, 0, 0),
+        after=datetime.datetime(2020, 4, 1, 0, 0, 0),
+        around=datetime.datetime(2020, 4, 1, 0, 30, 0),
+    )
+
+
+def test_GroupDMChannel_icon():
+    channel = hikari_test_helpers.unslot_class(channels.GroupDMChannel)()
+    channel.format_icon = mock.Mock(return_value="icon")
+
+    assert channel.icon == "icon"
+    channel.format_icon.assert_called_once()
+
+
+def test_GroupDMChannel_format_icon():
+    channel = channels.GroupDMChannel()
+    channel.id = 123
+    channel.icon_hash = "456abc"
+
+    assert channel.format_icon(format="jpeg", size=16) == files.URL(
+        "https://cdn.discordapp.com/channel-icons/123/456abc.jpeg?size=16"
+    )
+
+
+def test_GroupDMChannel_format_icon_without_optionals():
+    channel = channels.GroupDMChannel()
+    channel.id = 123
+    channel.icon_hash = "456abc"
+
+    assert channel.format_icon() == files.URL("https://cdn.discordapp.com/channel-icons/123/456abc.png?size=4096")
+
+
+def test_GroupDMChannel_format_icon_when_hash_is_None():
+    channel = channels.GroupDMChannel()
+    channel.icon_hash = None
+
+    assert channel.format_icon() is None

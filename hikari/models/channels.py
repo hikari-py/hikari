@@ -43,8 +43,8 @@ import attr
 
 from hikari.models import permissions
 from hikari.models import users
-from hikari.utilities import cdn
 from hikari.utilities import files
+from hikari.utilities import cdn
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -54,7 +54,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import embeds
     from hikari.models import guilds
     from hikari.models import messages
-    from hikari.net import iterators
+    from hikari.utilities import iterators
 
 
 @enum.unique
@@ -230,11 +230,11 @@ class TextChannel(PartialChannel, abc.ABC):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `False`.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str] or bool
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str] or bool
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -304,7 +304,7 @@ class TextChannel(PartialChannel, abc.ABC):
 
         Returns
         -------
-        hikari.net.iterators.LazyIterator[hikari.models.messages.Message]
+        hikari.utilities.iterators.LazyIterator[hikari.models.messages.Message]
             A lazy async iterator across the messages.
         """  # noqa: E501 - Line too long
         return self.app.rest.fetch_messages(self.id, before=before, after=after, around=around)

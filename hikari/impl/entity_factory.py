@@ -46,9 +46,9 @@ from hikari.models import presences as presence_models
 from hikari.models import users as user_models
 from hikari.models import voices as voice_models
 from hikari.models import webhooks as webhook_models
+from hikari.utilities import files
 from hikari.net import gateway
 from hikari.utilities import date
-from hikari.utilities import files
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -206,7 +206,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
                 members[team_member.user.id] = team_member
             team.members = members
 
-            team.owner_user_id = snowflake.Snowflake(team_payload["owner_user_id"])
+            team.owner_id = snowflake.Snowflake(team_payload["owner_user_id"])
             application.team = team
         else:
             application.team = None
@@ -583,7 +583,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             author.name = author_payload.get("name")
             author.url = author_payload.get("url")
 
-            if (icon_url := author_payload.get("icon_url")) is not None:
+            if icon_url := author_payload.get("icon_url"):
                 author.icon = embed_models.EmbedResource(resource=files.ensure_resource(icon_url))
                 author.icon.proxy_resource = files.ensure_resource(author_payload.get("proxy_icon_url"))
             else:
@@ -626,7 +626,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         if embed.color is not None:
             payload["color"] = int(embed.color)
 
-        if embed.footer:
+        if embed.footer is not None:
             footer_payload: data_binding.JSONObject = {}
 
             if embed.footer.text is not None:
@@ -640,7 +640,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
             payload["footer"] = footer_payload
 
-        if embed.image:
+        if embed.image is not None:
             image_payload: data_binding.JSONObject = {}
 
             if not isinstance(embed.image.resource, files.WebResource):
@@ -649,7 +649,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             image_payload["url"] = embed.image.url
             payload["image"] = image_payload
 
-        if embed.thumbnail:
+        if embed.thumbnail is not None:
             thumbnail_payload: data_binding.JSONObject = {}
 
             if not isinstance(embed.thumbnail.resource, files.WebResource):
@@ -658,7 +658,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             thumbnail_payload["url"] = embed.thumbnail.url
             payload["thumbnail"] = thumbnail_payload
 
-        if embed.author:
+        if embed.author is not None:
             author_payload: data_binding.JSONObject = {}
 
             if embed.author.name is not None:
@@ -731,19 +731,18 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ##################
 
     def deserialize_gateway_bot(self, payload: data_binding.JSONObject) -> gateway_models.GatewayBot:
-        gateway_bot = gateway_models.GatewayBot()
-        gateway_bot.url = payload["url"]
-        gateway_bot.shard_count = int(payload["shards"])
         session_start_limit_payload = payload["session_start_limit"]
-        session_start_limit = gateway_models.SessionStartLimit()
-        session_start_limit.total = int(session_start_limit_payload["total"])
-        session_start_limit.remaining = int(session_start_limit_payload["remaining"])
-        session_start_limit.reset_after = datetime.timedelta(milliseconds=session_start_limit_payload["reset_after"])
-        # I do not trust that this may never be zero for some unknown reason. If it was 0, it
-        # would hang the application on start up, so I enforce it is at least 1.
-        session_start_limit.max_concurrency = max(session_start_limit_payload.get("max_concurrency", 0), 1)
-        gateway_bot.session_start_limit = session_start_limit
-        return gateway_bot
+        session_start_limit = gateway_models.SessionStartLimit(
+            total=int(session_start_limit_payload["total"]),
+            remaining=int(session_start_limit_payload["remaining"]),
+            reset_after=datetime.timedelta(milliseconds=session_start_limit_payload["reset_after"]),
+            # I do not trust that this may never be zero for some unknown reason. If it was 0, it
+            # would hang the application on start up, so I enforce it is at least 1.
+            max_concurrency=max(session_start_limit_payload.get("max_concurrency", 0), 1),
+        )
+        return gateway_models.GatewayBot(
+            url=payload["url"], shard_count=int(payload["shards"]), session_start_limit=session_start_limit,
+        )
 
     ################
     # GUILD MODELS #
@@ -838,7 +837,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild_integration.expire_grace_period = datetime.timedelta(days=payload["expire_grace_period"])
         guild_integration.user = self.deserialize_user(payload["user"])
 
-        if (last_synced_at := payload["synced_at"]) is not None:
+        if (last_synced_at := payload.get("synced_at")) is not None:
             last_synced_at = date.iso8601_datetime_string_to_datetime(last_synced_at)
         guild_integration.last_synced_at = last_synced_at
 

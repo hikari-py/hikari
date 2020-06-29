@@ -27,26 +27,26 @@ import datetime
 import http
 import logging
 import math
+import time
 import typing
 import uuid
 
 import aiohttp
 
 from hikari import errors
-from hikari.api import component
 from hikari.models import embeds as embeds_
 from hikari.models import emojis
 from hikari.net import buckets
-from hikari.net import http_client
-from hikari.net import http_settings
-from hikari.net import iterators
+from hikari.net import config
+from hikari.net import helpers
 from hikari.net import rate_limits
-from hikari.net import rest_utils
 from hikari.net import routes
+from hikari.net import special_endpoints
 from hikari.net import strings
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
+from hikari.utilities import iterators
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -66,13 +66,12 @@ if typing.TYPE_CHECKING:
     from hikari.models import voices
     from hikari.models import webhooks
 
-
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net.rest")
 
 
 # TODO: make a mechanism to allow me to share the same client session but
 # use various tokens for REST-only apps.
-class REST(http_client.HTTPClient, component.IComponent):
+class REST:
     """Implementation of the V6 and V7-compatible Discord REST API.
 
     This manages making HTTP/1.1 requests to the API and using the entity
@@ -84,10 +83,6 @@ class REST(http_client.HTTPClient, component.IComponent):
     app : hikari.api.rest.IRESTClient
         The REST application containing all other application components
         that Hikari uses.
-    config : hikari.net.http_settings.HTTPSettings
-        The AIOHTTP-specific configuration settings. This is used to configure
-        proxies, and specify TCP connectors to control the size of HTTP
-        connection pools, etc.
     debug : bool
         If `True`, this will enable logging of each payload sent and received,
         as well as information such as DNS cache hits and misses, and other
@@ -109,7 +104,20 @@ class REST(http_client.HTTPClient, component.IComponent):
         The API version to use.
     """
 
-    __slots__: typing.Sequence[str] = ("buckets", "global_rate_limit", "version", "_app", "_rest_url", "_token")
+    __slots__: typing.Sequence[str] = (
+        "buckets",
+        "global_rate_limit",
+        "version",
+        "_app",
+        "_client_session",
+        "_connector",
+        "_connector_owner",
+        "_debug",
+        "_http_settings",
+        "_proxy_settings",
+        "_rest_url",
+        "_token",
+    )
 
     buckets: buckets.RESTBucketManager
     """Bucket ratelimiter manager."""
@@ -128,51 +136,70 @@ class REST(http_client.HTTPClient, component.IComponent):
         self,
         *,
         app: rest.IRESTClient,
-        config: http_settings.HTTPSettings,
-        global_ratelimit: rate_limits.ManualRateLimiter,
+        connector: typing.Optional[aiohttp.BaseConnector],
+        connector_owner: bool,
         debug: bool,
-        token: typing.Union[undefined.UndefinedType, str],
-        token_type: typing.Union[undefined.UndefinedType, str],
-        rest_url: typing.Union[undefined.UndefinedType, str],
+        global_ratelimit: rate_limits.ManualRateLimiter,
+        http_settings: config.HTTPSettings,
+        proxy_settings: config.ProxySettings,
+        token: typing.Optional[str],
+        token_type: typing.Optional[str],
+        rest_url: typing.Optional[str],
         version: int,
     ) -> None:
-        super().__init__(config=config, debug=debug)
         self.buckets = buckets.RESTBucketManager()
         self.global_rate_limit = global_ratelimit
         self.version = version
 
         self._app = app
+        self._client_session: typing.Optional[aiohttp.ClientSession] = None
+        self._connector = connector
+        self._connector_owner = connector_owner
+        self._debug = debug
+        self._http_settings = http_settings
+        self._proxy_settings = proxy_settings
 
-        if token is undefined.UNDEFINED:
+        if token is None:
             full_token = None
         else:
-            if token_type is undefined.UNDEFINED:
+            if token_type is None:
                 token_type = strings.BOT_TOKEN
 
             full_token = f"{token_type.title()} {token}"
 
         self._token: typing.Optional[str] = full_token
 
-        if rest_url is undefined.UNDEFINED:
+        if rest_url is None:
             rest_url = strings.REST_API_URL
 
         self._rest_url = rest_url.format(self)
 
-    @property
     @typing.final
-    def app(self) -> rest.IRESTClient:
-        return self._app
+    def _acquire_client_session(self) -> aiohttp.ClientSession:
+        if self._client_session is None:
+            self._client_session = aiohttp.ClientSession(
+                connector=self._connector,
+                version=aiohttp.HttpVersion11,
+                timeout=aiohttp.ClientTimeout(
+                    total=self._http_settings.timeouts.total,
+                    connect=self._http_settings.timeouts.acquire_and_connect,
+                    sock_read=self._http_settings.timeouts.request_socket_read,
+                    sock_connect=self._http_settings.timeouts.request_socket_connect,
+                ),
+                trust_env=self._proxy_settings.trust_env,
+            )
+
+        return self._client_session
 
     @typing.final
     async def _request(
         self,
         compiled_route: routes.CompiledRoute,
         *,
-        query: typing.Union[undefined.UndefinedType, None, data_binding.StringMapBuilder] = undefined.UNDEFINED,
-        body: typing.Union[
-            undefined.UndefinedType, None, aiohttp.FormData, data_binding.JSONObjectBuilder, data_binding.JSONArray
-        ] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        query: typing.Optional[data_binding.StringMapBuilder] = None,
+        form: typing.Optional[aiohttp.FormData] = None,
+        json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
+        reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
         no_auth: bool = False,
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
         # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
@@ -187,95 +214,95 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         headers = data_binding.StringMapBuilder()
         headers.setdefault(strings.USER_AGENT_HEADER, strings.HTTP_USER_AGENT)
-
-        headers.put(strings.X_RATELIMIT_PRECISION_HEADER, "millisecond")
-        headers.put(strings.ACCEPT_HEADER, strings.APPLICATION_JSON)
+        headers.put(strings.X_RATELIMIT_PRECISION_HEADER, strings.MILLISECOND_PRECISION)
 
         if self._token is not None and not no_auth:
             headers[strings.AUTHORIZATION_HEADER] = self._token
 
-        if body is undefined.UNDEFINED:
-            body = None
-
         headers.put(strings.X_AUDIT_LOG_REASON_HEADER, reason)
-
-        if query is undefined.UNDEFINED:
-            query = None
 
         while True:
             try:
-                # Moved to a separate method to keep branch counts down.
-                return await self._request_once(compiled_route=compiled_route, headers=headers, body=body, query=query)
+                url = compiled_route.create_url(self._rest_url)
+
+                # Wait for any rate-limits to finish.
+                await asyncio.gather(self.buckets.acquire(compiled_route), self.global_rate_limit.acquire())
+
+                uuid4 = str(uuid.uuid4())
+
+                if self._debug:
+                    headers_str = "\n".join(f"\t\t{name}:{value}" for name, value in headers.items())
+                    _LOGGER.debug(
+                        "%s %s %s\n\theaders:\n%s\n\tbody:\n\t\t%r",
+                        uuid4,
+                        compiled_route.method,
+                        url,
+                        headers_str,
+                        json,
+                    )
+                else:
+                    _LOGGER.debug("%s %s %s", uuid4, compiled_route.method, url)
+
+                # Make the request.
+                session = self._acquire_client_session()
+                start = time.perf_counter()
+                response = await session.request(
+                    compiled_route.method,
+                    url,
+                    headers=headers,
+                    params=query,
+                    json=json,
+                    data=form,
+                    allow_redirects=self._http_settings.allow_redirects,
+                    max_redirects=self._http_settings.max_redirects,
+                    proxy=self._proxy_settings.url,
+                    proxy_headers=self._proxy_settings.all_headers,
+                    verify_ssl=self._http_settings.verify_ssl,
+                )
+                time_taken = (time.perf_counter() - start) * 1_000
+
+                if self._debug:
+                    headers_str = "\n".join(
+                        f"\t\t{name.decode('utf-8')}:{value.decode('utf-8')}" for name, value in response.raw_headers
+                    )
+                    _LOGGER.debug(
+                        "%s %s %s in %sms\n\theaders:\n%s\n\tbody:\n\t\t%r",
+                        uuid4,
+                        response.status,
+                        response.reason,
+                        time_taken,
+                        headers_str,
+                        await response.read(),
+                    )
+                else:
+                    _LOGGER.debug("%s %s %s in %sms", uuid4, response.status, response.reason, time_taken)
+
+                # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
+                await self._parse_ratelimits(compiled_route, response)
+
+                # Don't bother processing any further if we got NO CONTENT. There's not anything
+                # to check.
+                if response.status == http.HTTPStatus.NO_CONTENT:
+                    return None
+
+                # Handle the response.
+                if 200 <= response.status < 300:
+                    if response.content_type == strings.APPLICATION_JSON:
+                        # Only deserializing here stops Cloudflare shenanigans messing us around.
+                        return data_binding.load_json(await response.read())
+
+                    real_url = str(response.real_url)
+                    raise errors.HTTPError(real_url, f"Expected JSON response but received {response.content_type}")
+
+                return await self._handle_error_response(response)
+
             except self._RetryRequest:
                 pass
-
-    @typing.final
-    async def _request_once(
-        self,
-        compiled_route: routes.CompiledRoute,
-        headers: data_binding.Headers,
-        body: typing.Union[None, aiohttp.FormData, data_binding.JSONArray, data_binding.JSONObject],
-        query: typing.Union[None, data_binding.StringMapBuilder],
-    ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
-        url = compiled_route.create_url(self._rest_url)
-
-        # Wait for any ratelimits to finish.
-        await asyncio.gather(self.buckets.acquire(compiled_route), self.global_rate_limit.acquire())
-
-        uuid4 = str(uuid.uuid4())
-
-        if self._debug:
-            headers_str = "\n".join(f"\t\t{name}:{value}" for name, value in headers.items())
-            _LOGGER.debug(
-                "%s %s %s\n\theaders:\n%s\n\tbody:\n\t\t%r", uuid4, compiled_route.method, url, headers_str, body
-            )
-        else:
-            _LOGGER.debug("%s %s %s", uuid4, compiled_route.method, url)
-
-        # Make the request.
-        # noinspection PyUnresolvedReferences
-        response = await self._perform_request(
-            method=compiled_route.method, url=url, headers=headers, body=body, query=query
-        )
-
-        if self._debug:
-            headers_str = "\n".join(
-                f"\t\t{name.decode('utf-8')}:{value.decode('utf-8')}" for name, value in response.raw_headers
-            )
-            _LOGGER.debug(
-                "%s %s %s\n\theaders:\n%s\n\tbody:\n\t\t%r",
-                uuid4,
-                response.status,
-                response.reason,
-                headers_str,
-                await response.read(),
-            )
-        else:
-            _LOGGER.debug("%s %s %s", uuid4, response.status, response.reason)
-
-        # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
-        await self._parse_ratelimits(compiled_route, response)
-
-        # Don't bother processing any further if we got NO CONTENT. There's not anything
-        # to check.
-        if response.status == http.HTTPStatus.NO_CONTENT:
-            return None
-
-        # Handle the response.
-        if 200 <= response.status < 300:
-            if response.content_type == strings.APPLICATION_JSON:
-                # Only deserializing here stops Cloudflare shenanigans messing us around.
-                return data_binding.load_json(await response.read())
-
-            real_url = str(response.real_url)
-            raise errors.HTTPError(real_url, f"Expected JSON response but received {response.content_type}")
-
-        return await self._handle_error_response(response)
 
     @staticmethod
     @typing.final
     async def _handle_error_response(response: aiohttp.ClientResponse) -> typing.NoReturn:
-        raise await http_client.generate_error_response(response)
+        raise await helpers.generate_error_response(response)
 
     @typing.final
     async def _parse_ratelimits(self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse) -> None:
@@ -403,7 +430,8 @@ class REST(http_client.HTTPClient, component.IComponent):
     @typing.final
     async def close(self) -> None:
         """Close the REST client and any open HTTP connections."""
-        await super().close()
+        if self._client_session is not None:
+            await self._client_session.close()
         self.buckets.close()
 
     async def fetch_channel(
@@ -413,7 +441,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to fetch. This may be a channel object, or the ID of an
             existing channel.
 
@@ -465,7 +493,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to edit. This may be a channel object, or the ID of an
             existing channel.
         name : hikari.utilities.undefined.UndefinedType or str
@@ -484,7 +512,7 @@ class REST(http_client.HTTPClient, component.IComponent):
             If provided, the new rate limit per user in the channel.
         permission_overwrites : hikari.utilities.undefined.UndefinedType or typing.Sequence[hikari.models.channels.PermissionOverwrite]
             If provided, the new permission overwrites for the channel.
-        parent_category : hikari.utilities.undefined.UndefinedType or hikari.models.channels.GuildCategory or hikari.utilities.snowflake.Snowflake or int or str
+        parent_category : hikari.utilities.undefined.UndefinedType or hikari.models.channels.GuildCategory or hikari.utilities.snowflake.UniqueObject
             If provided, the new guild category for the channel. This may be
             a category object, or the ID of an existing category.
         reason : hikari.utilities.undefined.UndefinedType or str
@@ -524,7 +552,7 @@ class REST(http_client.HTTPClient, component.IComponent):
             conversion=self._app.entity_factory.serialize_permission_overwrite,
         )
 
-        raw_response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_channel(response)
 
@@ -533,7 +561,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to delete. This may be a channel object, or the ID of an
             existing channel.
 
@@ -594,10 +622,10 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to edit a permission overwrite in. This may be a channel object, or
             the ID of an existing channel.
-        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflake or int or str
+        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.UniqueObject
             The channel overwrite to edit. This may be a overwrite object, or the ID of an
             existing channel.
         target_type : hikari.utilities.undefined.UndefinedType or hikari.models.channels.PermissionOverwriteType or str
@@ -645,7 +673,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("allow", allow)
         body.put("deny", deny)
 
-        await self._request(route, body=body, reason=reason)
+        await self._request(route, json=body, reason=reason)
 
     async def delete_permission_overwrite(
         self,
@@ -656,10 +684,10 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to delete a permission overwrite in. This may be a channel
             object, or the ID of an existing channel.
-        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflake or int or str
+        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.UniqueObject
             The channel overwrite to delete.
 
         Raises
@@ -683,7 +711,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to fetch the invites from. This may be a channel
             object, or the ID of an existing channel.
 
@@ -724,7 +752,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to create a invite for. This may be a channel object,
             or the ID of an existing channel.
         max_age : hikari.utilities.undefined.UndefinedType or datetime.timedelta or float or int
@@ -735,7 +763,7 @@ class REST(http_client.HTTPClient, component.IComponent):
             If provided, whether the invite only grants temporary membership.
         unique : hikari.utilities.undefined.UndefinedType or bool
             If provided, wheter the invite should be unique.
-        target_user : hikari.utilities.undefined.UndefinedType or hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str
+        target_user : hikari.utilities.undefined.UndefinedType or hikari.models.users.User or hikari.utilities.snowflake.UniqueObject
             If provided, the target user id for this invite. This may be a
             user object, or the ID of an existing user.
         target_user_type : hikari.utilities.undefined.UndefinedType or hikari.models.invites.TargetUserType or int
@@ -770,24 +798,24 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("unique", unique)
         body.put_snowflake("target_user_id", target_user)
         body.put("target_user_type", target_user_type)
-        raw_response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_invite_with_metadata(response)
 
     def trigger_typing(
         self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
-    ) -> rest_utils.TypingIndicator:
+    ) -> special_endpoints.TypingIndicator:
         """Trigger typing in a text channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to trigger typing in. This may be a channel object, or
             the ID of an existing channel.
 
         Returns
         -------
-        hikari.net.rest_utils.TypingIndicator
+        hikari.net.special_endpoints.TypingIndicator
             A typing indicator to use.
 
         Raises
@@ -807,7 +835,7 @@ class REST(http_client.HTTPClient, component.IComponent):
             is awaited or interacted with. Invoking this function itself will
             not raise any of the above types.
         """
-        return rest_utils.TypingIndicator(channel, self._request)
+        return special_endpoints.TypingIndicator(channel, self._request)
 
     async def fetch_pins(
         self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
@@ -816,7 +844,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to fetch pins from. This may be a channel object, or
             the ID of an existing channel.
 
@@ -851,10 +879,10 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to pin a message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.Snowflake or int or str
+        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
             The message to pin. This may be a message object,
             or the ID of an existing message.
 
@@ -882,10 +910,10 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to unpin a message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.Snowflake or int or str
+        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
             The message to unpin. This may be a message object, or the ID of an
             existing message.
 
@@ -916,22 +944,22 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to fetch messages in. This may be a channel object, or
             the ID of an existing channel.
-        before : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
+        before : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
             If provided, fetch messages before this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake.
-        after : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
+        after : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
             If provided, fetch messages after this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake.
-        around : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
+        around : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
             If provided, fetch messages around this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake.
 
         Returns
         -------
-        hikari.net.iterators.LazyIterator[hikari.models.messages.Message]
+        hikari.utilities.iterators.LazyIterator[hikari.models.messages.Message]
             A iterator to fetch the messages.
 
         Raises
@@ -957,6 +985,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         if undefined.count(before, after, around) < 2:
             raise TypeError("Expected no kwargs, or maximum of one of 'before', 'after', 'around'")
 
+        timestamp: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.Unique, int, str]
         if before is not undefined.UNDEFINED:
             direction, timestamp = "before", before
         elif after is not undefined.UNDEFINED:
@@ -964,12 +993,14 @@ class REST(http_client.HTTPClient, component.IComponent):
         elif around is not undefined.UNDEFINED:
             direction, timestamp = "around", around
         else:
-            direction, timestamp = "before", snowflake.Snowflake.max()
+            direction, timestamp = "before", undefined.UNDEFINED
 
         if isinstance(timestamp, datetime.datetime):
-            timestamp = snowflake.Snowflake.from_datetime(timestamp)
+            timestamp = str(snowflake.Snowflake.from_datetime(timestamp))
+        elif timestamp is not undefined.UNDEFINED:
+            timestamp = str(timestamp)
 
-        return iterators.MessageIterator(self._app, self._request, str(int(channel)), direction, str(timestamp))
+        return special_endpoints.MessageIterator(self._app, self._request, str(int(channel)), direction, timestamp)
 
     async def fetch_message(
         self,
@@ -980,10 +1011,10 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to fetch messages in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.Snowflake or int or str
+        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
             The message to fetch. This may be a channel object, or the ID of an
             existing channel.
 
@@ -1030,7 +1061,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to create the message in. This may be a channel object, or
             the ID of an existing channel.
         text : hikari.utilities.undefined.UndefinedType or str
@@ -1049,11 +1080,11 @@ class REST(http_client.HTTPClient, component.IComponent):
             If specified, a nonce that can be used for optimistic message sending.
         mentions_everyone : bool
             If specified, whether the message should parse @everyone/@here mentions.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str] or bool
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or bool
             If specified, and `bool`, whether to parse user mentions. If specified and
             `list`, the users to parse the mention for. This may be a user object, or
             the ID of an existing user.
-        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str] or bool
+        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or bool
             If specified and `bool`, whether to parse role mentions. If specified and
             `list`, the roles to parse the mention for. This may be a role object, or
             the ID of an existing role.
@@ -1126,11 +1157,11 @@ class REST(http_client.HTTPClient, component.IComponent):
                         f"file{i}", stream, filename=stream.filename, content_type=strings.APPLICATION_OCTET_STREAM
                     )
 
-                raw_response = await self._request(route, body=form)
+                raw_response = await self._request(route, form=form)
             finally:
                 await stack.aclose()
         else:
-            raw_response = await self._request(route, body=body)
+            raw_response = await self._request(route, json=body)
 
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_message(response)
@@ -1155,10 +1186,10 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to edit the message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.Snowflake or int or str
+        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
             The message to fetch.
         text
         embed
@@ -1209,7 +1240,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         elif embed is None:
             body.put("embed", None)
 
-        raw_response = await self._request(route, body=body)
+        raw_response = await self._request(route, json=body)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_message(response)
 
@@ -1271,7 +1302,7 @@ class REST(http_client.HTTPClient, component.IComponent):
             route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
             body = data_binding.JSONObjectBuilder()
             body.put_snowflake_array("messages", messages)
-            await self._request(route, body=body)
+            await self._request(route, json=body)
         else:
             raise TypeError("Must delete a minimum of 2 messages and a maximum of 100")
 
@@ -1385,7 +1416,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         message: typing.Union[messages_.Message, snowflake.UniqueObject],
         emoji: typing.Union[str, emojis.Emoji],
     ) -> iterators.LazyIterator[users.User]:
-        return iterators.ReactorIterator(
+        return special_endpoints.ReactorIterator(
             app=self._app,
             request_call=self._request,
             channel_id=str(int(channel)),
@@ -1405,11 +1436,11 @@ class REST(http_client.HTTPClient, component.IComponent):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         if avatar is not undefined.UNDEFINED:
-            avatar_resouce = files.ensure_resource(avatar)
-            async with avatar_resouce.stream(executor=self._app.executor) as stream:
+            avatar_resource = files.ensure_resource(avatar)
+            async with avatar_resource.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
-        raw_response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_webhook(response)
 
@@ -1476,7 +1507,7 @@ class REST(http_client.HTTPClient, component.IComponent):
             async with avatar_resource.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
-        raw_response = await self._request(route, body=body, reason=reason, no_auth=no_auth)
+        raw_response = await self._request(route, json=body, reason=reason, no_auth=no_auth)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_webhook(response)
 
@@ -1555,11 +1586,11 @@ class REST(http_client.HTTPClient, component.IComponent):
                         f"file{i}", stream, filename=stream.filename, content_type=strings.APPLICATION_OCTET_STREAM
                     )
 
-                raw_response = await self._request(route, query=query, body=form, no_auth=True)
+                raw_response = await self._request(route, query=query, form=form, no_auth=True)
             finally:
                 await stack.aclose()
         else:
-            raw_response = await self._request(route, query=query, body=body, no_auth=True)
+            raw_response = await self._request(route, query=query, json=body, no_auth=True)
 
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_message(response)
@@ -1612,7 +1643,7 @@ class REST(http_client.HTTPClient, component.IComponent):
             async with avatar_resouce.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
-        raw_response = await self._request(route, body=body)
+        raw_response = await self._request(route, json=body)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_my_user(response)
 
@@ -1635,7 +1666,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         elif isinstance(start_at, datetime.datetime):
             start_at = snowflake.Snowflake.from_datetime(start_at)
 
-        return iterators.OwnGuildIterator(self._app, self._request, newest_first, str(start_at))
+        return special_endpoints.OwnGuildIterator(self._app, self._request, newest_first, str(start_at))
 
     async def leave_guild(self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject], /) -> None:
         route = routes.DELETE_MY_GUILD.compile(guild=guild)
@@ -1645,7 +1676,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         route = routes.POST_MY_CHANNELS.compile()
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("recipient_id", user)
-        raw_response = await self._request(route, body=body)
+        raw_response = await self._request(route, json=body)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_dm_channel(response)
 
@@ -1676,7 +1707,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("deaf", deaf)
         body.put_snowflake_array("roles", roles)
 
-        if (raw_response := await self._request(route, body=body)) is not None:
+        if (raw_response := await self._request(route, json=body)) is not None:
             response = typing.cast(data_binding.JSONObject, raw_response)
             return self._app.entity_factory.deserialize_member(response)
         else:
@@ -1705,17 +1736,15 @@ class REST(http_client.HTTPClient, component.IComponent):
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         guild = str(int(guild))
 
-        if before is undefined.UNDEFINED:
-            before = str(snowflake.Snowflake.max())
-        elif isinstance(before, datetime.datetime):
+        if isinstance(before, datetime.datetime):
             before = str(snowflake.Snowflake.from_datetime(before))
-        else:
-            before = str(int(before))
+        elif before is not undefined.UNDEFINED:
+            before = str(before)
 
         if user is not undefined.UNDEFINED:
             user = str(int(user))
 
-        return iterators.AuditLogIterator(self._app, self._request, guild, before, user, event_type)
+        return special_endpoints.AuditLogIterator(self._app, self._request, guild, before, user, event_type)
 
     async def fetch_emoji(
         self,
@@ -1759,7 +1788,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         body.put_snowflake_array("roles", roles)
 
-        raw_response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_known_custom_emoji(response)
 
@@ -1782,7 +1811,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("name", name)
         body.put_snowflake_array("roles", roles)
 
-        raw_response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_known_custom_emoji(response)
 
@@ -1798,8 +1827,8 @@ class REST(http_client.HTTPClient, component.IComponent):
         )
         await self._request(route)
 
-    def guild_builder(self, name: str, /) -> rest_utils.GuildBuilder:
-        return rest_utils.GuildBuilder(app=self._app, name=name, request_call=self._request)
+    def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
+        return special_endpoints.GuildBuilder(app=self._app, name=name, request_call=self._request)
 
     async def fetch_guild(self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]) -> guilds.Guild:
         route = routes.GET_GUILD.compile(guild=guild)
@@ -1880,7 +1909,7 @@ class REST(http_client.HTTPClient, component.IComponent):
             async with banner_resource.stream(executor=self._app.executor) as stream:
                 body.put("banner", await stream.data_uri())
 
-        raw_response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild(response)
 
@@ -2051,7 +2080,7 @@ class REST(http_client.HTTPClient, component.IComponent):
             conversion=self._app.entity_factory.serialize_permission_overwrite,
         )
 
-        raw_response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
         channel = self._app.entity_factory.deserialize_channel(response)
         return typing.cast(channels.GuildChannel, channel)
@@ -2063,7 +2092,7 @@ class REST(http_client.HTTPClient, component.IComponent):
     ) -> None:
         route = routes.POST_GUILD_CHANNELS.compile(guild=guild)
         body = [{"id": str(int(channel)), "position": pos} for pos, channel in positions.items()]
-        await self._request(route, body=body)
+        await self._request(route, json=body)
 
     async def fetch_member(
         self,
@@ -2078,7 +2107,7 @@ class REST(http_client.HTTPClient, component.IComponent):
     def fetch_members(
         self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
     ) -> iterators.LazyIterator[guilds.Member]:
-        return iterators.MemberIterator(self._app, self._request, str(int(guild)))
+        return special_endpoints.MemberIterator(self._app, self._request, str(int(guild)))
 
     async def edit_member(
         self,
@@ -2108,7 +2137,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         elif voice_channel is not undefined.UNDEFINED:
             body.put_snowflake("channel_id", voice_channel)
 
-        await self._request(route, body=body, reason=reason)
+        await self._request(route, json=body, reason=reason)
 
     async def edit_my_nick(
         self,
@@ -2120,7 +2149,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         route = routes.PATCH_MY_GUILD_NICKNAME.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("nick", nick)
-        await self._request(route, body=body, reason=reason)
+        await self._request(route, json=body, reason=reason)
 
     async def add_role_to_member(
         self,
@@ -2151,7 +2180,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         *,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
-        route = routes.DELETE_GUILD_MEMBER.compile(guild=guild, user=user,)
+        route = routes.DELETE_GUILD_MEMBER.compile(guild=guild, user=user)
         await self._request(route, reason=reason)
 
     async def ban_user(
@@ -2165,7 +2194,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body = data_binding.JSONObjectBuilder()
         body.put("delete_message_days", delete_message_days)
         route = routes.PUT_GUILD_BAN.compile(guild=guild, user=user)
-        await self._request(route, reason=reason, body=body)
+        await self._request(route, reason=reason, json=body)
 
     async def unban_user(
         self,
@@ -2227,7 +2256,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("hoist", hoist)
         body.put("mentionable", mentionable)
 
-        raw_response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_role(response)
 
@@ -2238,7 +2267,7 @@ class REST(http_client.HTTPClient, component.IComponent):
     ) -> None:
         route = routes.POST_GUILD_ROLES.compile(guild=guild)
         body = [{"id": str(int(role)), "position": pos} for pos, role in positions.items()]
-        await self._request(route, body=body)
+        await self._request(route, json=body)
 
     async def edit_role(
         self,
@@ -2266,7 +2295,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("hoist", hoist)
         body.put("mentionable", mentionable)
 
-        raw_response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_role(response)
 
@@ -2291,12 +2320,12 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.Snowflake or int or str
+        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
             The guild to estimate the guild prune count for. This may be a guild object,
             or the ID of an existing channel.
         days : hikari.utilities.undefined.UndefinedType or int
             If provided, number of days to count prune for.
-        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str]
+        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject]
             If provided, the role(s) to include. By default, this endpoint will not count
             users with roles. Providing roles using this attribute will make members with
             the specified roles also get included into the count.
@@ -2344,7 +2373,7 @@ class REST(http_client.HTTPClient, component.IComponent):
 
         Parameters
         ----------
-        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.Snowflake or int or str
+        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
             The guild to begin the guild prune in. This may be a guild object,
             or the ID of an existing channel.
         days : hikari.utilities.undefined.UndefinedType or int
@@ -2352,7 +2381,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         compute_prune_count: hikari.utilities.undefined.UndefinedType or bool
             If provided, whether to return the prune count. This is discouraged for large
             guilds.
-        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str]
+        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject]
             If provided, the role(s) to include. By default, this endpoint will not count
             users with roles. Providing roles using this attribute will make members with
             the specified roles also get included into the count.
@@ -2382,7 +2411,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("days", days)
         body.put("compute_prune_count", compute_prune_count)
         body.put_snowflake_array("include_roles", include_roles)
-        raw_response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
         pruned = response.get("pruned")
         return int(pruned) if pruned is not None else None
@@ -2429,7 +2458,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         body.put("expire_grace_period", expire_grace_period, conversion=date.timespan_to_int)
         # Inconsistent naming in the API itself, so I have changed the name.
         body.put("enable_emoticons", enable_emojis)
-        await self._request(route, body=body, reason=reason)
+        await self._request(route, json=body, reason=reason)
 
     async def delete_integration(
         self,
@@ -2474,7 +2503,7 @@ class REST(http_client.HTTPClient, component.IComponent):
         elif channel is not undefined.UNDEFINED:
             body.put_snowflake("channel", channel)
 
-        raw_response = await self._request(route, body=body, reason=reason)
+        raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild_widget(response)
 

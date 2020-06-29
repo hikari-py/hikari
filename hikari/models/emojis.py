@@ -27,8 +27,8 @@ import unicodedata
 
 import attr
 
-from hikari.utilities import cdn
 from hikari.utilities import files
+from hikari.utilities import cdn
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:

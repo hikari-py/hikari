@@ -27,9 +27,6 @@ import typing
 from hikari.api import event_consumer
 from hikari.api import event_dispatcher
 
-if typing.TYPE_CHECKING:
-    from hikari.net import http_settings as http_settings_
-
 
 class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatcherApp, abc.ABC):
     """Base for bot applications.
@@ -41,19 +38,3 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
     """
 
     __slots__: typing.Sequence[str] = ()
-
-    @property
-    @abc.abstractmethod
-    def http_settings(self) -> http_settings_.HTTPSettings:
-        """HTTP settings to use for the shards when they get created.
-
-        !!! info
-            This is stored only for bots, since shards are generated lazily on
-            start-up once sharding information has been retrieved from the REST
-            API on startup.
-
-        Returns
-        -------
-        hikari.net.http_settings.HTTPSettings
-            The HTTP settings to use.
-        """
