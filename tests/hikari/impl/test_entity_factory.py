@@ -210,7 +210,7 @@ class TestEntityFactoryImpl:
         # Team
         assert application.team.id == 202020202
         assert application.team.icon_hash == "hashtag"
-        assert application.team.owner_user_id == 393030292
+        assert application.team.owner_id == 393030292
         assert isinstance(application.team, application_models.Team)
         # TeamMember
         assert len(application.team.members) == 1

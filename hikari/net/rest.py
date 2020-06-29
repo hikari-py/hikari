@@ -441,7 +441,7 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to fetch. This may be a channel object, or the ID of an
             existing channel.
 
@@ -493,7 +493,7 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to edit. This may be a channel object, or the ID of an
             existing channel.
         name : hikari.utilities.undefined.UndefinedType or str
@@ -512,7 +512,7 @@ class REST:
             If provided, the new rate limit per user in the channel.
         permission_overwrites : hikari.utilities.undefined.UndefinedType or typing.Sequence[hikari.models.channels.PermissionOverwrite]
             If provided, the new permission overwrites for the channel.
-        parent_category : hikari.utilities.undefined.UndefinedType or hikari.models.channels.GuildCategory or hikari.utilities.snowflake.Snowflake or int or str
+        parent_category : hikari.utilities.undefined.UndefinedType or hikari.models.channels.GuildCategory or hikari.utilities.snowflake.UniqueObject
             If provided, the new guild category for the channel. This may be
             a category object, or the ID of an existing category.
         reason : hikari.utilities.undefined.UndefinedType or str
@@ -561,7 +561,7 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to delete. This may be a channel object, or the ID of an
             existing channel.
 
@@ -622,10 +622,10 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to edit a permission overwrite in. This may be a channel object, or
             the ID of an existing channel.
-        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflake or int or str
+        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.UniqueObject
             The channel overwrite to edit. This may be a overwrite object, or the ID of an
             existing channel.
         target_type : hikari.utilities.undefined.UndefinedType or hikari.models.channels.PermissionOverwriteType or str
@@ -684,10 +684,10 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to delete a permission overwrite in. This may be a channel
             object, or the ID of an existing channel.
-        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflake or int or str
+        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.UniqueObject
             The channel overwrite to delete.
 
         Raises
@@ -711,7 +711,7 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to fetch the invites from. This may be a channel
             object, or the ID of an existing channel.
 
@@ -752,7 +752,7 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to create a invite for. This may be a channel object,
             or the ID of an existing channel.
         max_age : hikari.utilities.undefined.UndefinedType or datetime.timedelta or float or int
@@ -763,7 +763,7 @@ class REST:
             If provided, whether the invite only grants temporary membership.
         unique : hikari.utilities.undefined.UndefinedType or bool
             If provided, wheter the invite should be unique.
-        target_user : hikari.utilities.undefined.UndefinedType or hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str
+        target_user : hikari.utilities.undefined.UndefinedType or hikari.models.users.User or hikari.utilities.snowflake.UniqueObject
             If provided, the target user id for this invite. This may be a
             user object, or the ID of an existing user.
         target_user_type : hikari.utilities.undefined.UndefinedType or hikari.models.invites.TargetUserType or int
@@ -809,7 +809,7 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to trigger typing in. This may be a channel object, or
             the ID of an existing channel.
 
@@ -844,7 +844,7 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to fetch pins from. This may be a channel object, or
             the ID of an existing channel.
 
@@ -879,10 +879,10 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to pin a message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.Snowflake or int or str
+        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
             The message to pin. This may be a message object,
             or the ID of an existing message.
 
@@ -910,10 +910,10 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to unpin a message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.Snowflake or int or str
+        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
             The message to unpin. This may be a message object, or the ID of an
             existing message.
 
@@ -944,22 +944,22 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to fetch messages in. This may be a channel object, or
             the ID of an existing channel.
-        before : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
+        before : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
             If provided, fetch messages before this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake.
-        after : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
+        after : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
             If provided, fetch messages after this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake.
-        around : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.Snowflake or int or str
+        around : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
             If provided, fetch messages around this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake.
 
         Returns
         -------
-        hikari.net.iterators.LazyIterator[hikari.models.messages.Message]
+        hikari.utilities.iterators.LazyIterator[hikari.models.messages.Message]
             A iterator to fetch the messages.
 
         Raises
@@ -985,6 +985,7 @@ class REST:
         if undefined.count(before, after, around) < 2:
             raise TypeError("Expected no kwargs, or maximum of one of 'before', 'after', 'around'")
 
+        timestamp: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.Unique, int, str]
         if before is not undefined.UNDEFINED:
             direction, timestamp = "before", before
         elif after is not undefined.UNDEFINED:
@@ -992,12 +993,14 @@ class REST:
         elif around is not undefined.UNDEFINED:
             direction, timestamp = "around", around
         else:
-            direction, timestamp = "before", snowflake.Snowflake.max()
+            direction, timestamp = "before", undefined.UNDEFINED
 
         if isinstance(timestamp, datetime.datetime):
-            timestamp = snowflake.Snowflake.from_datetime(timestamp)
+            timestamp = str(snowflake.Snowflake.from_datetime(timestamp))
+        elif timestamp is not undefined.UNDEFINED:
+            timestamp = str(timestamp)
 
-        return special_endpoints.MessageIterator(self._app, self._request, str(int(channel)), direction, str(timestamp))
+        return special_endpoints.MessageIterator(self._app, self._request, str(int(channel)), direction, timestamp)
 
     async def fetch_message(
         self,
@@ -1008,10 +1011,10 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to fetch messages in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.Snowflake or int or str
+        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
             The message to fetch. This may be a channel object, or the ID of an
             existing channel.
 
@@ -1058,7 +1061,7 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to create the message in. This may be a channel object, or
             the ID of an existing channel.
         text : hikari.utilities.undefined.UndefinedType or str
@@ -1077,11 +1080,11 @@ class REST:
             If specified, a nonce that can be used for optimistic message sending.
         mentions_everyone : bool
             If specified, whether the message should parse @everyone/@here mentions.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str] or bool
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or bool
             If specified, and `bool`, whether to parse user mentions. If specified and
             `list`, the users to parse the mention for. This may be a user object, or
             the ID of an existing user.
-        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str] or bool
+        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or bool
             If specified and `bool`, whether to parse role mentions. If specified and
             `list`, the roles to parse the mention for. This may be a role object, or
             the ID of an existing role.
@@ -1183,10 +1186,10 @@ class REST:
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.Snowflake or int or str
+        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to edit the message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.Snowflake or int or str
+        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
             The message to fetch.
         text
         embed
@@ -1733,12 +1736,10 @@ class REST:
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         guild = str(int(guild))
 
-        if before is undefined.UNDEFINED:
-            before = str(snowflake.Snowflake.max())
-        elif isinstance(before, datetime.datetime):
+        if isinstance(before, datetime.datetime):
             before = str(snowflake.Snowflake.from_datetime(before))
-        else:
-            before = str(int(before))
+        elif before is not undefined.UNDEFINED:
+            before = str(before)
 
         if user is not undefined.UNDEFINED:
             user = str(int(user))
@@ -2179,7 +2180,7 @@ class REST:
         *,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
-        route = routes.DELETE_GUILD_MEMBER.compile(guild=guild, user=user, )
+        route = routes.DELETE_GUILD_MEMBER.compile(guild=guild, user=user)
         await self._request(route, reason=reason)
 
     async def ban_user(
@@ -2319,12 +2320,12 @@ class REST:
 
         Parameters
         ----------
-        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.Snowflake or int or str
+        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
             The guild to estimate the guild prune count for. This may be a guild object,
             or the ID of an existing channel.
         days : hikari.utilities.undefined.UndefinedType or int
             If provided, number of days to count prune for.
-        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str]
+        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject]
             If provided, the role(s) to include. By default, this endpoint will not count
             users with roles. Providing roles using this attribute will make members with
             the specified roles also get included into the count.
@@ -2372,7 +2373,7 @@ class REST:
 
         Parameters
         ----------
-        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.Snowflake or int or str
+        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
             The guild to begin the guild prune in. This may be a guild object,
             or the ID of an existing channel.
         days : hikari.utilities.undefined.UndefinedType or int
@@ -2380,7 +2381,7 @@ class REST:
         compute_prune_count: hikari.utilities.undefined.UndefinedType or bool
             If provided, whether to return the prune count. This is discouraged for large
             guilds.
-        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str]
+        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject]
             If provided, the role(s) to include. By default, this endpoint will not count
             users with roles. Providing roles using this attribute will make members with
             the specified roles also get included into the count.

@@ -309,7 +309,7 @@ class Team(snowflake.Unique):
     member object.
     """
 
-    owner_user_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    owner_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of this team's owner."""
 
     def __str__(self) -> str:

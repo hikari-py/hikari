@@ -92,12 +92,12 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         Proxy-related configuration.
     shard_ids : typing.Set[int] or None
         A set of every shard ID that should be created and started on startup.
-        If left None along with `shard_count`, then auto-sharding is used
+        If left to `None` along with `shard_count`, then auto-sharding is used
         instead, which is the default.
     shard_count : int or None
-        The number of shards in the entire application. If left None along
-        with `shard_ids`, then auto-sharding is used instead, which is the
-        default.
+        The number of shards in the entire application. If left to `None`
+        along with `shard_ids`, then auto-sharding is used instead, which is
+        the default.
     token : str
         The bot token to use. This should not start with a prefix such as
         `Bot `, but instead only contain the token itself.
@@ -202,7 +202,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
             else:
                 # The user won't care where this gets raised from, unless we are
                 # debugging. It just causes a lot of confusing spam.
-                raise ex.with_traceback(None)  # noqa: R100 raise in except handler without fromflake8
+                raise ex.with_traceback(None)  # noqa: R100 raise in except handler without from
         finally:
             self._map_signal_handlers(loop.remove_signal_handler)
             _LOGGER.info("client has shut down")

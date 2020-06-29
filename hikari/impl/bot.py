@@ -115,12 +115,12 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         are supported. This defaults to v6.
     shard_ids : typing.Set[int] or None
         A set of every shard ID that should be created and started on startup.
-        If left None along with `shard_count`, then auto-sharding is used
+        If left to `None` along with `shard_count`, then auto-sharding is used
         instead, which is the default.
     shard_count : int or None
-        The number of shards in the entire application. If left None along
-        with `shard_ids`, then auto-sharding is used instead, which is the
-        default.
+        The number of shards in the entire application. If left to `None`
+        along with `shard_ids`, then auto-sharding is used instead, which is
+        the default.
     stateless : bool
         If `True`, the bot will not implement a cache, and will be considered
         stateless. If `False`, then a cache will be used (this is the default).

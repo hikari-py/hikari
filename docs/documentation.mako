@@ -64,12 +64,15 @@
 %>
 
 <%
+    import typing
+
+    typing.TYPE_CHECKING = True
+
     import abc
     import enum
     import functools
     import inspect
     import textwrap
-    import typing
 
     import pdoc
 
@@ -112,7 +115,8 @@
         if name.startswith("builtins."):
             _, _, name = name.partition("builtins.")
         
-        if with_prefixes:        
+        show_object = False
+        if with_prefixes:
             if isinstance(dobj, pdoc.Function):
                 qual = dobj.funcdef()
 
@@ -132,6 +136,7 @@
                     qual = QUAL_CACHED_PROPERTY if isinstance(descriptor, functools.cached_property) else QUAL_PROPERTY
                     prefix = f"<small class='text-muted'><em>{prefix}{qual}</em></small> "
                 elif dobj.module.name == "typing" or dobj.docstring and dobj.docstring.casefold().startswith(("type hint", "typehint", "type alias")):
+                    show_object = True
                     prefix = f"<small class='text-muted'><em>{prefix}{QUAL_TYPEHINT} </em></small> "
                 elif all(not c.isalpha() or c.isupper() for c in dobj.name):
                     prefix = f"<small class='text-muted'><em>{prefix}{QUAL_CONST}</em></small> "
@@ -195,6 +200,10 @@
         if simple_names:
             name = simple_name(name)
 
+        extra = ""
+        if show_object:
+            extra = f" = {dobj.obj}"
+
         classes = []
         if dotted:
             classes.append("dotted")
@@ -207,7 +216,7 @@
 
         anchor = "" if not anchor else f'id="{dobj.refname}"'
 
-        return '{}<a title="{}" href="{}" {} {}>{}</a>'.format(prefix, dobj.name + " -- " + glimpse(dobj.docstring), url, anchor, class_str, name)
+        return '{}<a title="{}" href="{}" {} {}>{}</a>{}'.format(prefix, dobj.name + " -- " + glimpse(dobj.docstring), url, anchor, class_str, name, extra)
 
     def simple_name(s):
         _, _, name = s.rpartition(".")
