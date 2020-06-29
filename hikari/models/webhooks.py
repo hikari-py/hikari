@@ -26,8 +26,8 @@ import typing
 
 import attr
 
-from hikari.utilities import cdn
 from hikari.utilities import files as files_
+from hikari.utilities import cdn
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -152,11 +152,11 @@ class Webhook(snowflake.Unique):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.Snowflake or int or str] or bool
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or bool
             Either an array of user objects/IDs to allow mentions for,
             `True` to allow all user mentions or `False` to block all
             user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.Snowflake or int or str] or bool
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or bool
             Either an array of guild role objects/IDs to allow mentions for,
             `True` to allow all role mentions or `False` to block all
             role mentions from resolving, defaults to `True`.
@@ -252,7 +252,7 @@ class Webhook(snowflake.Unique):
         avatar : hikari.utilities.files.Resource or None or hikari.utilities.undefined.UndefinedType
             If specified, the new avatar image. If `None`, then
             it is removed. If not specified, nothing is changed.
-        channel : hikari.models.channels.GuildChannel or hikari.utilities.snowflake.Snowflake or str or int or hikari.utilities.undefined.UndefinedType
+        channel : hikari.models.channels.GuildChannel or hikari.utilities.snowflake.UniqueObject or hikari.utilities.undefined.UndefinedType
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
         reason : str or hikari.utilities.undefined.UndefinedType

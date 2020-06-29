@@ -1367,9 +1367,9 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.Snowflake or str or int
+        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
             The guild to update the voice state in.
-        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.Snowflake or str or int or None
+        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.UniqueObject or None
             The voice channel to change to, or `None` if attempting to leave a
             voice channel and disconnect entirely.
         self_mute : bool
