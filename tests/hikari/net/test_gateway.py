@@ -28,18 +28,19 @@ from hikari import errors
 from hikari.models import presences
 from hikari.net import config
 from hikari.net import gateway
+from hikari.utilities import undefined
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture()
 def http_settings():
-    return mock.create_autospec(config.HTTPSettings)
+    return mock.create_autospec(spec=config.HTTPSettings, spec_set=True)
 
 
 @pytest.fixture()
 def proxy_settings():
-    return mock.create_autospec(config.ProxySettings)
+    return mock.create_autospec(spec=config.ProxySettings, spec_set=True)
 
 
 @pytest.fixture()
@@ -744,3 +745,106 @@ class TestUpdatePresence:
         )
 
         client._send_json.assert_awaited_once_with({"op": gateway.Gateway._GatewayOpcode.PRESENCE_UPDATE, "d": result})
+
+    @pytest.mark.parametrize("idle_since", [undefined.UNDEFINED, datetime.datetime.now()])
+    @pytest.mark.parametrize("afk", [undefined.UNDEFINED, True, False])
+    @pytest.mark.parametrize(
+        "status",
+        [
+            undefined.UNDEFINED,
+            presences.Status.DND,
+            presences.Status.IDLE,
+            presences.Status.ONLINE,
+            presences.Status.OFFLINE,
+        ],
+    )
+    @pytest.mark.parametrize("activity", [undefined.UNDEFINED, presences.Activity(name="foo"), None])
+    async def test_update_presence_ignores_undefined(self, client, idle_since, afk, status, activity):
+        result = object()
+        client_activity = mock.MagicMock()
+        client_idle_since = mock.MagicMock()
+        client_afk = mock.MagicMock()
+        client_status = mock.MagicMock()
+
+        client._activity = client_activity
+        client._idle_since = client_idle_since
+        client._is_afk = client_afk
+        client._status = client_status
+
+        client._app.entity_factory.serialize_gateway_presence = mock.MagicMock(return_value=result)
+
+        await client.update_presence(
+            idle_since=idle_since, afk=afk, status=status, activity=activity,
+        )
+
+        client._app.entity_factory.serialize_gateway_presence.assert_called_once_with(
+            idle_since=idle_since if idle_since is not undefined.UNDEFINED else client_idle_since,
+            afk=afk if afk is not undefined.UNDEFINED else client_afk,
+            activity=activity if activity is not undefined.UNDEFINED else client_activity,
+            status=status if status is not undefined.UNDEFINED else client_status,
+        )
+
+
+@pytest.mark.asyncio
+class TestUpdateVoiceState:
+    @pytest.fixture
+    def client(self, proxy_settings, http_settings):
+        client = hikari_test_helpers.unslot_class(gateway.Gateway)(
+            url="wss://gateway.discord.gg",
+            token="lol",
+            app=mock.MagicMock(),
+            http_settings=http_settings,
+            proxy_settings=proxy_settings,
+            shard_id=3,
+            shard_count=17,
+        )
+        return hikari_test_helpers.mock_methods_on(
+            client,
+            except_=(
+                "update_voice_state",
+                "_InvalidSession",
+                "_Reconnect",
+                "_SocketClosed",
+                "_GatewayCloseCode",
+                "_GatewayOpcode",
+            ),
+        )
+
+    @pytest.mark.parametrize("channel", ["12345", None])
+    @pytest.mark.parametrize("self_deaf", [True, False])
+    @pytest.mark.parametrize("self_mute", [True, False])
+    async def test_invoked(self, client, channel, self_deaf, self_mute):
+        await client.update_voice_state("69696", channel, self_deaf=self_deaf, self_mute=self_mute)
+        client._app.entity_factory.serialize_gateway_voice_state_update("69696", channel)
+
+    async def test_serialized_result_sent_on_websocket(self, client):
+        payload = mock.MagicMock()
+        client._app.entity_factory.serialize_gateway_voice_state_update = mock.MagicMock(return_value=payload)
+
+        await client.update_voice_state("6969420", "12345")
+
+        client._send_json.assert_awaited_once_with(
+            {"op": gateway.Gateway._GatewayOpcode.VOICE_STATE_UPDATE, "d": payload}
+        )
+
+
+@pytest.mark.asyncio
+class TestCloseWs:
+    async def test_when_connected(self, client):
+        client._ws = mock.create_autospec(aiohttp.ClientWebSocketResponse, spec_set=True)
+
+        await client._close_ws(6969420, "you got yeeted")
+
+        client._ws.close.assert_awaited_once_with(code=6969420, message=b"you got yeeted")
+
+    async def test_when_disconnected(self, client):
+        client._ws = None
+        await client._close_ws(6969420, "you got yeeted")
+        # Do not expect any error or anything to happen.
+        assert True
+
+
+@pytest.mark.asyncio
+class TestHandshake:
+    # TODO: this
+    ...

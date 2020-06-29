@@ -54,6 +54,11 @@ class Emoji(files.WebResource, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def name(self) -> typing.Optional[str]:
+        """Generic name for the emoji, or the unicode representation."""
+
+    @property
+    @abc.abstractmethod
     def url(self) -> str:
         """URL of the emoji image to display in clients."""
 
@@ -73,7 +78,7 @@ class Emoji(files.WebResource, abc.ABC):
         """Mention string to use to mention the emoji with."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(hash=True, init=False, kw_only=True, slots=True, eq=False)
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji.
 
@@ -93,11 +98,18 @@ class UnicodeEmoji(Emoji):
         removed in a future release after a deprecation period.
     """
 
-    name: str = attr.ib(eq=True, hash=True, repr=True)
+    name: str = attr.ib(repr=True, hash=True)
     """The code points that form the emoji."""
 
     def __str__(self) -> str:
         return self.name
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, Emoji):
+            return self.name == other.name
+        if isinstance(other, str):
+            return self.name == other
+        return False
 
     @property
     @typing.final
@@ -224,6 +236,7 @@ class CustomEmoji(snowflake.Unique, Emoji):
     )
     """The ID of this entity."""
 
+    # TODO: document when this is None, or fix it to not be optional?
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The name of the emoji."""
 
