@@ -275,6 +275,18 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
     ) -> typing.Callable[[CallbackT], CallbackT]:
         return self.event_dispatcher.listen(event_type)
 
+    def get_listeners(
+        self, event_type: typing.Type[EventT],
+    ) -> typing.Optional[typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]]:
+        return self.event_dispatcher.get_listeners(event_type)
+
+    def has_listener(
+        self,
+        event_type: typing.Type[EventT],
+        callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
+    ) -> bool:
+        return self.event_dispatcher.has_listener(event_type, callback)
+
     def subscribe(
         self,
         event_type: typing.Type[EventT],
