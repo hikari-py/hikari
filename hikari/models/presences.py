@@ -188,7 +188,7 @@ class Activity:
     url: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The activity URL. Only valid for `STREAMING` activities."""
 
-    type: ActivityType = attr.ib(converter=ActivityType)
+    type: ActivityType = attr.ib(converter=ActivityType, default=ActivityType.PLAYING)
     """The activity type."""
 
     def __str__(self) -> str:

@@ -431,10 +431,7 @@ class Gateway:
             finally:
                 heartbeat.cancel()
         finally:
-            if not math.isnan(self.connected_at):
-                # Only dispatch this if we actually connected before we failed!
-                self._dispatch("DISCONNECTED", {})
-
+            self._dispatch("DISCONNECTED", {})
             self.connected_at = float("nan")
 
     async def update_presence(
@@ -510,7 +507,7 @@ class Gateway:
             `False`, then it will undeafen itself.
         """
         payload = self._app.entity_factory.serialize_gateway_voice_state_update(guild, channel, self_mute, self_deaf)
-        await self._send_json(payload)
+        await self._send_json({"op": self._GatewayOpcode.VOICE_STATE_UPDATE, "d": payload})
 
     async def _close_ws(self, code: int, message: str) -> None:
         self._logger.debug("sending close frame with code %s and message %r", int(code), message)
@@ -519,7 +516,10 @@ class Gateway:
             await self._ws.close(code=code, message=bytes(message, "utf-8"))
 
     async def _handshake(self) -> None:
-        # HELLO!
+        await self._hello()
+        await self._identify() if self.session_id is None else await self._resume()
+
+    async def _hello(self) -> None:
         message = await self._receive_json_payload()
         op = message["op"]
         if message["op"] != self._GatewayOpcode.HELLO:
@@ -527,46 +527,42 @@ class Gateway:
             raise errors.GatewayError(f"Expected HELLO opcode {self._GatewayOpcode.HELLO.value} but received {op}")
 
         self.heartbeat_interval = message["d"]["heartbeat_interval"] / 1_000.0
-
         self._logger.info("received HELLO, heartbeat interval is %ss", self.heartbeat_interval)
 
-        if self.session_id is not None:
-            # RESUME!
-            await self._send_json(
-                {
-                    "op": self._GatewayOpcode.RESUME,
-                    "d": {"token": self._token, "seq": self._seq, "session_id": self.session_id},
-                }
+    async def _identify(self) -> None:
+        payload: data_binding.JSONObject = {
+            "op": self._GatewayOpcode.IDENTIFY,
+            "d": {
+                "token": self._token,
+                "compress": False,
+                "large_threshold": self.large_threshold,
+                "properties": {
+                    "$os": strings.SYSTEM_TYPE,
+                    "$browser": strings.AIOHTTP_VERSION,
+                    "$device": strings.LIBRARY_VERSION,
+                },
+                "shard": [self._shard_id, self._shard_count],
+            },
+        }
+
+        if self._intents is not None:
+            payload["d"]["intents"] = self._intents
+
+        if undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
+            # noinspection PyTypeChecker
+            payload["d"]["presence"] = self._app.entity_factory.serialize_gateway_presence(
+                self._idle_since, self._is_afk, self._status, self._activity,
             )
 
-        else:
-            # IDENTIFY!
-            # noinspection PyArgumentList
-            payload: data_binding.JSONObject = {
-                "op": self._GatewayOpcode.IDENTIFY,
-                "d": {
-                    "token": self._token,
-                    "compress": False,
-                    "large_threshold": self.large_threshold,
-                    "properties": {
-                        "$os": strings.SYSTEM_TYPE,
-                        "$browser": strings.AIOHTTP_VERSION,
-                        "$device": strings.LIBRARY_VERSION,
-                    },
-                    "shard": [self._shard_id, self._shard_count],
-                },
+        await self._send_json(payload)
+
+    async def _resume(self) -> None:
+        await self._send_json(
+            {
+                "op": self._GatewayOpcode.RESUME,
+                "d": {"token": self._token, "seq": self._seq, "session_id": self.session_id},
             }
-
-            if self._intents is not None:
-                payload["d"]["intents"] = self._intents
-
-            if undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
-                # noinspection PyTypeChecker
-                payload["d"]["presence"] = self._app.entity_factory.serialize_gateway_presence(
-                    self._idle_since, self._is_afk, self._status, self._activity,
-                )
-
-            await self._send_json(payload)
+        )
 
     async def _heartbeat_keepalive(self) -> None:
         try:
