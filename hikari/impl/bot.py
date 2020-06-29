@@ -22,6 +22,7 @@ from __future__ import annotations
 __all__: typing.Final[typing.Sequence[str]] = ["BotAppImpl"]
 
 import asyncio
+import contextlib
 import inspect
 import logging
 import os
@@ -193,7 +194,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
 
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl()
-            _LOGGER.info("this application will be stateless! Cache-based operations will be unavailable!")
+            _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
             self._cache = cache_impl.InMemoryCacheComponentImpl(app=self)
 
@@ -269,6 +270,22 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
     @property
     def rest(self) -> rest.REST:
         return self._rest
+
+    def start(self) -> typing.Coroutine[None, typing.Any, None]:
+        if self._debug is True:
+            _LOGGER.warning("debug mode is enabled, performance may be affected")
+
+            # If possible, set the coroutine origin tracking depth to a larger value.
+            # This feature is provisional, so don't hold your breath if it doesn't
+            # exist.
+            with contextlib.suppress(AttributeError, NameError):
+                # noinspection PyUnresolvedReferences
+                sys.set_coroutine_origin_tracking_depth(40)  # type: ignore[attr-defined]
+
+            # Set debugging on the event loop.
+            asyncio.get_event_loop().set_debug(True)
+
+        return super().start()
 
     def listen(
         self, event_type: typing.Union[undefined.UndefinedType, typing.Type[EventT]] = undefined.UNDEFINED,

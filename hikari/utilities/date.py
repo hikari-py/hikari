@@ -27,6 +27,8 @@ __all__: typing.Final[typing.Sequence[str]] = [
     "unix_epoch_to_datetime",
     "TimeSpan",
     "timespan_to_int",
+    "local_datetime",
+    "utc_datetime",
 ]
 
 import datetime
@@ -196,3 +198,13 @@ def timespan_to_int(value: TimeSpan, /) -> int:
     if isinstance(value, datetime.timedelta):
         value = value.total_seconds()
     return int(max(0, value))
+
+
+def local_datetime() -> datetime.datetime:
+    """Return the current date/time for the system's time zone."""
+    return utc_datetime().astimezone()
+
+
+def utc_datetime() -> datetime.datetime:
+    """Return the current date/time for UTC (GMT+0)."""
+    return datetime.datetime.now(tz=datetime.timezone.utc)

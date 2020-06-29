@@ -731,19 +731,18 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ##################
 
     def deserialize_gateway_bot(self, payload: data_binding.JSONObject) -> gateway_models.GatewayBot:
-        gateway_bot = gateway_models.GatewayBot()
-        gateway_bot.url = payload["url"]
-        gateway_bot.shard_count = int(payload["shards"])
         session_start_limit_payload = payload["session_start_limit"]
-        session_start_limit = gateway_models.SessionStartLimit()
-        session_start_limit.total = int(session_start_limit_payload["total"])
-        session_start_limit.remaining = int(session_start_limit_payload["remaining"])
-        session_start_limit.reset_after = datetime.timedelta(milliseconds=session_start_limit_payload["reset_after"])
-        # I do not trust that this may never be zero for some unknown reason. If it was 0, it
-        # would hang the application on start up, so I enforce it is at least 1.
-        session_start_limit.max_concurrency = max(session_start_limit_payload.get("max_concurrency", 0), 1)
-        gateway_bot.session_start_limit = session_start_limit
-        return gateway_bot
+        session_start_limit = gateway_models.SessionStartLimit(
+            total=int(session_start_limit_payload["total"]),
+            remaining=int(session_start_limit_payload["remaining"]),
+            reset_after=datetime.timedelta(milliseconds=session_start_limit_payload["reset_after"]),
+            # I do not trust that this may never be zero for some unknown reason. If it was 0, it
+            # would hang the application on start up, so I enforce it is at least 1.
+            max_concurrency=max(session_start_limit_payload.get("max_concurrency", 0), 1),
+        )
+        return gateway_models.GatewayBot(
+            url=payload["url"], shard_count=int(payload["shards"]), session_start_limit=session_start_limit,
+        )
 
     ################
     # GUILD MODELS #
