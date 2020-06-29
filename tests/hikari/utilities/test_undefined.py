@@ -18,12 +18,11 @@
 import pytest
 
 from hikari.utilities import undefined
-from tests.hikari import hikari_test_helpers
 
 
 class TestUndefined:
     def test_repr(self):
-        assert repr(undefined.UNDEFINED) == "<undefined value>"
+        assert repr(undefined.UNDEFINED) == "UNDEFINED"
 
     def test_str(self):
         assert str(undefined.UNDEFINED) == "UNDEFINED"
@@ -35,8 +34,8 @@ class TestUndefined:
     def test_singleton_behaviour(self):
         assert undefined.UNDEFINED is undefined.UNDEFINED
         assert undefined.UNDEFINED == undefined.UNDEFINED
-        assert undefined.UNDEFINED != None
-        assert undefined.UNDEFINED != False
+        assert undefined.UNDEFINED is not None
+        assert undefined.UNDEFINED is not False
 
     def test_count(self):
         assert undefined.count(9, 18, undefined.UNDEFINED, 36, undefined.UNDEFINED, 54) == 2

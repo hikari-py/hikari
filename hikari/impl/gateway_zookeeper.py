@@ -26,6 +26,7 @@ import asyncio
 import contextlib
 import datetime
 import logging
+import reprlib
 import signal
 import time
 import typing
@@ -39,7 +40,7 @@ from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari.events import base as base_events
-    from hikari.net import http_settings
+    from hikari.net import config
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
     from hikari.models import presences
@@ -64,13 +65,13 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
     compression : bool
         Defaulting to `True`, if `True`, then zlib transport compression is used
         for each shard connection. If `False`, no compression is used.
-    config : hikari.utilities.undefined.UndefinedType or hikari.net.http_settings.HTTPSettings
-        Optional aiohttp settings to apply to the created shards.
     debug : bool
         Defaulting to `False`, if `True`, then each payload sent and received
         on the gateway will be dumped to debug logs. This will provide useful
         debugging context at the cost of performance. Generally you do not
         need to enable this.
+    http_settings : hikari.net.config.HTTPSettings
+        HTTP-related configuration.
     initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
         The initial activity to have on each shard.
     initial_activity : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
@@ -88,14 +89,16 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
     large_threshold : int
         The number of members that need to be in a guild for the guild to be
         considered large. Defaults to the maximum, which is `250`.
-    shard_ids : typing.Set[int] or undefined.UndefinedType
+    proxy_settings : hikari.net.config.ProxySettings
+        Proxy-related configuration.
+    shard_ids : typing.Set[int] or None
         A set of every shard ID that should be created and started on startup.
-        If left undefined along with `shard_count`, then auto-sharding is used
+        If left to `None` along with `shard_count`, then auto-sharding is used
         instead, which is the default.
-    shard_count : int or undefined.UndefinedType
-        The number of shards in the entire application. If left undefined along
-        with `shard_ids`, then auto-sharding is used instead, which is the
-        default.
+    shard_count : int or None
+        The number of shards in the entire application. If left to `None`
+        along with `shard_ids`, then auto-sharding is used instead, which is
+        the default.
     token : str
         The bot token to use. This should not start with a prefix such as
         `Bot `, but instead only contain the token itself.
@@ -139,32 +142,26 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         self,
         *,
         compression: bool,
-        config: http_settings.HTTPSettings,
         debug: bool,
-        initial_activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
-        initial_idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
-        initial_is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        initial_status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
+        http_settings: config.HTTPSettings,
+        initial_activity: typing.Union[undefined.UndefinedType, presences.Activity, None],
+        initial_idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None],
+        initial_is_afk: typing.Union[undefined.UndefinedType, bool],
+        initial_status: typing.Union[undefined.UndefinedType, presences.Status],
         intents: typing.Optional[intents_.Intent],
         large_threshold: int,
-        shard_ids: typing.Union[typing.Set[int], undefined.UndefinedType] = undefined.UNDEFINED,
-        shard_count: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
+        proxy_settings: config.ProxySettings,
+        shard_ids: typing.Optional[typing.Set[int]],
+        shard_count: typing.Optional[int],
         token: str,
         version: int,
     ) -> None:
         if undefined.count(shard_ids, shard_count) == 1:
             raise TypeError("You must provide values for both shard_ids and shard_count, or neither.")
-        if shard_ids is not undefined.UNDEFINED:
-            if not shard_ids:
-                raise ValueError("At least one shard ID must be specified if provided.")
-            if not all(shard_id >= 0 for shard_id in shard_ids):
-                raise ValueError("shard_ids must be greater than or equal to 0.")
-            if shard_count is not undefined.UNDEFINED and not all(shard_id < shard_count for shard_id in shard_ids):
-                raise ValueError("shard_ids must be less than the total shard_count.")
 
-        self._aiohttp_config = config
         self._debug = debug
         self._gather_task: typing.Optional[asyncio.Task[None]] = None
+        self._http_settings = http_settings
         self._initial_activity = initial_activity
         self._initial_idle_since = initial_idle_since
         self._initial_is_afk = initial_is_afk
@@ -172,9 +169,10 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         self._intents = intents
         self._large_threshold = large_threshold
         self._max_concurrency = 1
+        self._proxy_settings = proxy_settings
         self._request_close_event = asyncio.Event()
-        self._shard_count = shard_count if shard_count is not undefined.UNDEFINED else 0
-        self._shard_ids = set() if shard_ids is undefined.UNDEFINED else shard_ids
+        self._shard_count: int = shard_count if shard_count is not None else 0
+        self._shard_ids: typing.Set[int] = set() if shard_ids is None else shard_ids
         self._shards: typing.Dict[int, gateway.Gateway] = {}
         self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
@@ -205,7 +203,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
             else:
                 # The user won't care where this gets raised from, unless we are
                 # debugging. It just causes a lot of confusing spam.
-                raise ex.with_traceback(None)  # noqa: R100 raise in except handler without fromflake8
+                raise ex.with_traceback(None)  # noqa: R100 raise in except handler without from
         finally:
             self._map_signal_handlers(loop.remove_signal_handler)
             _LOGGER.info("client has shut down")
@@ -219,11 +217,6 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         self._request_close_event.clear()
 
         await self._maybe_dispatch(other.StartingEvent())
-
-        if self._shard_count > 1:
-            _LOGGER.info("starting %s shard(s)", len(self._shards))
-        else:
-            _LOGGER.info("this application will be single-sharded")
 
         start_time = time.perf_counter()
 
@@ -268,7 +261,10 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
 
             finish_time = time.perf_counter()
             self._gather_task = asyncio.create_task(self._gather(), name=f"zookeeper for {len(self._shards)} shard(s)")
-            _LOGGER.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
+
+            # Don't bother logging this if we are single sharded. It is useless information.
+            if len(self._shard_ids) > 1:
+                _LOGGER.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
 
             await self._maybe_dispatch(other.StartedEvent())
 
@@ -320,36 +316,26 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
     async def _init(self) -> None:
         gw_recs = await self.fetch_sharding_settings()
 
-        _LOGGER.info(
-            "you have opened %s session(s) recently, you can open %s more before %s",
-            gw_recs.session_start_limit.total - gw_recs.session_start_limit.remaining,
-            gw_recs.session_start_limit.remaining if gw_recs.session_start_limit.remaining > 0 else "no",
-            (datetime.datetime.now() + gw_recs.session_start_limit.reset_after).strftime("%c"),
-        )
-
         self._shard_count = self._shard_count if self._shard_count else gw_recs.shard_count
         self._shard_ids = self._shard_ids if self._shard_ids else set(range(self._shard_count))
         self._max_concurrency = gw_recs.session_start_limit.max_concurrency
         url = gw_recs.url
 
-        _LOGGER.info(
-            "will connect shards to %s at a rate of %s shard(s) per 5 seconds (contact Discord to increase this rate)",
-            url,
-            self._max_concurrency,
-        )
+        reset_at = gw_recs.session_start_limit.reset_at.strftime("%d/%m/%y %H:%M:%S %Z").rstrip()
 
         shard_clients: typing.Dict[int, gateway.Gateway] = {}
         for shard_id in self._shard_ids:
             shard = gateway.Gateway(
                 app=self,
-                config=self._aiohttp_config,
                 debug=self._debug,
+                http_settings=self._http_settings,
                 initial_activity=self._initial_activity,
                 initial_idle_since=self._initial_idle_since,
                 initial_is_afk=self._initial_is_afk,
                 initial_status=self._initial_status,
                 intents=self._intents,
                 large_threshold=self._large_threshold,
+                proxy_settings=self._proxy_settings,
                 shard_id=shard_id,
                 shard_count=self._shard_count,
                 token=self._token,
@@ -360,6 +346,28 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
             shard_clients[shard_id] = shard
 
         self._shards = shard_clients
+
+        if len(self._shard_ids) == 1 and self._shard_ids == {0}:
+            _LOGGER.info(
+                "single-sharded configuration -- you have started %s/%s sessions prior to connecting (resets at %s)",
+                gw_recs.session_start_limit.used,
+                gw_recs.session_start_limit.total,
+                reset_at,
+            )
+        else:
+            _LOGGER.info(
+                "max_concurrency: %s (contact Discord for an increase) -- "
+                "will connect %s shards %s; the distributed application should have %s shards in total -- "
+                "you have started %s/%s sessions prior to connecting (resets at %s)",
+                url,
+                gw_recs.session_start_limit.max_concurrency,
+                len(self._shard_ids),
+                reprlib.repr(sorted(self._shard_ids)),
+                self._shard_count,
+                gw_recs.session_start_limit.used,
+                gw_recs.session_start_limit.total,
+                reset_at,
+            )
 
     def _max_concurrency_chunker(self) -> typing.Iterator[typing.Iterator[int]]:
         """Yield generators of shard IDs.

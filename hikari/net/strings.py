@@ -34,6 +34,7 @@ CF_REQUEST_ID_HEADER: typing.Final[str] = "CF-Request-ID"
 CONTENT_LENGTH_HEADER: typing.Final[str] = "Content-Length"
 CONTENT_TYPE_HEADER: typing.Final[str] = "Content-Type"
 DATE_HEADER: typing.Final[str] = "Date"
+PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"
 USER_AGENT_HEADER: typing.Final[str] = "User-Agent"
 X_AUDIT_LOG_REASON_HEADER: typing.Final[str] = "X-Audit-Log-Reason"
 X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = "X-RateLimit-Bucket"
@@ -49,6 +50,7 @@ APPLICATION_XML: typing.Final[str] = "application/xml"
 APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 
 # Bits of text.
+BASICAUTH_TOKEN: typing.Final[str] = "Basic"  # nosec
 BEARER_TOKEN: typing.Final[str] = "Bearer"  # nosec
 BOT_TOKEN: typing.Final[str] = "Bot"  # nosec
 MILLISECOND_PRECISION: typing.Final[str] = "millisecond"

@@ -36,8 +36,8 @@ import typing
 import attr
 
 from hikari.models import guilds
-from hikari.utilities import cdn
 from hikari.utilities import files
+from hikari.utilities import cdn
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
@@ -309,7 +309,7 @@ class Team(snowflake.Unique):
     member object.
     """
 
-    owner_user_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    owner_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of this team's owner."""
 
     def __str__(self) -> str:

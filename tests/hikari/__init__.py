@@ -15,27 +15,22 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import asyncio
-import contextlib
 import sys
 
+import asyncio
 import pytest
 
-_real_new_event_loop = asyncio.new_event_loop
+
+sys.set_coroutine_origin_tracking_depth(100)
 
 
-def _new_event_loop():
-    loop = _real_new_event_loop()
-    loop.set_debug(True)
-
-    with contextlib.suppress(AttributeError):
-        # provisional since py37
-        sys.set_coroutine_origin_tracking_depth(20)
-
-    return loop
+class TestingPolicy(asyncio.DefaultEventLoopPolicy):
+    def set_event_loop(self, loop) -> None:
+        loop.set_debug(True)
+        super().set_event_loop(loop)
 
 
-asyncio.new_event_loop = _new_event_loop
+asyncio.set_event_loop_policy(TestingPolicy())
 
 
 _pytest_parametrize = pytest.mark.parametrize

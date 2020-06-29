@@ -32,6 +32,7 @@ if typing.TYPE_CHECKING:
 
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
+    from hikari.net import config
     from hikari.net import rest as rest_
 
 
@@ -93,6 +94,16 @@ class IRESTClient(abc.ABC):
             return `None` instead.
         """
 
+    @property
+    @abc.abstractmethod
+    def http_settings(self) -> config.HTTPSettings:
+        """HTTP-specific settings."""
+
+    @property
+    @abc.abstractmethod
+    def proxy_settings(self) -> config.ProxySettings:
+        """Proxy-specific settings."""
+
     @abc.abstractmethod
     async def close(self) -> None:
         """Safely shut down all resources."""
@@ -126,7 +137,7 @@ class IRESTClientFactory(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def acquire(self, token: str, token_type: str = strings.BEARER_TOKEN) -> IRESTClient:
+    def acquire(self, token: str, token_type: str = strings.BEARER_TOKEN) -> IRESTClientContextManager:
         """Acquire a REST client for the given authentication details.
 
         Parameters
@@ -145,6 +156,16 @@ class IRESTClientFactory(abc.ABC):
     @abc.abstractmethod
     async def close(self) -> None:
         """Safely shut down all resources."""
+
+    @property
+    @abc.abstractmethod
+    def http_settings(self) -> config.HTTPSettings:
+        """HTTP-specific settings."""
+
+    @property
+    @abc.abstractmethod
+    def proxy_settings(self) -> config.ProxySettings:
+        """Proxy-specific settings."""
 
     @abc.abstractmethod
     async def __aenter__(self) -> IRESTClientFactory:

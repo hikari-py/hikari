@@ -26,8 +26,8 @@ import typing
 
 import attr
 
-from hikari.utilities import cdn
 from hikari.utilities import files
+from hikari.utilities import cdn
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -264,9 +264,6 @@ class OwnUser(User):
     Will be `None` if retrieved through OAuth2 flow without the `email`
     scope. Will always be `None` for bot users.
     """
-
-    flags: UserFlag = attr.ib(eq=False, hash=False, repr=False)
-    """This user account's flags."""
 
     premium_type: typing.Optional[PremiumType] = attr.ib(eq=False, hash=False, repr=False)
     """The type of Nitro Subscription this user account had.
