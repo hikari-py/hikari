@@ -508,6 +508,9 @@ class TestRunOnce:
         client._last_run_started_at = 40
         client._backoff.__next__ = mock.MagicMock(return_value=24.37)
 
+        # We mock create_task, so this will never be awaited if not.
+        client._heartbeat_keepalive = mock.MagicMock()
+
         stack = contextlib.ExitStack()
         wait_for = stack.enter_context(mock.patch.object(asyncio, "wait_for", side_effect=asyncio.TimeoutError))
         create_task = stack.enter_context(mock.patch.object(asyncio, "create_task"))
@@ -556,6 +559,9 @@ class TestRunOnce:
                 "backoff was incremented, but this is not expected to occur in this test case scenario!"
             )
         )
+
+        # We mock create_task, so this will never be awaited if not.
+        client._heartbeat_keepalive = mock.MagicMock()
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(asyncio, "wait_for"))
