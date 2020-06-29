@@ -55,7 +55,7 @@ class Emoji(files.WebResource, abc.ABC):
     @property
     @abc.abstractmethod
     def name(self) -> typing.Optional[str]:
-        """Generic name for the emoji, or the unicode representation."""
+        """Return the generic name/representation for this emoji."""
 
     @property
     @abc.abstractmethod
