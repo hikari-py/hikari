@@ -176,20 +176,25 @@ class IEventDispatcherBase(abc.ABC):
 
     @abc.abstractmethod
     def get_listeners(
-        self, event_type: typing.Type[EventT],
-    ) -> typing.Optional[typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]]:
+        self, event_type: typing.Type[EventT], *, polymorphic: bool = True,
+    ) -> typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]:
         """Get the listeners for a given event type, if there are any.
 
         Parameters
         ----------
-        event_type : typing.Type[T]
+        event_type : typing.Type[hikari.events.base.Event]
             The event type to look for.
+        polymorphic : bool
+            If `True`, this will return `True` if a subclass of the given
+            event type has a listener registered. If `False`, then only
+            listeners for this class specifically are returned. The default
+            is `True`.
 
         Returns
         -------
-        typing.Optional[typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]
-            A copy of the collection of listeners for the event, or `None` if
-            none are registered.
+        typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]
+            A copy of the collection of listeners for the event. Will return
+            an empty collection if nothing is registered.
         """
 
     @abc.abstractmethod
@@ -197,8 +202,23 @@ class IEventDispatcherBase(abc.ABC):
         self,
         event_type: typing.Type[EventT],
         callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
+        *,
+        polymorphic: bool = True,
     ) -> bool:
-        """Check whether the callback is subscribed to the given event."""
+        """Check whether the callback is subscribed to the given event.
+
+        Parameters
+        ----------
+        event_type : typing.Type[hikari.events.base.Event]
+            The event type to look for.
+        callback :
+            The callback to look for.
+        polymorphic : bool
+            If `True`, this will return `True` if a subclass of the given
+            event type has a listener registered. If `False`, then only
+            listeners for this class specifically are checked. The default
+            is `True`.
+        """
 
     @abc.abstractmethod
     def unsubscribe(

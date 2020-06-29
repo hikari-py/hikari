@@ -112,21 +112,37 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
             return callback
 
     def get_listeners(
-        self, event_type: typing.Type[EventT],
-    ) -> typing.Optional[typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]]:
-        items = self._listeners.get(event_type)
-        if items is not None:
-            return items[:]
-        return None
+        self, event_type: typing.Type[EventT], *, polymorphic: bool = True,
+    ) -> typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]:
+        if polymorphic:
+            listeners: typing.List[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]] = []
+            for subscribed_event_type, subscribed_listeners in self._listeners.items():
+                if issubclass(subscribed_event_type, event_type):
+                    listeners += subscribed_listeners
+            return listeners
+        else:
+            items = self._listeners.get(event_type)
+            if items is not None:
+                return items[:]
+
+            return []
 
     def has_listener(
         self,
         event_type: typing.Type[EventT],
         callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
+        *,
+        polymorphic: bool = True,
     ) -> bool:
-        if event_type not in self._listeners:
+        if polymorphic:
+            for subscribed_event_type, listeners in self._listeners.items():
+                if issubclass(subscribed_event_type, event_type) and callback in listeners:
+                    return True
             return False
-        return callback in self._listeners[event_type]
+        else:
+            if event_type not in self._listeners:
+                return False
+            return callback in self._listeners[event_type]
 
     def unsubscribe(
         self,
