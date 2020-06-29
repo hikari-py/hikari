@@ -276,16 +276,18 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         return self.event_dispatcher.listen(event_type)
 
     def get_listeners(
-        self, event_type: typing.Type[EventT],
-    ) -> typing.Optional[typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]]:
-        return self.event_dispatcher.get_listeners(event_type)
+        self, event_type: typing.Type[EventT], *, polymorphic: bool = True,
+    ) -> typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]:
+        return self.event_dispatcher.get_listeners(event_type, polymorphic=polymorphic)
 
     def has_listener(
         self,
         event_type: typing.Type[EventT],
         callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
+        *,
+        polymorphic: bool = True,
     ) -> bool:
-        return self.event_dispatcher.has_listener(event_type, callback)
+        return self.event_dispatcher.has_listener(event_type, callback, polymorphic=polymorphic)
 
     def subscribe(
         self,
