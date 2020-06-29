@@ -613,10 +613,7 @@ class Gateway:
                     user_id = user_pl["id"]
                     tag = user_pl["username"] + "#" + user_pl["discriminator"]
                     self._logger.info(
-                        "shard is ready [session:%s, user_id:%s, tag:%s]",
-                        self.session_id,
-                        user_id,
-                        tag,
+                        "shard is ready [session:%s, user_id:%s, tag:%s]", self.session_id, user_id, tag,
                     )
                     self._handshake_event.set()
 
