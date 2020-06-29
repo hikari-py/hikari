@@ -606,12 +606,22 @@ class Gateway:
             if op == self._GatewayOpcode.DISPATCH:
                 event = message["t"]
                 self._seq = message["s"]
+
                 if event == "READY":
                     self.session_id = data["session_id"]
-                    self._logger.info("connection is ready [session:%s]", self.session_id)
+                    user_pl = data["user"]
+                    user_id = user_pl["id"]
+                    tag = user_pl["username"] + "#" + user_pl["discriminator"]
+                    self._logger.info(
+                        "shard is ready [session:%s, user_id:%s, tag:%s]",
+                        self.session_id,
+                        user_id,
+                        tag,
+                    )
                     self._handshake_event.set()
+
                 elif event == "RESUME":
-                    self._logger.info("connection has resumed [session:%s, seq:%s]", self.session_id, self._seq)
+                    self._logger.info("shard has resumed [session:%s, seq:%s]", self.session_id, self._seq)
                     self._handshake_event.set()
 
                 self._dispatch(event, data)
