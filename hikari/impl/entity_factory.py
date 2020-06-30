@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Basic implementation of an entity factory for general bots and REST apps."""
+"""Basic implementation of an entity factory for general bots and HTTP apps."""
 
 from __future__ import annotations
 
@@ -25,7 +25,8 @@ import datetime
 import typing
 
 from hikari.api import entity_factory
-from hikari.api import rest
+from hikari.api import gateway
+from hikari.api import rest_app
 from hikari.events import channel as channel_events
 from hikari.events import guild as guild_events
 from hikari.events import message as message_events
@@ -46,9 +47,8 @@ from hikari.models import presences as presence_models
 from hikari.models import users as user_models
 from hikari.models import voices as voice_models
 from hikari.models import webhooks as webhook_models
-from hikari.utilities import files
-from hikari.net import gateway
 from hikari.utilities import date
+from hikari.utilities import files
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -78,7 +78,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     This will convert objects to/from JSON compatible representations.
     """
 
-    def __init__(self, app: rest.IRESTClient) -> None:
+    def __init__(self, app: rest_app.IRESTApp) -> None:
         self._app = app
         self._audit_log_entry_converters: typing.Mapping[str, typing.Callable[[typing.Any], typing.Any]] = {
             audit_log_models.AuditLogChangeKey.OWNER_ID: snowflake.Snowflake,
@@ -87,7 +87,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             audit_log_models.AuditLogChangeKey.MFA_LEVEL: guild_models.GuildMFALevel,
             audit_log_models.AuditLogChangeKey.VERIFICATION_LEVEL: guild_models.GuildVerificationLevel,
             audit_log_models.AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guild_models.GuildExplicitContentFilterLevel,
-            audit_log_models.AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guild_models.GuildMessageNotificationsLevel,  # noqa: E501 - Line too long
+            audit_log_models.AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guild_models.GuildMessageNotificationsLevel,
+            # noqa: E501 - Line too long
             audit_log_models.AuditLogChangeKey.PRUNE_DELETE_DAYS: _deserialize_day_timedelta,
             audit_log_models.AuditLogChangeKey.WIDGET_CHANNEL_ID: snowflake.Snowflake,
             audit_log_models.AuditLogChangeKey.POSITION: int,
@@ -140,7 +141,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
     @property
     @typing.final
-    def app(self) -> rest.IRESTClient:
+    def app(self) -> rest_app.IRESTApp:
         return self._app
 
     ######################
@@ -705,6 +706,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         known_custom_emoji = emoji_models.KnownCustomEmoji()
         known_custom_emoji.app = self._app
         known_custom_emoji.id = snowflake.Snowflake(payload["id"])
+        # noinspection PyPropertyAccess
         known_custom_emoji.name = payload["name"]
         known_custom_emoji.is_animated = payload.get("animated", False)
         known_custom_emoji.role_ids = {snowflake.Snowflake(role_id) for role_id in payload.get("roles", ())}
@@ -1791,7 +1793,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ################
 
     def deserialize_ready_event(
-        self, shard: gateway.Gateway, payload: data_binding.JSONObject
+        self, shard: gateway.IGatewayShard, payload: data_binding.JSONObject
     ) -> other_events.ReadyEvent:
         ready_event = other_events.ReadyEvent()
         ready_event.shard = shard

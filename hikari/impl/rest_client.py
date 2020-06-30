@@ -15,11 +15,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Implementation of a V6 and V7 compatible REST API for Discord."""
+"""Implementation of a V6 and V7 compatible HTTP API for Discord."""
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["REST"]
+__all__: typing.Final[typing.Sequence[str]] = ["RESTClientImpl"]
 
 import asyncio
 import contextlib
@@ -33,16 +33,17 @@ import uuid
 
 import aiohttp
 
+from hikari import config
 from hikari import errors
+from hikari.api import rest_client
+from hikari.impl import buckets
+from hikari.impl import constants
+from hikari.impl import rate_limits
+from hikari.impl import response_handler
+from hikari.impl import routes
+from hikari.impl import special_endpoints
 from hikari.models import embeds as embeds_
 from hikari.models import emojis
-from hikari.net import buckets
-from hikari.net import config
-from hikari.net import helpers
-from hikari.net import rate_limits
-from hikari.net import routes
-from hikari.net import special_endpoints
-from hikari.net import strings
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
@@ -51,7 +52,7 @@ from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest
+    from hikari.api import rest_app
 
     from hikari.models import applications
     from hikari.models import audit_logs
@@ -66,13 +67,11 @@ if typing.TYPE_CHECKING:
     from hikari.models import voices
     from hikari.models import webhooks
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net.rest")
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
 
-# TODO: make a mechanism to allow me to share the same client session but
-# use various tokens for REST-only apps.
-class REST:
-    """Implementation of the V6 and V7-compatible Discord REST API.
+class RESTClientImpl(rest_client.IRESTClient):
+    """Implementation of the V6 and V7-compatible Discord HTTP API.
 
     This manages making HTTP/1.1 requests to the API and using the entity
     factory within the passed application instance to deserialize JSON responses
@@ -80,28 +79,34 @@ class REST:
 
     Parameters
     ----------
-    app : hikari.api.rest.IRESTClient
-        The REST application containing all other application components
+    app : hikari.api.rest_app.IRESTApp
+        The HTTP application containing all other application components
         that Hikari uses.
-    debug : bool
-        If `True`, this will enable logging of each payload sent and received,
-        as well as information such as DNS cache hits and misses, and other
-        information useful for debugging this application. These logs will
+    debug : builtins.bool
+        If `builtins.True`, this will enable logging of each payload sent and
+        received, as well as information such as DNS cache hits and misses, and
+        other information useful for debugging this application. These logs will
         be written as DEBUG log entries. For most purposes, this should be
-        left `False`.
-    global_ratelimit : hikari.net.rate_limits.ManualRateLimiter
+        left `builtins.False`.
+    global_ratelimit : hikari.impl.rate_limits.ManualRateLimiter
         The shared ratelimiter to use for the application.
-    token : str or hikari.utilities.undefined.UndefinedType
+    token : builtins.str or hikari.utilities.undefined.UndefinedType
         The bot or bearer token. If no token is to be used,
         this can be undefined.
-    token_type : str or hikari.utilities.undefined.UndefinedType
+    token_type : builtins.str or hikari.utilities.undefined.UndefinedType
         The type of token in use. If no token is used, this can be ignored and
         left to the default value. This can be `"Bot"` or `"Bearer"`.
-    rest_url : str
-        The REST API base URL. This can contain format-string specifiers to
+    rest_url : builtins.str
+        The HTTP API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
-    version : int
-        The API version to use.
+    version : builtins.int
+        The API version to use. Currently only supports `6` and `7`.
+
+    !!! warning
+        The V7 API at the time of writing is considered to be experimental and
+        is undocumented. While currently almost identical in most places to the
+        V6 API, it should not be used unless you are sure you understand the
+        risk that it might break without warning.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -135,7 +140,7 @@ class REST:
     def __init__(
         self,
         *,
-        app: rest.IRESTClient,
+        app: rest_app.IRESTApp,
         connector: typing.Optional[aiohttp.BaseConnector],
         connector_owner: bool,
         debug: bool,
@@ -163,16 +168,20 @@ class REST:
             full_token = None
         else:
             if token_type is None:
-                token_type = strings.BOT_TOKEN
+                token_type = constants.BOT_TOKEN
 
             full_token = f"{token_type.title()} {token}"
 
         self._token: typing.Optional[str] = full_token
 
         if rest_url is None:
-            rest_url = strings.REST_API_URL
+            rest_url = constants.REST_API_URL
 
         self._rest_url = rest_url.format(self)
+
+    @property
+    def app(self) -> rest_app.IRESTApp:
+        return self._app
 
     @typing.final
     def _acquire_client_session(self) -> aiohttp.ClientSession:
@@ -213,13 +222,13 @@ class REST:
             self.buckets.start()
 
         headers = data_binding.StringMapBuilder()
-        headers.setdefault(strings.USER_AGENT_HEADER, strings.HTTP_USER_AGENT)
-        headers.put(strings.X_RATELIMIT_PRECISION_HEADER, strings.MILLISECOND_PRECISION)
+        headers.setdefault(constants.USER_AGENT_HEADER, constants.HTTP_USER_AGENT)
+        headers.put(constants.X_RATELIMIT_PRECISION_HEADER, constants.MILLISECOND_PRECISION)
 
         if self._token is not None and not no_auth:
-            headers[strings.AUTHORIZATION_HEADER] = self._token
+            headers[constants.AUTHORIZATION_HEADER] = self._token
 
-        headers.put(strings.X_AUDIT_LOG_REASON_HEADER, reason)
+        headers.put(constants.X_AUDIT_LOG_REASON_HEADER, reason)
 
         while True:
             try:
@@ -287,7 +296,7 @@ class REST:
 
                 # Handle the response.
                 if 200 <= response.status < 300:
-                    if response.content_type == strings.APPLICATION_JSON:
+                    if response.content_type == constants.APPLICATION_JSON:
                         # Only deserializing here stops Cloudflare shenanigans messing us around.
                         return data_binding.load_json(await response.read())
 
@@ -302,7 +311,7 @@ class REST:
     @staticmethod
     @typing.final
     async def _handle_error_response(response: aiohttp.ClientResponse) -> typing.NoReturn:
-        raise await helpers.generate_error_response(response)
+        raise await response_handler.generate_error_response(response)
 
     @typing.final
     async def _parse_ratelimits(self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse) -> None:
@@ -311,13 +320,13 @@ class REST:
 
         # Handle rate limiting.
         resp_headers = response.headers
-        limit = int(resp_headers.get(strings.X_RATELIMIT_LIMIT_HEADER, "1"))
-        remaining = int(resp_headers.get(strings.X_RATELIMIT_REMAINING_HEADER, "1"))
-        bucket = resp_headers.get(strings.X_RATELIMIT_BUCKET_HEADER, "None")
-        reset_at = float(resp_headers.get(strings.X_RATELIMIT_RESET_HEADER, "0"))
-        reset_after = float(resp_headers.get(strings.X_RATELIMIT_RESET_AFTER_HEADER, "0"))
+        limit = int(resp_headers.get(constants.X_RATELIMIT_LIMIT_HEADER, "1"))
+        remaining = int(resp_headers.get(constants.X_RATELIMIT_REMAINING_HEADER, "1"))
+        bucket = resp_headers.get(constants.X_RATELIMIT_BUCKET_HEADER, "None")
+        reset_at = float(resp_headers.get(constants.X_RATELIMIT_RESET_HEADER, "0"))
+        reset_after = float(resp_headers.get(constants.X_RATELIMIT_RESET_AFTER_HEADER, "0"))
         reset_date = datetime.datetime.fromtimestamp(reset_at, tz=datetime.timezone.utc)
-        now_date = date.rfc7231_datetime_string_to_datetime(resp_headers[strings.DATE_HEADER])
+        now_date = date.rfc7231_datetime_string_to_datetime(resp_headers[constants.DATE_HEADER])
 
         is_rate_limited = response.status == http.HTTPStatus.TOO_MANY_REQUESTS
 
@@ -333,7 +342,7 @@ class REST:
         if not is_rate_limited:
             return
 
-        if response.content_type != strings.APPLICATION_JSON:
+        if response.content_type != constants.APPLICATION_JSON:
             # We don't know exactly what this could imply. It is likely Cloudflare interfering
             # but I'd rather we just give up than do something resulting in multiple failed
             # requests repeatedly.
@@ -429,7 +438,7 @@ class REST:
 
     @typing.final
     async def close(self) -> None:
-        """Close the REST client and any open HTTP connections."""
+        """Close the HTTP client and any open HTTP connections."""
         if self._client_session is not None:
             await self._client_session.close()
         self.buckets.close()
@@ -437,30 +446,6 @@ class REST:
     async def fetch_channel(
         self, channel: typing.Union[channels.PartialChannel, snowflake.UniqueObject]
     ) -> channels.PartialChannel:
-        """Fetch a channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to fetch. This may be a channel object, or the ID of an
-            existing channel.
-
-        Returns
-        -------
-        hikari.models.channels.PartialChannel
-            The fetched channel.
-
-        Raises
-        ------
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to access the channel.
-        hikari.errors.NotFound
-            If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """
         route = routes.GET_CHANNEL.compile(channel=channel)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
@@ -489,53 +474,6 @@ class REST:
         ] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> channels.PartialChannel:
-        """Edit a channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to edit. This may be a channel object, or the ID of an
-            existing channel.
-        name : hikari.utilities.undefined.UndefinedType or str
-            If provided, the new name for the channel.
-        position : hikari.utilities.undefined.UndefinedType or int
-            If provided, the new position for the channel.
-        topic : hikari.utilities.undefined.UndefinedType or str
-            If provided, the new topic for the channel.
-        nsfw : hikari.utilities.undefined.UndefinedType or bool
-            If provided, whether the channel should be marked as NSFW or not.
-        bitrate : hikari.utilities.undefined.UndefinedType or int
-            If provided, the new bitrate for the channel.
-        user_limit : hikari.utilities.undefined.UndefinedType or int
-            If provided, the new user limit in the channel.
-        rate_limit_per_user : hikari.utilities.undefined.UndefinedType or datetime.timedelta or float or int
-            If provided, the new rate limit per user in the channel.
-        permission_overwrites : hikari.utilities.undefined.UndefinedType or typing.Sequence[hikari.models.channels.PermissionOverwrite]
-            If provided, the new permission overwrites for the channel.
-        parent_category : hikari.utilities.undefined.UndefinedType or hikari.models.channels.GuildCategory or hikari.utilities.snowflake.UniqueObject
-            If provided, the new guild category for the channel. This may be
-            a category object, or the ID of an existing category.
-        reason : hikari.utilities.undefined.UndefinedType or str
-            If provided, the reason that will be recorded in the audit logs.
-
-        Returns
-        -------
-        hikari.models.channels.PartialChannel
-            The edited channel.
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to edit the channel
-        hikari.errors.NotFound
-            If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
         route = routes.PATCH_CHANNEL.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
@@ -557,56 +495,8 @@ class REST:
         return self._app.entity_factory.deserialize_channel(response)
 
     async def delete_channel(self, channel: typing.Union[channels.PartialChannel, snowflake.UniqueObject]) -> None:
-        """Delete a channel in a guild, or close a DM.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to delete. This may be a channel object, or the ID of an
-            existing channel.
-
-        Raises
-        ------
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to delete the channel in a guild.
-        hikari.errors.NotFound
-            If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            For Public servers, the set 'Rules' or 'Guidelines' channels and the
-            'Public Server Updates' channel cannot be deleted.
-        """
         route = routes.DELETE_CHANNEL.compile(channel=channel)
         await self._request(route)
-
-    @typing.overload
-    async def edit_permission_overwrites(
-        self,
-        channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
-        target: typing.Union[channels.PermissionOverwrite, users.User, guilds.Role],
-        *,
-        allow: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
-        deny: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-    ) -> None:
-        """Edit permissions for a target entity."""
-
-    @typing.overload
-    async def edit_permission_overwrites(
-        self,
-        channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
-        target: typing.Union[int, str, snowflake.Snowflake],
-        *,
-        target_type: typing.Union[channels.PermissionOverwriteType, str],
-        allow: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
-        deny: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-    ) -> None:
-        """Edit permissions for a given entity ID and type."""
 
     async def edit_permission_overwrites(
         self,
@@ -618,43 +508,6 @@ class REST:
         deny: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
-        """Edit permissions for a specific entity in the given guild channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to edit a permission overwrite in. This may be a channel object, or
-            the ID of an existing channel.
-        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.UniqueObject
-            The channel overwrite to edit. This may be a overwrite object, or the ID of an
-            existing channel.
-        target_type : hikari.utilities.undefined.UndefinedType or hikari.models.channels.PermissionOverwriteType or str
-            If provided, the type of the target to update. If unset, will attempt to get
-            the type from `target`.
-        allow : hikari.utilities.undefined.UndefinedType or hikari.models.permissions.Permission
-            If provided, the new vale of all allowed permissions.
-        deny : hikari.utilities.undefined.UndefinedType or hikari.models.permissions.Permission
-            If provided, the new vale of all disallowed permissions.
-        reason : hikari.utilities.undefined.UndefinedType or str
-            If provided, the reason that will be recorded in the audit logs.
-
-        Raises
-        ------
-        TypeError
-            If `target_type` is unset and we were unable to determine the type
-            from `target`.
-        hikari.errors.BadRequest
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to edit the permission overwrites.
-        hikari.errors.NotFound
-            If the channel is not found or the target is not found if it is
-            a role.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
         if target_type is undefined.UNDEFINED:
             if isinstance(target, users.User):
                 target_type = channels.PermissionOverwriteType.MEMBER
@@ -680,57 +533,12 @@ class REST:
         channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
         target: typing.Union[channels.PermissionOverwrite, guilds.Role, users.User, snowflake.UniqueObject],
     ) -> None:
-        """Delete a custom permission for an entity in a given guild channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to delete a permission overwrite in. This may be a channel
-            object, or the ID of an existing channel.
-        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.UniqueObject
-            The channel overwrite to delete.
-
-        Raises
-        ------
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to delete the permission overwrite.
-        hikari.errors.NotFound
-            If the channel is not found or the target is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
         route = routes.DELETE_CHANNEL_PERMISSIONS.compile(channel=channel, overwrite=target)
         await self._request(route)
 
     async def fetch_channel_invites(
         self, channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
-        """Fetch all invites pointing to the given guild channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to fetch the invites from. This may be a channel
-            object, or the ID of an existing channel.
-
-        Returns
-        -------
-        typing.Sequence[hikari.models.invites.InviteWithMetadata]
-            The invites pointing to the given guild channel.
-
-        Raises
-        ------
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to view the invites for the given channel.
-        hikari.errors.NotFound
-            If the channel is not found in any guilds you are a member of.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """
         route = routes.GET_CHANNEL_INVITES.compile(channel=channel)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
@@ -748,48 +556,6 @@ class REST:
         target_user_type: typing.Union[undefined.UndefinedType, invites.TargetUserType] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
-        """Create an invite to the given guild channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to create a invite for. This may be a channel object,
-            or the ID of an existing channel.
-        max_age : hikari.utilities.undefined.UndefinedType or datetime.timedelta or float or int
-            If provided, the duration of the invite before expiry.
-        max_uses : hikari.utilities.undefined.UndefinedType or int
-            If provided, the max uses the invite can have.
-        temporary : hikari.utilities.undefined.UndefinedType or bool
-            If provided, whether the invite only grants temporary membership.
-        unique : hikari.utilities.undefined.UndefinedType or bool
-            If provided, wheter the invite should be unique.
-        target_user : hikari.utilities.undefined.UndefinedType or hikari.models.users.User or hikari.utilities.snowflake.UniqueObject
-            If provided, the target user id for this invite. This may be a
-            user object, or the ID of an existing user.
-        target_user_type : hikari.utilities.undefined.UndefinedType or hikari.models.invites.TargetUserType or int
-            If provided, the type of target user for this invite.
-        reason : hikari.utilities.undefined.UndefinedType or str
-            If provided, the reason that will be recorded in the audit logs.
-
-        Returns
-        -------
-        hikari.models.invites.InviteWithMetadata
-            The invite to the given guild channel.
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to create the given channel.
-        hikari.errors.NotFound
-            If the channel is not found, or if the target user does not exist,
-            if specified.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
         route = routes.POST_CHANNEL_INVITES.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("max_age", max_age, conversion=date.timespan_to_int)
@@ -805,66 +571,11 @@ class REST:
     def trigger_typing(
         self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
     ) -> special_endpoints.TypingIndicator:
-        """Trigger typing in a text channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to trigger typing in. This may be a channel object, or
-            the ID of an existing channel.
-
-        Returns
-        -------
-        hikari.net.special_endpoints.TypingIndicator
-            A typing indicator to use.
-
-        Raises
-        ------
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to read messages or send messages in the
-            text channel.
-        hikari.errors.NotFound
-            If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            The exceptions on this endpoint will only be raised once the result
-            is awaited or interacted with. Invoking this function itself will
-            not raise any of the above types.
-        """
         return special_endpoints.TypingIndicator(channel, self._request)
 
     async def fetch_pins(
         self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
     ) -> typing.Sequence[messages_.Message]:
-        """Fetch the pinned messages in this text channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to fetch pins from. This may be a channel object, or
-            the ID of an existing channel.
-
-        Returns
-        -------
-        typing.Sequence[hikari.models.messages.Message]
-            The pinned messages in this text channel.
-
-        Raises
-        ------
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to read messages or send messages in the
-            text channel.
-        hikari.errors.NotFound
-            If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """
         route = routes.GET_CHANNEL_PINS.compile(channel=channel)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
@@ -875,29 +586,6 @@ class REST:
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         message: typing.Union[messages_.Message, snowflake.UniqueObject],
     ) -> None:
-        """Pin an existing message in the given text channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to pin a message in. This may be a channel object, or
-            the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
-            The message to pin. This may be a message object,
-            or the ID of an existing message.
-
-        Raises
-        ------
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to pin messages in the given channel.
-        hikari.errors.NotFound
-            If the channel is not found, or if the message does not exist in
-            the given channel.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """
         route = routes.PUT_CHANNEL_PINS.compile(channel=channel, message=message)
         await self._request(route)
 
@@ -906,29 +594,6 @@ class REST:
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         message: typing.Union[messages_.Message, snowflake.UniqueObject],
     ) -> None:
-        """Unpin a given message from a given text channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to unpin a message in. This may be a channel object, or
-            the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
-            The message to unpin. This may be a message object, or the ID of an
-            existing message.
-
-        Raises
-        ------
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to pin messages in the given channel.
-        hikari.errors.NotFound
-            If the channel is not found or the message is not a pinned message
-            in the given channel.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """
         route = routes.DELETE_CHANNEL_PIN.compile(channel=channel, message=message)
         await self._request(route)
 
@@ -940,48 +605,6 @@ class REST:
         after: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
         around: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[messages_.Message]:
-        """Browse the message history for a given text channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to fetch messages in. This may be a channel object, or
-            the ID of an existing channel.
-        before : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
-            If provided, fetch messages before this snowflake. If you provide
-            a datetime object, it will be transformed into a snowflake.
-        after : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
-            If provided, fetch messages after this snowflake. If you provide
-            a datetime object, it will be transformed into a snowflake.
-        around : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
-            If provided, fetch messages around this snowflake. If you provide
-            a datetime object, it will be transformed into a snowflake.
-
-        Returns
-        -------
-        hikari.utilities.iterators.LazyIterator[hikari.models.messages.Message]
-            A iterator to fetch the messages.
-
-        Raises
-        ------
-        TypeError
-            If you specify more than one of `before`, `after`, `about`.
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to read message history in the given
-            channel.
-        hikari.errors.NotFound
-            If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            The exceptions on this endpoint (other than `TypeError`) will only
-            be raised once the result is awaited or interacted with. Invoking
-            this function itself will not raise anything (other than
-            `TypeError`).
-        """  # noqa: E501 - Line too long
         if undefined.count(before, after, around) < 2:
             raise TypeError("Expected no kwargs, or maximum of one of 'before', 'after', 'around'")
 
@@ -1007,35 +630,6 @@ class REST:
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         message: typing.Union[messages_.Message, snowflake.UniqueObject],
     ) -> messages_.Message:
-        """Fetch a specific message in the given text channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to fetch messages in. This may be a channel object, or
-            the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
-            The message to fetch. This may be a channel object, or the ID of an
-            existing channel.
-
-        Returns
-        -------
-        hikari.models.messages.Message
-            The requested message.
-
-        Raises
-        ------
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to read message history in the given
-            channel.
-        hikari.errors.NotFound
-            If the channel is not found or the message is not found in the
-            given text channel.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """
         route = routes.GET_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
@@ -1057,71 +651,6 @@ class REST:
         user_mentions: typing.Union[typing.Collection[typing.Union[users.User, snowflake.UniqueObject]], bool] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]], bool] = True,
     ) -> messages_.Message:
-        """Create a message in the given channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to create the message in. This may be a channel object, or
-            the ID of an existing channel.
-        text : hikari.utilities.undefined.UndefinedType or str
-            If specified, the message contents.
-        embed : hikari.utilities.undefined.UndefinedType or hikari.models.embeds.Embed
-            If specified, the message embed.
-        attachment : hikari.utilities.undefined.UndefinedType or str or hikari.utilities.files.Resource
-            If specified, the message attachment. This can be a resource,
-            or string of a path on your computer or a URL.
-        attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[str or hikari.utilities.files.Resource]
-            If specified, the message attachments. These can be resources, or
-            strings consisting of paths on your computer or URLs.
-        tts : hikari.utilities.undefined.UndefinedType or bool
-            If specified, whether the message will be TTS (Text To Speech).
-        nonce : hikari.utilities.undefined.UndefinedType or str
-            If specified, a nonce that can be used for optimistic message sending.
-        mentions_everyone : bool
-            If specified, whether the message should parse @everyone/@here mentions.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or bool
-            If specified, and `bool`, whether to parse user mentions. If specified and
-            `list`, the users to parse the mention for. This may be a user object, or
-            the ID of an existing user.
-        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or bool
-            If specified and `bool`, whether to parse role mentions. If specified and
-            `list`, the roles to parse the mention for. This may be a role object, or
-            the ID of an existing role.
-
-        Returns
-        -------
-        hikari.models.messages.Message
-            The created message.
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            This may be raised in several discrete situations, such as messages
-            being empty with no attachments or embeds; messages with more than
-            2000 characters in them, embeds that exceed one of the many embed
-            limits; too many attachments; attachments that are too large;
-            invalid image URLs in embeds; users in `user_mentions` not being
-            mentioned in the message content; roles in `role_mentions` not
-            being mentioned in the message content.
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to send messages in the given channel.
-        hikari.errors.NotFound
-            If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        ValueError
-            If more than 100 unique objects/entities are passed for
-            `role_mentions` or `user_mentions`.
-        TypeError
-            If both `attachment` and `attachments` are specified.
-
-        !!! warning
-            You are expected to make a connection to the gateway and identify
-            once before being able to use this endpoint for a bot.
-        """  # noqa: E501 - Line too long
         if attachment is not undefined.UNDEFINED and attachments is not undefined.UNDEFINED:
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
@@ -1146,7 +675,7 @@ class REST:
 
         if final_attachments:
             form = data_binding.URLEncodedForm()
-            form.add_field("payload_json", data_binding.dump_json(body), content_type=strings.APPLICATION_JSON)
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=constants.APPLICATION_JSON)
 
             stack = contextlib.AsyncExitStack()
 
@@ -1154,7 +683,7 @@ class REST:
                 for i, attachment in enumerate(final_attachments):
                     stream = await stack.enter_async_context(attachment.stream(executor=self._app.executor))
                     form.add_field(
-                        f"file{i}", stream, filename=stream.filename, content_type=strings.APPLICATION_OCTET_STREAM
+                        f"file{i}", stream, filename=stream.filename, content_type=constants.APPLICATION_OCTET_STREAM
                     )
 
                 raw_response = await self._request(route, form=form)
@@ -1182,48 +711,6 @@ class REST:
         ] = undefined.UNDEFINED,
         flags: typing.Union[undefined.UndefinedType, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        """Edit an existing message in a given channel.
-
-        Parameters
-        ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to edit the message in. This may be a channel object, or
-            the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
-            The message to fetch.
-        text
-        embed
-        mentions_everyone
-        user_mentions
-        role_mentions
-        flags
-
-        Returns
-        -------
-        hikari.models.messages.Message
-            The edited message.
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            This may be raised in several discrete situations, such as messages
-            being empty with no embeds; messages with more than 2000 characters
-            in them, embeds that exceed one of the many embed
-            limits; invalid image URLs in embeds; users in `user_mentions` not
-            being mentioned in the message content; roles in `role_mentions` not
-            being mentioned in the message content.
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to send messages in the given channel; if
-            you try to change the contents of another user's message; or if you
-            try to edit the flags on another user's message without the
-            permissions to manage messages_.
-        hikari.errors.NotFound
-            If the channel or message is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """
         route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         body = data_binding.JSONObjectBuilder()
         body.put("flags", flags)
@@ -1249,25 +736,6 @@ class REST:
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         message: typing.Union[messages_.Message, snowflake.UniqueObject],
     ) -> None:
-        """Delete a given message in a given channel.
-
-        Parameters
-        ----------
-        channel
-        message
-
-        Raises
-        ------
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack the permissions to manage messages, and the message is
-            not composed by your associated user.
-        hikari.errors.NotFound
-            If the channel or message is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """
         route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         await self._request(route)
 
@@ -1277,27 +745,6 @@ class REST:
         /,
         *messages: typing.Union[messages_.Message, snowflake.UniqueObject],
     ) -> None:
-        """Bulk-delete between 2 and 100 messages from the given guild channel.
-
-        Parameters
-        ----------
-        channel
-        *messages
-
-        Raises
-        ------
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack the permissions to manage messages, and the message is
-            not composed by your associated user.
-        hikari.errors.NotFound
-            If the channel or message is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        TypeError
-            If you do not provide between 2 and 100 messages (inclusive).
-        """
         if 2 <= len(messages) <= 100:
             route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
             body = data_binding.JSONObjectBuilder()
@@ -1312,28 +759,6 @@ class REST:
         message: typing.Union[messages_.Message, snowflake.UniqueObject],
         emoji: typing.Union[str, emojis.Emoji],
     ) -> None:
-        """Add a reaction emoji to a message in a given channel.
-
-        Parameters
-        ----------
-        channel
-        message
-        emoji
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            If an invalid unicode emoji is given, or if the given custom emoji
-            does not exist.
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack permissions to add reactions to messages.
-        hikari.errors.NotFound
-            If the channel or message is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """
         route = routes.PUT_MY_REACTION.compile(
             emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
             channel=channel,
@@ -1347,26 +772,6 @@ class REST:
         message: typing.Union[messages_.Message, snowflake.UniqueObject],
         emoji: typing.Union[str, emojis.Emoji],
     ) -> None:
-        """Delete a reaction that your application user created.
-
-        Parameters
-        ----------
-        channel
-        message
-        emoji
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            If an invalid unicode emoji is given, or if the given custom emoji
-            does not exist.
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFound
-            If the channel or message is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """
         route = routes.DELETE_MY_REACTION.compile(
             emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
             channel=channel,
@@ -1575,7 +980,7 @@ class REST:
 
         if final_attachments:
             form = data_binding.URLEncodedForm()
-            form.add_field("payload_json", data_binding.dump_json(body), content_type=strings.APPLICATION_JSON)
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=constants.APPLICATION_JSON)
 
             stack = contextlib.AsyncExitStack()
 
@@ -1583,7 +988,7 @@ class REST:
                 for i, attachment in enumerate(final_attachments):
                     stream = await stack.enter_async_context(attachment.stream(executor=self._app.executor))
                     form.add_field(
-                        f"file{i}", stream, filename=stream.filename, content_type=strings.APPLICATION_OCTET_STREAM
+                        f"file{i}", stream, filename=stream.filename, content_type=constants.APPLICATION_OCTET_STREAM
                     )
 
                 raw_response = await self._request(route, query=query, form=form, no_auth=True)
@@ -1639,8 +1044,8 @@ class REST:
         if avatar is None:
             body.put("avatar", None)
         elif avatar is not undefined.UNDEFINED:
-            avatar_resouce = files.ensure_resource(avatar)
-            async with avatar_resouce.stream(executor=self._app.executor) as stream:
+            avatar_resource = files.ensure_resource(avatar)
+            async with avatar_resource.stream(executor=self._app.executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, json=body)
@@ -2173,7 +1578,7 @@ class REST:
         route = routes.DELETE_GUILD_MEMBER_ROLE.compile(guild=guild, user=user, role=role)
         await self._request(route, reason=reason)
 
-    async def kick_member(
+    async def kick_user(
         self,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         user: typing.Union[users.User, snowflake.UniqueObject],
@@ -2182,6 +1587,8 @@ class REST:
     ) -> None:
         route = routes.DELETE_GUILD_MEMBER.compile(guild=guild, user=user)
         await self._request(route, reason=reason)
+
+    kick_member = kick_user
 
     async def ban_user(
         self,
@@ -2196,6 +1603,8 @@ class REST:
         route = routes.PUT_GUILD_BAN.compile(guild=guild, user=user)
         await self._request(route, reason=reason, json=body)
 
+    ban_member = ban_user
+
     async def unban_user(
         self,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
@@ -2205,6 +1614,8 @@ class REST:
     ) -> None:
         route = routes.DELETE_GUILD_BAN.compile(guild=guild, user=user)
         await self._request(route, reason=reason)
+
+    unban_member = unban_user
 
     async def fetch_ban(
         self,
@@ -2316,38 +1727,6 @@ class REST:
             undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
         ] = undefined.UNDEFINED,
     ) -> int:
-        """Estimate the guild prune count.
-
-        Parameters
-        ----------
-        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
-            The guild to estimate the guild prune count for. This may be a guild object,
-            or the ID of an existing channel.
-        days : hikari.utilities.undefined.UndefinedType or int
-            If provided, number of days to count prune for.
-        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject]
-            If provided, the role(s) to include. By default, this endpoint will not count
-            users with roles. Providing roles using this attribute will make members with
-            the specified roles also get included into the count.
-
-        Returns
-        -------
-        int
-            The estimated guild prune count.
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack the `KICK_MEMBERS` permission.
-        hikari.errors.NotFound
-            If the guild is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
         route = routes.GET_GUILD_PRUNE.compile(guild=guild)
         query = data_binding.StringMapBuilder()
         query.put("days", days)
@@ -2369,43 +1748,6 @@ class REST:
         ] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> typing.Optional[int]:
-        """Begin the guild prune.
-
-        Parameters
-        ----------
-        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
-            The guild to begin the guild prune in. This may be a guild object,
-            or the ID of an existing channel.
-        days : hikari.utilities.undefined.UndefinedType or int
-            If provided, number of days to count prune for.
-        compute_prune_count: hikari.utilities.undefined.UndefinedType or bool
-            If provided, whether to return the prune count. This is discouraged for large
-            guilds.
-        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject]
-            If provided, the role(s) to include. By default, this endpoint will not count
-            users with roles. Providing roles using this attribute will make members with
-            the specified roles also get included into the count.
-        reason : hikari.utilities.undefined.UndefinedType or str
-            If provided, the reason that will be recorded in the audit logs.
-
-        Returns
-        -------
-        int or None
-            If `compute_prune_count` is not provided or `True`, the number of members pruned.
-
-        Raises
-        ------
-        hikari.errors.BadRequest
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack the `KICK_MEMBERS` permission.
-        hikari.errors.NotFound
-            If the guild is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
         route = routes.POST_GUILD_PRUNE.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("days", days)

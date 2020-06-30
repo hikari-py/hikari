@@ -48,11 +48,10 @@ import urllib.parse
 import aiohttp.client
 import attr
 
-from hikari.net import helpers
+from hikari.impl import response_handler
 
 if typing.TYPE_CHECKING:
     import types
-
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 _MAGIC: typing.Final[int] = 50 * 1024
@@ -78,15 +77,15 @@ def ensure_resource(url_or_resource: typing.Union[None, str, Resource], /) -> ty
 
     Parameters
     ----------
-    url_or_resource : None or str or Resource
-        The item to convert. If the item is `None`, then `None` is returned.
-        Likewise if a `Resource` is passed, it is simply returned again.
-        Anything else is converted to a `Resource` first.
+    url_or_resource : builtins.None or builtins.str or Resource
+        The item to convert. If the item is `builtins.None`, then
+        `builtins.None` is returned. Likewise if a `Resource` is passed, it is
+        simply returned again. Anything else is converted to a `Resource` first.
 
     Returns
     -------
-    Resource or None
-        The resource to use, or `None` if `None` was input.
+    Resource or builtins.None
+        The resource to use, or `builtins.None` if `builtins.None` was input.
     """
     if isinstance(url_or_resource, Resource):
         return url_or_resource
@@ -106,13 +105,13 @@ def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
 
     Parameters
     ----------
-    name : bytes
+    name : builtins.bytes
         The filename to inspect.
 
     Returns
     -------
-    str or None
-        The closest guess to the given filename. May be `None` if
+    builtins.str or builtins.None
+        The closest guess to the given filename. May be `builtins.None` if
         no match was found.
     """
     guess, _ = mimetypes.guess_type(name)
@@ -128,14 +127,14 @@ def guess_mimetype_from_data(data: bytes, /) -> typing.Optional[str]:
 
     Parameters
     ----------
-    data : bytes
+    data : builtins.bytes
         The byte content to inspect.
 
     Returns
     -------
-    str or None
+    builtins.str or builtins.None
         The mimetype, if it was found. If the header is unrecognised, then
-        `None` is returned.
+        `builtins.None` is returned.
     """
     if data.startswith(b"\211PNG\r\n\032\n"):
         return "image/png"
@@ -153,7 +152,7 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
 
     Parameters
     ----------
-    mimetype : str
+    mimetype : builtins.str
         The mimetype to guess the extension for.
 
     Example
@@ -165,9 +164,9 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
 
     Returns
     -------
-    str or None
+    builtins.str or builtins.None
         The file extension, prepended with a `.`. If no match was found,
-        return `None`.
+        return `builtins.None`.
     """
     return mimetypes.guess_extension(mimetype)
 
@@ -182,16 +181,16 @@ def generate_filename_from_details(
 
     Parameters
     ----------
-    mimetype : str or None
-        The mimetype of the content, or `None` if not known.
-    extension : str or None
-        The file extension to use, or `None` if not known.
-    data : bytes or None
-        The data to inspect, or `None` if not known.
+    mimetype : builtins.str or builtins.None
+        The mimetype of the content, or `builtins.None` if not known.
+    extension : builtins.str or builtins.None
+        The file extension to use, or `builtins.None` if not known.
+    data : builtins.bytes or builtins.None
+        The data to inspect, or `builtins.None` if not known.
 
     Returns
     -------
-    str
+    builtins.str
         A generated quasi-unique filename.
     """
     if data is not None and mimetype is None:
@@ -213,14 +212,14 @@ def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
 
     Parameters
     ----------
-    data : bytes
+    data : builtins.bytes
         The data to encode as base64.
-    mimetype : str or None
-        The mimetype, or `None` if we should attempt to guess it.
+    mimetype : builtins.str or builtins.None
+        The mimetype, or `builtins.None` if we should attempt to guess it.
 
     Returns
     -------
-    str
+    builtins.str
         A data URI string.
     """
     if mimetype is None:
@@ -245,7 +244,7 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
     """The filename of the resource."""
 
     mimetype: typing.Optional[str]
-    """The mimetype of the resource. May be `None` if not known."""
+    """The mimetype of the resource. May be `builtins.None` if not known."""
 
     async def data_uri(self) -> str:
         """Fetch the data URI.
@@ -255,7 +254,7 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
         return to_data_uri(await self.read(), self.mimetype)
 
     async def read(self) -> bytes:
-        """Read the rest of the resource and return it in a `bytes` object."""
+        """Read the rest of the resource and return it in a `builtins.bytes` object."""
         buff = bytearray()
         async for chunk in self:
             buff.extend(chunk)
@@ -300,7 +299,7 @@ class WebReader(AsyncReader):
     """The size of the resource, if known."""
 
     head_only: bool
-    """If `True`, then only the HEAD was requested.
+    """If `builtins.True`, then only the HEAD was requested.
 
     In this case, neither `__aiter__` nor `read` would return anything other
     than an empty byte string.
@@ -492,7 +491,7 @@ class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReade
                     head_only=self._head_only,
                 )
             else:
-                raise await helpers.generate_error_response(resp)
+                raise await response_handler.generate_error_response(resp)
 
         except Exception as ex:
             await ctx.__aexit__(type(ex), ex, ex.__traceback__)
@@ -537,14 +536,14 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 
         Parameters
         ----------
-        executor : concurrent.futures.Executor or None
+        executor : concurrent.futures.Executor or builtins.None
             The executor to run in for blocking operations.
-            If `None`, then the default executor is used for the current
-            event loop.
-        head_only : bool
-            Defaults to `False`. If `True`, then the implementation may
-            only retrieve HEAD information if supported. This currently
-            only has any effect for web requests.
+            If `builtins.None`, then the default executor is used for the
+            current event loop.
+        head_only : builtins.bool
+            Defaults to `builtins.False`. If `builtins.True`, then the
+            implementation may only retrieve HEAD information if supported.
+            This currently only has any effect for web requests.
 
         Returns
         -------
@@ -572,15 +571,16 @@ class Bytes(Resource[ByteReader]):
 
     Parameters
     ----------
-    data : bytes
+    data : builtins.bytes
         The raw data.
-    mimetype : str or None
-        The mimetype, or `None` if you do not wish to specify this.
-    filename : str or None
-        The filename to use, or `None` if one should be generated as needed.
-    extension : str or None
-        The file extension to use, or `None` if one should be determined
-        manually as needed.
+    mimetype : builtins.str or builtins.None
+        The mimetype, or `builtins.None` if you do not wish to specify this.
+    filename : builtins.str or builtins.None
+        The filename to use, or `builtins.None` if one should be generated as
+        needed.
+    extension : builtins.str or builtins.None
+        The file extension to use, or `builtins.None` if one should be
+        determined manually as needed.
 
     !!! note
         You only need to provide one of `mimetype`, `filename`, or `extension`.
@@ -599,10 +599,10 @@ class Bytes(Resource[ByteReader]):
     """The raw data to upload."""
 
     mimetype: typing.Optional[str]
-    """The provided mimetype, if specified. Otherwise `None`."""
+    """The provided mimetype, if specified. Otherwise `builtins.None`."""
 
     extension: typing.Optional[str]
-    """The provided file extension, if specified. Otherwise `None`."""
+    """The provided file extension, if specified. Otherwise `builtins.None`."""
 
     def __init__(
         self,
@@ -647,9 +647,9 @@ class Bytes(Resource[ByteReader]):
 
         Parameters
         ----------
-        executor : concurrent.futures.Executor or None
+        executor : concurrent.futures.Executor or builtins.None
             Not used. Provided only to match the underlying interface.
-        head_only : bool
+        head_only : builtins.bool
             Not used. Provided only to match the underlying interface.
 
         Returns
@@ -676,7 +676,7 @@ class WebResource(Resource[WebReader], abc.ABC):
         occur is within embeds.
 
         If you need to re-upload the resource, you should download it into
-        a `Bytes` and pass that instead in these cases.
+        a `builtins.bytes` and pass that instead in these cases.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -691,12 +691,12 @@ class WebResource(Resource[WebReader], abc.ABC):
 
         Parameters
         ----------
-        executor : concurrent.futures.Executor or None
+        executor : concurrent.futures.Executor or builtins.None
             Not used. Provided only to match the underlying interface.
-        head_only : bool
-            Defaults to `False`. If `True`, then the implementation may
-            only retrieve HEAD information if supported. This currently
-            only has any effect for web requests.
+        head_only : builtins.bool
+            Defaults to `builtins.False`. If `builtins.True`, then the
+            implementation may only retrieve HEAD information if supported.
+            This currently only has any effect for web requests.
 
         Examples
         --------
@@ -755,7 +755,7 @@ class URL(WebResource):
 
     Parameters
     ----------
-    url : str
+    url : builtins.str
         The URL of the resource.
 
     !!! note
@@ -764,7 +764,7 @@ class URL(WebResource):
         occur is within embeds.
 
         If you need to re-upload the resource, you should download it into
-        a `Bytes` and pass that instead in these cases.
+        a `builtins.bytes` and pass that instead in these cases.
     """
 
     __slots__: typing.Sequence[str] = ("_url",)
@@ -787,7 +787,7 @@ class File(Resource[FileReader]):
 
     Parameters
     ----------
-    path : str or os.PathLike or pathlib.Path
+    path : builtins.str or os.PathLike or pathlib.Path
         The path to use.
 
         !!! note
@@ -798,8 +798,8 @@ class File(Resource[FileReader]):
             This will all be performed as required in an executor to prevent
             blocking the event loop.
 
-    filename : str or None
-        The filename to use. If this is `None`, the name of the file is taken
+    filename : builtins.str or builtins.None
+        The filename to use. If this is `builtins.None`, the name of the file is taken
         from the path instead.
     """
 
@@ -830,11 +830,11 @@ class File(Resource[FileReader]):
 
         Parameters
         ----------
-        executor : typing.Optional[concurrent.futures.Executor]
-            The executor to run the blocking read operations in. If `None`,
-            the default executor for the running event loop will be used
-            instead.
-        head_only : bool
+        executor : concurrent.futures.Executor or builtins.None
+            The executor to run the blocking read operations in. If
+            `builtins.None`, the default executor for the running event loop
+            will be used instead.
+        head_only : builtins.bool
             Not used. Provided only to match the underlying interface.
 
         Returns

@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["Gateway"]
+__all__: typing.Final[typing.Sequence[str]] = ["GatewayShardImpl"]
 
 import asyncio
 import enum
@@ -34,65 +34,68 @@ import aiohttp
 import attr
 
 from hikari import errors
+from hikari.api import gateway
+from hikari.impl import constants
+from hikari.impl import rate_limits
 from hikari.models import presences
-from hikari.net import rate_limits
-from hikari.net import strings
 from hikari.utilities import data_binding
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import config
     from hikari.api import event_consumer
-    from hikari.net import config
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import intents as intents_
     from hikari.utilities import snowflake
 
 
-class Gateway:
+class GatewayShardImpl(gateway.IGatewayShard):
     """Implementation of a V6 and V7 compatible gateway.
 
     Parameters
     ----------
     app : hikari.api.event_consumer.IEventConsumerApp
         The base application.
-    debug : bool
-        If `True`, each sent and received payload is dumped to the logs. If
-        `False`, only the fact that data has been sent/received will be logged.
-    http_settings : hikari.net.config.HTTPSettings
+    debug : builtins.bool
+        If `builtins.True`, each sent and received payload is dumped to the
+        logs. If `builtins.False`, only the fact that data has been
+        sent/received will be logged.
+    http_settings : hikari.config.HTTPSettings
         The HTTP-related settings to use while negotiating a websocket.
-    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
+    initial_activity : hikari.models.presences.Activity or builtins.None or hikari.utilities.undefined.UndefinedType
         The initial activity to appear to have for this shard.
-    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
+    initial_idle_since : datetime.datetime or builtins.None or hikari.utilities.undefined.UndefinedType
         The datetime to appear to be idle since.
-    initial_is_afk : bool or hikari.utilities.undefined.UndefinedType
+    initial_is_afk : builtins.bool or hikari.utilities.undefined.UndefinedType
         Whether to appear to be AFK or not on login.
     initial_status : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
         The initial status to set on login for the shard.
-    intents : hikari.models.intents.Intent or None
-        Collection of intents to use, or `None` to not use intents at all.
-    large_threshold : int
+    intents : hikari.models.intents.Intent or builtins.None
+        Collection of intents to use, or `builtins.None` to not use intents at
+        all.
+    large_threshold : builtins.int
         The number of members to have in a guild for it to be considered large.
-    proxy_settings : hikari.net.config.ProxySettings
+    proxy_settings : hikari.config.ProxySettings
         The proxy settings to use while negotiating a websocket.
-    shard_id : int
+    shard_id : builtins.int
         The shard ID.
-    shard_count : int
+    shard_count : builtins.int
         The shard count.
-    token : str
+    token : builtins.str
         The bot token to use.
-    url : str
+    url : builtins.str
         The gateway URL to use. This should not contain a query-string or
         fragments.
-    use_compression : bool
-        If `True`, then transport compression is enabled.
-    use_etf : bool
-        If `True`, ETF is used to receive payloads instead of JSON. Defaults to
-        `False`. Currently, setting this to `True` will raise a
-        `NotImplementedError`.
-    version : int
+    use_compression : builtins.bool
+        If `builtins.True`, then transport compression is enabled.
+    use_etf : builtins.bool
+        If `builtins.True`, ETF is used to receive payloads instead of JSON.
+        Defaults to `builtins.False`. Currently, setting this to `builtins.True`
+        will raise a `builtins.NotImplementedError`.
+    version : builtins.int
         Gateway API version to use.
 
     !!! note
@@ -201,7 +204,7 @@ class Gateway:
         self._intents: typing.Optional[intents_.Intent] = intents
         self._is_afk: typing.Union[undefined.UndefinedType, bool] = initial_is_afk
         self._last_run_started_at = float("nan")
-        self._logger = logging.getLogger(f"hikari.net.gateway.{shard_id}")
+        self._logger = logging.getLogger(f"hikari.gateway.{shard_id}")
         self._proxy_settings = proxy_settings
         self._request_close_event = asyncio.Event()
         self._seq: typing.Optional[str] = None
@@ -245,19 +248,11 @@ class Gateway:
         return self._app
 
     @property
+    @typing.final
     def is_alive(self) -> bool:
-        """Return whether the shard is alive."""
         return not math.isnan(self.connected_at)
 
     async def start(self) -> asyncio.Task[None]:
-        """Start the shard, wait for it to become ready.
-
-        Returns
-        -------
-        asyncio.Task
-            The task containing the shard running logic. Awaiting this will
-            wait until the shard has shut down before returning.
-        """
         run_task = asyncio.create_task(self._run(), name=f"shard {self._shard_id} keep-alive")
         await self._handshake_event.wait()
         return run_task
@@ -308,7 +303,7 @@ class Gateway:
                 self._handshake_event.set()
 
     async def _run_once_shielded(self, client_session: aiohttp.ClientSession) -> bool:
-        # Returns `True` if we can reconnect, or `False` otherwise.
+        # Returns `builtins.True` if we can reconnect, or `builtins.False` otherwise.
         # Wraps the runner logic in the standard exception handling mechanisms.
         try:
             await self._run_once(client_session)
@@ -442,22 +437,6 @@ class Gateway:
         activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
         status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
     ) -> None:
-        """Update the presence of the shard user.
-
-        Parameters
-        ----------
-        idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
-            The datetime that the user started being idle. If undefined, this
-            will not be changed.
-        afk : bool or hikari.utilities.undefined.UndefinedType
-            If `True`, the user is marked as AFK. If `False`, the user is marked
-            as being active. If undefined, this will not be changed.
-        activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
-            The activity to appear to be playing. If undefined, this will not be
-            changed.
-        status : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
-            The web status to show. If undefined, this will not be changed.
-        """
         if idle_since is undefined.UNDEFINED:
             idle_since = self._idle_since
         if afk is undefined.UNDEFINED:
@@ -489,23 +468,6 @@ class Gateway:
         self_mute: bool = False,
         self_deaf: bool = False,
     ) -> None:
-        """Update the voice state for this shard in a given guild.
-
-        Parameters
-        ----------
-        guild : hikari.models.guilds.PartialGuild or hikari.utilities.snowflake.UniqueObject
-            The guild or guild ID to update the voice state for.
-        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.UniqueObject or None
-            The channel or channel ID to update the voice state for. If `None`
-            then the bot will leave the voice channel that it is in for the
-            given guild.
-        self_mute : bool
-            If `True`, the bot will mute itself in that voice channel. If
-            `False`, then it will unmute itself.
-        self_deaf : bool
-            If `True`, the bot will deafen itself in that voice channel. If
-            `False`, then it will undeafen itself.
-        """
         payload = self._app.entity_factory.serialize_gateway_voice_state_update(guild, channel, self_mute, self_deaf)
         await self._send_json({"op": self._GatewayOpcode.VOICE_STATE_UPDATE, "d": payload})
 
@@ -537,9 +499,9 @@ class Gateway:
                 "compress": False,
                 "large_threshold": self.large_threshold,
                 "properties": {
-                    "$os": strings.SYSTEM_TYPE,
-                    "$browser": strings.AIOHTTP_VERSION,
-                    "$device": strings.LIBRARY_VERSION,
+                    "$os": constants.SYSTEM_TYPE,
+                    "$browser": constants.AIOHTTP_VERSION,
+                    "$device": constants.LIBRARY_VERSION,
                 },
                 "shard": [self._shard_id, self._shard_count],
             },

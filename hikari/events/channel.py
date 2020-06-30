@@ -42,7 +42,7 @@ from hikari.models import intents
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest
+    from hikari.api import rest_app
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import invites
@@ -88,13 +88,13 @@ class ChannelPinsUpdateEvent(base_events.Event):
     when a pinned message is deleted.
     """
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild where this event happened.
 
-    Will be `None` if this happened in a DM channel.
+    Will be `builtins.None` if this happened in a DM channel.
     """
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -103,7 +103,7 @@ class ChannelPinsUpdateEvent(base_events.Event):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(repr=True)
     """The datetime of when the most recent message was pinned in this channel.
 
-    Will be `None` if there are no messages pinned after this change.
+    Will be `builtins.None` if there are no messages pinned after this change.
     """
 
 
@@ -115,7 +115,7 @@ class WebhookUpdateEvent(base_events.Event):
     Sent when a webhook is updated, created or deleted in a guild.
     """
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -133,7 +133,7 @@ class TypingStartEvent(base_events.Event):
     Received when a user or bot starts "typing" in a channel.
     """
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -142,7 +142,7 @@ class TypingStartEvent(base_events.Event):
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild this typing event is occurring in.
 
-    Will be `None` if this event is happening in a DM channel.
+    Will be `builtins.None` if this event is happening in a DM channel.
     """
 
     user_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -154,7 +154,7 @@ class TypingStartEvent(base_events.Event):
     member: typing.Optional[guilds.Member] = attr.ib(repr=False)
     """The member object of the user who triggered this typing event.
 
-    Will be `None` if this was triggered in a DM.
+    Will be `builtins.None` if this was triggered in a DM.
     """
 
 
@@ -175,7 +175,7 @@ class InviteDeleteEvent(base_events.Event):
     Sent when an invite is deleted for a channel we can access.
     """
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -187,5 +187,5 @@ class InviteDeleteEvent(base_events.Event):
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild this invite was deleted in.
 
-    This will be `None` if this invite belonged to a DM channel.
+    This will be `builtins.None` if this invite belonged to a DM channel.
     """

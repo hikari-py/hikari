@@ -27,7 +27,6 @@ import typing
 from hikari.api import event_consumer
 from hikari.api import event_dispatcher
 
-
 if typing.TYPE_CHECKING:
     import datetime
 
@@ -35,7 +34,7 @@ if typing.TYPE_CHECKING:
 class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatcherApp, abc.ABC):
     """Base for bot applications.
 
-    Bots are components that have access to a REST API, an event dispatcher,
+    Bots are components that have access to a HTTP API, an event dispatcher,
     and an event consumer.
 
     Additionally, bots will contain a collection of Gateway client objects.
@@ -50,6 +49,11 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
 
         If the application has not been started, then this will return
         a `datetime.timedelta` of 0 seconds.
+
+        Returns
+        -------
+        datetime.timedelta
+            The number of seconds the application has been running.
         """
 
     @property
@@ -58,5 +62,11 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
         """Return the timestamp when the bot was started.
 
         If the application has not been started, then this will return
-        `None`.
+        `builtins.None`.
+
+        Returns
+        -------
+        datetime.datetime or builtins.None
+            The date/time that the application started at, or `builtins.None` if
+            not yet running.
         """

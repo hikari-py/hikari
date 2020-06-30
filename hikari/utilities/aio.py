@@ -33,14 +33,15 @@ def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future
 
     Parameters
     ----------
-    result : T_inv or None
+    result : T
         The value to set for the result of the future.
-        `T_inv` is a generic type placeholder for the type that
-        the future will have set as the result.
+        `T` is a generic type placeholder for the type that
+        the future will have set as the result. `T` may be `builtins.None`, in
+        which case, this will return `asyncio.Future[builtins.None]`.
 
     Returns
     -------
-    asyncio.Future[T_inv or None]
+    asyncio.Future[T]
         The completed future.
     """
     future = asyncio.get_event_loop().create_future()

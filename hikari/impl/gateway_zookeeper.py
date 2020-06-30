@@ -32,19 +32,19 @@ import time
 import typing
 
 from hikari.api import event_dispatcher
+from hikari.api import gateway
 from hikari.api import gateway_zookeeper
 from hikari.events import other
-from hikari.net import gateway
+from hikari.impl import gateway as gateway_impl
 from hikari.utilities import aio
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
+    from hikari import config
     from hikari.events import base as base_events
-    from hikari.net import config
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
     from hikari.models import presences
-
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
@@ -58,51 +58,52 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
     ability to manage sharding.
 
     !!! note
-        This does not provide REST API functionality.
+        This does not provide HTTP API functionality.
 
     Parameters
     ----------
-    compression : bool
-        Defaulting to `True`, if `True`, then zlib transport compression is used
-        for each shard connection. If `False`, no compression is used.
-    debug : bool
-        Defaulting to `False`, if `True`, then each payload sent and received
-        on the gateway will be dumped to debug logs. This will provide useful
-        debugging context at the cost of performance. Generally you do not
-        need to enable this.
-    http_settings : hikari.net.config.HTTPSettings
+    compression : builtins.bool
+        Defaulting to `builtins.True`, if `builtins.True`, then zlib transport
+        compression is used for each shard connection. If `builtins.False`, no
+        compression is used.
+    debug : builtins.bool
+        Defaulting to `builtins.False`, if `builtins.True`, then each payload
+        sent and received on the gateway will be dumped to debug logs. This
+        will provide useful debugging context at the cost of performance.
+        Generally you do not need to enable this.
+    http_settings : hikari.config.HTTPSettings
         HTTP-related configuration.
-    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
+    initial_activity : hikari.models.presences.Activity or builtins.None or hikari.utilities.undefined.UndefinedType
         The initial activity to have on each shard.
     initial_activity : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
         The initial status to have on each shard.
-    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
-        The initial time to show as being idle since, or `None` if not idle,
-        for each shard.
-    initial_idle_since : bool or hikari.utilities.undefined.UndefinedType
-        If `True`, each shard will appear as being AFK on startup. If `False`,
-        each shard will appear as _not_ being AFK.
-    intents : hikari.models.intents.Intent or None
-        The intents to use for each shard. If `None`, then no intents are
-        passed. Note that on the version `7` gateway, this will cause an
+    initial_idle_since : datetime.datetime or builtins.None or hikari.utilities.undefined.UndefinedType
+        The initial time to show as being idle since, or `builtins.None` if not
+        idle, for each shard.
+    initial_idle_since : builtins.bool or hikari.utilities.undefined.UndefinedType
+        If `builtins.True`, each shard will appear as being AFK on startup. If
+        `builtins.False`, each shard will appear as _not_ being AFK.
+    intents : hikari.models.intents.Intent or builtins.None
+        The intents to use for each shard. If `builtins.None`, then no intents
+        are passed. Note that on the version `7` gateway, this will cause an
         immediate connection close with an error code.
-    large_threshold : int
+    large_threshold : builtins.int
         The number of members that need to be in a guild for the guild to be
         considered large. Defaults to the maximum, which is `250`.
-    proxy_settings : hikari.net.config.ProxySettings
+    proxy_settings : hikari.config.ProxySettings
         Proxy-related configuration.
-    shard_ids : typing.Set[int] or None
+    shard_ids : typing.Set[builtins.int] or builtins.None
         A set of every shard ID that should be created and started on startup.
-        If left to `None` along with `shard_count`, then auto-sharding is used
+        If left to `builtins.None` along with `shard_count`, then auto-sharding
+        is used instead, which is the default.
+    shard_count : builtins.int or builtins.None
+        The number of shards in the entire application. If left to
+        `builtins.None` along with `shard_ids`, then auto-sharding is used
         instead, which is the default.
-    shard_count : int or None
-        The number of shards in the entire application. If left to `None`
-        along with `shard_ids`, then auto-sharding is used instead, which is
-        the default.
-    token : str
+    token : builtins.str
         The bot token to use. This should not start with a prefix such as
         `Bot `, but instead only contain the token itself.
-    version : int
+    version : builtins.int
         The version of the gateway to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to using v6.
@@ -113,12 +114,12 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         application will use the Discord-provided recommendation for the number
         of shards to start.
 
-        If only one of these two parameters are specified, expect a `TypeError`
-        to be raised.
+        If only one of these two parameters are specified, expect a
+        `builtins.TypeError` to be raised.
 
         Likewise, all shard_ids must be greater-than or equal-to `0`, and
         less than `shard_count` to be valid. Failing to provide valid
-        values will result in a `ValueError` being raised.
+        values will result in a `builtins.ValueError` being raised.
 
     !!! note
         If all four of `initial_activity`, `initial_idle_since`,
@@ -128,9 +129,9 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
 
     Raises
     ------
-    ValueError
+    builtins.ValueError
         If sharding information is provided, but is unfeasible or invalid.
-    TypeError
+    builtins.TypeError
         If sharding information is not specified correctly.
     """
 
@@ -173,14 +174,14 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         self._request_close_event = asyncio.Event()
         self._shard_count: int = shard_count if shard_count is not None else 0
         self._shard_ids: typing.Set[int] = set() if shard_ids is None else shard_ids
-        self._shards: typing.Dict[int, gateway.Gateway] = {}
+        self._shards: typing.Dict[int, gateway.IGatewayShard] = {}
         self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
         self._use_compression = compression
         self._version = version
 
     @property
-    def shards(self) -> typing.Mapping[int, gateway.Gateway]:
+    def shards(self) -> typing.Mapping[int, gateway.IGatewayShard]:
         return self._shards
 
     @property
@@ -323,9 +324,9 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
 
         reset_at = gw_recs.session_start_limit.reset_at.strftime("%d/%m/%y %H:%M:%S %Z").rstrip()
 
-        shard_clients: typing.Dict[int, gateway.Gateway] = {}
+        shard_clients: typing.Dict[int, gateway.IGatewayShard] = {}
         for shard_id in self._shard_ids:
-            shard = gateway.Gateway(
+            shard = gateway_impl.GatewayShardImpl(
                 app=self,
                 debug=self._debug,
                 http_settings=self._http_settings,

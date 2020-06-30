@@ -62,12 +62,12 @@ class CompiledRoute:
 
         Parameters
         ----------
-        base_url : str
+        base_url : builtins.str
             The base of the URL to prepend to the compiled path.
 
         Returns
         -------
-        str
+        builtins.str
             The full URL for the route.
         """
         return base_url + self.compiled_path
@@ -80,13 +80,13 @@ class CompiledRoute:
 
         Parameters
         ----------
-        initial_bucket_hash : str
+        initial_bucket_hash : builtins.str
             The initial bucket hash provided by Discord in the HTTP headers
             for a given response.
 
         Returns
         -------
-        str
+        builtins.str
             The input hash amalgamated with a hash code produced by the
             major parameters in this compiled route instance.
         """
@@ -106,9 +106,9 @@ class Route:
 
     Parameters
     ----------
-    method : str
+    method : builtins.str
         The HTTP method
-    path_template : str
+    path_template : builtins.str
         The template string for the path to use.
     """
 

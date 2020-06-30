@@ -36,12 +36,11 @@ import email.utils
 import re
 import typing
 
-
 TimeSpan = typing.Union[int, float, datetime.timedelta]
 """Type hint representing a naive time period or time span.
 
 This is an alias for `typing.Union[int, float, datetime.datetime]`,
-where `int` and `float` types are interpreted as a number of seconds.
+where `builtins.int` and `builtins.float` types are interpreted as a number of seconds.
 """
 
 DISCORD_EPOCH: typing.Final[int] = 1_420_070_400
@@ -65,7 +64,7 @@ def rfc7231_datetime_string_to_datetime(date_str: str, /) -> datetime.datetime:
 
     Parameters
     ----------
-    date_str : str
+    date_str : builtins.str
         The RFC-2822 (section 3.3) compliant date string to parse.
 
     Returns
@@ -87,7 +86,7 @@ def iso8601_datetime_string_to_datetime(date_string: str, /) -> datetime.datetim
 
     Parameters
     ----------
-    date_string : str
+    date_string : builtins.str
         The ISO-8601 compliant date string to parse.
 
     Returns
@@ -125,7 +124,7 @@ def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
 
     Parameters
     ----------
-    epoch : int
+    epoch : builtins.int
         Number of milliseconds since `1/1/2015 00:00:00 UTC`.
 
     Returns
@@ -137,7 +136,7 @@ def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
 
 
 def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
-    """Parse a `datetime.datetime` object into an `int` `DISCORD_EPOCH` offset.
+    """Parse a `datetime.datetime` object into an `builtins.int` `DISCORD_EPOCH` offset.
 
     Parameters
     ----------
@@ -146,7 +145,7 @@ def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
 
     Returns
     -------
-    int
+    builtins.int
         Number of milliseconds since `1/1/2015 00:00:00 UTC`.
     """
     return int((timestamp.timestamp() - DISCORD_EPOCH) * 1_000)
@@ -157,7 +156,7 @@ def unix_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
 
     Parameters
     ----------
-    epoch : int
+    epoch : builtins.int
         Number of milliseconds since `1/1/1970 00:00:00 UTC`.
 
     Returns
@@ -191,7 +190,7 @@ def timespan_to_int(value: TimeSpan, /) -> int:
 
     Returns
     -------
-    int
+    builtins.int
         The integer number of seconds. Fractions are discarded. Negative values
         are removed.
     """
