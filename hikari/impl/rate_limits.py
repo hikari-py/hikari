@@ -40,7 +40,7 @@ import typing
 if typing.TYPE_CHECKING:
     import types
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.impl.ratelimits")
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ratelimits")
 
 
 class BaseRateLimiter(abc.ABC):

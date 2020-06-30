@@ -21,8 +21,6 @@ from __future__ import annotations
 __all__: typing.Final[typing.Sequence[str]] = ["ICacheComponent"]
 
 import abc
-
-# noinspection PyUnresolvedReferences
 import typing
 
 from hikari.api import component

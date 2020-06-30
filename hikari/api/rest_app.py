@@ -19,28 +19,28 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["IRESTClient", "IRESTClientFactory", "IRESTClientContextManager"]
+__all__: typing.Final[typing.Sequence[str]] = ["IRESTApp", "IRESTAppFactory", "IRESTAppContextManager"]
 
 import abc
 import typing
 
-from hikari.impl import strings
+from hikari.impl import constants
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
     import types
 
+    from hikari import config
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
-    from hikari.impl import config
-    from hikari.impl import http as rest_
+    from hikari.api import rest_client
 
 
-class IRESTClient(abc.ABC):
+class IRESTApp(abc.ABC):
     """Component specialization that is used for HTTP-only applications.
 
     This is a specific instance of a HTTP-only client provided by pooled
-    implementations of `IRESTClientFactory`. It may also be used by bots
+    implementations of `IRESTAppFactory`. It may also be used by bots
     as a base if they require HTTP-API access.
     """
 
@@ -48,14 +48,14 @@ class IRESTClient(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def rest(self) -> rest_.HTTP:
+    def rest(self) -> rest_client.IRESTClient:
         """HTTP API Client.
 
         Use this to make calls to Discord's HTTP API over HTTPS.
 
         Returns
         -------
-        hikari.impl.http.HTTP
+        hikari.api.rest_client.IRESTClient
             The HTTP API client.
         """
 
@@ -109,11 +109,11 @@ class IRESTClient(abc.ABC):
         """Safely shut down all resources."""
 
 
-class IRESTClientContextManager(IRESTClient):
-    """An IRESTClient that may behave as a context manager."""
+class IRESTAppContextManager(IRESTApp):
+    """An IRESTApp that may behave as a context manager."""
 
     @abc.abstractmethod
-    async def __aenter__(self) -> IRESTClientContextManager:
+    async def __aenter__(self) -> IRESTAppContextManager:
         ...
 
     @abc.abstractmethod
@@ -126,7 +126,7 @@ class IRESTClientContextManager(IRESTClient):
         ...
 
 
-class IRESTClientFactory(abc.ABC):
+class IRESTAppFactory(abc.ABC):
     """A client factory that emits clients.
 
     This enables a connection pool to be shared for stateless HTTP-only
@@ -137,7 +137,7 @@ class IRESTClientFactory(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def acquire(self, token: str, token_type: str = strings.BEARER_TOKEN) -> IRESTClientContextManager:
+    def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> IRESTAppContextManager:
         """Acquire a HTTP client for the given authentication details.
 
         Parameters
@@ -149,7 +149,7 @@ class IRESTClientFactory(abc.ABC):
 
         Returns
         -------
-        IRESTClient
+        IRESTApp
             The HTTP client to use.
         """
 
@@ -168,7 +168,7 @@ class IRESTClientFactory(abc.ABC):
         """Proxy-specific settings."""
 
     @abc.abstractmethod
-    async def __aenter__(self) -> IRESTClientFactory:
+    async def __aenter__(self) -> IRESTAppFactory:
         ...
 
     @abc.abstractmethod

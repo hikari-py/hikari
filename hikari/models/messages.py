@@ -42,7 +42,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import rest
+    from hikari.api import rest_app
     from hikari.models import applications
     from hikari.models import channels
     from hikari.models import embeds as embeds_
@@ -221,7 +221,7 @@ class MessageCrosspost:
     "published" to another.
     """
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
@@ -250,7 +250,7 @@ class MessageCrosspost:
 class Message(snowflake.Unique):
     """Represents a message."""
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(

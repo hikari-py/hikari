@@ -40,7 +40,7 @@ from hikari.utilities import snowflake
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import rest
+    from hikari.api import rest_app
     from hikari.models import channels
     from hikari.models import users
 
@@ -61,7 +61,7 @@ class TargetUserType(int, enum.Enum):
 class VanityURL:
     """A special case invite object, that represents a guild's vanity url."""
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
@@ -174,7 +174,7 @@ class InviteGuild(guilds.PartialGuild):
 class Invite:
     """Represents an invite that's used to add users to a guild or group dm."""
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
