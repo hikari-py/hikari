@@ -157,13 +157,13 @@ class User(PartialUser):
     """This user's username."""
 
     avatar_hash: typing.Optional[str]
-    """This user's avatar hash, if they have one, otherwise `None`."""
+    """This user's avatar hash, if they have one, otherwise `builtins.None`."""
 
     is_bot: bool
-    """`True` if this user is a bot account, `False` otherwise."""
+    """`builtins.True` if this user is a bot account, `builtins.False` otherwise."""
 
     is_system: bool
-    """`True` if this user is a system account, `False` otherwise."""
+    """`builtins.True` if this user is a system account, `builtins.False` otherwise."""
 
     flags: UserFlag
     """The public flags for this user."""
@@ -185,38 +185,39 @@ class User(PartialUser):
 
     @property
     def avatar(self) -> typing.Optional[files.URL]:
-        """Avatar for the user if set, else `None`."""
+        """Avatar for the user if set, else `builtins.None`."""
         return self.format_avatar()
 
     def format_avatar(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the avatar for this user, if set.
 
-        If no custom avatar is set, this returns `None`. You can then use the
-        `default_avatar_url` attribute instead to fetch the displayed URL.
+        If no custom avatar is set, this returns `builtins.None`. You can then
+        use the `default_avatar_url` attribute instead to fetch the displayed
+        URL.
 
         Parameters
         ----------
-        format_ : str or `None`
+        format_ : builtins.str or builtins.None
             The format to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated). Will be ignored for default avatars which can only be
             `png`.
 
-            If `None`, then the correct default format is determined based on
-            whether the icon is animated or not.
-        size : int
+            If `builtins.None`, then the correct default format is determined
+            based on whether the icon is animated or not.
+        size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
             Will be ignored for default avatars.
 
         Returns
         -------
-        hikari.utilities.files.URL
-            The URL to the avatar, or `None` if not present.
+        hikari.utilities.files.URL or builtins.None
+            The URL to the avatar, or `builtins.None` if not present.
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.avatar_hash is None:
@@ -254,21 +255,21 @@ class OwnUser(User):
     is_verified: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether the email for this user's account has been verified.
 
-    Will be `None` if retrieved through the OAuth2 flow without the `email`
+    Will be `builtins.None` if retrieved through the OAuth2 flow without the `email`
     scope.
     """
 
     email: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The user's set email.
 
-    Will be `None` if retrieved through OAuth2 flow without the `email`
-    scope. Will always be `None` for bot users.
+    Will be `builtins.None` if retrieved through OAuth2 flow without the `email`
+    scope. Will always be `builtins.None` for bot users.
     """
 
     premium_type: typing.Optional[PremiumType] = attr.ib(eq=False, hash=False, repr=False)
     """The type of Nitro Subscription this user account had.
 
-    This will always be `None` for bots.
+    This will always be `builtins.None` for bots.
     """
 
     async def fetch_self(self) -> OwnUser:

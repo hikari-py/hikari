@@ -85,7 +85,7 @@ class Webhook(snowflake.Unique):
     """The user that created the webhook
 
     !!! info
-        This will be `None` when getting a webhook with bot authorization rather
+        This will be `builtins.None` when getting a webhook with bot authorization rather
         than the webhook's token.
     """
 
@@ -130,36 +130,36 @@ class Webhook(snowflake.Unique):
 
         Parameters
         ----------
-        text : str or hikari.utilities.undefined.UndefinedType
+        text : builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, the message content to send with the message.
-        username : str or hikari.utilities.undefined.UndefinedType
+        username : builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, the username to override the webhook's username
             for this request.
-        avatar_url : str or hikari.utilities.undefined.UndefinedType
+        avatar_url : builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, the url of an image to override the webhook's
             avatar with for this request.
-        tts : bool or hikari.utilities.undefined.UndefinedType
+        tts : builtins.bool or hikari.utilities.undefined.UndefinedType
             If specified, whether the message will be sent as a TTS message.
-        attachment : hikari.utilities.undefined.UndefinedType or str or hikari.utilities.files.Resource
+        attachment : hikari.utilities.undefined.UndefinedType or builtins.str or hikari.utilities.files.Resource
             If specified, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
-        attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[str or hikari.utilities.files.Resource]
+        attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[builtins.str or hikari.utilities.files.Resource]
             If specified, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
         embeds : typing.Sequence[hikari.models.embeds.Embed] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of between `1` to `10` embed objects
             (inclusive) to send with the embed.
-        mentions_everyone : bool
+        mentions_everyone : builtins.bool
             Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to `True`.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or bool
+            discord and lead to actual pings, defaults to `builtins.True`.
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             Either an array of user objects/IDs to allow mentions for,
-            `True` to allow all user mentions or `False` to block all
-            user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or bool
+            `builtins.True` to allow all user mentions or `builtins.False` to
+            block all user mentions from resolving, defaults to `builtins.True`.
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             Either an array of guild role objects/IDs to allow mentions for,
-            `True` to allow all role mentions or `False` to block all
-            role mentions from resolving, defaults to `True`.
+            `builtins.True` to allow all role mentions or `builtins.False` to
+            block all role mentions from resolving, defaults to `builtins.True`.
 
         Returns
         -------
@@ -179,10 +179,10 @@ class Webhook(snowflake.Unique):
             due to it being outside of the range of a 64 bit integer.
         hikari.errors.Unauthorized
             If you pass a token that's invalid for the target webhook.
-        ValueError
-            If either `Webhook.token` is `None` or more than 100 unique
+        builtins.ValueError
+            If either `Webhook.token` is `builtins.None` or more than 100 unique
             objects/entities are passed for `role_mentions` or `user_mentions.
-        TypeError
+        builtins.TypeError
             If both `attachment` and `attachments` are specified.
         """  # noqa: E501 - Line too long
         if not self.token:
@@ -208,11 +208,11 @@ class Webhook(snowflake.Unique):
 
         Parameters
         ----------
-        use_token : bool or hikari.utilities.undefined.UndefinedType
-            If set to `True` then the webhook's token will be used for this
-            request; if set to `False` then bot authorization will be used;
-            if not specified then the webhook's token will be used for the
-            request if it's set else bot authorization.
+        use_token : builtins.bool or hikari.utilities.undefined.UndefinedType
+            If set to `builtins.True` then the webhook's token will be used for
+            this request; if set to `builtins.False` then bot authorization will
+            be used; if not specified then the webhook's token will be used for
+            the request if it's set else bot authorization.
 
         Raises
         ------
@@ -221,8 +221,9 @@ class Webhook(snowflake.Unique):
         hikari.errors.Forbidden
             If you either lack the `MANAGE_WEBHOOKS` permission or
             aren't a member of the guild this webhook belongs to.
-        ValueError
-            If `use_token` is passed as `True` when `Webhook.token` is `None`.
+        builtins.ValueError
+            If `use_token` is passed as `builtins.True` when `Webhook.token` is
+            `builtins.None`.
         """
         if use_token and self.token is None:
             raise ValueError("This webhook's token is unknown, so cannot be used.")
@@ -247,23 +248,23 @@ class Webhook(snowflake.Unique):
 
         Parameters
         ----------
-        name : str or hikari.utilities.undefined.UndefinedType
+        name : builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, the new name string.
         avatar : hikari.utilities.files.Resource or None or hikari.utilities.undefined.UndefinedType
-            If specified, the new avatar image. If `None`, then
+            If specified, the new avatar image. If `builtins.None`, then
             it is removed. If not specified, nothing is changed.
         channel : hikari.models.channels.GuildChannel or hikari.utilities.snowflake.UniqueObject or hikari.utilities.undefined.UndefinedType
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
-        reason : str or hikari.utilities.undefined.UndefinedType
+        reason : builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, the audit log reason explaining why the operation
             was performed. This field will be used when using the webhook's
             token rather than bot authorization.
-        use_token : bool or hikari.utilities.undefined.UndefinedType
-            If set to `True` then the webhook's token will be used for this
-            request; if set to `False` then bot authorization will be used;
-            if not specified then the webhook's token will be used for the
-            request if it's set else bot authorization.
+        use_token : builtins.bool or hikari.utilities.undefined.UndefinedType
+            If set to `builtins.True` then the webhook's token will be used for
+            this request; if set to `builtins.False` then bot authorization will
+            be used; if not specified then the webhook's token will be used for
+            the request if it's set else bot authorization.
 
         Returns
         -------
@@ -282,8 +283,8 @@ class Webhook(snowflake.Unique):
             aren't a member of the guild this webhook belongs to.
         hikari.errors.Unauthorized
             If you pass a token that's invalid for the target webhook.
-        ValueError
-            If `use_token` is passed as `True` when `Webhook.token` is `None`.
+        builtins.ValueError
+            If `use_token` is passed as `builtins.True` when `Webhook.token` is `builtins.None`.
         """  # noqa: E501 - Line too long
         if use_token and self.token is None:
             raise ValueError("This webhook's token is unknown, so cannot be used.")
@@ -319,11 +320,11 @@ class Webhook(snowflake.Unique):
 
         Parameters
         ----------
-        use_token : bool or hikari.utilities.undefined.UndefinedType
-            If set to `True` then the webhook's token will be used for this
-            request; if set to `False` then bot authorization will be used;
-            if not specified then the webhook's token will be used for the
-            request if it's set else bot authorization.
+        use_token : builtins.bool or hikari.utilities.undefined.UndefinedType
+            If set to `builtins.True` then the webhook's token will be used for
+            this request; if set to `builtins.False` then bot authorization will
+            be used; if not specified then the webhook's token will be used for
+            the request if it's set else bot authorization.
 
         Returns
         -------
@@ -342,8 +343,9 @@ class Webhook(snowflake.Unique):
             lack the `MANAGE_WEBHOOKS` permission.
         hikari.errors.Unauthorized
             If you pass a token that's invalid for the target webhook.
-        ValueError
-            If `use_token` is passed as `True` when `Webhook.token` is `None`.
+        builtins.ValueError
+            If `use_token` is passed as `builtins.True` when `Webhook.token`
+            is `builtins.None`.
         """
         if use_token and not self.token:
             raise ValueError("This webhook's token is unknown, so cannot be used.")
@@ -379,28 +381,31 @@ class Webhook(snowflake.Unique):
         return cdn.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
 
     def format_avatar(self, format_: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
-        """Generate the avatar URL for this webhook's custom avatar if set, else it's default avatar.
+        """Generate the avatar URL for this webhook's custom avatar if set.
+
+        If no avatar is specified, return `None`. In this case, you should
+        use `default_avatar` instead.
 
         Parameters
         ----------
-        format_ : str
+        format_ : builtins.str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg`, `webp`. This will be ignored for
             default avatars which can only be `png`.
-        size : int
+        size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
             Will be ignored for default avatars.
 
         Returns
         -------
-        hikari.utilities.files.URL or None
-            The URL of the resource. `None` if no avatar is set (in this case,
-            use the `default_avatar` instead).
+        hikari.utilities.files.URL or builtins.None
+            The URL of the resource. `builtins.None` if no avatar is set (in
+            this case, use the `default_avatar` instead).
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If `size` is not a power of two between 16 and 4096 (inclusive).
         """
         if self.avatar_hash is None:

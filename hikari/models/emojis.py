@@ -242,7 +242,7 @@ class CustomEmoji(snowflake.Unique, Emoji):
     is_animated: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=True)
     """Whether the emoji is animated.
 
-    Will be `None` when received in Message Reaction Remove and Message
+    Will be `builtins.None` when received in Message Reaction Remove and Message
     Reaction Remove Emoji events.
     """
 
@@ -292,14 +292,14 @@ class KnownCustomEmoji(CustomEmoji):
     """The user that created the emoji.
 
     !!! note
-        This will be `None` if you are missing the `MANAGE_EMOJIS`
+        This will be `builtins.None` if you are missing the `MANAGE_EMOJIS`
         permission in the server the emoji is from.
     """
 
     is_animated: bool = attr.ib(eq=False, hash=False, repr=True)
     """Whether the emoji is animated.
 
-    Unlike in `CustomEmoji`, this information is always known, and will thus never be `None`.
+    Unlike in `CustomEmoji`, this information is always known, and will thus never be `builtins.None`.
     """
 
     is_colons_required: bool = attr.ib(eq=False, hash=False, repr=False)
@@ -311,5 +311,5 @@ class KnownCustomEmoji(CustomEmoji):
     is_available: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this emoji can currently be used.
 
-    May be `False` due to a loss of Sever Boosts on the emoji's guild.
+    May be `builtins.False` due to a loss of Sever Boosts on the emoji's guild.
     """

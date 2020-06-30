@@ -58,7 +58,7 @@ class EmbedResource(files.Resource):
     """The resource this object wraps around."""
 
     proxy_resource: typing.Optional[files.Resource] = attr.ib(default=None, repr=False, init=False)
-    """The proxied version of the resource, or `None` if not present.
+    """The proxied version of the resource, or `builtins.None` if not present.
 
     !!! note
         This field cannot be set by bots or webhooks while sending an embed
@@ -82,14 +82,14 @@ class EmbedResource(files.Resource):
 
         Parameters
         ----------
-        executor : concurrent.futures.Executor or None
+        executor : concurrent.futures.Executor or builtins.None
             The executor to run in for blocking operations.
-            If `None`, then the default executor is used for the current
-            event loop.
-        head_only : bool
-            Defaults to `False`. If `True`, then the implementation may
-            only retrieve HEAD information if supported. This currently
-            only has any effect for web requests.
+            If `builtins.None`, then the default executor is used for the
+            current event loop.
+        head_only : builtins.bool
+            Defaults to `builtins.False`. If `builtins.True`, then the
+            implementation may only retrieve HEAD information if supported.
+            This currently only has any effect for web requests.
         """
         return self.resource.stream(executor=executor, head_only=head_only)
 
@@ -99,10 +99,10 @@ class EmbedFooter:
     """Represents an embed footer."""
 
     text: typing.Optional[str] = attr.ib(default=None, repr=True)
-    """The footer text, or `None` if not present."""
+    """The footer text, or `builtins.None` if not present."""
 
     icon: typing.Optional[EmbedResource] = attr.ib(default=None, repr=False)
-    """The URL of the footer icon, or `None` if not present."""
+    """The URL of the footer icon, or `builtins.None` if not present."""
 
 
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)
@@ -110,7 +110,7 @@ class EmbedImage(EmbedResource):
     """Represents an embed image."""
 
     height: typing.Optional[int] = attr.ib(default=None, repr=False, init=False)
-    """The height of the image, if present and known, otherwise `None`.
+    """The height of the image, if present and known, otherwise `builtins.None`.
 
     !!! note
         This field cannot be set by bots or webhooks while sending an embed and
@@ -119,7 +119,7 @@ class EmbedImage(EmbedResource):
     """
 
     width: typing.Optional[int] = attr.ib(default=None, repr=False, init=False)
-    """The width of the image, if present and known, otherwise `None`.
+    """The width of the image, if present and known, otherwise `builtins.None`.
 
     !!! note
         This field cannot be set by bots or webhooks while sending an embed and
@@ -174,16 +174,16 @@ class EmbedAuthor:
     """Represents an author of an embed."""
 
     name: typing.Optional[str] = attr.ib(default=None, repr=True)
-    """The name of the author, or `None` if not specified."""
+    """The name of the author, or `builtins.None` if not specified."""
 
     url: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The URL that the author's name should act as a hyperlink to.
 
-    This may be `None` if no hyperlink on the author's name is specified.
+    This may be `builtins.None` if no hyperlink on the author's name is specified.
     """
 
     icon: typing.Optional[EmbedResource] = attr.ib(default=None, repr=False)
-    """The author's icon, or `None` if not present."""
+    """The author's icon, or `builtins.None` if not present."""
 
 
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)
@@ -202,7 +202,7 @@ class EmbedField:
     # in the constructor for `_inline`.
     @property
     def is_inline(self) -> bool:
-        """Return `True` if the field should display inline.
+        """Return `builtins.True` if the field should display inline.
 
         Defaults to False.
         """
@@ -218,11 +218,11 @@ class Embed:
     """Represents an embed."""
 
     color: typing.Optional[colors.Color] = attr.ib(default=None, repr=False, converter=_maybe_color)
-    """Colour of the embed, or `None` to use the default."""
+    """Colour of the embed, or `builtins.None` to use the default."""
 
     @property
     def colour(self) -> typing.Optional[colors.Color]:
-        """Colour of the embed, or `None` to use the default.
+        """Colour of the embed, or `builtins.None` to use the default.
 
         !!! note
             This is an alias for `color` for people who do not use Americanized
@@ -236,16 +236,16 @@ class Embed:
         self.color = value  # type: ignore
 
     title: typing.Optional[str] = attr.ib(default=None, repr=True)
-    """The title of the embed, or `None` if not present."""
+    """The title of the embed, or `builtins.None` if not present."""
 
     description: typing.Optional[str] = attr.ib(default=None, repr=False)
-    """The description of the embed, or `None` if not present."""
+    """The description of the embed, or `builtins.None` if not present."""
 
     url: typing.Optional[str] = attr.ib(default=None, repr=False)
-    """The URL of the embed, or `None` if not present."""
+    """The URL of the embed, or `builtins.None` if not present."""
 
     timestamp: typing.Optional[datetime.datetime] = attr.ib(default=None, repr=True)
-    """The timestamp of the embed, or `None` if not present.
+    """The timestamp of the embed, or `builtins.None` if not present.
 
     !!! note
         If specified, this should be treated as a UTC timestamp. Ensure any
@@ -302,16 +302,16 @@ class Embed:
     """
 
     footer: typing.Optional[EmbedFooter] = attr.ib(default=None, repr=False)
-    """The footer of the embed, if present, otherwise `None`."""
+    """The footer of the embed, if present, otherwise `builtins.None`."""
 
     image: typing.Optional[EmbedImage] = attr.ib(default=None, repr=False)
-    """The image to display in the embed, or `None` if not present."""
+    """The image to display in the embed, or `builtins.None` if not present."""
 
     thumbnail: typing.Optional[EmbedImage] = attr.ib(default=None, repr=False)
-    """The thumbnail to show in the embed, or `None` if not present."""
+    """The thumbnail to show in the embed, or `builtins.None` if not present."""
 
     video: typing.Optional[EmbedVideo] = attr.ib(default=None, repr=False, init=False)
-    """The video to show in the embed, or `None` if not present.
+    """The video to show in the embed, or `builtins.None` if not present.
 
     !!! note
         This object cannot be set by bots or webhooks while sending an embed and

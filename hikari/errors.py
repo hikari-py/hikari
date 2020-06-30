@@ -93,11 +93,11 @@ class GatewayError(HikariError):
 
 
 class GatewayClientClosedError(GatewayError):
-    """An exception raised when you programmatically shut down the bot client-side.
+    """An exception raised when you programmatically shut down the bot.
 
     Parameters
     ----------
-    reason : str
+    reason : builtins.str
         A string explaining the issue.
     """
 
@@ -112,13 +112,14 @@ class GatewayServerClosedConnectionError(GatewayError):
 
     Parameters
     ----------
-    reason : str or None
+    reason : builtins.str or builtins.None
         A string explaining the issue.
-    code : int or None
+    code : builtins.int or builtins.None
         The close code.
-    can_reconnect : bool
-        If `True`, a reconnect will occur after this is raised rather than
-        it being propagated to the caller. If `False`, this will be raised.
+    can_reconnect : builtins.bool
+        If `builtins.True`, a reconnect will occur after this is raised rather
+        than it being propagated to the caller. If `builtins.False`, this will
+        be raised.
     """
 
     __slots__: typing.Sequence[str] = ("code", "can_reconnect")
@@ -137,9 +138,9 @@ class HTTPError(HikariError):
 
     Parameters
     ----------
-    message : str
+    message : builtins.str
         The error message.
-    url : str
+    url : builtins.str
         The URL that produced this error.
     """
 
@@ -162,9 +163,9 @@ class HTTPErrorResponse(HTTPError):
 
     Parameters
     ----------
-    url : str
+    url : builtins.str
         The URL that produced the error message.
-    status : int or http.HTTPStatus
+    status : builtins.int or http.HTTPStatus
         The HTTP status code of the response that caused this error.
     headers : hikari.utilities.data_binding.Headers
         Any headers that were given in the response.
@@ -228,7 +229,7 @@ class BadRequest(ClientHTTPErrorResponse):
 
     Parameters
     ----------
-    url : str
+    url : builtins.str
         The URL that produced the error message.
     headers : hikari.utilities.data_binding.Headers
         Any headers that were given in the response.
@@ -250,7 +251,7 @@ class Unauthorized(ClientHTTPErrorResponse):
 
     Parameters
     ----------
-    url : str
+    url : builtins.str
         The URL that produced the error message.
     headers : hikari.utilities.data_binding.Headers
         Any headers that were given in the response.
@@ -274,7 +275,7 @@ class Forbidden(ClientHTTPErrorResponse):
 
     Parameters
     ----------
-    url : str
+    url : builtins.str
         The URL that produced the error message.
     headers : hikari.utilities.data_binding.Headers
         Any headers that were given in the response.
@@ -294,7 +295,7 @@ class NotFound(ClientHTTPErrorResponse):
 
     Parameters
     ----------
-    url : str
+    url : builtins.str
         The URL that produced the error message.
     headers : hikari.utilities.data_binding.Headers
         Any headers that were given in the response.
@@ -339,7 +340,7 @@ class RateLimited(ClientHTTPErrorResponse):
 
     Parameters
     ----------
-    url : str
+    url : builtins.str
         The URL that produced the error message.
     route : hikari.impl.routes.CompiledRoute
         The route that produced this error.
@@ -347,7 +348,7 @@ class RateLimited(ClientHTTPErrorResponse):
         Any headers that were given in the response.
     raw_body : typing.Any
         The body that was received.
-    retry_after : float
+    retry_after : builtins.float
         How many seconds to wait before you can reuse the route with the
         specific request.
     """

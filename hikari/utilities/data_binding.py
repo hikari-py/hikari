@@ -99,7 +99,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
     low-level HTTP API interaction, amongst other things.
 
     !!! warn
-        Because this subclasses `dict`, you should not use the
+        Because this subclasses `builtins.dict`, you should not use the
         index operator to set items on this object. Doing so will skip any
         form of validation on the type. Use the `put*` methods instead.
     """
@@ -121,18 +121,19 @@ class StringMapBuilder(multidict.MultiDict[str]):
 
         Parameters
         ----------
-        key : str
+        key : builtins.str
             The string key.
         value : hikari.utilities.undefined.UndefinedType or typing.Any
             The value to set.
-        conversion : typing.Callable[[typing.Any], typing.Any] or None
+        conversion : typing.Callable[[typing.Any], typing.Any] or builtins.None
             An optional conversion to perform.
 
         !!! note
-            The value will always be cast to a `str` before inserting it.
+            The value will always be cast to a `builtins.str` before inserting it.
 
-            `True` will be translated to `"true"`, `False` will be translated
-            to `"false"`, and `None` will be translated to `"null"`.
+            `builtins.True` will be translated to `"true"`, `builtins.False`
+            ill be translated to `"false"`, and `builtins.None` will be
+            translated to `"null"`.
         """
         if value is not undefined.UNDEFINED:
             if conversion is not None:
@@ -164,7 +165,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
     API interaction.
 
     !!! warn
-        Because this subclasses `dict`, you should not use the
+        Because this subclasses `builtins.dict`, you should not use the
         index operator to set items on this object. Doing so will skip any
         form of validation on the type. Use the `put*` methods instead.
     """
@@ -188,13 +189,13 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
 
         Parameters
         ----------
-        key : str
+        key : builtins.str
             The key to give the element.
-        value : JSONAny or typing.Any or hikari.utilities.undefined.UndefinedType
+        value : typing.Any or hikari.utilities.undefined.UndefinedType
             The JSON type to put. This may be a non-JSON type if a conversion
             is also specified. This may alternatively be undefined. In the latter
             case, nothing is performed.
-        conversion : typing.Callable[[typing.Any], JSONAny] or None
+        conversion : typing.Callable[[typing.Any], JSONAny] or builtins.None
             Optional conversion to apply.
         """
         if value is not undefined.UNDEFINED:
@@ -219,13 +220,13 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
 
         Parameters
         ----------
-        key : str
+        key : builtins.str
             The key to give the element.
-        values : JSONAny or Any or hikari.utilities.undefined.UndefinedType
+        values : typing.Iterable[T] or hikari.utilities.undefined.UndefinedType
             The JSON types to put. This may be an iterable of non-JSON types if
             a conversion is also specified. This may alternatively be undefined.
             In the latter case, nothing is performed.
-        conversion : typing.Callable[[typing.Any], JSONType] or None
+        conversion : typing.Callable[[typing.Any], JSONType] or builtins.None
             Optional conversion to apply.
         """
         if values is not undefined.UNDEFINED:
@@ -239,9 +240,9 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
 
         Parameters
         ----------
-        key : str
+        key : builtins.str
             The key to give the element.
-        value : JSONAny or hikari.utilities.undefined.UndefinedType
+        value : hikari.utilities.snowflake.UniqueObject or hikari.utilities.undefined.UndefinedType
             The JSON type to put. This may alternatively be undefined. In the latter
             case, nothing is performed.
         """
@@ -255,11 +256,11 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
 
         If an undefined value is given, it is ignored.
 
-        Each snowflake should be castable to an `int`.
+        Each snowflake should be castable to an `builtins.int`.
 
         Parameters
         ----------
-        key : str
+        key : builtins.str
             The key to give the element.
         values : typing.Iterable[typing.SupportsInt] or hikari.utilities.undefined.UndefinedType
             The JSON snowflakes to put. This may alternatively be undefined.

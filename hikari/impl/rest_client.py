@@ -82,24 +82,24 @@ class RESTClientImpl(rest_client.IRESTClient):
     app : hikari.api.rest_app.IRESTApp
         The HTTP application containing all other application components
         that Hikari uses.
-    debug : bool
-        If `True`, this will enable logging of each payload sent and received,
-        as well as information such as DNS cache hits and misses, and other
-        information useful for debugging this application. These logs will
+    debug : builtins.bool
+        If `builtins.True`, this will enable logging of each payload sent and
+        received, as well as information such as DNS cache hits and misses, and
+        other information useful for debugging this application. These logs will
         be written as DEBUG log entries. For most purposes, this should be
-        left `False`.
+        left `builtins.False`.
     global_ratelimit : hikari.impl.rate_limits.ManualRateLimiter
         The shared ratelimiter to use for the application.
-    token : str or hikari.utilities.undefined.UndefinedType
+    token : builtins.str or hikari.utilities.undefined.UndefinedType
         The bot or bearer token. If no token is to be used,
         this can be undefined.
-    token_type : str or hikari.utilities.undefined.UndefinedType
+    token_type : builtins.str or hikari.utilities.undefined.UndefinedType
         The type of token in use. If no token is used, this can be ignored and
         left to the default value. This can be `"Bot"` or `"Bearer"`.
-    rest_url : str
+    rest_url : builtins.str
         The HTTP API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
-    version : int
+    version : builtins.int
         The API version to use. Currently only supports `6` and `7`.
 
     !!! warning

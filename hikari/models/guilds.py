@@ -266,7 +266,7 @@ class Member:
     )
     """This member's nickname.
 
-    This will be `None` if not set and `hikari.utilities.undefined.UndefinedType`
+    This will be `builtins.None` if not set and `hikari.utilities.undefined.UndefinedType`
     if it's state is unknown.
     """
 
@@ -281,7 +281,7 @@ class Member:
     )
     """The datetime of when this member started "boosting" this guild.
 
-    This will be `None` if they aren't boosting and
+    This will be `builtins.None` if they aren't boosting and
     `hikari.utilities.undefined.UndefinedType` if their boosting status is unknown.
     """
 
@@ -333,7 +333,7 @@ class Role(PartialRole):
     is_hoisted: bool = attr.ib(eq=False, hash=False, repr=True)
     """Whether this role is hoisting the members it's attached to in the member list.
 
-    members will be hoisted under their highest role where this is set to `True`.
+    members will be hoisted under their highest role where this is set to `builtins.True`.
     """
 
     position: int = attr.ib(eq=False, hash=False, repr=True)
@@ -440,7 +440,7 @@ class GuildMemberBan:
     """Used to represent guild bans."""
 
     reason: typing.Optional[str] = attr.ib(repr=True)
-    """The reason for this ban, will be `None` if no reason was given."""
+    """The reason for this ban, will be `builtins.None` if no reason was given."""
 
     user: users.User = attr.ib(repr=True)
     """The object of the user this ban targets."""
@@ -463,9 +463,9 @@ class UnavailableGuild(snowflake.Unique):
     # Ignore docstring not starting in an imperative mood
     @property
     def is_unavailable(self) -> bool:  # noqa: D401
-        """`True` if this guild is unavailable, else `False`.
+        """`builtins.True` if this guild is unavailable, else `builtins.False`.
 
-        This value is always `True`, and is only provided for consistency.
+        This value is always `builtins.True`, and is only provided for consistency.
         """
         return True
 
@@ -496,7 +496,7 @@ class PartialGuild(snowflake.Unique):
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
-        """Icon for the guild, if set; otherwise `None`."""
+        """Icon for the guild, if set; otherwise `builtins.None`."""
         return self.format_icon()
 
     def format_icon(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
@@ -504,25 +504,25 @@ class PartialGuild(snowflake.Unique):
 
         Parameters
         ----------
-        format_ : str or None
+        format_ : builtins.str or builtins.None
             The format to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
-            If `None`, then the correct default format is determined based on
-            whether the icon is animated or not.
-        size : int
+            If `builtins.None`, then the correct default format is determined
+            based on whether the icon is animated or not.
+        size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
-        hikari.utilities.files.URL or None
-            The URL to the resource, or `None` if no icon is set.
+        hikari.utilities.files.URL or builtins.None
+            The URL to the resource, or `builtins.None` if no icon is set.
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash is None:
@@ -569,21 +569,21 @@ class GuildPreview(PartialGuild):
 
         Parameters
         ----------
-        format_ : str
+        format_ : builtins.str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
-        hikari.utilities.files.URL or None
-            The URL to the splash, or `None` if not set.
+        hikari.utilities.files.URL or builtins.None
+            The URL to the splash, or `builtins.None` if not set.
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash is None:
@@ -601,21 +601,21 @@ class GuildPreview(PartialGuild):
 
         Parameters
         ----------
-        format_ : str
+        format_ : builtins.str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
-        hikari.utilities.files.URL or None
+        hikari.utilities.files.URL or builtins.None
             The string URL.
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.discovery_splash_hash is None:
@@ -652,7 +652,7 @@ class Guild(PartialGuild):
     This will not take into account permission overwrites or implied
     permissions (for example, `ADMINISTRATOR` implies all other permissions).
 
-    This will be `None` when this object is retrieved through a HTTP request
+    This will be `builtins.None` when this object is retrieved through a HTTP request
     rather than from the gateway.
     """
 
@@ -662,7 +662,7 @@ class Guild(PartialGuild):
     afk_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID for the channel that AFK voice users get sent to.
 
-    If `None`, then no AFK channel is set up for this guild.
+    If `builtins.None`, then no AFK channel is set up for this guild.
     """
 
     afk_timeout: datetime.timedelta = attr.ib(eq=False, hash=False, repr=False)
@@ -675,8 +675,8 @@ class Guild(PartialGuild):
     is_embed_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Defines if the guild embed is enabled or not.
 
-    This information may not be present, in which case, it will be `None`
-    instead. This will be `None` for guilds that the bot is not a member in.
+    This information may not be present, in which case, it will be `builtins.None`
+    instead. This will be `builtins.None` for guilds that the bot is not a member in.
 
     !!! deprecated
         Use `is_widget_enabled` instead.
@@ -685,7 +685,7 @@ class Guild(PartialGuild):
     embed_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The channel ID that the guild embed will generate an invite to.
 
-    Will be `None` if invites are disabled for this guild's embed.
+    Will be `builtins.None` if invites are disabled for this guild's embed.
 
     !!! deprecated
         Use `widget_channel_id` instead.
@@ -712,7 +712,7 @@ class Guild(PartialGuild):
     application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the application that created this guild.
 
-    This will always be `None` for guilds that weren't created by a bot.
+    This will always be `builtins.None` for guilds that weren't created by a bot.
     """
 
     is_unavailable: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
@@ -720,7 +720,7 @@ class Guild(PartialGuild):
 
     This information is only available if the guild was sent via a
     `GUILD_CREATE` event. If the guild is received from any other place, this
-    will always be `None`.
+    will always be `builtins.None`.
 
     An unavailable guild cannot be interacted with, and most information may
     be outdated if that is the case.
@@ -729,18 +729,18 @@ class Guild(PartialGuild):
     is_widget_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Describes whether the guild widget is enabled or not.
 
-    If this information is not present, this will be `None`.
+    If this information is not present, this will be `builtins.None`.
     """
 
     widget_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The channel ID that the widget's generated invite will send the user to.
 
     If this information is unavailable or this isn't enabled for the guild then
-    this will be `None`.
+    this will be `builtins.None`.
     """
 
     system_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
-    """The ID of the system channel or `None` if it is not enabled.
+    """The ID of the system channel or `builtins.None` if it is not enabled.
 
     Welcome messages and Nitro boost messages may be sent to this channel.
     """
@@ -752,7 +752,7 @@ class Guild(PartialGuild):
     """The ID of the channel where guilds with the `GuildFeature.PUBLIC`
     `features` display rules and guidelines.
 
-    If the `GuildFeature.PUBLIC` feature is not defined, then this is `None`.
+    If the `GuildFeature.PUBLIC` feature is not defined, then this is `builtins.None`.
     """
 
     joined_at: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
@@ -760,7 +760,7 @@ class Guild(PartialGuild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `None`.
+    `builtins.None`.
     """
 
     is_large: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
@@ -768,7 +768,7 @@ class Guild(PartialGuild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `None`.
+    `builtins.None`.
 
     The implications of a large guild are that presence information will not be
     sent about members who are offline or invisible.
@@ -779,7 +779,7 @@ class Guild(PartialGuild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `None`.
+    `builtins.None`.
     """
 
     members: typing.Optional[typing.Mapping[snowflake.Snowflake, Member]] = attr.ib(eq=False, hash=False, repr=False)
@@ -787,7 +787,7 @@ class Guild(PartialGuild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `None`.
+    `builtins.None`.
 
     Additionally, any offline members may not be included here, especially if
     there are more members than the large threshold set for the gateway this
@@ -809,7 +809,7 @@ class Guild(PartialGuild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `None`.
+    `builtins.None`.
 
     Additionally, any channels that you lack permissions to see will not be
     defined here.
@@ -830,7 +830,7 @@ class Guild(PartialGuild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `None`.
+    `builtins.None`.
 
     Additionally, any channels that you lack permissions to see will not be
     defined here.
@@ -845,40 +845,40 @@ class Guild(PartialGuild):
     max_presences: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The maximum number of presences for the guild.
 
-    If this is `None`, then the default value is used (currently 25000).
+    If this is `builtins.None`, then the default value is used (currently 25000).
     """
 
     max_members: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The maximum number of members allowed in this guild.
 
-    This information may not be present, in which case, it will be `None`.
+    This information may not be present, in which case, it will be `builtins.None`.
     """
 
     max_video_channel_users: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The maximum number of users allowed in a video channel together.
 
-    This information may not be present, in which case, it will be `None`.
+    This information may not be present, in which case, it will be `builtins.None`.
     """
 
     vanity_url_code: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The vanity URL code for the guild's vanity URL.
 
     This is only present if `GuildFeature.VANITY_URL` is in `Guild.features` for
-    this guild. If not, this will always be `None`.
+    this guild. If not, this will always be `builtins.None`.
     """
 
     description: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The guild's description.
 
     This is only present if certain `GuildFeature`'s are set in
-    `Guild.features` for this guild. Otherwise, this will always be `None`.
+    `Guild.features` for this guild. Otherwise, this will always be `builtins.None`.
     """
 
     banner_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash for the guild's banner.
 
     This is only present if the guild has `GuildFeature.BANNER` in
-    `Guild.features` for this guild. For all other purposes, it is `None`.
+    `Guild.features` for this guild. For all other purposes, it is `builtins.None`.
     """
 
     premium_tier: GuildPremiumTier = attr.ib(eq=False, hash=False, repr=False)
@@ -887,7 +887,7 @@ class Guild(PartialGuild):
     premium_subscription_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The number of nitro boosts that the server currently has.
 
-    This information may not be present, in which case, it will be `None`.
+    This information may not be present, in which case, it will be `builtins.None`.
     """
 
     preferred_locale: str = attr.ib(eq=False, hash=False, repr=False)
@@ -902,16 +902,16 @@ class Guild(PartialGuild):
     from Discord.
 
     This is only present if `GuildFeature.PUBLIC` is in `Guild.features` for
-    this guild. For all other purposes, it should be considered to be `None`.
+    this guild. For all other purposes, it should be considered to be `builtins.None`.
     """
 
-    # TODO: if this is `None`, then should we attempt to look at the known member count if present?
+    # TODO: if this is `builtins.None`, then should we attempt to look at the known member count if present?
     approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild.
 
     This information will be provided by HTTP API calls fetching the guilds that
     a bot account is in. For all other purposes, this should be expected to
-    remain `None`.
+    remain `builtins.None`.
     """
 
     approximate_active_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
@@ -919,7 +919,7 @@ class Guild(PartialGuild):
 
     This information will be provided by HTTP API calls fetching the guilds that
     a bot account is in. For all other purposes, this should be expected to
-    remain `None`.
+    remain `builtins.None`.
     """
 
     @property
@@ -932,21 +932,21 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        format_ : str
+        format_ : builtins.str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
-        hikari.utilities.files.URL or None
-            The URL to the splash, or `None` if not set.
+        hikari.utilities.files.URL or builtins.None
+            The URL to the splash, or `builtins.None` if not set.
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash is None:
@@ -964,21 +964,21 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        format_ : str
+        format_ : builtins.str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
-        hikari.utilities.files.URL or None
+        hikari.utilities.files.URL or builtins.None
             The string URL.
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.discovery_splash_hash is None:
@@ -998,21 +998,21 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        format_ : str
+        format_ : builtins.str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
-        hikari.utilities.files.URL or None
-            The URL of the banner, or `None` if no banner is set.
+        hikari.utilities.files.URL or builtins.None
+            The URL of the banner, or `builtins.None` if no banner is set.
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash is None:

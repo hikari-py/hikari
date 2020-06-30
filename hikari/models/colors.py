@@ -30,7 +30,7 @@ class Color(int):
 
     This value is immutable.
 
-    This is a specialization of `int` which provides alternative overrides for
+    This is a specialization of `builtins.int` which provides alternative overrides for
     common methods and color system conversions.
 
     This currently supports:
@@ -127,7 +127,7 @@ class Color(int):
     def __init__(self, raw_rgb: typing.SupportsInt) -> None:
         if not (0 <= int(raw_rgb) <= 0xFFFFFF):
             raise ValueError(f"raw_rgb must be in the exclusive range of 0 and {0xFF_FF_FF}")
-        # The __new__ for `int` initializes the value for us, this super-call does nothing other
+        # The __new__ for `builtins.int` initializes the value for us, this super-call does nothing other
         # than keeping the linter happy.
         super().__init__()
 
@@ -191,7 +191,7 @@ class Color(int):
     # Ignore docstring not starting in an imperative mood
     @property
     def is_web_safe(self) -> bool:  # noqa: D401
-        """`True` if the color is web safe, `False` otherwise."""
+        """`builtins.True` if the color is web safe, `builtins.False` otherwise."""
         return not (((self & 0xFF0000) % 0x110000) or ((self & 0xFF00) % 0x1100) or ((self & 0xFF) % 0x11))
 
     @classmethod
@@ -202,11 +202,11 @@ class Color(int):
 
         Parameters
         ----------
-        red : int
+        red : builtins.int
             Red channel.
-        green : int
+        green : builtins.int
             Green channel.
-        blue : int
+        blue : builtins.int
             Blue channel.
 
         Returns
@@ -216,7 +216,7 @@ class Color(int):
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If red, green, or blue are outside the range [0x0, 0xFF].
         """
         if not 0 <= red <= 0xFF:
@@ -237,11 +237,11 @@ class Color(int):
 
         Parameters
         ----------
-        red : float
+        red : builtins.float
             Red channel.
-        green : float
+        green : builtins.float
             Green channel.
-        blue : float
+        blue : builtins.float
             Blue channel.
 
         Returns
@@ -251,7 +251,7 @@ class Color(int):
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If red, green or blue are outside the range [0, 1].
         """
         if not 0 <= red <= 1:
@@ -273,7 +273,7 @@ class Color(int):
 
         Parameters
         ----------
-        hex_code : str
+        hex_code : builtins.str
             A hexadecimal color code to parse. This may optionally start with
             a case insensitive `0x` or `#`.
 
@@ -284,7 +284,7 @@ class Color(int):
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If `hex_code` is not a hexadecimal or is a invalid length.
         """
         if hex_code.startswith("#"):
@@ -331,14 +331,12 @@ class Color(int):
 
         Parameters
         ----------
-        bytes_ : typing.Iterable[int]
+        bytes_ : typing.Iterable[builtins.int]
             A iterable of int byte values.
-
-        byteorder : str
+        byteorder : builtins.str
             The endianess of the value represented by the bytes.
             Can be `"big"` endian or `"little"` endian.
-
-        signed : bool
+        signed : builtins.bool
             Whether the value is signed or unsigned.
 
         Returns
@@ -422,17 +420,17 @@ class Color(int):
 
         Parameters
         ----------
-        length : int
+        length : builtins.int
             The number of bytes to produce. Should be around `3`, but not less.
-        byteorder : str
+        byteorder : builtins.str
             The endianess of the value represented by the bytes.
             Can be `"big"` endian or `"little"` endian.
-        signed : bool
+        signed : builtins.bool
             Whether the value is signed or unsigned.
 
         Returns
         -------
-        bytes
+        builtins.bytes
             The bytes representation of the Color.
         """
         return int(self).to_bytes(length, byteorder, signed=signed)

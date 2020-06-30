@@ -221,19 +221,19 @@ class GuildBuilder:
 
         Parameters
         ----------
-        name : str
+        name : builtins.str
             The role name.
         color : hikari.utilities.undefined.UndefinedType or hikari.models.colors.Color
             The colour of the role to use. If unspecified, then the default
             colour is used instead.
         colour : hikari.utilities.undefined.UndefinedType or hikari.models.colors.Color
             Alias for the `color` parameter for non-american users.
-        hoisted : hikari.utilities.undefined.UndefinedType or bool
-            If `True`, the role will show up in the user sidebar in a separate
-            category if it is the highest hoisted role. If `False`, or
+        hoisted : hikari.utilities.undefined.UndefinedType or builtins.bool
+            If `builtins.True`, the role will show up in the user sidebar in a separate
+            category if it is the highest hoisted role. If `builtins.False`, or
             unspecified, then this will not occur.
-        mentionable : hikari.utilities.undefined.UndefinedType or bool
-            If `True`, then the role will be able to be mentioned.
+        mentionable : hikari.utilities.undefined.UndefinedType or builtins.bool
+            If `builtins.True`, then the role will be able to be mentioned.
         permissions : hikari.utilities.undefined.UndefinedType or hikari.models.permissions.Permission
             The optional permissions to enforce on the role. If unspecified,
             the default permissions for roles will be used.
@@ -242,7 +242,7 @@ class GuildBuilder:
                 The default permissions are **NOT** the same as providing
                 zero permissions. To set no permissions, you should
                 pass `Permission(0)` explicitly.
-        position : hikari.utilities.undefined.UndefinedType or int
+        position : hikari.utilities.undefined.UndefinedType or builtins.int
             If specified, the position to place the role in.
 
         Returns
@@ -256,9 +256,9 @@ class GuildBuilder:
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If you are defining the first role, but did not name it `@everyone`.
-        TypeError
+        builtins.TypeError
             If you specify both `color` and `colour` together.
         """
 
@@ -278,16 +278,16 @@ class GuildBuilder:
 
         Parameters
         ----------
-        name : str
+        name : builtins.str
             The name of the category.
-        position : hikari.utilities.undefined.UndefinedType or int
+        position : hikari.utilities.undefined.UndefinedType or builtins.int
             The position to place the category in, if specified.
         permission_overwrites : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.channels.PermissionOverwrite]
             If defined, a collection of one or more
             `hikari.models.channels.PermissionOverwrite` objects.
-        nsfw : hikari.utilities.undefined.UndefinedType or bool
-            If `True`, the channel is marked as NSFW and only users over
-            18 years of age should be given access.
+        nsfw : hikari.utilities.undefined.UndefinedType or builtins.bool
+            If `builtins.True`, the channel is marked as NSFW and only users
+            over 18 years of age should be given access.
 
         Returns
         -------
@@ -318,21 +318,21 @@ class GuildBuilder:
 
         Parameters
         ----------
-        name : str
+        name : builtins.str
             The name of the category.
-        position : hikari.utilities.undefined.UndefinedType or int
+        position : hikari.utilities.undefined.UndefinedType or builtins.int
             The position to place the category in, if specified.
         permission_overwrites : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.channels.PermissionOverwrite]
             If defined, a collection of one or more
             `hikari.models.channels.PermissionOverwrite` objects.
-        nsfw : hikari.utilities.undefined.UndefinedType or bool
-            If `True`, the channel is marked as NSFW and only users over
-            18 years of age should be given access.
+        nsfw : hikari.utilities.undefined.UndefinedType or builtins.bool
+            If `builtins.True`, the channel is marked as NSFW and only users
+            over 18 years of age should be given access.
         parent_id : hikari.utilities.undefined.UndefinedType or hikari.utilities.snowflake.Snowflake
             If defined, should be a snowflake ID of a category channel
             that was made with this builder. If provided, this channel will
             become a child channel of that category.
-        topic : hikari.utilities.undefined.UndefinedType or str
+        topic : hikari.utilities.undefined.UndefinedType or builtins.str
             If specified, the topic to set on the channel.
         rate_limit_per_user : hikari.utilities.undefined.UndefinedType or hikari.utilities.date.TimeSpan
             If specified, the time to wait between allowing consecutive messages
@@ -367,23 +367,23 @@ class GuildBuilder:
 
         Parameters
         ----------
-        name : str
+        name : builtins.str
             The name of the category.
-        position : hikari.utilities.undefined.UndefinedType or int
+        position : hikari.utilities.undefined.UndefinedType or builtins.int
             The position to place the category in, if specified.
         permission_overwrites : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.channels.PermissionOverwrite]
             If defined, a collection of one or more
             `hikari.models.channels.PermissionOverwrite` objects.
-        nsfw : hikari.utilities.undefined.UndefinedType or bool
-            If `True`, the channel is marked as NSFW and only users over
-            18 years of age should be given access.
+        nsfw : hikari.utilities.undefined.UndefinedType or builtins.bool
+            If `builtins.True`, the channel is marked as NSFW and only users
+            over 18 years of age should be given access.
         parent_id : hikari.utilities.undefined.UndefinedType or hikari.utilities.snowflake.Snowflake
             If defined, should be a snowflake ID of a category channel
             that was made with this builder. If provided, this channel will
             become a child channel of that category.
-        bitrate : hikari.utilities.undefined.UndefinedType or int
+        bitrate : hikari.utilities.undefined.UndefinedType or builtins.int
             If specified, the bitrate to set on the channel.
-        user_limit : hikari.utilities.undefined.UndefinedType or int
+        user_limit : hikari.utilities.undefined.UndefinedType or builtins.int
             If specified, the maximum number of users to allow in the voice
             channel.
 

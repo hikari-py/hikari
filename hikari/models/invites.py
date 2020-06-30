@@ -85,14 +85,14 @@ class InviteGuild(guilds.PartialGuild):
     """The hash for the guild's banner.
 
     This is only present if `hikari.models.guilds.GuildFeature.BANNER` is in the
-    `features` for this guild. For all other purposes, it is `None`.
+    `features` for this guild. For all other purposes, it is `builtins.None`.
     """
 
     description: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The guild's description.
 
     This is only present if certain `features` are set in this guild.
-    Otherwise, this will always be `None`. For all other purposes, it is `None`.
+    Otherwise, this will always be `builtins.None`. For all other purposes, it is `builtins.None`.
     """
 
     verification_level: guilds.GuildVerificationLevel = attr.ib(eq=False, hash=False, repr=False)
@@ -102,7 +102,7 @@ class InviteGuild(guilds.PartialGuild):
     """The vanity URL code for the guild's vanity URL.
 
     This is only present if `hikari.models.guilds.GuildFeature.VANITY_URL` is in the
-    `features` for this guild. If not, this will always be `None`.
+    `features` for this guild. If not, this will always be `builtins.None`.
     """
 
     @property
@@ -115,21 +115,21 @@ class InviteGuild(guilds.PartialGuild):
 
         Parameters
         ----------
-        format_ : str
+        format_ : builtins.str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
-        hikari.utilities.files.URL or None
-            The URL to the splash, or `None` if not set.
+        hikari.utilities.files.URL or builtins.None
+            The URL to the splash, or `builtins.None` if not set.
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash is None:
@@ -147,21 +147,21 @@ class InviteGuild(guilds.PartialGuild):
 
         Parameters
         ----------
-        format_ : str
+        format_ : builtins.str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         hikari.utilities.files.URL or None
-            The URL of the banner, or `None` if no banner is set.
+            The URL of the banner, or `builtins.None` if no banner is set.
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash is None:
@@ -183,20 +183,20 @@ class Invite:
     guild: typing.Optional[InviteGuild] = attr.ib(eq=False, hash=False, repr=False)
     """The partial object of the guild this invite belongs to.
 
-    Will be `None` for group DM invites and when attached to a gateway event;
+    Will be `builtins.None` for group DM invites and when attached to a gateway event;
     for invites received over the gateway you should refer to `Invite.guild_id`.
     """
 
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the guild this invite belongs to.
 
-    Will be `None` for group DM invites.
+    Will be `builtins.None` for group DM invites.
     """
 
     channel: typing.Optional[channels.PartialChannel] = attr.ib(eq=False, hash=False, repr=False)
     """The partial object of the channel this invite targets.
 
-    Will be `None` for invite objects that are attached to gateway events,
+    Will be `builtins.None` for invite objects that are attached to gateway events,
     in which case you should refer to `Invite.channel_id`.
     """
 
@@ -215,14 +215,14 @@ class Invite:
     approximate_presence_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate amount of presences in this invite's guild.
 
-    This is only present when `with_counts` is passed as `True` to the GET
+    This is only present when `with_counts` is passed as `builtins.True` to the GET
     Invites endpoint.
     """
 
     approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate amount of members in this invite's guild.
 
-    This is only present when `with_counts` is passed as `True` to the GET
+    This is only present when `with_counts` is passed as `builtins.True` to the GET
     Invites endpoint.
     """
 
@@ -244,7 +244,7 @@ class InviteWithMetadata(Invite):
     max_uses: typing.Optional[int] = attr.attrib(eq=False, hash=False, repr=True)
     """The limit for how many times this invite can be used before it expires.
 
-    If set to `None` then this is unlimited.
+    If set to `builtins.None` then this is unlimited.
     """
 
     # TODO: can we use a non-None value to represent infinity here somehow, or
@@ -252,7 +252,7 @@ class InviteWithMetadata(Invite):
     max_age: typing.Optional[datetime.timedelta] = attr.attrib(eq=False, hash=False, repr=False)
     """The timedelta of how long this invite will be valid for.
 
-    If set to `None` then this is unlimited.
+    If set to `builtins.None` then this is unlimited.
     """
 
     is_temporary: bool = attr.attrib(eq=False, hash=False, repr=True)
@@ -265,7 +265,7 @@ class InviteWithMetadata(Invite):
     def expires_at(self) -> typing.Optional[datetime.datetime]:
         """When this invite should expire, if `InviteWithMetadata.max_age` is set.
 
-        If this invite doesn't have a set expiry then this will be `None`.
+        If this invite doesn't have a set expiry then this will be `builtins.None`.
         """
         if self.max_age is not None:
             return self.created_at + self.max_age

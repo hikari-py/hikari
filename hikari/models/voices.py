@@ -44,7 +44,7 @@ class VoiceState:
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the channel this user is connected to.
 
-    This will be `None` if they are leaving voice.
+    This will be `builtins.None` if they are leaving voice.
     """
 
     user_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)

@@ -296,13 +296,13 @@ class MemberPresence:
     """The ids of the user's current roles in the guild this presence belongs to.
 
     !!! info
-        If this is `None` then this information wasn't provided and is unknown.
+        If this is `builtins.None` then this information wasn't provided and is unknown.
     """
 
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=True, hash=True, repr=True)
     """The ID of the guild this presence belongs to.
 
-    This will be `None` when received in an array of members attached to a guild
+    This will be `builtins.None` when received in an array of members attached to a guild
     object (e.g on Guild Create).
     """
 
@@ -320,7 +320,7 @@ class MemberPresence:
     premium_since: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this member started "boosting" this guild.
 
-    This will be `None` if they aren't boosting.
+    This will be `builtins.None` if they aren't boosting.
     """
 
     nickname: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)

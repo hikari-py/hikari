@@ -47,7 +47,7 @@ def _generate():
         "__doc__": (
             "A stateless cache implementation that implements dummy operations for "
             "each of the required attributes of a functional cache implementation. "
-            "Any descriptors will always return `NotImplemented`, and any methods "
+            "Any descriptors will always return `builtins.NotImplemented`, and any methods "
             "will always raise `hikari.errors.HikariError` when being invoked."
         ),
         "__init__": lambda *_, **__: None,

@@ -62,47 +62,48 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
 
     Parameters
     ----------
-    compression : bool
-        Defaulting to `True`, if `True`, then zlib transport compression is used
-        for each shard connection. If `False`, no compression is used.
-    debug : bool
-        Defaulting to `False`, if `True`, then each payload sent and received
-        on the gateway will be dumped to debug logs. This will provide useful
-        debugging context at the cost of performance. Generally you do not
-        need to enable this.
+    compression : builtins.bool
+        Defaulting to `builtins.True`, if `builtins.True`, then zlib transport
+        compression is used for each shard connection. If `builtins.False`, no
+        compression is used.
+    debug : builtins.bool
+        Defaulting to `builtins.False`, if `builtins.True`, then each payload
+        sent and received on the gateway will be dumped to debug logs. This
+        will provide useful debugging context at the cost of performance.
+        Generally you do not need to enable this.
     http_settings : hikari.config.HTTPSettings
         HTTP-related configuration.
-    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
+    initial_activity : hikari.models.presences.Activity or builtins.None or hikari.utilities.undefined.UndefinedType
         The initial activity to have on each shard.
     initial_activity : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
         The initial status to have on each shard.
-    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
-        The initial time to show as being idle since, or `None` if not idle,
-        for each shard.
-    initial_idle_since : bool or hikari.utilities.undefined.UndefinedType
-        If `True`, each shard will appear as being AFK on startup. If `False`,
-        each shard will appear as _not_ being AFK.
-    intents : hikari.models.intents.Intent or None
-        The intents to use for each shard. If `None`, then no intents are
-        passed. Note that on the version `7` gateway, this will cause an
+    initial_idle_since : datetime.datetime or builtins.None or hikari.utilities.undefined.UndefinedType
+        The initial time to show as being idle since, or `builtins.None` if not
+        idle, for each shard.
+    initial_idle_since : builtins.bool or hikari.utilities.undefined.UndefinedType
+        If `builtins.True`, each shard will appear as being AFK on startup. If
+        `builtins.False`, each shard will appear as _not_ being AFK.
+    intents : hikari.models.intents.Intent or builtins.None
+        The intents to use for each shard. If `builtins.None`, then no intents
+        are passed. Note that on the version `7` gateway, this will cause an
         immediate connection close with an error code.
-    large_threshold : int
+    large_threshold : builtins.int
         The number of members that need to be in a guild for the guild to be
         considered large. Defaults to the maximum, which is `250`.
     proxy_settings : hikari.config.ProxySettings
         Proxy-related configuration.
-    shard_ids : typing.Set[int] or None
+    shard_ids : typing.Set[builtins.int] or builtins.None
         A set of every shard ID that should be created and started on startup.
-        If left to `None` along with `shard_count`, then auto-sharding is used
+        If left to `builtins.None` along with `shard_count`, then auto-sharding
+        is used instead, which is the default.
+    shard_count : builtins.int or builtins.None
+        The number of shards in the entire application. If left to
+        `builtins.None` along with `shard_ids`, then auto-sharding is used
         instead, which is the default.
-    shard_count : int or None
-        The number of shards in the entire application. If left to `None`
-        along with `shard_ids`, then auto-sharding is used instead, which is
-        the default.
-    token : str
+    token : builtins.str
         The bot token to use. This should not start with a prefix such as
         `Bot `, but instead only contain the token itself.
-    version : int
+    version : builtins.int
         The version of the gateway to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to using v6.
@@ -113,12 +114,12 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         application will use the Discord-provided recommendation for the number
         of shards to start.
 
-        If only one of these two parameters are specified, expect a `TypeError`
-        to be raised.
+        If only one of these two parameters are specified, expect a
+        `builtins.TypeError` to be raised.
 
         Likewise, all shard_ids must be greater-than or equal-to `0`, and
         less than `shard_count` to be valid. Failing to provide valid
-        values will result in a `ValueError` being raised.
+        values will result in a `builtins.ValueError` being raised.
 
     !!! note
         If all four of `initial_activity`, `initial_idle_since`,
@@ -128,9 +129,9 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
 
     Raises
     ------
-    ValueError
+    builtins.ValueError
         If sharding information is provided, but is unfeasible or invalid.
-    TypeError
+    builtins.TypeError
         If sharding information is not specified correctly.
     """
 
