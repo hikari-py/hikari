@@ -30,8 +30,8 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.api import gateway
     from hikari.models import presences
-    from hikari.net import gateway
 
 
 class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
@@ -49,7 +49,7 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def shards(self) -> typing.Mapping[int, gateway.Gateway]:
+    def shards(self) -> typing.Mapping[int, gateway.IGatewayShard]:
         """Map of each shard ID to the corresponding client for it.
 
         If the shards have not started, and auto=sharding is in-place, then it
@@ -64,7 +64,7 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
 
         Returns
         -------
-        typing.Mapping[int, hikari.net.gateway.Gateway]
+        typing.Mapping[int, hikari.api.gateway.IGatewayShard]
             The mapping of shard IDs to gateway connections for the
             corresponding shard. These shard IDs are 0-indexed.
         """

@@ -48,11 +48,10 @@ import urllib.parse
 import aiohttp.client
 import attr
 
-from hikari.net import helpers
+from hikari.impl import response_handler
 
 if typing.TYPE_CHECKING:
     import types
-
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 _MAGIC: typing.Final[int] = 50 * 1024
@@ -492,7 +491,7 @@ class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReade
                     head_only=self._head_only,
                 )
             else:
-                raise await helpers.generate_error_response(resp)
+                raise await response_handler.generate_error_response(resp)
 
         except Exception as ex:
             await ctx.__aexit__(type(ex), ex, ex.__traceback__)

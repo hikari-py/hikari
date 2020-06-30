@@ -26,13 +26,13 @@ import typing
 
 import attr
 
-from hikari.utilities import files as files_
 from hikari.utilities import cdn
+from hikari.utilities import files as files_
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest
+    from hikari.api import rest_app
     from hikari.models import channels as channels_
     from hikari.models import embeds as embeds_
     from hikari.models import guilds as guilds_
@@ -64,7 +64,7 @@ class Webhook(snowflake.Unique):
     send informational messages to specific channels.
     """
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(
