@@ -17,7 +17,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Barebones implementation of a cache that never stores anything.
 
-This is used to enable compatibility with REST applications and stateless
+This is used to enable compatibility with HTTP applications and stateless
 bots where desired.
 """
 from __future__ import annotations
@@ -47,7 +47,7 @@ def _generate():
         "__doc__": (
             "A stateless cache implementation that implements dummy operations for "
             "each of the required attributes of a functional cache implementation. "
-            "Any descriptors will always return `NotImplemented`, and any methods "
+            "Any descriptors will always return `builtins.NotImplemented`, and any methods "
             "will always raise `hikari.errors.HikariError` when being invoked."
         ),
         "__init__": lambda *_, **__: None,

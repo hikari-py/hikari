@@ -27,14 +27,13 @@ import unicodedata
 
 import attr
 
-from hikari.utilities import files
 from hikari.utilities import cdn
+from hikari.utilities import files
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest
+    from hikari.api import rest_app
     from hikari.models import users
-
 
 _TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/72x72/"
 """URL for Twemoji PNG artwork for built-in emojis."""
@@ -228,7 +227,7 @@ class CustomEmoji(snowflake.Unique, Emoji):
         https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913
     """
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False, init=True)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False, init=True)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(
@@ -243,7 +242,7 @@ class CustomEmoji(snowflake.Unique, Emoji):
     is_animated: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=True)
     """Whether the emoji is animated.
 
-    Will be `None` when received in Message Reaction Remove and Message
+    Will be `builtins.None` when received in Message Reaction Remove and Message
     Reaction Remove Emoji events.
     """
 
@@ -293,14 +292,14 @@ class KnownCustomEmoji(CustomEmoji):
     """The user that created the emoji.
 
     !!! note
-        This will be `None` if you are missing the `MANAGE_EMOJIS`
+        This will be `builtins.None` if you are missing the `MANAGE_EMOJIS`
         permission in the server the emoji is from.
     """
 
     is_animated: bool = attr.ib(eq=False, hash=False, repr=True)
     """Whether the emoji is animated.
 
-    Unlike in `CustomEmoji`, this information is always known, and will thus never be `None`.
+    Unlike in `CustomEmoji`, this information is always known, and will thus never be `builtins.None`.
     """
 
     is_colons_required: bool = attr.ib(eq=False, hash=False, repr=False)
@@ -312,5 +311,5 @@ class KnownCustomEmoji(CustomEmoji):
     is_available: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this emoji can currently be used.
 
-    May be `False` due to a loss of Sever Boosts on the emoji's guild.
+    May be `builtins.False` due to a loss of Sever Boosts on the emoji's guild.
     """

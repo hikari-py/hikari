@@ -14,14 +14,15 @@ ignore =
 
 per-file-ignores =
     # f-string missing prefix.
-    hikari/net/routes.py:FS003
+    hikari/impl/routes.py:FS003
     # f-string missing prefix.
     hikari/utilities/date.py:FS003
     # complaints about importing stuff and not using it afterwards
     hikari/__init__.py:F401
 
 max-complexity = 20
-max-line-length = 120
+# Technically this is 120, but black has a policy of "1 or 2 over is fine if it is tidier", so we have to raise this.
+max-line-length = 130
 show_source = False
 statistics = False
 

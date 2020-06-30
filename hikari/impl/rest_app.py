@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Implementation of a REST application.
+"""Implementation of a HTTP application.
 
 This provides functionality for projects that only need to use the RESTful
 API, such as web dashboards and other OAuth2-based scripts.
@@ -23,19 +23,20 @@ API, such as web dashboards and other OAuth2-based scripts.
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["RESTClientFactoryImpl", "RESTClientImpl"]
+__all__: typing.Final[typing.Sequence[str]] = ["RESTAppFactoryImpl", "RESTClientImpl"]
 
 import typing
 
 import aiohttp
 
-from hikari.api import rest as rest_api
+from hikari import config
+from hikari.api import rest_app
+from hikari.api import rest_client
+from hikari.impl import constants
 from hikari.impl import entity_factory as entity_factory_impl
+from hikari.impl import rate_limits
+from hikari.impl import rest_client as rest_client_impl
 from hikari.impl import stateless_cache
-from hikari.net import config
-from hikari.net import rate_limits
-from hikari.net import rest as rest_component
-from hikari.net import strings
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
@@ -45,36 +46,36 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
 
 
-class RESTClientImpl(rest_api.IRESTClientContextManager):
-    """Client for a specific set of credentials within a REST-only application.
+class RESTClientImpl(rest_app.IRESTAppContextManager):
+    """Client for a specific set of credentials within a HTTP-only application.
 
     Parameters
     ----------
-    debug : bool
-        Defaulting to `False`, if `True`, then each payload sent and received
-        in HTTP requests will be dumped to debug logs. This will provide useful
-        debugging context at the cost of performance. Generally you do not
-        need to enable this.
+    debug : builtins.bool
+        Defaulting to `builtins.False`, if `builtins.True`, then each payload
+        sent and received in HTTP requests will be dumped to debug logs. This
+        will provide useful debugging context at the cost of performance.
+        Generally you do not need to enable this.
     connector : aiohttp.BaseConnector
         The AIOHTTP connector to use. This must be closed by the caller, and
         will not be terminated when this class closes (since you will generally
         expect this to be a connection pool).
-    global_ratelimit : hikari.net.rate_limits.ManualRateLimiter
+    global_ratelimit : hikari.impl.rate_limits.ManualRateLimiter
         The global ratelimiter.
-    http_settings : hikari.net.config.HTTPSettings
+    http_settings : hikari.config.HTTPSettings
         HTTP-related settings.
-    proxy_settings : hikari.net.config.ProxySettings
+    proxy_settings : hikari.config.ProxySettings
         Proxy-related settings.
-    token : str or None
+    token : builtins.str or builtins.None
         If defined, the token to use. If not defined, no token will be injected
         into the `Authorization` header for requests.
-    token_type : str or None
+    token_type : builtins.str or builtins.None
         The token type to use. If undefined, a default is used instead, which
         will be `Bot`. If no `token` is provided, this is ignored.
-    url : str or None
+    url : builtins.str or builtins.None
         The API URL to hit. Generally you can leave this undefined and use the
         default.
-    version : int
+    version : builtins.int
         The API version to use. This is interpolated into the default `url`
         to create the full URL. Currently this only supports `6` or `7`.
     """
@@ -98,7 +99,7 @@ class RESTClientImpl(rest_api.IRESTClientContextManager):
         self._http_settings = http_settings
         self._proxy_settings = proxy_settings
 
-        self._rest = rest_component.REST(
+        self._rest = rest_client_impl.RESTClientImpl(
             app=self,
             connector=connector,
             connector_owner=False,
@@ -117,7 +118,7 @@ class RESTClientImpl(rest_api.IRESTClientContextManager):
         """Return the cache component.
 
         !!! warn
-            This will always return `NotImplemented` for REST-only applications.
+            This will always return `builtins.NotImplemented` for HTTP-only applications.
         """
         return self._cache
 
@@ -138,13 +139,13 @@ class RESTClientImpl(rest_api.IRESTClientContextManager):
         return self._proxy_settings
 
     @property
-    def rest(self) -> rest_component.REST:
+    def rest(self) -> rest_client.IRESTClient:
         return self._rest
 
     async def close(self) -> None:
         await self._rest.close()
 
-    async def __aenter__(self) -> rest_api.IRESTClientContextManager:
+    async def __aenter__(self) -> rest_app.IRESTAppContextManager:
         return self
 
     async def __aexit__(
@@ -156,23 +157,23 @@ class RESTClientImpl(rest_api.IRESTClientContextManager):
         await self.close()
 
 
-class RESTClientFactoryImpl(rest_api.IRESTClientFactory):
-    """The base for a REST-only Discord application.
+class RESTAppFactoryImpl(rest_app.IRESTAppFactory):
+    """The base for a HTTP-only Discord application.
 
     This comprises of a shared TCP connector connection pool, and can have
-    `hikari.api.rest.IRESTClient` instances for specific credentials acquired
+    `hikari.api.rest.IRESTApp` instances for specific credentials acquired
     from it.
 
     Parameters
     ----------
-    debug : bool
-        If `True`, then much more information is logged each time a request is
-        made. Generally you do not need this to be on, so it will default to
-        `False` instead.
+    debug : builtins.bool
+        If `builtins.True`, then much more information is logged each time a
+        request is made. Generally you do not need this to be on, so it will
+        default to `builtins.False` instead.
     url : str or hikari.utilities.undefined.UndefinedType
         The base URL for the API. You can generally leave this as being
         `undefined` and the correct default API base URL will be generated.
-    version : int
+    version : builtins.int
         The Discord API version to use. Can be `6` (stable, default), or `7`
         (undocumented development release).
     """
@@ -205,7 +206,7 @@ class RESTClientFactoryImpl(rest_api.IRESTClientFactory):
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
 
-    def acquire(self, token: str, token_type: str = strings.BEARER_TOKEN) -> rest_api.IRESTClientContextManager:
+    def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> rest_app.IRESTAppContextManager:
         return RESTClientImpl(
             connector=self._connector,
             debug=self._debug,
@@ -223,7 +224,7 @@ class RESTClientFactoryImpl(rest_api.IRESTClientFactory):
             await self._connector.close()
         self._global_ratelimit.close()
 
-    async def __aenter__(self) -> RESTClientFactoryImpl:
+    async def __aenter__(self) -> RESTAppFactoryImpl:
         return self
 
     async def __aexit__(

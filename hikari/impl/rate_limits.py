@@ -17,7 +17,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Basic lazy ratelimit systems for asyncio.
 
-See `hikari.net.buckets` for REST-specific rate-limiting logic.
+See `hikari.impl.buckets` for HTTP-specific rate-limiting logic.
 """
 
 from __future__ import annotations
@@ -40,8 +40,7 @@ import typing
 if typing.TYPE_CHECKING:
     import types
 
-
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net.ratelimits")
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ratelimits")
 
 
 class BaseRateLimiter(abc.ABC):
@@ -61,7 +60,7 @@ class BaseRateLimiter(abc.ABC):
 
         Returns
         -------
-        asyncio.Future
+        asyncio.Future[builtins.None]
             A future that should be awaited. Once the future is complete, you
             can proceed to execute your rate-limited task.
         """
@@ -90,7 +89,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     """The name of the rate limiter."""
 
     throttle_task: typing.Optional[asyncio.Task[typing.Any]]
-    """The throttling task, or `None` if it isn't running."""
+    """The throttling task, or `builtins.None` if it isn't running."""
 
     queue: typing.Final[typing.List[asyncio.Future[typing.Any]]]
     """The queue of any futures under a rate limit."""
@@ -109,7 +108,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
         Returns
         -------
-        asyncio.Future
+        asyncio.Future[typing.Any]
             A future that should be immediately awaited. Once the await
             completes, you are able to proceed with the operation that is
             under this rate limit.
@@ -141,13 +140,13 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
     @property
     def is_empty(self) -> bool:
-        """Return `True` if no futures are on the queue being rate limited."""
+        """Return `builtins.True` if no futures are on the queue being rate limited."""
         return len(self.queue) == 0
 
 
 @typing.final
 class ManualRateLimiter(BurstRateLimiter):
-    """Rate limit handler for the global REST rate limit.
+    """Rate limit handler for the global HTTP rate limit.
 
     This is a non-preemptive rate limiting algorithm that will always return
     completed futures until `ManualRateLimiter.throttle` is invoked. Once this
@@ -160,8 +159,8 @@ class ManualRateLimiter(BurstRateLimiter):
     Triggering a throttle when it is already set will cancel the current
     throttle task that is sleeping and replace it.
 
-    This is used to enforce the global REST rate limit that will occur
-    "randomly" during REST API interaction.
+    This is used to enforce the global HTTP rate limit that will occur
+    "randomly" during HTTP API interaction.
 
     Expect random occurrences.
     """
@@ -176,7 +175,7 @@ class ManualRateLimiter(BurstRateLimiter):
 
         Returns
         -------
-        asyncio.Future
+        asyncio.Future[typing.Any]
             A future that should be immediately awaited. Once the await
             completes, you are able to proceed with the operation that is
             under this rate limit.
@@ -197,18 +196,18 @@ class ManualRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        retry_after : float
+        retry_after : builtins.float
             How long to sleep for before unlocking and releasing any futures
             in the queue.
 
         !!! note
-            This will invoke `ManualRateLimiter.unlock_later` as a scheduled task
-            in the future (it will not await it to finish).
+            This will invoke `ManualRateLimiter.unlock_later` as a scheduled
+            task in the future (it will not await it to finish).
 
             When the `ManualRateLimiter.unlock_later` coroutine function
             completes, it should be expected to set the `throttle_task` to
-            `None`. This means you can check if throttling is occurring by
-            checking if `throttle_task` is not `None`.
+            `builtins.None`. This means you can check if throttling is occurring
+            by checking if `throttle_task` is not `builtins.None`.
 
             If this is invoked while another throttle is in progress, that one
             is cancelled and a new one is started. This enables new rate limits
@@ -225,7 +224,7 @@ class ManualRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        retry_after : float
+        retry_after : builtins.float
             How long to sleep for before unlocking and releasing any futures
             in the queue.
 
@@ -235,8 +234,8 @@ class ManualRateLimiter(BurstRateLimiter):
 
             When the `ManualRateLimiter.unlock_later` coroutine function
             completes, it should be expected to set the `throttle_task` to
-            `None`. This means you can check if throttling is occurring by
-            checking if `throttle_task` is not `None`.
+            `builtins.None`. This means you can check if throttling is occurring
+            by checking if `throttle_task` is not `builtins.None`.
         """
         _LOGGER.warning("you are being globally rate limited for %ss", retry_after)
         await asyncio.sleep(retry_after)
@@ -305,7 +304,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         Returns
         -------
-        asyncio.Future
+        asyncio.Future[typing.Any]
             A future that should be immediately awaited. Once the await
             completes, you are able to proceed with the operation that is
             under this rate limit.
@@ -332,7 +331,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        now : float
+        now : builtins.float
             The monotonic `time.perf_counter` timestamp.
 
         !!! warning
@@ -344,7 +343,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         Returns
         -------
-        float
+        builtins.float
             The time left to sleep before the rate limit is reset. If no rate limit
             is in effect, then this will return `0.0` instead.
         """
@@ -357,13 +356,14 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        now : float
+        now : builtins.float
             The monotonic `time.perf_counter` timestamp.
 
         Returns
         -------
-        bool
-            `True` if we are being rate limited. `False` if we are not.
+        builtins.bool
+            `builtins.True` if we are being rate limited, or `builtins.False` if
+            we are not.
 
         !!! warning
             Invoking this method will update the internal state if we were
@@ -395,8 +395,8 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
             task immediately in `throttle_task`.
 
             When this coroutine function completes, it will set the
-            `throttle_task` to `None`. This means you can check if throttling
-            is occurring by checking if `throttle_task` is not `None`.
+            `throttle_task` to `builtins.None`. This means you can check if throttling
+            is occurring by checking if `throttle_task` is not `builtins.None`.
         """
         _LOGGER.debug(
             "you are being rate limited on bucket %s, backing off for %ss",
@@ -430,16 +430,16 @@ class ExponentialBackOff:
 
     Parameters
     ----------
-    base : float
+    base : builtins.float
         The base to use. Defaults to `2`.
-    maximum : float or None
-        If not `None`, then this is the max value the backoff can be in a
-        single iteration before an `asyncio.TimeoutError` is raised.
+    maximum : builtins.float or builtins.None
+        If not `builtins.None`, then this is the max value the backoff can be
+        in a single iteration before an `asyncio.TimeoutError` is raised.
         Defaults to `64` seconds.
-    jitter_multiplier : float
+    jitter_multiplier : builtins.float
         The multiplier for the random jitter. Defaults to `1`.
         Set to `0` to disable jitter.
-    initial_increment : int
+    initial_increment : builtins.int
         The initial increment to start at. Defaults to `0`.
     """
 
@@ -452,7 +452,7 @@ class ExponentialBackOff:
     """The current increment."""
 
     maximum: typing.Optional[float]
-    """If not `None`, then this is the max value the backoff can be in a
+    """If not `builtins.None`, then this is the max value the backoff can be in a
     single iteration before an `asyncio.TimeoutError` is raised.
     """
 

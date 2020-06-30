@@ -29,6 +29,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.api import gateway
     from hikari.events import channel as channel_events
     from hikari.events import guild as guild_events
     from hikari.events import message as message_events
@@ -47,7 +48,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import users as user_models
     from hikari.models import voices as voice_models
     from hikari.models import webhooks as webhook_models
-    from hikari.net import gateway
     from hikari.utilities import data_binding
     from hikari.utilities import files
     from hikari.utilities import snowflake
@@ -395,7 +395,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.emojis.UnicodeEmoji | hikari.models.emoji.CustomEmoji
+        hikari.models.emojis.UnicodeEmoji or hikari.models.emoji.CustomEmoji
             The deserialized custom or unicode emoji object.
         """
 
@@ -750,7 +750,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -765,7 +765,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -780,7 +780,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -797,7 +797,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -812,7 +812,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -827,7 +827,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -842,7 +842,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -857,7 +857,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -876,7 +876,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -891,7 +891,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -906,7 +906,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -923,12 +923,12 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
         -------
-        hikari.events.
+        hikari.events.guild.GuildUnavailableEvent
             The parsed guild unavailable event object.
         """
 
@@ -938,7 +938,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -953,7 +953,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -970,7 +970,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -987,7 +987,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1002,7 +1002,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1019,7 +1019,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1036,7 +1036,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1053,7 +1053,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1070,7 +1070,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1087,7 +1087,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1102,7 +1102,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1121,7 +1121,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1136,7 +1136,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1151,7 +1151,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1168,7 +1168,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1185,7 +1185,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1202,7 +1202,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1219,7 +1219,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1236,7 +1236,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1251,15 +1251,15 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
     @abc.abstractmethod
     def deserialize_ready_event(
-        self, shard: gateway.Gateway, payload: data_binding.JSONObject,
+        self, shard: gateway.IGatewayShard, payload: data_binding.JSONObject,
     ) -> other_events.ReadyEvent:
         """Parse a raw payload from Discord into a ready event object.
 
         Parameters
         ----------
-        shard : hikari.net.gateway.Gateway
+        shard : hikari.api.gateway.IGatewayShard
             The shard that was ready.
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1274,7 +1274,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1295,7 +1295,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1312,7 +1312,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[str, typing.Any]
+        payload : typing.Mapping[builtins.str, typing.Any]
             The dict payload to parse.
 
         Returns
@@ -1340,11 +1340,11 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        idle_since : hikari.utilities.undefined.UndefinedType or None or datetime.datetime
-            The time that the user should appear to be idle since. If `None`,
-            then the user is marked as not being idle.
-        afk : hikari.utilities.undefined.UndefinedType or bool
-            If `True`, the user becomes AFK. This will move them
+        idle_since : hikari.utilities.undefined.UndefinedType or builtins.None or datetime.datetime
+            The time that the user should appear to be idle since. If
+            `builtins.None`, then the user is marked as not being idle.
+        afk : hikari.utilities.undefined.UndefinedType or builtins.bool
+            If `builtins.True`, the user becomes AFK. This will move them
 
         status : hikari.utilities.undefined.UndefinedType or hikari.models.presences.Status
         activity : hikari.utilities.undefined.UndefinedType or None or hikari.models.presences.Activity
@@ -1369,15 +1369,15 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ----------
         guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
             The guild to update the voice state in.
-        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.UniqueObject or None
-            The voice channel to change to, or `None` if attempting to leave a
-            voice channel and disconnect entirely.
-        self_mute : bool
-            `True` if the user should be muted, `False` if they should be
-            unmuted.
-        self_deaf : bool
-            `True` if the user should be deafened, `False` if they should be
-            able to hear other users.
+        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.UniqueObject or builtins.None
+            The voice channel to change to, or `builtins.None` if attempting to
+            leave a voice channel and disconnect entirely.
+        self_mute : builtins.bool
+            `builtins.True` if the user should be muted, `builtins.False` if
+            they should be unmuted.
+        self_deaf : builtins.bool
+            `builtins.True` if the user should be deafened, `builtins.False`
+            if they should be able to hear other users.
 
         Returns
         -------

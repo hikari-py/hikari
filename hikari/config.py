@@ -31,7 +31,7 @@ import typing
 
 import attr
 
-from hikari.net import strings
+from hikari.impl import constants
 from hikari.utilities import data_binding
 
 
@@ -50,7 +50,7 @@ class BasicAuthHeader:
         """Generate the header value and return it."""
         raw_token = f"{self.username}:{self.password}".encode("ascii")
         token_part = base64.b64encode(raw_token).decode("ascii")
-        return f"{strings.BASICAUTH_TOKEN} {token_part}"
+        return f"{constants.BASICAUTH_TOKEN} {token_part}"
 
     def __str__(self) -> str:
         return self.header
@@ -72,13 +72,13 @@ class ProxySettings:
     """The URL of the proxy to use."""
 
     trust_env: bool = False
-    """If `True`, and no proxy info is given, then `HTTP_PROXY` and
+    """If `builtins.True`, and no proxy info is given, then `HTTP_PROXY` and
     `HTTPS_PROXY` will be used from the environment variables if present.
 
     Any proxy credentials will be read from the user's `netrc` file
     (https://www.gnu.org/software/inetutils/manual/html_node/The-_002enetrc-file.html)
-    If `False`, then this information is instead ignored.
-    Defaults to `False` if unspecified.
+    If `builtins.False`, then this information is instead ignored.
+    Defaults to `builtins.False` if unspecified.
     """
 
     @property
@@ -87,11 +87,11 @@ class ProxySettings:
         if self.headers is None:
             if self.auth is None:
                 return None
-            return {strings.PROXY_AUTHENTICATION_HEADER: self.auth}
+            return {constants.PROXY_AUTHENTICATION_HEADER: self.auth}
 
         if self.auth is None:
             return self.headers
-        return {**self.headers, strings.PROXY_AUTHENTICATION_HEADER: self.auth}
+        return {**self.headers, constants.PROXY_AUTHENTICATION_HEADER: self.auth}
 
 
 @attr.s(slots=True, kw_only=True, auto_attribs=True)
@@ -119,7 +119,7 @@ class HTTPSettings:
     """Settings to control the HTTP client."""
 
     allow_redirects: bool = False
-    """If `True`, allow following redirects from `3xx` HTTP responses.
+    """If `builtins.True`, allow following redirects from `3xx` HTTP responses.
 
     Generally you do not want to enable this unless you have a good reason to.
     """
@@ -127,14 +127,14 @@ class HTTPSettings:
     max_redirects: int = 10
     """The maximum number of redirects to allow.
 
-    If `allow_redirects` is `False`, then this is ignored.
+    If `allow_redirects` is `builtins.False`, then this is ignored.
     """
 
     timeouts: HTTPTimeoutSettings = attr.ib(factory=HTTPTimeoutSettings)
     """Settings to control HTTP request timeouts."""
 
     verify_ssl: bool = True
-    """If `True`, then responses with invalid SSL certificates will be
+    """If `builtins.True`, then responses with invalid SSL certificates will be
     rejected. Generally you want to keep this enabled unless you have a
     problem with SSL and you know exactly what you are doing by disabling
     this. Disabling SSL  verification can have major security implications.

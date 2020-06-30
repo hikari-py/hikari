@@ -21,7 +21,7 @@ import mock
 import pytest
 
 
-from hikari.api import rest
+from hikari.api import rest_app
 from hikari.impl import entity_factory
 from hikari.events import channel as channel_events
 from hikari.events import guild as guild_events
@@ -76,8 +76,8 @@ def test__deserialize_max_age_returns_null():
 
 class TestEntityFactoryImpl:
     @pytest.fixture()
-    def mock_app(self) -> rest.IRESTClient:
-        return mock.MagicMock(rest.IRESTClient)
+    def mock_app(self) -> rest_app.IRESTApp:
+        return mock.MagicMock(rest_app.IRESTApp)
 
     @pytest.fixture()
     def entity_factory_impl(self, mock_app) -> entity_factory.EntityFactoryComponentImpl:

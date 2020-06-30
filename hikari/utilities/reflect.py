@@ -38,9 +38,9 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
         The function to get the resolved annotations from.
 
     !!! warning
-        This will use `eval` to resolve string typehints and forward references.
-        This has a slight performance overhead, so attempt to cache this info
-        as much as possible.
+        This will use `builtins.eval` to resolve string type-hints and forward
+        references. This has a slight performance overhead, so attempt to cache
+        this info as much as possible.
 
     Returns
     -------
@@ -72,9 +72,9 @@ def get_logger(obj: typing.Union[typing.Type[typing.Any], typing.Any], *addition
 
     Parameters
     ----------
-    obj : typing.Type or object
+    obj : typing.Type or typing.Any
         A type or instance of a type to make a _LOGGER in the name of.
-    *additional_args : str
+    *additional_args : builtins.str
         Additional tokens to append onto the _LOGGER name, separated by `.`.
         This is useful in some places to append info such as shard ID to each
         _LOGGER to enable shard-specific logging, for example.

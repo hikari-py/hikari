@@ -43,14 +43,14 @@ import attr
 
 from hikari.models import permissions
 from hikari.models import users
-from hikari.utilities import files
 from hikari.utilities import cdn
+from hikari.utilities import files
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
-    from hikari.api import rest
+    from hikari.api import rest_app
     from hikari.models import embeds
     from hikari.models import guilds
     from hikari.models import messages
@@ -158,7 +158,7 @@ class PermissionOverwrite(snowflake.Unique):
 class PartialChannel(snowflake.Unique):
     """Channel representation for cases where further detail is not provided.
 
-    This is commonly received in REST API responses where full information is
+    This is commonly received in HTTP API responses where full information is
     not available from Discord.
     """
 
@@ -167,7 +167,7 @@ class PartialChannel(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
@@ -217,10 +217,10 @@ class TextChannel(PartialChannel, abc.ABC):
             and can usually be ignored.
         tts : bool or hikari.utilities.undefined.UndefinedType
             If specified, whether the message will be sent as a TTS message.
-        attachment : hikari.utilities.files.Resource or str or hikari.utilities.undefined.UndefinedType
+        attachment : hikari.utilities.files.Resource or builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, a attachment to upload, if desired. This can
             be a resource, or string of a path on your computer or a URL.
-        attachments : typing.Sequence[hikari.utilities.files.Resource or str] or hikari.utilities.undefined.UndefinedType
+        attachments : typing.Sequence[hikari.utilities.files.Resource or builtins.str] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of attachments to upload, if desired.
             Should be between 1 and 10 objects in size (inclusive), also
             including embed attachments. These can be resources, or
@@ -229,15 +229,16 @@ class TextChannel(PartialChannel, abc.ABC):
             If specified, the embed object to send with the message.
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to `False`.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or bool
+            discord and lead to actual pings, defaults to `builtins.False`.
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             Either an array of user objects/IDs to allow mentions for,
-            `True` to allow all user mentions or `False` to block all
-            user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or bool
+            `builtins.True` to allow all user mentions or `builtins.False`
+            to block all user mentions from resolving, defaults to
+            `builtins.True`.
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             Either an array of guild role objects/IDs to allow mentions for,
-            `True` to allow all role mentions or `False` to block all
-            role mentions from resolving, defaults to `True`.
+            `builtins.True` to allow all role mentions or `builtins.False` to
+            block all role mentions from resolving, defaults to `builtins.True`.
 
         Returns
         -------
@@ -260,10 +261,10 @@ class TextChannel(PartialChannel, abc.ABC):
         hikari.errors.Forbidden
             If you lack permissions to send to the channel this message belongs
             to.
-        ValueError
+        builtins.ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
-        TypeError
+        builtins.TypeError
             If both `attachment` and `attachments` are specified.
         """  # noqa: E501 - Line too long
         return await self.app.rest.create_message(
@@ -345,7 +346,7 @@ class GroupDMChannel(DMChannel):
     application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the application that created the group DM.
 
-    If the group DM was not created by a bot, this will be `None`.
+    If the group DM was not created by a bot, this will be `builtins.None`.
     """
 
     def __str__(self) -> str:
@@ -362,21 +363,21 @@ class GroupDMChannel(DMChannel):
 
         Parameters
         ----------
-        format : str
+        format : builtins.str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
-        hikari.utilities.files.URL or None
-            The URL, or `None` if no icon is present.
+        hikari.utilities.files.URL or builtins.None
+            The URL, or `builtins.None` if no icon is present.
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If `size` is not a power of two between 16 and 4096 (inclusive).
         """
         if self.icon_hash is None:
@@ -393,7 +394,7 @@ class GuildChannel(PartialChannel):
     """The ID of the guild the channel belongs to.
 
     !!! warning
-        This will be `None` when received over the gateway in certain events
+        This will be `builtins.None` when received over the gateway in certain events
         (e.g Guild Create).
     """
 
@@ -415,14 +416,14 @@ class GuildChannel(PartialChannel):
     """Whether the channel is marked as NSFW.
 
     !!! warning
-        This will be `None` when received over the gateway in certain events
+        This will be `builtins.None` when received over the gateway in certain events
         (e.g Guild Create).
     """
 
     parent_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the parent category the channel belongs to.
 
-    If no parent category is set for the channel, this will be `None`.
+    If no parent category is set for the channel, this will be `builtins.None`.
     """
 
 
@@ -463,7 +464,7 @@ class GuildTextChannel(GuildChannel, TextChannel):
     """The timestamp of the last-pinned message.
 
     !!! note
-        This may be `None` in several cases; Discord does not document what
+        This may be `builtins.None` in several cases; Discord does not document what
         these cases are. Trust no one!
     """
 
@@ -487,7 +488,7 @@ class GuildNewsChannel(GuildChannel, TextChannel):
     """The timestamp of the last-pinned message.
 
     !!! note
-        This may be `None` in several cases; Discord does not document what
+        This may be `builtins.None` in several cases; Discord does not document what
         these cases are. Trust no one!
     """
 

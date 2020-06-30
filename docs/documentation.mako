@@ -1,5 +1,9 @@
 <%!
+    import typing
+    typing.TYPE_CHECKING = True
+
     import builtins
+    import re
     import sphobjinv
 
     inventory_urls = [
@@ -21,14 +25,15 @@
     located_external_refs = {}
     unlocatable_external_refs = set()
 
-
     def discover_source(fqn):
-        #print("attempting to find", fqn, "in intersphinx inventories")
         if fqn in unlocatable_external_refs:
             return
 
+        if fqn.startswith("builtins."):
+            fqn = fqn.replace("builtins.", "")
+
         if fqn not in located_external_refs:
-            # print("attempting to find intersphinx reference for", fqn)
+            print("attempting to find intersphinx reference for", fqn)
             for base_url, inv in inventories.items():
                 for obj in inv.values():
                     if isinstance(obj, dict) and obj["name"] == fqn:
@@ -61,17 +66,22 @@
         ztext = sphobjinv.compress(text)
         sphobjinv.writebytes('public/objects.inv', ztext)
 
+
+    # To get links to work in type hints to builtins, we do a bit of hacky search-replace using regex.
+    # This generates regex to match general builtins in typehints.
+    builtin_patterns = [
+        re.compile("(?<!builtins\\.)\\b({name})\\b")
+        for obj in dir(builtins)
+    ]
+
+
 %>
-
 <%
-    import typing
-
-    typing.TYPE_CHECKING = True
-
     import abc
     import enum
     import functools
     import inspect
+    import re
     import textwrap
 
     import pdoc
@@ -97,24 +107,25 @@
     QUAL_VAR = "var"
 
     def link(
-        dobj: pdoc.Doc, 
-        *, 
-        with_prefixes=False, 
-        simple_names=False, 
-        css_classes="", 
-        name=None, 
-        default_type="", 
-        dotted=True, 
-        anchor=False, 
+        dobj: pdoc.Doc,
+        *,
+        with_prefixes=False,
+        simple_names=False,
+        css_classes="",
+        name=None,
+        default_type="",
+        dotted=True,
+        anchor=False,
         fully_qualified=False,
         hide_ref=False,
+        recurse=True,
     ):
         prefix = ""
         name = name or dobj.name
 
         if name.startswith("builtins."):
             _, _, name = name.partition("builtins.")
-        
+
         show_object = False
         if with_prefixes:
             if isinstance(dobj, pdoc.Function):
@@ -163,7 +174,7 @@
 
                     if inspect.isabstract(dobj.obj):
                         qual = f"{QUAL_ABC} {qual}"
-            
+
                 prefix = f"<small class='text-muted'><em>{qual}</em></small> "
 
             elif isinstance(dobj, pdoc.Module):
@@ -171,7 +182,10 @@
                 prefix = f"<small class='text-muted'><em>{qual}</em></small> "
 
             else:
-                prefix = f"<small class='text-muted'><em>{default_type}</em></small> "
+                if isinstance(dobj, pdoc.External):
+                    prefix = f"<small class='text-muted'><em>{QUAL_EXTERNAL} {default_type}</em></small> "
+                else:
+                    prefix = f"<small class='text-muted'><em>{default_type}</em></small> "
         else:
             name = name or dobj.name or ""
 
@@ -180,7 +194,9 @@
 
         if isinstance(dobj, pdoc.External):
             if dobj.module:
-                fqn = dobj.module.name + "." + dobj.obj.__qualname__
+                fqn = dobj.module.obj.__name__ + "." + dobj.obj.__qualname__
+            elif hasattr(dobj.obj, "__module__"):
+                fqn = dobj.obj.__module__ + "." + dobj.obj.__qualname__
             else:
                 fqn = dobj.name
 
@@ -189,7 +205,35 @@
                 url = discover_source(name)
 
             if url is None:
-                return name if not with_prefixes else f"{QUAL_EXTERNAL} {name}"
+                if fqn_match := re.match(r"([a-z_]+)\.((?:[^\.]|^\s)+)", fqn):
+                    print("Struggling to resolve", fqn, "in", module.name, "so attempting to see if it is an import alias now instead.")
+
+                    if import_match := re.search(f"from (.*) import (.*) as {fqn_match.group(1)}", module.source):
+                        old_fqn = fqn
+                        fqn = import_match.group(1) + "." + import_match.group(2) + "." + fqn_match.group(2)
+                        try:
+                            url = pdoc._global_context[fqn].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+                            print(old_fqn, "->", fqn, "via", url)
+                        except KeyError:
+                            print("maybe", fqn, "is external but aliased?")
+                            url = discover_source(fqn)
+                    elif import_match := re.search(f"import (.*) as {fqn_match.group(1)}", module.source):
+                        old_fqn = fqn
+                        fqn = import_match.group(1) + "." + fqn_match.group(2)
+                        try:
+                            url = pdoc._global_context[fqn].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+                            print(old_fqn, "->", fqn, "via", url)
+                        except KeyError:
+                            print("maybe", fqn, "is external but aliased?")
+                            url = discover_source(fqn)
+                    else:
+                        # print("No clue where", fqn, "came from --- it isn't an import that i can see.")
+                        pass
+
+
+            if url is None:
+                # print("Could not resolve where", fqn, "came from :(")
+                return name
         else:
             try:
                 ref = dobj if not hasattr(dobj.obj, "__module__") else pdoc._global_context[dobj.obj.__module__ + "." + dobj.obj.__qualname__]
@@ -224,13 +268,16 @@
 
     def get_annotation(bound_method, sep=':'):
         annot = bound_method(link=link)
-        
+
         annot = annot.replace("NoneType", "None")
         # Remove quotes.
         if annot.startswith("'") and annot.endswith("'"):
             annot = annot[1:-1]
         if annot:
             annot = ' ' + sep + '\N{NBSP}' + annot
+
+        for pattern in builtin_patterns:
+            annot = pattern.sub(r"builtins.\1", annot)
 
         return annot
 
@@ -245,7 +292,7 @@
 
         for before, after in replacements:
             text = text.replace(before, after)
-        
+
         return text
 %>
 
@@ -325,10 +372,14 @@
                 *(f"    {p}," for p in params),
                 ")" + return_type + ": ..."
             ))
+
         elif params:
             representation = f"{f.funcdef()} {f.name}({', '.join(params)}){return_type}: ..."
         else:
             representation = f"{f.funcdef()} {f.name}(){return_type}: ..."
+
+        for pattern in builtin_patterns:
+            representation = pattern.sub(r"builtins.\1", representation)
 
         if f.module.name != f.obj.__module__:
             try:
@@ -373,10 +424,8 @@
 
 <%def name="show_class(c, is_nested=False)">
     <%
-        class_vars = c.class_variables(show_inherited_members, sort=sort_identifiers)
-        smethods = c.functions(show_inherited_members, sort=sort_identifiers)
-        inst_vars = c.instance_variables(show_inherited_members, sort=sort_identifiers)
-        methods = c.methods(show_inherited_members, sort=sort_identifiers)
+        variables = c.instance_variables(show_inherited_members, sort=sort_identifiers) + c.class_variables(show_inherited_members, sort=sort_identifiers)
+        methods = c.methods(show_inherited_members, sort=sort_identifiers) + c.functions(show_inherited_members, sort=sort_identifiers)
         mro = c.mro()
         subclasses = c.subclasses()
 
@@ -393,6 +442,9 @@
             representation = f"{QUAL_CLASS} {c.name} (" + ", ".join(params) + "): ..."
         else:
             representation = f"{QUAL_CLASS} {c.name}: ..."
+
+        for pattern in builtin_patterns:
+            representation = pattern.sub(r"builtins.\1", representation)
 
         if c.module.name != c.obj.__module__:
             try:
@@ -444,8 +496,10 @@
                 <h5>Subclasses</h5>
                 <dl>
                     % for sc in subclasses:
-                        <dt class="nested">${link(sc, with_prefixes=True, default_type="class")}</dt>
-                        <dd class="nested">${sc.docstring | glimpse, to_html}</dd>
+                        % if not isinstance(sc, pdoc.External):
+                            <dt class="nested">${link(sc, with_prefixes=True, default_type="class")}</dt>
+                            <dd class="nested">${sc.docstring | glimpse, to_html}</dd>
+                        % endif
                     % endfor
                 </dl>
                 <div class="sep"></div>
@@ -465,7 +519,7 @@
             % endif
 
             % if methods:
-                <h5>Instance methods</h5>
+                <h5>Methods</h5>
                 <dl>
                     % for m in methods:
                         ${show_func(m)}
@@ -474,31 +528,11 @@
                 <div class="sep"></div>
             % endif
 
-            % if inst_vars:
-                <h5>Instance variables and properties</h5>
+            % if variables:
+                <h5>Variables and properties</h5>
                 <dl>
-                    % for i in inst_vars:
+                    % for i in variables:
                         ${show_var(i)}
-                    % endfor
-                </dl>
-                <div class="sep"></div>
-            % endif
-
-            % if smethods:
-                <h5>Class methods</h5>
-                <dl>
-                    % for m in smethods:
-                        ${show_func(m)}
-                    % endfor
-                </dl>
-                <div class="sep"></div>
-            % endif
-
-            % if class_vars:
-                <h5>Class variables and properties</h5>
-                <dl>
-                    % for cv in class_vars:
-                        ${show_var(cv)}
                     % endfor
                 </dl>
                 <div class="sep"></div>
@@ -515,7 +549,7 @@
     % if not short:
         % if d.inherits:
             <p class="inheritance">
-                <em>Inherited from:</em>
+                <em><small>Inherited from:</small></em>
                 % if hasattr(d.inherits, 'cls'):
                     <code>${link(d.inherits.cls, with_prefixes=False)}</code>.<code>${link(d.inherits, name=d.name, with_prefixes=False)}</code>
                 % else:
@@ -695,81 +729,6 @@
                     </dl>
                 </section>
             % endif
-        </div>
-
-        <div class="col">
-            <h2>Notation used in this documentation</h2>
-            <dl class="no-nest">
-                <dt><code>${QUAL_DEF}</code></dt>
-                <dd>Regular function.</dd>
-
-                <dt><code>${QUAL_ASYNC_DEF}</code></dt>
-                <dd>Coroutine function that should be awaited.</dd>
-
-                <dt><code>${QUAL_CLASS}</code></dt>
-                <dd>Regular class that provides a certain functionality.</dd>
-
-                <dt><code>${QUAL_ABC}</code></dt>
-                <dd>
-                    Abstract member. These must be subclassed/overridden with a
-                    concrete implementation elsewhere to be used.
-                </dd>
-
-                <dt><code>${QUAL_DATACLASS}</code></dt>
-                <dd>
-                    Data class. This is a class designed to model and store information
-                    rather than provide a certain behaviour or functionality.
-                </dd>
-
-                <dt><code>${QUAL_ENUM}</code></dt>
-                <dd>Enumerated type.</dd>
-
-                <dt><code>${QUAL_ENUM_FLAG}</code></dt>
-                <dd>Enumerated flag type. Supports being combined.</dd>
-
-                <dt><code>${QUAL_METACLASS}</code></dt>
-                <dd>
-                    Metaclass. This is a base type of a class, used to control how implementing
-                    classes are created, exist, operate, and get destroyed.
-                </dd>
-
-                <dt><code>${QUAL_MODULE}</code></dt>
-                <dd>Python module that you can import directly</dd>
-
-                <dt><code>${QUAL_PACKAGE}</code></dt>
-                <dd>Python package that can be imported and can contain sub-modules.</dd>
-
-                <dt><code>${QUAL_PROPERTY}</code></dt>
-                <dd>
-                    Property type. Will always support read operations.
-                </dd>
-
-                <dt><code>${QUAL_NAMESPACE}</code></dt>
-                <dd>Python namespace package that can contain sub-modules, but is not directly importable.</dd>
-
-                <dt><code>${QUAL_TYPEHINT}</code></dt>
-                <dd>
-                    An object or attribute used to denote a certain type or combination of types.
-                    These usually provide no functionality and only exist for documentation purposes
-                    and for static type-checkers.
-                </dd>
-
-                <dt><code>${QUAL_VAR}</code></dt>
-                <dd>
-                    Variable or attribute.
-                </dd>
-
-                <dt><code>${QUAL_CONST}</code></dt>
-                <dd>
-                    Value that should not be changed manually.
-                </dd>
-
-                <dt><code>${QUAL_EXTERNAL}</code></dt>
-                <dd>
-                    Attribute or object that is not covered by this documentation. This usually
-                    denotes types from other dependencies, or from the standard library.
-                </dd>
-            </dl>
         </div>
     </div>
 </div>

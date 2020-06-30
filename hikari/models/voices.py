@@ -26,7 +26,7 @@ import typing
 import attr
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest
+    from hikari.api import rest_app
     from hikari.models import guilds
     from hikari.utilities import snowflake
 
@@ -35,7 +35,7 @@ if typing.TYPE_CHECKING:
 class VoiceState:
     """Represents a user's voice connection status."""
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
@@ -44,7 +44,7 @@ class VoiceState:
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the channel this user is connected to.
 
-    This will be `None` if they are leaving voice.
+    This will be `builtins.None` if they are leaving voice.
     """
 
     user_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)

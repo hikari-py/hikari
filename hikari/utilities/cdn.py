@@ -24,8 +24,8 @@ __all__: typing.Final[typing.Sequence[str]] = ["generate_cdn_url", "get_default_
 import typing
 import urllib.parse
 
+from hikari.impl import constants
 from hikari.utilities import files
-from hikari.net import strings
 
 
 def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]) -> files.URL:
@@ -33,13 +33,13 @@ def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]
 
     Parameters
     ----------
-    *route_parts : str
+    *route_parts : builtins.str
         The string _route parts that will be used to form the link.
-    format_ : str
+    format_ : builtins.str
         The format to use for the wanted cdn entity, will usually be one of
         `webp`, `png`, `jpeg`, `jpg` or `gif` (which will be invalid
         if the target entity doesn't have an animated version available).
-    size : int or None
+    size : builtins.int or builtins.None
         The size to specify for the image in the query string if applicable,
         should be passed through as None to avoid the param being set.
         Must be any power of two between 16 and 4096.
@@ -51,7 +51,7 @@ def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]
 
     Raises
     ------
-    ValueError
+    builtins.ValueError
         If `size` is not a power of two or not between 16 and 4096.
     """
     if size and not 16 <= size <= 4096:
@@ -60,7 +60,7 @@ def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]
         raise ValueError("Size must be an integer power of 2")
 
     path = "/".join(urllib.parse.unquote(part) for part in route_parts)
-    url = urllib.parse.urljoin(strings.CDN_URL, "/" + path) + "." + str(format_)
+    url = urllib.parse.urljoin(constants.CDN_URL, "/" + path) + "." + str(format_)
     query = urllib.parse.urlencode({"size": size}) if size is not None else None
     return files.URL(f"{url}?{query}" if query else url)
 
@@ -70,12 +70,12 @@ def get_default_avatar_index(discriminator: str) -> int:
 
     Parameters
     ----------
-    discriminator : str
+    discriminator : builtins.str
         The integer discriminator, as a string.
 
     Returns
     -------
-    int
+    builtins.int
         The index.
     """
     return int(discriminator) % 5
@@ -86,7 +86,7 @@ def get_default_avatar_url(discriminator: str) -> files.URL:
 
     Parameters
     ----------
-    discriminator : str
+    discriminator : builtins.str
         The integer discriminator, as a string.
 
     Returns
