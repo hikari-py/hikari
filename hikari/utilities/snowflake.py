@@ -34,7 +34,7 @@ from hikari.utilities import date
 class Snowflake(int):
     """A concrete representation of a unique identifier for an object on Discord.
 
-    This object can be treated as a regular `int` for most purposes.
+    This object can be treated as a regular `builtins.int` for most purposes.
     """
 
     __slots__: typing.Sequence[str] = ()

@@ -49,6 +49,11 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
 
         If the application has not been started, then this will return
         a `datetime.timedelta` of 0 seconds.
+
+        Returns
+        -------
+        datetime.timedelta
+            The number of seconds the application has been running.
         """
 
     @property
@@ -57,5 +62,11 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
         """Return the timestamp when the bot was started.
 
         If the application has not been started, then this will return
-        `None`.
+        `builtins.None`.
+
+        Returns
+        -------
+        datetime.datetime or builtins.None
+            The date/time that the application started at, or `builtins.None` if
+            not yet running.
         """

@@ -59,41 +59,43 @@ class GatewayShardImpl(gateway.IGatewayShard):
     ----------
     app : hikari.api.event_consumer.IEventConsumerApp
         The base application.
-    debug : bool
-        If `True`, each sent and received payload is dumped to the logs. If
-        `False`, only the fact that data has been sent/received will be logged.
+    debug : builtins.bool
+        If `builtins.True`, each sent and received payload is dumped to the
+        logs. If `builtins.False`, only the fact that data has been
+        sent/received will be logged.
     http_settings : hikari.config.HTTPSettings
         The HTTP-related settings to use while negotiating a websocket.
-    initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
+    initial_activity : hikari.models.presences.Activity or builtins.None or hikari.utilities.undefined.UndefinedType
         The initial activity to appear to have for this shard.
-    initial_idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
+    initial_idle_since : datetime.datetime or builtins.None or hikari.utilities.undefined.UndefinedType
         The datetime to appear to be idle since.
-    initial_is_afk : bool or hikari.utilities.undefined.UndefinedType
+    initial_is_afk : builtins.bool or hikari.utilities.undefined.UndefinedType
         Whether to appear to be AFK or not on login.
     initial_status : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
         The initial status to set on login for the shard.
-    intents : hikari.models.intents.Intent or None
-        Collection of intents to use, or `None` to not use intents at all.
-    large_threshold : int
+    intents : hikari.models.intents.Intent or builtins.None
+        Collection of intents to use, or `builtins.None` to not use intents at
+        all.
+    large_threshold : builtins.int
         The number of members to have in a guild for it to be considered large.
     proxy_settings : hikari.config.ProxySettings
         The proxy settings to use while negotiating a websocket.
-    shard_id : int
+    shard_id : builtins.int
         The shard ID.
-    shard_count : int
+    shard_count : builtins.int
         The shard count.
-    token : str
+    token : builtins.str
         The bot token to use.
-    url : str
+    url : builtins.str
         The gateway URL to use. This should not contain a query-string or
         fragments.
-    use_compression : bool
-        If `True`, then transport compression is enabled.
-    use_etf : bool
-        If `True`, ETF is used to receive payloads instead of JSON. Defaults to
-        `False`. Currently, setting this to `True` will raise a
-        `NotImplementedError`.
-    version : int
+    use_compression : builtins.bool
+        If `builtins.True`, then transport compression is enabled.
+    use_etf : builtins.bool
+        If `builtins.True`, ETF is used to receive payloads instead of JSON.
+        Defaults to `builtins.False`. Currently, setting this to `builtins.True`
+        will raise a `builtins.NotImplementedError`.
+    version : builtins.int
         Gateway API version to use.
 
     !!! note
@@ -301,7 +303,7 @@ class GatewayShardImpl(gateway.IGatewayShard):
                 self._handshake_event.set()
 
     async def _run_once_shielded(self, client_session: aiohttp.ClientSession) -> bool:
-        # Returns `True` if we can reconnect, or `False` otherwise.
+        # Returns `builtins.True` if we can reconnect, or `builtins.False` otherwise.
         # Wraps the runner logic in the standard exception handling mechanisms.
         try:
             await self._run_once(client_session)

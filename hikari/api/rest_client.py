@@ -119,26 +119,26 @@ class IRESTClient(component.IComponent, abc.ABC):
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to edit. This may be a channel object, or the ID of an
             existing channel.
-        name : hikari.utilities.undefined.UndefinedType or str
+        name : hikari.utilities.undefined.UndefinedType or builtins.str
             If provided, the new name for the channel.
-        position : hikari.utilities.undefined.UndefinedType or int
+        position : hikari.utilities.undefined.UndefinedType or builtins.int
             If provided, the new position for the channel.
-        topic : hikari.utilities.undefined.UndefinedType or str
+        topic : hikari.utilities.undefined.UndefinedType or builtins.str
             If provided, the new topic for the channel.
-        nsfw : hikari.utilities.undefined.UndefinedType or bool
+        nsfw : hikari.utilities.undefined.UndefinedType or builtins.bool
             If provided, whether the channel should be marked as NSFW or not.
-        bitrate : hikari.utilities.undefined.UndefinedType or int
+        bitrate : hikari.utilities.undefined.UndefinedType or builtins.int
             If provided, the new bitrate for the channel.
-        user_limit : hikari.utilities.undefined.UndefinedType or int
+        user_limit : hikari.utilities.undefined.UndefinedType or builtins.int
             If provided, the new user limit in the channel.
-        rate_limit_per_user : hikari.utilities.undefined.UndefinedType or datetime.timedelta or float or int
+        rate_limit_per_user : hikari.utilities.undefined.UndefinedType or datetime.timedelta or builtins.float or builtins.int
             If provided, the new rate limit per user in the channel.
         permission_overwrites : hikari.utilities.undefined.UndefinedType or typing.Sequence[hikari.models.channels.PermissionOverwrite]
             If provided, the new permission overwrites for the channel.
         parent_category : hikari.utilities.undefined.UndefinedType or hikari.models.channels.GuildCategory or hikari.utilities.snowflake.UniqueObject
             If provided, the new guild category for the channel. This may be
             a category object, or the ID of an existing category.
-        reason : hikari.utilities.undefined.UndefinedType or str
+        reason : hikari.utilities.undefined.UndefinedType or builtins.str
             If provided, the reason that will be recorded in the audit logs.
 
         Returns
@@ -234,19 +234,19 @@ class IRESTClient(component.IComponent, abc.ABC):
         target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.UniqueObject
             The channel overwrite to edit. This may be a overwrite object, or the ID of an
             existing channel.
-        target_type : hikari.utilities.undefined.UndefinedType or hikari.models.channels.PermissionOverwriteType or str
+        target_type : hikari.utilities.undefined.UndefinedType or hikari.models.channels.PermissionOverwriteType or builtins.str
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
         allow : hikari.utilities.undefined.UndefinedType or hikari.models.permissions.Permission
             If provided, the new vale of all allowed permissions.
         deny : hikari.utilities.undefined.UndefinedType or hikari.models.permissions.Permission
             If provided, the new vale of all disallowed permissions.
-        reason : hikari.utilities.undefined.UndefinedType or str
+        reason : hikari.utilities.undefined.UndefinedType or builtins.str
             If provided, the reason that will be recorded in the audit logs.
 
         Raises
         ------
-        TypeError
+        builtins.TypeError
             If `target_type` is unset and we were unable to determine the type
             from `target`.
         hikari.errors.BadRequest
@@ -339,20 +339,20 @@ class IRESTClient(component.IComponent, abc.ABC):
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to create a invite for. This may be a channel object,
             or the ID of an existing channel.
-        max_age : hikari.utilities.undefined.UndefinedType or datetime.timedelta or float or int
+        max_age : hikari.utilities.undefined.UndefinedType or datetime.timedelta or builtins.float or builtins.int
             If provided, the duration of the invite before expiry.
-        max_uses : hikari.utilities.undefined.UndefinedType or int
+        max_uses : hikari.utilities.undefined.UndefinedType or builtins.int
             If provided, the max uses the invite can have.
-        temporary : hikari.utilities.undefined.UndefinedType or bool
+        temporary : hikari.utilities.undefined.UndefinedType or builtins.bool
             If provided, whether the invite only grants temporary membership.
-        unique : hikari.utilities.undefined.UndefinedType or bool
+        unique : hikari.utilities.undefined.UndefinedType or builtins.bool
             If provided, wheter the invite should be unique.
         target_user : hikari.utilities.undefined.UndefinedType or hikari.models.users.User or hikari.utilities.snowflake.UniqueObject
             If provided, the target user id for this invite. This may be a
             user object, or the ID of an existing user.
-        target_user_type : hikari.utilities.undefined.UndefinedType or hikari.models.invites.TargetUserType or int
+        target_user_type : hikari.utilities.undefined.UndefinedType or hikari.models.invites.TargetUserType or builtins.int
             If provided, the type of target user for this invite.
-        reason : hikari.utilities.undefined.UndefinedType or str
+        reason : hikari.utilities.undefined.UndefinedType or builtins.str
             If provided, the reason that will be recorded in the audit logs.
 
         Returns
@@ -389,7 +389,7 @@ class IRESTClient(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.impl.special_endpoints.TypingIndicator
+        hikari.api.special_endpoints.TypingIndicator
             A typing indicator to use.
 
         Raises
@@ -533,7 +533,7 @@ class IRESTClient(component.IComponent, abc.ABC):
 
         Raises
         ------
-        TypeError
+        builtins.TypeError
             If you specify more than one of `before`, `after`, `about`.
         hikari.errors.Unauthorized
             If you are unauthorized to make the request (invalid/missing token).
@@ -546,10 +546,10 @@ class IRESTClient(component.IComponent, abc.ABC):
             If an internal error occurs on Discord while handling the request.
 
         !!! note
-            The exceptions on this endpoint (other than `TypeError`) will only
+            The exceptions on this endpoint (other than `builtins.TypeError`) will only
             be raised once the result is awaited or interacted with. Invoking
             this function itself will not raise anything (other than
-            `TypeError`).
+            `builtins.TypeError`).
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
@@ -612,29 +612,29 @@ class IRESTClient(component.IComponent, abc.ABC):
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to create the message in. This may be a channel object, or
             the ID of an existing channel.
-        text : hikari.utilities.undefined.UndefinedType or str
+        text : hikari.utilities.undefined.UndefinedType or builtins.str
             If specified, the message contents.
         embed : hikari.utilities.undefined.UndefinedType or hikari.models.embeds.Embed
             If specified, the message embed.
-        attachment : hikari.utilities.undefined.UndefinedType or str or hikari.utilities.files.Resource
+        attachment : hikari.utilities.undefined.UndefinedType or builtins.str or hikari.utilities.files.Resource
             If specified, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
-        attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[str or hikari.utilities.files.Resource]
+        attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[builtins.str or hikari.utilities.files.Resource]
             If specified, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        tts : hikari.utilities.undefined.UndefinedType or bool
+        tts : hikari.utilities.undefined.UndefinedType or builtins.bool
             If specified, whether the message will be TTS (Text To Speech).
-        nonce : hikari.utilities.undefined.UndefinedType or str
+        nonce : hikari.utilities.undefined.UndefinedType or builtins.str
             If specified, a nonce that can be used for optimistic message sending.
-        mentions_everyone : bool
+        mentions_everyone : builtins.bool
             If specified, whether the message should parse @everyone/@here mentions.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or bool
-            If specified, and `bool`, whether to parse user mentions. If specified and
-            `list`, the users to parse the mention for. This may be a user object, or
-            the ID of an existing user.
-        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or bool
-            If specified and `bool`, whether to parse role mentions. If specified and
-            `list`, the roles to parse the mention for. This may be a role object, or
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+            If specified, and a `builtins.bool`, whether to parse user mentions.
+            If specified and a `builtins.list`, the users to parse the mention
+            for. This may be a user object, or the ID of an existing user.
+        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+            If specified and `builtins.bool`, whether to parse role mentions. If specified and
+            `builtins.list`, the roles to parse the mention for. This may be a role object, or
             the ID of an existing role.
 
         Returns
@@ -660,10 +660,10 @@ class IRESTClient(component.IComponent, abc.ABC):
             If the channel is not found.
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
-        ValueError
+        builtins.ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
-        TypeError
+        builtins.TypeError
             If both `attachment` and `attachments` are specified.
 
         !!! warning
@@ -1427,16 +1427,17 @@ class IRESTClient(component.IComponent, abc.ABC):
         guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
             The guild to estimate the guild prune count for. This may be a guild object,
             or the ID of an existing channel.
-        days : hikari.utilities.undefined.UndefinedType or int
+        days : hikari.utilities.undefined.UndefinedType or builtins.int
             If provided, number of days to count prune for.
         include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject]
-            If provided, the role(s) to include. By default, this endpoint will not count
-            users with roles. Providing roles using this attribute will make members with
-            the specified roles also get included into the count.
+            If provided, the role(s) to include. By default, this endpoint will
+            not count users with roles. Providing roles using this attribute
+            will make members with the specified roles also get included into
+            the count.
 
         Returns
         -------
-        int
+        builtins.int
             The estimated guild prune count.
 
         Raises
@@ -1472,22 +1473,24 @@ class IRESTClient(component.IComponent, abc.ABC):
         guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
             The guild to begin the guild prune in. This may be a guild object,
             or the ID of an existing channel.
-        days : hikari.utilities.undefined.UndefinedType or int
+        days : hikari.utilities.undefined.UndefinedType or builtins.int
             If provided, number of days to count prune for.
-        compute_prune_count: hikari.utilities.undefined.UndefinedType or bool
-            If provided, whether to return the prune count. This is discouraged for large
-            guilds.
+        compute_prune_count: hikari.utilities.undefined.UndefinedType or builtins.bool
+            If provided, whether to return the prune count. This is discouraged
+            for large guilds.
         include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject]
-            If provided, the role(s) to include. By default, this endpoint will not count
-            users with roles. Providing roles using this attribute will make members with
-            the specified roles also get included into the count.
-        reason : hikari.utilities.undefined.UndefinedType or str
+            If provided, the role(s) to include. By default, this endpoint will
+            not count users with roles. Providing roles using this attribute
+            will make members with the specified roles also get included into
+            the count.
+        reason : hikari.utilities.undefined.UndefinedType or builtins.str
             If provided, the reason that will be recorded in the audit logs.
 
         Returns
         -------
-        int or None
-            If `compute_prune_count` is not provided or `True`, the number of members pruned.
+        builtins.int or builtins.None
+            If `compute_prune_count` is not provided or `builtins.True`, the
+            number of members pruned.
 
         Raises
         ------

@@ -107,7 +107,7 @@ class UpdatedMessageFields(snowflake.Unique):
     edited_timestamp: typing.Union[datetime.datetime, undefined.UndefinedType, None] = attr.ib(repr=False)
     """The timestamp that the message was last edited at.
 
-    Will be `None` if the message wasn't ever edited, or `undefined` if the
+    Will be `builtins.None` if the message wasn't ever edited, or `undefined` if the
     info is not available.
     """
 
@@ -203,7 +203,7 @@ class MessageDeleteEvent(base_events.Event):
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild where this message was deleted.
 
-    This will be `None` if this message was deleted in a DM channel.
+    This will be `builtins.None` if this message was deleted in a DM channel.
     """
 
     message_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -228,7 +228,7 @@ class MessageDeleteBulkEvent(base_events.Event):
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the channel these messages have been deleted in.
 
-    This will be `None` if these messages were bulk deleted in a DM channel.
+    This will be `builtins.None` if these messages were bulk deleted in a DM channel.
     """
 
     message_ids: typing.Set[snowflake.Snowflake] = attr.ib(repr=False)
@@ -250,7 +250,7 @@ class MessageReactionEvent(base_events.Event):
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild where this reaction event is happening.
 
-    This will be `None` if this is happening in a DM channel.
+    This will be `builtins.None` if this is happening in a DM channel.
     """
 
 
@@ -266,7 +266,7 @@ class MessageReactionAddEvent(MessageReactionEvent):
     member: typing.Optional[guilds.Member] = attr.ib(repr=False)
     """The member object of the user who's adding this reaction.
 
-    This will be `None` if this is happening in a DM channel.
+    This will be `builtins.None` if this is happening in a DM channel.
     """
 
     emoji: typing.Union[emojis.CustomEmoji, emojis.UnicodeEmoji] = attr.ib(repr=True)

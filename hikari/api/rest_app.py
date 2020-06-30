@@ -88,10 +88,10 @@ class IRESTApp(abc.ABC):
 
         Returns
         -------
-        concurrent.futures.Executor or None
+        concurrent.futures.Executor or builtins.None
             The custom thread-pool being used for blocking IO. If the
             default event loop thread-pool is being used, then this will
-            return `None` instead.
+            return `builtins.None` instead.
         """
 
     @property
@@ -142,9 +142,9 @@ class IRESTAppFactory(abc.ABC):
 
         Parameters
         ----------
-        token : str
+        token : builtins.str
             The token to use.
-        token_type : str
+        token_type : builtins.str
             The token type to use. Defaults to `"Bearer"`.
 
         Returns

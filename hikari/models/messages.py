@@ -228,7 +228,7 @@ class MessageCrosspost:
     """The ID of the message.
 
     !!! warning
-        This may be `None` in some cases according to the Discord API
+        This may be `builtins.None` in some cases according to the Discord API
         documentation, but the situations that cause this to occur are not
         currently documented.
     """
@@ -240,7 +240,7 @@ class MessageCrosspost:
     """The ID of the guild that the message originated from.
 
     !!! warning
-        This may be `None` in some cases according to the Discord API
+        This may be `builtins.None` in some cases according to the Discord API
         documentation, but the situations that cause this to occur are not
         currently documented.
     """
@@ -279,7 +279,7 @@ class Message(snowflake.Unique):
     edited_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The timestamp that the message was last edited at.
 
-    Will be `None` if it wasn't ever edited.
+    Will be `builtins.None` if it wasn't ever edited.
     """
 
     is_tts: bool = attr.ib(eq=False, hash=False, repr=False)
@@ -373,23 +373,24 @@ class Message(snowflake.Unique):
 
         Parameters
         ----------
-        text : str or hikari.utilities.undefined.UndefinedType or None
-            If specified, the message text to set on the message. If `None`,
-            then the content is removed if already present.
-        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType or None
-            If specified, the embed object to set on the message. If `None`,
-            then the embed is removed if already present.
-        mentions_everyone : bool
+        text : builtins.str or hikari.utilities.undefined.UndefinedType or builtins.None
+            If specified, the message text to set on the message. If
+            `builtins.None`, then the content is removed if already present.
+        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType or builtins.None
+            If specified, the embed object to set on the message. If
+            `builtins.None`, then the embed is removed if already present.
+        mentions_everyone : builtins.bool
             Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to `False`.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or bool
+            discord and lead to actual pings, defaults to `builtins.False`.
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             Either an array of user objects/IDs to allow mentions for,
-            `True` to allow all user mentions or `False` to block all
-            user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or bool
+            `builtins.True` to allow all user mentions or `builtins.False`
+            to block all user mentions from resolving. Defaults to
+            `builtins.True`.
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             Either an array of guild role objects/IDs to allow mentions for,
-            `True` to allow all role mentions or `False` to block all
-            role mentions from resolving, defaults to `True`.
+            `builtins.True` to allow all role mentions or `builtins.False` to
+            block all role mentions from resolving. Defaults to `builtins.True`.
 
         Returns
         -------
@@ -412,10 +413,10 @@ class Message(snowflake.Unique):
             on a message you did not author.
             If you try to edit the flags on a message you did not author without
             the `MANAGE_MESSAGES` permission.
-        ValueError
+        builtins.ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
-        """
+        """  # noqa: E501 - Line too long
         return await self.app.rest.edit_message(
             message=self.id,
             channel=self.channel_id,
@@ -449,35 +450,35 @@ class Message(snowflake.Unique):
 
         Parameters
         ----------
-        text : str or hikari.utilities.undefined.UndefinedType
+        text : builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, the message text to send with the message.
-        nonce : str or hikari.utilities.undefined.UndefinedType
+        nonce : builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, an optional ID to send for opportunistic message
             creation. This doesn't serve any real purpose for general use,
             and can usually be ignored.
-        tts : bool or hikari.utilities.undefined.UndefinedType
+        tts : builtins.bool or hikari.utilities.undefined.UndefinedType
             If specified, whether the message will be sent as a TTS message.
-        attachment : hikari.utilities.files.Resource or str or hikari.utilities.undefined.UndefinedType
+        attachment : hikari.utilities.files.Resource or builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, a attachment to upload, if desired. This can
             be a resource, or string of a path on your computer or a URL.
-        attachments : typing.Sequence[hikari.utilities.files.Resource or str] or hikari.utilities.undefined.UndefinedType
+        attachments : typing.Sequence[hikari.utilities.files.Resource or builtins.str] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of attachments to upload, if desired.
             Should be between 1 and 10 objects in size (inclusive), also
             including embed attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
         embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
             If specified, the embed object to send with the message.
-        mentions_everyone : bool
+        mentions_everyone : builtins.bool
             Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to `False`.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or bool
+            discord and lead to actual pings, defaults to `builtins.False`.
+        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             Either an array of user objects/IDs to allow mentions for,
-            `True` to allow all user mentions or `False` to block all
-            user mentions from resolving, defaults to `True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or bool
+            `builtins.True` to allow all user mentions or `builtins.False` to block all
+            user mentions from resolving, defaults to `builtins.True`.
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             Either an array of guild role objects/IDs to allow mentions for,
-            `True` to allow all role mentions or `False` to block all
-            role mentions from resolving, defaults to `True`.
+            `builtins.True` to allow all role mentions or `builtins.False` to block all
+            role mentions from resolving, defaults to `builtins.True`.
 
         Returns
         -------
@@ -500,10 +501,10 @@ class Message(snowflake.Unique):
         hikari.errors.Forbidden
             If you lack permissions to send to the channel this message belongs
             to.
-        ValueError
+        builtins.ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
-        TypeError
+        builtins.TypeError
             If both `attachment` and `attachments` are specified.
         """  # noqa: E501 - Line too long
         return await self.app.rest.create_message(
@@ -537,7 +538,7 @@ class Message(snowflake.Unique):
 
         Parameters
         ----------
-        emoji : str or hikari.models.emojis.Emoji
+        emoji : builtins.str or hikari.models.emojis.Emoji
             The emoji to add.
 
         Examples
@@ -582,7 +583,7 @@ class Message(snowflake.Unique):
 
         Parameters
         ----------
-        emoji : str or hikari.models.emojis.Emoji
+        emoji : builtins.str or hikari.models.emojis.Emoji
             The emoji to remove.
         user : hikari.models.users.User or hikari.utilities.undefined.UndefinedType
             The user of the reaction to remove. If unspecified, then the bot's
@@ -630,7 +631,7 @@ class Message(snowflake.Unique):
 
         Parameters
         ----------
-        emoji : str or hikari.models.emojis.Emoji or hikari.utilities.undefined.UndefinedType
+        emoji : builtins.str or hikari.models.emojis.Emoji or hikari.utilities.undefined.UndefinedType
             The emoji to remove all reactions for. If not specified, then all
             emojis are removed.
 

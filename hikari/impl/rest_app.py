@@ -51,11 +51,11 @@ class RESTClientImpl(rest_app.IRESTAppContextManager):
 
     Parameters
     ----------
-    debug : bool
-        Defaulting to `False`, if `True`, then each payload sent and received
-        in HTTP requests will be dumped to debug logs. This will provide useful
-        debugging context at the cost of performance. Generally you do not
-        need to enable this.
+    debug : builtins.bool
+        Defaulting to `builtins.False`, if `builtins.True`, then each payload
+        sent and received in HTTP requests will be dumped to debug logs. This
+        will provide useful debugging context at the cost of performance.
+        Generally you do not need to enable this.
     connector : aiohttp.BaseConnector
         The AIOHTTP connector to use. This must be closed by the caller, and
         will not be terminated when this class closes (since you will generally
@@ -66,16 +66,16 @@ class RESTClientImpl(rest_app.IRESTAppContextManager):
         HTTP-related settings.
     proxy_settings : hikari.config.ProxySettings
         Proxy-related settings.
-    token : str or None
+    token : builtins.str or builtins.None
         If defined, the token to use. If not defined, no token will be injected
         into the `Authorization` header for requests.
-    token_type : str or None
+    token_type : builtins.str or builtins.None
         The token type to use. If undefined, a default is used instead, which
         will be `Bot`. If no `token` is provided, this is ignored.
-    url : str or None
+    url : builtins.str or builtins.None
         The API URL to hit. Generally you can leave this undefined and use the
         default.
-    version : int
+    version : builtins.int
         The API version to use. This is interpolated into the default `url`
         to create the full URL. Currently this only supports `6` or `7`.
     """
@@ -118,7 +118,7 @@ class RESTClientImpl(rest_app.IRESTAppContextManager):
         """Return the cache component.
 
         !!! warn
-            This will always return `NotImplemented` for HTTP-only applications.
+            This will always return `builtins.NotImplemented` for HTTP-only applications.
         """
         return self._cache
 
@@ -166,14 +166,14 @@ class RESTAppFactoryImpl(rest_app.IRESTAppFactory):
 
     Parameters
     ----------
-    debug : bool
-        If `True`, then much more information is logged each time a request is
-        made. Generally you do not need this to be on, so it will default to
-        `False` instead.
+    debug : builtins.bool
+        If `builtins.True`, then much more information is logged each time a
+        request is made. Generally you do not need this to be on, so it will
+        default to `builtins.False` instead.
     url : str or hikari.utilities.undefined.UndefinedType
         The base URL for the API. You can generally leave this as being
         `undefined` and the correct default API base URL will be generated.
-    version : int
+    version : builtins.int
         The Discord API version to use. Can be `6` (stable, default), or `7`
         (undocumented development release).
     """

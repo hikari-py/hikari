@@ -116,7 +116,7 @@ class IEventDispatcherBase(abc.ABC):
 
         Returns
         -------
-        asyncio.Future
+        asyncio.Future[typing.Any]
             A future that can be optionally awaited. If awaited, the future
             will complete once all corresponding event listeners have been
             invoked. If not awaited, this will schedule the dispatch of the
@@ -184,17 +184,21 @@ class IEventDispatcherBase(abc.ABC):
         ----------
         event_type : typing.Type[hikari.events.base.Event]
             The event type to look for.
-        polymorphic : bool
-            If `True`, this will return `True` if a subclass of the given
-            event type has a listener registered. If `False`, then only
-            listeners for this class specifically are returned. The default
-            is `True`.
+        polymorphic : builtins.bool
+            If `builtins.True`, this will return `builtins.True` if a subclass
+            of the given event type has a listener registered. If
+            `builtins.False`, then only listeners for this class specifically
+            are returned. The default is `builtins.True`.
 
         Returns
         -------
-        typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]
+        typing.Collection[typing.Callable[[EventT], typing.Coroutine[builtins.None, typing.Any, builtins.None]]
             A copy of the collection of listeners for the event. Will return
             an empty collection if nothing is registered.
+
+        See Also
+        --------
+        `hikari.api.event_dispatcher.IEventDispatcherBase.has_listener`
         """
 
     @abc.abstractmethod
@@ -211,13 +215,17 @@ class IEventDispatcherBase(abc.ABC):
         ----------
         event_type : typing.Type[hikari.events.base.Event]
             The event type to look for.
-        callback :
+        callback
             The callback to look for.
-        polymorphic : bool
-            If `True`, this will return `True` if a subclass of the given
-            event type has a listener registered. If `False`, then only
-            listeners for this class specifically are checked. The default
-            is `True`.
+        polymorphic : builtins.bool
+            If `builtins.True`, this will return `builtins.True` if a subclass
+            of the given event type has a listener registered. If
+            `builtins.False`, then only listeners for this class specifically
+            are checked. The default is `builtins.True`.
+
+        See Also
+        --------
+        `hikari.api.event_dispatcher.IEventDispatcherBase.get_listeners`
         """
 
     @abc.abstractmethod
@@ -294,14 +302,14 @@ class IEventDispatcherBase(abc.ABC):
             this type additionally.
         predicate
             A function or coroutine taking the event as the single parameter.
-            This should return `True` if the event is one you want to return,
-            or `False` if the event should not be returned.
-        timeout : float or int or None
+            This should return `builtins.True` if the event is one you want to return,
+            or `builtins.False` if the event should not be returned.
+        timeout : builtins.float or builtins.int or builtins.None
             The amount of time to wait before raising an `asyncio.TimeoutError`
-            and giving up instead. This is measured in seconds. If `None`, then
-            no timeout will be waited for (no timeout can result in "leaking" of
-            coroutines that never complete if called in an uncontrolled way,
-            so is not recommended).
+            and giving up instead. This is measured in seconds. If
+            `builtins.None`, then no timeout will be waited for (no timeout can
+            result in "leaking" of coroutines that never complete if called in
+            an uncontrolled way, so is not recommended).
 
         Returns
         -------
@@ -311,8 +319,8 @@ class IEventDispatcherBase(abc.ABC):
         Raises
         ------
         asyncio.TimeoutError
-            If the timeout is not `None` and is reached before an event is
-            received that the predicate returns `True` for.
+            If the timeout is not `builtins.None` and is reached before an event is
+            received that the predicate returns `builtins.True` for.
 
         See Also
         --------

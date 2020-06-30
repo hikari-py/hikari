@@ -44,12 +44,12 @@ class IVoiceComponent(component.IComponent, abc.ABC):
         ----------
         channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.UniqueObject
             The channel or channel ID to connect to.
-        deaf : bool
-            Defaulting to `False`, if `True`, the client will enter the voice
-            channel deafened (thus unable to hear other users).
-        mute : bool
-            Defaulting to `False`, if `True`, the client will enter the voice
-            channel muted (thus unable to send audio).
+        deaf : builtins.bool
+            Defaulting to `builtins.False`, if `builtins.True`, the client will
+            enter the voice channel deafened (thus unable to hear other users).
+        mute : builtins.bool
+            Defaulting to `builtins.False`, if `builtins.True`, the client will
+            enter the voice channel muted (thus unable to send audio).
         """
 
 

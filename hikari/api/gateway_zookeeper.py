@@ -38,7 +38,7 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
     """Component specialization that looks after a set of shards.
 
     These events will be produced by a low-level gateway implementation, and
-    will produce `list` and `dict` types only.
+    will produce `builtins.list` and `builtins.dict` types only.
 
     This may be combined with `IEventDispatcherApp` for most single-process
     bots, or may be a specific component for large distributed applications
@@ -64,7 +64,7 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
 
         Returns
         -------
-        typing.Mapping[int, hikari.api.gateway.IGatewayShard]
+        typing.Mapping[builtins.int, hikari.api.gateway.IGatewayShard]
             The mapping of shard IDs to gateway connections for the
             corresponding shard. These shard IDs are 0-indexed.
         """
@@ -81,7 +81,7 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
 
         Returns
         -------
-        int
+        builtins.int
             The number of shards in the entire application.
         """
 
@@ -122,12 +122,13 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
             If defined, the new status to set.
         activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
             If defined, the new activity to set.
-        idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
-            If defined, the time to show up as being idle since, or `None` if
-            not applicable. If undefined, then it is not changed.
-        afk : bool or hikari.utilities.undefined.UndefinedType
-            If defined, `True` if the user should be marked as AFK,
-            or `False` if not AFK.
+        idle_since : datetime.datetime or builtins.None or hikari.utilities.undefined.UndefinedType
+            If defined, the time to show up as being idle since, or
+            `builtins.None` if not applicable. If undefined, then it is not
+            changed.
+        afk : builtins.bool or hikari.utilities.undefined.UndefinedType
+            If defined, `builtins.True` if the user should be marked as AFK,
+            or `builtins.False` if not AFK.
         """
 
     @abc.abstractmethod
