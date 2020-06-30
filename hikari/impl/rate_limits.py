@@ -17,7 +17,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Basic lazy ratelimit systems for asyncio.
 
-See `hikari.net.buckets` for REST-specific rate-limiting logic.
+See `hikari.impl.buckets` for HTTP-specific rate-limiting logic.
 """
 
 from __future__ import annotations
@@ -40,8 +40,7 @@ import typing
 if typing.TYPE_CHECKING:
     import types
 
-
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net.ratelimits")
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.impl.ratelimits")
 
 
 class BaseRateLimiter(abc.ABC):
@@ -147,7 +146,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
 @typing.final
 class ManualRateLimiter(BurstRateLimiter):
-    """Rate limit handler for the global REST rate limit.
+    """Rate limit handler for the global HTTP rate limit.
 
     This is a non-preemptive rate limiting algorithm that will always return
     completed futures until `ManualRateLimiter.throttle` is invoked. Once this
@@ -160,8 +159,8 @@ class ManualRateLimiter(BurstRateLimiter):
     Triggering a throttle when it is already set will cancel the current
     throttle task that is sleeping and replace it.
 
-    This is used to enforce the global REST rate limit that will occur
-    "randomly" during REST API interaction.
+    This is used to enforce the global HTTP rate limit that will occur
+    "randomly" during HTTP API interaction.
 
     Expect random occurrences.
     """

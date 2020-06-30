@@ -15,11 +15,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Implementation of a V6 and V7 compatible REST API for Discord."""
+"""Implementation of a V6 and V7 compatible HTTP API for Discord."""
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["REST"]
+__all__: typing.Final[typing.Sequence[str]] = ["HTTP"]
 
 import asyncio
 import contextlib
@@ -34,15 +34,15 @@ import uuid
 import aiohttp
 
 from hikari import errors
+from hikari.impl import buckets
+from hikari.impl import config
+from hikari.impl import helpers
+from hikari.impl import rate_limits
+from hikari.impl import routes
+from hikari.impl import special_endpoints
+from hikari.impl import strings
 from hikari.models import embeds as embeds_
 from hikari.models import emojis
-from hikari.net import buckets
-from hikari.net import config
-from hikari.net import helpers
-from hikari.net import rate_limits
-from hikari.net import routes
-from hikari.net import special_endpoints
-from hikari.net import strings
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
@@ -66,13 +66,13 @@ if typing.TYPE_CHECKING:
     from hikari.models import voices
     from hikari.models import webhooks
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net.rest")
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.impl.http")
 
 
 # TODO: make a mechanism to allow me to share the same client session but
-# use various tokens for REST-only apps.
-class REST:
-    """Implementation of the V6 and V7-compatible Discord REST API.
+# use various tokens for HTTP-only apps.
+class HTTP:
+    """Implementation of the V6 and V7-compatible Discord HTTP API.
 
     This manages making HTTP/1.1 requests to the API and using the entity
     factory within the passed application instance to deserialize JSON responses
@@ -81,7 +81,7 @@ class REST:
     Parameters
     ----------
     app : hikari.api.rest.IRESTClient
-        The REST application containing all other application components
+        The HTTP application containing all other application components
         that Hikari uses.
     debug : bool
         If `True`, this will enable logging of each payload sent and received,
@@ -89,7 +89,7 @@ class REST:
         information useful for debugging this application. These logs will
         be written as DEBUG log entries. For most purposes, this should be
         left `False`.
-    global_ratelimit : hikari.net.rate_limits.ManualRateLimiter
+    global_ratelimit : hikari.impl.rate_limits.ManualRateLimiter
         The shared ratelimiter to use for the application.
     token : str or hikari.utilities.undefined.UndefinedType
         The bot or bearer token. If no token is to be used,
@@ -98,7 +98,7 @@ class REST:
         The type of token in use. If no token is used, this can be ignored and
         left to the default value. This can be `"Bot"` or `"Bearer"`.
     rest_url : str
-        The REST API base URL. This can contain format-string specifiers to
+        The HTTP API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
     version : int
         The API version to use.
@@ -429,7 +429,7 @@ class REST:
 
     @typing.final
     async def close(self) -> None:
-        """Close the REST client and any open HTTP connections."""
+        """Close the HTTP client and any open HTTP connections."""
         if self._client_session is not None:
             await self._client_session.close()
         self.buckets.close()
@@ -815,7 +815,7 @@ class REST:
 
         Returns
         -------
-        hikari.net.special_endpoints.TypingIndicator
+        hikari.impl.special_endpoints.TypingIndicator
             A typing indicator to use.
 
         Raises

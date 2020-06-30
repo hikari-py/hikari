@@ -17,7 +17,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Barebones implementation of a cache that never stores anything.
 
-This is used to enable compatibility with REST applications and stateless
+This is used to enable compatibility with HTTP applications and stateless
 bots where desired.
 """
 from __future__ import annotations

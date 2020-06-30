@@ -31,7 +31,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari.models import presences
-    from hikari.net import gateway
+    from hikari.impl import gateway
 
 
 class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
@@ -64,7 +64,7 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
 
         Returns
         -------
-        typing.Mapping[int, hikari.net.gateway.Gateway]
+        typing.Mapping[int, hikari.impl.gateway.Gateway]
             The mapping of shard IDs to gateway connections for the
             corresponding shard. These shard IDs are 0-indexed.
         """

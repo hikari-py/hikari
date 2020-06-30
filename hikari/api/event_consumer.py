@@ -27,7 +27,7 @@ from hikari.api import component
 from hikari.api import rest
 
 if typing.TYPE_CHECKING:
-    from hikari.net import gateway
+    from hikari.impl import gateway
     from hikari.utilities import data_binding
 
 
@@ -50,7 +50,7 @@ class IEventConsumerComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.net.gateway.Gateway
+        shard : hikari.impl.gateway.Gateway
             The gateway shard that emitted the event.
         event_name : str
             The event name.

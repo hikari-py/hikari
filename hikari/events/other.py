@@ -41,7 +41,7 @@ from hikari.events import base as base_events
 if typing.TYPE_CHECKING:
     from hikari.models import guilds
     from hikari.models import users
-    from hikari.net import gateway as gateway_client
+    from hikari.impl import gateway as gateway_client
     from hikari.utilities import snowflake
 
 

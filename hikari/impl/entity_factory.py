@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Basic implementation of an entity factory for general bots and REST apps."""
+"""Basic implementation of an entity factory for general bots and HTTP apps."""
 
 from __future__ import annotations
 
@@ -31,6 +31,7 @@ from hikari.events import guild as guild_events
 from hikari.events import message as message_events
 from hikari.events import other as other_events
 from hikari.events import voice as voice_events
+from hikari.impl import gateway
 from hikari.models import applications as application_models
 from hikari.models import audit_logs as audit_log_models
 from hikari.models import channels as channel_models
@@ -46,9 +47,8 @@ from hikari.models import presences as presence_models
 from hikari.models import users as user_models
 from hikari.models import voices as voice_models
 from hikari.models import webhooks as webhook_models
-from hikari.utilities import files
-from hikari.net import gateway
 from hikari.utilities import date
+from hikari.utilities import files
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -87,7 +87,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             audit_log_models.AuditLogChangeKey.MFA_LEVEL: guild_models.GuildMFALevel,
             audit_log_models.AuditLogChangeKey.VERIFICATION_LEVEL: guild_models.GuildVerificationLevel,
             audit_log_models.AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guild_models.GuildExplicitContentFilterLevel,
-            audit_log_models.AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guild_models.GuildMessageNotificationsLevel,  # noqa: E501 - Line too long
+            audit_log_models.AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guild_models.GuildMessageNotificationsLevel,
+            # noqa: E501 - Line too long
             audit_log_models.AuditLogChangeKey.PRUNE_DELETE_DAYS: _deserialize_day_timedelta,
             audit_log_models.AuditLogChangeKey.WIDGET_CHANNEL_ID: snowflake.Snowflake,
             audit_log_models.AuditLogChangeKey.POSITION: int,

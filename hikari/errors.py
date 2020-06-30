@@ -38,9 +38,8 @@ __all__: typing.Final[typing.Sequence[str]] = [
 import http
 import typing
 
-
 if typing.TYPE_CHECKING:
-    from hikari.net import routes
+    from hikari.impl import routes
     from hikari.utilities import data_binding
 
 
@@ -336,13 +335,13 @@ class RateLimited(ClientHTTPErrorResponse):
     !!! note
         If you receive this regularly, please file a bug report, or contact
         Discord with the relevant debug information that can be obtained by
-        enabling debug logs and enabling the debug mode on the REST components.
+        enabling debug logs and enabling the debug mode on the HTTP components.
 
     Parameters
     ----------
     url : str
         The URL that produced the error message.
-    route : hikari.net.routes.CompiledRoute
+    route : hikari.impl.routes.CompiledRoute
         The route that produced this error.
     headers : hikari.utilities.data_binding.Headers
         Any headers that were given in the response.

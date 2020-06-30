@@ -36,7 +36,6 @@ import email.utils
 import re
 import typing
 
-
 TimeSpan = typing.Union[int, float, datetime.timedelta]
 """Type hint representing a naive time period or time span.
 

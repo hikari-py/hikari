@@ -26,8 +26,8 @@ import typing
 
 import attr
 
-from hikari.utilities import files as files_
 from hikari.utilities import cdn
+from hikari.utilities import files as files_
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 

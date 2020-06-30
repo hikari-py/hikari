@@ -43,8 +43,8 @@ import attr
 
 from hikari.models import permissions
 from hikari.models import users
-from hikari.utilities import files
 from hikari.utilities import cdn
+from hikari.utilities import files
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -158,7 +158,7 @@ class PermissionOverwrite(snowflake.Unique):
 class PartialChannel(snowflake.Unique):
     """Channel representation for cases where further detail is not provided.
 
-    This is commonly received in REST API responses where full information is
+    This is commonly received in HTTP API responses where full information is
     not available from Discord.
     """
 

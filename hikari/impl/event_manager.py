@@ -27,7 +27,7 @@ from hikari.events import other
 from hikari.impl import event_manager_core
 
 if typing.TYPE_CHECKING:
-    from hikari.net import gateway
+    from hikari.impl import gateway
     from hikari.utilities import data_binding
 
 
