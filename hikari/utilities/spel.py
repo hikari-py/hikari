@@ -50,7 +50,6 @@ and nice to work with.
 import operator
 import typing
 
-
 InputValueT = typing.TypeVar("InputValueT")
 ReturnValueT = typing.TypeVar("ReturnValueT")
 

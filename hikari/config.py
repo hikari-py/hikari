@@ -31,7 +31,7 @@ import typing
 
 import attr
 
-from hikari.net import strings
+from hikari.impl import constants
 from hikari.utilities import data_binding
 
 
@@ -50,7 +50,7 @@ class BasicAuthHeader:
         """Generate the header value and return it."""
         raw_token = f"{self.username}:{self.password}".encode("ascii")
         token_part = base64.b64encode(raw_token).decode("ascii")
-        return f"{strings.BASICAUTH_TOKEN} {token_part}"
+        return f"{constants.BASICAUTH_TOKEN} {token_part}"
 
     def __str__(self) -> str:
         return self.header
@@ -87,11 +87,11 @@ class ProxySettings:
         if self.headers is None:
             if self.auth is None:
                 return None
-            return {strings.PROXY_AUTHENTICATION_HEADER: self.auth}
+            return {constants.PROXY_AUTHENTICATION_HEADER: self.auth}
 
         if self.auth is None:
             return self.headers
-        return {**self.headers, strings.PROXY_AUTHENTICATION_HEADER: self.auth}
+        return {**self.headers, constants.PROXY_AUTHENTICATION_HEADER: self.auth}
 
 
 @attr.s(slots=True, kw_only=True, auto_attribs=True)

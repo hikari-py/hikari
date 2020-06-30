@@ -48,14 +48,14 @@ import typing
 import attr
 
 from hikari.models import users
-from hikari.utilities import files
 from hikari.utilities import cdn
+from hikari.utilities import files
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import rest
+    from hikari.api import rest_app
     from hikari.models import channels as channels_
     from hikari.models import colors
     from hikari.models import emojis as emojis_
@@ -236,7 +236,7 @@ class GuildVerificationLevel(int, enum.Enum):
 class GuildWidget:
     """Represents a guild embed."""
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
@@ -250,7 +250,7 @@ class GuildWidget:
 class Member:
     """Used to represent a guild bound member."""
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     # TODO: make Member delegate to user and implement a common base class
@@ -310,7 +310,7 @@ class PartialRole(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
@@ -479,7 +479,7 @@ class PartialGuild(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
@@ -652,7 +652,7 @@ class Guild(PartialGuild):
     This will not take into account permission overwrites or implied
     permissions (for example, `ADMINISTRATOR` implies all other permissions).
 
-    This will be `None` when this object is retrieved through a REST request
+    This will be `None` when this object is retrieved through a HTTP request
     rather than from the gateway.
     """
 
@@ -909,7 +909,7 @@ class Guild(PartialGuild):
     approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild.
 
-    This information will be provided by REST API calls fetching the guilds that
+    This information will be provided by HTTP API calls fetching the guilds that
     a bot account is in. For all other purposes, this should be expected to
     remain `None`.
     """
@@ -917,7 +917,7 @@ class Guild(PartialGuild):
     approximate_active_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild that are not offline.
 
-    This information will be provided by REST API calls fetching the guilds that
+    This information will be provided by HTTP API calls fetching the guilds that
     a bot account is in. For all other purposes, this should be expected to
     remain `None`.
     """

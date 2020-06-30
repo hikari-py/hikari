@@ -30,16 +30,16 @@ to document the theory of how this is handled here.
 What is the theory behind this implementation?
 ----------------------------------------------
 
-In this module, we refer to a `hikari.net.routes.CompiledRoute` as a definition
+In this module, we refer to a `hikari.impl.routes.CompiledRoute` as a definition
 of a route with specific major parameter values included (e.g.
-`POST /channels/123/messages`), and a `hikari.net.routes.Route` as a
+`POST /channels/123/messages`), and a `hikari.impl.routes.Route` as a
 definition of a route without specific parameter values included (e.g.
 `POST /channels/{channel}/messages`). We can compile a
-`hikari.net.routes.CompiledRoute` from a `hikari.net.routes.Route`
+`hikari.impl.routes.CompiledRoute` from a `hikari.impl.routes.Route`
 by providing the corresponding parameters as kwargs, as you may already know.
 
 In this module, a "bucket" is an internal data structure that tracks and
-enforces the rate limit state for a specific `hikari.net.routes.CompiledRoute`,
+enforces the rate limit state for a specific `hikari.impl.routes.CompiledRoute`,
 and can manage delaying tasks in the event that we begin to get rate limited.
 It also supports providing in-order execution of queued tasks.
 
@@ -64,7 +64,7 @@ major parameters. This is used for quick bucket indexing internally in this
 module.
 
 One issue that occurs from this is that we cannot effectively hash a
-`hikari.net.routes.CompiledRoute` that has not yet been hit, meaning that
+`hikari.impl.routes.CompiledRoute` that has not yet been hit, meaning that
 until we receive a response from this endpoint, we have no idea what our rate
 limits could be, nor the bucket that they sit in. This is usually not
 problematic, as the first request to an endpoint should never be rate limited
@@ -78,13 +78,13 @@ Initially acquiring time on a bucket
 ------------------------------------
 
 Each time you `BaseRateLimiter.acquire()` a request timeslice for a given
-`hikari.net.routes.Route`, several things happen. The first is that we
+`hikari.impl.routes.Route`, several things happen. The first is that we
 attempt to find the existing bucket for that route, if there is one, or get an
 unknown bucket otherwise. This is done by creating a real bucket hash from the
 compiled route. The initial hash is calculated using a lookup table that maps
-`hikari.net.routes.CompiledRoute` objects to their corresponding initial hash
+`hikari.impl.routes.CompiledRoute` objects to their corresponding initial hash
 codes, or to the unknown bucket hash code if not yet known. This initial hash is
-processed by the `hikari.net.routes.CompiledRoute` to provide the real bucket
+processed by the `hikari.impl.routes.CompiledRoute` to provide the real bucket
 hash we need to get the route's bucket object internally.
 
 The `BaseRateLimiter.acquire()` method will take the bucket and acquire a new
@@ -165,7 +165,7 @@ Body-field-specific rate limiting
 ---------------------------------
 
 As of the start of June, 2020, Discord appears to be enforcing another layer
-of rate limiting logic to their REST APIs which is field-specific. This means
+of rate limiting logic to their HTTP APIs which is field-specific. This means
 that special rate limits will also exist on some endpoints that limit based
 on what attributes you send in a JSON or form data payload.
 
@@ -175,7 +175,7 @@ response, you will have the `"global"` attribute set to `false`, and a
 `"reset_after"` attribute that differs entirely to the `X-RateLimit-Reset`
 header. Thus, it is important to not assume the value in the 429 response
 for the reset time is the same as the one in the bucket headers. Hikari's
-`hikari.net.rest.REST` implementation specifically uses the value furthest
+`hikari.impl.http.HTTP` implementation specifically uses the value furthest
 in the future when working out which bucket to adhere to.
 
 It is worth remembering that there is an API limit to the number of 401s,
@@ -193,7 +193,7 @@ Caveats
 
 These implementations rely on Discord sending consistent buckets back to us.
 
-This also begins to crumble if more than one REST client is in use, since
+This also begins to crumble if more than one HTTP client is in use, since
 there is no performant way to communicate shared rate limits between
 distributed applications. The general concept to follow is that if you are
 making repeated API calls, or calls that are not event-based (e.g.
@@ -212,21 +212,20 @@ import time
 import types
 import typing
 
-from hikari.net import rate_limits
-from hikari.net import routes
+from hikari.impl import rate_limits
+from hikari.impl import routes
 from hikari.utilities import aio
 
 UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""
 
-
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.net.rest")
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.impl.http")
 
 
 class RESTBucket(rate_limits.WindowedBurstRateLimiter):
-    """Represents a rate limit for an REST endpoint.
+    """Represents a rate limit for an HTTP endpoint.
 
-    Component to represent an active rate limit bucket on a specific REST _route
+    Component to represent an active rate limit bucket on a specific HTTP _route
     with a specific major parameter combo.
 
     This is somewhat similar to the `WindowedBurstRateLimiter` in how it
@@ -309,9 +308,9 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
 
 class RESTBucketManager:
-    """The main rate limiter implementation for REST clients.
+    """The main rate limiter implementation for HTTP clients.
 
-    This is designed to provide bucketed rate limiting for Discord REST
+    This is designed to provide bucketed rate limiting for Discord HTTP
     endpoints that respects the `X-RateLimit-Bucket` rate limit header. To do
     this, it makes the assumption that any limit can change at any time.
     """
@@ -487,7 +486,7 @@ class RESTBucketManager:
 
         Parameters
         ----------
-        compiled_route : hikari.net.routes.CompiledRoute
+        compiled_route : hikari.impl.routes.CompiledRoute
             The _route to get the bucket for.
 
         Returns
@@ -499,7 +498,7 @@ class RESTBucketManager:
         !!! note
             The returned future MUST be awaited, and will complete when your
             turn to make a call comes along. You are expected to await this and
-            then immediately make your REST call. The returned future may
+            then immediately make your HTTP call. The returned future may
             already be completed if you can make the call immediately.
         """
         # Returns a future to await on to wait to be allowed to send the request, and a
@@ -537,7 +536,7 @@ class RESTBucketManager:
 
         Parameters
         ----------
-        compiled_route : hikari.net.routes.CompiledRoute
+        compiled_route : hikari.impl.routes.CompiledRoute
             The compiled _route to get the bucket for.
         bucket_header : str, optional
             The `X-RateLimit-Bucket` header that was provided in the response.

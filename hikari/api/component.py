@@ -25,14 +25,14 @@ import abc
 import typing
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest
+    from hikari.api import rest_app
 
 
 class IComponent(abc.ABC):
     """A component that makes up part of the application.
 
     Objects that derive from this should usually be attributes on the
-    `hikari.api.rest.IRESTClient` object.
+    `hikari.api.rest.IRESTApp` object.
 
     Examples
     --------
@@ -46,11 +46,11 @@ class IComponent(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def app(self) -> rest.IRESTClient:
+    def app(self) -> rest_app.IRESTApp:
         """Return the Application that owns this component.
 
         Returns
         -------
-        hikari.api.rest.IRESTClient
+        hikari.api.rest_app.IRESTApp
             The application implementation that owns this component.
         """

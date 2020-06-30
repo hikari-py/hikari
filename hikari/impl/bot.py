@@ -32,17 +32,17 @@ import sys
 import time
 import typing
 
+from hikari import config
 from hikari.api import bot
 from hikari.impl import cache as cache_impl
+from hikari.impl import constants
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
+from hikari.impl import rate_limits
+from hikari.impl import rest_client as rest_client_impl
 from hikari.impl import stateless_cache as stateless_cache_impl
 from hikari.models import presences
-from hikari.net import config
-from hikari.net import rate_limits
-from hikari.net import rest
-from hikari.net import strings
 from hikari.utilities import date
 from hikari.utilities import undefined
 
@@ -53,6 +53,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_consumer as event_consumer_
     from hikari.api import event_dispatcher as event_dispatcher_
+    from hikari.api import rest_client
     from hikari.events import base as base_events
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
@@ -67,7 +68,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
     ----------
     debug : bool
         Defaulting to `False`, if `True`, then each payload sent and received
-        on the gateway will be dumped to debug logs, and every REST API request
+        on the gateway will be dumped to debug logs, and every HTTP API request
         and response will also be dumped to logs. This will provide useful
         debugging context at the cost of performance. Generally you do not
         need to enable this.
@@ -78,7 +79,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         The version of the gateway to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to using v6.
-    http_settings : hikari.net.config.HTTPSettings or None
+    http_settings : hikari.config.HTTPSettings or None
         The HTTP-related settings to use.
     initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
         The initial activity to have on each shard.
@@ -107,13 +108,13 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         or simply wish to initialize it in your own time instead.
 
         !!! note
-            Initializating logging means already have a handler in the root logger.
-            This is usually achived by calling `logging.basicConfig` or adding the
-            handler another way.
-    proxy_settings : hikari.net.config.ProxySettings or None
+            Initializing logging means already have a handler in the root
+            logger. This is usually achieved by calling `logging.basicConfig`
+            or adding the handler manually.
+    proxy_settings : hikari.config.ProxySettings or None
         Settings to use for the proxy.
     rest_version : int
-        The version of the REST API to connect to. At the time of writing,
+        The version of the HTTP API to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to v6.
     shard_ids : typing.Set[int] or None
@@ -230,7 +231,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
             version=gateway_version,
         )
 
-        self._rest = rest.REST(  # noqa: S106 - Possible hardcoded password
+        self._rest = rest_client_impl.RESTClientImpl(  # noqa: S106 - Possible hardcoded password
             app=self,
             connector=None,
             connector_owner=True,
@@ -239,7 +240,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
             global_ratelimit=self._global_ratelimit,
             proxy_settings=self._proxy_settings,
             token=token,
-            token_type=strings.BOT_TOKEN,  # nosec
+            token_type=constants.BOT_TOKEN,  # nosec
             rest_url=rest_url,
             version=rest_version,
         )
@@ -273,7 +274,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         return self._proxy_settings
 
     @property
-    def rest(self) -> rest.REST:
+    def rest(self) -> rest_client.IRESTClient:
         return self._rest
 
     @property

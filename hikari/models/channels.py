@@ -43,14 +43,14 @@ import attr
 
 from hikari.models import permissions
 from hikari.models import users
-from hikari.utilities import files
 from hikari.utilities import cdn
+from hikari.utilities import files
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
-    from hikari.api import rest
+    from hikari.api import rest_app
     from hikari.models import embeds
     from hikari.models import guilds
     from hikari.models import messages
@@ -158,7 +158,7 @@ class PermissionOverwrite(snowflake.Unique):
 class PartialChannel(snowflake.Unique):
     """Channel representation for cases where further detail is not provided.
 
-    This is commonly received in REST API responses where full information is
+    This is commonly received in HTTP API responses where full information is
     not available from Discord.
     """
 
@@ -167,7 +167,7 @@ class PartialChannel(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    app: rest.IRESTClient = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)

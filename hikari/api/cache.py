@@ -21,8 +21,6 @@ from __future__ import annotations
 __all__: typing.Final[typing.Sequence[str]] = ["ICacheComponent"]
 
 import abc
-
-# noinspection PyUnresolvedReferences
 import typing
 
 from hikari.api import component
@@ -31,7 +29,7 @@ from hikari.api import component
 class ICacheComponent(component.IComponent, abc.ABC):
     """Interface describing the operations a cache component should provide.
 
-    This will be used by the gateway and REST API to cache specific types of
+    This will be used by the gateway and HTTP API to cache specific types of
     objects that the application should attempt to remember for later, depending
     on how this is implemented. The requirement for this stems from the
     assumption by Discord that bot applications will maintain some form of
