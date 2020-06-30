@@ -29,6 +29,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.api import gateway
     from hikari.events import channel as channel_events
     from hikari.events import guild as guild_events
     from hikari.events import message as message_events
@@ -47,7 +48,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import users as user_models
     from hikari.models import voices as voice_models
     from hikari.models import webhooks as webhook_models
-    from hikari.impl import gateway
     from hikari.utilities import data_binding
     from hikari.utilities import files
     from hikari.utilities import snowflake
@@ -1251,13 +1251,13 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
     @abc.abstractmethod
     def deserialize_ready_event(
-        self, shard: gateway.Gateway, payload: data_binding.JSONObject,
+        self, shard: gateway.IGatewayShard, payload: data_binding.JSONObject,
     ) -> other_events.ReadyEvent:
         """Parse a raw payload from Discord into a ready event object.
 
         Parameters
         ----------
-        shard : hikari.impl.gateway.Gateway
+        shard : hikari.api.gateway.IGatewayShard
             The shard that was ready.
         payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.

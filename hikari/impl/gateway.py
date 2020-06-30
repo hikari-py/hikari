@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["Gateway"]
+__all__: typing.Final[typing.Sequence[str]] = ["GatewayShardImpl"]
 
 import asyncio
 import enum
@@ -34,8 +34,9 @@ import aiohttp
 import attr
 
 from hikari import errors
+from hikari.api import gateway
+from hikari.impl import constants
 from hikari.impl import rate_limits
-from hikari.impl import strings
 from hikari.models import presences
 from hikari.utilities import data_binding
 from hikari.utilities import undefined
@@ -43,15 +44,15 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import config
     from hikari.api import event_consumer
-    from hikari.impl import config
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import intents as intents_
     from hikari.utilities import snowflake
 
 
-class Gateway:
+class GatewayShardImpl(gateway.IGatewayShard):
     """Implementation of a V6 and V7 compatible gateway.
 
     Parameters
@@ -61,7 +62,7 @@ class Gateway:
     debug : bool
         If `True`, each sent and received payload is dumped to the logs. If
         `False`, only the fact that data has been sent/received will be logged.
-    http_settings : hikari.impl.config.HTTPSettings
+    http_settings : hikari.config.HTTPSettings
         The HTTP-related settings to use while negotiating a websocket.
     initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
         The initial activity to appear to have for this shard.
@@ -75,7 +76,7 @@ class Gateway:
         Collection of intents to use, or `None` to not use intents at all.
     large_threshold : int
         The number of members to have in a guild for it to be considered large.
-    proxy_settings : hikari.impl.config.ProxySettings
+    proxy_settings : hikari.config.ProxySettings
         The proxy settings to use while negotiating a websocket.
     shard_id : int
         The shard ID.
@@ -245,19 +246,11 @@ class Gateway:
         return self._app
 
     @property
+    @typing.final
     def is_alive(self) -> bool:
-        """Return whether the shard is alive."""
         return not math.isnan(self.connected_at)
 
     async def start(self) -> asyncio.Task[None]:
-        """Start the shard, wait for it to become ready.
-
-        Returns
-        -------
-        asyncio.Task
-            The task containing the shard running logic. Awaiting this will
-            wait until the shard has shut down before returning.
-        """
         run_task = asyncio.create_task(self._run(), name=f"shard {self._shard_id} keep-alive")
         await self._handshake_event.wait()
         return run_task
@@ -442,22 +435,6 @@ class Gateway:
         activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
         status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
     ) -> None:
-        """Update the presence of the shard user.
-
-        Parameters
-        ----------
-        idle_since : datetime.datetime or None or hikari.utilities.undefined.UndefinedType
-            The datetime that the user started being idle. If undefined, this
-            will not be changed.
-        afk : bool or hikari.utilities.undefined.UndefinedType
-            If `True`, the user is marked as AFK. If `False`, the user is marked
-            as being active. If undefined, this will not be changed.
-        activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
-            The activity to appear to be playing. If undefined, this will not be
-            changed.
-        status : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
-            The web status to show. If undefined, this will not be changed.
-        """
         if idle_since is undefined.UNDEFINED:
             idle_since = self._idle_since
         if afk is undefined.UNDEFINED:
@@ -489,23 +466,6 @@ class Gateway:
         self_mute: bool = False,
         self_deaf: bool = False,
     ) -> None:
-        """Update the voice state for this shard in a given guild.
-
-        Parameters
-        ----------
-        guild : hikari.models.guilds.PartialGuild or hikari.utilities.snowflake.UniqueObject
-            The guild or guild ID to update the voice state for.
-        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.UniqueObject or None
-            The channel or channel ID to update the voice state for. If `None`
-            then the bot will leave the voice channel that it is in for the
-            given guild.
-        self_mute : bool
-            If `True`, the bot will mute itself in that voice channel. If
-            `False`, then it will unmute itself.
-        self_deaf : bool
-            If `True`, the bot will deafen itself in that voice channel. If
-            `False`, then it will undeafen itself.
-        """
         payload = self._app.entity_factory.serialize_gateway_voice_state_update(guild, channel, self_mute, self_deaf)
         await self._send_json({"op": self._GatewayOpcode.VOICE_STATE_UPDATE, "d": payload})
 
@@ -537,9 +497,9 @@ class Gateway:
                 "compress": False,
                 "large_threshold": self.large_threshold,
                 "properties": {
-                    "$os": strings.SYSTEM_TYPE,
-                    "$browser": strings.AIOHTTP_VERSION,
-                    "$device": strings.LIBRARY_VERSION,
+                    "$os": constants.SYSTEM_TYPE,
+                    "$browser": constants.AIOHTTP_VERSION,
+                    "$device": constants.LIBRARY_VERSION,
                 },
                 "shard": [self._shard_id, self._shard_count],
             },

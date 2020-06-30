@@ -36,12 +36,12 @@ import typing
 
 import attr
 
+from hikari.api import gateway as gateway_client
 from hikari.events import base as base_events
 
 if typing.TYPE_CHECKING:
     from hikari.models import guilds
     from hikari.models import users
-    from hikari.impl import gateway as gateway_client
     from hikari.utilities import snowflake
 
 
@@ -90,7 +90,7 @@ class StoppedEvent(base_events.Event):
 class ConnectedEvent(base_events.Event):
     """Event invoked each time a shard connects."""
 
-    shard: gateway_client.Gateway = attr.ib(repr=True)
+    shard: gateway_client.IGatewayShard = attr.ib(repr=True)
     """The shard that connected."""
 
 
@@ -99,7 +99,7 @@ class ConnectedEvent(base_events.Event):
 class DisconnectedEvent(base_events.Event):
     """Event invoked each time a shard disconnects."""
 
-    shard: gateway_client.Gateway = attr.ib(repr=True)
+    shard: gateway_client.IGatewayShard = attr.ib(repr=True)
     """The shard that disconnected."""
 
 
@@ -107,7 +107,7 @@ class DisconnectedEvent(base_events.Event):
 class ResumedEvent(base_events.Event):
     """Represents a gateway Resume event."""
 
-    shard: gateway_client.Gateway = attr.ib(repr=True)
+    shard: gateway_client.IGatewayShard = attr.ib(repr=True)
     """The shard that reconnected."""
 
 
@@ -118,7 +118,7 @@ class ReadyEvent(base_events.Event):
     This is received only when IDENTIFYing with the gateway.
     """
 
-    shard: gateway_client.Gateway = attr.ib(repr=False)
+    shard: gateway_client.IGatewayShard = attr.ib(repr=False)
     """The shard that is ready."""
 
     gateway_version: int = attr.ib(repr=True)

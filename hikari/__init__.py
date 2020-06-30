@@ -35,4 +35,4 @@ from hikari._about import __license__
 from hikari._about import __url__
 from hikari._about import __version__
 from hikari.impl.bot import BotAppImpl as Bot
-from hikari.impl.rest_app import RESTClientFactoryImpl as RESTClientFactory
+from hikari.impl.rest_app import RESTAppFactoryImpl as RESTClientFactory

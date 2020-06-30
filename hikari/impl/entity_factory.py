@@ -25,13 +25,13 @@ import datetime
 import typing
 
 from hikari.api import entity_factory
-from hikari.api import rest
+from hikari.api import gateway
+from hikari.api import rest_app
 from hikari.events import channel as channel_events
 from hikari.events import guild as guild_events
 from hikari.events import message as message_events
 from hikari.events import other as other_events
 from hikari.events import voice as voice_events
-from hikari.impl import gateway
 from hikari.models import applications as application_models
 from hikari.models import audit_logs as audit_log_models
 from hikari.models import channels as channel_models
@@ -78,7 +78,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     This will convert objects to/from JSON compatible representations.
     """
 
-    def __init__(self, app: rest.IRESTClient) -> None:
+    def __init__(self, app: rest_app.IRESTApp) -> None:
         self._app = app
         self._audit_log_entry_converters: typing.Mapping[str, typing.Callable[[typing.Any], typing.Any]] = {
             audit_log_models.AuditLogChangeKey.OWNER_ID: snowflake.Snowflake,
@@ -141,7 +141,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
     @property
     @typing.final
-    def app(self) -> rest.IRESTClient:
+    def app(self) -> rest_app.IRESTApp:
         return self._app
 
     ######################
@@ -706,6 +706,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         known_custom_emoji = emoji_models.KnownCustomEmoji()
         known_custom_emoji.app = self._app
         known_custom_emoji.id = snowflake.Snowflake(payload["id"])
+        # noinspection PyPropertyAccess
         known_custom_emoji.name = payload["name"]
         known_custom_emoji.is_animated = payload.get("animated", False)
         known_custom_emoji.role_ids = {snowflake.Snowflake(role_id) for role_id in payload.get("roles", ())}
@@ -1792,7 +1793,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ################
 
     def deserialize_ready_event(
-        self, shard: gateway.Gateway, payload: data_binding.JSONObject
+        self, shard: gateway.IGatewayShard, payload: data_binding.JSONObject
     ) -> other_events.ReadyEvent:
         ready_event = other_events.ReadyEvent()
         ready_event.shard = shard
