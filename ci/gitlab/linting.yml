@@ -35,7 +35,6 @@
 ### Flake8 linter.
 ###
 flake8:
-  allow_failure: true
   artifacts:
     expire_in: 2 days
     reports:
@@ -60,7 +59,6 @@ safety:
 ### MyPy static type checker.
 ###
 mypy:
-  allow_failure: true
   extends: .lint
   script:
     - nox -s mypy --no-error-on-external-run
