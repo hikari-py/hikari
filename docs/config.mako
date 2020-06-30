@@ -40,7 +40,7 @@
         search_query = "inurl:github.com/nekokatt/hikari  site:nekokatt.gitlab.io/hikari/hikari"
 
     site_accent = "#ff029a"
-    site_logo = "/logo.png"
+    site_logo = "https://nekokatt.gitlab.io/hikari/logo.png"
     site_description = "A Discord Bot framework for modern Python and asyncio built on good intentions"
 
     # Versions of stuff
