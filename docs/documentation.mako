@@ -60,7 +60,6 @@
         text = project_inventory.data_file(contract=True)
         ztext = sphobjinv.compress(text)
         sphobjinv.writebytes('public/objects.inv', ztext)
-
 %>
 
 <%
@@ -373,10 +372,8 @@
 
 <%def name="show_class(c, is_nested=False)">
     <%
-        class_vars = c.class_variables(show_inherited_members, sort=sort_identifiers)
-        smethods = c.functions(show_inherited_members, sort=sort_identifiers)
-        inst_vars = c.instance_variables(show_inherited_members, sort=sort_identifiers)
-        methods = c.methods(show_inherited_members, sort=sort_identifiers)
+        variables = c.instance_variables(show_inherited_members, sort=sort_identifiers) + c.class_variables(show_inherited_members, sort=sort_identifiers)
+        methods = c.methods(show_inherited_members, sort=sort_identifiers) + c.functions(show_inherited_members, sort=sort_identifiers)
         mro = c.mro()
         subclasses = c.subclasses()
 
@@ -465,7 +462,7 @@
             % endif
 
             % if methods:
-                <h5>Instance methods</h5>
+                <h5>Methods</h5>
                 <dl>
                     % for m in methods:
                         ${show_func(m)}
@@ -475,30 +472,10 @@
             % endif
 
             % if inst_vars:
-                <h5>Instance variables and properties</h5>
+                <h5>Variables and properties</h5>
                 <dl>
-                    % for i in inst_vars:
+                    % for i in variables:
                         ${show_var(i)}
-                    % endfor
-                </dl>
-                <div class="sep"></div>
-            % endif
-
-            % if smethods:
-                <h5>Class methods</h5>
-                <dl>
-                    % for m in smethods:
-                        ${show_func(m)}
-                    % endfor
-                </dl>
-                <div class="sep"></div>
-            % endif
-
-            % if class_vars:
-                <h5>Class variables and properties</h5>
-                <dl>
-                    % for cv in class_vars:
-                        ${show_var(cv)}
                     % endfor
                 </dl>
                 <div class="sep"></div>
