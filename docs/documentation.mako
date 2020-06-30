@@ -170,7 +170,10 @@
                 prefix = f"<small class='text-muted'><em>{qual}</em></small> "
 
             else:
-                prefix = f"<small class='text-muted'><em>{default_type}</em></small> "
+                if isinstance(dobj, pdoc.External):
+                    prefix = f"<small class='text-muted'><em>{QUAL_EXTERNAL} {default_type}</em></small> "
+                else:
+                    prefix = f"<small class='text-muted'><em>{default_type}</em></small> "
         else:
             name = name or dobj.name or ""
 
@@ -188,7 +191,7 @@
                 url = discover_source(name)
 
             if url is None:
-                return name if not with_prefixes else f"{QUAL_EXTERNAL} {name}"
+                return name
         else:
             try:
                 ref = dobj if not hasattr(dobj.obj, "__module__") else pdoc._global_context[dobj.obj.__module__ + "." + dobj.obj.__qualname__]
@@ -441,8 +444,10 @@
                 <h5>Subclasses</h5>
                 <dl>
                     % for sc in subclasses:
-                        <dt class="nested">${link(sc, with_prefixes=True, default_type="class")}</dt>
-                        <dd class="nested">${sc.docstring | glimpse, to_html}</dd>
+                        % if not isinstance(sc, pdoc.External):
+                            <dt class="nested">${link(sc, with_prefixes=True, default_type="class")}</dt>
+                            <dd class="nested">${sc.docstring | glimpse, to_html}</dd>
+                        % endif
                     % endfor
                 </dl>
                 <div class="sep"></div>
@@ -492,7 +497,7 @@
     % if not short:
         % if d.inherits:
             <p class="inheritance">
-                <em>Inherited from:</em>
+                <em><small>Inherited from:</small></em>
                 % if hasattr(d.inherits, 'cls'):
                     <code>${link(d.inherits.cls, with_prefixes=False)}</code>.<code>${link(d.inherits, name=d.name, with_prefixes=False)}</code>
                 % else:
