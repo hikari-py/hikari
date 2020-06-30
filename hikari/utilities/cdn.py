@@ -24,8 +24,8 @@ __all__: typing.Final[typing.Sequence[str]] = ["generate_cdn_url", "get_default_
 import typing
 import urllib.parse
 
+from hikari.impl import strings
 from hikari.utilities import files
-from hikari.net import strings
 
 
 def generate_cdn_url(*route_parts: str, format_: str, size: typing.Optional[int]) -> files.URL:

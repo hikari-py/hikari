@@ -34,17 +34,16 @@ import typing
 from hikari.api import event_dispatcher
 from hikari.api import gateway_zookeeper
 from hikari.events import other
-from hikari.net import gateway
+from hikari.impl import gateway
 from hikari.utilities import aio
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari.events import base as base_events
-    from hikari.net import config
+    from hikari.impl import config
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
     from hikari.models import presences
-
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
@@ -58,7 +57,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
     ability to manage sharding.
 
     !!! note
-        This does not provide REST API functionality.
+        This does not provide HTTP API functionality.
 
     Parameters
     ----------
@@ -70,7 +69,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         on the gateway will be dumped to debug logs. This will provide useful
         debugging context at the cost of performance. Generally you do not
         need to enable this.
-    http_settings : hikari.net.config.HTTPSettings
+    http_settings : hikari.impl.config.HTTPSettings
         HTTP-related configuration.
     initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
         The initial activity to have on each shard.
@@ -89,7 +88,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
     large_threshold : int
         The number of members that need to be in a guild for the guild to be
         considered large. Defaults to the maximum, which is `250`.
-    proxy_settings : hikari.net.config.ProxySettings
+    proxy_settings : hikari.impl.config.ProxySettings
         Proxy-related configuration.
     shard_ids : typing.Set[int] or None
         A set of every shard ID that should be created and started on startup.

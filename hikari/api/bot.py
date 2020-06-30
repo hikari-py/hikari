@@ -27,7 +27,6 @@ import typing
 from hikari.api import event_consumer
 from hikari.api import event_dispatcher
 
-
 if typing.TYPE_CHECKING:
     import datetime
 
@@ -35,7 +34,7 @@ if typing.TYPE_CHECKING:
 class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatcherApp, abc.ABC):
     """Base for bot applications.
 
-    Bots are components that have access to a REST API, an event dispatcher,
+    Bots are components that have access to a HTTP API, an event dispatcher,
     and an event consumer.
 
     Additionally, bots will contain a collection of Gateway client objects.

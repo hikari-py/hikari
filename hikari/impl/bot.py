@@ -34,15 +34,15 @@ import typing
 
 from hikari.api import bot
 from hikari.impl import cache as cache_impl
+from hikari.impl import config
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
+from hikari.impl import http
+from hikari.impl import rate_limits
 from hikari.impl import stateless_cache as stateless_cache_impl
+from hikari.impl import strings
 from hikari.models import presences
-from hikari.net import config
-from hikari.net import rate_limits
-from hikari.net import rest
-from hikari.net import strings
 from hikari.utilities import date
 from hikari.utilities import undefined
 
@@ -67,7 +67,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
     ----------
     debug : bool
         Defaulting to `False`, if `True`, then each payload sent and received
-        on the gateway will be dumped to debug logs, and every REST API request
+        on the gateway will be dumped to debug logs, and every HTTP API request
         and response will also be dumped to logs. This will provide useful
         debugging context at the cost of performance. Generally you do not
         need to enable this.
@@ -78,7 +78,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         The version of the gateway to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to using v6.
-    http_settings : hikari.net.config.HTTPSettings or None
+    http_settings : hikari.impl.config.HTTPSettings or None
         The HTTP-related settings to use.
     initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
         The initial activity to have on each shard.
@@ -110,10 +110,10 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
             Initializating logging means already have a handler in the root logger.
             This is usually achived by calling `logging.basicConfig` or adding the
             handler another way.
-    proxy_settings : hikari.net.config.ProxySettings or None
+    proxy_settings : hikari.impl.config.ProxySettings or None
         Settings to use for the proxy.
     rest_version : int
-        The version of the REST API to connect to. At the time of writing,
+        The version of the HTTP API to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to v6.
     shard_ids : typing.Set[int] or None
@@ -230,7 +230,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
             version=gateway_version,
         )
 
-        self._rest = rest.REST(  # noqa: S106 - Possible hardcoded password
+        self._rest = http.HTTP(  # noqa: S106 - Possible hardcoded password
             app=self,
             connector=None,
             connector_owner=True,
@@ -273,7 +273,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         return self._proxy_settings
 
     @property
-    def rest(self) -> rest.REST:
+    def rest(self) -> http.HTTP:
         return self._rest
 
     @property

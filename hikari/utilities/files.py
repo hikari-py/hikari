@@ -48,11 +48,10 @@ import urllib.parse
 import aiohttp.client
 import attr
 
-from hikari.net import helpers
+from hikari.impl import helpers
 
 if typing.TYPE_CHECKING:
     import types
-
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 _MAGIC: typing.Final[int] = 50 * 1024

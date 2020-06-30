@@ -14,7 +14,7 @@ ignore =
 
 per-file-ignores =
     # f-string missing prefix.
-    hikari/net/routes.py:FS003
+    hikari/impl/routes.py:FS003
     # f-string missing prefix.
     hikari/utilities/date.py:FS003
     # complaints about importing stuff and not using it afterwards

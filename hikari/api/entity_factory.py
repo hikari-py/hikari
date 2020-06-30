@@ -47,7 +47,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import users as user_models
     from hikari.models import voices as voice_models
     from hikari.models import webhooks as webhook_models
-    from hikari.net import gateway
+    from hikari.impl import gateway
     from hikari.utilities import data_binding
     from hikari.utilities import files
     from hikari.utilities import snowflake
@@ -1257,7 +1257,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.net.gateway.Gateway
+        shard : hikari.impl.gateway.Gateway
             The shard that was ready.
         payload : typing.Mapping[str, typing.Any]
             The dict payload to parse.

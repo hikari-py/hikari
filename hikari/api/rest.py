@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""REST application interface."""
+"""HTTP application interface."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ __all__: typing.Final[typing.Sequence[str]] = ["IRESTClient", "IRESTClientFactor
 import abc
 import typing
 
-from hikari.net import strings
+from hikari.impl import strings
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
@@ -32,31 +32,31 @@ if typing.TYPE_CHECKING:
 
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
-    from hikari.net import config
-    from hikari.net import rest as rest_
+    from hikari.impl import config
+    from hikari.impl import http as rest_
 
 
 class IRESTClient(abc.ABC):
-    """Component specialization that is used for REST-only applications.
+    """Component specialization that is used for HTTP-only applications.
 
-    This is a specific instance of a REST-only client provided by pooled
+    This is a specific instance of a HTTP-only client provided by pooled
     implementations of `IRESTClientFactory`. It may also be used by bots
-    as a base if they require REST-API access.
+    as a base if they require HTTP-API access.
     """
 
     __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
-    def rest(self) -> rest_.REST:
-        """REST API Client.
+    def rest(self) -> rest_.HTTP:
+        """HTTP API Client.
 
-        Use this to make calls to Discord's REST API over HTTPS.
+        Use this to make calls to Discord's HTTP API over HTTPS.
 
         Returns
         -------
-        hikari.net.rest.REST
-            The REST API client.
+        hikari.impl.http.HTTP
+            The HTTP API client.
         """
 
     @property
@@ -129,7 +129,7 @@ class IRESTClientContextManager(IRESTClient):
 class IRESTClientFactory(abc.ABC):
     """A client factory that emits clients.
 
-    This enables a connection pool to be shared for stateless REST-only
+    This enables a connection pool to be shared for stateless HTTP-only
     applications such as web dashboards, while still using the HTTP architecture
     that the bot system will use.
     """
@@ -138,7 +138,7 @@ class IRESTClientFactory(abc.ABC):
 
     @abc.abstractmethod
     def acquire(self, token: str, token_type: str = strings.BEARER_TOKEN) -> IRESTClientContextManager:
-        """Acquire a REST client for the given authentication details.
+        """Acquire a HTTP client for the given authentication details.
 
         Parameters
         ----------
@@ -150,7 +150,7 @@ class IRESTClientFactory(abc.ABC):
         Returns
         -------
         IRESTClient
-            The REST client to use.
+            The HTTP client to use.
         """
 
     @abc.abstractmethod

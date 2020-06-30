@@ -30,7 +30,7 @@ from hikari.api import event_consumer
 from hikari.api import event_dispatcher
 from hikari.events import base
 from hikari.events import other
-from hikari.net import gateway
+from hikari.impl import gateway
 from hikari.utilities import aio
 from hikari.utilities import data_binding
 from hikari.utilities import reflect
@@ -39,9 +39,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     from hikari.api import rest
 
-
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
-
 
 if typing.TYPE_CHECKING:
     EventT = typing.TypeVar("EventT", bound=base.Event, contravariant=True)

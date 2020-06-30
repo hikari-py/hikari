@@ -34,9 +34,9 @@ import aiohttp
 import attr
 
 from hikari import errors
+from hikari.impl import rate_limits
+from hikari.impl import strings
 from hikari.models import presences
-from hikari.net import rate_limits
-from hikari.net import strings
 from hikari.utilities import data_binding
 from hikari.utilities import undefined
 
@@ -44,7 +44,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari.api import event_consumer
-    from hikari.net import config
+    from hikari.impl import config
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import intents as intents_
@@ -61,7 +61,7 @@ class Gateway:
     debug : bool
         If `True`, each sent and received payload is dumped to the logs. If
         `False`, only the fact that data has been sent/received will be logged.
-    http_settings : hikari.net.config.HTTPSettings
+    http_settings : hikari.impl.config.HTTPSettings
         The HTTP-related settings to use while negotiating a websocket.
     initial_activity : hikari.models.presences.Activity or None or hikari.utilities.undefined.UndefinedType
         The initial activity to appear to have for this shard.
@@ -75,7 +75,7 @@ class Gateway:
         Collection of intents to use, or `None` to not use intents at all.
     large_threshold : int
         The number of members to have in a guild for it to be considered large.
-    proxy_settings : hikari.net.config.ProxySettings
+    proxy_settings : hikari.impl.config.ProxySettings
         The proxy settings to use while negotiating a websocket.
     shard_id : int
         The shard ID.
@@ -201,7 +201,7 @@ class Gateway:
         self._intents: typing.Optional[intents_.Intent] = intents
         self._is_afk: typing.Union[undefined.UndefinedType, bool] = initial_is_afk
         self._last_run_started_at = float("nan")
-        self._logger = logging.getLogger(f"hikari.net.gateway.{shard_id}")
+        self._logger = logging.getLogger(f"hikari.gateway.{shard_id}")
         self._proxy_settings = proxy_settings
         self._request_close_event = asyncio.Event()
         self._seq: typing.Optional[str] = None

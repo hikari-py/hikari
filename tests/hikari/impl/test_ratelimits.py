@@ -25,7 +25,7 @@ import time
 import mock
 import pytest
 
-from hikari.net import rate_limits
+from hikari.impl import rate_limits
 from tests.hikari import hikari_test_helpers
 
 

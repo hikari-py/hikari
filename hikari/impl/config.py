@@ -31,7 +31,7 @@ import typing
 
 import attr
 
-from hikari.net import strings
+from hikari.impl import strings
 from hikari.utilities import data_binding
 
 

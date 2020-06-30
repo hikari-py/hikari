@@ -48,8 +48,8 @@ import typing
 import attr
 
 from hikari.models import users
-from hikari.utilities import files
 from hikari.utilities import cdn
+from hikari.utilities import files
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
@@ -652,7 +652,7 @@ class Guild(PartialGuild):
     This will not take into account permission overwrites or implied
     permissions (for example, `ADMINISTRATOR` implies all other permissions).
 
-    This will be `None` when this object is retrieved through a REST request
+    This will be `None` when this object is retrieved through a HTTP request
     rather than from the gateway.
     """
 
@@ -909,7 +909,7 @@ class Guild(PartialGuild):
     approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild.
 
-    This information will be provided by REST API calls fetching the guilds that
+    This information will be provided by HTTP API calls fetching the guilds that
     a bot account is in. For all other purposes, this should be expected to
     remain `None`.
     """
@@ -917,7 +917,7 @@ class Guild(PartialGuild):
     approximate_active_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild that are not offline.
 
-    This information will be provided by REST API calls fetching the guilds that
+    This information will be provided by HTTP API calls fetching the guilds that
     a bot account is in. For all other purposes, this should be expected to
     remain `None`.
     """

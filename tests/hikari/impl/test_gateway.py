@@ -26,8 +26,8 @@ import pytest
 
 from hikari import errors
 from hikari.models import presences
-from hikari.net import config
-from hikari.net import gateway
+from hikari.impl import config
+from hikari.impl import gateway
 from hikari.utilities import undefined
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers

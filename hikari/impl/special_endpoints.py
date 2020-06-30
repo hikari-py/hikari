@@ -30,7 +30,7 @@ import typing
 
 import attr
 
-from hikari.net import routes
+from hikari.impl import routes
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import iterators
@@ -106,12 +106,12 @@ class TypingIndicator:
 class GuildBuilder:
     """A helper class used to construct a prototype for a guild.
 
-    This is used to create a guild in a tidy way using the REST API, since
+    This is used to create a guild in a tidy way using the HTTP API, since
     the logic behind creating a guild on an API level is somewhat confusing
     and detailed.
 
     !!! note
-        This is a helper class that is used by `hikari.net.rest.REST`.
+        This is a helper class that is used by `hikari.impl.http.HTTP`.
         You should only ever need to use instances of this class that are
         produced by that API, thus, any details about the constructor are
         omitted from the following examples for brevity.

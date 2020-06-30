@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Implementation of a REST application.
+"""Implementation of a HTTP application.
 
 This provides functionality for projects that only need to use the RESTful
 API, such as web dashboards and other OAuth2-based scripts.
@@ -30,12 +30,12 @@ import typing
 import aiohttp
 
 from hikari.api import rest as rest_api
+from hikari.impl import config
 from hikari.impl import entity_factory as entity_factory_impl
+from hikari.impl import http as rest_component
+from hikari.impl import rate_limits
 from hikari.impl import stateless_cache
-from hikari.net import config
-from hikari.net import rate_limits
-from hikari.net import rest as rest_component
-from hikari.net import strings
+from hikari.impl import strings
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
@@ -46,7 +46,7 @@ if typing.TYPE_CHECKING:
 
 
 class RESTClientImpl(rest_api.IRESTClientContextManager):
-    """Client for a specific set of credentials within a REST-only application.
+    """Client for a specific set of credentials within a HTTP-only application.
 
     Parameters
     ----------
@@ -59,11 +59,11 @@ class RESTClientImpl(rest_api.IRESTClientContextManager):
         The AIOHTTP connector to use. This must be closed by the caller, and
         will not be terminated when this class closes (since you will generally
         expect this to be a connection pool).
-    global_ratelimit : hikari.net.rate_limits.ManualRateLimiter
+    global_ratelimit : hikari.impl.rate_limits.ManualRateLimiter
         The global ratelimiter.
-    http_settings : hikari.net.config.HTTPSettings
+    http_settings : hikari.impl.config.HTTPSettings
         HTTP-related settings.
-    proxy_settings : hikari.net.config.ProxySettings
+    proxy_settings : hikari.impl.config.ProxySettings
         Proxy-related settings.
     token : str or None
         If defined, the token to use. If not defined, no token will be injected
@@ -98,7 +98,7 @@ class RESTClientImpl(rest_api.IRESTClientContextManager):
         self._http_settings = http_settings
         self._proxy_settings = proxy_settings
 
-        self._rest = rest_component.REST(
+        self._rest = rest_component.HTTP(
             app=self,
             connector=connector,
             connector_owner=False,
@@ -117,7 +117,7 @@ class RESTClientImpl(rest_api.IRESTClientContextManager):
         """Return the cache component.
 
         !!! warn
-            This will always return `NotImplemented` for REST-only applications.
+            This will always return `NotImplemented` for HTTP-only applications.
         """
         return self._cache
 
@@ -138,7 +138,7 @@ class RESTClientImpl(rest_api.IRESTClientContextManager):
         return self._proxy_settings
 
     @property
-    def rest(self) -> rest_component.REST:
+    def rest(self) -> rest_component.HTTP:
         return self._rest
 
     async def close(self) -> None:
@@ -157,7 +157,7 @@ class RESTClientImpl(rest_api.IRESTClientContextManager):
 
 
 class RESTClientFactoryImpl(rest_api.IRESTClientFactory):
-    """The base for a REST-only Discord application.
+    """The base for a HTTP-only Discord application.
 
     This comprises of a shared TCP connector connection pool, and can have
     `hikari.api.rest.IRESTClient` instances for specific credentials acquired
