@@ -1841,7 +1841,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def serialize_gateway_presence(
         self,
         idle_since: typing.Union[undefined.UndefinedType, typing.Optional[datetime.datetime]] = undefined.UNDEFINED,
-        is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         status: typing.Union[undefined.UndefinedType, presence_models.Status] = undefined.UNDEFINED,
         activity: typing.Union[
             undefined.UndefinedType, typing.Optional[presence_models.Activity]
@@ -1858,7 +1858,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         payload = data_binding.JSONObjectBuilder()
         payload.put("since", idle_since, conversion=datetime.datetime.timestamp)
-        payload.put("afk", is_afk)
+        payload.put("afk", afk)
         payload.put("status", status)
         payload.put("game", game)
         return payload
