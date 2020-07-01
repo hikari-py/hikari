@@ -39,6 +39,10 @@ from hikari._about import __version__
 
 # We need these imported explicitly for the __all__ to be visible due to
 # Python's weird import visibility system.
+from hikari import config
+from hikari import events
+from hikari import errors
+from hikari import models
 from hikari.utilities import files as _files
 from hikari.utilities import iterators as _iterators
 from hikari.utilities import snowflake as _snowflake
