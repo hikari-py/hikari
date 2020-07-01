@@ -3,6 +3,8 @@
     typing.TYPE_CHECKING = True
 
     import builtins
+    import importlib
+    import inspect
     import re
     import sphobjinv
 
@@ -33,7 +35,7 @@
             fqn = fqn.replace("builtins.", "")
 
         if fqn not in located_external_refs:
-            print("attempting to find intersphinx reference for", fqn)
+            # print("attempting to find intersphinx reference for", fqn)
             for base_url, inv in inventories.items():
                 for obj in inv.values():
                     if isinstance(obj, dict) and obj["name"] == fqn:
@@ -48,7 +50,7 @@
         try:
             return located_external_refs[fqn]
         except KeyError:
-            print("blacklisting", fqn, "as it cannot be dereferenced from external documentation")
+            # print("blacklisting", fqn, "as it cannot be dereferenced from external documentation")
             unlocatable_external_refs.add(fqn)
 
     project_inventory = sphobjinv.Inventory()
@@ -88,24 +90,29 @@
 
     from pdoc.html_helpers import extract_toc, glimpse, to_html as _to_html, format_git_link
 
-    QUAL_ABC = "abstract"
-    QUAL_ASYNC_DEF = "async def"
-    QUAL_CLASS = "class"
-    QUAL_DATACLASS = "dataclass"
-    QUAL_CACHED_PROPERTY = "cached property"
-    QUAL_CONST = "const"
-    QUAL_DEF = "def"
-    QUAL_ENUM = "enum"
-    QUAL_ENUM_FLAG = "flag"
-    QUAL_EXTERNAL = "external"
-    QUAL_METACLASS = "metaclass"
-    QUAL_MODULE = "module"
-    QUAL_NAMESPACE = "namespace"
-    QUAL_PACKAGE = "package"
-    QUAL_PROPERTY = "property"
-    QUAL_TYPEHINT = "type hint"
-    QUAL_VAR = "var"
+    QUAL_ABC = "<abbr title='An abstract base class which may have abstract methods and abstract properties.'>abstract</abbr>"
+    QUAL_ABSTRACT = "<abbr title='An abstract method or property that must be overridden in a derived class.'>abstract</abbr>"
+    QUAL_ASYNC_DEF = "<abbr title='A function that returns a coroutine and must be awaited.'>async</abbr>"
+    QUAL_CLASS = "<abbr title='A standard Python type.'>class</abbr>"
+    QUAL_DATACLASS = "<abbr title='A standard Python type that represents some form of information or entity.'>dataclass</abbr>"
+    QUAL_CACHED_PROPERTY = "<abbr title='A Python property that caches any result for subsequent re-use.'>cached property</abbr>"
+    QUAL_CONST = "<abbr title='A variable that should be considered to be a constant value.'>const</abbr>"
+    QUAL_DEF = "<abbr title='A standard Python function.'>def</abbr>"
+    QUAL_ENUM = "<abbr title='A standard Python enum type. This contains one or more discrete \"constant\" values.'>enum</abbr>"
+    QUAL_ENUM_FLAG = "<abbr title='A Python enum type that supports combination using bitwise flags.'>enum flag</abbr>"
+    QUAL_EXCEPTION = "<abbr title='A standard Python Exception that can be raised and caught.'>exception</abbr>"
+    QUAL_EXTERNAL = "<abbr title='Anything that is external to this library.'>extern</abbr>"
+    QUAL_INTERFACE = "<abbr title='An abstract base class that has EMPTY slots, and only methods/properties. Can safely be used in multiple inheritance without side effects.'>abstract trait</abbr>"
+    QUAL_METACLASS = "<abbr title='A standard Python metaclass type.'>meta</abbr>"
+    QUAL_MODULE = "<abbr title='A standard Python module.'>module</abbr>"
+    QUAL_NAMESPACE = "<abbr title='A standard Python PEP-420 namespace package.'>namespace</abbr>"
+    QUAL_PACKAGE = "<abbr title='A standard Python package.'>package</abbr>"
+    QUAL_PROPERTY = "<abbr title='A descriptor on an object that behaves like a synthetic attribute/variable.'>property</abbr>"
+    QUAL_TYPEHINT = "<abbr title='A type hint that is usable by static-type checkers like MyPy, but otherwise serves no functional purpose.'>type hint</abbr>"
+    QUAL_VAR = "<abbr title='A standard variable'>var</abbr>"
+    QUAL_WARNING = "<abbr title='A standard Python warning that can be raised.'>warning</abbr>"
 
+    # Help, it is a monster!
     def link(
         dobj: pdoc.Doc,
         *,
@@ -132,22 +139,28 @@
                 qual = dobj.funcdef()
 
                 if getattr(dobj.obj, "__isabstractmethod__", False):
-                    prefix = f"{QUAL_ABC} "
+                    prefix = f"{QUAL_ABSTRACT} "
 
                 prefix = "<small class='text-muted'><em>" + prefix + qual + "</em></small> "
 
             elif isinstance(dobj, pdoc.Variable):
                 if getattr(dobj.obj, "__isabstractmethod__", False):
-                    prefix = f"{QUAL_ABC} "
+                    prefix = f"{QUAL_ABSTRACT} "
 
                 descriptor = None
-                is_descriptor = hasattr(dobj.cls, "obj") and (descriptor := dobj.cls.obj.__dict__.get(dobj.name))
+                is_descriptor = False
 
-                if is_descriptor and isinstance(descriptor, (property, functools.cached_property)):
+                if hasattr(dobj.cls, "obj"):
+                    for cls in dobj.cls.obj.mro():
+                        if (descriptor := cls.__dict__.get(dobj.name)) is not None:
+                            is_descriptor = True
+                            break
+
+                if is_descriptor:
                     qual = QUAL_CACHED_PROPERTY if isinstance(descriptor, functools.cached_property) else QUAL_PROPERTY
                     prefix = f"<small class='text-muted'><em>{prefix}{qual}</em></small> "
                 elif dobj.module.name == "typing" or dobj.docstring and dobj.docstring.casefold().startswith(("type hint", "typehint", "type alias")):
-                    show_object = True
+                    show_object = not simple_names
                     prefix = f"<small class='text-muted'><em>{prefix}{QUAL_TYPEHINT} </em></small> "
                 elif all(not c.isalpha() or c.isupper() for c in dobj.name):
                     prefix = f"<small class='text-muted'><em>{prefix}{QUAL_CONST}</em></small> "
@@ -160,20 +173,24 @@
                 if issubclass(dobj.obj, type):
                     qual += QUAL_METACLASS
                 else:
-                    if "__call__" in dobj.obj.__dict__:
-                        name += "()"
-
                     if enum.Flag in dobj.obj.mro():
                         qual += QUAL_ENUM_FLAG
                     elif enum.Enum in dobj.obj.mro():
                         qual += QUAL_ENUM
                     elif hasattr(dobj.obj, "__attrs_attrs__"):
                         qual += QUAL_DATACLASS
+                    elif issubclass(dobj.obj, Warning):
+                        qual += QUAL_WARNING
+                    elif issubclass(dobj.obj, BaseException):
+                        qual += QUAL_EXCEPTION
                     else:
                         qual += QUAL_CLASS
 
                     if inspect.isabstract(dobj.obj):
-                        qual = f"{QUAL_ABC} {qual}"
+                        if re.match(r"^I[A-Za-z]", dobj.name):
+                            qual = f"{QUAL_INTERFACE} {qual}"
+                        else:
+                            qual = f"{QUAL_ABC} {qual}"
 
                 prefix = f"<small class='text-muted'><em>{qual}</em></small> "
 
@@ -206,25 +223,25 @@
 
             if url is None:
                 if fqn_match := re.match(r"([a-z_]+)\.((?:[^\.]|^\s)+)", fqn):
-                    print("Struggling to resolve", fqn, "in", module.name, "so attempting to see if it is an import alias now instead.")
+                    # print("Struggling to resolve", fqn, "in", module.name, "so attempting to see if it is an import alias now instead.")
 
                     if import_match := re.search(f"from (.*) import (.*) as {fqn_match.group(1)}", module.source):
                         old_fqn = fqn
                         fqn = import_match.group(1) + "." + import_match.group(2) + "." + fqn_match.group(2)
                         try:
                             url = pdoc._global_context[fqn].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
-                            print(old_fqn, "->", fqn, "via", url)
+                            # print(old_fqn, "->", fqn, "via", url)
                         except KeyError:
-                            print("maybe", fqn, "is external but aliased?")
+                            # print("maybe", fqn, "is external but aliased?")
                             url = discover_source(fqn)
                     elif import_match := re.search(f"import (.*) as {fqn_match.group(1)}", module.source):
                         old_fqn = fqn
                         fqn = import_match.group(1) + "." + fqn_match.group(2)
                         try:
                             url = pdoc._global_context[fqn].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
-                            print(old_fqn, "->", fqn, "via", url)
+                            # print(old_fqn, "->", fqn, "via", url)
                         except KeyError:
-                            print("maybe", fqn, "is external but aliased?")
+                            # print("maybe", fqn, "is external but aliased?")
                             url = discover_source(fqn)
                     else:
                         # print("No clue where", fqn, "came from --- it isn't an import that i can see.")
@@ -276,8 +293,8 @@
         if annot:
             annot = ' ' + sep + '\N{NBSP}' + annot
 
-        for pattern in builtin_patterns:
-            annot = pattern.sub(r"builtins.\1", annot)
+        # for pattern in builtin_patterns:
+        #    annot = pattern.sub(r"builtins.\1", annot)
 
         return annot
 
@@ -498,7 +515,7 @@
                     % for sc in subclasses:
                         % if not isinstance(sc, pdoc.External):
                             <dt class="nested">${link(sc, with_prefixes=True, default_type="class")}</dt>
-                            <dd class="nested">${sc.docstring | glimpse, to_html}</dd>
+                            <dd class="nested">${sc.docstring or sc.obj.__doc__ | glimpse, to_html}</dd>
                         % endif
                     % endfor
                 </dl>
@@ -511,6 +528,16 @@
                     <dt class="nested">${link(c, with_prefixes=True)}</dt>
                     <dd class="nested"><em class="text-muted">That's this class!</em></dd>
                     % for mro_c in mro:
+                        <%
+                            if mro_c.obj is None:
+                                module, _, cls = mro_c.qualname.rpartition(".")
+                                try:
+                                    cls = getattr(importlib.import_module(module), cls)
+                                    mro_c.docstring = cls.__doc__ or ""
+                                except:
+                                    pass
+                        %>
+
                         <dt class="nested">${link(mro_c, with_prefixes=True, default_type="class")}</dt>
                         <dd class="nested">${mro_c.docstring | glimpse, to_html}</dd>
                     % endfor
@@ -544,7 +571,7 @@
 <%def name="show_desc(d, short=False)">
     <%
         inherits = ' inherited' if d.inherits else ''
-        docstring = d.docstring
+        docstring = d.docstring or d.obj.__doc__
     %>
     % if not short:
         % if d.inherits:
@@ -594,9 +621,9 @@
 <div class="container-xl">
     <div class="row">
         <%
-            variables = module.variables(sort=sort_identifiers)
-            classes = module.classes(sort=sort_identifiers)
-            functions = module.functions(sort=sort_identifiers)
+            variables = module.variables(sort=sort_identifiers and module.name != "hikari")
+            classes = module.classes(sort=sort_identifiers and module.name != "hikari")
+            functions = module.functions(sort=sort_identifiers and module.name != "hikari")
             submodules = module.submodules()
             supermodule = module.supermodule
 
@@ -617,7 +644,7 @@
                 % if submodules:
                     <ul class="list-unstyled text-truncate">
                         % for child_module in submodules:
-                            <li class="text-truncate monospaced">${link(child_module, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
+                            <li class="text-truncate monospaced">${link(child_module, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False, simple_names=True)}</li>
                         % endfor
                     </ul>
                 % endif
@@ -629,7 +656,7 @@
                 % if variables:
                     <ul class="list-unstyled text-truncate">
                         % for variable in variables:
-                            <li class="text-truncate monospaced">${link(variable, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
+                            <li class="text-truncate monospaced">${link(variable, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False, simple_names=True)}</li>
                         % endfor
                     </ul>
                 % endif
@@ -637,7 +664,7 @@
                 % if functions:
                     <ul class="list-unstyled text-truncate">
                         % for function in functions:
-                            <li class="text-truncate monospaced">${link(function, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
+                            <li class="text-truncate monospaced">${link(function, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False, simple_names=True)}</li>
                         % endfor
                     </ul>
                 % endif
@@ -647,9 +674,16 @@
                         ## Purposely using one item per list for layout reasons.
                         <ul class="list-unstyled text-truncate">
                             <li class="monospaced">
-                                ${link(c, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}
-
                                 <%
+                                    if c.module.name != c.obj.__module__:
+                                        try:
+                                            ref = pdoc._global_context[c.obj.__module__ + "." + c.obj.__qualname__]
+                                            redirect = True
+                                        except KeyError:
+                                            redirect = False
+                                    else:
+                                        redirect = False
+
                                     members = c.functions(sort=sort_identifiers) + c.methods(sort=sort_identifiers)
 
                                     if list_class_variables_in_index:
@@ -662,10 +696,14 @@
                                         members = sorted(members)
                                 %>
 
+                                ${link(c, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False, simple_names=True)}
+
                                 <ul class="list-unstyled nested text-truncate">
-                                    % if members:
+                                    % if members and not redirect:
                                         % for member in members:
-                                            <li class="text-truncate monospaced">${link(member, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False)}</li>
+                                            <li class="text-truncate monospaced">
+                                                ${link(member, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False, simple_names=True)}
+                                            </li>
                                         % endfor
                                     % endif
                                 </ul>

@@ -18,7 +18,7 @@
 """Special additional endpoints used by the REST API."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["TypingIndicator", "GuildBuilder"]
+__all__: typing.Final[typing.List[str]] = ["TypingIndicator", "GuildBuilder"]
 
 import abc
 import typing

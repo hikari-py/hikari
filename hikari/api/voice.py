@@ -18,7 +18,7 @@
 """Interfaces used to describe voice client implementations."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["IVoiceComponent", "IVoiceConnection"]
+__all__: typing.Final[typing.List[str]] = ["IVoiceComponent", "IVoiceConnection"]
 
 import abc
 import typing

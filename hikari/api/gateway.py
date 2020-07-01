@@ -18,7 +18,7 @@
 """Provides an interface for gateway shard implementations to conform to."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["IGatewayShard"]
+__all__: typing.Final[typing.List[str]] = ["IGatewayShard"]
 
 import abc
 import typing

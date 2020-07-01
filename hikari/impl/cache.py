@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["InMemoryCacheComponentImpl"]
+__all__: typing.Final[typing.List[str]] = ["InMemoryCacheComponentImpl"]
 
 import typing
 
