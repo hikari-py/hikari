@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["IGatewayZookeeperApp"]
+__all__: typing.Final[typing.List[str]] = ["IGatewayZookeeperApp"]
 
 import abc
 import typing

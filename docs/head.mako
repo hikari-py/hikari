@@ -15,12 +15,12 @@
         </ul>
     </div>
         
-    <form class="form-inline my-2 my-lg-0">
+    <!--<form class="form-inline my-2 my-lg-0">
         <div class="gcse-search"
             data-as_oq="${' '.join(search_query.strip().split()) | h }"
             data-gaCategoryParameter="${module.refname | h}">
         </div>
-    </form>
+    </form>-->
 
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"/>

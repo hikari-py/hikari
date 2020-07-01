@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["generate_error_response"]
+__all__: typing.Final[typing.List[str]] = ["generate_error_response"]
 
 import http
 import typing

@@ -10,15 +10,17 @@ ignore =
     E402,      # Module level import not at top of file (isn't compatible with our import style).
     IFSTMT001  # "use a oneliner here"
     T101,      # TO DO comments only
+    W503,      # line break before binary operator
 
-
+# F401:  unused import.
+# F403:  cannot detect unused vars if we use starred import
+# FS003: f-string missing prefix.
 per-file-ignores =
-    # f-string missing prefix.
-    hikari/impl/routes.py:FS003
-    # f-string missing prefix.
-    hikari/utilities/date.py:FS003
-    # complaints about importing stuff and not using it afterwards
-    hikari/__init__.py:F401
+    hikari/__init__.py:          F401,F403
+    hikari/events/__init__.py:   F401,F403
+    hikari/models/__init__.py:   F401,F403
+    hikari/impl/routes.py:       FS003
+    hikari/utilities/date.py:    FS003
 
 max-complexity = 20
 # Technically this is 120, but black has a policy of "1 or 2 over is fine if it is tidier", so we have to raise this.
