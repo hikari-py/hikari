@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["resolve_signature", "EMPTY", "get_logger"]
+__all__: typing.Final[typing.List[str]] = ["resolve_signature", "EMPTY", "get_logger"]
 
 import inspect
 import logging

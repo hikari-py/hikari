@@ -53,8 +53,8 @@
         <link rel="shortcut icon" type="image/png" href="${site_logo}"/>
 
         ## Google Search Engine integration
-        <script async src="https://cse.google.com/cse.js?cx=017837193012385208679:pey8ky8gdqw"></script>
-        <style>.gsc-control-cse {padding:0 !important;margin-top:1em}</style>
+        <!--<script async src="https://cse.google.com/cse.js?cx=017837193012385208679:pey8ky8gdqw"></script>
+        <style>.gsc-control-cse {padding:0 !important;margin-top:1em}</style>-->
 
         ## Bootstrap 4 stylesheet
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/${bootstrap_version}/css/bootstrap.min.css"/>

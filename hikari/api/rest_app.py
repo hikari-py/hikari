@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["IRESTApp", "IRESTAppFactory", "IRESTAppContextManager"]
+__all__: typing.Final[typing.List[str]] = ["IRESTApp", "IRESTAppFactory", "IRESTAppContextManager"]
 
 import abc
 import typing

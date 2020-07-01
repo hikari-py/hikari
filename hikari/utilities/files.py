@@ -20,7 +20,6 @@
 from __future__ import annotations
 
 __all__ = [
-    "ensure_resource",
     "AsyncReader",
     "ByteReader",
     "FileReader",

@@ -18,7 +18,7 @@
 """Provides an interface for REST API implementations to follow."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["IRESTClient"]
+__all__: typing.Final[typing.List[str]] = ["IRESTClient"]
 
 import abc
 import typing

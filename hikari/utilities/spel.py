@@ -46,6 +46,9 @@ This expression language is highly experimental and may change without
 prior notice for the time being while I play with getting something usable
 and nice to work with.
 """
+from __future__ import annotations
+
+__all__: typing.Final[typing.List[str]] = ["AttrGetter"]
 
 import operator
 import typing

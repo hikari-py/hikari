@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["EntityFactoryComponentImpl"]
+__all__: typing.Final[typing.List[str]] = ["EntityFactoryComponentImpl"]
 
 import datetime
 import typing

@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["generate_cdn_url", "get_default_avatar_url", "get_default_avatar_index"]
+__all__: typing.Final[typing.List[str]] = ["generate_cdn_url", "get_default_avatar_url", "get_default_avatar_index"]
 
 import typing
 import urllib.parse

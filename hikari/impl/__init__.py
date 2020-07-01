@@ -25,7 +25,7 @@ implementations.
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = []
+__all__: typing.Final[typing.List[str]] = []
 
 # noinspection PyUnresolvedReferences
 import typing
