@@ -70,7 +70,7 @@
     # To get links to work in type hints to builtins, we do a bit of hacky search-replace using regex.
     # This generates regex to match general builtins in typehints.
     builtin_patterns = [
-        re.compile("(?<!builtins\\.)\\b({name})\\b")
+        re.compile(f"(?<!builtins\\.)\\b({obj})\\b")
         for obj in dir(builtins)
     ]
 
