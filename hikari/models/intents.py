@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["Intent"]
+__all__: typing.Final[typing.List[str]] = ["Intent"]
 
 import enum
 

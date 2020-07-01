@@ -74,4 +74,4 @@ REST_API_URL: typing.Final[str] = "https://discord.com/api/v{0.version}"  # noqa
 OAUTH2_API_URL: typing.Final[str] = f"{REST_API_URL}/oauth2"
 CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
 
-__all__: typing.Final[typing.Sequence[str]] = [attr for attr in globals() if not any(c.islower() for c in attr)]
+__all__: typing.Final[typing.List[str]] = [attr for attr in globals() if not any(c.islower() for c in attr)]

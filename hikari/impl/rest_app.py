@@ -23,7 +23,7 @@ API, such as web dashboards and other OAuth2-based scripts.
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["RESTAppFactoryImpl", "RESTClientImpl"]
+__all__: typing.Final[typing.List[str]] = ["RESTAppFactoryImpl", "RESTClientImpl"]
 
 import typing
 

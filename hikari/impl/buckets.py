@@ -203,7 +203,7 @@ and should be used sparingly.
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.Sequence[str]] = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
+__all__: typing.Final[typing.List[str]] = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
 
 import asyncio
 import datetime
