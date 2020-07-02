@@ -453,7 +453,7 @@ class GuildTextChannel(GuildChannel, TextChannel):
 
     rate_limit_per_user: datetime.timedelta = attr.ib(eq=False, hash=False, repr=False)
     """The delay (in seconds) between a user can send a message to this channel.
-    
+
     If there is no rate limit, this will be 0 seconds.
 
     !!! note
