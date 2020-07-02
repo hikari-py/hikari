@@ -67,7 +67,7 @@ One issue that occurs from this is that we cannot effectively hash a
 `hikari.utilities.routes.CompiledRoute` that has not yet been hit, meaning that
 until we receive a response from this endpoint, we have no idea what our rate
 limits could be, nor the bucket that they sit in. This is usually not
-problematic, as the first request to an endpoint should never be rate limited
+problematic, as the first request to an _endpoint should never be rate limited
 unless you are hitting it from elsewhere in the same time window outside your
 hikari.models.applications. To manage this situation, unknown endpoints are allocated to
 a special unlimited bucket until they have an initial bucket hash code allocated
@@ -183,7 +183,7 @@ It is worth remembering that there is an API limit to the number of 401s,
 limit results in a soft ban of your account.
 
 At the time of writing, the only example of this appears to be on the
-`PATCH /channels/{channel_id}` endpoint. This has a limit of two changes per
+`PATCH /channels/{channel_id}` _endpoint. This has a limit of two changes per
 10 minutes. More details about how this is implemented have yet to be
 released or documented...
 
@@ -194,7 +194,7 @@ Caveats
 These implementations rely on Discord sending consistent buckets back to us.
 
 This also begins to crumble if more than one HTTP client is in use, since
-there is no performant way to communicate shared rate limits between
+there is no performent way to communicate shared rate limits between
 distributed applications. The general concept to follow is that if you are
 making repeated API calls, or calls that are not event-based (e.g.
 fetching messages on a timer), then this can be considered a form of API abuse
@@ -223,7 +223,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.impl.http")
 
 
 class RESTBucket(rate_limits.WindowedBurstRateLimiter):
-    """Represents a rate limit for an HTTP endpoint.
+    """Represents a rate limit for an HTTP _endpoint.
 
     Component to represent an active rate limit bucket on a specific HTTP _route
     with a specific major parameter combo.

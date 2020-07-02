@@ -74,5 +74,11 @@ class VoiceServerUpdateEvent(VoiceEvent):
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this voice server update is for."""
 
-    endpoint: str = attr.ib(repr=True)
-    """The URI for this voice server host."""
+    _endpoint: str = attr.ib(repr=True)
+
+    @property
+    def endpoint(self) -> str:
+        """The URI for this voice server host, with the correct port."""
+        # Discord have had this wrong for like 4 years, bleh.
+        uri, _, _ = self._endpoint.rpartition(":")
+        return f"wss://{uri}:443"

@@ -200,7 +200,7 @@ class BotAppImpl(bot.IBotApp):
         self._event_manager = manager.EventManagerImpl(app=self, intents_=intents)
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
         self._global_ratelimit = rate_limits.ManualRateLimiter()
-        self._voice = voice_component.VoiceComponentImpl(self)
+        self._voice = voice_component.VoiceComponentImpl(self, self._event_manager)
 
         self._started_at_monotonic: typing.Optional[float] = None
         self._started_at_timestamp: typing.Optional[datetime.datetime] = None
