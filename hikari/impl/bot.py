@@ -34,6 +34,7 @@ import typing
 
 from hikari import config
 from hikari.api import bot
+from hikari.api.gateway import shard as gateway_shard
 from hikari.events import other as other_events
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
@@ -42,6 +43,7 @@ from hikari.impl.cache import stateless as stateless_cache_impl
 from hikari.impl.gateway import manager
 from hikari.impl.gateway import shard as gateway_shard_impl
 from hikari.impl.rest import client as rest_client_impl
+from hikari.impl.voice import voice_component
 from hikari.models import presences
 from hikari.utilities import constants
 from hikari.utilities import date
@@ -51,11 +53,7 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
 
     from hikari.api import cache as cache_
-    from hikari.api import entity_factory as entity_factory_
-    from hikari.api.gateway import consumer as event_consumer_
     from hikari.api.gateway import dispatcher as event_dispatcher_
-    from hikari.api.gateway import shard as gateway_shard
-    from hikari.api.rest import client
     from hikari.events import base as base_events
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
@@ -202,6 +200,7 @@ class BotAppImpl(bot.IBotApp):
         self._event_manager = manager.EventManagerImpl(app=self, intents_=intents)
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
         self._global_ratelimit = rate_limits.ManualRateLimiter()
+        self._voice = voice_component.VoiceComponentImpl(self)
 
         self._started_at_monotonic: typing.Optional[float] = None
         self._started_at_timestamp: typing.Optional[datetime.datetime] = None
@@ -249,19 +248,19 @@ class BotAppImpl(bot.IBotApp):
         )
 
     @property
-    def event_dispatcher(self) -> event_dispatcher_.IEventDispatcherComponent:
-        return self._event_manager
-
-    @property
     def cache(self) -> cache_.ICacheComponent:
         return self._cache
 
     @property
-    def entity_factory(self) -> entity_factory_.IEntityFactoryComponent:
+    def entity_factory(self) -> entity_factory_impl.EntityFactoryComponentImpl:
         return self._entity_factory
 
     @property
-    def event_consumer(self) -> event_consumer_.IEventConsumerComponent:
+    def event_consumer(self) -> manager.EventManagerImpl:
+        return self._event_manager
+
+    @property
+    def event_dispatcher(self) -> manager.EventManagerImpl:
         return self._event_manager
 
     @property
@@ -277,7 +276,7 @@ class BotAppImpl(bot.IBotApp):
         return self._proxy_settings
 
     @property
-    def rest(self) -> client.IRESTClient:
+    def rest(self) -> rest_client_impl.RESTClientImpl:
         return self._rest
 
     @property
@@ -287,6 +286,9 @@ class BotAppImpl(bot.IBotApp):
     @property
     def shard_count(self) -> int:
         return self._shard_count
+
+    def voice(self) -> voice_component.VoiceComponentImpl:
+        return self._voice
 
     @property
     def started_at(self) -> typing.Optional[datetime.datetime]:
