@@ -464,22 +464,25 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return category
 
     def deserialize_guild_text_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildTextChannel:
-        guild_text_category = channel_models.GuildTextChannel()
-        guild_text_category.app = self._app
-        self._set_guild_channel_attributes(payload, guild_text_category)
-        guild_text_category.topic = payload["topic"]
+        guild_text_channel = channel_models.GuildTextChannel()
+        guild_text_channel.app = self._app
+        self._set_guild_channel_attributes(payload, guild_text_channel)
+        guild_text_channel.topic = payload["topic"]
 
         if (last_message_id := payload["last_message_id"]) is not None:
             last_message_id = snowflake.Snowflake(last_message_id)
-        guild_text_category.last_message_id = last_message_id
+        guild_text_channel.last_message_id = last_message_id
 
-        guild_text_category.rate_limit_per_user = datetime.timedelta(seconds=payload["rate_limit_per_user"])
+        # Usually this is 0 if unset, but some old channels made before the
+        # rate_limit_per_user field was implemented will not have this field
+        # at all if they have never had the rate limit changed...
+        guild_text_channel.rate_limit_per_user = datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0))
 
         if (last_pin_timestamp := payload.get("last_pin_timestamp")) is not None:
             last_pin_timestamp = date.iso8601_datetime_string_to_datetime(last_pin_timestamp)
-        guild_text_category.last_pin_timestamp = last_pin_timestamp
+        guild_text_channel.last_pin_timestamp = last_pin_timestamp
 
-        return guild_text_category
+        return guild_text_channel
 
     def deserialize_guild_news_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildNewsChannel:
         guild_news_channel = channel_models.GuildNewsChannel()
