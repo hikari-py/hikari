@@ -1004,7 +1004,7 @@ class RESTClientImpl(rest_client.IRESTClient):
         route = routes.GET_GATEWAY.compile()
         # This doesn't need authorization.
         raw_response = await self._request(route, no_auth=True)
-        response = typing.cast(typing.Mapping[str, str], raw_response)
+        response = typing.cast("typing.Mapping[str, str]", raw_response)
         return response["url"]
 
     async def fetch_gateway_bot(self) -> gateway.GatewayBot:
@@ -1330,7 +1330,7 @@ class RESTClientImpl(rest_client.IRESTClient):
         response = typing.cast(data_binding.JSONArray, raw_response)
         channel_sequence = data_binding.cast_json_array(response, self._app.entity_factory.deserialize_channel)
         # Will always be guild channels unless Discord messes up severely on something!
-        return typing.cast(typing.Sequence[channels.GuildChannel], channel_sequence)
+        return typing.cast("typing.Sequence[channels.GuildChannel]", channel_sequence)
 
     async def create_guild_text_channel(
         self,
