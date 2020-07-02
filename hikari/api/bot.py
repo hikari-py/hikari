@@ -38,7 +38,9 @@ class IBotApp(consumer.IEventConsumerApp, dispatcher.IEventDispatcherApp, voice.
     Bots are components that have access to a HTTP API, an event dispatcher,
     and an event consumer.
 
-    Additionally, bots will contain a collection of Gateway client objects.
+    Additionally, bots may contain a collection of Gateway client objects. This
+    is not mandatory though, as the bot may consume its events from another managed
+    component that manages gateway zookeeping instead.
     """
 
     __slots__: typing.Sequence[str] = ()

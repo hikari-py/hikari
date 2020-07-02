@@ -1869,7 +1869,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         voice_server_update = voice_events.VoiceServerUpdateEvent()
         voice_server_update.token = payload["token"]
         voice_server_update.guild_id = snowflake.Snowflake(payload["guild_id"])
-        voice_server_update.endpoint = payload["endpoint"]
+        voice_server_update._endpoint = payload["endpoint"]
         return voice_server_update
 
     def serialize_gateway_presence(

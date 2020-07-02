@@ -29,6 +29,7 @@ from hikari.events import voice
 
 if typing.TYPE_CHECKING:
     from hikari.models import channels
+    from hikari.models import guilds
     from hikari.utilities import snowflake
 
 
@@ -60,7 +61,8 @@ class IVoiceComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def connect_to(
         self,
-        channel: channels.GuildVoiceChannel,
+        channel: typing.Union[channels.GuildVoiceChannel, snowflake.UniqueObject],
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         *,
         deaf: bool = False,
         mute: bool = False,
@@ -73,6 +75,8 @@ class IVoiceComponent(component.IComponent, abc.ABC):
         ----------
         channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.UniqueObject
             The channel or channel ID to connect to.
+        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
+            The guild to connect to.
         deaf : builtins.bool
             Defaulting to `builtins.False`, if `builtins.True`, the client will
             enter the voice channel deafened (thus unable to hear other users).
