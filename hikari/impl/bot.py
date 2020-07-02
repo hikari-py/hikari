@@ -342,9 +342,13 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         return self.event_dispatcher.unsubscribe(event_type, callback)
 
     async def wait_for(
-        self, event_type: typing.Type[EventT], predicate: PredicateT, timeout: typing.Union[float, int, None],
+        self,
+        event_type: typing.Type[EventT],
+        /,
+        timeout: typing.Union[float, int, None],
+        predicate: typing.Optional[PredicateT] = None,
     ) -> EventT:
-        return await self.event_dispatcher.wait_for(event_type, predicate, timeout)
+        return await self.event_dispatcher.wait_for(event_type, predicate=predicate, timeout=timeout)
 
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
         return self.event_dispatcher.dispatch(event)

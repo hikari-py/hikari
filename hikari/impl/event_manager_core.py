@@ -55,6 +55,10 @@ if typing.TYPE_CHECKING:
     WaiterMapT = typing.MutableMapping[typing.Type[EventT], typing.MutableSet[WaiterT]]
 
 
+def _default_predicate(_: EventT) -> typing.Literal[True]:
+    return True
+
+
 class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, event_consumer.IEventConsumerComponent):
     """Provides functionality to consume and dispatch events.
 
@@ -215,8 +219,15 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
         return decorator
 
     async def wait_for(
-        self, event_type: typing.Type[EventT], predicate: PredicateT, timeout: typing.Union[float, int, None]
+        self,
+        event_type: typing.Type[EventT],
+        /,
+        timeout: typing.Union[float, int, None],
+        predicate: typing.Optional[PredicateT] = None,
     ) -> EventT:
+
+        if predicate is None:
+            predicate = _default_predicate
 
         future: asyncio.Future[EventT] = asyncio.get_event_loop().create_future()
 
