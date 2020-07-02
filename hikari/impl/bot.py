@@ -205,7 +205,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
             self._cache = cache_impl.InMemoryCacheComponentImpl(app=self)
 
         self._config = config
-        self._event_manager = event_manager.EventManagerImpl(app=self)
+        self._event_manager = event_manager.EventManagerImpl(app=self, intents_=intents)
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
         self._global_ratelimit = rate_limits.ManualRateLimiter()
 
