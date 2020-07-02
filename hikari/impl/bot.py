@@ -192,6 +192,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         token: str,
     ) -> None:
         if logging_level is not None and not _LOGGER.hasHandlers():
+            logging.captureWarnings(True)
             logging.basicConfig(format=self.__get_logging_format())
             _LOGGER.setLevel(logging_level)
 
