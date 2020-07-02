@@ -360,7 +360,6 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
                 "max_concurrency: %s (contact Discord for an increase) -- "
                 "will connect %s shards %s; the distributed application should have %s shards in total -- "
                 "you have started %s/%s sessions prior to connecting (resets at %s)",
-                url,
                 gw_recs.session_start_limit.max_concurrency,
                 len(self._shard_ids),
                 reprlib.repr(sorted(self._shard_ids)),
