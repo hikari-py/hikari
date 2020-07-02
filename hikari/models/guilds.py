@@ -47,6 +47,7 @@ import typing
 
 import attr
 
+from hikari.api.gateway import zookeeper
 from hikari.models import users
 from hikari.utilities import constants
 from hikari.utilities import files
@@ -568,6 +569,18 @@ class PartialGuild(snowflake.Unique):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def shard_id(self) -> typing.Optional[int]:
+        """Return the ID of the shard this guild is served by.
+
+        This may return `None` if the application does not have a gateway
+        connection.
+        """
+        if not isinstance(self.app, zookeeper.IGatewayZookeeperApp):
+            return None
+
+        return (self.id >> 22) % self.app.shard_count
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
