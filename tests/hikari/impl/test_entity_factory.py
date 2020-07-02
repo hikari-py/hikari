@@ -615,13 +615,13 @@ class TestEntityFactoryImpl:
                 "type": 0,
                 "position": 6,
                 "permission_overwrites": [],
-                "rate_limit_per_user": 2,
                 "topic": "¯\\_(ツ)_/¯",
                 "last_message_id": "123456",
             }
         )
         assert guild_text_channel.guild_id is None
         assert guild_text_channel.is_nsfw is None
+        assert guild_text_channel.rate_limit_per_user.total_seconds() == 0
         assert guild_text_channel.last_pin_timestamp is None
         assert guild_text_channel.parent_id is None
 
