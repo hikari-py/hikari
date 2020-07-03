@@ -192,6 +192,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         token: str,
     ) -> None:
         if logging_level is not None and not _LOGGER.hasHandlers():
+            logging.captureWarnings(True)
             logging.basicConfig(format=self.__get_logging_format())
             _LOGGER.setLevel(logging_level)
 
@@ -204,7 +205,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
             self._cache = cache_impl.InMemoryCacheComponentImpl(app=self)
 
         self._config = config
-        self._event_manager = event_manager.EventManagerImpl(app=self)
+        self._event_manager = event_manager.EventManagerImpl(app=self, intents_=intents)
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
         self._global_ratelimit = rate_limits.ManualRateLimiter()
 
@@ -341,9 +342,13 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         return self.event_dispatcher.unsubscribe(event_type, callback)
 
     async def wait_for(
-        self, event_type: typing.Type[EventT], predicate: PredicateT, timeout: typing.Union[float, int, None],
+        self,
+        event_type: typing.Type[EventT],
+        /,
+        timeout: typing.Union[float, int, None],
+        predicate: typing.Optional[PredicateT] = None,
     ) -> EventT:
-        return await self.event_dispatcher.wait_for(event_type, predicate, timeout)
+        return await self.event_dispatcher.wait_for(event_type, predicate=predicate, timeout=timeout)
 
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
         return self.event_dispatcher.dispatch(event)
