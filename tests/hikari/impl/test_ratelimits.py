@@ -255,10 +255,12 @@ class TestWindowedBurstRateLimiter:
         ratelimiter.throttle_task = None
         ratelimiter.is_rate_limited = mock.MagicMock(return_value=True)
 
-        future = ratelimiter.acquire()
-
-        # use slice to prevent aborting test with index error rather than assertion error if this fails.
-        assert ratelimiter.queue[-1:] == [future]
+        try:
+            future = ratelimiter.acquire()
+            # use slice to prevent aborting test with index error rather than assertion error if this fails.
+            assert ratelimiter.queue[-1:] == [future]
+        finally:
+            ratelimiter.throttle_task.cancel()
 
     @pytest.mark.asyncio
     async def test_throttle_consumes_queue(self, event_loop):

@@ -291,7 +291,11 @@ class IEventDispatcherBase(abc.ABC):
 
     @abc.abstractmethod
     async def wait_for(
-        self, event_type: typing.Type[EventT], predicate: PredicateT, timeout: typing.Union[float, int, None],
+        self,
+        event_type: typing.Type[EventT],
+        /,
+        timeout: typing.Union[float, int, None],
+        predicate: typing.Optional[PredicateT] = None,
     ) -> EventT:
         """Wait for a given event to occur once, then return the event.
 
@@ -300,10 +304,12 @@ class IEventDispatcherBase(abc.ABC):
         event_type : typing.Type[hikari.events.base.Event]
             The event type to listen for. This will listen for subclasses of
             this type additionally.
-        predicate
+        predicate :
             A function or coroutine taking the event as the single parameter.
-            This should return `builtins.True` if the event is one you want to return,
-            or `builtins.False` if the event should not be returned.
+            This should return `builtins.True` if the event is one you want to
+            return, or `builtins.False` if the event should not be returned.
+            If left as `None` (the default), then the first matching event type
+            that the bot receives (or any subtype) will be the one returned.
         timeout : builtins.float or builtins.int or builtins.None
             The amount of time to wait before raising an `asyncio.TimeoutError`
             and giving up instead. This is measured in seconds. If
@@ -319,8 +325,8 @@ class IEventDispatcherBase(abc.ABC):
         Raises
         ------
         asyncio.TimeoutError
-            If the timeout is not `builtins.None` and is reached before an event is
-            received that the predicate returns `builtins.True` for.
+            If the timeout is not `builtins.None` and is reached before an
+            event is received that the predicate returns `builtins.True` for.
 
         See Also
         --------

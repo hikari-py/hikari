@@ -25,11 +25,14 @@ import asyncio
 import functools
 import logging
 import typing
+import warnings
 
+from hikari import errors
 from hikari.api import event_consumer
 from hikari.api import event_dispatcher
 from hikari.events import base
 from hikari.events import other
+from hikari.models import intents
 from hikari.utilities import aio
 from hikari.utilities import data_binding
 from hikari.utilities import reflect
@@ -52,6 +55,10 @@ if typing.TYPE_CHECKING:
     WaiterMapT = typing.MutableMapping[typing.Type[EventT], typing.MutableSet[WaiterT]]
 
 
+def _default_predicate(_: EventT) -> typing.Literal[True]:
+    return True
+
+
 class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, event_consumer.IEventConsumerComponent):
     """Provides functionality to consume and dispatch events.
 
@@ -59,8 +66,9 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
     is the raw event name being dispatched in lower-case.
     """
 
-    def __init__(self, app: rest_app.IRESTApp) -> None:
+    def __init__(self, app: rest_app.IRESTApp, intents_: typing.Optional[intents.Intent]) -> None:
         self._app = app
+        self._intents = intents_
         self._listeners: ListenerMapT = {}
         self._waiters: WaiterMapT = {}
 
@@ -82,10 +90,33 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
         self,
         event_type: typing.Type[EventT],
         callback: typing.Callable[[EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
+        *,
+        _nested: int = 0,
     ) -> typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]:
+        # `_nested` is used to show the correct source code snippet if an intent
+        # warning is triggered.
+
+        # If None, the user is on v6 with intents disabled, so we don't care.
+        if self._intents is not None:
+            # Collection of combined bitfield combinations of intents that
+            # could be enabled to receive this event.
+            expected_intent_sets = base.get_required_intents_for(event_type)
+            if not any(self._intents & expected_intent_set for expected_intent_set in expected_intent_sets):
+                expected_intents_str = ", ".join(
+                    str(expected_intent_set) for expected_intent_set in expected_intent_sets
+                )
+
+                warnings.warn(
+                    f"You have tried to listen to {event_type.__name__}, but this will only ever be triggered if you "
+                    f"enable one of the following intents: {expected_intents_str}.",
+                    category=errors.IntentWarning,
+                    stacklevel=_nested + 2,
+                )
+
         if event_type not in self._listeners:
             self._listeners[event_type] = []
 
+        # TODO: not sure if I want to do this or not... it might be misleading to replace the function in @listen
         if not asyncio.iscoroutinefunction(callback):
 
             @functools.wraps(callback)
@@ -182,14 +213,21 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
                 if not isinstance(event_type, type) or not issubclass(event_type, base.Event):
                     raise TypeError("Event type must derive from Event")
 
-            self.subscribe(event_type, callback)
+            self.subscribe(event_type, callback, _nested=1)
             return callback
 
         return decorator
 
     async def wait_for(
-        self, event_type: typing.Type[EventT], predicate: PredicateT, timeout: typing.Union[float, int, None]
+        self,
+        event_type: typing.Type[EventT],
+        /,
+        timeout: typing.Union[float, int, None],
+        predicate: typing.Optional[PredicateT] = None,
     ) -> EventT:
+
+        if predicate is None:
+            predicate = _default_predicate
 
         future: asyncio.Future[EventT] = asyncio.get_event_loop().create_future()
 
