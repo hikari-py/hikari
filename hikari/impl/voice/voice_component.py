@@ -21,27 +21,29 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = []
 
+import asyncio
+
 # noinspection PyUnresolvedReferences
 import logging
 import typing
 
-import asyncio
-
 from hikari import errors
-from hikari.api import voice
 from hikari.api import bot
+from hikari.api import voice
 from hikari.api.gateway import dispatcher
 from hikari.events import voice as voice_events
 from hikari.models import channels
 from hikari.models import guilds
 from hikari.utilities import snowflake
 
-
 if typing.TYPE_CHECKING:
     _VoiceEventCallbackT = typing.Callable[[voice_events.VoiceEvent], typing.Coroutine[None, typing.Any, None]]
 
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.voice.management")
+
+
+_VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="voice.IVoiceConnection")
 
 
 class VoiceComponentImpl(voice.IVoiceComponent):
@@ -51,13 +53,14 @@ class VoiceComponentImpl(voice.IVoiceComponent):
     voice channels with.
     """
 
-    __slots__ = ("_app", "_connections", "_dispatcher", "_event_callbacks")
+    __slots__ = ("_app", "_connections", "_dispatcher")
 
     def __init__(self, app: bot.IBotApp, event_dispatcher: dispatcher.IEventDispatcherComponent) -> None:
         self._app = app
         self._dispatcher = event_dispatcher
         self._connections: typing.Dict[snowflake.Snowflake, voice.IVoiceConnection] = {}
-        self._event_callbacks: typing.Dict[snowflake.Snowflake, typing.Collection[_VoiceEventCallbackT]] = {}
+
+        self._dispatcher.subscribe(voice_events.VoiceEvent, self._on_voice_event)
 
     @property
     def app(self) -> bot.IBotApp:
@@ -72,6 +75,8 @@ class VoiceComponentImpl(voice.IVoiceComponent):
             _LOGGER.info("shutting down %s voice connection(s)", len(self._connections))
             await asyncio.gather(*(c.disconnect() for c in self._connections.values()))
 
+        self._dispatcher.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
+
     async def connect_to(
         self,
         channel: typing.Union[channels.GuildVoiceChannel, snowflake.UniqueObject],
@@ -79,15 +84,21 @@ class VoiceComponentImpl(voice.IVoiceComponent):
         *,
         deaf: bool = False,
         mute: bool = False,
-        voice_connection_type: typing.Type[voice.IVoiceConnection],
+        voice_connection_type: typing.Type[_VoiceConnectionT],
         **kwargs: typing.Any,
-    ) -> voice.IVoiceConnection:
+    ) -> _VoiceConnectionT:
         guild_id = snowflake.Snowflake(int(guild))
         shard_id = (guild_id >> 22) % self._app.shard_count
 
         if shard_id is None:
             raise errors.VoiceError(
                 "Cannot connect to voice. Ensure the application is configured as a gateway zookeeper and try again."
+            )
+
+        if guild_id in self._connections:
+            raise errors.VoiceError(
+                "The bot is already in a voice channel for this guild. Close the other connection first, or "
+                "request that the application moves to the new voice channel instead."
             )
 
         try:
@@ -130,14 +141,17 @@ class VoiceComponentImpl(voice.IVoiceComponent):
             timeout=10.0,
         )
 
-        _LOGGER.info(
-            "joined voice channel %s in guild %s via shard %s using endpoint %s",
+        _LOGGER.debug(
+            "joined voice channel %s in guild %s via shard %s using endpoint %s, starting voice websocket",
             state.state.channel_id,
             state.state.guild_id,
             shard_id,
             server.endpoint,
         )
-        raise NotImplementedError()
+
+        voice_connection = await voice_connection_type.initialize(**kwargs)
+        self._connections[guild_id] = voice_connection
+        return voice_connection
 
     @staticmethod
     def _init_state_update_predicate(
@@ -156,3 +170,9 @@ class VoiceComponentImpl(voice.IVoiceComponent):
             return event.guild_id == guild_id
 
         return predicate
+
+    async def _on_voice_event(self, event: voice_events.VoiceEvent) -> None:
+        if event.guild_id is not None and event.guild_id in self._connections:
+            connection = self._connections[event.guild_id]
+            _LOGGER.debug("notifying voice connection %s in guild %s of event %s", connection, event.guild_id, event)
+            await connection.notify(event)

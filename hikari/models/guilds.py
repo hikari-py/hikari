@@ -47,7 +47,7 @@ import typing
 
 import attr
 
-from hikari.api.gateway import zookeeper
+from hikari.api import bot
 from hikari.models import users
 from hikari.utilities import constants
 from hikari.utilities import files
@@ -577,10 +577,10 @@ class PartialGuild(snowflake.Unique):
         This may return `None` if the application does not have a gateway
         connection.
         """
-        if not isinstance(self.app, zookeeper.IGatewayZookeeperApp):
+        try:
+            return (self.id >> 22) % getattr(self.app, "shard_count")
+        except (TypeError, AttributeError, NameError):
             return None
-
-        return (self.id >> 22) % self.app.shard_count
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
