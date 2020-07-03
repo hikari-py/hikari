@@ -47,13 +47,11 @@ from hikari.models import presences as presence_models
 from hikari.models import users as user_models
 from hikari.models import voices as voice_models
 from hikari.models import webhooks as webhook_models
+from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
-
-if typing.TYPE_CHECKING:
-    from hikari.utilities import data_binding
 
 
 def _deserialize_seconds_timedelta(seconds: typing.Union[str, int]) -> datetime.timedelta:
