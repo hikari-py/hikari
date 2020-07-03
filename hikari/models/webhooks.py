@@ -26,8 +26,9 @@ import typing
 
 import attr
 
-from hikari.utilities import cdn
+from hikari.utilities import constants
 from hikari.utilities import files as files_
+from hikari.utilities import routes
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -368,19 +369,15 @@ class Webhook(snowflake.Unique):
         return url
 
     @property
-    def default_avatar_index(self) -> int:
-        """Integer representation of this webhook's default avatar."""
-        return 0
-
-    @property
     def default_avatar(self) -> files_.URL:
         """URL for this webhook's default avatar.
 
         This is used if no avatar is set.
         """
-        return cdn.generate_cdn_url("embed", "avatars", str(self.default_avatar_index), format_="png", size=None)
+        return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(constants.CDN_URL, discriminator=0, file_format="png",)
 
-    def format_avatar(self, format_: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
+    # noinspection PyShadowingBuiltins
+    def format_avatar(self, format: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
         """Generate the avatar URL for this webhook's custom avatar if set.
 
         If no avatar is specified, return `None`. In this case, you should
@@ -388,7 +385,7 @@ class Webhook(snowflake.Unique):
 
         Parameters
         ----------
-        format_ : builtins.str
+        format : builtins.str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg`, `webp`. This will be ignored for
             default avatars which can only be `png`.
@@ -411,4 +408,6 @@ class Webhook(snowflake.Unique):
         if self.avatar_hash is None:
             return None
 
-        return cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
+        return routes.CDN_USER_AVATAR.compile_to_file(
+            constants.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=format,
+        )

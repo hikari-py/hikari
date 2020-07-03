@@ -31,7 +31,7 @@ import typing
 import attr
 
 from hikari.api import special_endpoints
-from hikari.impl import routes
+from hikari.utilities import routes
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import iterators

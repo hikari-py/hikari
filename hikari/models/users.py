@@ -26,8 +26,9 @@ import typing
 
 import attr
 
-from hikari.utilities import cdn
+from hikari.utilities import constants
 from hikari.utilities import files
+from hikari.utilities import routes
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -141,6 +142,103 @@ class PartialUser(snowflake.Unique):
     def __str__(self) -> str:
         return f"{self.username}#{self.discriminator}"
 
+    async def fetch_self(self) -> User:
+        """Get this user's up-to-date object.
+
+        Returns
+        -------
+        hikari.models.users.User
+            The requested user object.
+
+        Raises
+        ------
+        hikari.errors.NotFound
+            If the user is not found.
+        """
+        return await self.app.rest.fetch_user(user=self.id)
+
+    @property
+    def avatar(self) -> typing.Optional[files.URL]:
+        """Avatar for the user if set, else `builtins.None`."""
+        return self.format_avatar()
+
+    # noinspection PyShadowingBuiltins
+    def format_avatar(self, *, format: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the avatar for this user, if set.
+
+        If no custom avatar is set, this returns `builtins.None`. You can then
+        use the `default_avatar_url` attribute instead to fetch the displayed
+        URL.
+
+        Parameters
+        ----------
+        format : builtins.str or builtins.None
+            The format to use for this URL, defaults to `png` or `gif`.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated). Will be ignored for default avatars which can only be
+            `png`.
+
+            If `builtins.None`, then the correct default format is determined
+            based on whether the icon is animated or not.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+            Will be ignored for default avatars.
+
+        Returns
+        -------
+        hikari.utilities.files.URL or builtins.None
+            The URL to the avatar, or `builtins.None` if not present.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        builtins.LookupError
+            If the avatar hash is not known. This will occur if `avatar_hash`
+            was not provided by Discord, and is
+            `hikari.utilities.undefined.UNDEFINED`.
+            This will only ever occur for `PartialUser` objects, regular
+            `User` objects should never be expected to raise this.
+        """
+        if self.avatar_hash is undefined.UNDEFINED:
+            raise LookupError("Unknown avatar hash for PartialUser")
+
+        if self.avatar_hash is None:
+            return None
+
+        if format is None:
+            if self.avatar_hash.startswith("a_"):
+                # Ignore the fact this shadows `format`, as it is the parameter
+                # name, which shadows it anyway.
+                format = "gif"  # noqa: A001 shadowing builtin
+            else:
+                format = "png"  # noqa: A001 shadowing builtin
+
+        return routes.CDN_USER_AVATAR.compile_to_file(
+            constants.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=format,
+        )
+
+    @property
+    def default_avatar(self) -> files.URL:  # noqa: D401 imperative mood check
+        """Placeholder default avatar for the user if no avatar is set.
+
+        Raises
+        ------
+         builtins.LookupError
+            If the descriminator is not known. This will occur if
+            `discriminator` was not provided by Discord, and is
+            `hikari.utilities.undefined.UNDEFINED`.
+            This will only ever occur for `PartialUser` objects, regular
+            `User` objects should never be expected to raise this.
+        """
+        if self.discriminator is undefined.UNDEFINED:
+            raise LookupError("Unknown discriminator for PartialUser")
+
+        return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
+            constants.CDN_URL, discriminator=self.discriminator % 5, file_format="png",
+        )
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class User(PartialUser):
@@ -167,79 +265,6 @@ class User(PartialUser):
 
     flags: UserFlag
     """The public flags for this user."""
-
-    async def fetch_self(self) -> User:
-        """Get this user's up-to-date object.
-
-        Returns
-        -------
-        hikari.models.users.User
-            The requested user object.
-
-        Raises
-        ------
-        hikari.errors.NotFound
-            If the user is not found.
-        """
-        return await self.app.rest.fetch_user(user=self.id)
-
-    @property
-    def avatar(self) -> typing.Optional[files.URL]:
-        """Avatar for the user if set, else `builtins.None`."""
-        return self.format_avatar()
-
-    def format_avatar(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the avatar for this user, if set.
-
-        If no custom avatar is set, this returns `builtins.None`. You can then
-        use the `default_avatar_url` attribute instead to fetch the displayed
-        URL.
-
-        Parameters
-        ----------
-        format_ : builtins.str or builtins.None
-            The format to use for this URL, defaults to `png` or `gif`.
-            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
-            animated). Will be ignored for default avatars which can only be
-            `png`.
-
-            If `builtins.None`, then the correct default format is determined
-            based on whether the icon is animated or not.
-        size : builtins.int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
-            Will be ignored for default avatars.
-
-        Returns
-        -------
-        hikari.utilities.files.URL or builtins.None
-            The URL to the avatar, or `builtins.None` if not present.
-
-        Raises
-        ------
-        builtins.ValueError
-            If `size` is not a power of two or not between 16 and 4096.
-        """
-        if self.avatar_hash is None:
-            return None
-
-        if format_ is None:
-            if self.avatar_hash.startswith("a_"):
-                format_ = "gif"
-            else:
-                format_ = "png"
-
-        return cdn.generate_cdn_url("avatars", str(self.id), self.avatar_hash, format_=format_, size=size)
-
-    @property
-    def default_avatar(self) -> files.URL:  # noqa: D401 imperative mood check
-        """Placeholder default avatar for the user."""
-        return cdn.get_default_avatar_url(self.discriminator)
-
-    @property
-    def default_avatar_index(self) -> int:
-        """Integer representation of this user's default avatar."""
-        return cdn.get_default_avatar_index(self.discriminator)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

@@ -48,8 +48,9 @@ import typing
 import attr
 
 from hikari.models import users
-from hikari.utilities import cdn
+from hikari.utilities import constants
 from hikari.utilities import files
+from hikari.utilities import routes
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
@@ -534,7 +535,9 @@ class PartialGuild(snowflake.Unique):
             else:
                 format_ = "png"
 
-        return cdn.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
+        return routes.CDN_GUILD_ICON.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.icon_hash, size=size, file_format=format_,
+        )
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -589,7 +592,9 @@ class GuildPreview(PartialGuild):
         if self.splash_hash is None:
             return None
 
-        return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+        return routes.CDN_GUILD_SPLASH.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=format_,
+        )
 
     @property
     def discovery_splash(self) -> typing.Optional[files.URL]:
@@ -621,8 +626,8 @@ class GuildPreview(PartialGuild):
         if self.discovery_splash_hash is None:
             return None
 
-        return cdn.generate_cdn_url(
-            "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
+        return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=format_,
         )
 
 
@@ -952,7 +957,9 @@ class Guild(PartialGuild):
         if self.splash_hash is None:
             return None
 
-        return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+        return routes.CDN_GUILD_SPLASH.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=format_,
+        )
 
     @property
     def discovery_splash(self) -> typing.Optional[files.URL]:
@@ -984,8 +991,8 @@ class Guild(PartialGuild):
         if self.discovery_splash_hash is None:
             return None
 
-        return cdn.generate_cdn_url(
-            "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
+        return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=format_,
         )
 
     @property
@@ -1018,4 +1025,6 @@ class Guild(PartialGuild):
         if self.banner_hash is None:
             return None
 
-        return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
+        return routes.CDN_GUILD_BANNER.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=format_,
+        )
