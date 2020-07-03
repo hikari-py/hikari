@@ -1841,27 +1841,27 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
     def serialize_gateway_presence(
         self,
-        idle_since: typing.Union[undefined.UndefinedType, typing.Optional[datetime.datetime]] = undefined.UNDEFINED,
-        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        status: typing.Union[undefined.UndefinedType, presence_models.Status] = undefined.UNDEFINED,
-        activity: typing.Union[
-            undefined.UndefinedType, typing.Optional[presence_models.Activity]
-        ] = undefined.UNDEFINED,
+        idle_since: typing.Optional[datetime.datetime],
+        afk: bool,
+        status: presence_models.Status,
+        activity: typing.Optional[presence_models.Activity],
     ) -> data_binding.JSONObject:
-        if activity is not None and activity is not undefined.UNDEFINED:
-            game: typing.Union[undefined.UndefinedType, None, data_binding.JSONObject] = {
-                "name": activity.name,
-                "url": activity.url,
-                "type": activity.type,
-            }
-        else:
-            game = activity
-
         payload = data_binding.JSONObjectBuilder()
-        payload.put("since", idle_since, conversion=datetime.datetime.timestamp)
+
+        if activity is not None:
+            payload.put("game", {"name": activity.name, "url": activity.url, "type": activity.type})
+        else:
+            payload.put("game", None)
+
+        payload.put("since", int(idle_since.timestamp() * 1_000) if idle_since is not None else None)
         payload.put("afk", afk)
-        payload.put("status", status)
-        payload.put("game", game)
+
+        # Turns out Discord don't document this properly. I can send "offline"
+        # to the gateway, but it will actually just result in the bot not
+        # changing the status. I have to set it to "invisible" instead to get
+        # this to work...
+        payload.put("status", "invisible" if status is presence_models.Status.OFFLINE else status)
+
         return payload
 
     def serialize_gateway_voice_state_update(

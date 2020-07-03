@@ -786,6 +786,27 @@ class TestUpdatePresence:
             status=status if status is not undefined.UNDEFINED else client_status,
         )
 
+    async def test_update_presence_has_defaults_for_undefined_on_object(self, client):
+        result = object()
+
+        client._activity = undefined.UNDEFINED
+        client._idle_since = undefined.UNDEFINED
+        client._is_afk = undefined.UNDEFINED
+        client._status = undefined.UNDEFINED
+
+        client._app.entity_factory.serialize_gateway_presence = mock.MagicMock(return_value=result)
+
+        await client.update_presence(
+            idle_since=undefined.UNDEFINED,
+            afk=undefined.UNDEFINED,
+            status=undefined.UNDEFINED,
+            activity=undefined.UNDEFINED,
+        )
+
+        client._app.entity_factory.serialize_gateway_presence.assert_called_once_with(
+            idle_since=None, afk=False, activity=None, status=presences.Status.ONLINE,
+        )
+
 
 @pytest.mark.asyncio
 class TestUpdateVoiceState:
