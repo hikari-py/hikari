@@ -32,7 +32,7 @@ import aiohttp
 from hikari import config
 from hikari.api import rest_app
 from hikari.api import rest_client
-from hikari.impl import constants
+from hikari.utilities import constants
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import rest_client as rest_client_impl
