@@ -41,7 +41,6 @@ import typing
 
 import attr
 
-from hikari.api.gateway import zookeeper
 from hikari.models import permissions
 from hikari.models import users
 from hikari.utilities import constants
@@ -437,10 +436,10 @@ class GuildChannel(PartialChannel):
         This may be `builtins.None` if this channel was not received over the
         gateway in an event, or if the guild is not known.
         """
-        if not isinstance(self.app, zookeeper.IGatewayZookeeperApp) or self.guild_id is None:
+        try:
+            return (self.guild_id >> 22) % getattr(self.app, "shard_count")
+        except (TypeError, AttributeError, NameError):
             return None
-
-        return (self.guild_id >> 22) % self.app.shard_count
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

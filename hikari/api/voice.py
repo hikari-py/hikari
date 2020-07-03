@@ -44,6 +44,9 @@ class IVoiceApp(app.IApp, abc.ABC):
         """Return the voice component."""
 
 
+_VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="IVoiceConnection")
+
+
 class IVoiceComponent(component.IComponent, abc.ABC):
     """Interface for a voice system implementation."""
 
@@ -66,9 +69,9 @@ class IVoiceComponent(component.IComponent, abc.ABC):
         *,
         deaf: bool = False,
         mute: bool = False,
-        voice_connection_type: typing.Type[IVoiceConnection],
+        voice_connection_type: typing.Type[_VoiceConnectionT],
         **kwargs: typing.Any,
-    ) -> IVoiceConnection:
+    ) -> _VoiceConnectionT:
         """Connect to a given voice channel.
 
         Parameters
@@ -99,21 +102,6 @@ class IVoiceComponent(component.IComponent, abc.ABC):
         """
 
 
-class IVoiceInstruction(abc.ABC):
-    """A valid instruction that can be given to a voice connection."""
-
-    __slots__ = ()
-
-    @property
-    @abc.abstractmethod
-    def interrupt(self) -> bool:
-        """Return whether instruction is considered to be an interrupt.
-
-        If `builtins.True`, then this will be considered to be an "urgent"
-        instruction that should halt the current task to be
-        """
-
-
 class IVoiceConnection(abc.ABC):
     """An abstract interface for defining how bots can interact with voice.
 
@@ -127,10 +115,6 @@ class IVoiceConnection(abc.ABC):
     idea is to allow various decoders to be implemented to allow this to direct
     interface with other types of system outside this library, such as LavaLink,
     for example.
-
-    Implementations may wish to provide a second mechanism to allow the voice
-    implementation to communicate with the bot itself, if desired, but this
-    detail lies outside the implementation specification for this interface.
     """
 
     __slots__ = ()
@@ -174,9 +158,5 @@ class IVoiceConnection(abc.ABC):
         """Wait for the process to halt before continuing."""
 
     @abc.abstractmethod
-    async def submit_event(self, event: voice.VoiceEvent) -> None:
+    async def notify(self, event: voice.VoiceEvent) -> None:
         """Submit an event to the voice connection to be processed."""
-
-    @abc.abstractmethod
-    async def submit_instruction(self, instruction: IVoiceInstruction) -> None:
-        """Submit an instruction to the voice connection to be processed."""
