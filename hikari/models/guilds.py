@@ -299,6 +299,11 @@ class Member(users.User):
     """
 
     @property
+    def app(self) -> rest_app.IRESTApp:
+        """Return the app that is bound to the user object."""
+        return self.user.app
+
+    @property
     def id(self) -> snowflake.Snowflake:
         return self.user.id
 

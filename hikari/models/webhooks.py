@@ -104,6 +104,9 @@ class Webhook(snowflake.Unique):
         channel settings.
     """
 
+    def __str__(self) -> str:
+        return self.name if self.name is not None else f"Unnamed webhook ID {self.id}"
+
     @property
     def mention(self) -> str:
         """Return a raw mention string for the given webhook's user.
