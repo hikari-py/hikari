@@ -19,7 +19,7 @@ per-file-ignores =
     hikari/__init__.py:          F401,F403
     hikari/events/__init__.py:   F401,F403
     hikari/models/__init__.py:   F401,F403
-    hikari/impl/routes.py:       FS003
+    hikari/utilities/routes.py:  FS003
     hikari/utilities/date.py:    FS003
 
 max-complexity = 20

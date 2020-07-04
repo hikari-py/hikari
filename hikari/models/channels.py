@@ -43,8 +43,9 @@ import attr
 
 from hikari.models import permissions
 from hikari.models import users
-from hikari.utilities import cdn
+from hikari.utilities import constants
 from hikari.utilities import files
+from hikari.utilities import routes
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -383,7 +384,9 @@ class GroupDMChannel(DMChannel):
         if self.icon_hash is None:
             return None
 
-        return cdn.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format, size=size)
+        return routes.CDN_CHANNEL_ICON.compile_to_file(
+            constants.CDN_URL, channel_id=self.id, hash=self.icon_hash, size=size, file_format=format,
+        )
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
