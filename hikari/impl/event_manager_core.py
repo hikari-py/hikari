@@ -45,17 +45,14 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 if typing.TYPE_CHECKING:
-    EventT = typing.TypeVar("EventT", bound=base.Event, contravariant=True)
-    PredicateT = typing.Callable[[EventT], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
-    SyncCallbackT = typing.Callable[[EventT], None]
-    AsyncCallbackT = typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]
-    CallbackT = typing.Union[SyncCallbackT, AsyncCallbackT]
-    ListenerMapT = typing.MutableMapping[typing.Type[EventT], typing.MutableSequence[AsyncCallbackT]]
-    WaiterT = typing.Tuple[PredicateT, asyncio.Future[EventT]]
-    WaiterMapT = typing.MutableMapping[typing.Type[EventT], typing.MutableSet[WaiterT]]
+    ListenerMapT = typing.MutableMapping[
+        typing.Type[event_dispatcher.EventT], typing.MutableSequence[event_dispatcher.AsyncCallbackT]
+    ]
+    WaiterT = typing.Tuple[event_dispatcher.PredicateT, asyncio.Future[event_dispatcher.EventT]]
+    WaiterMapT = typing.MutableMapping[typing.Type[event_dispatcher.EventT], typing.MutableSet[WaiterT]]
 
 
-def _default_predicate(_: EventT) -> typing.Literal[True]:
+def _default_predicate(_: event_dispatcher.EventT) -> typing.Literal[True]:
     return True
 
 
@@ -88,11 +85,11 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
 
     def subscribe(
         self,
-        event_type: typing.Type[EventT],
-        callback: typing.Callable[[EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
+        event_type: typing.Type[event_dispatcher.EventT],
+        callback: event_dispatcher.CallbackT,
         *,
         _nested: int = 0,
-    ) -> typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]:
+    ) -> event_dispatcher.CallbackT:
         # `_nested` is used to show the correct source code snippet if an intent
         # warning is triggered.
 
@@ -120,7 +117,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
         if not asyncio.iscoroutinefunction(callback):
 
             @functools.wraps(callback)
-            async def wrapper(event: EventT) -> None:
+            async def wrapper(event: event_dispatcher.EventT) -> None:
                 callback(event)
 
             self.subscribe(event_type, wrapper)
@@ -135,16 +132,16 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
                 event_type.__qualname__,
             )
 
-            callback = typing.cast("typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]", callback)
+            callback = typing.cast("event_dispatcher.AsyncCallbackT", callback)
             self._listeners[event_type].append(callback)
 
             return callback
 
     def get_listeners(
-        self, event_type: typing.Type[EventT], *, polymorphic: bool = True,
-    ) -> typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]:
+        self, event_type: typing.Type[event_dispatcher.EventT], *, polymorphic: bool = True,
+    ) -> typing.Collection[event_dispatcher.AsyncCallbackT]:
         if polymorphic:
-            listeners: typing.List[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]] = []
+            listeners: typing.List[event_dispatcher.AsyncCallbackT] = []
             for subscribed_event_type, subscribed_listeners in self._listeners.items():
                 if issubclass(subscribed_event_type, event_type):
                     listeners += subscribed_listeners
@@ -158,8 +155,8 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
 
     def has_listener(
         self,
-        event_type: typing.Type[EventT],
-        callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
+        event_type: typing.Type[event_dispatcher.EventT],
+        callback: event_dispatcher.CallbackT,
         *,
         polymorphic: bool = True,
     ) -> bool:
@@ -174,9 +171,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
             return callback in self._listeners[event_type]
 
     def unsubscribe(
-        self,
-        event_type: typing.Type[EventT],
-        callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
+        self, event_type: typing.Type[event_dispatcher.EventT], callback: event_dispatcher.AsyncCallbackT
     ) -> None:
         if event_type in self._listeners:
             _LOGGER.debug(
@@ -191,9 +186,10 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
                 del self._listeners[event_type]
 
     def listen(
-        self, event_type: typing.Union[undefined.UndefinedType, typing.Type[EventT]] = undefined.UNDEFINED,
-    ) -> typing.Callable[[CallbackT], CallbackT]:
-        def decorator(callback: CallbackT) -> CallbackT:
+        self,
+        event_type: typing.Union[undefined.UndefinedType, typing.Type[event_dispatcher.EventT]] = undefined.UNDEFINED,
+    ) -> typing.Callable[[event_dispatcher.CallbackT], event_dispatcher.CallbackT]:
+        def decorator(callback: event_dispatcher.CallbackT) -> event_dispatcher.CallbackT:
             nonlocal event_type
 
             signature = reflect.resolve_signature(callback)
@@ -220,16 +216,16 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
 
     async def wait_for(
         self,
-        event_type: typing.Type[EventT],
+        event_type: typing.Type[event_dispatcher.EventT],
         /,
         timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[PredicateT] = None,
-    ) -> EventT:
+        predicate: typing.Optional[event_dispatcher.PredicateT] = None,
+    ) -> event_dispatcher.EventT:
 
         if predicate is None:
             predicate = _default_predicate
 
-        future: asyncio.Future[EventT] = asyncio.get_event_loop().create_future()
+        future: asyncio.Future[event_dispatcher.EventT] = asyncio.get_event_loop().create_future()
 
         if event_type not in self._waiters:
             self._waiters[event_type] = set()
@@ -239,7 +235,11 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
         return await asyncio.wait_for(future, timeout=timeout) if timeout is not None else await future
 
     async def _test_waiter(
-        self, cls: typing.Type[EventT], event: EventT, predicate: PredicateT, future: asyncio.Future[EventT]
+        self,
+        cls: typing.Type[event_dispatcher.EventT],
+        event: event_dispatcher.EventT,
+        predicate: event_dispatcher.PredicateT,
+        future: asyncio.Future[event_dispatcher.EventT],
     ) -> None:
         try:
             result = predicate(event)
@@ -282,7 +282,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
 
-    async def _invoke_callback(self, callback: AsyncCallbackT, event: EventT) -> None:
+    async def _invoke_callback(self, callback: event_dispatcher.AsyncCallbackT, event: event_dispatcher.EventT) -> None:
         try:
             result = callback(event)
             if asyncio.iscoroutine(result):

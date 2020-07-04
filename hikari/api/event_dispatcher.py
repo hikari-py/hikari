@@ -33,6 +33,12 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     from hikari.events import base
 
+    EventT = typing.TypeVar("EventT", bound=base.Event, contravariant=True)
+    PredicateT = typing.Callable[[EventT], typing.Union[bool, typing.Coroutine[typing.Any, typing.Any, bool]]]
+    SyncCallbackT = typing.Callable[[EventT], None]
+    AsyncCallbackT = typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.Any, None]]
+    CallbackT = typing.Union[SyncCallbackT, AsyncCallbackT]
+
 
 class IEventDispatcherBase(abc.ABC):
     """Base interface for event dispatcher implementations.
@@ -43,13 +49,6 @@ class IEventDispatcherBase(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = ()
-
-    if typing.TYPE_CHECKING:
-        EventT = typing.TypeVar("EventT", bound=base.Event)
-        PredicateT = typing.Callable[[base.Event], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
-        SyncCallbackT = typing.Callable[[base.Event], None]
-        AsyncCallbackT = typing.Callable[[base.Event], typing.Coroutine[None, typing.Any, None]]
-        CallbackT = typing.Union[SyncCallbackT, AsyncCallbackT]
 
     @abc.abstractmethod
     def dispatch(self, event: base.Event) -> asyncio.Future[typing.Any]:
@@ -129,18 +128,15 @@ class IEventDispatcherBase(abc.ABC):
         """
 
     @abc.abstractmethod
-    def subscribe(
-        self,
-        event_type: typing.Type[EventT],
-        callback: typing.Callable[[EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
-    ) -> typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]:
+    def subscribe(self, event_type: typing.Type[EventT], callback: CallbackT,) -> CallbackT:
         """Subscribe a given callback to a given event type.
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.base.Event]
+        event_type : typing.Type[EventT]
             The event type to listen for. This will also listen for any
             subclasses of the given type.
+            `EventT` must derive from `hikari.events.base.Event`.
         callback
             Either a function or a coroutine function to invoke. This should
             consume an instance of the given event, or an instance of a valid
@@ -162,7 +158,7 @@ class IEventDispatcherBase(abc.ABC):
 
         Returns
         -------
-        typing.Callable[[T], typing.Coroutine[None, typing.Any, None]
+        typing.Callable[[T], typing.Coroutine[typing.Any, typing.Any, builtins.None]
             The event callback. If you did not pass a callback that was a
             coroutine function, then this will be a coroutine function
             wrapping your callback instead. This enables you to correctly
@@ -177,13 +173,14 @@ class IEventDispatcherBase(abc.ABC):
     @abc.abstractmethod
     def get_listeners(
         self, event_type: typing.Type[EventT], *, polymorphic: bool = True,
-    ) -> typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]:
+    ) -> typing.Collection[AsyncCallbackT]:
         """Get the listeners for a given event type, if there are any.
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.base.Event]
+        event_type : typing.Type[EventT]
             The event type to look for.
+            `EventT` must derive from `hikari.events.base.Event`.
         polymorphic : builtins.bool
             If `builtins.True`, this will return `builtins.True` if a subclass
             of the given event type has a listener registered. If
@@ -192,7 +189,7 @@ class IEventDispatcherBase(abc.ABC):
 
         Returns
         -------
-        typing.Collection[typing.Callable[[EventT], typing.Coroutine[builtins.None, typing.Any, builtins.None]]
+        typing.Collection[typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.Any, builtins.None]]
             A copy of the collection of listeners for the event. Will return
             an empty collection if nothing is registered.
 
@@ -203,18 +200,15 @@ class IEventDispatcherBase(abc.ABC):
 
     @abc.abstractmethod
     def has_listener(
-        self,
-        event_type: typing.Type[EventT],
-        callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
-        *,
-        polymorphic: bool = True,
+        self, event_type: typing.Type[EventT], callback: AsyncCallbackT, *, polymorphic: bool = True
     ) -> bool:
         """Check whether the callback is subscribed to the given event.
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.base.Event]
+        event_type : typing.Type[EventT]
             The event type to look for.
+            `EventT` must derive from `hikari.events.base.Event`.
         callback
             The callback to look for.
         polymorphic : builtins.bool
@@ -229,18 +223,15 @@ class IEventDispatcherBase(abc.ABC):
         """
 
     @abc.abstractmethod
-    def unsubscribe(
-        self,
-        event_type: typing.Type[EventT],
-        callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
-    ) -> None:
+    def unsubscribe(self, event_type: typing.Type[EventT], callback: AsyncCallbackT,) -> None:
         """Unsubscribe a given callback from a given event type, if present.
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.base.Event]
+        event_type : typing.Type[EventT]
             The event type to unsubscribe from. This must be the same exact
             type as was originally subscribed with to be removed correctly.
+            `EventT` must derive from `hikari.events.base.Event`.
         callback
             The callback to unsubscribe.
 
