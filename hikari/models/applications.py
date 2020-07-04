@@ -36,8 +36,9 @@ import typing
 import attr
 
 from hikari.models import guilds
-from hikari.utilities import cdn
+from hikari.utilities import constants
 from hikari.utilities import files
+from hikari.utilities import routes
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
@@ -277,7 +278,7 @@ class TeamMember:
     team_id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of the team this member belongs to."""
 
-    user: users.User = attr.ib(eq=True, hash=True, repr=True)
+    user: users.UserImpl = attr.ib(eq=True, hash=True, repr=True)
     """The user representation of this team member."""
 
     def __str__(self) -> str:
@@ -326,12 +327,13 @@ class Team(snowflake.Unique):
         """
         return self.format_icon()
 
-    def format_icon(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    # noinspection PyShadowingBuiltins
+    def format_icon(self, *, format: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon for this team if set.
 
         Parameters
         ----------
-        format_ : builtins.str
+        format : builtins.str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
@@ -352,7 +354,9 @@ class Team(snowflake.Unique):
         if self.icon_hash is None:
             return None
 
-        return cdn.generate_cdn_url("team-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+        return routes.CDN_TEAM_ICON.compile_to_file(
+            constants.CDN_URL, team_id=self.id, hash=self.icon_hash, size=size, file_format=format,
+        )
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -386,7 +390,7 @@ class Application(snowflake.Unique):
     Will be `builtins.None` if this application doesn't have a bot.
     """
 
-    owner: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=True)
+    owner: typing.Optional[users.UserImpl] = attr.ib(eq=False, hash=False, repr=True)
     """The application's owner.
 
     This should always be `builtins.None` in application objects retrieved outside
@@ -443,12 +447,13 @@ class Application(snowflake.Unique):
         """
         return self.format_icon()
 
-    def format_icon(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    # noinspection PyShadowingBuiltins
+    def format_icon(self, *, format: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon for this application.
 
         Parameters
         ----------
-        format_ : builtins.str
+        format : builtins.str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
@@ -469,7 +474,9 @@ class Application(snowflake.Unique):
         if self.icon_hash is None:
             return None
 
-        return cdn.generate_cdn_url("application-icons", str(self.id), self.icon_hash, format_=format_, size=size)
+        return routes.CDN_APPLICATION_ICON.compile_to_file(
+            constants.CDN_URL, application_id=self.id, hash=self.icon_hash, size=size, file_format=format,
+        )
 
     @property
     def cover_image(self) -> typing.Optional[files.URL]:
@@ -482,12 +489,13 @@ class Application(snowflake.Unique):
         """
         return self.format_cover_image()
 
-    def format_cover_image(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    # noinspection PyShadowingBuiltins
+    def format_cover_image(self, *, format: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the cover image used in the store, if set.
 
         Parameters
         ----------
-        format_ : builtins.str
+        format : builtins.str
             The format to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
@@ -508,6 +516,6 @@ class Application(snowflake.Unique):
         if self.cover_image_hash is None:
             return None
 
-        return cdn.generate_cdn_url(
-            "application-assets", str(self.id), self.cover_image_hash, format_=format_, size=size
+        return routes.CDN_APPLICATION_ASSET.compile_to_file(
+            constants.CDN_URL, team_id=self.id, hash=self.cover_image_hash, size=size, file_format=format,
         )

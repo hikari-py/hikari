@@ -678,10 +678,34 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         if embed.fields:
             field_payloads: data_binding.JSONArray = []
-            for field in embed.fields:
+            for i, field in enumerate(embed.fields):
+
+                # Yep, this is technically two unreachable branches. However, this is an incredibly
+                # common mistake to make when working with embeds and not using a static type
+                # checker, so I have added these as additional safeguards for UX and ease
+                # of debugging. The case that there are `None` should be detected immediately by
+                # static type checkers, regardless.
+
+                name = str(field.name) if field.name is not None else None  # type: ignore[unreachable]
+                value = str(field.value) if field.value is not None else None  # type: ignore[unreachable]
+
+                if name is None:
+                    raise TypeError(f"in embed.fields[{i}].name - cannot have `None`")
+                if not name:
+                    raise TypeError(f"in embed.fields[{i}].name - cannot have empty string")
+                if not name.strip():
+                    raise TypeError(f"in embed.fields[{i}].name - cannot have only whitespace")
+
+                if value is None:
+                    raise TypeError(f"in embed.fields[{i}].value - cannot have `None`")
+                if not value:
+                    raise TypeError(f"in embed.fields[{i}].value - cannot have empty string")
+                if not value.strip():
+                    raise TypeError(f"in embed.fields[{i}].value - cannot have only whitespace")
+
                 # Name and value always have to be specified; we can always
                 # send a default `inline` value also just to keep this simpler.
-                field_payloads.append({"name": field.name, "value": field.value, "inline": field.is_inline})
+                field_payloads.append({"name": name, "value": value, "inline": field.is_inline})
             payload["fields"] = field_payloads
 
         return payload, uploads
@@ -766,11 +790,10 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         self,
         payload: data_binding.JSONObject,
         *,
-        user: typing.Union[undefined.UndefinedType, user_models.User] = undefined.UNDEFINED,
+        user: typing.Union[undefined.UndefinedType, user_models.UserImpl] = undefined.UNDEFINED,
     ) -> guild_models.Member:
         guild_member = guild_models.Member()
-        guild_member.app = self._app
-        guild_member.user = user or self.deserialize_user(payload["user"])
+        guild_member.user = typing.cast(user_models.UserImpl, user or self.deserialize_user(payload["user"]))
         guild_member.role_ids = {snowflake.Snowflake(role_id) for role_id in payload["roles"]}
 
         joined_at = payload.get("joined_at")
@@ -953,9 +976,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         if "members" in payload:
             for member_payload in payload["members"]:
                 member = self.deserialize_member(member_payload)
-                # Could be None, so cast to avoid.
-                user_id = typing.cast("user_models.User", member.user).id
-                guild.members[user_id] = member
+                guild.members[member.user.id] = member
 
         guild.channels = {}
         if "channels" in payload:
@@ -1309,7 +1330,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ###############
 
     @staticmethod
-    def _set_user_attributes(payload: data_binding.JSONObject, user: user_models.User) -> None:
+    def _set_user_attributes(payload: data_binding.JSONObject, user: user_models.UserImpl) -> None:
         user.id = snowflake.Snowflake(payload["id"])
         user.discriminator = payload["discriminator"]
         user.username = payload["username"]
@@ -1317,8 +1338,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         user.is_bot = payload.get("bot", False)
         user.is_system = payload.get("system", False)
 
-    def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.User:
-        user = user_models.User()
+    def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.UserImpl:
+        user = user_models.UserImpl()
         user.app = self._app
         self._set_user_attributes(payload, user)
         # noinspection PyArgumentList
@@ -1841,27 +1862,27 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
     def serialize_gateway_presence(
         self,
-        idle_since: typing.Union[undefined.UndefinedType, typing.Optional[datetime.datetime]] = undefined.UNDEFINED,
-        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        status: typing.Union[undefined.UndefinedType, presence_models.Status] = undefined.UNDEFINED,
-        activity: typing.Union[
-            undefined.UndefinedType, typing.Optional[presence_models.Activity]
-        ] = undefined.UNDEFINED,
+        idle_since: typing.Optional[datetime.datetime],
+        afk: bool,
+        status: presence_models.Status,
+        activity: typing.Optional[presence_models.Activity],
     ) -> data_binding.JSONObject:
-        if activity is not None and activity is not undefined.UNDEFINED:
-            game: typing.Union[undefined.UndefinedType, None, data_binding.JSONObject] = {
-                "name": activity.name,
-                "url": activity.url,
-                "type": activity.type,
-            }
-        else:
-            game = activity
-
         payload = data_binding.JSONObjectBuilder()
-        payload.put("since", idle_since, conversion=datetime.datetime.timestamp)
+
+        if activity is not None:
+            payload.put("game", {"name": activity.name, "url": activity.url, "type": activity.type})
+        else:
+            payload.put("game", None)
+
+        payload.put("since", int(idle_since.timestamp() * 1_000) if idle_since is not None else None)
         payload.put("afk", afk)
-        payload.put("status", status)
-        payload.put("game", game)
+
+        # Turns out Discord don't document this properly. I can send "offline"
+        # to the gateway, but it will actually just result in the bot not
+        # changing the status. I have to set it to "invisible" instead to get
+        # this to work...
+        payload.put("status", "invisible" if status is presence_models.Status.OFFLINE else status)
+
         return payload
 
     def serialize_gateway_voice_state_update(

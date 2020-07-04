@@ -57,7 +57,7 @@ def test_GuildVerificationLevel_str_operator():
 
 def test_Member_str_operator():
     member = guilds.Member()
-    user = users.User()
+    user = users.UserImpl()
     user.username = "thomm.o"
     user.discriminator = "8637"
     member.user = user

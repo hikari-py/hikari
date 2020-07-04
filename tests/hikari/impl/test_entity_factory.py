@@ -1294,7 +1294,7 @@ class TestEntityFactoryImpl:
         assert member.is_mute is undefined.UNDEFINED
 
     def test_deserialize_member_with_passed_through_user_object(self, entity_factory_impl):
-        mock_user = mock.MagicMock(user_models.User)
+        mock_user = mock.MagicMock(user_models.UserImpl)
         member = entity_factory_impl.deserialize_member(
             {
                 "nick": "foobarbaz",
@@ -2392,7 +2392,7 @@ class TestEntityFactoryImpl:
         assert user.is_bot is True
         assert user.is_system is True
         assert user.flags == user_models.UserFlag.VERIFIED_BOT_DEVELOPER
-        assert isinstance(user, user_models.User)
+        assert isinstance(user, user_models.UserImpl)
 
     def test_deserialize_user_with_unset_fields(self, entity_factory_impl, mock_app, user_payload):
         user = entity_factory_impl.deserialize_user(

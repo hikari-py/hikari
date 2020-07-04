@@ -74,7 +74,7 @@ class GuildBuilder:
     and detailed.
 
     !!! note
-        This is a helper class that is used by `hikari.impl.http.HTTP`.
+        This is a helper class that is used by `hikari.rest_client.IRESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API, thus, any details about the constructor are
         omitted from the following examples for brevity.

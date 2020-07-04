@@ -264,7 +264,7 @@ class Message(snowflake.Unique):
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the guild that the message was sent in."""
 
-    author: users.User = attr.ib(eq=False, hash=False, repr=True)
+    author: users.UserImpl = attr.ib(eq=False, hash=False, repr=True)
     """The author of this message."""
 
     member: typing.Optional[guilds.Member] = attr.ib(eq=False, hash=False, repr=True)
@@ -360,7 +360,9 @@ class Message(snowflake.Unique):
         embed: typing.Union[undefined.UndefinedType, embeds_.Embed, None] = undefined.UNDEFINED,
         mentions_everyone: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool, undefined.UndefinedType
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]],
+            bool,
+            undefined.UndefinedType,
         ] = undefined.UNDEFINED,
         role_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.UndefinedType
@@ -382,7 +384,7 @@ class Message(snowflake.Unique):
         mentions_everyone : builtins.bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `builtins.False`.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             Either an array of user objects/IDs to allow mentions for,
             `builtins.True` to allow all user mentions or `builtins.False`
             to block all user mentions from resolving. Defaults to
@@ -438,7 +440,7 @@ class Message(snowflake.Unique):
         ] = undefined.UNDEFINED,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]], bool
         ] = True,
         role_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
@@ -471,7 +473,7 @@ class Message(snowflake.Unique):
         mentions_everyone : builtins.bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `builtins.False`.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             Either an array of user objects/IDs to allow mentions for,
             `builtins.True` to allow all user mentions or `builtins.False` to block all
             user mentions from resolving, defaults to `builtins.True`.
@@ -577,7 +579,7 @@ class Message(snowflake.Unique):
         self,
         emoji: typing.Union[str, emojis_.Emoji],
         *,
-        user: typing.Union[users.User, undefined.UndefinedType] = undefined.UNDEFINED,
+        user: typing.Union[users.UserImpl, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> None:
         r"""Remove a reaction from this message.
 
@@ -585,7 +587,7 @@ class Message(snowflake.Unique):
         ----------
         emoji : builtins.str or hikari.models.emojis.Emoji
             The emoji to remove.
-        user : hikari.models.users.User or hikari.utilities.undefined.UndefinedType
+        user : hikari.models.users.UserImpl or hikari.utilities.undefined.UndefinedType
             The user of the reaction to remove. If unspecified, then the bot's
             reaction is removed instead.
 

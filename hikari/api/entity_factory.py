@@ -442,7 +442,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
-        user: typing.Union[undefined.UndefinedType, user_models.User] = undefined.UNDEFINED,
+        user: typing.Union[undefined.UndefinedType, user_models.UserImpl] = undefined.UNDEFINED,
     ) -> guild_models.Member:
         """Parse a raw payload from Discord into a member object.
 
@@ -450,7 +450,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
-        user : hikari.models.users.User or hikari.utilities.undefined.UndefinedType
+        user : hikari.models.users.UserImpl or hikari.utilities.undefined.UndefinedType
             The user to attach to this member, should only be passed in
             situations where "user" is not included in the payload.
 
@@ -658,7 +658,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
     ###############
 
     @abc.abstractmethod
-    def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.User:
+    def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.UserImpl:
         """Parse a raw payload from Discord into a user object.
 
         Parameters
@@ -668,7 +668,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.users.User
+        hikari.models.users.UserImpl
             The deserialized user object.
         """
 
@@ -1328,26 +1328,26 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def serialize_gateway_presence(
         self,
-        idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = undefined.UNDEFINED,
-        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        status: typing.Union[undefined.UndefinedType, presence_models.Status] = undefined.UNDEFINED,
-        activity: typing.Union[undefined.UndefinedType, None, presence_models.Activity] = undefined.UNDEFINED,
+        idle_since: typing.Optional[datetime.datetime],
+        afk: bool,
+        status: presence_models.Status,
+        activity: typing.Optional[presence_models.Activity],
     ) -> data_binding.JSONObject:
         """Serialize a set of presence parameters into a raw gateway payload.
 
-        Any parameters that are left to be unspecified are omitted from the
-        generated payload.
-
         Parameters
         ----------
-        idle_since : hikari.utilities.undefined.UndefinedType or builtins.None or datetime.datetime
+        idle_since : builtins.None or datetime.datetime
             The time that the user should appear to be idle since. If
             `builtins.None`, then the user is marked as not being idle.
-        afk : hikari.utilities.undefined.UndefinedType or builtins.bool
-            If `builtins.True`, the user becomes AFK. This will move them
-
-        status : hikari.utilities.undefined.UndefinedType or hikari.models.presences.Status
-        activity : hikari.utilities.undefined.UndefinedType or None or hikari.models.presences.Activity
+        afk : builtins.bool
+            If `builtins.True`, the user becomes AFK. This will move them to
+            the guild's AFK channel if there is one set.
+        status : hikari.models.presences.Status
+            The status to display.
+        activity : builtins.None or hikari.models.presences.Activity
+            The activity to display, or `builtins.None` if no activity should
+            be shown.
 
         Returns
         -------
