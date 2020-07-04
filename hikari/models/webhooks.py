@@ -82,7 +82,7 @@ class Webhook(snowflake.Unique):
     channel_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The channel ID this webhook is for."""
 
-    author: typing.Optional[users_.User] = attr.ib(eq=False, hash=False, repr=True)
+    author: typing.Optional[users_.UserImpl] = attr.ib(eq=False, hash=False, repr=True)
     """The user that created the webhook
 
     !!! info
@@ -104,8 +104,30 @@ class Webhook(snowflake.Unique):
         channel settings.
     """
 
-    def __str__(self) -> str:
-        return self.name if self.name is not None else f"Unnamed webhook ID {self.id}"
+    @property
+    def mention(self) -> str:
+        """Return a raw mention string for the given webhook's user.
+
+        !!! note
+            This exists purely for consistency. Webhooks do not receive events
+            from the gateway, and without some bot backend to support it, will
+            not be able to detect mentions of their webhook.
+
+        Example
+        -------
+
+        ```py
+        >>> some_webhook.mention
+        '<@123456789123456789>'
+        ```
+
+        Returns
+        -------
+        builtins.str
+            The mention string to use.
+        """
+        # TODO: check if this ID the same as the optional author.id in terms of validity.
+        return f"<@{self.id}>"
 
     async def execute(
         self,
@@ -121,7 +143,7 @@ class Webhook(snowflake.Unique):
         embeds: typing.Union[undefined.UndefinedType, typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: bool = True,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users_.User]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users_.UserImpl]], bool
         ] = True,
         role_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds_.Role]], bool
@@ -153,7 +175,7 @@ class Webhook(snowflake.Unique):
         mentions_everyone : builtins.bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `builtins.True`.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             Either an array of user objects/IDs to allow mentions for,
             `builtins.True` to allow all user mentions or `builtins.False` to
             block all user mentions from resolving, defaults to `builtins.True`.

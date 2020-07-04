@@ -19,8 +19,9 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["User", "OwnUser", "UserFlag", "PremiumType"]
+__all__: typing.Final[typing.List[str]] = ["PartialUser", "User", "OwnUser", "UserFlag", "PremiumType"]
 
+import abc
 import enum
 import typing
 
@@ -105,6 +106,125 @@ class PremiumType(int, enum.Enum):
         return self.name
 
 
+class User(snowflake.Unique, abc.ABC):
+    """Interface for any user-like object.
+
+    This does not include partial users, as they may not be fully formed.
+    """
+
+    __slots__ = ()
+
+    @property
+    @abc.abstractmethod
+    def discriminator(self) -> str:
+        """This user's discriminator."""
+
+    @property
+    @abc.abstractmethod
+    def username(self) -> str:
+        """This user's username."""
+
+    @property
+    @abc.abstractmethod
+    def avatar_hash(self) -> typing.Optional[str]:
+        """This user's avatar hash, if they have one, otherwise `builtins.None`."""
+
+    @property
+    @abc.abstractmethod
+    def is_bot(self) -> bool:
+        """`builtins.True` if this user is a bot account, `builtins.False` otherwise."""
+
+    @property
+    @abc.abstractmethod
+    def is_system(self) -> bool:
+        """`builtins.True` if this user is a system account, `builtins.False` otherwise."""
+
+    @property
+    @abc.abstractmethod
+    def flags(self) -> UserFlag:
+        """The public flags for this user."""
+
+    @property
+    @abc.abstractmethod
+    def mention(self) -> str:
+        """Return a raw mention string for the given user.
+
+        Example
+        -------
+
+        ```py
+        >>> some_user.mention
+        '<@123456789123456789>'
+        ```
+
+        Returns
+        -------
+        builtins.str
+            The mention string to use.
+        """
+
+    @property
+    @abc.abstractmethod
+    def avatar(self) -> files.URL:
+        """Avatar for the user, or the default avatar if not set."""
+
+    # noinspection PyShadowingBuiltins
+    @abc.abstractmethod
+    def format_avatar(self, *, format: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the avatar for this user, if set.
+
+        If no custom avatar is set, this returns `builtins.None`. You can then
+        use the `default_avatar_url` attribute instead to fetch the displayed
+        URL.
+
+        Parameters
+        ----------
+        format : builtins.str or builtins.None
+            The format to use for this URL, defaults to `png` or `gif`.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated). Will be ignored for default avatars which can only be
+            `png`.
+
+            If `builtins.None`, then the correct default format is determined
+            based on whether the icon is animated or not.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+            Will be ignored for default avatars.
+
+        Returns
+        -------
+        hikari.utilities.files.URL or builtins.None
+            The URL to the avatar, or `builtins.None` if not present.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        builtins.LookupError
+            If the avatar hash is not known. This will occur if `avatar_hash`
+            was not provided by Discord, and is
+            `hikari.utilities.undefined.UNDEFINED`.
+            This will only ever occur for `PartialUser` objects, regular
+            `User` objects should never be expected to raise this.
+        """
+
+    @property
+    @abc.abstractmethod
+    def default_avatar(self) -> files.URL:  # noqa: D401 imperative mood check
+        """Placeholder default avatar for the user if no avatar is set.
+
+        Raises
+        ------
+         builtins.LookupError
+            If the descriminator is not known. This will occur if
+            `discriminator` was not provided by Discord, and is
+            `hikari.utilities.undefined.UNDEFINED`.
+            This will only ever occur for `PartialUser` objects, regular
+            `User` objects should never be expected to raise this.
+        """
+
+
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class PartialUser(snowflake.Unique):
     """Represents partial information about a user.
@@ -116,13 +236,13 @@ class PartialUser(snowflake.Unique):
     id: snowflake.Snowflake = attr.ib(
         converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
     )
-    """The ID of this entity."""
+    """The ID of this user."""
 
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     discriminator: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)
-    """This user's discriminator."""
+    """The user's discriminator."""
 
     username: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)
     """This user's username."""
@@ -139,15 +259,36 @@ class PartialUser(snowflake.Unique):
     flags: typing.Union[UserFlag, undefined.UndefinedType] = attr.ib(eq=False, hash=False)
     """The public flags for this user."""
 
+    @property
+    def mention(self) -> str:
+        """Return a raw mention string for the given user.
+
+        Example
+        -------
+
+        ```py
+        >>> some_user.mention
+        '<@123456789123456789>'
+        ```
+
+        Returns
+        -------
+        builtins.str
+            The mention string to use.
+        """
+        return f"<@{self.id}>"
+
     def __str__(self) -> str:
+        if self.username is undefined.UNDEFINED or self.discriminator is undefined.UNDEFINED:
+            return f"Partial user ID {self.id}"
         return f"{self.username}#{self.discriminator}"
 
-    async def fetch_self(self) -> User:
+    async def fetch_self(self) -> UserImpl:
         """Get this user's up-to-date object.
 
         Returns
         -------
-        hikari.models.users.User
+        hikari.models.users.UserImpl
             The requested user object.
 
         Raises
@@ -158,9 +299,9 @@ class PartialUser(snowflake.Unique):
         return await self.app.rest.fetch_user(user=self.id)
 
     @property
-    def avatar(self) -> typing.Optional[files.URL]:
-        """Avatar for the user if set, else `builtins.None`."""
-        return self.format_avatar()
+    def avatar(self) -> files.URL:
+        """Avatar for the user, or the default avatar if not set."""
+        return self.format_avatar() or self.default_avatar
 
     # noinspection PyShadowingBuiltins
     def format_avatar(self, *, format: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
@@ -241,8 +382,8 @@ class PartialUser(snowflake.Unique):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class User(PartialUser):
-    """Represents partial information about a user."""
+class UserImpl(PartialUser, User):
+    """Concrete implementation of user information."""
 
     # These are not attribs on purpose. The idea is to narrow the types of
     # these fields without redefining them twice in the slots. This is
@@ -268,7 +409,7 @@ class User(PartialUser):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class OwnUser(User):
+class OwnUser(UserImpl):
     """Represents a user with extended OAuth2 information."""
 
     is_mfa_enabled: bool = attr.ib(eq=False, hash=False, repr=False)
@@ -302,7 +443,7 @@ class OwnUser(User):
 
         Returns
         -------
-        hikari.models.users.User
+        hikari.models.users.UserImpl
             The requested user object.
         """
         return await self.app.rest.fetch_my_user()

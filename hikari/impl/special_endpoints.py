@@ -322,7 +322,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
 # We use an explicit forward reference for this, since this breaks potential
 # circular import issues (once the file has executed, using those resources is
 # not an issue for us).
-class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
+class ReactorIterator(iterators.BufferedLazyIterator["users.UserImpl"]):
     """Implementation of an iterator for message reactions."""
 
     __slots__: typing.Sequence[str] = ("_app", "_first_id", "_route", "_request_call")
@@ -343,7 +343,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
         self._first_id = undefined.UNDEFINED
         self._route = routes.GET_REACTIONS.compile(channel=channel_id, message=message_id, emoji=emoji)
 
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[users.User, typing.Any, None]]:
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[users.UserImpl, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
         query.put("after", self._first_id)
         query.put("limit", 100)

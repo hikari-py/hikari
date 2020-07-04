@@ -290,7 +290,7 @@ class KnownCustomEmoji(CustomEmoji):
     If this is empty then any user can use this emoji regardless of their roles.
     """
 
-    user: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=False)
+    user: typing.Optional[users.UserImpl] = attr.ib(eq=False, hash=False, repr=False)
     """The user that created the emoji.
 
     !!! note

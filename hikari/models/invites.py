@@ -208,10 +208,10 @@ class Invite:
     channel_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the channel this invite targets."""
 
-    inviter: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=False)
+    inviter: typing.Optional[users.UserImpl] = attr.ib(eq=False, hash=False, repr=False)
     """The object of the user who created this invite."""
 
-    target_user: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=False)
+    target_user: typing.Optional[users.UserImpl] = attr.ib(eq=False, hash=False, repr=False)
     """The object of the user who this invite targets, if set."""
 
     target_user_type: typing.Optional[TargetUserType] = attr.ib(eq=False, hash=False, repr=False)
