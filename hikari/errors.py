@@ -39,7 +39,7 @@ import http
 import typing
 
 if typing.TYPE_CHECKING:
-    from hikari.impl import routes
+    from hikari.utilities import routes
     from hikari.utilities import data_binding
 
 
@@ -342,7 +342,7 @@ class RateLimited(ClientHTTPErrorResponse):
     ----------
     url : builtins.str
         The URL that produced the error message.
-    route : hikari.impl.routes.CompiledRoute
+    route : hikari.utilities.routes.CompiledRoute
         The route that produced this error.
     headers : hikari.utilities.data_binding.Headers
         Any headers that were given in the response.

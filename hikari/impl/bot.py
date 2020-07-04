@@ -35,7 +35,7 @@ import typing
 from hikari import config
 from hikari.api import bot
 from hikari.impl import cache as cache_impl
-from hikari.impl import constants
+from hikari.utilities import constants
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
