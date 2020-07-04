@@ -175,7 +175,7 @@ response, you will have the `"global"` attribute set to `builtins.False`, and a
 `"reset_after"` attribute that differs entirely to the `X-RateLimit-Reset`
 header. Thus, it is important to not assume the value in the 429 response
 for the reset time is the same as the one in the bucket headers. Hikari's
-`hikari.impl.http.HTTP` implementation specifically uses the value furthest
+`hikari.rest_client.IRESTClient` implementation specifically uses the value furthest
 in the future when working out which bucket to adhere to.
 
 It is worth remembering that there is an API limit to the number of 401s,
