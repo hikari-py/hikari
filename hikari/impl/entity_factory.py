@@ -766,11 +766,10 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         self,
         payload: data_binding.JSONObject,
         *,
-        user: typing.Union[undefined.UndefinedType, user_models.User] = undefined.UNDEFINED,
+        user: typing.Union[undefined.UndefinedType, user_models.UserImpl] = undefined.UNDEFINED,
     ) -> guild_models.Member:
         guild_member = guild_models.Member()
-        guild_member.app = self._app
-        guild_member.user = user or self.deserialize_user(payload["user"])
+        guild_member.user = typing.cast(user_models.UserImpl, user or self.deserialize_user(payload["user"]))
         guild_member.role_ids = {snowflake.Snowflake(role_id) for role_id in payload["roles"]}
 
         joined_at = payload.get("joined_at")
@@ -953,9 +952,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         if "members" in payload:
             for member_payload in payload["members"]:
                 member = self.deserialize_member(member_payload)
-                # Could be None, so cast to avoid.
-                user_id = typing.cast("user_models.User", member.user).id
-                guild.members[user_id] = member
+                guild.members[member.user.id] = member
 
         guild.channels = {}
         if "channels" in payload:
@@ -1309,7 +1306,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ###############
 
     @staticmethod
-    def _set_user_attributes(payload: data_binding.JSONObject, user: user_models.User) -> None:
+    def _set_user_attributes(payload: data_binding.JSONObject, user: user_models.UserImpl) -> None:
         user.id = snowflake.Snowflake(payload["id"])
         user.discriminator = payload["discriminator"]
         user.username = payload["username"]
@@ -1317,8 +1314,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         user.is_bot = payload.get("bot", False)
         user.is_system = payload.get("system", False)
 
-    def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.User:
-        user = user_models.User()
+    def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.UserImpl:
+        user = user_models.UserImpl()
         user.app = self._app
         self._set_user_attributes(payload, user)
         # noinspection PyArgumentList

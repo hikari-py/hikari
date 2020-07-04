@@ -278,7 +278,7 @@ class TeamMember:
     team_id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of the team this member belongs to."""
 
-    user: users.User = attr.ib(eq=True, hash=True, repr=True)
+    user: users.UserImpl = attr.ib(eq=True, hash=True, repr=True)
     """The user representation of this team member."""
 
     def __str__(self) -> str:
@@ -390,7 +390,7 @@ class Application(snowflake.Unique):
     Will be `builtins.None` if this application doesn't have a bot.
     """
 
-    owner: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=True)
+    owner: typing.Optional[users.UserImpl] = attr.ib(eq=False, hash=False, repr=True)
     """The application's owner.
 
     This should always be `builtins.None` in application objects retrieved outside

@@ -52,7 +52,7 @@ def test_PartialChannel_str_operator_when_name_is_None():
 
 def test_DMChannel_str_operator():
     channel = channels.DMChannel()
-    user = users.User()
+    user = users.UserImpl()
     user.discriminator = "0420"
     user.username = "snoop"
     channel.recipients = {1: user}
@@ -68,7 +68,7 @@ def test_GroupDMChannel_str_operator():
 def test_GroupDMChannel_str_operator_when_name_is_None():
     channel = channels.GroupDMChannel()
     channel.name = None
-    user, other_user = users.User(), users.User()
+    user, other_user = users.UserImpl(), users.UserImpl()
     user.discriminator = "0420"
     user.username = "snoop"
     other_user.discriminator = "6969"

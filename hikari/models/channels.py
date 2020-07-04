@@ -198,7 +198,7 @@ class TextChannel(PartialChannel, abc.ABC):
         ] = undefined.UNDEFINED,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]], bool
         ] = True,
         role_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
@@ -231,7 +231,7 @@ class TextChannel(PartialChannel, abc.ABC):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `builtins.False`.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             Either an array of user objects/IDs to allow mentions for,
             `builtins.True` to allow all user mentions or `builtins.False`
             to block all user mentions from resolving, defaults to
@@ -324,7 +324,7 @@ class DMChannel(TextChannel):
         this will always be valid.
     """
 
-    recipients: typing.Mapping[snowflake.Snowflake, users.User] = attr.ib(eq=False, hash=False, repr=False)
+    recipients: typing.Mapping[snowflake.Snowflake, users.UserImpl] = attr.ib(eq=False, hash=False, repr=False)
     """The recipients of the DM."""
 
     def __str__(self) -> str:

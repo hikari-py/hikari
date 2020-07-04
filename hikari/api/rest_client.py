@@ -191,7 +191,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     async def edit_permission_overwrites(
         self,
         channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
-        target: typing.Union[channels.PermissionOverwrite, users.User, guilds.Role],
+        target: typing.Union[channels.PermissionOverwrite, users.UserImpl, guilds.Role],
         *,
         allow: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
         deny: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
@@ -217,7 +217,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     async def edit_permission_overwrites(
         self,
         channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
-        target: typing.Union[snowflake.UniqueObject, users.User, guilds.Role, channels.PermissionOverwrite],
+        target: typing.Union[snowflake.UniqueObject, users.UserImpl, guilds.Role, channels.PermissionOverwrite],
         *,
         target_type: typing.Union[undefined.UndefinedType, channels.PermissionOverwriteType, str] = undefined.UNDEFINED,
         allow: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
@@ -231,7 +231,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to edit a permission overwrite in. This may be a channel object, or
             the ID of an existing channel.
-        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.UniqueObject
+        target : hikari.models.users.UserImpl or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.UniqueObject
             The channel overwrite to edit. This may be a overwrite object, or the ID of an
             existing channel.
         target_type : hikari.utilities.undefined.UndefinedType or hikari.models.channels.PermissionOverwriteType or builtins.str
@@ -266,7 +266,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     async def delete_permission_overwrite(
         self,
         channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
-        target: typing.Union[channels.PermissionOverwrite, guilds.Role, users.User, snowflake.UniqueObject],
+        target: typing.Union[channels.PermissionOverwrite, guilds.Role, users.UserImpl, snowflake.UniqueObject],
     ) -> None:
         """Delete a custom permission for an entity in a given guild channel.
 
@@ -275,7 +275,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
             The channel to delete a permission overwrite in. This may be a channel
             object, or the ID of an existing channel.
-        target : hikari.models.users.User or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.UniqueObject
+        target : hikari.models.users.UserImpl or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.UniqueObject
             The channel overwrite to delete.
 
         Raises
@@ -328,7 +328,9 @@ class IRESTClient(component.IComponent, abc.ABC):
         max_uses: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
         temporary: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         unique: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        target_user: typing.Union[undefined.UndefinedType, users.User, snowflake.UniqueObject] = undefined.UNDEFINED,
+        target_user: typing.Union[
+            undefined.UndefinedType, users.UserImpl, snowflake.UniqueObject
+        ] = undefined.UNDEFINED,
         target_user_type: typing.Union[undefined.UndefinedType, invites.TargetUserType] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
@@ -347,7 +349,7 @@ class IRESTClient(component.IComponent, abc.ABC):
             If provided, whether the invite only grants temporary membership.
         unique : hikari.utilities.undefined.UndefinedType or builtins.bool
             If provided, wheter the invite should be unique.
-        target_user : hikari.utilities.undefined.UndefinedType or hikari.models.users.User or hikari.utilities.snowflake.UniqueObject
+        target_user : hikari.utilities.undefined.UndefinedType or hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject
             If provided, the target user id for this invite. This may be a
             user object, or the ID of an existing user.
         target_user_type : hikari.utilities.undefined.UndefinedType or hikari.models.invites.TargetUserType or builtins.int
@@ -602,7 +604,9 @@ class IRESTClient(component.IComponent, abc.ABC):
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[typing.Union[users.User, snowflake.UniqueObject]], bool] = True,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool
+        ] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]], bool] = True,
     ) -> messages_.Message:
         """Create a message in the given channel.
@@ -628,7 +632,7 @@ class IRESTClient(component.IComponent, abc.ABC):
             If specified, a nonce that can be used for optimistic message sending.
         mentions_everyone : builtins.bool
             If specified, whether the message should parse @everyone/@here mentions.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             If specified, and a `builtins.bool`, whether to parse user mentions.
             If specified and a `builtins.list`, the users to parse the mention
             for. This may be a user object, or the ID of an existing user.
@@ -681,7 +685,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         embed: typing.Union[undefined.UndefinedType, None, embeds_.Embed] = undefined.UNDEFINED,
         mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         user_mentions: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[users.User, snowflake.UniqueObject]], bool
+            undefined.UndefinedType, typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool
         ] = undefined.UNDEFINED,
         role_mentions: typing.Union[
             undefined.UndefinedType, typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool
@@ -859,7 +863,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         message: typing.Union[messages_.Message, snowflake.UniqueObject],
         emoji: typing.Union[str, emojis.Emoji],
-        user: typing.Union[users.User, snowflake.UniqueObject],
+        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
     ) -> None:
         ...
 
@@ -877,7 +881,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         message: typing.Union[messages_.Message, snowflake.UniqueObject],
         emoji: typing.Union[str, emojis.Emoji],
-    ) -> iterators.LazyIterator[users.User]:
+    ) -> iterators.LazyIterator[users.UserImpl]:
         ...
 
     @abc.abstractmethod
@@ -952,7 +956,9 @@ class IRESTClient(component.IComponent, abc.ABC):
         ] = undefined.UNDEFINED,
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         mentions_everyone: bool = True,
-        user_mentions: typing.Union[typing.Collection[typing.Union[users.User, snowflake.UniqueObject]], bool] = True,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool
+        ] = True,
         role_mentions: typing.Union[typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool] = True,
     ) -> messages_.Message:
         ...
@@ -1006,7 +1012,9 @@ class IRESTClient(component.IComponent, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def create_dm_channel(self, user: typing.Union[users.User, snowflake.UniqueObject], /) -> channels.DMChannel:
+    async def create_dm_channel(
+        self, user: typing.Union[users.UserImpl, snowflake.UniqueObject], /
+    ) -> channels.DMChannel:
         ...
 
     @abc.abstractmethod
@@ -1018,7 +1026,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         self,
         access_token: str,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.User, snowflake.UniqueObject],
+        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
         *,
         nick: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         roles: typing.Union[
@@ -1034,7 +1042,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_user(self, user: typing.Union[users.User, snowflake.UniqueObject]) -> users.User:
+    async def fetch_user(self, user: typing.Union[users.UserImpl, snowflake.UniqueObject]) -> users.UserImpl:
         ...
 
     def fetch_audit_log(
@@ -1042,7 +1050,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         *,
         before: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
-        user: typing.Union[undefined.UndefinedType, users.User, snowflake.UniqueObject] = undefined.UNDEFINED,
+        user: typing.Union[undefined.UndefinedType, users.UserImpl, snowflake.UniqueObject] = undefined.UNDEFINED,
         event_type: typing.Union[undefined.UndefinedType, audit_logs.AuditLogEventType] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         ...
@@ -1134,7 +1142,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         ] = undefined.UNDEFINED,
         afk_timeout: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
         icon: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
-        owner: typing.Union[undefined.UndefinedType, users.User, snowflake.UniqueObject] = undefined.UNDEFINED,
+        owner: typing.Union[undefined.UndefinedType, users.UserImpl, snowflake.UniqueObject] = undefined.UNDEFINED,
         splash: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
         banner: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
         system_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
@@ -1242,7 +1250,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     async def fetch_member(
         self,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.User, snowflake.UniqueObject],
+        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
     ) -> guilds.Member:
         ...
 
@@ -1256,7 +1264,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     async def edit_member(
         self,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.User, snowflake.UniqueObject],
+        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
         *,
         nick: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         roles: typing.Union[
@@ -1285,7 +1293,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     async def add_role_to_member(
         self,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.User, snowflake.UniqueObject],
+        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
         role: typing.Union[guilds.Role, snowflake.UniqueObject],
         *,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
@@ -1296,7 +1304,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     async def remove_role_from_member(
         self,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.User, snowflake.UniqueObject],
+        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
         role: typing.Union[guilds.Role, snowflake.UniqueObject],
         *,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
@@ -1307,7 +1315,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     async def kick_user(
         self,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.User, snowflake.UniqueObject],
+        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
         *,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
@@ -1320,7 +1328,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     async def ban_user(
         self,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.User, snowflake.UniqueObject],
+        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
         *,
         delete_message_days: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
@@ -1334,7 +1342,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     async def unban_user(
         self,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.User, snowflake.UniqueObject],
+        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
         *,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
@@ -1347,7 +1355,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     async def fetch_ban(
         self,
         guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.User, snowflake.UniqueObject],
+        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
     ) -> guilds.GuildMemberBan:
         ...
 

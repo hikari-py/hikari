@@ -322,7 +322,7 @@ class AuditLog:
     integrations: typing.Mapping[snowflake.Snowflake, guilds.PartialIntegration] = attr.ib(repr=False)
     """A mapping of the partial objects of integrations found in this audit log."""
 
-    users: typing.Mapping[snowflake.Snowflake, users_.User] = attr.ib(repr=False)
+    users: typing.Mapping[snowflake.Snowflake, users_.UserImpl] = attr.ib(repr=False)
     """A mapping of the objects of users found in this audit log."""
 
     webhooks: typing.Mapping[snowflake.Snowflake, webhooks_.Webhook] = attr.ib(repr=False)
