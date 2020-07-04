@@ -117,17 +117,17 @@ class User(snowflake.Unique, abc.ABC):
     @property
     @abc.abstractmethod
     def discriminator(self) -> str:
-        """This user's discriminator."""
+        """Discriminator for the user."""
 
     @property
     @abc.abstractmethod
     def username(self) -> str:
-        """This user's username."""
+        """Username for the user."""
 
     @property
     @abc.abstractmethod
     def avatar_hash(self) -> typing.Optional[str]:
-        """This user's avatar hash, if they have one, otherwise `builtins.None`."""
+        """Avatar hash for the user, if they have one, otherwise `builtins.None`."""
 
     @property
     @abc.abstractmethod
@@ -142,7 +142,7 @@ class User(snowflake.Unique, abc.ABC):
     @property
     @abc.abstractmethod
     def flags(self) -> UserFlag:
-        """The public flags for this user."""
+        """Flag bits that are set for the user."""
 
     @property
     @abc.abstractmethod
@@ -239,16 +239,16 @@ class PartialUser(snowflake.Unique):
     """The ID of this user."""
 
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
-    """The client application that models may use for procedures."""
+    """Reference to the client application that models may use for procedures."""
 
     discriminator: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)
-    """The user's discriminator."""
+    """Four-digit discriminator for the user."""
 
     username: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)
-    """This user's username."""
+    """Username of the user."""
 
     avatar_hash: typing.Union[None, str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
-    """This user's avatar hash, if set."""
+    """Avatar hash of the user, if a custom avatar is set."""
 
     is_bot: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is a bot account."""
@@ -257,7 +257,7 @@ class PartialUser(snowflake.Unique):
     """Whether this user is a system account."""
 
     flags: typing.Union[UserFlag, undefined.UndefinedType] = attr.ib(eq=False, hash=False)
-    """The public flags for this user."""
+    """Public flags for this user."""
 
     @property
     def mention(self) -> str:
@@ -390,13 +390,13 @@ class UserImpl(PartialUser, User):
     # compatible with MYPY, hence why I have done it like this...
 
     discriminator: str
-    """This user's discriminator."""
+    """The user's discriminator."""
 
     username: str
-    """This user's username."""
+    """The user's username."""
 
     avatar_hash: typing.Optional[str]
-    """This user's avatar hash, if they have one, otherwise `builtins.None`."""
+    """The user's avatar hash, if they have one, otherwise `builtins.None`."""
 
     is_bot: bool
     """`builtins.True` if this user is a bot account, `builtins.False` otherwise."""
