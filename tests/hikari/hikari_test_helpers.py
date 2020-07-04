@@ -235,3 +235,29 @@ async def idle():
 def ensure_occurs_quickly():
     with async_timeout.timeout(REASONABLE_QUICK_RESPONSE_TIME):
         yield
+
+
+def assert_does_not_raise(type_=BaseException):
+    def decorator(func):
+        @pytest.mark.asyncio
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            try:
+                result = func(*args, **kwargs)
+                await result if inspect.iscoroutine(result) else None
+            except type_ as ex:
+                assertion_error = AssertionError(
+                    f"{type(ex).__name__} was raised, but the test case specified that "
+                    f"any derivative of {type_.__name__} must never be raised in this scenario."
+                )
+                assertion_error.__cause__ = ex
+                raise assertion_error from ex
+
+        return wrapper
+
+    if inspect.isfunction(type_) or inspect.ismethod(type_):
+        decorated_func = type_
+        type_ = BaseException
+        return decorator(decorated_func)
+    else:
+        return decorator

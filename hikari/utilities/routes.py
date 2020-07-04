@@ -165,10 +165,10 @@ class Route:
 
 
 def _cdn_valid_formats_converter(values: typing.Set[str]) -> typing.FrozenSet[str]:
-    return frozenset(v.casefold() for v in values)
+    return frozenset(v.lower() for v in values)
 
 
-@attr.s(hash=True, init=True, frozen=True)
+@attr.s(hash=True, init=True, slots=True)
 @typing.final
 class CDNRoute:
     """Route implementation for a CDN resource."""
@@ -177,15 +177,16 @@ class CDNRoute:
     """Template string for this endpoint."""
 
     valid_formats: typing.AbstractSet[str] = attr.ib(
-        converter=_cdn_valid_formats_converter, eq=False, hash=False,
+        converter=_cdn_valid_formats_converter, eq=False, hash=False, repr=False,
     )
     """Valid file formats for this endpoint."""
 
     @valid_formats.validator
-    def _(self, _: typing.Any, values: typing.AbstractSet[str]) -> bool:
-        return len(values) > 0
+    def _(self, _: attr.Attribute, values: typing.AbstractSet[str]) -> None:
+        if not values:
+            raise ValueError(f"{self.path_template} must have at least one valid format set")
 
-    sizable: bool = attr.ib(default=True, kw_only=True)
+    sizable: bool = attr.ib(default=True, kw_only=True, repr=False, hash=False, eq=False)
     """`True` if a `size` param can be specified, or `False` otherwise."""
 
     def compile(
@@ -222,7 +223,7 @@ class CDNRoute:
             If `size` is specified, but is not an integer power of `2` between
             `16` and `4096` inclusive.
         """
-        file_format = file_format.casefold()
+        file_format = file_format.lower()
 
         if file_format not in self.valid_formats:
             raise TypeError(
@@ -230,9 +231,11 @@ class CDNRoute:
                 + ", ".join(self.valid_formats)
             )
 
-        if not kwargs.get("hash", "").startswith("a_") and file_format == GIF:
+        if "hash" in kwargs and not kwargs["hash"].startswith("a_") and file_format == GIF:
             raise TypeError("This asset is not animated, so cannot be retrieved as a GIF")
 
+        # Make URL-safe first.
+        kwargs = {k: urllib.parse.quote(str(v)) for k, v in kwargs.items()}
         url = base_url + self.path_template.format(**kwargs) + f".{file_format}"
 
         if size is not None:
