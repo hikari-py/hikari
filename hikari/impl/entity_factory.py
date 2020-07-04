@@ -687,7 +687,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
                 # static type checkers, regardless.
 
                 name = str(field.name) if field.name is not None else None  # type: ignore[unreachable]
-                value = str(field.name) if field.name is not None else None  # type: ignore[unreachable]
+                value = str(field.value) if field.value is not None else None  # type: ignore[unreachable]
 
                 if name is None:
                     raise TypeError(f"in embed.fields[{i}].name - cannot have `None`")
