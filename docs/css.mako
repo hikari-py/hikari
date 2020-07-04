@@ -127,8 +127,12 @@ code a {
     color: #e83e8c;
 }
 
-a.dotted {
+a.dotted:hover, abbr:hover {
     text-decoration: underline #6c757d dotted !important;
+}
+
+a.dotted, abbr {
+    text-decoration: none !important;
 }
 
 ## Custom search formatting to look somewhat bootstrap-py
