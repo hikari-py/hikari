@@ -281,14 +281,14 @@ class Member(users.User):
     """The datetime of when this member started "boosting" this guild.
 
     This will be `builtins.None` if they aren't boosting and
-    `hikari.utilities.undefined.UndefinedType` if their boosting status is 
+    `hikari.utilities.undefined.UndefinedType` if their boosting status is
     unknown.
     """
 
     is_deaf: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
     """`builtins.True` if this member is deafened in the current voice channel.
 
-    This will be `hikari.utilities.undefined.UndefinedType if it's state is 
+    This will be `hikari.utilities.undefined.UndefinedType if it's state is
     unknown.
     """
 
