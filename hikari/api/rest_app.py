@@ -24,7 +24,7 @@ __all__: typing.Final[typing.List[str]] = ["IRESTApp", "IRESTAppFactory", "IREST
 import abc
 import typing
 
-from hikari.impl import constants
+from hikari.utilities import constants
 
 if typing.TYPE_CHECKING:
     import concurrent.futures

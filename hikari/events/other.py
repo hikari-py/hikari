@@ -151,7 +151,7 @@ class ReadyEvent(base_events.Event):
 
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class OwnUserUpdateEvent(base_events.Event):
-    """Used to represent User Update gateway events.
+    """Used to represent user update gateway events.
 
     Sent when the current user is updated.
     """

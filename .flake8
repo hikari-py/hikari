@@ -8,9 +8,10 @@ ignore =
     D102,      # Missing docstring in public method.
     D105,      # Magic methods not having a docstring.
     E402,      # Module level import not at top of file (isn't compatible with our import style).
-    IFSTMT001  # "use a oneliner here"
-    T101,      # TO DO comments only
-    W503,      # line break before binary operator
+    IFSTMT001  # "use a oneliner here".
+    T101,      # TO-DO comment detection (T102 is FIX-ME and T103 is XXX).
+    W503,      # line break before binary operator.
+    W504,      # line break before binary operator (again, I guess).
 
 # F401:  unused import.
 # F403:  cannot detect unused vars if we use starred import
@@ -19,7 +20,7 @@ per-file-ignores =
     hikari/__init__.py:          F401,F403
     hikari/events/__init__.py:   F401,F403
     hikari/models/__init__.py:   F401,F403
-    hikari/impl/routes.py:       FS003
+    hikari/utilities/routes.py:  FS003
     hikari/utilities/date.py:    FS003
 
 max-complexity = 20

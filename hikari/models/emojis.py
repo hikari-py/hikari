@@ -27,8 +27,9 @@ import unicodedata
 
 import attr
 
-from hikari.utilities import cdn
+from hikari.utilities import constants
 from hikari.utilities import files
+from hikari.utilities import routes
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
@@ -271,7 +272,8 @@ class CustomEmoji(snowflake.Unique, Emoji):
     @typing.final
     def url(self) -> str:
         ext = "gif" if self.is_animated else "png"
-        return cdn.generate_cdn_url("emojis", str(self.id), format_=ext, size=None).url
+
+        return routes.CDN_CUSTOM_EMOJI.compile(constants.CDN_URL, emoji_id=self.id, file_format=ext,)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -288,7 +290,7 @@ class KnownCustomEmoji(CustomEmoji):
     If this is empty then any user can use this emoji regardless of their roles.
     """
 
-    user: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=False)
+    user: typing.Optional[users.UserImpl] = attr.ib(eq=False, hash=False, repr=False)
     """The user that created the emoji.
 
     !!! note

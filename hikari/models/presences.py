@@ -57,6 +57,7 @@ class ActivityType(int, enum.Enum):
     """Shows up as `Playing <name>`"""
 
     STREAMING = 1
+    """Shows up as `Streaming` and links to a Twitch or YouTube stream/video."""
 
     LISTENING = 2
     """Shows up as `Listening to <name>`."""
@@ -74,6 +75,9 @@ class ActivityType(int, enum.Enum):
 
     To set an emoji with the status, place a unicode emoji or Discord emoji
     (`:smiley:`) as the first part of the status activity name.
+
+    !!! warning
+        Bots currently do not support setting custom statuses.
     """
 
     def __str__(self) -> str:
@@ -133,7 +137,7 @@ class ActivitySecret:
     """The secret used for spectating a party, if applicable."""
 
     match: typing.Optional[str] = attr.ib(repr=False)
-    """The secret used for joining a party, if applicable."""
+    """The secret used for matching a party, if applicable."""
 
 
 @enum.unique
@@ -169,18 +173,7 @@ class ActivityFlag(enum.IntFlag):
 # TODO: add strict type checking to gateway for this type in an invariant way.
 @attr.s(eq=True, hash=False, kw_only=True, slots=True)
 class Activity:
-    """An activity that the bot can set for one or more shards.
-
-    !!! note
-        Bots cannot currently set custom presence statuses.
-
-    !!! warning
-        Other activity types may derive from this one, but only their
-        name, url and type will be passed if used in a presence update
-        request. Passing a `RichActivity` or similar may cause an
-        `INVALID_OPCODE` to be raised which will result in the shard shutting
-        down.
-    """
+    """Represents a regular activity that can be associated with a presence."""
 
     name: str = attr.ib()
     """The activity name."""
@@ -197,11 +190,7 @@ class Activity:
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
 class RichActivity(Activity):
-    """Represents an activity that will be attached to a member's presence.
-
-    !!! warning
-        You can NOT use this in presence update requests.
-    """
+    """Represents a rich activity that can be associated with a presence."""
 
     created_at: datetime.datetime = attr.ib(repr=False)
     """When this activity was added to the user's session."""
@@ -220,7 +209,7 @@ class RichActivity(Activity):
     state: typing.Optional[str] = attr.ib(repr=False)
     """The current status of this activity's target, if set."""
 
-    emoji: typing.Union[None, emojis_.UnicodeEmoji, emojis_.CustomEmoji] = attr.ib(repr=False)
+    emoji: typing.Union[None, emojis_.Emoji] = attr.ib(repr=False)
     """The emoji of this activity, if it is a custom status and set."""
 
     party: typing.Optional[ActivityParty] = attr.ib(repr=False)

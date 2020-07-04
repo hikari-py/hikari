@@ -128,7 +128,7 @@ class GuildBanEvent(GuildEvent, abc.ABC):
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this ban is in."""
 
-    user: users.User = attr.ib(repr=True)
+    user: users.UserImpl = attr.ib(repr=True)
     """The object of the user this ban targets."""
 
 
@@ -218,7 +218,7 @@ class GuildMemberRemoveEvent(GuildMemberEvent):
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this user was removed from."""
 
-    user: users.User = attr.ib(repr=True)
+    user: users.UserImpl = attr.ib(repr=True)
     """The object of the user who was removed from this guild."""
 
 

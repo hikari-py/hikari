@@ -19,7 +19,11 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["resolve_signature", "EMPTY", "get_logger"]
+__all__: typing.Final[typing.List[str]] = [
+    "resolve_signature",
+    "EMPTY",
+    "get_logger",
+]
 
 import inspect
 import logging
@@ -27,6 +31,8 @@ import typing
 
 EMPTY: typing.Final[inspect.Parameter.empty] = inspect.Parameter.empty
 """A singleton that empty annotations will be set to in `resolve_signature`."""
+
+_T = typing.TypeVar("_T")
 
 
 def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signature:

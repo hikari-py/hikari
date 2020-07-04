@@ -37,7 +37,7 @@ def test_TeamMembershipState_str_operator():
 
 def test_TeamMember_str_operator():
     team_member = applications.TeamMember()
-    team_member_user = users.User()
+    team_member_user = users.UserImpl()
     team_member_user.username = "mario"
     team_member_user.discriminator = "1234"
     team_member.user = team_member_user

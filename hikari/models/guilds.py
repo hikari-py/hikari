@@ -48,8 +48,9 @@ import typing
 import attr
 
 from hikari.models import users
-from hikari.utilities import cdn
+from hikari.utilities import constants
 from hikari.utilities import files
+from hikari.utilities import routes
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
@@ -247,19 +248,17 @@ class GuildWidget:
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class Member:
+class Member(users.User):
     """Used to represent a guild bound member."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
-    """The client application that models may use for procedures."""
-
-    # TODO: make Member delegate to user and implement a common base class
-    # this allows members and users to be used interchangeably.
-    user: typing.Union[undefined.UndefinedType, users.User] = attr.ib(eq=True, hash=True, repr=True)
-    """This member's user object.
-
-    This will be undefined when attached to Message Create and Update gateway events.
-    """
+    # This is technically optional, since UPDATE MEMBER and MESSAGE CREATE
+    # events do not inject the user into the member payload, but specify it
+    # separately. However, to get around this inconsistency, we force the
+    # entity factory to always provide the user object in these cases, so we
+    # can assume this is always set, and thus we are always able to get info
+    # such as the ID of the user this member represents.
+    user: users.UserImpl = attr.ib(eq=True, hash=True, repr=True)
+    """This member's corresponding user object."""
 
     nickname: typing.Union[str, None, undefined.UndefinedType] = attr.ib(
         eq=False, hash=False, repr=True,
@@ -267,7 +266,7 @@ class Member:
     """This member's nickname.
 
     This will be `builtins.None` if not set and `hikari.utilities.undefined.UndefinedType`
-    if it's state is unknown.
+    if unknown.
     """
 
     role_ids: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
@@ -282,20 +281,96 @@ class Member:
     """The datetime of when this member started "boosting" this guild.
 
     This will be `builtins.None` if they aren't boosting and
-    `hikari.utilities.undefined.UndefinedType` if their boosting status is unknown.
+    `hikari.utilities.undefined.UndefinedType` if their boosting status is
+    unknown.
     """
 
     is_deaf: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
-    """Whether this member is deafened by this guild in it's voice channels.
+    """`builtins.True` if this member is deafened in the current voice channel.
 
-    This will be `hikari.utilities.undefined.UndefinedType if it's state is unknown.
+    This will be `hikari.utilities.undefined.UndefinedType if it's state is
+    unknown.
     """
 
     is_mute: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
-    """Whether this member is muted by this guild in it's voice channels.
+    """`builtins.True` if this member is muted in the current voice channel.
 
     This will be `hikari.utilities.undefined.UndefinedType if it's state is unknown.
     """
+
+    @property
+    def app(self) -> rest_app.IRESTApp:
+        """Return the app that is bound to the user object."""
+        return self.user.app
+
+    @property
+    def id(self) -> snowflake.Snowflake:
+        return self.user.id
+
+    @id.setter
+    def id(self, value: snowflake.Snowflake) -> None:
+        raise TypeError("Cannot mutate the ID of a member")
+
+    @property
+    def username(self) -> str:
+        return self.user.username
+
+    @property
+    def discriminator(self) -> str:
+        return self.user.discriminator
+
+    @property
+    def avatar_hash(self) -> typing.Optional[str]:
+        return self.user.avatar_hash
+
+    @property
+    def is_bot(self) -> bool:
+        return self.user.is_bot
+
+    @property
+    def is_system(self) -> bool:
+        return self.user.is_system
+
+    @property
+    def flags(self) -> users.UserFlag:
+        return self.user.flags
+
+    @property
+    def avatar(self) -> files.URL:
+        return self.user.avatar
+
+    # noinspection PyShadowingBuiltins
+    def format_avatar(self, *, format: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        return self.user.format_avatar(format=format, size=size)
+
+    @property
+    def default_avatar(self) -> files.URL:
+        return self.user.default_avatar
+
+    @property
+    def mention(self) -> str:
+        """Return a raw mention string for the given member.
+
+        If the member has a known nickname, we always return
+        a bang ("`!`") before the ID part of the mention string. This
+        mimics the behaviour Discord clients tend to provide.
+
+        Example
+        -------
+
+        ```py
+        >>> some_member_without_nickname.mention
+        '<@123456789123456789>'
+        >>> some_member_with_nickname.mention
+        '<@!123456789123456789>'
+        ```
+
+        Returns
+        -------
+        builtins.str
+            The mention string to use.
+        """
+        return f"<@!{self.id}>" if isinstance(self.nickname, str) else self.user.mention
 
     def __str__(self) -> str:
         return str(self.user)
@@ -428,7 +503,7 @@ class Integration(PartialIntegration):
     `GuildIntegration.expire_behavior` is enacted out on them
     """
 
-    user: users.User = attr.ib(eq=False, hash=False, repr=False)
+    user: users.UserImpl = attr.ib(eq=False, hash=False, repr=False)
     """The user this integration belongs to."""
 
     last_synced_at: datetime.datetime = attr.ib(eq=False, hash=False, repr=False)
@@ -442,7 +517,7 @@ class GuildMemberBan:
     reason: typing.Optional[str] = attr.ib(repr=True)
     """The reason for this ban, will be `builtins.None` if no reason was given."""
 
-    user: users.User = attr.ib(repr=True)
+    user: users.UserImpl = attr.ib(repr=True)
     """The object of the user this ban targets."""
 
 
@@ -534,7 +609,9 @@ class PartialGuild(snowflake.Unique):
             else:
                 format_ = "png"
 
-        return cdn.generate_cdn_url("icons", str(self.id), self.icon_hash, format_=format_, size=size)
+        return routes.CDN_GUILD_ICON.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.icon_hash, size=size, file_format=format_,
+        )
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -589,7 +666,9 @@ class GuildPreview(PartialGuild):
         if self.splash_hash is None:
             return None
 
-        return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+        return routes.CDN_GUILD_SPLASH.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=format_,
+        )
 
     @property
     def discovery_splash(self) -> typing.Optional[files.URL]:
@@ -621,8 +700,8 @@ class GuildPreview(PartialGuild):
         if self.discovery_splash_hash is None:
             return None
 
-        return cdn.generate_cdn_url(
-            "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
+        return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=format_,
         )
 
 
@@ -952,7 +1031,9 @@ class Guild(PartialGuild):
         if self.splash_hash is None:
             return None
 
-        return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+        return routes.CDN_GUILD_SPLASH.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=format_,
+        )
 
     @property
     def discovery_splash(self) -> typing.Optional[files.URL]:
@@ -984,8 +1065,8 @@ class Guild(PartialGuild):
         if self.discovery_splash_hash is None:
             return None
 
-        return cdn.generate_cdn_url(
-            "discovery-splashes", str(self.id), self.discovery_splash_hash, format_=format_, size=size
+        return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=format_,
         )
 
     @property
@@ -1018,4 +1099,6 @@ class Guild(PartialGuild):
         if self.banner_hash is None:
             return None
 
-        return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
+        return routes.CDN_GUILD_BANNER.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=format_,
+        )

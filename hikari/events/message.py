@@ -92,7 +92,7 @@ class UpdatedMessageFields(snowflake.Unique):
     guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = attr.ib(repr=True)
     """The ID of the guild that the message was sent in."""
 
-    author: typing.Union[users.User, undefined.UndefinedType] = attr.ib(repr=True)
+    author: typing.Union[users.UserImpl, undefined.UndefinedType] = attr.ib(repr=True)
     """The author of this message."""
 
     member: typing.Union[guilds.Member, undefined.UndefinedType] = attr.ib(repr=False)

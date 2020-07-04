@@ -43,8 +43,9 @@ import attr
 
 from hikari.models import permissions
 from hikari.models import users
-from hikari.utilities import cdn
+from hikari.utilities import constants
 from hikari.utilities import files
+from hikari.utilities import routes
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -197,7 +198,7 @@ class TextChannel(PartialChannel, abc.ABC):
         ] = undefined.UNDEFINED,
         mentions_everyone: bool = False,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.User]], bool
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]], bool
         ] = True,
         role_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
@@ -230,7 +231,7 @@ class TextChannel(PartialChannel, abc.ABC):
         mentions_everyone : bool
             Whether `@everyone` and `@here` mentions should be resolved by
             discord and lead to actual pings, defaults to `builtins.False`.
-        user_mentions : typing.Collection[hikari.models.users.User or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool
             Either an array of user objects/IDs to allow mentions for,
             `builtins.True` to allow all user mentions or `builtins.False`
             to block all user mentions from resolving, defaults to
@@ -323,7 +324,7 @@ class DMChannel(TextChannel):
         this will always be valid.
     """
 
-    recipients: typing.Mapping[snowflake.Snowflake, users.User] = attr.ib(eq=False, hash=False, repr=False)
+    recipients: typing.Mapping[snowflake.Snowflake, users.UserImpl] = attr.ib(eq=False, hash=False, repr=False)
     """The recipients of the DM."""
 
     def __str__(self) -> str:
@@ -383,7 +384,9 @@ class GroupDMChannel(DMChannel):
         if self.icon_hash is None:
             return None
 
-        return cdn.generate_cdn_url("channel-icons", str(self.id), self.icon_hash, format_=format, size=size)
+        return routes.CDN_CHANNEL_ICON.compile_to_file(
+            constants.CDN_URL, channel_id=self.id, hash=self.icon_hash, size=size, file_format=format,
+        )
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

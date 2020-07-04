@@ -33,8 +33,9 @@ import typing
 import attr
 
 from hikari.models import guilds
-from hikari.utilities import cdn
+from hikari.utilities import constants
 from hikari.utilities import files
+from hikari.utilities import routes
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
@@ -135,7 +136,9 @@ class InviteGuild(guilds.PartialGuild):
         if self.splash_hash is None:
             return None
 
-        return cdn.generate_cdn_url("splashes", str(self.id), self.splash_hash, format_=format_, size=size)
+        return routes.CDN_GUILD_SPLASH.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=format_,
+        )
 
     @property
     def banner(self) -> typing.Optional[files.URL]:
@@ -156,7 +159,7 @@ class InviteGuild(guilds.PartialGuild):
 
         Returns
         -------
-        hikari.utilities.files.URL or None
+        hikari.utilities.files.URL or builtins.None
             The URL of the banner, or `builtins.None` if no banner is set.
 
         Raises
@@ -167,7 +170,9 @@ class InviteGuild(guilds.PartialGuild):
         if self.banner_hash is None:
             return None
 
-        return cdn.generate_cdn_url("banners", str(self.id), self.banner_hash, format_=format_, size=size)
+        return routes.CDN_GUILD_BANNER.compile_to_file(
+            constants.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=format_,
+        )
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -203,10 +208,10 @@ class Invite:
     channel_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the channel this invite targets."""
 
-    inviter: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=False)
+    inviter: typing.Optional[users.UserImpl] = attr.ib(eq=False, hash=False, repr=False)
     """The object of the user who created this invite."""
 
-    target_user: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=False)
+    target_user: typing.Optional[users.UserImpl] = attr.ib(eq=False, hash=False, repr=False)
     """The object of the user who this invite targets, if set."""
 
     target_user_type: typing.Optional[TargetUserType] = attr.ib(eq=False, hash=False, repr=False)

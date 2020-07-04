@@ -35,7 +35,7 @@ import typing
 from hikari import config
 from hikari.api import bot
 from hikari.impl import cache as cache_impl
-from hikari.impl import constants
+from hikari.utilities import constants
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_manager
 from hikari.impl import gateway_zookeeper
@@ -160,13 +160,6 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
     builtins.ValueError
         If sharding information is provided, but is unfeasible or invalid.
     """
-
-    if typing.TYPE_CHECKING:
-        EventT = typing.TypeVar("EventT", bound=base_events.Event)
-        PredicateT = typing.Callable[[base_events.Event], typing.Union[bool, typing.Coroutine[None, typing.Any, bool]]]
-        SyncCallbackT = typing.Callable[[base_events.Event], None]
-        AsyncCallbackT = typing.Callable[[base_events.Event], typing.Coroutine[None, typing.Any, None]]
-        CallbackT = typing.Union[SyncCallbackT, AsyncCallbackT]
 
     def __init__(
         self,
@@ -309,45 +302,42 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         return super().start()
 
     def listen(
-        self, event_type: typing.Union[undefined.UndefinedType, typing.Type[EventT]] = undefined.UNDEFINED,
-    ) -> typing.Callable[[CallbackT], CallbackT]:
+        self,
+        event_type: typing.Union[undefined.UndefinedType, typing.Type[event_dispatcher_.EventT]] = undefined.UNDEFINED,
+    ) -> typing.Callable[[event_dispatcher_.CallbackT], event_dispatcher_.CallbackT]:
         return self.event_dispatcher.listen(event_type)
 
     def get_listeners(
-        self, event_type: typing.Type[EventT], *, polymorphic: bool = True,
-    ) -> typing.Collection[typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]]:
+        self, event_type: typing.Type[event_dispatcher_.EventT], *, polymorphic: bool = True,
+    ) -> typing.Collection[event_dispatcher_.AsyncCallbackT]:
         return self.event_dispatcher.get_listeners(event_type, polymorphic=polymorphic)
 
     def has_listener(
         self,
-        event_type: typing.Type[EventT],
-        callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
+        event_type: typing.Type[event_dispatcher_.EventT],
+        callback: event_dispatcher_.AsyncCallbackT,
         *,
         polymorphic: bool = True,
     ) -> bool:
         return self.event_dispatcher.has_listener(event_type, callback, polymorphic=polymorphic)
 
     def subscribe(
-        self,
-        event_type: typing.Type[EventT],
-        callback: typing.Callable[[EventT], typing.Union[typing.Coroutine[None, typing.Any, None], None]],
-    ) -> typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]]:
+        self, event_type: typing.Type[event_dispatcher_.EventT], callback: event_dispatcher_.CallbackT,
+    ) -> event_dispatcher_.CallbackT:
         return self.event_dispatcher.subscribe(event_type, callback)
 
     def unsubscribe(
-        self,
-        event_type: typing.Type[EventT],
-        callback: typing.Callable[[EventT], typing.Coroutine[None, typing.Any, None]],
+        self, event_type: typing.Type[event_dispatcher_.EventT], callback: event_dispatcher_.AsyncCallbackT,
     ) -> None:
         return self.event_dispatcher.unsubscribe(event_type, callback)
 
     async def wait_for(
         self,
-        event_type: typing.Type[EventT],
+        event_type: typing.Type[event_dispatcher_.EventT],
         /,
         timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[PredicateT] = None,
-    ) -> EventT:
+        predicate: typing.Optional[event_dispatcher_.PredicateT] = None,
+    ) -> event_dispatcher_.EventT:
         return await self.event_dispatcher.wait_for(event_type, predicate=predicate, timeout=timeout)
 
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:

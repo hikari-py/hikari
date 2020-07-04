@@ -35,7 +35,7 @@ import attr
 
 from hikari import errors
 from hikari.api import gateway
-from hikari.impl import constants
+from hikari.utilities import constants
 from hikari.impl import rate_limits
 from hikari.models import presences
 from hikari.utilities import data_binding
@@ -103,6 +103,12 @@ class GatewayShardImpl(gateway.IGatewayShard):
         `initial_is_afk`, and `initial_status` are not defined and left to their
         default values, then the presence will not be _updated_ on startup
         at all.
+
+        If any of these _are_ specified, then any that are not specified will
+        be set to sane defaults, which may change the previous status. This will
+        only occur during startup, and is an artifact of how Discord manages
+        these updates internally. All other calls to update the status of
+        the shard will support partial updates.
     """
 
     @enum.unique
@@ -438,13 +444,13 @@ class GatewayShardImpl(gateway.IGatewayShard):
         status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
     ) -> None:
         if idle_since is undefined.UNDEFINED:
-            idle_since = self._idle_since
+            idle_since = self._idle_since if self._idle_since is not undefined.UNDEFINED else None
         if afk is undefined.UNDEFINED:
-            afk = self._is_afk
+            afk = self._is_afk if self._is_afk is not undefined.UNDEFINED else False
         if status is undefined.UNDEFINED:
-            status = self._status
+            status = self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE
         if activity is undefined.UNDEFINED:
-            activity = self._activity
+            activity = self._activity if self._activity is not undefined.UNDEFINED else None
 
         presence = self._app.entity_factory.serialize_gateway_presence(
             idle_since=idle_since, afk=afk, status=status, activity=activity
@@ -455,10 +461,10 @@ class GatewayShardImpl(gateway.IGatewayShard):
         await self._send_json(payload)
 
         # Update internal status.
-        self._idle_since = idle_since if idle_since is not undefined.UNDEFINED else self._idle_since
-        self._is_afk = afk if afk is not undefined.UNDEFINED else self._is_afk
-        self._activity = activity if activity is not undefined.UNDEFINED else self._activity
-        self._status = status if status is not undefined.UNDEFINED else self._status
+        self._idle_since = idle_since
+        self._is_afk = afk
+        self._activity = activity
+        self._status = status
 
     async def update_voice_state(
         self,
@@ -513,7 +519,10 @@ class GatewayShardImpl(gateway.IGatewayShard):
         if undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
             # noinspection PyTypeChecker
             payload["d"]["presence"] = self._app.entity_factory.serialize_gateway_presence(
-                self._idle_since, self._is_afk, self._status, self._activity,
+                idle_since=self._idle_since if self._idle_since is not undefined.UNDEFINED else None,
+                afk=self._is_afk if self._is_afk is not undefined.UNDEFINED else False,
+                status=self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE,
+                activity=self._activity if self._activity is not undefined.UNDEFINED else None,
             )
 
         await self._send_json(payload)
