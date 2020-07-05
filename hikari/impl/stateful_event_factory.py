@@ -21,6 +21,7 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = ["EventFactoryImpl"]
 
+import asyncio
 import typing
 
 from hikari.events import other as other_events
@@ -85,13 +86,27 @@ class EventFactoryImpl(event_factory_base.EventFactoryComponentBase):
     async def on_guild_create(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
         event = self.app.entity_factory.deserialize_guild_create_event(payload)
-        _ = await self.app.cache.set_guild(event.guild)
+        await self.app.cache.set_guild(event.guild)
+        await asyncio.gather(
+            self.app.cache.set_all_guild_channels(event.guild.id, event.channels.values()),
+            self.app.cache.set_all_guild_emojis(event.guild.id, event.emojis.values()),
+            self.app.cache.set_all_guild_roles(event.guild.id, event.roles.values()),
+            self.app.cache.set_all_guild_members(event.guild.id, event.members.values()),
+            self.app.cache.set_all_guild_presences(event.guild.id, event.presences.values()),
+        )
         await self.dispatch(event)
 
     async def on_guild_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-update for more info."""
         event = self.app.entity_factory.deserialize_guild_update_event(payload)
-        _ = await self.app.cache.set_guild(event.guild)
+        await self.app.cache.set_guild(event.guild)
+        await asyncio.gather(
+            self.app.cache.set_all_guild_channels(event.guild.id, event.channels.values()),
+            self.app.cache.set_all_guild_emojis(event.guild.id, event.emojis.values()),
+            self.app.cache.set_all_guild_roles(event.guild.id, event.roles.values()),
+            self.app.cache.set_all_guild_members(event.guild.id, event.members.values()),
+            self.app.cache.set_all_guild_presences(event.guild.id, event.presences.values()),
+        )
         await self.dispatch(event)
 
     async def on_guild_delete(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
@@ -100,7 +115,7 @@ class EventFactoryImpl(event_factory_base.EventFactoryComponentBase):
             event = self.app.entity_factory.deserialize_guild_unavailable_event(payload)
             guild = guilds.UnavailableGuild()
             guild.id = event.id
-            await self.app.cache.store_unavailable_guild(guild)
+            await self.app.cache.set_guild_availability(guild.id, False)
 
         else:
             event = self.app.entity_factory.deserialize_guild_leave_event(payload)
