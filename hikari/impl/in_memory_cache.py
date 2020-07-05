@@ -71,14 +71,16 @@ class InMemoryCacheComponentImpl(cache.ICacheComponent):
     def _is_intent_enabled(self, intents: intents_.Intent, /) -> bool:
         return self._intents is None or self._intents & intents
 
+    def delete_guild(self, guild_id: snowflake.Snowflake) -> typing.Optional[guilds.Guild]:
+        if guild_id not in self._guild_entries:
+            return None
+
+        guild_record = self._guild_entries[guild_id]
+        del self._guild_entries[guild_id]
+        return guild_record.guild
+
     def get_me(self) -> typing.Optional[users.OwnUser]:
         return self._me
-
-    def set_me(self, new: users.OwnUser, /) -> typing.Optional[users.OwnUser]:
-        _LOGGER.debug("setting my user to %s", new)
-        old = self._me
-        self._me = new
-        return old
 
     def get_guild(self, guild_id: snowflake.Snowflake) -> typing.Optional[guilds.GatewayGuild]:
         if (entry := self._guild_entries.get(guild_id)) is not None:
@@ -86,6 +88,74 @@ class InMemoryCacheComponentImpl(cache.ICacheComponent):
                 raise errors.UnavailableGuildError(entry.guild)
             return entry.guild
         return None
+
+    def get_guild_channel(
+        self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake
+    ) -> typing.Optional[channels.GuildChannel]:
+        guild_record = self._guild_entries.get(guild_id)
+        if guild_record is not None and guild_record.channels is not None:
+            return guild_record.channels.get(channel_id)
+
+    def get_guild_emoji(
+        self, guild_id: snowflake.Snowflake, emoji_id: snowflake.Snowflake
+    ) -> typing.Optional[emojis.KnownCustomEmoji]:
+        guild_record = self._guild_entries.get(guild_id)
+        if guild_record is not None:
+            return guild_record.emojis.get(emoji_id)
+
+    def get_guild_member(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake
+    ) -> typing.Optional[guilds.Member]:
+        guild_record = self._guild_entries.get(guild_id)
+        if guild_record is None or guild_record.members is None:
+            return None
+        return guild_record.members.get(user_id)
+
+    def get_guild_presence(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake
+    ) -> typing.Optional[presences.MemberPresence]:
+        guild_record = self._guild_entries.get(guild_id)
+        if guild_record is None or guild_record.members is None:
+            return None
+        return guild_record.presences.get(user_id)
+
+    def get_guild_role(
+        self, guild_id: snowflake.Snowflake, role_id: snowflake.Snowflake
+    ) -> typing.Optional[guilds.Role]:
+        guild_record = self._guild_entries.get(guild_id)
+        if guild_record.emojis is None or guild_record.roles is None:
+            return None
+        return guild_record.roles[role_id]
+
+    def iter_guilds(self) -> typing.Iterator[guilds.GatewayGuild]:
+        for record in self._guild_entries.values():
+            if record.guild is not None:
+                yield record.guild
+
+    def iter_guild_channels(self, guild_id: snowflake.Snowflake) -> typing.Iterator[channels.GuildChannel]:
+        guild_record = self._guild_entries.get(guild_id)
+        if guild_record is not None and guild_record.channels is not None:
+            yield from guild_record.channels.values()
+
+    def iter_guild_emojis(self, guild_id: snowflake.Snowflake) -> typing.Iterator[emojis.KnownCustomEmoji]:
+        guild_record = self._guild_entries.get(guild_id)
+        if guild_record is not None and guild_record.emojis is not None:
+            yield from guild_record.emojis.values()
+
+    def iter_guild_members(self, guild_id: snowflake.Snowflake) -> typing.Iterator[guilds.Member]:
+        guild_record = self._guild_entries.get(guild_id)
+        if guild_record is not None and guild_record.members is not None:
+            yield from guild_record.members.values()
+
+    def iter_guild_presences(self, guild_id: snowflake.Snowflake) -> typing.Iterator[presences.MemberPresence]:
+        guild_record = self._guild_entries.get(guild_id)
+        if guild_record is not None and guild_record.presences is not None:
+            yield from guild_record.presences
+
+    def iter_guild_roles(self, guild_id: snowflake.Snowflake) -> typing.Iterator[guilds.Role]:
+        guild_record = self._guild_entries.get(guild_id)
+        if guild_record is not None and guild_record.roles is not None:
+            yield from guild_record.roles.values()
 
     def set_initial_unavailable_guilds(self, guild_ids: typing.Collection[snowflake.Snowflake]) -> None:
         # Invoked when we receive ON_READY, assume all of these are unavailable on startup.
@@ -109,89 +179,41 @@ class InMemoryCacheComponentImpl(cache.ICacheComponent):
         guild_record.is_available = True
         return old
 
-    def delete_guild(self, guild_id: snowflake.Snowflake) -> typing.Optional[guilds.Guild]:
-        if guild_id not in self._guild_entries:
-            return None
-
-        guild_record = self._guild_entries[guild_id]
-        del self._guild_entries[guild_id]
-        return guild_record.guild
-
     def set_guild_availability(self, guild_id: snowflake.Snowflake, is_available: bool) -> None:
-        if guild_id in self._guild_entries:
-            self._guild_entries[guild_id].is_available = is_available
+        if guild_id not in self._guild_entries:
+            self._guild_entries[guild_id] = GuildRecord(guild_id)
 
-    def iter_guilds(self) -> typing.Iterator[guilds.GatewayGuild]:
-        for record in self._guild_entries.values():
-            if record.guild is not None:
-                yield record.guild
+        self._guild_entries[guild_id].is_available = is_available
 
-    def get_guild_channel(
-        self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake
-    ) -> typing.Optional[channels.GuildChannel]:
-        guild_record = self._guild_entries.get(guild_id)
-        if guild_record is not None and guild_record.channels is not None:
-            return guild_record.channels.get(channel_id)
+    def set_me(self, new: users.OwnUser, /) -> typing.Optional[users.OwnUser]:
+        _LOGGER.debug("setting my user to %s", new)
+        old = self._me
+        self._me = new
+        return old
 
-    def set_all_guild_channels(
+    def replace_all_guild_channels(
         self, guild_id: snowflake.Snowflake, channel_objs: typing.Collection[channels.GuildChannel]
     ) -> None:
+        if guild_id not in self._guild_entries:
+            self._guild_entries[guild_id] = GuildRecord(guild_id)
+
         self._guild_entries[guild_id].channels = sorted(channel_objs, key=lambda c: c.position)
 
-    def iter_guild_channels(self, guild_id: snowflake.Snowflake) -> typing.Iterator[channels.GuildChannel]:
-        guild_record = self._guild_entries.get(guild_id)
-        if guild_record is not None and guild_record.channels is not None:
-            yield from guild_record.channels.values()
-
-    def get_guild_emoji(
-        self, guild_id: snowflake.Snowflake, emoji_id: snowflake.Snowflake
-    ) -> typing.Optional[emojis.KnownCustomEmoji]:
-        guild_record = self._guild_entries.get(guild_id)
-        if guild_record is not None:
-            return guild_record.emojis.get(emoji_id)
-
-    def set_all_guild_emojis(
+    def replace_all_guild_emojis(
         self, guild_id: snowflake.Snowflake, emoji_objs: typing.Collection[emojis.KnownCustomEmoji]
     ) -> None:
+        if guild_id not in self._guild_entries:
+            self._guild_entries[guild_id] = GuildRecord(guild_id)
+
         guild_record = self._guild_entries.get(guild_id)
         if guild_record is not None:
             guild_record.emojis = {emoji_obj.id: emoji_obj for emoji_obj in emoji_objs}
 
-    def iter_guild_emojis(self, guild_id: snowflake.Snowflake) -> typing.Iterator[emojis.KnownCustomEmoji]:
-        guild_record = self._guild_entries.get(guild_id)
-        if guild_record is not None and guild_record.emojis is not None:
-            yield from guild_record.emojis.values()
-
-    def get_guild_role(
-        self, guild_id: snowflake.Snowflake, role_id: snowflake.Snowflake
-    ) -> typing.Optional[guilds.Role]:
-        guild_record = self._guild_entries.get(guild_id)
-        if guild_record.emojis is None or guild_record.roles is None:
-            return None
-        return guild_record.roles[role_id]
-
-    def set_all_guild_roles(self, guild_id: snowflake.Snowflake, roles: typing.Collection[guilds.Role]) -> None:
-        # Top role first!
-        self._guild_entries[guild_id].roles = {
-            role.id: role for role in sorted(roles, key=lambda r: r.position, reverse=True)
-        }
-
-    def iter_guild_roles(self, guild_id: snowflake.Snowflake) -> typing.Iterator[guilds.Role]:
-        guild_record = self._guild_entries.get(guild_id)
-        if guild_record is not None and guild_record.roles is not None:
-            yield from guild_record.roles.values()
-
-    def get_guild_member(
-        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake
-    ) -> typing.Optional[guilds.Member]:
-        guild_record = self._guild_entries.get(guild_id)
-        if guild_record is None or guild_record.members is None:
-            return None
-        return guild_record.members.get(user_id)
-
-    def set_all_guild_members(
+    def replace_all_guild_members(
         self, guild_id: snowflake.Snowflake, member_objs: typing.Collection[guilds.Member]
     ) -> None:
+        if guild_id not in self._guild_entries:
+            self._guild_entries[guild_id] = GuildRecord(guild_id)
 
         self._guild_entries[guild_id].members = {}
 
@@ -202,28 +224,22 @@ class InMemoryCacheComponentImpl(cache.ICacheComponent):
                 self._user_entries[member.id] = member.user
             self._guild_entries[guild_id].members[member.id] = member
 
-    def iter_guild_members(self, guild_id: snowflake.Snowflake) -> typing.Iterator[guilds.Member]:
-        guild_record = self._guild_entries.get(guild_id)
-        if guild_record is not None and guild_record.members is not None:
-            yield from guild_record.members.values()
-
-    def get_guild_presence(
-        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake
-    ) -> typing.Optional[presences.MemberPresence]:
-        guild_record = self._guild_entries.get(guild_id)
-        if guild_record is None or guild_record.members is None:
-            return None
-        return guild_record.presences.get(user_id)
-
-    def iter_guild_presences(self, guild_id: snowflake.Snowflake) -> typing.Iterator[presences.MemberPresence]:
-        guild_record = self._guild_entries.get(guild_id)
-        if guild_record is not None and guild_record.presences is not None:
-            yield from guild_record.presences
-
-    def set_all_guild_presences(
+    def replace_all_guild_presences(
         self, guild_id: snowflake.Snowflake, presence_objs: typing.Collection[presences.MemberPresence]
     ) -> None:
+        if guild_id not in self._guild_entries:
+            self._guild_entries[guild_id] = GuildRecord(guild_id)
+
         self._guild_entries[guild_id].presences = {presence_obj.user_id: presence_obj for presence_obj in presence_objs}
+
+    def replace_all_guild_roles(self, guild_id: snowflake.Snowflake, roles: typing.Collection[guilds.Role]) -> None:
+        if guild_id not in self._guild_entries:
+            self._guild_entries[guild_id] = GuildRecord(guild_id)
+
+        # Top role first!
+        self._guild_entries[guild_id].roles = {
+            role.id: role for role in sorted(roles, key=lambda r: r.position, reverse=True)
+        }
 
 
 @attr.s(slots=True, repr=False, hash=False, auto_attribs=True)
