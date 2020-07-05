@@ -49,7 +49,7 @@ from hikari.models import intents
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest_app
+    from hikari.api.rest import app
     from hikari.models import emojis as emojis_models
     from hikari.models import guilds
     from hikari.models import presences
@@ -113,7 +113,7 @@ class GuildUnavailableEvent(GuildEvent, snowflake.Unique):
     )
     """The ID of this entity."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
 
@@ -122,7 +122,7 @@ class GuildUnavailableEvent(GuildEvent, snowflake.Unique):
 class GuildBanEvent(GuildEvent, abc.ABC):
     """A base object that guild ban events will inherit from."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -149,7 +149,7 @@ class GuildBanRemoveEvent(GuildBanEvent):
 class GuildEmojisUpdateEvent(GuildEvent):
     """Represents a Guild Emoji Update gateway event."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -164,7 +164,7 @@ class GuildEmojisUpdateEvent(GuildEvent):
 class GuildIntegrationsUpdateEvent(GuildEvent):
     """Used to represent Guild Integration Update gateway events."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -182,7 +182,7 @@ class GuildMemberEvent(GuildEvent):
 class GuildMemberAddEvent(GuildMemberEvent):
     """Used to represent a Guild Member Add gateway event."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)  # TODO: do we want to have guild_id on all members?
@@ -211,7 +211,7 @@ class GuildMemberRemoveEvent(GuildMemberEvent):
     Sent when a member is kicked, banned or leaves a guild.
     """
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     # TODO: make GuildMember event into common base class.
@@ -232,7 +232,7 @@ class GuildRoleEvent(GuildEvent):
 class GuildRoleCreateEvent(GuildRoleEvent):
     """Used to represent a Guild Role Create gateway event."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -247,7 +247,7 @@ class GuildRoleCreateEvent(GuildRoleEvent):
 class GuildRoleUpdateEvent(GuildRoleEvent):
     """Used to represent a Guild Role Create gateway event."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     # TODO: make any event with a guild ID into a custom base event.
@@ -264,7 +264,7 @@ class GuildRoleUpdateEvent(GuildRoleEvent):
 class GuildRoleDeleteEvent(GuildRoleEvent):
     """Represents a gateway Guild Role Delete Event."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)

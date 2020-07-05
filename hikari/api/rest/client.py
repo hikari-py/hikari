@@ -29,7 +29,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import special_endpoints
+    from hikari.api.rest import special_endpoints
     from hikari.models import applications
     from hikari.models import audit_logs
     from hikari.models import channels

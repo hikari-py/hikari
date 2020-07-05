@@ -35,12 +35,12 @@ import aiohttp
 
 from hikari import config
 from hikari import errors
-from hikari.api import rest_client
-from hikari.impl import buckets
+from hikari.api.rest import client
+from hikari.impl.rest import buckets
 from hikari.utilities import constants
 from hikari.impl import rate_limits
-from hikari.impl import response_handler
-from hikari.impl import special_endpoints
+from hikari.utilities import response_handler
+from hikari.impl.rest import special_endpoints
 from hikari.models import embeds as embeds_
 from hikari.models import emojis
 from hikari.utilities import data_binding
@@ -52,7 +52,7 @@ from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest_app
+    from hikari.api.rest import app
 
     from hikari.models import applications
     from hikari.models import audit_logs
@@ -70,7 +70,7 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
 
-class RESTClientImpl(rest_client.IRESTClient):
+class RESTClientImpl(client.IRESTClient):
     """Implementation of the V6 and V7-compatible Discord HTTP API.
 
     This manages making HTTP/1.1 requests to the API and using the entity
@@ -140,7 +140,7 @@ class RESTClientImpl(rest_client.IRESTClient):
     def __init__(
         self,
         *,
-        app: rest_app.IRESTApp,
+        app: app.IRESTApp,
         connector: typing.Optional[aiohttp.BaseConnector],
         connector_owner: bool,
         debug: bool,
@@ -180,7 +180,7 @@ class RESTClientImpl(rest_client.IRESTClient):
         self._rest_url = rest_url.format(self)
 
     @property
-    def app(self) -> rest_app.IRESTApp:
+    def app(self) -> app.IRESTApp:
         return self._app
 
     @typing.final

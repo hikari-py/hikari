@@ -34,7 +34,7 @@ import aiohttp
 import attr
 
 from hikari import errors
-from hikari.api import gateway
+from hikari.api.gateway import shard
 from hikari.utilities import constants
 from hikari.impl import rate_limits
 from hikari.models import presences
@@ -45,19 +45,19 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import config
-    from hikari.api import event_consumer
+    from hikari.api.gateway import consumer
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import intents as intents_
     from hikari.utilities import snowflake
 
 
-class GatewayShardImpl(gateway.IGatewayShard):
+class GatewayShardImpl(shard.IGatewayShard):
     """Implementation of a V6 and V7 compatible gateway.
 
     Parameters
     ----------
-    app : hikari.api.event_consumer.IEventConsumerApp
+    app : hikari.api.gateway.consumer.IEventConsumerApp
         The base application.
     debug : builtins.bool
         If `builtins.True`, each sent and received payload is dumped to the
@@ -182,7 +182,7 @@ class GatewayShardImpl(gateway.IGatewayShard):
     def __init__(
         self,
         *,
-        app: event_consumer.IEventConsumerApp,
+        app: consumer.IEventConsumerApp,
         debug: bool = False,
         http_settings: config.HTTPSettings,
         initial_activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
@@ -250,7 +250,7 @@ class GatewayShardImpl(gateway.IGatewayShard):
 
     @property
     @typing.final
-    def app(self) -> event_consumer.IEventConsumerApp:
+    def app(self) -> consumer.IEventConsumerApp:
         return self._app
 
     @property

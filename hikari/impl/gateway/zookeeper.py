@@ -31,11 +31,11 @@ import signal
 import time
 import typing
 
-from hikari.api import event_dispatcher
-from hikari.api import gateway
-from hikari.api import gateway_zookeeper
+from hikari.api.gateway import dispatcher
+from hikari.api.gateway import shard as gateway_shard
+from hikari.api.gateway import zookeeper as gateway_zookeeper
 from hikari.events import other
-from hikari.impl import gateway as gateway_impl
+from hikari.impl.gateway import shard as gateway_impl
 from hikari.utilities import aio
 from hikari.utilities import undefined
 
@@ -174,14 +174,14 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
         self._request_close_event = asyncio.Event()
         self._shard_count: int = shard_count if shard_count is not None else 0
         self._shard_ids: typing.Set[int] = set() if shard_ids is None else shard_ids
-        self._shards: typing.Dict[int, gateway.IGatewayShard] = {}
+        self._shards: typing.Dict[int, gateway_shard.IGatewayShard] = {}
         self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
         self._use_compression = compression
         self._version = version
 
     @property
-    def shards(self) -> typing.Mapping[int, gateway.IGatewayShard]:
+    def shards(self) -> typing.Mapping[int, gateway_shard.IGatewayShard]:
         return self._shards
 
     @property
@@ -324,7 +324,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
 
         reset_at = gw_recs.session_start_limit.reset_at.strftime("%d/%m/%y %H:%M:%S %Z").rstrip()
 
-        shard_clients: typing.Dict[int, gateway.IGatewayShard] = {}
+        shard_clients: typing.Dict[int, gateway_shard.IGatewayShard] = {}
         for shard_id in self._shard_ids:
             shard = gateway_impl.GatewayShardImpl(
                 app=self,
@@ -406,7 +406,7 @@ class AbstractGatewayZookeeper(gateway_zookeeper.IGatewayZookeeperApp, abc.ABC):
             await self.close()
 
     def _maybe_dispatch(self, event: base_events.Event) -> typing.Awaitable[typing.Any]:
-        if isinstance(self, event_dispatcher.IEventDispatcherApp):
+        if isinstance(self, dispatcher.IEventDispatcherApp):
             return self.event_dispatcher.dispatch(event)
         else:
             return aio.completed_future()

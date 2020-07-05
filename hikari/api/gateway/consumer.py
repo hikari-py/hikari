@@ -24,10 +24,10 @@ import abc
 import typing
 
 from hikari.api import component
-from hikari.api import rest_app
+from hikari.api.rest import app
 
 if typing.TYPE_CHECKING:
-    from hikari.api import gateway
+    from hikari.api.gateway import shard as gateway_shard
     from hikari.utilities import data_binding
 
 
@@ -44,7 +44,7 @@ class IEventConsumerComponent(component.IComponent, abc.ABC):
 
     @abc.abstractmethod
     async def consume_raw_event(
-        self, shard: gateway.IGatewayShard, event_name: str, payload: data_binding.JSONObject
+        self, shard: gateway_shard.IGatewayShard, event_name: str, payload: data_binding.JSONObject
     ) -> None:
         """Process a raw event from a gateway shard and process it.
 
@@ -59,7 +59,7 @@ class IEventConsumerComponent(component.IComponent, abc.ABC):
         """
 
 
-class IEventConsumerApp(rest_app.IRESTApp, abc.ABC):
+class IEventConsumerApp(app.IRESTApp, abc.ABC):
     """Application specialization that supports consumption of raw events.
 
     This may be combined with `IGatewayZookeeperApp` for most single-process

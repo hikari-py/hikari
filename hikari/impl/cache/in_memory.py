@@ -26,16 +26,16 @@ import typing
 from hikari.api import cache
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest_app
+    from hikari.api.rest import app
 
 
 class InMemoryCacheComponentImpl(cache.ICacheComponent):
     """In-memory cache implementation."""
 
-    def __init__(self, app: rest_app.IRESTApp) -> None:
+    def __init__(self, app: app.IRESTApp) -> None:
         self._app = app
 
     @property
     @typing.final
-    def app(self) -> rest_app.IRESTApp:
+    def app(self) -> app.IRESTApp:
         return self._app

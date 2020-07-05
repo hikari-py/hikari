@@ -56,7 +56,7 @@ from hikari.utilities import snowflake
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import rest_app
+    from hikari.api.rest import app
     from hikari.models import channels as channels_
     from hikari.models import colors
     from hikari.models import emojis as emojis_
@@ -237,7 +237,7 @@ class GuildVerificationLevel(int, enum.Enum):
 class GuildWidget:
     """Represents a guild embed."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
@@ -299,7 +299,7 @@ class Member(users.User):
     """
 
     @property
-    def app(self) -> rest_app.IRESTApp:
+    def app(self) -> app.IRESTApp:
         """Return the app that is bound to the user object."""
         return self.user.app
 
@@ -385,7 +385,7 @@ class PartialRole(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
@@ -554,7 +554,7 @@ class PartialGuild(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)

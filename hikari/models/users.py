@@ -34,7 +34,7 @@ from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest_app
+    from hikari.api.rest import app
 
 
 @enum.unique
@@ -238,7 +238,7 @@ class PartialUser(snowflake.Unique):
     )
     """The ID of this user."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """Reference to the client application that models may use for procedures."""
 
     discriminator: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)

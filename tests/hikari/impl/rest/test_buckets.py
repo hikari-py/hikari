@@ -15,14 +15,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import asyncio
 import datetime
 import time
 
 import mock
 import pytest
 
-from hikari.impl import buckets
+from hikari.impl.rest import buckets
 from hikari.utilities import routes
 from tests.hikari import hikari_test_helpers
 
