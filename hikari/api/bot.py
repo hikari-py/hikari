@@ -34,6 +34,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari.models import intents as intents_
+    from hikari.models import users
 
 
 class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatcherApp, voice.IVoiceApp, abc.ABC):
@@ -155,4 +156,19 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
         -------
         datetime.timedelta
             The number of seconds the application has been running.
+        """
+
+    @property
+    @abc.abstractmethod
+    def me(self) -> typing.Optional[users.OwnUser]:
+        """Return the bot user, if known.
+
+        You can assume this is set once the `READY` event has been fired. Before
+        this, expect this to potentially be `builtins.None`.
+
+        Returns
+        -------
+        hikari.models.users.OwnUser or builtins.None
+            The bot user, or `builtins.None` if the application is not yet
+            `READY`.
         """

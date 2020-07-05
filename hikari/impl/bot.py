@@ -46,7 +46,9 @@ from hikari.impl import in_memory_cache as cache_impl
 from hikari.impl import rate_limits
 from hikari.impl import rest as rest_client_impl
 from hikari.impl import shard as gateway_shard_impl
+from hikari.impl import stateful_event_factory
 from hikari.impl import stateless_cache as stateless_cache_impl
+from hikari.impl import stateless_event_factory
 from hikari.impl import voice
 from hikari.models import intents as intents_
 from hikari.models import presences
@@ -61,6 +63,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_dispatcher as event_dispatcher_
     from hikari.events import base_events
     from hikari.models import gateway as gateway_models
+    from hikari.models import users
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
@@ -246,15 +249,16 @@ class BotAppImpl(bot.IBotApp):
 
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl()
+            self._event_factory = stateless_event_factory.StatelessEventFactoryImpl(app=self, intents=intents)
             _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
-            self._cache = cache_impl.InMemoryCacheComponentImpl(app=self)
+            self._cache = cache_impl.InMemoryCacheComponentImpl(app=self, intents=intents)
+            self._event_factory = stateful_event_factory.EventFactoryImpl(app=self, intents=intents)
 
         self._connector_factory = rest_client_impl.BasicLazyCachedTCPConnectorFactory()
         self._debug = debug
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
         self._event_factory = event_factory_impl.EventFactoryComponentImpl(app=self)
-        self._event_manager = event_manager.EventManagerComponentImpl(app=self, intents_=intents)
         self._executor = executor
         self._global_ratelimit = rate_limits.ManualRateLimiter()
         self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
@@ -288,7 +292,7 @@ class BotAppImpl(bot.IBotApp):
         self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
         self._version = gateway_version
-        self._voice = voice.VoiceComponentImpl(self, self._event_manager)
+        self._voice = voice.VoiceComponentImpl(self, self._event_factory)
         # This should always be last so that we don't get an extra error when failed to initialize
         self._start_count: int = 0
 
@@ -313,12 +317,12 @@ class BotAppImpl(bot.IBotApp):
         return self._entity_factory
 
     @property
-    def event_consumer(self) -> event_manager.EventManagerComponentImpl:
-        return self._event_manager
+    def event_consumer(self) -> stateful_event_factory.EventFactoryImpl:
+        return self._event_factory
 
     @property
-    def event_dispatcher(self) -> event_manager.EventManagerComponentImpl:
-        return self._event_manager
+    def event_dispatcher(self) -> stateful_event_factory.EventFactoryImpl:
+        return self._event_factory
 
     @property
     def event_factory(self) -> event_factory_impl.EventFactoryComponentImpl:
@@ -353,6 +357,10 @@ class BotAppImpl(bot.IBotApp):
     @property
     def intents(self) -> typing.Optional[intents_.Intent]:
         return self._intents
+
+    @property
+    def me(self) -> typing.Optional[users.OwnUser]:
+        return self._cache.get_me()
 
     @property
     def proxy_settings(self) -> config.ProxySettings:
