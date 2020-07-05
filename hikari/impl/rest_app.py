@@ -23,7 +23,7 @@ API, such as web dashboards and other OAuth2-based scripts.
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["RESTAppFactoryImpl", "RESTClientImpl"]
+__all__: typing.Final[typing.List[str]] = ["RESTAppFactoryImpl", "RESTAppImpl"]
 
 import typing
 
@@ -46,7 +46,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
 
 
-class RESTClientImpl(rest_app.IRESTAppContextManager):
+class RESTAppImpl(rest_app.IRESTAppContextManager):
     """Client for a specific set of credentials within a HTTP-only application.
 
     Parameters
@@ -207,7 +207,7 @@ class RESTAppFactoryImpl(rest_app.IRESTAppFactory):
         return self._proxy_settings
 
     def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> rest_app.IRESTAppContextManager:
-        return RESTClientImpl(
+        return RESTAppImpl(
             connector=self._connector,
             debug=self._debug,
             http_settings=self._http_settings,
