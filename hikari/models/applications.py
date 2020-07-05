@@ -42,7 +42,7 @@ from hikari.utilities import routes
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
-    from hikari.api.rest import app
+    from hikari.api.rest import app as rest_app
     from hikari.models import permissions as permissions_
     from hikari.models import users
 
@@ -262,7 +262,7 @@ class TeamMembershipState(int, enum.Enum):
 class TeamMember:
     """Represents a member of a Team."""
 
-    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     membership_state: TeamMembershipState = attr.ib(eq=False, hash=False, repr=False)
@@ -289,7 +289,7 @@ class TeamMember:
 class Team(snowflake.Unique):
     """Represents a development team, along with all its members."""
 
-    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(
@@ -363,7 +363,7 @@ class Team(snowflake.Unique):
 class Application(snowflake.Unique):
     """Represents the information of an Oauth2 Application."""
 
-    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(

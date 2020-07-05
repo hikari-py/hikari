@@ -33,7 +33,7 @@ from hikari.utilities import routes
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
-    from hikari.api.rest import app
+    from hikari.api.rest import app as rest_app
     from hikari.models import users
 
 _TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/72x72/"
@@ -228,7 +228,7 @@ class CustomEmoji(snowflake.Unique, Emoji):
         https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913
     """
 
-    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False, init=True)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False, init=True)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(

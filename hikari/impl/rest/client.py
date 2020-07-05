@@ -52,7 +52,7 @@ from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari.api.rest import app
+    from hikari.api.rest import app as rest_app
 
     from hikari.models import applications
     from hikari.models import audit_logs
@@ -140,7 +140,7 @@ class RESTClientImpl(client.IRESTClient):
     def __init__(
         self,
         *,
-        app: app.IRESTApp,
+        app: rest_app.IRESTApp,
         connector: typing.Optional[aiohttp.BaseConnector],
         connector_owner: bool,
         debug: bool,
@@ -180,7 +180,7 @@ class RESTClientImpl(client.IRESTClient):
         self._rest_url = rest_url.format(self)
 
     @property
-    def app(self) -> app.IRESTApp:
+    def app(self) -> rest_app.IRESTApp:
         return self._app
 
     @typing.final

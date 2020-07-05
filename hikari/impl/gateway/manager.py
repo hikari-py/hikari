@@ -23,7 +23,7 @@ __all__: typing.Final[typing.List[str]] = ["EventManagerImpl"]
 
 import typing
 
-from hikari.events import other
+from hikari.events import other as other_events
 from hikari.impl.gateway import manager_core
 
 if typing.TYPE_CHECKING:
@@ -41,7 +41,7 @@ class EventManagerImpl(manager_core.EventManagerCoreComponent):
         Hikari.
         """
         # TODO: this should be in entity factory
-        await self.dispatch(other.ConnectedEvent(shard=shard))
+        await self.dispatch(other_events.ConnectedEvent(shard=shard))
 
     async def on_disconnected(self, shard: gateway_shard.IGatewayShard, _: data_binding.JSONObject) -> None:
         """Handle disconnection events.
@@ -50,7 +50,7 @@ class EventManagerImpl(manager_core.EventManagerCoreComponent):
         Hikari.
         """
         # TODO: this should be in entity factory
-        await self.dispatch(other.DisconnectedEvent(shard=shard))
+        await self.dispatch(other_events.DisconnectedEvent(shard=shard))
 
     async def on_ready(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#ready for more info."""
@@ -59,7 +59,7 @@ class EventManagerImpl(manager_core.EventManagerCoreComponent):
     async def on_resumed(self, shard: gateway_shard.IGatewayShard, _: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#resumed for more info."""
         # TODO: this should be in entity factory
-        await self.dispatch(other.ResumedEvent(shard=shard))
+        await self.dispatch(other_events.ResumedEvent(shard=shard))
 
     async def on_channel_create(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-create for more info."""

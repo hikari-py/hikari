@@ -44,7 +44,7 @@ from hikari.utilities import snowflake
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api.rest import app
+    from hikari.api.rest import app as rest_app
     from hikari.models import applications
     from hikari.models import embeds as embed_models
     from hikari.models import emojis
@@ -82,7 +82,7 @@ class UpdatedMessageFields(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -192,7 +192,7 @@ class MessageDeleteEvent(base_events.Event):
     Sent when a message is deleted in a channel we have access to.
     """
 
-    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     # TODO: common base class for Message events.
@@ -219,7 +219,7 @@ class MessageDeleteBulkEvent(base_events.Event):
     Sent when multiple messages are deleted in a channel at once.
     """
 
-    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -238,7 +238,7 @@ class MessageDeleteBulkEvent(base_events.Event):
 class MessageReactionEvent(base_events.Event):
     """A base class that all message reaction events will inherit from."""
 
-    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
