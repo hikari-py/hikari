@@ -1,3 +1,4 @@
 aiohttp==3.6.2
 attrs==19.3.0
+immutables==0.14
 multidict==4.7.6

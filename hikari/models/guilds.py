@@ -22,6 +22,8 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = [
     "Guild",
+    "RESTGuild",
+    "GatewayGuild",
     "GuildWidget",
     "Role",
     "GuildFeature",
@@ -44,6 +46,7 @@ __all__: typing.Final[typing.List[str]] = [
     "UnavailableGuild",
 ]
 
+import abc
 import enum
 import typing
 
@@ -53,6 +56,7 @@ from hikari.models import users
 from hikari.utilities import constants
 from hikari.utilities import files
 from hikari.utilities import flag
+from hikari.utilities import iterators
 from hikari.utilities import routes
 from hikari.utilities import snowflake
 
@@ -749,14 +753,7 @@ class GuildPreview(PartialGuild):
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class Guild(PartialGuild):
-    """A representation of a guild on Discord.
-
-    !!! note
-        If a guild object is considered to be unavailable, then the state of any
-        other fields other than the `is_unavailable` and `id` are
-        outdated or incorrect. If a guild is unavailable, then the contents of
-        any other fields should be ignored.
-    """
+    """A representation of a guild on Discord."""
 
     splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash of the splash for the guild, if there is one."""
@@ -766,16 +763,6 @@ class Guild(PartialGuild):
 
     owner_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the owner of this guild."""
-
-    my_permissions: typing.Optional[permissions_.Permission] = attr.ib(eq=False, hash=False, repr=False)
-    """The guild-level permissions that apply to the bot user.
-
-    This will not take into account permission overwrites or implied
-    permissions (for example, `ADMINISTRATOR` implies all other permissions).
-
-    This will be `builtins.None` when this object is retrieved through a HTTP request
-    rather than from the gateway.
-    """
 
     region: str = attr.ib(eq=False, hash=False, repr=False)
     """The voice region for the guild."""
@@ -791,16 +778,6 @@ class Guild(PartialGuild):
 
     How long a voice user has to be AFK for before they are classed as being
     AFK and are moved to the AFK channel (`Guild.afk_channel_id`).
-    """
-
-    is_embed_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
-    """Defines if the guild embed is enabled or not.
-
-    This information may not be present, in which case, it will be `builtins.None`
-    instead. This will be `builtins.None` for guilds that the bot is not a member in.
-
-    !!! deprecated
-        Use `is_widget_enabled` instead.
     """
 
     embed_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
@@ -821,12 +798,6 @@ class Guild(PartialGuild):
     explicit_content_filter: GuildExplicitContentFilterLevel = attr.ib(eq=False, hash=False, repr=False)
     """The setting for the explicit content filter in this guild."""
 
-    roles: typing.Mapping[snowflake.Snowflake, Role] = attr.ib(eq=False, hash=False, repr=False)
-    """The roles in this guild, represented as a mapping of ID to role object."""
-
-    emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(eq=False, hash=False, repr=False)
-    """A mapping of IDs to the objects of the emojis this guild provides."""
-
     mfa_level: GuildMFALevel = attr.ib(eq=False, hash=False, repr=False)
     """The required MFA level for users wishing to participate in this guild."""
 
@@ -834,17 +805,6 @@ class Guild(PartialGuild):
     """The ID of the application that created this guild.
 
     This will always be `builtins.None` for guilds that weren't created by a bot.
-    """
-
-    is_unavailable: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
-    """Whether the guild is unavailable or not.
-
-    This information is only available if the guild was sent via a
-    `GUILD_CREATE` event. If the guild is received from any other place, this
-    will always be `builtins.None`.
-
-    An unavailable guild cannot be interacted with, and most information may
-    be outdated if that is the case.
     """
 
     is_widget_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
@@ -874,93 +834,6 @@ class Guild(PartialGuild):
     `features` display rules and guidelines.
 
     If the `GuildFeature.PUBLIC` feature is not defined, then this is `builtins.None`.
-    """
-
-    joined_at: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
-    """The date and time that the bot user joined this guild.
-
-    This information is only available if the guild was sent via a `GUILD_CREATE`
-    event. If the guild is received from any other place, this will always be
-    `builtins.None`.
-    """
-
-    is_large: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
-    """Whether the guild is considered to be large or not.
-
-    This information is only available if the guild was sent via a `GUILD_CREATE`
-    event. If the guild is received from any other place, this will always be
-    `builtins.None`.
-
-    The implications of a large guild are that presence information will not be
-    sent about members who are offline or invisible.
-    """
-
-    member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
-    """The number of members in this guild.
-
-    This information is only available if the guild was sent via a `GUILD_CREATE`
-    event. If the guild is received from any other place, this will always be
-    `builtins.None`.
-    """
-
-    members: typing.Optional[typing.Mapping[snowflake.Snowflake, Member]] = attr.ib(eq=False, hash=False, repr=False)
-    """A mapping of ID to the corresponding guild members in this guild.
-
-    This information is only available if the guild was sent via a `GUILD_CREATE`
-    event. If the guild is received from any other place, this will always be
-    `builtins.None`.
-
-    Additionally, any offline members may not be included here, especially if
-    there are more members than the large threshold set for the gateway this
-    object was send with.
-
-    This information will only be updated if your shards have the correct
-    intents set for any update events.
-
-    Essentially, you should not trust the information here to be a full
-    representation. If you need complete accurate information, you should
-    query the members using the appropriate API call instead.
-    """
-
-    channels: typing.Optional[typing.Mapping[snowflake.Snowflake, channels_.GuildChannel]] = attr.ib(
-        eq=False, hash=False, repr=False
-    )
-
-    """A mapping of ID to the corresponding guild channels in this guild.
-
-    This information is only available if the guild was sent via a `GUILD_CREATE`
-    event. If the guild is received from any other place, this will always be
-    `builtins.None`.
-
-    Additionally, any channels that you lack permissions to see will not be
-    defined here.
-
-    This information will only be updated if your shards have the correct
-    intents set for any update events.
-
-    To retrieve a list of channels in any other case, you should make an
-    appropriate API call to retrieve this information.
-    """
-
-    presences: typing.Optional[typing.Mapping[snowflake.Snowflake, presences_.MemberPresence]] = attr.ib(
-        eq=False, hash=False, repr=False
-    )
-
-    """A mapping of member ID to the corresponding presence information for
-    the given member, if available.
-
-    This information is only available if the guild was sent via a `GUILD_CREATE`
-    event. If the guild is received from any other place, this will always be
-    `builtins.None`.
-
-    Additionally, any channels that you lack permissions to see will not be
-    defined here.
-
-    This information will only be updated if your shards have the correct
-    intents set for any update events.
-
-    To retrieve a list of presences in any other case, you should make an
-    appropriate API call to retrieve this information.
     """
 
     max_presences: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
@@ -1026,22 +899,23 @@ class Guild(PartialGuild):
     this guild. For all other purposes, it should be considered to be `builtins.None`.
     """
 
-    # TODO: if this is `builtins.None`, then should we attempt to look at the known member count if present?
-    approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
-    """The approximate number of members in the guild.
+    @abc.abstractmethod
+    def cached_roles(self) -> iterators.LazyIterator[Role]:
+        """Generate a lazy iterator across all roles."""
 
-    This information will be provided by HTTP API calls fetching the guilds that
-    a bot account is in. For all other purposes, this should be expected to
-    remain `builtins.None`.
-    """
+    @abc.abstractmethod
+    def cached_emojis(self) -> iterators.LazyIterator[emojis_.KnownCustomEmoji]:
+        """Generate a lazy iterator across all emojis."""
 
-    approximate_active_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
-    """The approximate number of members in the guild that are not offline.
+    @abc.abstractmethod
+    async def get_cached_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
+        """Get a role from the cache by an ID."""
 
-    This information will be provided by HTTP API calls fetching the guilds that
-    a bot account is in. For all other purposes, this should be expected to
-    remain `builtins.None`.
-    """
+    @abc.abstractmethod
+    async def get_cached_emoji(
+        self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.UniqueObject]
+    ) -> typing.Optional[emojis_.KnownCustomEmoji]:
+        """Get an emoji from the cache by an ID."""
 
     @property
     def splash_url(self) -> typing.Optional[files.URL]:
@@ -1144,3 +1018,130 @@ class Guild(PartialGuild):
         return routes.CDN_GUILD_BANNER.compile_to_file(
             constants.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=format_,
         )
+
+
+class RESTGuild(Guild):
+    """Guild specialization that is sent via the REST API only."""
+
+    _roles: typing.Mapping[snowflake.Snowflake, Role] = attr.ib(eq=False, hash=False, repr=False)
+    """The roles in this guild, represented as a mapping of ID to role object."""
+
+    _emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(eq=False, hash=False, repr=False)
+    """A mapping of IDs to the objects of the emojis this guild provides."""
+
+    is_embed_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
+    """Defines if the guild embed is enabled or not.
+
+    This information may not be present, in which case, it will be `builtins.None`
+    instead. This will be `builtins.None` for guilds that the bot is not a member in.
+
+    !!! deprecated
+        Use `is_widget_enabled` instead.
+    """
+
+    approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
+    """The approximate number of members in the guild.
+
+    This information will be provided by HTTP API calls fetching the guilds that
+    a bot account is in. For all other purposes, this should be expected to
+    remain `builtins.None`.
+    """
+
+    approximate_active_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
+    """The approximate number of members in the guild that are not offline.
+
+    This information will be provided by HTTP API calls fetching the guilds that
+    a bot account is in. For all other purposes, this should be expected to
+    remain `builtins.None`.
+    """
+
+    def cached_roles(self) -> iterators.FlatLazyIterator[Role]:
+        return iterators.FlatLazyIterator(self._roles.values())
+
+    def cached_emojis(self) -> iterators.FlatLazyIterator[emojis_.KnownCustomEmoji]:
+        return iterators.FlatLazyIterator(self._emojis.values())
+
+    async def get_cached_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
+        return self._roles.get(snowflake.Snowflake(int(role)))
+
+    async def get_cached_emoji(
+        self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.UniqueObject]
+    ) -> typing.Optional[emojis_.KnownCustomEmoji]:
+        return self._emojis.get(snowflake.Snowflake(int(emoji)))
+
+
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class GatewayGuild(Guild):
+    """Guild specialization that is sent via the gateway only."""
+
+    my_permissions: typing.Optional[permissions_.Permission] = attr.ib(eq=False, hash=False, repr=False)
+    """The guild-level permissions that apply to the bot user.
+
+    This will not take into account permission overwrites or implied
+    permissions (for example, `ADMINISTRATOR` implies all other permissions).
+    """
+
+    joined_at: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
+    """The date and time that the bot user joined this guild.
+
+    This information is only available if the guild was sent via a `GUILD_CREATE`
+    event. If the guild is received from any other place, this will always be
+    `builtins.None`.
+    """
+
+    is_large: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
+    """Whether the guild is considered to be large or not.
+
+    This information is only available if the guild was sent via a `GUILD_CREATE`
+    event. If the guild is received from any other place, this will always be
+    `builtins.None`.
+
+    The implications of a large guild are that presence information will not be
+    sent about members who are offline or invisible.
+    """
+
+    member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
+    """The number of members in this guild.
+
+    This information is only available if the guild was sent via a `GUILD_CREATE`
+    event. If the guild is received from any other place, this will always be
+    `builtins.None`.
+    """
+
+    def cached_roles(self) -> iterators.LazyIterator[Role]:
+        return self.app.cache.get_roles_for_guild(self.id)
+
+    def cached_emojis(self) -> iterators.LazyIterator[emojis_.KnownCustomEmoji]:
+        return self.app.cache.get_emojis_for_guild(self.id)
+
+    def cached_members(self) -> iterators.LazyIterator[Member]:
+        return self.app.cache.get_members_for_guild(self.id)
+
+    def cached_channels(self) -> iterators.LazyIterator[channels_.GuildChannel]:
+        return self.app.cache.get_channels_for_guild(self.id)
+
+    def cached_presences(self) -> iterators.LazyIterator[presences_.MemberPresence]:
+        return self.app.cache.get_presences_for_guild(self.id)
+
+    async def get_cached_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
+        return await self.app.cache.get_role_for_guild(self.id, snowflake.Snowflake(int(role)))
+
+    async def get_cached_emoji(
+        self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.UniqueObject]
+    ) -> typing.Optional[emojis_.KnownCustomEmoji]:
+        return await self.app.cache.get_emoji_for_guild(self.id, snowflake.Snowflake(int(emoji)))
+
+    async def get_cached_channel(
+        self, channel: typing.Union[channels_.GuildChannel, snowflake.UniqueObject],
+    ) -> typing.Optional[channels_.GuildChannel]:
+        return await self.app.cache.get_channel_for_guild(self.id, snowflake.Snowflake(int(channel)))
+
+    async def get_cached_member(
+        self, user: typing.Union[users.User, snowflake.UniqueObject]
+    ) -> typing.Optional[Member]:
+        return await self.app.cache.get_member_for_guild(self.id, snowflake.Snowflake(int(user)))
+
+    async def get_cached_presence(
+        self, user: typing.Union[users.User, snowflake.UniqueObject]
+    ) -> typing.Optional[presences_.MemberPresence]:
+        return await self.app.cache.get_presence_for_guild(self.id, snowflake.Snowflake(int(user)))

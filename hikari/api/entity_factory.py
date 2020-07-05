@@ -47,6 +47,16 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
+@typing.final
+class GatewayGuildDefinition(typing.NamedTuple):
+    guild: guild_models.GatewayGuild
+    channels: typing.Mapping[snowflake.Snowflake, channel_models.GuildChannel]
+    members: typing.Mapping[snowflake.Snowflake, guild_models.Member]
+    presences: typing.Mapping[snowflake.Snowflake, presence_models.MemberPresence]
+    roles: typing.Mapping[snowflake.Snowflake, guild_models.Role]
+    emojis: typing.Mapping[snowflake.Snowflake, emoji_models.KnownCustomEmoji]
+
+
 class IEntityFactoryComponent(component.IComponent, abc.ABC):
     """Interface for components that serialize and deserialize JSON payloads."""
 
@@ -653,21 +663,6 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_unavailable_guild(self, payload: data_binding.JSONObject) -> guild_models.UnavailableGuild:
-        """Parse a raw payload from Discord into a unavailable guild object.
-
-        Parameters
-        ----------
-        payload : hikari.utilities.data_binding.JSONObject
-            The JSON payload to deserialize.
-
-        Returns
-        -------
-        hikari.models.guilds.UnavailableGuild
-            The deserialized unavailable guild object.
-        """
-
-    @abc.abstractmethod
     def deserialize_guild_preview(self, payload: data_binding.JSONObject) -> guild_models.GuildPreview:
         """Parse a raw payload from Discord into a guild preview object.
 
@@ -683,7 +678,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_guild(self, payload: data_binding.JSONObject) -> guild_models.Guild:
+    def deserialize_rest_guild(self, payload: data_binding.JSONObject) -> guild_models.RESTGuild:
         """Parse a raw payload from Discord into a guild object.
 
         Parameters
@@ -693,8 +688,32 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.guilds.Guild
+        hikari.models.guilds.RESTGuild
             The deserialized guild object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> GatewayGuildDefinition:
+        """Parse a raw payload from Discord into a guild object.
+
+        Parameters
+        ----------
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        builtins.tuple
+            The deserialized guild object and the internal collections as
+            maps of `hikari.utilities.snowflake.Snowflake` mapping to
+            `hikari.models.channels.GuildChannel`,
+            `hikari.models.guilds.Member`,
+            `hikari.models.presences.MemberPresence`,
+            `hikari.models.guilds.Role`, and
+            `hikari.models.emojis.KnownCustomEmoji`. This is provided in
+            several components to allow separate caching and linking
+            between entities in various relational cache implementations
+            internally.
         """
 
     #################

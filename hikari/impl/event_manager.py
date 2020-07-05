@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["EventManagerComponentBase", "EventManagerComponentImpl"]
+__all__: typing.Final[typing.List[str]] = ["EventManagerComponentBase"]
 
 import asyncio
 import logging
@@ -32,7 +32,7 @@ from hikari.api import event_consumer
 from hikari.api import event_dispatcher
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.models import intents
+from hikari.models import intents as intents_
 from hikari.utilities import aio
 from hikari.utilities import reflect
 
@@ -69,9 +69,9 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
 
     __slots__: typing.Sequence[str] = ("_app", "_intents", "_listeners", "_waiters")
 
-    def __init__(self, app: bot.IBotApp, intents_: typing.Optional[intents.Intent]) -> None:
+    def __init__(self, app: bot.IBotApp, intents: typing.Optional[intents_.Intent]) -> None:
         self._app = app
-        self._intents = intents_
+        self._intents = intents
         self._listeners: ListenerMapT = {}
         self._waiters: WaiterMapT = {}
 
@@ -116,7 +116,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
                     warnings.warn(
                         f"You have tried to listen to {event_type.__name__}, but this will only ever be triggered if "
                         f"you enable one of the following intents: {expected_intents_str}.",
-                        category=errors.IntentWarning,
+                        category=errors.MissingIntentWarning,
                         stacklevel=_nested + 2,
                     )
 

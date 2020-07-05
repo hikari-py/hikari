@@ -1407,11 +1407,11 @@ class IRESTClient(component.IComponent, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.Guild:
+    async def fetch_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.RESTGuild:
         ...
 
     @abc.abstractmethod
-    async def fetch_guild_preview(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],) -> guilds.GuildPreview:
+    async def fetch_guild_preview(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildPreview:
         ...
 
     @abc.abstractmethod
@@ -1445,7 +1445,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> guilds.Guild:
+    ) -> guilds.RESTGuild:
         ...
 
     @abc.abstractmethod

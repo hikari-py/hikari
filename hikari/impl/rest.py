@@ -688,7 +688,7 @@ class RESTClientImpl(rest_api.IRESTClient):
             # We don't know exactly what this could imply. It is likely Cloudflare interfering
             # but I'd rather we just give up than do something resulting in multiple failed
             # requests repeatedly.
-            raise errors.HTTPErrorResponse(
+            raise errors.HTTPResponseError(
                 str(response.real_url),
                 http.HTTPStatus.TOO_MANY_REQUESTS,
                 response.headers,
@@ -738,7 +738,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         if math.isclose(body_retry_after, reset_after, rel_tol=0.20):
             raise self._RetryRequest
 
-        raise errors.RateLimited(
+        raise errors.RateLimitedError(
             url=str(response.real_url),
             route=compiled_route,
             headers=response.headers,
@@ -1690,7 +1690,7 @@ class RESTClientImpl(rest_api.IRESTClient):
     def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
         return special_endpoints.GuildBuilder(app=self._app, request_call=self._request, name=name)
 
-    async def fetch_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.Guild:
+    async def fetch_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.RESTGuild:
         route = routes.GET_GUILD.compile(guild=guild)
         query = data_binding.StringMapBuilder()
         query.put("with_counts", True)
@@ -2081,7 +2081,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         return self._app.entity_factory.deserialize_guild_member_ban(response)
 
     async def fetch_bans(
-        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[guilds.GuildMemberBan]:
         route = routes.GET_GUILD_BANS.compile(guild=guild)
         raw_response = await self._request(route)

@@ -207,7 +207,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     def name(self) -> str:
         return self._name
 
-    async def create(self) -> guilds.Guild:
+    async def create(self) -> guilds.GatewayGuild:
         route = routes.POST_GUILDS.compile()
         payload = data_binding.JSONObjectBuilder()
         payload.put("name", self.name)
