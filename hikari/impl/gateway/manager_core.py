@@ -30,8 +30,8 @@ import warnings
 from hikari import errors
 from hikari.api.gateway import consumer
 from hikari.api.gateway import dispatcher
-from hikari.events import base
-from hikari.events import other
+from hikari.events import base as base_events
+from hikari.events import other as other_events
 from hikari.models import intents
 from hikari.utilities import aio
 from hikari.utilities import data_binding
@@ -93,7 +93,7 @@ class EventManagerCoreComponent(dispatcher.IEventDispatcherComponent, consumer.I
         if self._intents is not None:
             # Collection of combined bitfield combinations of intents that
             # could be enabled to receive this event.
-            expected_intent_sets = base.get_required_intents_for(event_type)
+            expected_intent_sets = base_events.get_required_intents_for(event_type)
             if not any(self._intents & expected_intent_set for expected_intent_set in expected_intent_sets):
                 expected_intents_str = ", ".join(
                     str(expected_intent_set) for expected_intent_set in expected_intent_sets
@@ -195,7 +195,7 @@ class EventManagerCoreComponent(dispatcher.IEventDispatcherComponent, consumer.I
 
                 event_type = event_param.annotation
 
-                if not isinstance(event_type, type) or not issubclass(event_type, base.Event):
+                if not isinstance(event_type, type) or not issubclass(event_type, base_events.Event):
                     raise TypeError("Event type must derive from Event")
 
             self.subscribe(event_type, callback, _nested=1)
@@ -247,9 +247,9 @@ class EventManagerCoreComponent(dispatcher.IEventDispatcherComponent, consumer.I
         if not self._waiters[cls]:
             del self._waiters[cls]
 
-    def dispatch(self, event: base.Event) -> asyncio.Future[typing.Any]:
-        if not isinstance(event, base.Event):
-            raise TypeError(f"Events must be subclasses of {base.Event.__name__}, not {type(event).__name__}")
+    def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
+        if not isinstance(event, base_events.Event):
+            raise TypeError(f"Events must be subclasses of {base_events.Event.__name__}, not {type(event).__name__}")
 
         # We only need to iterate through the MRO until we hit Event, as
         # anything after that is random garbage we don't care about, as they do
@@ -258,7 +258,7 @@ class EventManagerCoreComponent(dispatcher.IEventDispatcherComponent, consumer.I
 
         tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
 
-        for cls in mro[: mro.index(base.Event) + 1]:
+        for cls in mro[: mro.index(base_events.Event) + 1]:
 
             if cls in self._listeners:
                 for callback in self._listeners[cls]:
@@ -281,8 +281,8 @@ class EventManagerCoreComponent(dispatcher.IEventDispatcherComponent, consumer.I
             # Skip the first frame in logs, we don't care for it.
             trio = type(ex), ex, ex.__traceback__.tb_next if ex.__traceback__ is not None else None
 
-            if base.is_no_catch_event(event):
+            if base_events.is_no_catch_event(event):
                 _LOGGER.error("an exception occurred handling an event, but it has been ignored", exc_info=trio)
             else:
                 _LOGGER.error("an exception occurred handling an event", exc_info=trio)
-                await self.dispatch(other.ExceptionEvent(exception=ex, event=event, callback=callback))
+                await self.dispatch(other_events.ExceptionEvent(exception=ex, event=event, callback=callback))

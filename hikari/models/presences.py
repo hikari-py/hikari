@@ -44,7 +44,7 @@ from hikari.utilities import snowflake
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api.rest import app
+    from hikari.api.rest import app as rest_app
     from hikari.models import emojis as emojis_
 
 
@@ -269,7 +269,7 @@ class ClientStatus:
 class MemberPresence:
     """Used to represent a guild member's presence."""
 
-    app: app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     user: users.PartialUser = attr.ib(eq=True, hash=True, repr=True)

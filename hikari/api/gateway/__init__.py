@@ -15,3 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Gateway components."""
+from __future__ import annotations
+
+__all__: typing.Final[typing.List[str]] = []
+
+# noinspection PyUnresolvedReferences
+import typing
