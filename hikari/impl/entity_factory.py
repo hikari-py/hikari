@@ -1010,9 +1010,6 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         guild.afk_timeout = datetime.timedelta(seconds=payload["afk_timeout"])
 
-        embed_channel_id = payload.get("embed_channel_id")
-        guild.embed_channel_id = snowflake.Snowflake(embed_channel_id) if embed_channel_id is not None else None
-
         # noinspection PyArgumentList
         guild.verification_level = guild_models.GuildVerificationLevel(payload["verification_level"])
         # noinspection PyArgumentList
@@ -1026,8 +1023,6 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         application_id = payload["application_id"]
         guild.application_id = snowflake.Snowflake(application_id) if application_id is not None else None
-
-        guild.is_widget_enabled = payload["widget_enabled"] if "widget_enabled" in payload else None
 
         widget_channel_id = payload.get("widget_channel_id")
         guild.widget_channel_id = snowflake.Snowflake(widget_channel_id) if widget_channel_id is not None else None
@@ -1079,7 +1074,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild.approximate_active_member_count = (
             int(payload["approximate_presence_count"]) if "approximate_presence_count" in payload else None
         )
-        guild.is_embed_enabled = payload.get("embed_enabled", False)
+        guild.is_widget_enabled = payload["widget_enabled"] if "widget_enabled" in payload else None
 
         guild._roles = {
             snowflake.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild.id) for role in payload["roles"]

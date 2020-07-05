@@ -219,6 +219,9 @@ class GuildPremiumTier(enum.IntEnum):
 class GuildSystemChannelFlag(flag.Flag):
     """Defines which features are suppressed in the system channel."""
 
+    NONE = 0
+    """Nothing is suppressed."""
+
     SUPPRESS_USER_JOIN = 1 << 0
     """Display a message about new users joining."""
 
@@ -780,15 +783,6 @@ class Guild(PartialGuild):
     AFK and are moved to the AFK channel (`Guild.afk_channel_id`).
     """
 
-    embed_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
-    """The channel ID that the guild embed will generate an invite to.
-
-    Will be `builtins.None` if invites are disabled for this guild's embed.
-
-    !!! deprecated
-        Use `widget_channel_id` instead.
-    """
-
     verification_level: GuildVerificationLevel = attr.ib(eq=False, hash=False, repr=False)
     """The verification level required for a user to participate in this guild."""
 
@@ -805,12 +799,6 @@ class Guild(PartialGuild):
     """The ID of the application that created this guild.
 
     This will always be `builtins.None` for guilds that weren't created by a bot.
-    """
-
-    is_widget_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
-    """Describes whether the guild widget is enabled or not.
-
-    If this information is not present, this will be `builtins.None`.
     """
 
     widget_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
@@ -1029,16 +1017,6 @@ class RESTGuild(Guild):
     _emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(eq=False, hash=False, repr=False)
     """A mapping of IDs to the objects of the emojis this guild provides."""
 
-    is_embed_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
-    """Defines if the guild embed is enabled or not.
-
-    This information may not be present, in which case, it will be `builtins.None`
-    instead. This will be `builtins.None` for guilds that the bot is not a member in.
-
-    !!! deprecated
-        Use `is_widget_enabled` instead.
-    """
-
     approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild.
 
@@ -1109,39 +1087,39 @@ class GatewayGuild(Guild):
     """
 
     def cached_roles(self) -> iterators.LazyIterator[Role]:
-        return self.app.cache.get_roles_for_guild(self.id)
+        return self.app.cache.iter_guild_roles(self.id)
 
     def cached_emojis(self) -> iterators.LazyIterator[emojis_.KnownCustomEmoji]:
-        return self.app.cache.get_emojis_for_guild(self.id)
+        return self.app.cache.iter_guild_emojis(self.id)
 
     def cached_members(self) -> iterators.LazyIterator[Member]:
-        return self.app.cache.get_members_for_guild(self.id)
+        return self.app.cache.iter_guild_members(self.id)
 
     def cached_channels(self) -> iterators.LazyIterator[channels_.GuildChannel]:
-        return self.app.cache.get_channels_for_guild(self.id)
+        return self.app.cache.iter_guild_channels(self.id)
 
     def cached_presences(self) -> iterators.LazyIterator[presences_.MemberPresence]:
-        return self.app.cache.get_presences_for_guild(self.id)
+        return self.app.cache.iter_guild_presences(self.id)
 
     async def get_cached_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
-        return await self.app.cache.get_role_for_guild(self.id, snowflake.Snowflake(int(role)))
+        return await self.app.cache.get_guild_role(self.id, snowflake.Snowflake(int(role)))
 
     async def get_cached_emoji(
         self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.UniqueObject]
     ) -> typing.Optional[emojis_.KnownCustomEmoji]:
-        return await self.app.cache.get_emoji_for_guild(self.id, snowflake.Snowflake(int(emoji)))
+        return await self.app.cache.get_emoji(snowflake.Snowflake(int(emoji)))
 
     async def get_cached_channel(
         self, channel: typing.Union[channels_.GuildChannel, snowflake.UniqueObject],
     ) -> typing.Optional[channels_.GuildChannel]:
-        return await self.app.cache.get_channel_for_guild(self.id, snowflake.Snowflake(int(channel)))
+        return await self.app.cache.get_guild_channel(snowflake.Snowflake(int(channel)))
 
     async def get_cached_member(
         self, user: typing.Union[users.User, snowflake.UniqueObject]
     ) -> typing.Optional[Member]:
-        return await self.app.cache.get_member_for_guild(self.id, snowflake.Snowflake(int(user)))
+        return await self.app.cache.get_guild_member(self.id, snowflake.Snowflake(int(user)))
 
     async def get_cached_presence(
         self, user: typing.Union[users.User, snowflake.UniqueObject]
     ) -> typing.Optional[presences_.MemberPresence]:
-        return await self.app.cache.get_presence_for_guild(self.id, snowflake.Snowflake(int(user)))
+        return await self.app.cache.get_guild_presence(self.id, snowflake.Snowflake(int(user)))
