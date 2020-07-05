@@ -25,7 +25,7 @@ import abc
 import typing
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest_app
+    from hikari.api.rest import app
 
 
 class IComponent(abc.ABC):
@@ -46,7 +46,7 @@ class IComponent(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def app(self) -> rest_app.IRESTApp:
+    def app(self) -> app.IRESTApp:
         """Return the Application that owns this component.
 
         Returns

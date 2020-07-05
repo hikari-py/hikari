@@ -34,14 +34,14 @@ import typing
 
 from hikari import config
 from hikari.api import bot
-from hikari.impl import cache as cache_impl
+from hikari.impl.cache import in_memory as cache_impl
 from hikari.utilities import constants
 from hikari.impl import entity_factory as entity_factory_impl
-from hikari.impl import event_manager
-from hikari.impl import gateway_zookeeper
+from hikari.impl.gateway import manager
+from hikari.impl.gateway import zookeeper
 from hikari.impl import rate_limits
-from hikari.impl import rest_client as rest_client_impl
-from hikari.impl import stateless_cache as stateless_cache_impl
+from hikari.impl.rest import client as rest_client_impl
+from hikari.impl.cache import stateless as stateless_cache_impl
 from hikari.models import presences
 from hikari.utilities import date
 from hikari.utilities import undefined
@@ -51,9 +51,9 @@ if typing.TYPE_CHECKING:
 
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
-    from hikari.api import event_consumer as event_consumer_
-    from hikari.api import event_dispatcher as event_dispatcher_
-    from hikari.api import rest_client
+    from hikari.api.gateway import consumer as event_consumer_
+    from hikari.api.gateway import dispatcher as event_dispatcher_
+    from hikari.api.rest import client
     from hikari.events import base as base_events
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
@@ -61,7 +61,7 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
-class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
+class BotAppImpl(zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
     """Implementation of an auto-sharded bot application.
 
     Parameters
@@ -198,7 +198,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
             self._cache = cache_impl.InMemoryCacheComponentImpl(app=self)
 
         self._config = config
-        self._event_manager = event_manager.EventManagerImpl(app=self, intents_=intents)
+        self._event_manager = manager.EventManagerImpl(app=self, intents_=intents)
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
         self._global_ratelimit = rate_limits.ManualRateLimiter()
 
@@ -270,7 +270,7 @@ class BotAppImpl(gateway_zookeeper.AbstractGatewayZookeeper, bot.IBotApp):
         return self._proxy_settings
 
     @property
-    def rest(self) -> rest_client.IRESTClient:
+    def rest(self) -> client.IRESTClient:
         return self._rest
 
     @property

@@ -60,7 +60,7 @@ from hikari.utilities.spel import *
 from hikari.utilities.undefined import *
 
 from hikari.impl.bot import BotAppImpl as Bot
-from hikari.impl.rest_app import RESTAppFactoryImpl as REST
+from hikari.impl.rest.app import RESTAppFactoryImpl as REST
 
 _presorted_all = (
     config.__all__

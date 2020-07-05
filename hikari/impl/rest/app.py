@@ -30,13 +30,13 @@ import typing
 import aiohttp
 
 from hikari import config
-from hikari.api import rest_app
-from hikari.api import rest_client
+from hikari.api.rest import app
+from hikari.api.rest import client
 from hikari.utilities import constants
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
-from hikari.impl import rest_client as rest_client_impl
-from hikari.impl import stateless_cache
+from hikari.impl.rest import client as rest_client_impl
+from hikari.impl.cache import stateless
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
@@ -46,7 +46,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
 
 
-class RESTAppImpl(rest_app.IRESTAppContextManager):
+class RESTAppImpl(app.IRESTAppContextManager):
     """Client for a specific set of credentials within a HTTP-only application.
 
     Parameters
@@ -93,7 +93,7 @@ class RESTAppImpl(rest_app.IRESTAppContextManager):
         url: typing.Optional[str],
         version: int,
     ) -> None:
-        self._cache: cache_.ICacheComponent = stateless_cache.StatelessCacheImpl()
+        self._cache: cache_.ICacheComponent = stateless.StatelessCacheImpl()
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(self)
         self._executor = None
         self._http_settings = http_settings
@@ -139,13 +139,13 @@ class RESTAppImpl(rest_app.IRESTAppContextManager):
         return self._proxy_settings
 
     @property
-    def rest(self) -> rest_client.IRESTClient:
+    def rest(self) -> client.IRESTClient:
         return self._rest
 
     async def close(self) -> None:
         await self._rest.close()
 
-    async def __aenter__(self) -> rest_app.IRESTAppContextManager:
+    async def __aenter__(self) -> app.IRESTAppContextManager:
         return self
 
     async def __aexit__(
@@ -157,7 +157,7 @@ class RESTAppImpl(rest_app.IRESTAppContextManager):
         await self.close()
 
 
-class RESTAppFactoryImpl(rest_app.IRESTAppFactory):
+class RESTAppFactoryImpl(app.IRESTAppFactory):
     """The base for a HTTP-only Discord application.
 
     This comprises of a shared TCP connector connection pool, and can have
@@ -206,7 +206,7 @@ class RESTAppFactoryImpl(rest_app.IRESTAppFactory):
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
 
-    def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> rest_app.IRESTAppContextManager:
+    def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> app.IRESTAppContextManager:
         return RESTAppImpl(
             connector=self._connector,
             debug=self._debug,
