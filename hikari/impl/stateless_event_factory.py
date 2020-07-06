@@ -25,7 +25,7 @@ import logging
 import typing
 
 from hikari.events import other as other_events
-from hikari.impl import event_manager
+from hikari.impl import event_factory_base
 
 if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
@@ -34,7 +34,7 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
-class StatelessEventFactoryImpl(event_manager.EventManagerComponentBase):
+class StatelessEventFactoryImpl(event_factory_base.EventFactoryComponentBase):
     """Provides event handling logic for Discord events without a cache."""
 
     async def on_connected(self, shard: gateway_shard.IGatewayShard, _: data_binding.JSONObject) -> None:

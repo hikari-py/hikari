@@ -1088,37 +1088,37 @@ class GatewayGuild(Guild):
     """
 
     def cached_roles(self) -> cache.ICacheView[Role]:
-        return self.app.cache.iter_guild_roles(self.id)
+        return self.app.cache.get_guild_roles_view(self.id)
 
     def cached_emojis(self) -> cache.ICacheView[emojis_.KnownCustomEmoji]:
-        return self.app.cache.iter_guild_emojis(self.id)
+        return self.app.cache.get_guild_emojis_view(self.id)
 
     def cached_members(self) -> cache.ICacheView[Member]:
-        return self.app.cache.iter_guild_members(self.id)
+        return self.app.cache.get_guild_members_view(self.id)
 
     def cached_channels(self) -> cache.ICacheView[channels_.GuildChannel]:
-        return self.app.cache.iter_guild_channels(self.id)
+        return self.app.cache.get_guild_channels_view(self.id)
 
     def cached_presences(self) -> cache.ICacheView[presences_.MemberPresence]:
-        return self.app.cache.iter_guild_presences(self.id)
+        return self.app.cache.get_guild_presences_view(self.id)
 
     def get_cached_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
-        return await self.app.cache.get_guild_role(self.id, snowflake.Snowflake(int(role)))
+        return self.app.cache.get_guild_role(self.id, snowflake.Snowflake(int(role)))
 
     def get_cached_emoji(
         self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.UniqueObject]
     ) -> typing.Optional[emojis_.KnownCustomEmoji]:
-        return await self.app.cache.get_emoji(snowflake.Snowflake(int(emoji)))
+        return self.app.cache.get_emoji(snowflake.Snowflake(int(emoji)))
 
     def get_cached_channel(
         self, channel: typing.Union[channels_.GuildChannel, snowflake.UniqueObject],
     ) -> typing.Optional[channels_.GuildChannel]:
-        return await self.app.cache.get_guild_channel(snowflake.Snowflake(int(channel)))
+        return self.app.cache.get_guild_channel(snowflake.Snowflake(int(channel)))
 
     def get_cached_member(self, user: typing.Union[users.User, snowflake.UniqueObject]) -> typing.Optional[Member]:
-        return await self.app.cache.get_guild_member(self.id, snowflake.Snowflake(int(user)))
+        return self.app.cache.get_guild_member(self.id, snowflake.Snowflake(int(user)))
 
     def get_cached_presence(
         self, user: typing.Union[users.User, snowflake.UniqueObject]
     ) -> typing.Optional[presences_.MemberPresence]:
-        return await self.app.cache.get_guild_presence(self.id, snowflake.Snowflake(int(user)))
+        return self.app.cache.get_guild_presence(self.id, snowflake.Snowflake(int(user)))
