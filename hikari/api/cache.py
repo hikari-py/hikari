@@ -19,12 +19,48 @@
 """Core interface for a cache implementation."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["ICacheComponent"]
+__all__: typing.Final[typing.List[str]] = ["ICacheView", "ICacheComponent"]
 
 import abc
 import typing
 
 from hikari.api import component
+from hikari.utilities import iterators
+
+if typing.TYPE_CHECKING:
+    from hikari.utilities import snowflake
+
+
+_T = typing.TypeVar("_T")
+_T_co = typing.TypeVar("_T_co")
+
+
+class ICacheView(typing.Collection[_T], abc.ABC):
+    """Interface describing an immutable snapshot view of part of a cache."""
+
+    @abc.abstractmethod
+    def __len__(self) -> int:
+        ...
+
+    @abc.abstractmethod
+    def __iter__(self) -> typing.Iterator[_T_co]:
+        ...
+
+    @abc.abstractmethod
+    def __contains__(self, item: typing.Any) -> bool:
+        ...
+
+    @abc.abstractmethod
+    def get_item_at(self, index: int) -> typing.Optional[_T]:
+        ...
+
+    @abc.abstractmethod
+    def get_item_with_id(self, sf: snowflake.Snowflake) -> typing.Optional[_T]:
+        ...
+
+    @abc.abstractmethod
+    def iterator(self, sf: snowflake.Snowflake) -> iterators.LazyIterator[_T_co]:
+        ...
 
 
 class ICacheComponent(component.IComponent, abc.ABC):

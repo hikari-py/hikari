@@ -52,6 +52,7 @@ import typing
 
 import attr
 
+from hikari.api import cache
 from hikari.models import users
 from hikari.utilities import constants
 from hikari.utilities import files
@@ -1086,40 +1087,38 @@ class GatewayGuild(Guild):
     `builtins.None`.
     """
 
-    def cached_roles(self) -> iterators.LazyIterator[Role]:
+    def cached_roles(self) -> cache.ICacheView[Role]:
         return self.app.cache.iter_guild_roles(self.id)
 
-    def cached_emojis(self) -> iterators.LazyIterator[emojis_.KnownCustomEmoji]:
+    def cached_emojis(self) -> cache.ICacheView[emojis_.KnownCustomEmoji]:
         return self.app.cache.iter_guild_emojis(self.id)
 
-    def cached_members(self) -> iterators.LazyIterator[Member]:
+    def cached_members(self) -> cache.ICacheView[Member]:
         return self.app.cache.iter_guild_members(self.id)
 
-    def cached_channels(self) -> iterators.LazyIterator[channels_.GuildChannel]:
+    def cached_channels(self) -> cache.ICacheView[channels_.GuildChannel]:
         return self.app.cache.iter_guild_channels(self.id)
 
-    def cached_presences(self) -> iterators.LazyIterator[presences_.MemberPresence]:
+    def cached_presences(self) -> cache.ICacheView[presences_.MemberPresence]:
         return self.app.cache.iter_guild_presences(self.id)
 
-    async def get_cached_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
+    def get_cached_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
         return await self.app.cache.get_guild_role(self.id, snowflake.Snowflake(int(role)))
 
-    async def get_cached_emoji(
+    def get_cached_emoji(
         self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.UniqueObject]
     ) -> typing.Optional[emojis_.KnownCustomEmoji]:
         return await self.app.cache.get_emoji(snowflake.Snowflake(int(emoji)))
 
-    async def get_cached_channel(
+    def get_cached_channel(
         self, channel: typing.Union[channels_.GuildChannel, snowflake.UniqueObject],
     ) -> typing.Optional[channels_.GuildChannel]:
         return await self.app.cache.get_guild_channel(snowflake.Snowflake(int(channel)))
 
-    async def get_cached_member(
-        self, user: typing.Union[users.User, snowflake.UniqueObject]
-    ) -> typing.Optional[Member]:
+    def get_cached_member(self, user: typing.Union[users.User, snowflake.UniqueObject]) -> typing.Optional[Member]:
         return await self.app.cache.get_guild_member(self.id, snowflake.Snowflake(int(user)))
 
-    async def get_cached_presence(
+    def get_cached_presence(
         self, user: typing.Union[users.User, snowflake.UniqueObject]
     ) -> typing.Optional[presences_.MemberPresence]:
         return await self.app.cache.get_guild_presence(self.id, snowflake.Snowflake(int(user)))
