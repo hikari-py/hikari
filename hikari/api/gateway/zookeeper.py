@@ -24,17 +24,17 @@ __all__: typing.Final[typing.List[str]] = ["IGatewayZookeeperApp"]
 import abc
 import typing
 
-from hikari.api import event_consumer
+from hikari.api.gateway import consumer
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import gateway
+    from hikari.api.gateway import shard as gateway_shard
     from hikari.models import presences
 
 
-class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
+class IGatewayZookeeperApp(consumer.IEventConsumerApp, abc.ABC):
     """Component specialization that looks after a set of shards.
 
     These events will be produced by a low-level gateway implementation, and
@@ -49,7 +49,7 @@ class IGatewayZookeeperApp(event_consumer.IEventConsumerApp, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def shards(self) -> typing.Mapping[int, gateway.IGatewayShard]:
+    def shards(self) -> typing.Mapping[int, gateway_shard.IGatewayShard]:
         """Map of each shard ID to the corresponding client for it.
 
         If the shards have not started, and auto=sharding is in-place, then it

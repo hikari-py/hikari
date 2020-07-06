@@ -15,27 +15,3 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Basic implementation of a cache for general bots and gateway apps."""
-
-from __future__ import annotations
-
-__all__: typing.Final[typing.List[str]] = ["InMemoryCacheComponentImpl"]
-
-import typing
-
-from hikari.api import cache
-
-if typing.TYPE_CHECKING:
-    from hikari.api import rest_app
-
-
-class InMemoryCacheComponentImpl(cache.ICacheComponent):
-    """In-memory cache implementation."""
-
-    def __init__(self, app: rest_app.IRESTApp) -> None:
-        self._app = app
-
-    @property
-    @typing.final
-    def app(self) -> rest_app.IRESTApp:
-        return self._app

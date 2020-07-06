@@ -25,8 +25,8 @@ import datetime
 import typing
 
 from hikari.api import entity_factory
-from hikari.api import gateway
-from hikari.api import rest_app
+from hikari.api.gateway import shard as gateway_shard
+from hikari.api.rest import app as rest_app
 from hikari.events import channel as channel_events
 from hikari.events import guild as guild_events
 from hikari.events import message as message_events
@@ -1815,7 +1815,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ################
 
     def deserialize_ready_event(
-        self, shard: gateway.IGatewayShard, payload: data_binding.JSONObject
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
     ) -> other_events.ReadyEvent:
         ready_event = other_events.ReadyEvent()
         ready_event.shard = shard

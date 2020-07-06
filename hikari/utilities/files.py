@@ -47,7 +47,7 @@ import urllib.parse
 import aiohttp.client
 import attr
 
-from hikari.impl import response_handler
+from hikari.utilities import response_handler
 
 if typing.TYPE_CHECKING:
     import types

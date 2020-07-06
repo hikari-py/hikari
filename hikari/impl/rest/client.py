@@ -35,12 +35,12 @@ import aiohttp
 
 from hikari import config
 from hikari import errors
-from hikari.api import rest_client
-from hikari.impl import buckets
+from hikari.api.rest import client
+from hikari.impl.rest import buckets
 from hikari.utilities import constants
 from hikari.impl import rate_limits
-from hikari.impl import response_handler
-from hikari.impl import special_endpoints
+from hikari.utilities import response_handler
+from hikari.impl.rest import special_endpoints
 from hikari.models import embeds as embeds_
 from hikari.models import emojis
 from hikari.utilities import data_binding
@@ -52,7 +52,7 @@ from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest_app
+    from hikari.api.rest import app as rest_app
 
     from hikari.models import applications
     from hikari.models import audit_logs
@@ -70,7 +70,7 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
 
-class RESTClientImpl(rest_client.IRESTClient):
+class RESTClientImpl(client.IRESTClient):
     """Implementation of the V6 and V7-compatible Discord HTTP API.
 
     This manages making HTTP/1.1 requests to the API and using the entity
@@ -409,8 +409,8 @@ class RESTClientImpl(rest_client.IRESTClient):
             undefined.UndefinedType, typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool
         ],
     ) -> typing.Union[undefined.UndefinedType, data_binding.JSONObject]:
-        parsed_mentions = []
-        allowed_mentions = {}
+        parsed_mentions: typing.List[str] = []
+        allowed_mentions = {"parse": parsed_mentions}
 
         if mentions_everyone is True:
             parsed_mentions.append("everyone")
@@ -430,9 +430,6 @@ class RESTClientImpl(rest_client.IRESTClient):
 
         if not parsed_mentions and not allowed_mentions:
             return undefined.UNDEFINED
-
-        if parsed_mentions:
-            allowed_mentions["parse"] = parsed_mentions
 
         return allowed_mentions
 

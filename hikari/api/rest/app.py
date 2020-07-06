@@ -33,7 +33,7 @@ if typing.TYPE_CHECKING:
     from hikari import config
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
-    from hikari.api import rest_client
+    from hikari.api.rest import client
 
 
 class IRESTApp(abc.ABC):
@@ -48,7 +48,7 @@ class IRESTApp(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def rest(self) -> rest_client.IRESTClient:
+    def rest(self) -> client.IRESTClient:
         """HTTP API Client.
 
         Use this to make calls to Discord's HTTP API over HTTPS.

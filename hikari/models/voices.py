@@ -26,7 +26,7 @@ import typing
 import attr
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest_app
+    from hikari.api.rest import app as rest_app
     from hikari.models import guilds
     from hikari.utilities import snowflake
 

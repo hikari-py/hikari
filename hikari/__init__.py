@@ -60,7 +60,7 @@ from hikari.utilities.spel import *
 from hikari.utilities.undefined import *
 
 from hikari.impl.bot import BotAppImpl as Bot
-from hikari.impl.rest_app import RESTAppFactoryImpl as RESTClientFactory
+from hikari.impl.rest.app import RESTAppFactoryImpl as REST
 
 _presorted_all = (
     config.__all__
@@ -80,6 +80,6 @@ __all__: typing.Final[typing.List[str]] = [
     # (this file) specifically. This way, we can force `Bot` and `RESTClientFactory`
     # to the top of the list.
     "Bot",
-    "RESTClientFactory",
+    "REST",
     *sorted(_presorted_all),
 ]

@@ -15,42 +15,27 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Base interface for any internal components of an application."""
+"""Basic implementation of a cache for general bots and gateway apps."""
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IComponent"]
+__all__: typing.Final[typing.List[str]] = ["InMemoryCacheComponentImpl"]
 
-import abc
 import typing
+
+from hikari.api import cache
 
 if typing.TYPE_CHECKING:
     from hikari.api.rest import app as rest_app
 
 
-class IComponent(abc.ABC):
-    """A component that makes up part of the application.
+class InMemoryCacheComponentImpl(cache.ICacheComponent):
+    """In-memory cache implementation."""
 
-    Objects that derive from this should usually be attributes on the
-    `hikari.api.rest.IRESTApp` object.
-
-    Examples
-    --------
-    See the source code for `hikari.api.entity_factory.IEntityFactoryComponent`,
-    `hikari.api.cache.ICacheComponent`, and
-    `hikari.api.event_dispatcher.IEventDispatcherComponent`
-    for examples of usage.
-    """
-
-    __slots__: typing.Sequence[str] = ()
+    def __init__(self, app: rest_app.IRESTApp) -> None:
+        self._app = app
 
     @property
-    @abc.abstractmethod
+    @typing.final
     def app(self) -> rest_app.IRESTApp:
-        """Return the Application that owns this component.
-
-        Returns
-        -------
-        hikari.api.rest_app.IRESTApp
-            The application implementation that owns this component.
-        """
+        return self._app
