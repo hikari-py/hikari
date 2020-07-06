@@ -31,8 +31,9 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-_T = typing.TypeVar("_T")
-_T_co = typing.TypeVar("_T_co")
+_T = typing.TypeVar("_T", bound="snowflake.Unique")
+_T_co = typing.TypeVar("_T_co", bound="snowflake.Unique")
+_U = typing.TypeVar("_U")
 
 
 class ICacheView(typing.Collection[_T], abc.ABC):
@@ -51,11 +52,11 @@ class ICacheView(typing.Collection[_T], abc.ABC):
         ...
 
     @abc.abstractmethod
-    def get_item_at(self, index: int) -> typing.Optional[_T]:
+    def get_item_at(self, index: int) -> _T:
         ...
 
     @abc.abstractmethod
-    def get_item_with_id(self, sf: snowflake.Snowflake) -> typing.Optional[_T]:
+    def get_item_with_id(self, sf: snowflake.Snowflake, default: _U = None) -> typing.Union[_T, _U]:
         ...
 
     @abc.abstractmethod

@@ -252,8 +252,8 @@ class BotAppImpl(bot.IBotApp):
             self._event_factory = stateless_event_factory.StatelessEventFactoryImpl(app=self, intents=intents)
             _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
-            self._cache = cache_impl.InMemoryCacheComponentImpl(app=self, intents=intents)
-            self._event_factory = stateful_event_factory.EventFactoryImpl(app=self, intents=intents)
+            self._cache = cache_impl.StatefulCacheComponentImpl(app=self, intents=intents)
+            self._event_factory = stateful_event_factory.StatefulEventFactoryImpl(app=self, intents=intents)
 
         self._connector_factory = rest_client_impl.BasicLazyCachedTCPConnectorFactory()
         self._debug = debug
@@ -317,11 +317,11 @@ class BotAppImpl(bot.IBotApp):
         return self._entity_factory
 
     @property
-    def event_consumer(self) -> stateful_event_factory.EventFactoryImpl:
+    def event_consumer(self) -> stateful_event_factory.StatefulEventFactoryImpl:
         return self._event_factory
 
     @property
-    def event_dispatcher(self) -> stateful_event_factory.EventFactoryImpl:
+    def event_dispatcher(self) -> stateful_event_factory.StatefulEventFactoryImpl:
         return self._event_factory
 
     @property

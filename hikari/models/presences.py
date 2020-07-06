@@ -261,7 +261,7 @@ class ClientStatus:
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
-class MemberPresence:
+class MemberPresence(snowflake.Unique):
     """Used to represent a guild member's presence."""
 
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
@@ -303,3 +303,7 @@ class MemberPresence:
 
     nickname: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """This member's nickname, if set."""
+
+    @property
+    def id(self) -> snowflake.Snowflake:
+        return self.user.id

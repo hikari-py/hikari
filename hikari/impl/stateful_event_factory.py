@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["EventFactoryImpl"]
+__all__: typing.Final[typing.List[str]] = ["StatefulEventFactoryImpl"]
 
 import typing
 
@@ -32,7 +32,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import data_binding
 
 
-class EventFactoryImpl(event_factory_base.EventFactoryComponentBase):
+class StatefulEventFactoryImpl(event_factory_base.EventFactoryComponentBase):
     """Provides event handling logic for Discord events."""
 
     async def on_connected(self, shard: gateway_shard.IGatewayShard, _: data_binding.JSONObject) -> None:
@@ -57,7 +57,7 @@ class EventFactoryImpl(event_factory_base.EventFactoryComponentBase):
         """See https://discord.com/developers/docs/topics/gateway#ready for more info."""
         # TODO: cache unavailable guilds on startup, I didn't bother for the time being.
         event = self.app.entity_factory.deserialize_ready_event(shard, payload)
-        self.app.cache.set_me(event.my_user)
+        self.app.cache.replace_me(event.my_user)
         self.app.cache.set_initial_unavailable_guilds(event.unavailable_guilds.keys())
         await self.dispatch(event)
 
@@ -85,7 +85,7 @@ class EventFactoryImpl(event_factory_base.EventFactoryComponentBase):
     async def on_guild_create(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
         event = self.app.entity_factory.deserialize_guild_create_event(payload)
-        self.app.cache.set_guild(event.guild)
+        self.app.cache.replace_guild(event.guild)
         self.app.cache.replace_all_guild_channels(event.guild.id, event.channels.values())
         self.app.cache.replace_all_guild_emojis(event.guild.id, event.emojis.values())
         self.app.cache.replace_all_guild_roles(event.guild.id, event.roles.values())
@@ -96,7 +96,7 @@ class EventFactoryImpl(event_factory_base.EventFactoryComponentBase):
     async def on_guild_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-update for more info."""
         event = self.app.entity_factory.deserialize_guild_update_event(payload)
-        self.app.cache.set_guild(event.guild)
+        self.app.cache.replace_guild(event.guild)
         self.app.cache.replace_all_guild_channels(event.guild.id, event.channels.values())
         self.app.cache.replace_all_guild_emojis(event.guild.id, event.emojis.values())
         self.app.cache.replace_all_guild_roles(event.guild.id, event.roles.values())
