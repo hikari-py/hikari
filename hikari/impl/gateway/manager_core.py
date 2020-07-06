@@ -28,10 +28,10 @@ import typing
 import warnings
 
 from hikari import errors
-from hikari.api import event_consumer
-from hikari.api import event_dispatcher
-from hikari.events import base
-from hikari.events import other
+from hikari.api.gateway import consumer
+from hikari.api.gateway import dispatcher
+from hikari.events import base as base_events
+from hikari.events import other as other_events
 from hikari.models import intents
 from hikari.utilities import aio
 from hikari.utilities import data_binding
@@ -39,24 +39,24 @@ from hikari.utilities import reflect
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari.api import gateway
-    from hikari.api import rest_app
+    from hikari.api.gateway import shard as gateway_shard
+    from hikari.api.rest import app as rest_app
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 if typing.TYPE_CHECKING:
     ListenerMapT = typing.MutableMapping[
-        typing.Type[event_dispatcher.EventT], typing.MutableSequence[event_dispatcher.AsyncCallbackT]
+        typing.Type[dispatcher.EventT], typing.MutableSequence[dispatcher.AsyncCallbackT]
     ]
-    WaiterT = typing.Tuple[event_dispatcher.PredicateT, asyncio.Future[event_dispatcher.EventT]]
-    WaiterMapT = typing.MutableMapping[typing.Type[event_dispatcher.EventT], typing.MutableSet[WaiterT]]
+    WaiterT = typing.Tuple[dispatcher.PredicateT, asyncio.Future[dispatcher.EventT]]
+    WaiterMapT = typing.MutableMapping[typing.Type[dispatcher.EventT], typing.MutableSet[WaiterT]]
 
 
-def _default_predicate(_: event_dispatcher.EventT) -> typing.Literal[True]:
+def _default_predicate(_: dispatcher.EventT) -> bool:
     return True
 
 
-class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, event_consumer.IEventConsumerComponent):
+class EventManagerCoreComponent(dispatcher.IEventDispatcherComponent, consumer.IEventConsumerComponent):
     """Provides functionality to consume and dispatch events.
 
     Specific event handlers should be in functions named `on_xxx` where `xxx`
@@ -75,7 +75,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
         return self._app
 
     async def consume_raw_event(
-        self, shard: gateway.IGatewayShard, event_name: str, payload: data_binding.JSONObject
+        self, shard: gateway_shard.IGatewayShard, event_name: str, payload: data_binding.JSONObject
     ) -> None:
         try:
             callback = getattr(self, "on_" + event_name.lower())
@@ -84,12 +84,8 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
             _LOGGER.debug("ignoring unknown event %s", event_name)
 
     def subscribe(
-        self,
-        event_type: typing.Type[event_dispatcher.EventT],
-        callback: event_dispatcher.CallbackT,
-        *,
-        _nested: int = 0,
-    ) -> event_dispatcher.CallbackT:
+        self, event_type: typing.Type[dispatcher.EventT], callback: dispatcher.CallbackT, *, _nested: int = 0,
+    ) -> dispatcher.CallbackT:
         # `_nested` is used to show the correct source code snippet if an intent
         # warning is triggered.
 
@@ -97,7 +93,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
         if self._intents is not None:
             # Collection of combined bitfield combinations of intents that
             # could be enabled to receive this event.
-            expected_intent_sets = base.get_required_intents_for(event_type)
+            expected_intent_sets = base_events.get_required_intents_for(event_type)
             if not any(self._intents & expected_intent_set for expected_intent_set in expected_intent_sets):
                 expected_intents_str = ", ".join(
                     str(expected_intent_set) for expected_intent_set in expected_intent_sets
@@ -117,7 +113,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
         if not asyncio.iscoroutinefunction(callback):
 
             @functools.wraps(callback)
-            async def wrapper(event: event_dispatcher.EventT) -> None:
+            async def wrapper(event: dispatcher.EventT) -> None:
                 callback(event)
 
             self.subscribe(event_type, wrapper)
@@ -132,16 +128,16 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
                 event_type.__qualname__,
             )
 
-            callback = typing.cast("event_dispatcher.AsyncCallbackT", callback)
+            callback = typing.cast("dispatcher.AsyncCallbackT", callback)
             self._listeners[event_type].append(callback)
 
             return callback
 
     def get_listeners(
-        self, event_type: typing.Type[event_dispatcher.EventT], *, polymorphic: bool = True,
-    ) -> typing.Collection[event_dispatcher.AsyncCallbackT]:
+        self, event_type: typing.Type[dispatcher.EventT], *, polymorphic: bool = True,
+    ) -> typing.Collection[dispatcher.AsyncCallbackT]:
         if polymorphic:
-            listeners: typing.List[event_dispatcher.AsyncCallbackT] = []
+            listeners: typing.List[dispatcher.AsyncCallbackT] = []
             for subscribed_event_type, subscribed_listeners in self._listeners.items():
                 if issubclass(subscribed_event_type, event_type):
                     listeners += subscribed_listeners
@@ -154,11 +150,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
             return []
 
     def has_listener(
-        self,
-        event_type: typing.Type[event_dispatcher.EventT],
-        callback: event_dispatcher.CallbackT,
-        *,
-        polymorphic: bool = True,
+        self, event_type: typing.Type[dispatcher.EventT], callback: dispatcher.CallbackT, *, polymorphic: bool = True,
     ) -> bool:
         if polymorphic:
             for subscribed_event_type, listeners in self._listeners.items():
@@ -170,9 +162,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
                 return False
             return callback in self._listeners[event_type]
 
-    def unsubscribe(
-        self, event_type: typing.Type[event_dispatcher.EventT], callback: event_dispatcher.AsyncCallbackT
-    ) -> None:
+    def unsubscribe(self, event_type: typing.Type[dispatcher.EventT], callback: dispatcher.AsyncCallbackT) -> None:
         if event_type in self._listeners:
             _LOGGER.debug(
                 "unsubscribing callback %s%s from event-type %s.%s",
@@ -186,10 +176,9 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
                 del self._listeners[event_type]
 
     def listen(
-        self,
-        event_type: typing.Union[undefined.UndefinedType, typing.Type[event_dispatcher.EventT]] = undefined.UNDEFINED,
-    ) -> typing.Callable[[event_dispatcher.CallbackT], event_dispatcher.CallbackT]:
-        def decorator(callback: event_dispatcher.CallbackT) -> event_dispatcher.CallbackT:
+        self, event_type: typing.Union[undefined.UndefinedType, typing.Type[dispatcher.EventT]] = undefined.UNDEFINED,
+    ) -> typing.Callable[[dispatcher.CallbackT], dispatcher.CallbackT]:
+        def decorator(callback: dispatcher.CallbackT) -> dispatcher.CallbackT:
             nonlocal event_type
 
             signature = reflect.resolve_signature(callback)
@@ -206,7 +195,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
 
                 event_type = event_param.annotation
 
-                if not isinstance(event_type, type) or not issubclass(event_type, base.Event):
+                if not isinstance(event_type, type) or not issubclass(event_type, base_events.Event):
                     raise TypeError("Event type must derive from Event")
 
             self.subscribe(event_type, callback, _nested=1)
@@ -216,16 +205,16 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
 
     async def wait_for(
         self,
-        event_type: typing.Type[event_dispatcher.EventT],
+        event_type: typing.Type[dispatcher.EventT],
         /,
         timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[event_dispatcher.PredicateT] = None,
-    ) -> event_dispatcher.EventT:
+        predicate: typing.Optional[dispatcher.PredicateT] = None,
+    ) -> dispatcher.EventT:
 
         if predicate is None:
             predicate = _default_predicate
 
-        future: asyncio.Future[event_dispatcher.EventT] = asyncio.get_event_loop().create_future()
+        future: asyncio.Future[dispatcher.EventT] = asyncio.get_event_loop().create_future()
 
         if event_type not in self._waiters:
             self._waiters[event_type] = set()
@@ -236,10 +225,10 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
 
     async def _test_waiter(
         self,
-        cls: typing.Type[event_dispatcher.EventT],
-        event: event_dispatcher.EventT,
-        predicate: event_dispatcher.PredicateT,
-        future: asyncio.Future[event_dispatcher.EventT],
+        cls: typing.Type[dispatcher.EventT],
+        event: dispatcher.EventT,
+        predicate: dispatcher.PredicateT,
+        future: asyncio.Future[dispatcher.EventT],
     ) -> None:
         try:
             result = predicate(event)
@@ -258,9 +247,9 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
         if not self._waiters[cls]:
             del self._waiters[cls]
 
-    def dispatch(self, event: base.Event) -> asyncio.Future[typing.Any]:
-        if not isinstance(event, base.Event):
-            raise TypeError(f"Events must be subclasses of {base.Event.__name__}, not {type(event).__name__}")
+    def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
+        if not isinstance(event, base_events.Event):
+            raise TypeError(f"Events must be subclasses of {base_events.Event.__name__}, not {type(event).__name__}")
 
         # We only need to iterate through the MRO until we hit Event, as
         # anything after that is random garbage we don't care about, as they do
@@ -269,7 +258,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
 
         tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
 
-        for cls in mro[: mro.index(base.Event) + 1]:
+        for cls in mro[: mro.index(base_events.Event) + 1]:
 
             if cls in self._listeners:
                 for callback in self._listeners[cls]:
@@ -282,7 +271,7 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
 
-    async def _invoke_callback(self, callback: event_dispatcher.AsyncCallbackT, event: event_dispatcher.EventT) -> None:
+    async def _invoke_callback(self, callback: dispatcher.AsyncCallbackT, event: dispatcher.EventT) -> None:
         try:
             result = callback(event)
             if asyncio.iscoroutine(result):
@@ -292,8 +281,8 @@ class EventManagerCoreComponent(event_dispatcher.IEventDispatcherComponent, even
             # Skip the first frame in logs, we don't care for it.
             trio = type(ex), ex, ex.__traceback__.tb_next if ex.__traceback__ is not None else None
 
-            if base.is_no_catch_event(event):
+            if base_events.is_no_catch_event(event):
                 _LOGGER.error("an exception occurred handling an event, but it has been ignored", exc_info=trio)
             else:
                 _LOGGER.error("an exception occurred handling an event", exc_info=trio)
-                await self.dispatch(other.ExceptionEvent(exception=ex, event=event, callback=callback))
+                await self.dispatch(other_events.ExceptionEvent(exception=ex, event=event, callback=callback))

@@ -27,7 +27,7 @@ import pytest
 from hikari import config
 from hikari import errors
 from hikari.models import presences
-from hikari.impl import gateway
+from hikari.impl.gateway import shard
 from hikari.utilities import undefined
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
@@ -52,7 +52,7 @@ def client_session():
 
 @pytest.fixture()
 def client(http_settings, proxy_settings):
-    return gateway.GatewayShardImpl(
+    return shard.GatewayShardImpl(
         url="wss://gateway.discord.gg",
         token="lol",
         app=mock.MagicMock(),
@@ -72,7 +72,7 @@ class TestInit:
         ],
     )
     def test_url_is_correct_json(self, v, use_compression, expect, http_settings, proxy_settings):
-        g = gateway.GatewayShardImpl(
+        g = shard.GatewayShardImpl(
             app=mock.MagicMock(),
             token=mock.MagicMock(),
             http_settings=http_settings,
@@ -88,7 +88,7 @@ class TestInit:
     @pytest.mark.parametrize(["v", "use_compression"], [(6, False), (6, True), (7, False), (7, True),])
     def test_using_etf_is_unsupported(self, v, use_compression, http_settings, proxy_settings):
         with pytest.raises(NotImplementedError):
-            gateway.GatewayShardImpl(
+            shard.GatewayShardImpl(
                 app=mock.MagicMock(),
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
@@ -103,7 +103,7 @@ class TestInit:
 class TestAppProperty:
     def test_returns_app(self, http_settings, proxy_settings):
         app = mock.MagicMock()
-        g = gateway.GatewayShardImpl(
+        g = shard.GatewayShardImpl(
             url="wss://gateway.discord.gg",
             token="lol",
             app=app,
@@ -128,7 +128,7 @@ class TestStart:
     @pytest.mark.parametrize("shard_id", [0, 1, 2])
     @hikari_test_helpers.timeout()
     async def test_starts_task(self, event_loop, shard_id, http_settings=http_settings, proxy_settings=proxy_settings):
-        g = gateway.GatewayShardImpl(
+        g = shard.GatewayShardImpl(
             url="wss://gateway.discord.gg",
             token="lol",
             app=mock.MagicMock(),
@@ -163,7 +163,7 @@ class TestStart:
 class TestClose:
     @pytest.fixture
     def client(self):
-        class GatewayStub(gateway.GatewayShardImpl):
+        class GatewayStub(shard.GatewayShardImpl):
             @property
             def is_alive(self):
                 return getattr(self, "_is_alive", False)
@@ -261,7 +261,7 @@ class TestRun:
 class TestRunOnceShielded:
     @pytest.fixture
     def client(self, http_settings=http_settings, proxy_settings=proxy_settings):
-        client = hikari_test_helpers.unslot_class(gateway.GatewayShardImpl)(
+        client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
             app=mock.MagicMock(),
@@ -314,7 +314,7 @@ class TestRunOnceShielded:
 
         def run_once():
             client._zombied = zombied
-            raise gateway.GatewayShardImpl._SocketClosed()
+            raise shard.GatewayShardImpl._SocketClosed()
 
         client._run_once = mock.AsyncMock(wraps=run_once)
         await client._run_once_shielded(client_session)
@@ -326,7 +326,7 @@ class TestRunOnceShielded:
 
     @hikari_test_helpers.timeout()
     async def test_invalid_session_resume_does_not_clear_seq_or_session_id(self, client, client_session):
-        client._run_once = mock.AsyncMock(side_effect=gateway.GatewayShardImpl._InvalidSession(True))
+        client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession(True))
         client._seq = 1234
         client.session_id = "69420"
         await client._run_once_shielded(client_session)
@@ -337,7 +337,7 @@ class TestRunOnceShielded:
     @hikari_test_helpers.timeout()
     async def test_socket_closed_is_restartable_if_no_closure_request(self, client, request_close, client_session):
         client._request_close_event.is_set = mock.MagicMock(return_value=request_close)
-        client._run_once = mock.AsyncMock(side_effect=gateway.GatewayShardImpl._SocketClosed())
+        client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._SocketClosed())
         assert await client._run_once_shielded(client_session) is not request_close
 
     @hikari_test_helpers.timeout()
@@ -352,28 +352,28 @@ class TestRunOnceShielded:
 
     @hikari_test_helpers.timeout()
     async def test_invalid_session_is_restartable(self, client, client_session):
-        client._run_once = mock.AsyncMock(side_effect=gateway.GatewayShardImpl._InvalidSession())
+        client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession())
         assert await client._run_once_shielded(client_session) is True
 
     @hikari_test_helpers.timeout()
     async def test_invalid_session_resume_does_not_invalidate_session(self, client, client_session):
-        client._run_once = mock.AsyncMock(side_effect=gateway.GatewayShardImpl._InvalidSession(True))
+        client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession(True))
         await client._run_once_shielded(client_session)
         client._close_ws.assert_awaited_once_with(
-            gateway.GatewayShardImpl._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)"
+            shard.GatewayShardImpl._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)"
         )
 
     @hikari_test_helpers.timeout()
     async def test_invalid_session_no_resume_invalidates_session(self, client, client_session):
-        client._run_once = mock.AsyncMock(side_effect=gateway.GatewayShardImpl._InvalidSession(False))
+        client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession(False))
         await client._run_once_shielded(client_session)
         client._close_ws.assert_awaited_once_with(
-            gateway.GatewayShardImpl._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)"
+            shard.GatewayShardImpl._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)"
         )
 
     @hikari_test_helpers.timeout()
     async def test_invalid_session_no_resume_clears_seq_and_session_id(self, client, client_session):
-        client._run_once = mock.AsyncMock(side_effect=gateway.GatewayShardImpl._InvalidSession(False))
+        client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession(False))
         client._seq = 1234
         client.session_id = "69420"
         await client._run_once_shielded(client_session)
@@ -382,7 +382,7 @@ class TestRunOnceShielded:
 
     @hikari_test_helpers.timeout()
     async def test_reconnect_is_restartable(self, client, client_session):
-        client._run_once = mock.AsyncMock(side_effect=gateway.GatewayShardImpl._Reconnect())
+        client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._Reconnect())
         assert await client._run_once_shielded(client_session) is True
 
     @hikari_test_helpers.timeout()
@@ -398,7 +398,7 @@ class TestRunOnceShielded:
         client._run_once = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, True))
         assert await client._run_once_shielded(client_session) is True
         client._close_ws.assert_awaited_once_with(
-            gateway.GatewayShardImpl._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me"
+            shard.GatewayShardImpl._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me"
         )
 
     @hikari_test_helpers.timeout()
@@ -418,7 +418,7 @@ class TestRunOnceShielded:
         with pytest.raises(errors.GatewayServerClosedConnectionError):
             await client._run_once_shielded(client_session)
         client._close_ws.assert_awaited_once_with(
-            gateway.GatewayShardImpl._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection"
+            shard.GatewayShardImpl._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection"
         )
 
     @pytest.mark.parametrize(
@@ -433,7 +433,7 @@ class TestRunOnceShielded:
 
         def run_once(_):
             client._zombied = zombied
-            raise gateway.GatewayShardImpl._SocketClosed()
+            raise shard.GatewayShardImpl._SocketClosed()
 
         client._run_once = mock.AsyncMock(wraps=run_once)
         await client._run_once_shielded(client_session)
@@ -450,7 +450,7 @@ class TestRunOnceShielded:
             await client._run_once_shielded(client_session)
 
         client._close_ws.assert_awaited_once_with(
-            gateway.GatewayShardImpl._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred"
+            shard.GatewayShardImpl._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred"
         )
 
 
@@ -458,7 +458,7 @@ class TestRunOnceShielded:
 class TestRunOnce:
     @pytest.fixture
     def client(self, http_settings=http_settings, proxy_settings=proxy_settings):
-        client = hikari_test_helpers.unslot_class(gateway.GatewayShardImpl)(
+        client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
             app=mock.MagicMock(),
@@ -705,7 +705,7 @@ class TestRunOnce:
 class TestUpdatePresence:
     @pytest.fixture
     def client(self, proxy_settings, http_settings):
-        client = hikari_test_helpers.unslot_class(gateway.GatewayShardImpl)(
+        client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
             app=mock.MagicMock(),
@@ -745,7 +745,7 @@ class TestUpdatePresence:
         )
 
         client._send_json.assert_awaited_once_with(
-            {"op": gateway.GatewayShardImpl._GatewayOpcode.PRESENCE_UPDATE, "d": result}
+            {"op": shard.GatewayShardImpl._GatewayOpcode.PRESENCE_UPDATE, "d": result}
         )
 
     @pytest.mark.parametrize("idle_since", [undefined.UNDEFINED, datetime.datetime.now()])
@@ -812,7 +812,7 @@ class TestUpdatePresence:
 class TestUpdateVoiceState:
     @pytest.fixture
     def client(self, proxy_settings, http_settings):
-        client = hikari_test_helpers.unslot_class(gateway.GatewayShardImpl)(
+        client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
             app=mock.MagicMock(),
@@ -847,7 +847,7 @@ class TestUpdateVoiceState:
         await client.update_voice_state("6969420", "12345")
 
         client._send_json.assert_awaited_once_with(
-            {"op": gateway.GatewayShardImpl._GatewayOpcode.VOICE_STATE_UPDATE, "d": payload}
+            {"op": shard.GatewayShardImpl._GatewayOpcode.VOICE_STATE_UPDATE, "d": payload}
         )
 
 

@@ -49,7 +49,7 @@ from hikari.models import intents
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest_app
+    from hikari.api.rest import app as rest_app
     from hikari.models import emojis as emojis_models
     from hikari.models import guilds
     from hikari.models import presences

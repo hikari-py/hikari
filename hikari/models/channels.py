@@ -51,7 +51,7 @@ from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
-    from hikari.api import rest_app
+    from hikari.api.rest import app as rest_app
     from hikari.models import embeds
     from hikari.models import guilds
     from hikari.models import messages

@@ -29,7 +29,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import gateway
+    from hikari.api.gateway import shard as gateway_shard
     from hikari.events import channel as channel_events
     from hikari.events import guild as guild_events
     from hikari.events import message as message_events
@@ -1251,7 +1251,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
     @abc.abstractmethod
     def deserialize_ready_event(
-        self, shard: gateway.IGatewayShard, payload: data_binding.JSONObject,
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject,
     ) -> other_events.ReadyEvent:
         """Parse a raw payload from Discord into a ready event object.
 

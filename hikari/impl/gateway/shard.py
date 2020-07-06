@@ -34,7 +34,7 @@ import aiohttp
 import attr
 
 from hikari import errors
-from hikari.api import gateway
+from hikari.api.gateway import shard
 from hikari.utilities import constants
 from hikari.impl import rate_limits
 from hikari.models import presences
@@ -45,19 +45,19 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import config
-    from hikari.api import event_consumer
+    from hikari.api.gateway import consumer
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import intents as intents_
     from hikari.utilities import snowflake
 
 
-class GatewayShardImpl(gateway.IGatewayShard):
+class GatewayShardImpl(shard.IGatewayShard):
     """Implementation of a V6 and V7 compatible gateway.
 
     Parameters
     ----------
-    app : hikari.api.event_consumer.IEventConsumerApp
+    app : hikari.api.gateway.consumer.IEventConsumerApp
         The base application.
     debug : builtins.bool
         If `builtins.True`, each sent and received payload is dumped to the
@@ -182,7 +182,7 @@ class GatewayShardImpl(gateway.IGatewayShard):
     def __init__(
         self,
         *,
-        app: event_consumer.IEventConsumerApp,
+        app: consumer.IEventConsumerApp,
         debug: bool = False,
         http_settings: config.HTTPSettings,
         initial_activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
@@ -250,7 +250,7 @@ class GatewayShardImpl(gateway.IGatewayShard):
 
     @property
     @typing.final
-    def app(self) -> event_consumer.IEventConsumerApp:
+    def app(self) -> consumer.IEventConsumerApp:
         return self._app
 
     @property
@@ -616,9 +616,11 @@ class GatewayShardImpl(gateway.IGatewayShard):
     async def _receive_json_payload(self) -> data_binding.JSONObject:
         message = await self._receive_raw()
 
+        payload: data_binding.JSONObject
+
         if message.type == aiohttp.WSMsgType.BINARY:
             n, string = await self._receive_zlib_message(message.data)
-            payload: data_binding.JSONObject = data_binding.load_json(string)  # type: ignore
+            payload = data_binding.load_json(string)  # type: ignore[assignment]
             self._log_debug_payload(
                 string, "received %s zlib encoded packets [t:%s, op:%s]", n, payload.get("t"), payload.get("op"),
             )
@@ -626,20 +628,20 @@ class GatewayShardImpl(gateway.IGatewayShard):
 
         if message.type == aiohttp.WSMsgType.TEXT:
             string = message.data
-            payload: data_binding.JSONObject = data_binding.load_json(string)  # type: ignore
+            payload = data_binding.load_json(string)  # type: ignore[assignment]
             self._log_debug_payload(string, "received text payload [t:%s, op:%s]", payload.get("t"), payload.get("op"))
             return payload
 
         if message.type == aiohttp.WSMsgType.CLOSE:
-            close_code = self._ws.close_code
+            close_code = self._ws.close_code  # type: ignore[union-attr]
             self._logger.debug("connection closed with code %s", close_code)
 
             if close_code in self._GatewayCloseCode.__members__.values():
-                reason = self._GatewayCloseCode(close_code).name
+                reason = self._GatewayCloseCode(close_code).name  # type: ignore[arg-type]
             else:
                 reason = f"unknown close code {close_code}"
 
-            can_reconnect = close_code < 4000 or close_code in (
+            can_reconnect = close_code < 4000 or close_code in (  # type: ignore[operator]
                 self._GatewayCloseCode.DECODE_ERROR,
                 self._GatewayCloseCode.INVALID_SEQ,
                 self._GatewayCloseCode.UNKNOWN_ERROR,
@@ -654,7 +656,7 @@ class GatewayShardImpl(gateway.IGatewayShard):
             raise self._SocketClosed
 
         # Assume exception for now.
-        ex = self._ws.exception()
+        ex = self._ws.exception()  # type: ignore[union-attr]
         self._logger.debug("encountered unexpected error", exc_info=ex)
         raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
 
@@ -677,7 +679,7 @@ class GatewayShardImpl(gateway.IGatewayShard):
         return packets, self._zlib.decompress(buff).decode("utf-8")
 
     async def _receive_raw(self) -> aiohttp.WSMessage:
-        packet = await self._ws.receive()
+        packet: aiohttp.WSMessage = await self._ws.receive()  # type: ignore[union-attr]
         self.last_message_received = self._now()
         return packet
 
@@ -685,7 +687,7 @@ class GatewayShardImpl(gateway.IGatewayShard):
         await self.ratelimiter.acquire()
         message = data_binding.dump_json(payload)
         self._log_debug_payload(message, "sending json payload [t:%s]", payload.get("t"))
-        await self._ws.send_str(message)
+        await self._ws.send_str(message)  # type: ignore[union-attr]
 
     def _dispatch(self, event_name: str, event: data_binding.JSONObject) -> asyncio.Task[None]:
         return asyncio.create_task(

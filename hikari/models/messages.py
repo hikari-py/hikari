@@ -42,7 +42,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import rest_app
+    from hikari.api.rest import app as rest_app
     from hikari.models import applications
     from hikari.models import channels
     from hikari.models import embeds as embeds_

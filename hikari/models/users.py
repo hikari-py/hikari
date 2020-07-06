@@ -34,7 +34,7 @@ from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest_app
+    from hikari.api.rest import app as rest_app
 
 
 @enum.unique
