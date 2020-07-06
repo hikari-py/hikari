@@ -1005,9 +1005,10 @@ class TestEntityFactoryImpl:
         thumbnail = embed_models.EmbedImage(resource=files.File("dog.png"))
         image = embed_models.EmbedImage(resource=files.Bytes(b"potato kung fu", filename="sushi.pdf"))
         author_icon = embed_models.EmbedResource(resource=files.Bytes(b"potato kung fu^2", filename="sushi².jpg"))
+        video_icon = embed_models.EmbedResource(resource=files.Bytes(b"whatevr", filename="sushi².mp4"))
 
         payload, resources = entity_factory_impl.serialize_embed(
-            embed_models.Embed(
+            embed_models.Embed.from_received_embed(
                 title="Title",
                 description="Nyaa",
                 url="https://some-url",
@@ -1018,6 +1019,8 @@ class TestEntityFactoryImpl:
                 thumbnail=thumbnail,
                 author=embed_models.EmbedAuthor(name="AUTH ME", url="wss://\\_/-_-\\_/", icon=author_icon),
                 fields=[embed_models.EmbedField(value="VALUE", name="NAME", inline=True)],
+                provider=None,
+                video=embed_models.EmbedVideo(resource=video_icon),
             )
         )
 
@@ -1057,7 +1060,7 @@ class TestEntityFactoryImpl:
         author_icon = embed_models.EmbedResource(resource=files.URL("http://foobar.com"))
 
         payload, resources = entity_factory_impl.serialize_embed(
-            embed_models.Embed(
+            embed_models.Embed.from_received_embed(
                 title="Title",
                 description="Nyaa",
                 url="https://some-url",
@@ -1068,6 +1071,10 @@ class TestEntityFactoryImpl:
                 thumbnail=thumbnail,
                 author=embed_models.EmbedAuthor(name="AUTH ME", url="wss://\\_/-_-\\_/", icon=author_icon),
                 fields=[embed_models.EmbedField(value="VALUE", name="NAME", inline=True)],
+                video=embed_models.EmbedVideo(
+                    resource=embed_models.EmbedResource(resource=files.URL("http://foobar.com"))
+                ),
+                provider=embed_models.EmbedProvider(name="I said nya"),
             )
         )
 
@@ -1093,7 +1100,7 @@ class TestEntityFactoryImpl:
 
     def test_serialize_embed_with_null_sub_fields(self, entity_factory_impl):
         payload, resources = entity_factory_impl.serialize_embed(
-            embed_models.Embed(
+            embed_models.Embed.from_received_embed(
                 title="Title",
                 description="Nyaa",
                 url="https://some-url",
@@ -1101,6 +1108,11 @@ class TestEntityFactoryImpl:
                 color=color_models.Color(321321),
                 footer=embed_models.EmbedFooter(),
                 author=embed_models.EmbedAuthor(),
+                video=None,
+                provider=None,
+                fields=None,
+                image=None,
+                thumbnail=None,
             )
         )
         assert payload == {
