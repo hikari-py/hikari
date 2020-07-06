@@ -888,20 +888,22 @@ class Guild(PartialGuild):
     this guild. For all other purposes, it should be considered to be `builtins.None`.
     """
 
+    @property
     @abc.abstractmethod
-    def cached_roles(self) -> iterators.LazyIterator[Role]:
-        """Generate a lazy iterator across all roles."""
+    def roles(self) -> typing.Collection[Role]:
+        """Return the roles in this guild."""
+
+    @property
+    @abc.abstractmethod
+    def emojis(self) -> typing.Collection[emojis_.KnownCustomEmoji]:
+        """Return the emojis in this guild."""
 
     @abc.abstractmethod
-    def cached_emojis(self) -> iterators.LazyIterator[emojis_.KnownCustomEmoji]:
-        """Generate a lazy iterator across all emojis."""
-
-    @abc.abstractmethod
-    async def get_cached_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
+    async def get_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
         """Get a role from the cache by an ID."""
 
     @abc.abstractmethod
-    async def get_cached_emoji(
+    async def get_emoji(
         self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.UniqueObject]
     ) -> typing.Optional[emojis_.KnownCustomEmoji]:
         """Get an emoji from the cache by an ID."""
@@ -1034,16 +1036,16 @@ class RESTGuild(Guild):
     remain `builtins.None`.
     """
 
-    def cached_roles(self) -> iterators.FlatLazyIterator[Role]:
-        return iterators.FlatLazyIterator(self._roles.values())
+    def roles(self) -> typing.ValuesView[Role]:
+        return self._roles.values()
 
-    def cached_emojis(self) -> iterators.FlatLazyIterator[emojis_.KnownCustomEmoji]:
-        return iterators.FlatLazyIterator(self._emojis.values())
+    def emojis(self) -> typing.ValuesView[emojis_.KnownCustomEmoji]:
+        return self._emojis.values()
 
-    async def get_cached_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
+    def get_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
         return self._roles.get(snowflake.Snowflake(int(role)))
 
-    async def get_cached_emoji(
+    def get_emoji(
         self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.UniqueObject]
     ) -> typing.Optional[emojis_.KnownCustomEmoji]:
         return self._emojis.get(snowflake.Snowflake(int(emoji)))
@@ -1087,38 +1089,43 @@ class GatewayGuild(Guild):
     `builtins.None`.
     """
 
-    def cached_roles(self) -> cache.ICacheView[Role]:
-        return self.app.cache.get_guild_roles_view(self.id)
+    @property
+    def roles(self) -> cache.ICacheView[Role]:
+        return self.app.cache.get_roles_view_for_guild(self.id)
 
-    def cached_emojis(self) -> cache.ICacheView[emojis_.KnownCustomEmoji]:
-        return self.app.cache.get_guild_emojis_view(self.id)
+    @property
+    def emojis(self) -> cache.ICacheView[emojis_.KnownCustomEmoji]:
+        return self.app.cache.get_emojis_view_for_guild(self.id)
 
-    def cached_members(self) -> cache.ICacheView[Member]:
-        return self.app.cache.get_guild_members_view(self.id)
+    @property
+    def members(self) -> cache.ICacheView[Member]:
+        return self.app.cache.get_members_view_for_guild(self.id)
 
-    def cached_channels(self) -> cache.ICacheView[channels_.GuildChannel]:
-        return self.app.cache.get_guild_channels_view(self.id)
+    @property
+    def channels(self) -> cache.ICacheView[channels_.GuildChannel]:
+        return self.app.cache.get_channels_view_for_guild(self.id)
 
-    def cached_presences(self) -> cache.ICacheView[presences_.MemberPresence]:
-        return self.app.cache.get_guild_presences_view(self.id)
+    @property
+    def presences(self) -> cache.ICacheView[presences_.MemberPresence]:
+        return self.app.cache.get_presences_view_for_guild(self.id)
 
-    def get_cached_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
+    def get_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
         return self.app.cache.get_guild_role(self.id, snowflake.Snowflake(int(role)))
 
-    def get_cached_emoji(
+    def get_emoji(
         self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.UniqueObject]
     ) -> typing.Optional[emojis_.KnownCustomEmoji]:
         return self.app.cache.get_emoji(snowflake.Snowflake(int(emoji)))
 
-    def get_cached_channel(
+    def get_channel(
         self, channel: typing.Union[channels_.GuildChannel, snowflake.UniqueObject],
     ) -> typing.Optional[channels_.GuildChannel]:
         return self.app.cache.get_guild_channel(snowflake.Snowflake(int(channel)))
 
-    def get_cached_member(self, user: typing.Union[users.User, snowflake.UniqueObject]) -> typing.Optional[Member]:
+    def get_member(self, user: typing.Union[users.User, snowflake.UniqueObject]) -> typing.Optional[Member]:
         return self.app.cache.get_guild_member(self.id, snowflake.Snowflake(int(user)))
 
-    def get_cached_presence(
+    def get_presence(
         self, user: typing.Union[users.User, snowflake.UniqueObject]
     ) -> typing.Optional[presences_.MemberPresence]:
         return self.app.cache.get_guild_presence(self.id, snowflake.Snowflake(int(user)))
