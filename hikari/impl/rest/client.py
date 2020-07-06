@@ -409,8 +409,8 @@ class RESTClientImpl(client.IRESTClient):
             undefined.UndefinedType, typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool
         ],
     ) -> typing.Union[undefined.UndefinedType, data_binding.JSONObject]:
-        parsed_mentions = []
-        allowed_mentions = {}
+        parsed_mentions: typing.List[str] = []
+        allowed_mentions = {"parse": parsed_mentions}
 
         if mentions_everyone is True:
             parsed_mentions.append("everyone")
@@ -430,9 +430,6 @@ class RESTClientImpl(client.IRESTClient):
 
         if not parsed_mentions and not allowed_mentions:
             return undefined.UNDEFINED
-
-        if parsed_mentions:
-            allowed_mentions["parse"] = parsed_mentions
 
         return allowed_mentions
 
