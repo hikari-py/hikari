@@ -42,7 +42,7 @@ from hikari.events import lifetime_events
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
 from hikari.impl import event_manager
-from hikari.impl import in_memory_cache as cache_impl
+from hikari.impl import stateful_cache as cache_impl
 from hikari.impl import rate_limits
 from hikari.impl import rest as rest_client_impl
 from hikari.impl import shard as gateway_shard_impl
