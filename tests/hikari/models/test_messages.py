@@ -47,9 +47,3 @@ def test_Reaction_str_operator():
     emoji.name = "\N{OK HAND SIGN}"
     reaction.emoji = emoji
     assert str(reaction) == "\N{OK HAND SIGN}"
-
-
-def test_Message_str_operator():
-    message = messages.Message()
-    message.content = "espy is super cool"
-    assert str(message) == "espy is super cool"
