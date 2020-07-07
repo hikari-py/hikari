@@ -138,6 +138,15 @@ def deploy_to_git(next_version: str) -> None:
     nox.shell("git push --atomic", config.REMOTE_NAME, config.PREPROD_BRANCH, config.PROD_BRANCH, next_version)
 
 
+def rebase_development() -> None:
+    print("Merging preprod back into dev")
+    nox.shell("git checkout", config.DEV_BRANCH)
+    nox.shell(f"git reset --hard {config.REMOTE_NAME}/{config.DEV_BRANCH}")
+
+    nox.shell(f"git rebase {config.PREPROD_BRANCH}")
+    nox.shell("git push", config.REMOTE_NAME, config.DEV_BRANCH, "-f", "-o", "ci.skip")
+
+
 def send_notification(version: str, title: str, description: str, color: str) -> None:
     print("Sending webhook to Discord")
     nox.shell(
@@ -188,12 +197,12 @@ def deploy(session: nox.Session) -> None:
             "```",
             "2C2F33",
         )
+        rebase_development()
     elif commit_ref == config.PROD_BRANCH:
         print("prod release!")
         next_version = get_next_prod_version_from_dev(current_version)
         update_version_string(next_version)
         deploy_to_pypi()
-        deploy_to_git(next_version)
         send_notification(
             next_version,
             f"{config.API_NAME} v{next_version} has been released",
@@ -203,5 +212,7 @@ def deploy(session: nox.Session) -> None:
             "```",
             "7289DA",
         )
+        deploy_to_git(next_version)
+        rebase_development()
     else:
         print("not preprod or prod branch, nothing will be performed.")
