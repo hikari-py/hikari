@@ -190,7 +190,7 @@ class Reaction:
     """Represents a reaction in a message."""
 
     count: int = attr.ib(eq=False, hash=False, repr=True)
-    """The amount of times the emoji has been used to react."""
+    """The number of times the emoji has been used to react."""
 
     emoji: typing.Union[emojis_.UnicodeEmoji, emojis_.CustomEmoji] = attr.ib(eq=True, hash=True, repr=True)
     """The emoji used to react."""
@@ -224,6 +224,7 @@ class MessageCrosspost:
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
+    # TODO: get clarification on this!
     id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the message.
 
@@ -329,9 +330,6 @@ class Message(snowflake.Unique):
 
     nonce: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The message nonce. This is a string used for validating a message was sent."""
-
-    def __str__(self) -> str:
-        return self.content
 
     async def fetch_channel(self) -> channels.PartialChannel:
         """Fetch the channel this message was created in.

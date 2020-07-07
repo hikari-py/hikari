@@ -407,7 +407,7 @@ class MultiprocessingFileReader(FileReader):
             return fp.read()
 
 
-class AsyncReaderContextManager(typing.Generic[ReaderImplT]):
+class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
     """Context manager that returns a reader."""
 
     __slots__: typing.Sequence[str] = ()

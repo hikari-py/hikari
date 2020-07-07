@@ -60,6 +60,7 @@ SKIP_DEPLOY_PHRASE = "[skip deploy]"
 SKIP_PAGES_PHRASE = "[skip pages]"
 PROD_BRANCH = "master"
 PREPROD_BRANCH = "staging"
+DEV_BRANCH = "development"
 REMOTE_NAME = "origin"
 DISTS = ["sdist", "bdist_wheel"]
 PYPI_REPO = "https://upload.pypi.org/legacy/"
