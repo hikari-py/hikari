@@ -102,7 +102,7 @@ def deploy_to_pypi() -> None:
     nox.shell("twine", "upload", "--disable-progress-bar", "--skip-existing", *dists)
 
 
-def deploy_to_git(next_version: str) -> None:
+def init_git() -> None:
     print("Setting up the git repository ready to make automated changes")
     nox.shell("git config user.name", shlex.quote(config.CI_ROBOT_NAME))
     nox.shell("git config user.email", shlex.quote(config.CI_ROBOT_EMAIL))
@@ -112,6 +112,8 @@ def deploy_to_git(next_version: str) -> None:
         "$(echo \"$CI_REPOSITORY_URL\" | perl -pe 's#.*@(.+?(\\:\\d+)?)/#git@\\1:#')",
     )
 
+
+def deploy_to_git(next_version: str) -> None:
     print("Making deployment commit")
     nox.shell(
         "git commit -am", shlex.quote(f"(ci) Deployed {next_version} to PyPI {config.SKIP_CI_PHRASE}"), "--allow-empty",
@@ -183,6 +185,7 @@ def deploy(session: nox.Session) -> None:
     print("Commit ref is", commit_ref)
     current_version = get_current_version()
 
+    init_git()
     if commit_ref == config.PREPROD_BRANCH:
         print("preprod release!")
         next_version = get_next_dev_version(current_version)
