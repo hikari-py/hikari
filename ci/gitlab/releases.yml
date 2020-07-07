@@ -44,6 +44,30 @@
   interruptible: false
   resource_group: deploy
   retry: 1
+  script:
+    - apt-get update
+    - apt-get install curl openssh-client -qy
+
+    # Don't dox our keys, or spam echos
+    - set +x
+
+    # Init the SSH agent and add our gitlab private key to it.
+    - echo ">>>> Starting SSH agent <<<<"
+    - eval "$(ssh-agent -s)"
+    - echo ">>>> Making ~/.ssh <<<<"
+    - mkdir ~/.ssh || true
+    - echo ">>>> Writing SSH private key to ~/.ssh/id_rsa <<<<"
+    - echo "${GIT_SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
+    - echo ">>>> SSH IS READY <<<<"
+
+    # Be verbose again.
+    - set -x
+
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -t rsa gitlab.com >> ~/.ssh/known_hosts
+    - ssh-add ~/.ssh/id_rsa
+
+    - nox -s deploy --no-error-on-external-run
   stage: deploy
 
 ###
@@ -57,8 +81,6 @@ release:staging:
     name: staging
     url: https://nekokatt.gitlab.io/hikari
   extends: .release
-  script:
-    - nox -s deploy --no-error-on-external-run
   rules:
     - if: "$CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_TAG == null && $CI_COMMIT_REF_NAME == 'staging'"
   variables:
@@ -75,30 +97,6 @@ release:master:
     name: prod
     url: https://nekokatt.gitlab.io/hikari
   extends: .release
-  script:
-     - apt-get update
-     - apt-get install curl openssh-client -qy
-
-     # Don't dox our keys, or spam echos
-     - set +x
-
-     # Init the SSH agent and add our gitlab private key to it.
-     - echo ">>>> Starting SSH agent <<<<"
-     - eval "$(ssh-agent -s)"
-     - echo ">>>> Making ~/.ssh <<<<"
-     - mkdir ~/.ssh || true
-     - echo ">>>> Writing SSH private key to ~/.ssh/id_rsa <<<<"
-     - echo "${GIT_SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
-     - echo ">>>> SSH IS READY <<<<"
-
-     # Be verbose again.
-     - set -x
-
-     - chmod 600 ~/.ssh/id_rsa
-     - ssh-keyscan -t rsa gitlab.com >> ~/.ssh/known_hosts
-     - ssh-add ~/.ssh/id_rsa
-
-     - nox -s deploy --no-error-on-external-run
   rules:
     - if: "$CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_TAG == null && $CI_COMMIT_REF_NAME == 'master'"    
   variables:
