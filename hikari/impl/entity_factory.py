@@ -521,90 +521,102 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ################
 
     def deserialize_embed(self, payload: data_binding.JSONObject) -> embed_models.Embed:
-        embed = embed_models.Embed()
-        embed.title = payload.get("title")
-        embed.description = payload.get("description")
-        embed.url = payload.get("url")
-        embed.timestamp = (
-            date.iso8601_datetime_string_to_datetime(payload["timestamp"]) if "timestamp" in payload else None
-        )
-        embed.color = color_models.Color(payload["color"]) if "color" in payload else None
-
-        if footer_payload := payload.get("footer"):
-            footer = embed_models.EmbedFooter()
-            footer.text = footer_payload["text"]
-
-            if icon_url := footer_payload.get("icon_url"):
-                footer.icon = embed_models.EmbedResource(resource=files.ensure_resource(icon_url))
-                footer.icon.proxy_resource = files.ensure_resource(footer_payload.get("proxy_icon_url"))
-            else:
-                footer.icon = None
-
-            embed.footer = footer
-        else:
-            embed.footer = None
+        # Keep these separate to aid debugging later.
+        title = payload.get("title")
+        description = payload.get("description")
+        url = payload.get("url")
+        color = color_models.Color(payload["color"]) if "color" in payload else None
+        timestamp = date.iso8601_datetime_string_to_datetime(payload["timestamp"]) if "timestamp" in payload else None
+        fields: typing.Optional[typing.MutableSequence[embed_models.EmbedField]] = None
 
         if image_payload := payload.get("image"):
-            image = embed_models.EmbedImage(resource=files.ensure_resource(image_payload.get("url")))
-            image.proxy_resource = files.ensure_resource(image_payload.get("proxy_url"))
-            image.height = int(image_payload["height"]) if "height" in image_payload else None
-            image.width = int(image_payload["width"]) if "width" in image_payload else None
-            embed.image = image
+            image: typing.Optional[embed_models.EmbedImage] = embed_models.EmbedImage(
+                resource=files.ensure_resource(image_payload.get("url")),
+                proxy_resource=files.ensure_resource(image_payload.get("proxy_url")),
+                height=image_payload.get("height"),
+                width=image_payload.get("width"),
+            )
         else:
-            embed.image = None
+            image = None
 
         if thumbnail_payload := payload.get("thumbnail"):
-            thumbnail = embed_models.EmbedImage(resource=files.ensure_resource(thumbnail_payload.get("url")))
-            thumbnail.proxy_resource = files.ensure_resource(thumbnail_payload.get("proxy_url"))
-            thumbnail.height = int(thumbnail_payload["height"]) if "height" in thumbnail_payload else None
-            thumbnail.width = int(thumbnail_payload["width"]) if "width" in thumbnail_payload else None
-            embed.thumbnail = thumbnail
+            thumbnail: typing.Optional[embed_models.EmbedImage] = embed_models.EmbedImage(
+                resource=files.ensure_resource(thumbnail_payload.get("url")),
+                proxy_resource=files.ensure_resource(thumbnail_payload.get("proxy_url")),
+                height=thumbnail_payload.get("height"),
+                width=thumbnail_payload.get("width"),
+            )
         else:
-            embed.thumbnail = None
+            thumbnail = None
 
         if video_payload := payload.get("video"):
-            video = embed_models.EmbedVideo(
+            video: typing.Optional[embed_models.EmbedVideo] = embed_models.EmbedVideo(
                 resource=files.ensure_resource(video_payload.get("url")),
-                height=int(video_payload["height"]) if "height" in video_payload else None,
-                width=int(video_payload["width"]) if "width" in video_payload else None,
+                height=video_payload.get("height"),
+                width=video_payload.get("width"),
             )
-            embed.video = video
         else:
-            embed.video = None
+            video = None
 
         if provider_payload := payload.get("provider"):
-            provider = embed_models.EmbedProvider()
-            provider.name = provider_payload.get("name")
-            provider.url = provider_payload.get("url")
-            embed.provider = provider
+            provider: typing.Optional[embed_models.EmbedProvider] = embed_models.EmbedProvider(
+                name=provider_payload.get("name"), url=provider_payload.get("url")
+            )
         else:
-            embed.provider = None
+            provider = None
 
         if author_payload := payload.get("author"):
-            author = embed_models.EmbedAuthor()
-            author.name = author_payload.get("name")
-            author.url = author_payload.get("url")
-
-            if icon_url := author_payload.get("icon_url"):
-                author.icon = embed_models.EmbedResource(resource=files.ensure_resource(icon_url))
-                author.icon.proxy_resource = files.ensure_resource(author_payload.get("proxy_icon_url"))
-            else:
-                author.icon = None
-
-            embed.author = author
-        else:
-            embed.author = None
-
-        fields = []
-        for field_payload in payload.get("fields", ()):
-            fields.append(
-                embed_models.EmbedField(
-                    name=field_payload["name"], value=field_payload["value"], inline=field_payload.get("inline", False)
+            if "icon_url" in author_payload:
+                icon: typing.Optional[embed_models.EmbedResourceWithProxy] = embed_models.EmbedResourceWithProxy(
+                    resource=files.ensure_resource(author_payload.get("icon_url")),
+                    proxy_resource=files.ensure_resource(author_payload.get("proxy_icon_url")),
                 )
-            )
-        embed.fields = fields
+            else:
+                icon = None
 
-        return embed
+            author: typing.Optional[embed_models.EmbedAuthor] = embed_models.EmbedAuthor(
+                name=author_payload.get("name"), url=author_payload.get("url"), icon=icon,
+            )
+        else:
+            author = None
+
+        if footer_payload := payload.get("footer"):
+            if "icon_url" in footer_payload:
+                icon = embed_models.EmbedResourceWithProxy(
+                    resource=files.ensure_resource(footer_payload.get("icon_url")),
+                    proxy_resource=files.ensure_resource(footer_payload.get("proxy_icon_url")),
+                )
+            else:
+                icon = None
+
+            footer: typing.Optional[embed_models.EmbedFooter] = embed_models.EmbedFooter(
+                text=footer_payload.get("text"), icon=icon
+            )
+        else:
+            footer = None
+
+        if fields_array := payload.get("fields"):
+            fields = []
+            for field_payload in fields_array:
+                field = embed_models.EmbedField(
+                    name=field_payload["name"], value=field_payload["value"], inline=field_payload.get("inline", False),
+                )
+                fields.append(field)
+
+        return embed_models.Embed.from_received_embed(
+            title=title,
+            description=description,
+            url=url,
+            color=color,
+            timestamp=timestamp,
+            image=image,
+            thumbnail=thumbnail,
+            video=video,
+            provider=provider,
+            author=author,
+            footer=footer,
+            fields=fields,
+        )
 
     def serialize_embed(  # noqa: C901
         self, embed: embed_models.Embed,
