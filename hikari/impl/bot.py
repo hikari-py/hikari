@@ -649,7 +649,9 @@ class BotAppImpl(bot.IBotApp):
         mapping_function: typing.Callable[..., None], *args: typing.Callable[[], typing.Any]
     ) -> None:
         valid_interrupts = signal.valid_signals()
-        for interrupt in (signal.SIGQUIT, signal.SIGTERM):
+        # We must getattr on these, or we risk an exception occurring on Windows.
+        for interrupt_name in ("SIGQUIT", "SIGTERM"):
+            interrupt = getattr(signal, interrupt_name, None)
             if interrupt in valid_interrupts:
                 with contextlib.suppress(NotImplementedError):
                     mapping_function(interrupt, *args)
