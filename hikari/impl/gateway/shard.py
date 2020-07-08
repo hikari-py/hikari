@@ -227,8 +227,8 @@ class GatewayShardImpl(shard.IGatewayShard):
 
         self.connected_at = float("nan")
         self.heartbeat_interval = float("nan")
-        self.heartbeat_latency = float("nan")
-        self.last_heartbeat_sent = float("nan")
+        self._heartbeat_latency = float("nan")
+        self._last_heartbeat_sent = float("nan")
         self.last_message_received = float("nan")
         self.large_threshold = large_threshold
         self.ratelimiter = rate_limits.WindowedBurstRateLimiter(str(shard_id), 60.0, 120)
@@ -257,6 +257,11 @@ class GatewayShardImpl(shard.IGatewayShard):
     @typing.final
     def is_alive(self) -> bool:
         return not math.isnan(self.connected_at)
+
+    @property
+    @typing.final
+    def heartbeat_latency(self) -> float:
+        return self._heartbeat_latency
 
     async def start(self) -> asyncio.Task[None]:
         run_task = asyncio.create_task(self._run(), name=f"shard {self._shard_id} keep-alive")
@@ -540,7 +545,7 @@ class GatewayShardImpl(shard.IGatewayShard):
             while not self._request_close_event.is_set():
                 now = self._now()
                 time_since_message = now - self.last_message_received
-                time_since_heartbeat_sent = now - self.last_heartbeat_sent
+                time_since_heartbeat_sent = now - self._last_heartbeat_sent
 
                 if self.heartbeat_interval < time_since_message:
                     self._logger.error(
@@ -556,7 +561,7 @@ class GatewayShardImpl(shard.IGatewayShard):
                     "preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, self.heartbeat_interval
                 )
                 await self._send_json({"op": self._GatewayOpcode.HEARTBEAT, "d": self._seq})
-                self.last_heartbeat_sent = self._now()
+                self._last_heartbeat_sent = self._now()
 
                 try:
                     await asyncio.wait_for(self._request_close_event.wait(), timeout=self.heartbeat_interval)
@@ -599,8 +604,8 @@ class GatewayShardImpl(shard.IGatewayShard):
                 await self._send_json({"op": self._GatewayOpcode.HEARTBEAT_ACK})
 
             elif op == self._GatewayOpcode.HEARTBEAT_ACK:
-                self.heartbeat_latency = self._now() - self.last_heartbeat_sent
-                self._logger.debug("received HEARTBEAT ACK [latency:%ss]", self.heartbeat_latency)
+                self._heartbeat_latency = self._now() - self._last_heartbeat_sent
+                self._logger.debug("received HEARTBEAT ACK [latency:%ss]", self._heartbeat_latency)
 
             elif op == self._GatewayOpcode.RECONNECT:
                 self._logger.debug("RECONNECT")
