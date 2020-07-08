@@ -1605,8 +1605,10 @@ class RESTClientImpl(client.IRESTClient):
     ) -> None:
         body = data_binding.JSONObjectBuilder()
         body.put("delete_message_days", delete_message_days)
+        # This endpoint specifies a reason in the body, specifically.
+        body.put("reason", reason)
         route = routes.PUT_GUILD_BAN.compile(guild=guild, user=user)
-        await self._request(route, reason=reason, json=body)
+        await self._request(route, json=body)
 
     ban_member = ban_user
 
