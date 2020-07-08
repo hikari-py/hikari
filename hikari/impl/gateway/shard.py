@@ -35,9 +35,9 @@ import attr
 
 from hikari import errors
 from hikari.api.gateway import shard
-from hikari.utilities import constants
 from hikari.impl import rate_limits
 from hikari.models import presences
+from hikari.utilities import constants
 from hikari.utilities import data_binding
 from hikari.utilities import undefined
 

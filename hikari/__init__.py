@@ -26,6 +26,12 @@ from __future__ import annotations
 # noinspection PyUnresolvedReferences
 import typing
 
+# We need these imported explicitly for the __all__ to be visible due to
+# Python's weird import visibility system.
+from hikari import config
+from hikari import errors
+from hikari import events
+from hikari import models
 from hikari._about import __author__
 from hikari._about import __ci__
 from hikari._about import __copyright__
@@ -36,31 +42,22 @@ from hikari._about import __issue_tracker__
 from hikari._about import __license__
 from hikari._about import __url__
 from hikari._about import __version__
-
-# We need these imported explicitly for the __all__ to be visible due to
-# Python's weird import visibility system.
-from hikari import config
-from hikari import events
-from hikari import errors
-from hikari import models
+from hikari.config import *
+from hikari.errors import *
+from hikari.events import *
+from hikari.impl.bot import BotAppImpl as Bot
+from hikari.impl.rest.app import RESTAppFactoryImpl as REST
+from hikari.models import *
 from hikari.utilities import files as _files
 from hikari.utilities import iterators as _iterators
 from hikari.utilities import snowflake as _snowflake
 from hikari.utilities import spel as _spel
 from hikari.utilities import undefined as _undefined
-
-from hikari.config import *
-from hikari.events import *
-from hikari.errors import *
-from hikari.models import *
 from hikari.utilities.files import *
 from hikari.utilities.iterators import *
 from hikari.utilities.snowflake import *
 from hikari.utilities.spel import *
 from hikari.utilities.undefined import *
-
-from hikari.impl.bot import BotAppImpl as Bot
-from hikari.impl.rest.app import RESTAppFactoryImpl as REST
 
 _presorted_all = (
     config.__all__

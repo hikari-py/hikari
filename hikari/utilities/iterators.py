@@ -31,9 +31,8 @@ __all__: typing.Final[typing.List[str]] = [
 ]
 
 import abc
-import typing
-
 import asyncio
+import typing
 
 from hikari.utilities import spel
 
