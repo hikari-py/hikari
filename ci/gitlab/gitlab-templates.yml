@@ -16,48 +16,8 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 include:
-  - template: "Dependency-Scanning.gitlab-ci.yml"
-  - template: "License-Scanning.gitlab-ci.yml"
   - template: "SAST.gitlab-ci.yml"
 
-###
-### GitLab's dependency scanning template.
-###
-### This gives dependency statistics on any MRs, and beefs out the security
-### dashboard.
-###
-### This must use a specific name. Do not rename it for consistency.
-###
-dependency_scanning:
-  artifacts:
-    expire_in: 3 days
-    when: always
-  interruptible: true
-  retry: 1
-  stage: test
-  rules:
-    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'schedule'"
-  variables:
-    DS_DEFAULT_ANALYZERS: "gemnasium-python"
-
-
-###
-### GitLab's license scanning template.
-###
-### This checks for license conflicts on any MRs and periodically, and beefs out
-### the security dashboard.
-###
-### This must use a specific name. Do not rename it for consistency.
-###
-license_scanning:
-  artifacts:
-    expire_in: 3 days
-    when: always
-  interruptible: true
-  retry: 1
-  rules:
-    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'schedule'"
-  stage: test
 
 ###
 ### GitLab's Static Application Security Testing suite.
