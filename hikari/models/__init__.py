@@ -39,7 +39,6 @@ from hikari.models import presences
 from hikari.models import users
 from hikari.models import voices
 from hikari.models import webhooks
-
 from hikari.models.applications import *
 from hikari.models.audit_logs import *
 from hikari.models.channels import *

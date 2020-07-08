@@ -36,17 +36,17 @@ import aiohttp
 from hikari import config
 from hikari import errors
 from hikari.api.rest import client
-from hikari.impl.rest import buckets
-from hikari.utilities import constants
 from hikari.impl import rate_limits
-from hikari.utilities import response_handler
+from hikari.impl.rest import buckets
 from hikari.impl.rest import special_endpoints
 from hikari.models import embeds as embeds_
 from hikari.models import emojis
+from hikari.utilities import constants
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
 from hikari.utilities import iterators
+from hikari.utilities import response_handler
 from hikari.utilities import routes
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
