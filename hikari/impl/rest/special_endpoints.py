@@ -31,10 +31,10 @@ import typing
 import attr
 
 from hikari.api.rest import special_endpoints
-from hikari.utilities import routes
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import iterators
+from hikari.utilities import routes
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:

@@ -32,11 +32,11 @@ import aiohttp
 from hikari import config
 from hikari.api.rest import app
 from hikari.api.rest import client
-from hikari.utilities import constants
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
-from hikari.impl.rest import client as rest_client_impl
 from hikari.impl.cache import stateless
+from hikari.impl.rest import client as rest_client_impl
+from hikari.utilities import constants
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
