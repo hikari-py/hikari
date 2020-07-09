@@ -393,13 +393,8 @@ class GroupDMChannel(DMChannel):
 class GuildChannel(PartialChannel):
     """The base for anything that is a guild channel."""
 
-    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
-    """The ID of the guild the channel belongs to.
-
-    !!! warning
-        This will be `builtins.None` when received over the gateway in certain events
-        (e.g Guild Create).
-    """
+    guild_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    """The ID of the guild the channel belongs to."""
 
     position: int = attr.ib(eq=False, hash=False, repr=False)
     """The sorting position of the channel.

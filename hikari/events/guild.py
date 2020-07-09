@@ -182,12 +182,6 @@ class GuildMemberEvent(GuildEvent):
 class GuildMemberAddEvent(GuildMemberEvent):
     """Used to represent a Guild Member Add gateway event."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
-    """The client application that models may use for procedures."""
-
-    guild_id: snowflake.Snowflake = attr.ib(repr=True)  # TODO: do we want to have guild_id on all members?
-    """The ID of the guild where this member was added."""
-
     member: guilds.Member = attr.ib(repr=True)
     """The object of the member who's being added."""
 
@@ -232,12 +226,6 @@ class GuildRoleEvent(GuildEvent):
 class GuildRoleCreateEvent(GuildRoleEvent):
     """Used to represent a Guild Role Create gateway event."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
-    """The client application that models may use for procedures."""
-
-    guild_id: snowflake.Snowflake = attr.ib(repr=True)
-    """The ID of the guild where this role was created."""
-
     role: guilds.Role = attr.ib(repr=True)
     """The object of the role that was created."""
 
@@ -246,14 +234,6 @@ class GuildRoleCreateEvent(GuildRoleEvent):
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class GuildRoleUpdateEvent(GuildRoleEvent):
     """Used to represent a Guild Role Create gateway event."""
-
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
-    """The client application that models may use for procedures."""
-
-    # TODO: make any event with a guild ID into a custom base event.
-    # https://pypi.org/project/stupid/ could this work around the multiple inheritance problem?
-    guild_id: snowflake.Snowflake = attr.ib(repr=True)
-    """The ID of the guild where this role was updated."""
 
     role: guilds.Role = attr.ib(repr=True)
     """The updated role object."""
@@ -267,6 +247,8 @@ class GuildRoleDeleteEvent(GuildRoleEvent):
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
+    # TODO: make any event with a guild ID into a custom base event.
+    # https://pypi.org/project/stupid/ could this work around the multiple inheritance problem?
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild where this role is being deleted."""
 
@@ -284,3 +266,12 @@ class PresenceUpdateEvent(GuildEvent):
 
     presence: presences.MemberPresence = attr.ib(repr=True)
     """The object of the presence being updated."""
+
+    partial_user: typing.Optional[users.PartialUser] = attr.ib(eq=True, hash=True, repr=True)
+    """The object of the user who this presence is for.
+
+    !!! info
+        This will be `None` unless the user's object is being updated in this
+        event in which case any attribute except `id` may be
+        `hikari.utilities.undefined.UNDEFINED`.
+    """
