@@ -79,9 +79,10 @@ class EventManagerCoreComponent(dispatcher.IEventDispatcherComponent, consumer.I
     ) -> None:
         try:
             callback = getattr(self, "on_" + event_name.lower())
-            await callback(shard, payload)
         except AttributeError:
             _LOGGER.debug("ignoring unknown event %s", event_name)
+        else:
+            await callback(shard, payload)
 
     def subscribe(
         self, event_type: typing.Type[dispatcher.EventT], callback: dispatcher.CallbackT, *, _nested: int = 0,

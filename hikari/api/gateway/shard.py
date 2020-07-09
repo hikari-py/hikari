@@ -49,6 +49,11 @@ class IGatewayShard(component.IComponent, abc.ABC):
     def is_alive(self) -> bool:
         """Return `builtins.True` if the shard is alive and connected."""
 
+    @property
+    @abc.abstractmethod
+    def heartbeat_latency(self) -> float:
+        """Return the shard's most recent heartbeat latency."""
+
     @abc.abstractmethod
     async def start(self) -> asyncio.Task[None]:
         """Start the shard, wait for it to become ready.
