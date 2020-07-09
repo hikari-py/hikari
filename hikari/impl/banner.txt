@@ -1,0 +1,10 @@
+  
+  ${red}oooo         o8o  oooo                            o8o       ${default}${bright}${hikari_copyright} ${hikari_license}${default}
+  ${bright_red}`888         `"'  `888                            `"'       ${default}${dim}Installed at:  ${bright}${cyan}${underline}${hikari_install_location}${default}
+  ${yellow} 888 .oo.   oooo   888  oooo   .oooo.   oooo d8b oooo       ${default}${dim}Support:       ${bright}${cyan}${underline}${hikari_discord_invite}${default}
+  ${bright_green} 888P"Y88b  `888   888 .8P'   `P  )88b  `888""8P `888       ${default}${dim}Documentation: ${bright}${cyan}${underline}${hikari_documentation_url}${default}
+  ${blue} 888   888   888   888888.     .oP"888   888      888      
+  ${cyan} 888   888   888   888 `88b.  d8(  888   888      888       ${default}${bright}${python_implementation} ${python_version}
+  ${magenta}o888o o888o o888o o888o o888o `Y888""8o d888b    o888o      ${default}compiled with ${python_compiler} (${python_build})
+${white} ▝▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▘     ${default}${libc_version} on ${platform_system} ${platform_architecture}
+                                     ${bright}${white}${framed}   v${hikari_version}   ${default}
