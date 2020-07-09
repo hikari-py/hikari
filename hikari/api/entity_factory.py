@@ -206,13 +206,22 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_guild_category(self, payload: data_binding.JSONObject) -> channel_models.GuildCategory:
+    def deserialize_guild_category(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> channel_models.GuildCategory:
         """Parse a raw payload from Discord into a guild category object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this channel belongs to. This will only need to
+            be passed in places where guild_id isn't provided in the payload.
+
 
         Returns
         -------
@@ -221,13 +230,21 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_guild_text_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildTextChannel:
+    def deserialize_guild_text_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> channel_models.GuildTextChannel:
         """Parse a raw payload from Discord into a guild text channel object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this channel belongs to. This will only need to
+            be passed in places where guild_id isn't provided in the payload.
 
         Returns
         -------
@@ -236,13 +253,21 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_guild_news_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildNewsChannel:
+    def deserialize_guild_news_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> channel_models.GuildNewsChannel:
         """Parse a raw payload from Discord into a guild news channel object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this channel belongs to. This will only need to
+            be passed in places where guild_id isn't provided in the payload.
 
         Returns
         -------
@@ -251,13 +276,21 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_guild_store_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildStoreChannel:
+    def deserialize_guild_store_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> channel_models.GuildStoreChannel:
         """Parse a raw payload from Discord into a guild store channel object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this channel belongs to. This will only need to
+            be passed in places where guild_id isn't provided in the payload.
 
         Returns
         -------
@@ -266,13 +299,21 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_guild_voice_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildVoiceChannel:
+    def deserialize_guild_voice_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> channel_models.GuildVoiceChannel:
         """Parse a raw payload from Discord into a guild voice channel object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this channel belongs to. This will only need to
+            be passed in places where guild_id isn't provided in the payload.
 
         Returns
         -------
@@ -281,13 +322,22 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_channel(self, payload: data_binding.JSONObject) -> channel_models.PartialChannel:
+    def deserialize_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> channel_models.PartialChannel:
         """Parse a raw payload from Discord into a channel object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this channel belongs to. This will only need to
+            be passed in places where guild_id isn't provided in the payload
+            and will be ignored for DM channels.
 
         Returns
         -------
@@ -368,13 +418,17 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_known_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.KnownCustomEmoji:
+    def deserialize_known_custom_emoji(
+        self, payload: data_binding.JSONObject, *, guild_id: snowflake.Snowflake
+    ) -> emoji_models.KnownCustomEmoji:
         """Parse a raw payload from Discord into a known custom emoji object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this known custom emoji belongs to.
 
         Returns
         -------
@@ -442,7 +496,8 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
-        user: typing.Union[undefined.UndefinedType, user_models.UserImpl] = undefined.UNDEFINED,
+        user: typing.Union[undefined.UndefinedType, user_models.User] = undefined.UNDEFINED,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> guild_models.Member:
         """Parse a raw payload from Discord into a member object.
 
@@ -453,6 +508,9 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         user : hikari.models.users.UserImpl or hikari.utilities.undefined.UndefinedType
             The user to attach to this member, should only be passed in
             situations where "user" is not included in the payload.
+        guild_id : hikari.utilities.snowflake.Snowflake or hikari.utilities.undefined.UndefinedType
+            The ID of the guild this member belongs to if it isn't already
+            included in the payload.
 
         Returns
         -------
@@ -461,13 +519,17 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_role(self, payload: data_binding.JSONObject) -> guild_models.Role:
+    def deserialize_role(
+        self, payload: data_binding.JSONObject, *, guild_id: snowflake.Snowflake,
+    ) -> guild_models.Role:
         """Parse a raw payload from Discord into a role object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this role belongs to.
 
         Returns
         -------
@@ -692,13 +754,21 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
     ################
 
     @abc.abstractmethod
-    def deserialize_voice_state(self, payload: data_binding.JSONObject) -> voice_models.VoiceState:
+    def deserialize_voice_state(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> voice_models.VoiceState:
         """Parse a raw payload from Discord into a voice state object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake or hikari.utilities.undefined.UndefinedType
+            The ID of the guild this voice state belongs to, this only needs to
+            be included when the guild ID isn't in the payload.
 
         Returns
         -------
@@ -1281,6 +1351,21 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         -------
         hikari.events.other.OwnUserUpdateEvent
             The parsed own user update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_member_chunk_event(self, payload: data_binding.JSONObject) -> other_events.MemberChunkEvent:
+        """Parse a raw payload from Discord into a member chunk event object.
+
+        Parameters
+        ----------
+        payload : typing.Mapping[builtins.str, typing.Any]
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.other_events.MemberChunk
+            The parsed member chunk object.
         """
 
     ################

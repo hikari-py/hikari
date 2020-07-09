@@ -38,7 +38,6 @@ import typing
 
 import attr
 
-from hikari.models import users
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
@@ -272,14 +271,8 @@ class MemberPresence:
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    user: users.PartialUser = attr.ib(eq=True, hash=True, repr=True)
-    """The object of the user who this presence is for.
-
-    !!! info
-        Only `PresenceUser.id` is guaranteed for this partial object,
-        with other attributes only being included when when they are being
-        changed in an event.
-    """
+    user_id: snowflake.Snowflake = attr.ib(repr=True, eq=False, hash=True)
+    """The ID of the user this presence belongs to."""
 
     role_ids: typing.Optional[typing.Set[snowflake.Snowflake]] = attr.ib(eq=False, hash=False, repr=False)
     """The ids of the user's current roles in the guild this presence belongs to.

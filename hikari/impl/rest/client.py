@@ -1119,7 +1119,7 @@ class RESTClientImpl(client.IRESTClient):
 
         if (raw_response := await self._request(route, json=body)) is not None:
             response = typing.cast(data_binding.JSONObject, raw_response)
-            return self._app.entity_factory.deserialize_member(response)
+            return self._app.entity_factory.deserialize_member(response, guild_id=snowflake.Snowflake(guild))
         else:
             # User already is in the guild.
             return None
@@ -1167,7 +1167,7 @@ class RESTClientImpl(client.IRESTClient):
         )
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_known_custom_emoji(response)
+        return self._app.entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflake.Snowflake(guild))
 
     async def fetch_guild_emojis(
         self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
@@ -1175,7 +1175,11 @@ class RESTClientImpl(client.IRESTClient):
         route = routes.GET_GUILD_EMOJIS.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return set(data_binding.cast_json_array(response, self._app.entity_factory.deserialize_known_custom_emoji))
+        return set(
+            data_binding.cast_json_array(
+                response, self._app.entity_factory.deserialize_known_custom_emoji, guild_id=snowflake.Snowflake(guild)
+            )
+        )
 
     async def create_emoji(
         self,
@@ -1200,7 +1204,7 @@ class RESTClientImpl(client.IRESTClient):
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_known_custom_emoji(response)
+        return self._app.entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflake.Snowflake(guild))
 
     async def edit_emoji(
         self,
@@ -1223,7 +1227,7 @@ class RESTClientImpl(client.IRESTClient):
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_known_custom_emoji(response)
+        return self._app.entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflake.Snowflake(guild))
 
     async def delete_emoji(
         self,
@@ -1512,7 +1516,7 @@ class RESTClientImpl(client.IRESTClient):
         route = routes.GET_GUILD_MEMBER.compile(guild=guild, user=user)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_member(response)
+        return self._app.entity_factory.deserialize_member(response, guild_id=snowflake.Snowflake(guild))
 
     def fetch_members(
         self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
@@ -1648,7 +1652,9 @@ class RESTClientImpl(client.IRESTClient):
         route = routes.GET_GUILD_ROLES.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_role)
+        return data_binding.cast_json_array(
+            response, self._app.entity_factory.deserialize_role, guild_id=snowflake.Snowflake(guild)
+        )
 
     async def create_role(
         self,
@@ -1676,7 +1682,7 @@ class RESTClientImpl(client.IRESTClient):
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_role(response)
+        return self._app.entity_factory.deserialize_role(response, guild_id=snowflake.Snowflake(guild))
 
     async def reposition_roles(
         self,
@@ -1715,7 +1721,7 @@ class RESTClientImpl(client.IRESTClient):
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_role(response)
+        return self._app.entity_factory.deserialize_role(response, guild_id=snowflake.Snowflake(guild))
 
     async def delete_role(
         self,

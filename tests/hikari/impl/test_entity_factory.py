@@ -43,6 +43,7 @@ from hikari.models import users as user_models
 from hikari.models import voices as voice_models
 from hikari.models import webhooks as webhook_models
 from hikari.utilities import files
+from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 
@@ -545,11 +546,11 @@ class TestEntityFactoryImpl:
                 "name": "Test",
                 "position": 3,
                 "type": 4,
+                "guild_id": "123123",
             }
         )
         assert guild_category.parent_id is None
         assert guild_category.is_nsfw is None
-        assert guild_category.guild_id is None
 
     def test_deserialize_guild_category_with_null_fields(self, entity_factory_impl, permission_overwrite_payload):
         guild_category = entity_factory_impl.deserialize_guild_category(
@@ -616,9 +617,9 @@ class TestEntityFactoryImpl:
                 "permission_overwrites": [],
                 "topic": "¯\\_(ツ)_/¯",
                 "last_message_id": "123456",
+                "guild_id": "123123123",
             }
         )
-        assert guild_text_channel.guild_id is None
         assert guild_text_channel.is_nsfw is None
         assert guild_text_channel.rate_limit_per_user.total_seconds() == 0
         assert guild_text_channel.last_pin_timestamp is None
@@ -694,9 +695,9 @@ class TestEntityFactoryImpl:
                 "permission_overwrites": [],
                 "topic": "Super Important Announcements",
                 "last_message_id": "456",
+                "guild_id": "4123",
             }
         )
-        assert news_channel.guild_id is None
         assert news_channel.is_nsfw is None
         assert news_channel.parent_id is None
         assert news_channel.last_pin_timestamp is None
@@ -753,11 +754,17 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_guild_store_channel_with_unset_fields(self, entity_factory_impl):
         store_chanel = entity_factory_impl.deserialize_guild_store_channel(
-            {"id": "123", "permission_overwrites": [], "name": "Half Life 3", "position": 2, "type": 6,}
+            {
+                "id": "123",
+                "permission_overwrites": [],
+                "name": "Half Life 3",
+                "position": 2,
+                "type": 6,
+                "guild_id": 123123,
+            }
         )
         assert store_chanel.parent_id is None
         assert store_chanel.is_nsfw is None
-        assert store_chanel.guild_id is None
 
     def test_deserialize_guild_store_channel_with_null_fields(self, entity_factory_impl):
         store_chanel = entity_factory_impl.deserialize_guild_store_channel(
@@ -834,11 +841,11 @@ class TestEntityFactoryImpl:
                 "bitrate": 64000,
                 "user_limit": 3,
                 "type": 6,
+                "guild_id": "123123",
             }
         )
         assert voice_channel.parent_id is None
         assert voice_channel.is_nsfw is None
-        assert voice_channel.guild_id is None
 
     def test_deserialize_channel_returns_right_type(
         self,
@@ -1173,9 +1180,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_known_custom_emoji(
         self, entity_factory_impl, mock_app, user_payload, known_custom_emoji_payload
     ):
-        emoji = entity_factory_impl.deserialize_known_custom_emoji(known_custom_emoji_payload)
+        emoji = entity_factory_impl.deserialize_known_custom_emoji(
+            known_custom_emoji_payload, guild_id=snowflake.Snowflake(1235123)
+        )
         assert emoji.app is mock_app
         assert emoji.id == 12345
+        assert emoji.guild_id == 1235123
         assert emoji.name == "testing"
         assert emoji.is_animated is False
         assert emoji.role_ids == {123, 456}
@@ -1194,7 +1204,8 @@ class TestEntityFactoryImpl:
                 "roles": ["123", "456"],
                 "require_colons": True,
                 "managed": False,
-            }
+            },
+            guild_id=snowflake.Snowflake(642334234),
         )
         assert emoji.user is None
         assert emoji.is_animated is False
@@ -1258,11 +1269,13 @@ class TestEntityFactoryImpl:
             "deaf": False,
             "mute": True,
             "user": user_payload,
+            "guild_id": "76543325",
         }
 
     def test_deserialize_member(self, entity_factory_impl, mock_app, member_payload, user_payload):
         member = entity_factory_impl.deserialize_member(member_payload)
         assert member.app is mock_app
+        assert member.guild_id == 76543325
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.nickname == "foobarbaz"
         assert member.role_ids == {11111, 22222, 33333, 44444}
@@ -1282,6 +1295,7 @@ class TestEntityFactoryImpl:
                 "deaf": False,
                 "mute": True,
                 "user": user_payload,
+                "guild_id": "123123453234",
             }
         )
         assert member.nickname is None
@@ -1297,6 +1311,7 @@ class TestEntityFactoryImpl:
                 "roles": ["11111", "22222", "33333", "44444"],
                 "joined_at": "2015-04-26T06:26:56.936000+00:00",
                 "user": user_payload,
+                "guild_id": "123123123",
             }
         )
         assert member.nickname is undefined.UNDEFINED
@@ -1304,7 +1319,7 @@ class TestEntityFactoryImpl:
         assert member.is_deaf is undefined.UNDEFINED
         assert member.is_mute is undefined.UNDEFINED
 
-    def test_deserialize_member_with_passed_through_user_object(self, entity_factory_impl):
+    def test_deserialize_member_with_passed_through_user_object_and_guild_id(self, entity_factory_impl):
         mock_user = mock.MagicMock(user_models.UserImpl)
         member = entity_factory_impl.deserialize_member(
             {
@@ -1316,8 +1331,10 @@ class TestEntityFactoryImpl:
                 "mute": True,
             },
             user=mock_user,
+            guild_id=snowflake.Snowflake(64234),
         )
         assert member.user is mock_user
+        assert member.guild_id == 64234
 
     @pytest.fixture()
     def guild_role_payload(self):
@@ -1333,9 +1350,10 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_role(self, entity_factory_impl, mock_app, guild_role_payload):
-        guild_role = entity_factory_impl.deserialize_role(guild_role_payload)
+        guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflake.Snowflake(76534453))
         assert guild_role.app is mock_app
         assert guild_role.id == 41771983423143936
+        assert guild_role.guild_id == 76534453
         assert guild_role.name == "WE DEM BOYZZ!!!!!!"
         assert guild_role.color == color_models.Color(3_447_003)
         assert guild_role.is_hoisted is True
@@ -1470,7 +1488,9 @@ class TestEntityFactoryImpl:
         assert guild_preview.splash_hash == "dsa345tfcdg54b"
         assert guild_preview.discovery_splash_hash == "lkodwaidi09239uid"
         assert guild_preview.emojis == {
-            12345: entity_factory_impl.deserialize_known_custom_emoji(known_custom_emoji_payload)
+            12345: entity_factory_impl.deserialize_known_custom_emoji(
+                known_custom_emoji_payload, guild_id=snowflake.Snowflake(152559372126519269)
+            )
         }
         assert guild_preview.approximate_member_count == 69
         assert guild_preview.approximate_presence_count == 42
@@ -1594,8 +1614,16 @@ class TestEntityFactoryImpl:
         assert guild.verification_level == guild_models.GuildVerificationLevel.VERY_HIGH
         assert guild.default_message_notifications == guild_models.GuildMessageNotificationsLevel.ONLY_MENTIONS
         assert guild.explicit_content_filter == guild_models.GuildExplicitContentFilterLevel.ALL_MEMBERS
-        assert guild.roles == {41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload)}
-        assert guild.emojis == {12345: entity_factory_impl.deserialize_known_custom_emoji(known_custom_emoji_payload)}
+        assert guild.roles == {
+            41771983423143936: entity_factory_impl.deserialize_role(
+                guild_role_payload, guild_id=snowflake.Snowflake(265828729970753537)
+            )
+        }
+        assert guild.emojis == {
+            12345: entity_factory_impl.deserialize_known_custom_emoji(
+                known_custom_emoji_payload, guild_id=snowflake.Snowflake(265828729970753537)
+            )
+        }
         assert guild.mfa_level == guild_models.GuildMFALevel.ELEVATED
         assert guild.application_id == 39494949
         assert guild.is_unavailable is False
@@ -1607,11 +1635,21 @@ class TestEntityFactoryImpl:
         assert guild.joined_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert guild.is_large is False
         assert guild.member_count == 14
-        assert guild.members == {115590097100865541: entity_factory_impl.deserialize_member(member_payload)}
+        assert guild.members == {
+            115590097100865541: entity_factory_impl.deserialize_member(
+                member_payload, guild_id=snowflake.Snowflake(265828729970753537)
+            )
+        }
         assert guild.channels == {
-            123: entity_factory_impl.deserialize_guild_text_channel(guild_text_channel_payload),
-            555: entity_factory_impl.deserialize_guild_voice_channel(guild_voice_channel_payload),
-            7777: entity_factory_impl.deserialize_guild_news_channel(guild_news_channel_payload),
+            123: entity_factory_impl.deserialize_guild_text_channel(
+                guild_text_channel_payload, guild_id=snowflake.Snowflake(265828729970753537)
+            ),
+            555: entity_factory_impl.deserialize_guild_voice_channel(
+                guild_voice_channel_payload, guild_id=snowflake.Snowflake(265828729970753537)
+            ),
+            7777: entity_factory_impl.deserialize_guild_news_channel(
+                guild_news_channel_payload, guild_id=snowflake.Snowflake(265828729970753537)
+            ),
         }
         assert guild.presences == {
             115590097100865541: entity_factory_impl.deserialize_member_presence(member_presence_payload)
@@ -1949,6 +1987,7 @@ class TestEntityFactoryImpl:
         self, user_payload, member_payload, custom_emoji_payload, partial_application_payload, embed_payload
     ):
         del member_payload["user"]
+        del member_payload["guild_id"]
         return {
             "id": "123",
             "channel_id": "456",
@@ -2009,7 +2048,9 @@ class TestEntityFactoryImpl:
         assert message.channel_id == 456
         assert message.guild_id == 678
         assert message.author == entity_factory_impl.deserialize_user(user_payload)
-        assert message.member == entity_factory_impl.deserialize_member(member_payload, user=message.author)
+        assert message.member == entity_factory_impl.deserialize_member(
+            member_payload, user=message.author, guild_id=snowflake.Snowflake(678)
+        )
         assert message.content == "some info"
         assert message.timestamp == datetime.datetime(2020, 3, 21, 21, 20, 16, 510000, tzinfo=datetime.timezone.utc)
         assert message.edited_timestamp == datetime.datetime(
@@ -2145,17 +2186,7 @@ class TestEntityFactoryImpl:
     ):
         presence = entity_factory_impl.deserialize_member_presence(member_presence_payload)
         assert presence.app is mock_app
-        # PresenceUser
-        assert presence.user.app is mock_app
-        assert presence.user.id == 115590097100865541
-        assert presence.user.discriminator == "6127"
-        assert presence.user.username == "nyaa"
-        assert presence.user.avatar_hash == "b3b24c6d7cbcdec129d5d537067061a8"
-        assert presence.user.is_bot is True
-        assert presence.user.is_system is True
-        assert presence.user.flags == user_models.UserFlag(131072)
-
-        assert isinstance(presence.user, user_models.PartialUser)
+        assert presence.user_id == 115590097100865541
         assert presence.role_ids == {49494949}
         assert presence.guild_id == 44004040
         assert presence.visible_status == presence_models.Status.DND
@@ -2228,7 +2259,6 @@ class TestEntityFactoryImpl:
         assert presence.premium_since is None
         assert presence.nickname is None
         # PresenceUser
-        assert presence.user.avatar_hash is None
 
     def test_deserialize_member_presence_with_unset_fields(
         self, entity_factory_impl, user_payload, presence_activity_payload
@@ -2250,14 +2280,6 @@ class TestEntityFactoryImpl:
         assert presence.client_status.desktop is presence_models.Status.OFFLINE
         assert presence.client_status.mobile is presence_models.Status.OFFLINE
         assert presence.client_status.web is presence_models.Status.OFFLINE
-        # PresenceUser
-        assert presence.user.id == 42
-        assert presence.user.discriminator is undefined.UNDEFINED
-        assert presence.user.username is undefined.UNDEFINED
-        assert presence.user.avatar_hash is undefined.UNDEFINED
-        assert presence.user.is_bot is undefined.UNDEFINED
-        assert presence.user.is_system is undefined.UNDEFINED
-        assert presence.user.flags is undefined.UNDEFINED
 
     def test_deserialize_member_presence_with_unset_activity_fields(self, entity_factory_impl, user_payload):
         presence = entity_factory_impl.deserialize_member_presence(
@@ -2480,6 +2502,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def voice_state_payload(self, member_payload):
+        del member_payload["guild_id"]
         return {
             "guild_id": "929292929292992",
             "channel_id": "157733188964188161",
@@ -2495,13 +2518,17 @@ class TestEntityFactoryImpl:
             "suppress": False,
         }
 
-    def test_deserialize_voice_state(self, entity_factory_impl, mock_app, voice_state_payload, member_payload):
+    def test_deserialize_voice_state_with_guild_id_in_payload(
+        self, entity_factory_impl, mock_app, voice_state_payload, member_payload
+    ):
         voice_state = entity_factory_impl.deserialize_voice_state(voice_state_payload)
         assert voice_state.app is mock_app
         assert voice_state.guild_id == 929292929292992
         assert voice_state.channel_id == 157733188964188161
         assert voice_state.user_id == 80351110224678912
-        assert voice_state.member == entity_factory_impl.deserialize_member(member_payload)
+        assert voice_state.member == entity_factory_impl.deserialize_member(
+            member_payload, guild_id=snowflake.Snowflake(929292929292992)
+        )
         assert voice_state.session_id == "90326bd25d71d39b9ef95b299e3872ff"
         assert voice_state.is_guild_deafened is True
         assert voice_state.is_guild_muted is True
@@ -2512,7 +2539,32 @@ class TestEntityFactoryImpl:
         assert voice_state.is_suppressed is False
         assert isinstance(voice_state, voice_models.VoiceState)
 
-    def test_deserialize_voice_state_with_null_and_unset_fields(self, entity_factory_impl):
+    def test_deserialize_voice_state_with_injected_guild_id(
+        self, entity_factory_impl, voice_state_payload, member_payload
+    ):
+        voice_state = entity_factory_impl.deserialize_voice_state(
+            {
+                "guild_id": "929292929292992",
+                "channel_id": "157733188964188161",
+                "user_id": "80351110224678912",
+                "member": member_payload,
+                "session_id": "90326bd25d71d39b9ef95b299e3872ff",
+                "deaf": True,
+                "mute": True,
+                "self_deaf": False,
+                "self_mute": True,
+                "self_stream": True,
+                "self_video": True,
+                "suppress": False,
+            },
+            guild_id=snowflake.Snowflake(43123),
+        )
+        assert voice_state.guild_id == 43123
+        assert voice_state.member == entity_factory_impl.deserialize_member(
+            member_payload, guild_id=snowflake.Snowflake(43123)
+        )
+
+    def test_deserialize_voice_state_with_null_and_unset_fields(self, entity_factory_impl, member_payload):
         voice_state = entity_factory_impl.deserialize_voice_state(
             {
                 "channel_id": None,
@@ -2524,11 +2576,11 @@ class TestEntityFactoryImpl:
                 "self_mute": True,
                 "self_video": False,
                 "suppress": False,
+                "guild_id": "123123123",
+                "member": member_payload,
             }
         )
-        assert voice_state.guild_id is None
         assert voice_state.channel_id is None
-        assert voice_state.member is None
         assert voice_state.is_streaming is False
 
     @pytest.fixture()
@@ -2669,6 +2721,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def typing_start_payload(self, member_payload):
+        del member_payload["guild_id"]
         return {
             "channel_id": "123123",
             "guild_id": "4542242",
@@ -2684,7 +2737,9 @@ class TestEntityFactoryImpl:
         assert typing_start.guild_id == 4542242
         assert typing_start.user_id == 29292929
         assert typing_start.timestamp == datetime.datetime(2020, 6, 2, 18, 36, 11, tzinfo=datetime.timezone.utc)
-        assert typing_start.member == entity_factory_impl.deserialize_member(member_payload)
+        assert typing_start.member == entity_factory_impl.deserialize_member(
+            member_payload, guild_id=snowflake.Snowflake(4542242)
+        )
         assert isinstance(typing_start, channel_events.TypingStartEvent)
 
     def test_deserialize_typing_start_event_with_unset_fields(self, entity_factory_impl):
@@ -2778,7 +2833,7 @@ class TestEntityFactoryImpl:
         assert guild_emoji_update.app is mock_app
         assert guild_emoji_update.guild_id == 424242
         assert guild_emoji_update.emojis == {
-            12345: entity_factory_impl.deserialize_known_custom_emoji(known_custom_emoji_payload)
+            12345: entity_factory_impl.deserialize_known_custom_emoji(known_custom_emoji_payload, guild_id=424242)
         }
         assert isinstance(guild_emoji_update, guild_events.GuildEmojisUpdateEvent)
 
@@ -2796,22 +2851,25 @@ class TestEntityFactoryImpl:
         assert guild_integrations_update.guild_id == 439399393
         assert isinstance(guild_integrations_update, guild_events.GuildIntegrationsUpdateEvent)
 
-    @pytest.fixture()
-    def guild_member_add_payload(self, member_payload):
-        return {**member_payload, "guild_id": "20202020202020"}
-
-    def test_deserialize_guild_member_add_event(
-        self, entity_factory_impl, mock_app, guild_member_add_payload, member_payload
-    ):
-        guild_member_add = entity_factory_impl.deserialize_guild_member_add_event(guild_member_add_payload)
-        assert guild_member_add.app is mock_app
-        assert guild_member_add.guild_id == 20202020202020
-        assert guild_member_add.member == entity_factory_impl.deserialize_member(member_payload)
+    def test_deserialize_guild_member_add_event(self, entity_factory_impl, mock_app, member_payload):
+        guild_member_add = entity_factory_impl.deserialize_guild_member_add_event(member_payload)
+        assert guild_member_add.member == entity_factory_impl.deserialize_member(
+            member_payload, guild_id=snowflake.Snowflake(76543325)
+        )
         assert isinstance(guild_member_add, guild_events.GuildMemberAddEvent)
 
-    def test_deserialize_guild_member_update_event(self, entity_factory_impl, member_payload):
+    def test_deserialize_guild_member_update_event(self, entity_factory_impl, user_payload):
+        member_payload = {
+            "guild_id": "1235432134",
+            "roles": ["543123"],
+            "user": user_payload,
+            "nick": None,
+            "premium_since": None,
+        }
         member_update_event = entity_factory_impl.deserialize_guild_member_update_event(member_payload)
-        assert member_update_event.member == entity_factory_impl.deserialize_member(member_payload)
+        assert member_update_event.member == entity_factory_impl.deserialize_member(
+            member_payload, guild_id=snowflake.Snowflake(1235432134)
+        )
         assert isinstance(member_update_event, guild_events.GuildMemberUpdateEvent)
 
     @pytest.fixture()
@@ -2835,18 +2893,18 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, guild_role_create_update_payload, guild_role_payload
     ):
         guild_role_create = entity_factory_impl.deserialize_guild_role_create_event(guild_role_create_update_payload)
-        assert guild_role_create.app is mock_app
-        assert guild_role_create.guild_id == 303030300303
-        assert guild_role_create.role == entity_factory_impl.deserialize_role(guild_role_payload)
+        assert guild_role_create.role == entity_factory_impl.deserialize_role(
+            guild_role_payload, guild_id=snowflake.Snowflake(303030300303)
+        )
         assert isinstance(guild_role_create, guild_events.GuildRoleCreateEvent)
 
     def test_deserialize_guild_role_update_event(
         self, entity_factory_impl, mock_app, guild_role_create_update_payload, guild_role_payload
     ):
         guild_role_create = entity_factory_impl.deserialize_guild_role_update_event(guild_role_create_update_payload)
-        assert guild_role_create.app is mock_app
-        assert guild_role_create.guild_id == 303030300303
-        assert guild_role_create.role == entity_factory_impl.deserialize_role(guild_role_payload)
+        assert guild_role_create.role == entity_factory_impl.deserialize_role(
+            guild_role_payload, guild_id=snowflake.Snowflake(303030300303)
+        )
         assert isinstance(guild_role_create, guild_events.GuildRoleUpdateEvent)
 
     @pytest.fixture()
@@ -2860,10 +2918,89 @@ class TestEntityFactoryImpl:
         assert guild_role_delete.role_id == 8383483848484848
         assert isinstance(guild_role_delete, guild_events.GuildRoleDeleteEvent)
 
-    def test_deserialize_presence_update_event(self, entity_factory_impl, member_presence_payload):
+    def test_deserialize_presence_update_event(self, entity_factory_impl, mock_app, member_presence_payload):
         presence_update = entity_factory_impl.deserialize_presence_update_event(member_presence_payload)
         assert presence_update.presence == entity_factory_impl.deserialize_member_presence(member_presence_payload)
+        # PresenceUser
+        assert presence_update.partial_user.app is mock_app
+        assert presence_update.partial_user.id == 115590097100865541
+        assert presence_update.partial_user.discriminator == "6127"
+        assert presence_update.partial_user.username == "nyaa"
+        assert presence_update.partial_user.avatar_hash == "b3b24c6d7cbcdec129d5d537067061a8"
+        assert presence_update.partial_user.is_bot is True
+        assert presence_update.partial_user.is_system is True
+        assert presence_update.partial_user.flags == user_models.UserFlag(131072)
+        assert isinstance(presence_update.partial_user, user_models.PartialUser)
         assert isinstance(presence_update, guild_events.PresenceUpdateEvent)
+
+    def test_deserialize_presence_update_event_with_null_fields(
+        self, entity_factory_impl, member_presence_payload, presence_activity_payload
+    ):
+        payload = {
+            "user": {"id": "12354", "avatar": None},
+            "roles": ["49494949"],
+            "game": presence_activity_payload,
+            "guild_id": "44004040",
+            "status": "dnd",
+            "activities": [presence_activity_payload],
+            "client_status": {"desktop": "online", "mobile": "idle", "web": "dnd"},
+            "premium_since": "2015-04-26T06:26:56.936000+00:00",
+            "nick": "Nick",
+        }
+        assert entity_factory_impl.deserialize_presence_update_event(payload).partial_user.avatar_hash is None
+
+    def test_deserialize_presence_update_event_with_just_user_id(
+        self, entity_factory_impl, member_presence_payload, presence_activity_payload
+    ):
+        payload = {
+            "user": {"id": "65324123123"},
+            "roles": ["49494949"],
+            "game": presence_activity_payload,
+            "guild_id": "44004040",
+            "status": "dnd",
+            "activities": [presence_activity_payload],
+            "client_status": {"desktop": "online", "mobile": "idle", "web": "dnd"},
+            "premium_since": "2015-04-26T06:26:56.936000+00:00",
+            "nick": "Nick",
+        }
+        assert entity_factory_impl.deserialize_presence_update_event(payload).partial_user is None
+
+    def test_deserialize_presence_update_event_with_unset_fields(
+        self, entity_factory_impl, member_presence_payload, presence_activity_payload
+    ):
+        payload = {
+            "user": {"id": "65324123123", "avatar": "53134e"},
+            "roles": ["49494949"],
+            "game": presence_activity_payload,
+            "guild_id": "44004040",
+            "status": "dnd",
+            "activities": [presence_activity_payload],
+            "client_status": {"desktop": "online", "mobile": "idle", "web": "dnd"},
+            "premium_since": "2015-04-26T06:26:56.936000+00:00",
+            "nick": "Nick",
+        }
+        presence_update_event = entity_factory_impl.deserialize_presence_update_event(payload)
+        assert presence_update_event.partial_user.username is undefined.UNDEFINED
+        assert presence_update_event.partial_user.discriminator is undefined.UNDEFINED
+        assert presence_update_event.partial_user.is_bot is undefined.UNDEFINED
+        assert presence_update_event.partial_user.is_system is undefined.UNDEFINED
+
+    def test_deserialize_presence_update_event_with_other_unset_fields(
+        self, entity_factory_impl, member_presence_payload, presence_activity_payload
+    ):
+        payload = {
+            "user": {"id": "65324123123", "discriminator": "63245234234"},
+            "roles": ["49494949"],
+            "game": presence_activity_payload,
+            "guild_id": "44004040",
+            "status": "dnd",
+            "activities": [presence_activity_payload],
+            "client_status": {"desktop": "online", "mobile": "idle", "web": "dnd"},
+            "premium_since": "2015-04-26T06:26:56.936000+00:00",
+            "nick": "Nick",
+        }
+        presence_update_event = entity_factory_impl.deserialize_presence_update_event(payload)
+        assert presence_update_event.partial_user.avatar_hash is undefined.UNDEFINED
 
     ##################
     # MESSAGE EVENTS #
@@ -2893,7 +3030,7 @@ class TestEntityFactoryImpl:
         assert message_update.message.guild_id == 678
         assert message_update.message.author == entity_factory_impl.deserialize_user(user_payload)
         assert message_update.message.member == entity_factory_impl.deserialize_member(
-            member_payload, user=message_update.message.author
+            member_payload, user=message_update.message.author, guild_id=snowflake.Snowflake(678)
         )
         assert message_update.message.content == "some info"
         assert message_update.message.timestamp == datetime.datetime(
@@ -3009,6 +3146,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def message_reaction_add_payload(self, member_payload, custom_emoji_payload):
+        del member_payload["guild_id"]
         return {
             "user_id": "202020",
             "channel_id": "23848774",
@@ -3027,7 +3165,9 @@ class TestEntityFactoryImpl:
         assert message_reaction_add.channel_id == 23848774
         assert message_reaction_add.message_id == 484848
         assert message_reaction_add.guild_id == 12123
-        assert message_reaction_add.member == entity_factory_impl.deserialize_member(member_payload)
+        assert message_reaction_add.member == entity_factory_impl.deserialize_member(
+            member_payload, guild_id=snowflake.Snowflake(12123)
+        )
         assert message_reaction_add.emoji == entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         assert isinstance(message_reaction_add, message_events.MessageReactionAddEvent)
 
@@ -3179,6 +3319,38 @@ class TestEntityFactoryImpl:
         my_user_update = entity_factory_impl.deserialize_own_user_update_event(my_user_payload)
         assert my_user_update.my_user == entity_factory_impl.deserialize_my_user(my_user_payload)
         assert isinstance(my_user_update, other_events.OwnUserUpdateEvent)
+
+    @pytest.fixture()
+    def member_chunk_payload(self, member_payload, member_presence_payload):
+        del member_payload["guild_id"]
+        return {
+            "guild_id": "65234234",
+            "members": [member_payload],
+            "chunk_index": 42,
+            "chunk_count": 69,
+            "not_found": ["987657345876", 99999],
+            "presences": [member_presence_payload],
+            "nonce": "sKatManUwUoWoPop",
+        }
+
+    def test_deserialize_guild_member_chunk_event(
+        self, entity_factory_impl, mock_app, member_chunk_payload, member_payload, member_presence_payload
+    ):
+        member_chunk = entity_factory_impl.deserialize_guild_member_chunk_event(member_chunk_payload)
+        assert member_chunk.app is mock_app
+        assert member_chunk.guild_id == 65234234
+        assert member_chunk.members == {
+            115590097100865541: entity_factory_impl.deserialize_member(
+                member_payload, guild_id=snowflake.Snowflake(65234234)
+            )
+        }
+        assert member_chunk.index == 42
+        assert member_chunk.count == 69
+        assert member_chunk.not_found == [987657345876, 99999]
+        assert member_chunk.presences == {
+            115590097100865541: entity_factory_impl.deserialize_member_presence(member_presence_payload)
+        }
+        assert member_chunk.nonce == "sKatManUwUoWoPop"
 
     ################
     # VOICE EVENTS #
