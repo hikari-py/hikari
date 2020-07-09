@@ -24,10 +24,8 @@ __all__: typing.Final[typing.List[str]] = ["BotAppImpl"]
 import asyncio
 import contextlib
 import datetime
-import inspect
 import logging
 import os
-import platform
 import reprlib
 import signal
 import sys
@@ -190,10 +188,10 @@ class BotAppImpl(bot.IBotApp):
     ) -> None:
         if logging_level is not None and not _LOGGER.hasHandlers():
             logging.captureWarnings(True)
-            logging.basicConfig(format=self.__get_logging_format())
+            logging.basicConfig(format=self._determine_default_logging_format())
             _LOGGER.setLevel(logging_level)
 
-        self.__print_banner()
+        self._dump_banner()
 
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl()
@@ -437,80 +435,6 @@ class BotAppImpl(bot.IBotApp):
     async def fetch_sharding_settings(self) -> gateway_models.GatewayBot:
         return await self.rest.fetch_gateway_bot()
 
-    @staticmethod
-    def __print_banner() -> None:
-        from hikari import _about
-
-        version = _about.__version__
-        # noinspection PyTypeChecker
-        sourcefile = typing.cast(str, inspect.getsourcefile(_about))
-        path = os.path.abspath(os.path.dirname(sourcefile))
-        python_implementation = platform.python_implementation()
-        python_version = platform.python_version()
-        operating_system = " ".join((platform.system(), *platform.architecture()))
-        python_compiler = platform.python_compiler()
-
-        copyright_str = f"{_about.__copyright__}, licensed under {_about.__license__}"
-        version_str = f"hikari v{version} (installed in {path})"
-        impl_str = f"Running on {python_implementation} v{python_version}, {python_compiler}, ({operating_system})"
-        doc_line = f"Documentation: {_about.__docs__}"
-        guild_line = f"Support: {_about.__discord_invite__}"
-        line_len = max(len(version_str), len(copyright_str), len(impl_str), len(guild_line), len(doc_line))
-
-        copyright_str = f"|*   {copyright_str:^{line_len}}   *|"
-        impl_str = f"|*   {impl_str:^{line_len}}   *|"
-        version_str = f"|*   {version_str:^{line_len}}   *|"
-        doc_line = f"|*   {doc_line:^{line_len}}   *|"
-        guild_line = f"|*   {guild_line:^{line_len}}   *|"
-        line_len = max(len(version_str), len(copyright_str), len(impl_str), len(guild_line), len(doc_line)) - 4
-
-        top_line = "//" + ("=" * line_len) + r"\\"
-        bottom_line = r"\\" + ("=" * line_len) + "//"
-
-        lines = "".join(
-            f"{line}\n" for line in (top_line, version_str, copyright_str, impl_str, doc_line, guild_line, bottom_line)
-        )
-
-        for handler in _LOGGER.handlers or ([logging.lastResort] if logging.lastResort is not None else []):
-            if isinstance(handler, logging.StreamHandler):
-                handler.stream.write(lines)
-
-    @staticmethod
-    def __get_logging_format() -> str:
-        # Modified from
-        # https://github.com/django/django/blob/master/django/core/management/color.py
-
-        plat = sys.platform
-        supports_color = False
-
-        # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
-        is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
-
-        if plat != "Pocket PC":
-            if plat == "win32":
-                supports_color |= os.getenv("TERM_PROGRAM", None) == "mintty"
-                supports_color |= "ANSICON" in os.environ
-                supports_color |= is_a_tty
-            else:
-                supports_color = is_a_tty
-
-            supports_color |= bool(os.getenv("PYCHARM_HOSTED", ""))
-
-        if supports_color:
-            blue = "\033[1;35m"
-            gray = "\033[1;37m"
-            green = "\033[1;32m"
-            red = "\033[1;31m"
-            yellow = "\033[1;33m"
-            default = "\033[0m"
-        else:
-            blue = gray = green = red = yellow = default = ""
-
-        return (
-            f"{red}%(levelname)-1.1s {yellow}%(name)-25.25s {green}#%(lineno)-4d {blue}%(asctime)23.23s"
-            f"{default} :: {gray}%(message)s{default}"
-        )
-
     def run(self) -> None:
         loop = asyncio.get_event_loop()
 
@@ -654,3 +578,108 @@ class BotAppImpl(bot.IBotApp):
             if interrupt in valid_interrupts:
                 with contextlib.suppress(NotImplementedError):
                     mapping_function(interrupt, *args)
+
+    def _dump_banner(self) -> None:
+        from importlib import resources
+        import platform
+        import string
+
+        import aiohttp
+        import attr
+
+        from hikari import _about
+
+        args = {
+            # Colours:
+            ""
+            # Hikari stuff.
+            "hikari_version": _about.__version__,
+            "hikari_copyright": _about.__copyright__,
+            "hikari_license": _about.__license__,
+            "hikari_install_location": os.path.abspath(os.path.dirname(_about.__file__)),
+            "hikari_documentation_url": _about.__docs__,
+            "hikari_discord_invite": _about.__discord_invite__,
+            "hikari_source_url": _about.__url__,
+            # Python stuff.
+            "python_implementation": platform.python_implementation(),
+            "python_version": platform.python_version(),
+            "python_build": " ".join(platform.python_build()),
+            "python_branch": platform.python_branch(),
+            "python_compiler": platform.python_compiler(),
+            # Platform specific stuff I might remove later.
+            "libc_version": " ".join(platform.libc_ver()),
+            # System stuff.
+            "platform_system": platform.system(),
+            "platform_architecture": " ".join(platform.architecture()),
+            # Dependencies.
+            "aiohttp_version": aiohttp.__version__,
+            "attrs_version": attr.__version__,
+        }
+
+        args.update(self._determine_console_colour_palette())
+
+        with resources.open_text("hikari.impl", "banner.txt") as banner_fp:
+            banner = string.Template(banner_fp.read()).safe_substitute(args)
+
+        sys.stdout.write(banner + "\n")
+        sys.stdout.flush()
+        # Give the TTY time to flush properly.
+        time.sleep(0.2)
+
+    def _determine_default_logging_format(self) -> str:
+        format_str = (
+            "{red}%(levelname)-1.1s{default} {yellow}%(asctime)23.23s"  # noqa: FS003 f-string missing prefix
+            "{default} {bright}{green}%(name)20.20s: {default}{cyan}%(message)s{default}"  # noqa: FS003
+        )
+
+        return format_str.format(**self._determine_console_colour_palette())
+
+    @staticmethod
+    def _determine_console_colour_palette() -> typing.Dict[str, str]:
+        # Modified from
+        # https://github.com/django/django/blob/master/django/core/management/color.py
+
+        plat = sys.platform
+        supports_color = False
+
+        # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
+        is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+
+        if plat != "Pocket PC":
+            if plat == "win32":
+                supports_color |= os.getenv("TERM_PROGRAM", None) == "mintty"
+                supports_color |= "ANSICON" in os.environ
+                supports_color |= is_a_tty
+            else:
+                supports_color = is_a_tty
+
+            supports_color |= bool(os.getenv("PYCHARM_HOSTED", ""))
+
+        palette = {
+            "default": "\033[0m",
+            "bright": "\033[1m",
+            "underline": "\033[4m",
+            "invert": "\033[7m",
+            "red": "\033[31m",
+            "green": "\033[32m",
+            "yellow": "\033[33m",
+            "blue": "\033[34m",
+            "magenta": "\033[35m",
+            "cyan": "\033[36m",
+            "white": "\033[37m",
+            "bright_red": "\033[91m",
+            "bright_green": "\033[92m",
+            "bright_yellow": "\033[93m",
+            "bright_blue": "\033[94m",
+            "bright_magenta": "\033[95m",
+            "bright_cyan": "\033[96m",
+            "bright_white": "\033[97m",
+            "framed": "\033[51m",
+            "dim": "\033[2m",
+        }
+
+        if not supports_color:
+            for key in list(palette.keys()):
+                palette[key] = ""
+
+        return palette
