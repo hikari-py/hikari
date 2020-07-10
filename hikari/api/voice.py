@@ -124,11 +124,13 @@ class IVoiceConnection(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    async def initialize(cls: typing.Type[_T], **kwargs: typing.Any) -> _T:
+    async def initialize(cls: typing.Type[_T], owner: IVoiceComponent, **kwargs: typing.Any) -> _T:
         """Initialize and connect the voice connection.
 
         Parameters
         ----------
+        owner : IVoiceComponent
+            The component that made this connection object.
         **kwargs : typing.Any
             Any implementation-specific arguments to provide to the
             voice connection that is being initialized.

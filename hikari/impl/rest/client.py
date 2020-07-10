@@ -46,7 +46,7 @@ from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
 from hikari.utilities import iterators
-from hikari.utilities import response_handler
+from hikari.utilities import net
 from hikari.utilities import routes
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
@@ -311,7 +311,7 @@ class RESTClientImpl(client.IRESTClient):
     @staticmethod
     @typing.final
     async def _handle_error_response(response: aiohttp.ClientResponse) -> typing.NoReturn:
-        raise await response_handler.generate_error_response(response)
+        raise await net.generate_error_response(response)
 
     @typing.final
     async def _parse_ratelimits(self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse) -> None:

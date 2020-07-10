@@ -226,6 +226,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         self._zlib: typing.Any = None
         self._zombied = False
 
+        # TODO: make these all private.
         self.connected_at = float("nan")
         self.heartbeat_interval = float("nan")
         self._heartbeat_latency = float("nan")
