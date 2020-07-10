@@ -3,7 +3,7 @@
 
 <head>
     <!--
-     | Copyright © Nekoka.tt 2019-2020
+     | Copyright © Nekokatt 2019-2020
      |
      | This file is part of Hikari.
      |
@@ -47,7 +47,6 @@
         import os
 
         import hikari
-        from hikari.events.message import MessageCreateEvent
 
         bot = hikari.Bot(token=os.environ["BOT_TOKEN"])
 
@@ -62,12 +61,12 @@
 
         @bot.listen()
         @command("hk.ping")
-        async def ping(message: MessageCreateEvent) -> None:
+        async def ping(message: hikari.MessageCreateEvent) -> None:
             await event.message.reply("Pong!")
 
         @bot.event()
         @command("hk.add")
-        async def add_numbers(event: MessageCreateEvent) -> None:
+        async def add_numbers(event: hikari.MessageCreateEvent) -> None:
             await event.message.reply("Please enter the first number")
 
             def is_number_check(e):
@@ -75,7 +74,7 @@
 
             try:
                 e1 = await bot.wait_for(MessageCreateEvent, predicate=is_number_check, timeout=30)
-                await bot.rest.create_message(event.message.channel_id, content="Please enter the second number")
+                await event.reply("Please enter the second number")
                 e2 = await bot.wait_for(MessageCreateEvent, predicate=is_number_check, timeout=30)
 
             except asyncio.TimeoutError:
@@ -135,7 +134,7 @@
 
         <footer class="mastfoot mt-auto">
             <div class="inner">
-                &copy; 2019-2020, Nekoka.tt
+                &copy; 2019-2020, Nekokatt
             </div>
         </footer>
     </div>
