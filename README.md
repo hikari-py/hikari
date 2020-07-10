@@ -15,13 +15,12 @@ rather than an obstacle for future development.
 
 ```py
 import hikari
-from hikari.events.message import MessageCreateEvent
 
 bot = hikari.Bot(token="...")
 
 
-@bot.listen(MessageCreateEvent)
-async def ping(event):
+@bot.listen()
+async def ping(event: hikari.MessageCreateEvent) -> None:
     # If a non-bot user sends a message "hk.ping", respond with "Pong!"
 
     if not event.message.author.is_bot and event.message.content.startswith("hk.ping"):
@@ -29,6 +28,16 @@ async def ping(event):
 
 
 bot.run()
+```
+
+Events are determined by the type annotation on the event parameter, or
+alternatively as a type passed to the `@bot.listen()` decorator, if you do not
+want to use type hints.
+
+```py
+@bot.listen(hikari.MessageCreateEvent)
+async def ping(event):
+    ...
 ```
 
 ----
@@ -45,94 +54,13 @@ py -3 -m pip install hikari -U --pre
 
 ----
 
-## What does _hikari_ aim to do?
+## Additional libraries
 
-- **Provide 100% documentation for the entire library.** Build your application
-  bottom-up or top-down with comprehensive documentation as standard. Currently
-  more than 45% of this codebase consists of documentation.
-- **Ensure all components are reusable.** Most people want a basic framework for
-  writing a bot, and _hikari_ will provide that. However, if you decide on a
-  bespoke solution using custom components, such as a _Redis_ state cache, or
-  a system where all events get put on a message queue, then _hikari_ provides
-  the conduit to make that happen. 
-- **Automate testing as much as possible.** You don't want to introduce bugs 
-  into your bot with version updates, and neither do we. _hikari_ aims for 100%
-  test coverage as standard. This significantly reduces the amount of bugs and
-  broken features that appear in library releases -- something most Python
-  Discord libraries cannot provide any guarantee of.
-- **Small improvements. Regularly.** Discord is known for pushing sudden changes
-  to their public APIs with little or no warning. When this happens, you want a 
-  fix, and quickly. You do not want to wait for weeks for a usable solution to 
-  be released. _hikari_ is developed using a fully automated CI pipeline with
-  extensive quality assurance. This enables bugfixes and new features to be 
-  shipped within 30 minutes of coding them, not 30 days. 
-  
-----
- 
-## What does _hikari_ currently support?
+You may wish to use a command framework on top of Hikari so that you can start
+writing a bot quickly without implementing your own command handler.
 
-### Library features
+Hikari does not include a command framework by default, so you will want to pick
+a third party library to do it.
 
-_hikari_ has been designed with the best practises at heart to allow developers 
-to freely contribute and help the library grow. This is achieved in multiple 
-ways.
-
-- Modular, reusable components.
-- Extensive documentation.
-- Support for using type hints to infer event types.
-- Minimal dependencies.
-- Rapidly evolving codebase.
-- Full unit test suite.
-
-### Network level components
-
-The heart of any application that uses Discord is the network layer. _hikari_
-exposes all of these components with full documentation and with the ability to
-reuse them in as many ways as you can think of.
-
-Most mainstream Python Discord APIs lack one or more of the following features. _hikari_ aims to 
-implement each feature as part of the design, rather than an additional component. This enables you
-to utilize these components as a black box where necessary.
-
-- Low level HTTP API implementation.
-- Low level gateway websocket shard implementation.
-- Rate limiting that complies with the `X-RateLimit-Bucket` header __properly__.
-- Gateway websocket ratelimiting (prevents your websocket getting completely invalidated).
-- Intents.
-- Proxy support for websockets and HTTP API.
-- File IO that doesn't block you.
-- Fluent Pythonic API that does not limit your creativity.
-
-### High level components
-
-- Stateless, object-oriented bot API. Serve thousands of servers on little memory.
-- Sensible, type-safe event dispatching system that is reactive to type annotations, and
-  supports [PEP-563](https://www.python.org/dev/peps/pep-0563/) without broken hacks and
-  bodges.
-- Models that extend the format provided by Discord, not fight against it. Working as close
-  to the original format of information provided by Discord as possible ensures that minimal
-  changes are required when a breaking API design is introduced. This reduces the amount of
-  stuff you need to fix in your applications as a result.
-- Standalone HTTP client. Not writing a bot, but need to use the API anyway? Simply
-  initialize a `hikari.RESTClient` and away you go.
-  
-### Stuff coming soon
-
-- Optional, optimised C implementations of internals to give large applications a 
-  well-deserved performance boost.
-
-### Planned extension modules for the future
-
-- Command framework (make commands and groups with the flick of a wrist).
-- Optional dependency injection tools (declare what components you want in your application, and
-  where you want them. Let _hikari_ work out how to put it together!)
-- Full voice transcoding support, natively in your application. Do not rely on invoking ffmpeg
-  in a subprocess ever again!
-  
-----
-
-## Getting started
-
-This section is still very bare, and we are still actively writing this framework every day.
-[Why not pop in and say hi?](https://discord.gg/Jx4cNGG) More comprehensive tutorials will be
-provided soon!
+- [`lightbulb`](https://gitlab.com/tandemdude/lightbulb) - a simple and easy to
+  use command framework for Hikari.
