@@ -437,9 +437,13 @@ class GuildChannel(PartialChannel):
         gateway in an event, or if the guild is not known.
         """
         try:
-            return (self.guild_id >> 22) % getattr(self.app, "shard_count")
+            # This is only sensible if there is a shard.
+            if self.guild_id is not None:
+                return (self.guild_id >> 22) % typing.cast(int, getattr(self.app, "shard_count"))
         except (TypeError, AttributeError, NameError):
-            return None
+            pass
+
+        return None
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

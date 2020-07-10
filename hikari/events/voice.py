@@ -78,7 +78,7 @@ class VoiceServerUpdateEvent(VoiceEvent):
 
     @property
     def endpoint(self) -> str:
-        """The URI for this voice server host, with the correct port."""
+        """Return the URI for this voice server host, with the correct port."""
         # Discord have had this wrong for like 4 years, bleh.
         uri, _, _ = self._endpoint.rpartition(":")
         return f"wss://{uri}:443"

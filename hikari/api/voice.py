@@ -18,7 +18,7 @@
 """Interfaces used to describe voice client implementations."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IVoiceComponent", "IVoiceConnection", "IVoiceInstruction"]
+__all__: typing.Final[typing.List[str]] = ["IVoiceComponent", "IVoiceConnection"]
 
 import abc
 import typing
@@ -124,7 +124,7 @@ class IVoiceConnection(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    async def initialize(cls: _T, **kwargs: typing.Any) -> _T:
+    async def initialize(cls: typing.Type[_T], **kwargs: typing.Any) -> _T:
         """Initialize and connect the voice connection.
 
         Parameters

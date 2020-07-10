@@ -47,7 +47,6 @@ import typing
 
 import attr
 
-from hikari.api import bot
 from hikari.models import users
 from hikari.utilities import constants
 from hikari.utilities import files
@@ -578,7 +577,8 @@ class PartialGuild(snowflake.Unique):
         connection.
         """
         try:
-            return (self.id >> 22) % getattr(self.app, "shard_count")
+            # This is only sensible if there is a shard.
+            return (self.id >> 22) % typing.cast(int, getattr(self.app, "shard_count"))
         except (TypeError, AttributeError, NameError):
             return None
 
