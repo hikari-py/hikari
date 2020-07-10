@@ -104,7 +104,9 @@ class VoiceComponentImpl(voice.IVoiceComponent):
         try:
             shard = self._app.shards[shard_id]
         except KeyError:
-            raise errors.VoiceError(f"Cannot connect to shard {shard_id}, it is not present in this application.")
+            raise errors.VoiceError(
+                f"Cannot connect to shard {shard_id}, it is not present in this application."
+            ) from None
 
         if not shard.is_alive:
             # Not sure if I can think of a situation this will happen in... really.

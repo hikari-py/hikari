@@ -25,6 +25,7 @@ import asyncio
 import contextlib
 import datetime
 import logging
+import math
 import os
 import reprlib
 import signal
@@ -268,6 +269,21 @@ class BotAppImpl(bot.IBotApp):
         return self._executor
 
     @property
+    def heartbeat_latencies(self) -> typing.Mapping[int, typing.Optional[float]]:
+        return {
+            shard_id: None if math.isnan(shard.heartbeat_latency) else shard.heartbeat_latency
+            for shard_id, shard in self._shards.items()
+        }
+
+    @property
+    def heartbeat_latency(self) -> typing.Optional[float]:
+        started_shards = [shard for shard in self._shards.values() if not math.isnan(shard.heartbeat_latency)]
+        if not started_shards:
+            return None
+
+        return sum(shard.heartbeat_latency for shard in started_shards) / len(started_shards)
+
+    @property
     def http_settings(self) -> config.HTTPSettings:
         return self._http_settings
 
@@ -377,41 +393,50 @@ class BotAppImpl(bot.IBotApp):
 
     def listen(
         self,
-        event_type: typing.Union[undefined.UndefinedType, typing.Type[event_dispatcher_.EventT]] = undefined.UNDEFINED,
-    ) -> typing.Callable[[event_dispatcher_.CallbackT], event_dispatcher_.CallbackT]:
+        event_type: typing.Union[
+            undefined.UndefinedType, typing.Type[event_dispatcher_.EventT_co]
+        ] = undefined.UNDEFINED,
+    ) -> typing.Callable[
+        [event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co]],
+        event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co],
+    ]:
         return self.event_dispatcher.listen(event_type)
 
     def get_listeners(
-        self, event_type: typing.Type[event_dispatcher_.EventT], *, polymorphic: bool = True,
-    ) -> typing.Collection[event_dispatcher_.AsyncCallbackT]:
+        self, event_type: typing.Type[event_dispatcher_.EventT_co], *, polymorphic: bool = True,
+    ) -> typing.Collection[event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co]]:
         return self.event_dispatcher.get_listeners(event_type, polymorphic=polymorphic)
 
     def has_listener(
         self,
-        event_type: typing.Type[event_dispatcher_.EventT],
-        callback: event_dispatcher_.AsyncCallbackT,
+        event_type: typing.Type[event_dispatcher_.EventT_co],
+        callback: event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co],
         *,
         polymorphic: bool = True,
     ) -> bool:
         return self.event_dispatcher.has_listener(event_type, callback, polymorphic=polymorphic)
 
     def subscribe(
-        self, event_type: typing.Type[event_dispatcher_.EventT], callback: event_dispatcher_.CallbackT,
-    ) -> event_dispatcher_.CallbackT:
+        self,
+        event_type: typing.Type[event_dispatcher_.EventT_co],
+        callback: event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co],
+    ) -> event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co]:
         return self.event_dispatcher.subscribe(event_type, callback)
 
     def unsubscribe(
-        self, event_type: typing.Type[event_dispatcher_.EventT], callback: event_dispatcher_.AsyncCallbackT,
+        self,
+        event_type: typing.Type[event_dispatcher_.EventT_co],
+        callback: event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co],
     ) -> None:
         return self.event_dispatcher.unsubscribe(event_type, callback)
 
     async def wait_for(
         self,
-        event_type: typing.Type[event_dispatcher_.EventT],
+        event_type: typing.Type[event_dispatcher_.EventT_co],
         /,
         timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[event_dispatcher_.PredicateT] = None,
-    ) -> event_dispatcher_.EventT:
+        predicate: typing.Optional[event_dispatcher_.PredicateT[event_dispatcher_.EventT_co]] = None,
+    ) -> event_dispatcher_.EventT_co:
         return await self.event_dispatcher.wait_for(event_type, predicate=predicate, timeout=timeout)
 
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
