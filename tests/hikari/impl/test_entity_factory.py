@@ -3191,10 +3191,11 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def voice_server_update_payload(self):
-        return {"token": "9292929iiasdiasdio", "guild_id": "29219929", "endpoint": "wss:>...<"}
+        return {"token": "9292929iiasdiasdio", "guild_id": "29219929", "endpoint": "hurr-durr-we-cant-write-apis:80"}
 
     def test_deserialize_voice_server_update_event(self, entity_factory_impl, mock_app, voice_server_update_payload):
         voice_server_update = entity_factory_impl.deserialize_voice_server_update_event(voice_server_update_payload)
         assert voice_server_update.token == "9292929iiasdiasdio"
         assert voice_server_update.guild_id == 29219929
-        assert voice_server_update.endpoint == "wss:>...<"
+        assert voice_server_update._endpoint == "hurr-durr-we-cant-write-apis:80"
+        assert voice_server_update.endpoint == "wss://hurr-durr-we-cant-write-apis:443"

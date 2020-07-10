@@ -19,8 +19,9 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["VoiceStateUpdateEvent", "VoiceServerUpdateEvent"]
+__all__: typing.Final[typing.List[str]] = ["VoiceStateUpdateEvent", "VoiceServerUpdateEvent", "VoiceEvent"]
 
+import abc
 import typing
 
 import attr
@@ -33,9 +34,19 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class VoiceEvent(base_events.Event):
+    """Base for any voice-related event."""
+
+    @property
+    @abc.abstractmethod
+    def guild_id(self) -> typing.Optional[snowflake.Snowflake]:
+        """Return the ID of the guild this event was for, if known."""
+
+
 @base_events.requires_intents(intents.Intent.GUILD_VOICE_STATES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class VoiceStateUpdateEvent(base_events.Event):
+class VoiceStateUpdateEvent(VoiceEvent):
     """Used to represent voice state update gateway events.
 
     Sent when a user joins, leaves or moves voice channel(s).
@@ -44,9 +55,13 @@ class VoiceStateUpdateEvent(base_events.Event):
     state: voices.VoiceState = attr.ib(repr=True)
     """The object of the voice state that's being updated."""
 
+    @property
+    def guild_id(self) -> typing.Optional[snowflake.Snowflake]:
+        return self.state.guild_id
+
 
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class VoiceServerUpdateEvent(base_events.Event):
+class VoiceServerUpdateEvent(VoiceEvent):
     """Used to represent voice server update gateway events.
 
     Sent when initially connecting to voice and when the current voice instance
@@ -59,5 +74,11 @@ class VoiceServerUpdateEvent(base_events.Event):
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild this voice server update is for."""
 
-    endpoint: str = attr.ib(repr=True)
-    """The URI for this voice server host."""
+    _endpoint: str = attr.ib(repr=True)
+
+    @property
+    def endpoint(self) -> str:
+        """Return the URI for this voice server host, with the correct port."""
+        # Discord have had this wrong for like 4 years, bleh.
+        uri, _, _ = self._endpoint.rpartition(":")
+        return f"wss://{uri}:443"

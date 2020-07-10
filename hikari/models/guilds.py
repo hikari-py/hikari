@@ -570,6 +570,19 @@ class PartialGuild(snowflake.Unique):
         return self.name
 
     @property
+    def shard_id(self) -> typing.Optional[int]:
+        """Return the ID of the shard this guild is served by.
+
+        This may return `None` if the application does not have a gateway
+        connection.
+        """
+        try:
+            # This is only sensible if there is a shard.
+            return (self.id >> 22) % typing.cast(int, getattr(self.app, "shard_count"))
+        except (TypeError, AttributeError, NameError):
+            return None
+
+    @property
     def icon_url(self) -> typing.Optional[files.URL]:
         """Icon for the guild, if set; otherwise `builtins.None`."""
         return self.format_icon()

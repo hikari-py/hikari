@@ -429,6 +429,22 @@ class GuildChannel(PartialChannel):
     If no parent category is set for the channel, this will be `builtins.None`.
     """
 
+    @property
+    def shard_id(self) -> typing.Optional[int]:
+        """Return the shard ID for the shard.
+
+        This may be `builtins.None` if this channel was not received over the
+        gateway in an event, or if the guild is not known.
+        """
+        try:
+            # This is only sensible if there is a shard.
+            if self.guild_id is not None:
+                return (self.guild_id >> 22) % typing.cast(int, getattr(self.app, "shard_count"))
+        except (TypeError, AttributeError, NameError):
+            pass
+
+        return None
+
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class GuildCategory(GuildChannel):

@@ -24,19 +24,16 @@ __all__: typing.Final[typing.List[str]] = ["IRESTApp", "IRESTAppFactory", "IREST
 import abc
 import typing
 
-from hikari.utilities import constants
+from hikari.api import app
 
 if typing.TYPE_CHECKING:
-    import concurrent.futures
     import types
 
     from hikari import config
-    from hikari.api import cache as cache_
-    from hikari.api import entity_factory as entity_factory_
     from hikari.api.rest import client
 
 
-class IRESTApp(abc.ABC):
+class IRESTApp(app.IApp, abc.ABC):
     """Component specialization that is used for HTTP-only applications.
 
     This is a specific instance of a HTTP-only client provided by pooled
@@ -59,55 +56,6 @@ class IRESTApp(abc.ABC):
             The HTTP API client.
         """
 
-    @property
-    @abc.abstractmethod
-    def cache(self) -> cache_.ICacheComponent:
-        """Entity cache.
-
-        Returns
-        -------
-        hikari.api.cache.ICacheComponent
-            The cache implementation used in this application.
-        """
-
-    @property
-    @abc.abstractmethod
-    def entity_factory(self) -> entity_factory_.IEntityFactoryComponent:
-        """Entity creator and updater facility.
-
-        Returns
-        -------
-        hikari.api.entity_factory.IEntityFactoryComponent
-            The factory object used to produce and update Python entities.
-        """
-
-    @property
-    @abc.abstractmethod
-    def executor(self) -> typing.Optional[concurrent.futures.Executor]:
-        """Thread-pool to utilise for file IO within the library, if set.
-
-        Returns
-        -------
-        concurrent.futures.Executor or builtins.None
-            The custom thread-pool being used for blocking IO. If the
-            default event loop thread-pool is being used, then this will
-            return `builtins.None` instead.
-        """
-
-    @property
-    @abc.abstractmethod
-    def http_settings(self) -> config.HTTPSettings:
-        """HTTP-specific settings."""
-
-    @property
-    @abc.abstractmethod
-    def proxy_settings(self) -> config.ProxySettings:
-        """Proxy-specific settings."""
-
-    @abc.abstractmethod
-    async def close(self) -> None:
-        """Safely shut down all resources."""
-
 
 class IRESTAppContextManager(IRESTApp):
     """An IRESTApp that may behave as a context manager."""
@@ -126,7 +74,7 @@ class IRESTAppContextManager(IRESTApp):
         ...
 
 
-class IRESTAppFactory(abc.ABC):
+class IRESTAppFactory(app.IApp, abc.ABC):
     """A client factory that emits clients.
 
     This enables a connection pool to be shared for stateless HTTP-only
@@ -137,7 +85,7 @@ class IRESTAppFactory(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> IRESTAppContextManager:
+    def acquire(self, token: str, token_type: str) -> IRESTAppContextManager:
         """Acquire a HTTP client for the given authentication details.
 
         Parameters
@@ -145,7 +93,7 @@ class IRESTAppFactory(abc.ABC):
         token : builtins.str
             The token to use.
         token_type : builtins.str
-            The token type to use. Defaults to `"Bearer"`.
+            The token type to use.
 
         Returns
         -------

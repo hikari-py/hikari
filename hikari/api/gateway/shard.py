@@ -55,6 +55,14 @@ class IGatewayShard(component.IComponent, abc.ABC):
         """Return the shard's most recent heartbeat latency."""
 
     @abc.abstractmethod
+    async def get_user_id(self) -> snowflake.Snowflake:
+        """Return the user ID.
+
+        If the shard has not connected fully yet, this should wait until the ID
+        is set before returning.
+        """
+
+    @abc.abstractmethod
     async def start(self) -> asyncio.Task[None]:
         """Start the shard, wait for it to become ready.
 
@@ -99,8 +107,8 @@ class IGatewayShard(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def update_voice_state(
         self,
-        guild: typing.Union[guilds.PartialGuild, snowflake.Snowflake, int, str],
-        channel: typing.Union[channels.GuildVoiceChannel, snowflake.Snowflake, int, str, None],
+        guild: typing.Union[guilds.PartialGuild, snowflake.UniqueObject],
+        channel: typing.Union[channels.GuildVoiceChannel, snowflake.UniqueObject, None],
         *,
         self_mute: bool = False,
         self_deaf: bool = False,

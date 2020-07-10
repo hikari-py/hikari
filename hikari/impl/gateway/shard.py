@@ -39,6 +39,7 @@ from hikari.impl import rate_limits
 from hikari.models import presences
 from hikari.utilities import constants
 from hikari.utilities import data_binding
+from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -49,7 +50,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import intents as intents_
-    from hikari.utilities import snowflake
 
 
 class GatewayShardImpl(shard.IGatewayShard):
@@ -219,6 +219,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         self._status: typing.Union[undefined.UndefinedType, presences.Status] = initial_status
         self._token = token
         self._use_compression = use_compression
+        self._user_id: typing.Optional[snowflake.Snowflake] = None
         self._version = version
         self._ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
         # No typeshed/stub.
@@ -262,6 +263,12 @@ class GatewayShardImpl(shard.IGatewayShard):
     @typing.final
     def heartbeat_latency(self) -> float:
         return self._heartbeat_latency
+
+    async def get_user_id(self) -> snowflake.Snowflake:
+        await self._handshake_event.wait()
+        if self._user_id is None:
+            raise RuntimeError("user_id was not known, this is probably a bug")
+        return self._user_id
 
     async def start(self) -> asyncio.Task[None]:
         run_task = asyncio.create_task(self._run(), name=f"shard {self._shard_id} keep-alive")
@@ -473,8 +480,8 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     async def update_voice_state(
         self,
-        guild: typing.Union[guilds.PartialGuild, snowflake.Snowflake, int, str],
-        channel: typing.Union[channels.GuildVoiceChannel, snowflake.Snowflake, int, str, None],
+        guild: typing.Union[guilds.PartialGuild, snowflake.UniqueObject],
+        channel: typing.Union[channels.GuildVoiceChannel, snowflake.UniqueObject, None],
         *,
         self_mute: bool = False,
         self_deaf: bool = False,
@@ -587,6 +594,7 @@ class GatewayShardImpl(shard.IGatewayShard):
                     self.session_id = data["session_id"]
                     user_pl = data["user"]
                     user_id = user_pl["id"]
+                    self._user_id = snowflake.Snowflake(user_id)
                     tag = user_pl["username"] + "#" + user_pl["discriminator"]
                     self._logger.info(
                         "shard is ready [session:%s, user_id:%s, tag:%s]", self.session_id, user_id, tag,
