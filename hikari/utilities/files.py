@@ -47,7 +47,7 @@ import urllib.parse
 import aiohttp.client
 import attr
 
-from hikari.utilities import response_handler
+from hikari.utilities import net
 
 if typing.TYPE_CHECKING:
     import types
@@ -490,7 +490,7 @@ class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReade
                     head_only=self._head_only,
                 )
             else:
-                raise await response_handler.generate_error_response(resp)
+                raise await net.generate_error_response(resp)
 
         except Exception as ex:
             await ctx.__aexit__(type(ex), ex, ex.__traceback__)
