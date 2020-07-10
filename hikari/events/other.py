@@ -45,10 +45,13 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
+EventT_inv = typing.TypeVar("EventT_inv", bound=base_events.Event)
+
+
 # Synthetic event, is not deserialized, and is produced by the dispatcher.
 @base_events.no_catch()
 @attr.s(eq=False, hash=False, init=True, kw_only=True, slots=True)
-class ExceptionEvent(base_events.Event):
+class ExceptionEvent(base_events.Event, typing.Generic[EventT_inv]):
     """Descriptor for an exception thrown while processing an event."""
 
     exception: Exception = attr.ib(repr=True)
@@ -57,7 +60,7 @@ class ExceptionEvent(base_events.Event):
     event: base_events.Event = attr.ib(repr=True)
     """The event that was being invoked when the exception occurred."""
 
-    callback: typing.Callable[[base_events.Event], typing.Coroutine[None, typing.Any, None]] = attr.ib(repr=False)
+    callback: typing.Callable[[EventT_inv], typing.Coroutine[None, typing.Any, None]] = attr.ib(repr=False)
     """The event that was being invoked when the exception occurred."""
 
 

@@ -22,6 +22,9 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = [
     "HikariError",
     "HikariWarning",
+    "GatewayServerClosedConnectionError",
+    "GatewayClientClosedError",
+    "GatewayError",
     "NotFound",
     "Unauthorized",
     "Forbidden",
@@ -30,9 +33,8 @@ __all__: typing.Final[typing.List[str]] = [
     "HTTPErrorResponse",
     "ClientHTTPErrorResponse",
     "ServerHTTPErrorResponse",
-    "GatewayServerClosedConnectionError",
-    "GatewayClientClosedError",
-    "GatewayError",
+    "IntentWarning",
+    "VoiceError",
 ]
 
 import http
@@ -271,7 +273,7 @@ class Forbidden(ClientHTTPErrorResponse):
 
     This means you lack the permissions to do something, either because of
     permissions set in a guild, or because your application is not whitelisted
-    to use a specific endpoint.
+    to use a specific _endpoint.
 
     Parameters
     ----------
@@ -315,7 +317,7 @@ class RateLimited(ClientHTTPErrorResponse):
 
     This should only ever occur for specific routes that have additional
     rate-limits applied to them by Discord. At the time of writing, the
-    PATCH CHANNEL endpoint is the only one that knowingly implements this, and
+    PATCH CHANNEL _endpoint is the only one that knowingly implements this, and
     does so by implementing rate-limits on the usage of specific fields only.
 
     If you receive one of these, you should NOT try again until the given
@@ -393,3 +395,7 @@ class IntentWarning(HikariWarning):
     """
 
     __slots__: typing.Sequence[str] = ()
+
+
+class VoiceError(HikariError):
+    """Error raised when a problem occurs with the voice subsystem."""
