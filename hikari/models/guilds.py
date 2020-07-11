@@ -251,6 +251,9 @@ class GuildWidget:
 class Member(users.User):
     """Used to represent a guild bound member."""
 
+    guild_id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    """The ID of the guild this member belongs to."""
+
     # This is technically optional, since UPDATE MEMBER and MESSAGE CREATE
     # events do not inject the user into the member payload, but specify it
     # separately. However, to get around this inconsistency, we force the
@@ -404,6 +407,9 @@ class Role(PartialRole):
 
     This will be applied to a member's name in chat if it's their top coloured role.
     """
+
+    guild_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    """The ID of the guild this role belongs to"""
 
     is_hoisted: bool = attr.ib(eq=False, hash=False, repr=True)
     """Whether this role is hoisting the members it's attached to in the member list.
@@ -568,6 +574,19 @@ class PartialGuild(snowflake.Unique):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def shard_id(self) -> typing.Optional[int]:
+        """Return the ID of the shard this guild is served by.
+
+        This may return `None` if the application does not have a gateway
+        connection.
+        """
+        try:
+            # This is only sensible if there is a shard.
+            return (self.id >> 22) % typing.cast(int, getattr(self.app, "shard_count"))
+        except (TypeError, AttributeError, NameError):
+            return None
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:

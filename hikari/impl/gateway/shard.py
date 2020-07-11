@@ -39,6 +39,7 @@ from hikari.impl import rate_limits
 from hikari.models import presences
 from hikari.utilities import constants
 from hikari.utilities import data_binding
+from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -49,7 +50,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import intents as intents_
-    from hikari.utilities import snowflake
 
 
 class GatewayShardImpl(shard.IGatewayShard):
@@ -113,7 +113,7 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     @enum.unique
     @typing.final
-    class _GatewayCloseCode(enum.IntEnum):
+    class _CloseCode(enum.IntEnum):
         RFC_6455_NORMAL_CLOSURE = 1000
         RFC_6455_GOING_AWAY = 1001
         RFC_6455_PROTOCOL_ERROR = 1002
@@ -145,7 +145,7 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     @enum.unique
     @typing.final
-    class _GatewayOpcode(enum.IntEnum):
+    class _Opcode(enum.IntEnum):
         DISPATCH = 0
         HEARTBEAT = 1
         IDENTIFY = 2
@@ -219,12 +219,14 @@ class GatewayShardImpl(shard.IGatewayShard):
         self._status: typing.Union[undefined.UndefinedType, presences.Status] = initial_status
         self._token = token
         self._use_compression = use_compression
+        self._user_id: typing.Optional[snowflake.Snowflake] = None
         self._version = version
         self._ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
         # No typeshed/stub.
         self._zlib: typing.Any = None
         self._zombied = False
 
+        # TODO: make these all private.
         self.connected_at = float("nan")
         self.heartbeat_interval = float("nan")
         self._heartbeat_latency = float("nan")
@@ -263,6 +265,12 @@ class GatewayShardImpl(shard.IGatewayShard):
     def heartbeat_latency(self) -> float:
         return self._heartbeat_latency
 
+    async def get_user_id(self) -> snowflake.Snowflake:
+        await self._handshake_event.wait()
+        if self._user_id is None:
+            raise RuntimeError("user_id was not known, this is probably a bug")
+        return self._user_id
+
     async def start(self) -> asyncio.Task[None]:
         run_task = asyncio.create_task(self._run(), name=f"shard {self._shard_id} keep-alive")
         await self._handshake_event.wait()
@@ -279,7 +287,7 @@ class GatewayShardImpl(shard.IGatewayShard):
 
             if self._ws is not None:
                 self._logger.warning("gateway client closed, will not attempt to restart")
-                await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "client shut down")
+                await self._close_ws(self._CloseCode.RFC_6455_NORMAL_CLOSURE, "client shut down")
 
     async def _run(self) -> None:
         """Start the shard and wait for it to shut down."""
@@ -327,17 +335,17 @@ class GatewayShardImpl(shard.IGatewayShard):
         except self._InvalidSession as ex:
             if ex.can_resume:
                 self._logger.warning("invalid session, so will attempt to resume session %s", self.session_id)
-                await self._close_ws(self._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
+                await self._close_ws(self._CloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
             else:
                 self._logger.warning("invalid session, so will attempt to reconnect with new session")
-                await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
+                await self._close_ws(self._CloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
                 self._seq = None
                 self.session_id = None
 
         except self._Reconnect:
             self._logger.warning("instructed by Discord to reconnect and resume session %s", self.session_id)
             self._backoff.reset()
-            await self._close_ws(self._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "reconnecting")
+            await self._close_ws(self._CloseCode.DO_NOT_INVALIDATE_SESSION, "reconnecting")
 
         except self._SocketClosed:
             # The socket has already closed, so no need to close it again.
@@ -345,7 +353,7 @@ class GatewayShardImpl(shard.IGatewayShard):
                 self._backoff.reset()
 
             if not self._request_close_event.is_set():
-                self._logger.warning("unexpected socket closure, will attempt to reconnect")
+                self._logger.warning("unexpected socket closure, will attempt to resume")
 
             return not self._request_close_event.is_set()
 
@@ -354,9 +362,9 @@ class GatewayShardImpl(shard.IGatewayShard):
                 self._logger.warning(
                     "server closed the connection with %s (%s), will attempt to reconnect", ex.code, ex.reason,
                 )
-                await self._close_ws(self._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me")
+                await self._close_ws(self._CloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me")
             else:
-                await self._close_ws(self._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection")
+                await self._close_ws(self._CloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection")
                 self._seq = None
                 self.session_id = None
                 self._backoff.reset()
@@ -365,7 +373,9 @@ class GatewayShardImpl(shard.IGatewayShard):
 
         except Exception as ex:
             self._logger.error("unexpected exception occurred, shard will now die", exc_info=ex)
-            await self._close_ws(self._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
+            self._seq = None
+            self.session_id = None
+            await self._close_ws(self._CloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
             raise
 
         return True
@@ -461,7 +471,7 @@ class GatewayShardImpl(shard.IGatewayShard):
             idle_since=idle_since, afk=afk, status=status, activity=activity
         )
 
-        payload: data_binding.JSONObject = {"op": self._GatewayOpcode.PRESENCE_UPDATE, "d": presence}
+        payload: data_binding.JSONObject = {"op": self._Opcode.PRESENCE_UPDATE, "d": presence}
 
         await self._send_json(payload)
 
@@ -473,14 +483,14 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     async def update_voice_state(
         self,
-        guild: typing.Union[guilds.PartialGuild, snowflake.Snowflake, int, str],
-        channel: typing.Union[channels.GuildVoiceChannel, snowflake.Snowflake, int, str, None],
+        guild: typing.Union[guilds.PartialGuild, snowflake.UniqueObject],
+        channel: typing.Union[channels.GuildVoiceChannel, snowflake.UniqueObject, None],
         *,
         self_mute: bool = False,
         self_deaf: bool = False,
     ) -> None:
         payload = self._app.entity_factory.serialize_gateway_voice_state_update(guild, channel, self_mute, self_deaf)
-        await self._send_json({"op": self._GatewayOpcode.VOICE_STATE_UPDATE, "d": payload})
+        await self._send_json({"op": self._Opcode.VOICE_STATE_UPDATE, "d": payload})
 
     async def _close_ws(self, code: int, message: str) -> None:
         self._logger.debug("sending close frame with code %s and message %r", int(code), message)
@@ -495,16 +505,16 @@ class GatewayShardImpl(shard.IGatewayShard):
     async def _hello(self) -> None:
         message = await self._receive_json_payload()
         op = message["op"]
-        if message["op"] != self._GatewayOpcode.HELLO:
-            await self._close_ws(self._GatewayCloseCode.RFC_6455_POLICY_VIOLATION.value, "did not receive HELLO")
-            raise errors.GatewayError(f"Expected HELLO opcode {self._GatewayOpcode.HELLO.value} but received {op}")
+        if message["op"] != self._Opcode.HELLO:
+            await self._close_ws(self._CloseCode.RFC_6455_POLICY_VIOLATION.value, "did not receive HELLO")
+            raise errors.GatewayError(f"Expected HELLO opcode {self._Opcode.HELLO.value} but received {op}")
 
         self.heartbeat_interval = message["d"]["heartbeat_interval"] / 1_000.0
         self._logger.info("received HELLO, heartbeat interval is %ss", self.heartbeat_interval)
 
     async def _identify(self) -> None:
         payload: data_binding.JSONObject = {
-            "op": self._GatewayOpcode.IDENTIFY,
+            "op": self._Opcode.IDENTIFY,
             "d": {
                 "token": self._token,
                 "compress": False,
@@ -534,10 +544,7 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     async def _resume(self) -> None:
         await self._send_json(
-            {
-                "op": self._GatewayOpcode.RESUME,
-                "d": {"token": self._token, "seq": self._seq, "session_id": self.session_id},
-            }
+            {"op": self._Opcode.RESUME, "d": {"token": self._token, "seq": self._seq, "session_id": self.session_id}}
         )
 
     async def _heartbeat_keepalive(self) -> None:
@@ -554,13 +561,13 @@ class GatewayShardImpl(shard.IGatewayShard):
                         time_since_heartbeat_sent,
                     )
                     self._zombied = True
-                    await self._close_ws(self._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "zombie connection")
+                    await self._close_ws(self._CloseCode.DO_NOT_INVALIDATE_SESSION, "zombie connection")
                     return
 
                 self._logger.debug(
                     "preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, self.heartbeat_interval
                 )
-                await self._send_json({"op": self._GatewayOpcode.HEARTBEAT, "d": self._seq})
+                await self._send_json({"op": self._Opcode.HEARTBEAT, "d": self._seq})
                 self._last_heartbeat_sent = self._now()
 
                 try:
@@ -579,7 +586,7 @@ class GatewayShardImpl(shard.IGatewayShard):
             op = message["op"]
             data = message["d"]
 
-            if op == self._GatewayOpcode.DISPATCH:
+            if op == self._Opcode.DISPATCH:
                 event = message["t"]
                 self._seq = message["s"]
 
@@ -587,6 +594,7 @@ class GatewayShardImpl(shard.IGatewayShard):
                     self.session_id = data["session_id"]
                     user_pl = data["user"]
                     user_id = user_pl["id"]
+                    self._user_id = snowflake.Snowflake(user_id)
                     tag = user_pl["username"] + "#" + user_pl["discriminator"]
                     self._logger.info(
                         "shard is ready [session:%s, user_id:%s, tag:%s]", self.session_id, user_id, tag,
@@ -599,19 +607,19 @@ class GatewayShardImpl(shard.IGatewayShard):
 
                 self._dispatch(event, data)
 
-            elif op == self._GatewayOpcode.HEARTBEAT:
+            elif op == self._Opcode.HEARTBEAT:
                 self._logger.debug("received HEARTBEAT; sending HEARTBEAT ACK")
-                await self._send_json({"op": self._GatewayOpcode.HEARTBEAT_ACK})
+                await self._send_json({"op": self._Opcode.HEARTBEAT_ACK})
 
-            elif op == self._GatewayOpcode.HEARTBEAT_ACK:
+            elif op == self._Opcode.HEARTBEAT_ACK:
                 self._heartbeat_latency = self._now() - self._last_heartbeat_sent
                 self._logger.debug("received HEARTBEAT ACK [latency:%ss]", self._heartbeat_latency)
 
-            elif op == self._GatewayOpcode.RECONNECT:
+            elif op == self._Opcode.RECONNECT:
                 self._logger.debug("RECONNECT")
                 raise self._Reconnect
 
-            elif op == self._GatewayOpcode.INVALID_SESSION:
+            elif op == self._Opcode.INVALID_SESSION:
                 self._logger.debug("INVALID SESSION [resume:%s]", data)
                 raise self._InvalidSession(data)
 
@@ -641,17 +649,17 @@ class GatewayShardImpl(shard.IGatewayShard):
             close_code = self._ws.close_code  # type: ignore[union-attr]
             self._logger.debug("connection closed with code %s", close_code)
 
-            if close_code in self._GatewayCloseCode.__members__.values():
-                reason = self._GatewayCloseCode(close_code).name  # type: ignore[arg-type]
+            if close_code in self._CloseCode.__members__.values():
+                reason = self._CloseCode(close_code).name  # type: ignore[arg-type]
             else:
                 reason = f"unknown close code {close_code}"
 
             can_reconnect = close_code < 4000 or close_code in (  # type: ignore[operator]
-                self._GatewayCloseCode.DECODE_ERROR,
-                self._GatewayCloseCode.INVALID_SEQ,
-                self._GatewayCloseCode.UNKNOWN_ERROR,
-                self._GatewayCloseCode.SESSION_TIMEOUT,
-                self._GatewayCloseCode.RATE_LIMITED,
+                self._CloseCode.DECODE_ERROR,
+                self._CloseCode.INVALID_SEQ,
+                self._CloseCode.UNKNOWN_ERROR,
+                self._CloseCode.SESSION_TIMEOUT,
+                self._CloseCode.RATE_LIMITED,
             )
 
             # Assume we can always resume first.
@@ -691,7 +699,7 @@ class GatewayShardImpl(shard.IGatewayShard):
     async def _send_json(self, payload: data_binding.JSONObject) -> None:
         await self.ratelimiter.acquire()
         message = data_binding.dump_json(payload)
-        self._log_debug_payload(message, "sending json payload [t:%s]", payload.get("t"))
+        self._log_debug_payload(message, "sending json payload [op:%s]", payload.get("op"))
         await self._ws.send_str(message)  # type: ignore[union-attr]
 
     def _dispatch(self, event_name: str, event: data_binding.JSONObject) -> asyncio.Task[None]:

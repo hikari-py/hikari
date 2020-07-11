@@ -30,6 +30,7 @@ __all__: typing.Final[typing.List[str]] = [
     "ReadyEvent",
     "ResumedEvent",
     "OwnUserUpdateEvent",
+    "MemberChunkEvent",
 ]
 
 import typing
@@ -40,15 +41,20 @@ from hikari.api.gateway import shard as gateway_shard
 from hikari.events import base as base_events
 
 if typing.TYPE_CHECKING:
+    from hikari.api.rest import app as rest_app
     from hikari.models import guilds
+    from hikari.models import presences as presences_
     from hikari.models import users
     from hikari.utilities import snowflake
+
+
+EventT_inv = typing.TypeVar("EventT_inv", bound=base_events.Event)
 
 
 # Synthetic event, is not deserialized, and is produced by the dispatcher.
 @base_events.no_catch()
 @attr.s(eq=False, hash=False, init=True, kw_only=True, slots=True)
-class ExceptionEvent(base_events.Event):
+class ExceptionEvent(base_events.Event, typing.Generic[EventT_inv]):
     """Descriptor for an exception thrown while processing an event."""
 
     exception: Exception = attr.ib(repr=True)
@@ -57,7 +63,7 @@ class ExceptionEvent(base_events.Event):
     event: base_events.Event = attr.ib(repr=True)
     """The event that was being invoked when the exception occurred."""
 
-    callback: typing.Callable[[base_events.Event], typing.Coroutine[None, typing.Any, None]] = attr.ib(repr=False)
+    callback: typing.Callable[[EventT_inv], typing.Coroutine[None, typing.Any, None]] = attr.ib(repr=False)
     """The event that was being invoked when the exception occurred."""
 
 
@@ -158,3 +164,43 @@ class OwnUserUpdateEvent(base_events.Event):
 
     my_user: users.OwnUser = attr.ib(repr=True)
     """The updated object of the current application's user."""
+
+
+@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+class MemberChunkEvent(base_events.Event):
+    """Used to represent the response to Guild Request Members."""
+
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
+
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
+    """The ID of the guild this member chunk is for."""
+
+    members: typing.Mapping[snowflake.Snowflake, guilds.Member] = attr.ib(repr=False)
+    """A mapping of snowflake IDs to the objects of the members in this chunk."""
+
+    index: int = attr.ib(repr=True)
+    """The zero-indexed position of this within the queued up chunks for this request."""
+
+    count: int = attr.ib(repr=True)
+    """The total number of expected chunks for the request this is associated with."""
+
+    not_found: typing.Sequence[snowflake.Snowflake] = attr.ib(repr=True)
+    """An array of the snowflakes that weren't found while making this request.
+
+    This is only applicable when user ids are specified while making the
+    member request the chunk is associated with.
+    """
+
+    presences: typing.Mapping[snowflake.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
+    """A mapping of snowflakes to found member presence objects.
+
+    This will be empty if no presences are found or `presences` isn't passed as
+    `True` while requesting the member chunks.
+    """
+
+    nonce: typing.Optional[str] = attr.ib(repr=True)
+    """The string nonce used to identify the request member chunks are associated with.
+
+    This is the nonce value passed while requesting member chunks.
+    """

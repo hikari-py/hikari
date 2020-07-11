@@ -124,8 +124,8 @@ class EventManagerImpl(manager_core.EventManagerCoreComponent):
 
     async def on_guild_members_chunk(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-members-chunk for more info."""
-        # TODO: implement model for this, and implement chunking components.
-        # await self.dispatch(self.app.entity_factory.deserialize_guild_member_chunk_event(payload))
+        # TODO: implement chunking components.
+        await self.dispatch(self.app.entity_factory.deserialize_guild_member_chunk_event(payload))
 
     async def on_guild_role_create(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-role-create for more info."""

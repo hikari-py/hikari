@@ -118,13 +118,13 @@ class PermissionOverwrite(snowflake.Unique):
     overwrite = PermissionOverwrite(
         type=PermissionOverwriteType.MEMBER,
         allow=(
-            Permissions.VIEW_CHANNEL
-            | Permissions.READ_MESSAGE_HISTORY
-            | Permissions.SEND_MESSAGES
+            Permission.VIEW_CHANNEL
+            | Permission.READ_MESSAGE_HISTORY
+            | Permission.SEND_MESSAGES
         ),
         deny=(
-            Permissions.MANAGE_MESSAGES
-            | Permissions.SPEAK
+            Permission.MANAGE_MESSAGES
+            | Permission.SPEAK
         ),
     )
     ```
@@ -178,7 +178,7 @@ class PartialChannel(snowflake.Unique):
     """The channel's type."""
 
     def __str__(self) -> str:
-        return self.name if self.name is not None else f"Unnamed channel ID {self.id}"
+        return self.name if self.name is not None else f"Unnamed {self.__class__.__name__} ID {self.id}"
 
 
 class TextChannel(PartialChannel, abc.ABC):
@@ -196,28 +196,26 @@ class TextChannel(PartialChannel, abc.ABC):
         attachments: typing.Union[
             undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
         ] = undefined.UNDEFINED,
-        mentions_everyone: bool = False,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]], bool
-        ] = True,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
-        ] = True,
         nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        mentions_everyone: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]],
+            bool,
+            undefined.UndefinedType,
+        ] = undefined.UNDEFINED,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
     ) -> messages.Message:
-        """Create a message in this channel.
+        """Create a message in the channel this message belongs to.
 
         Parameters
         ----------
-        text : str or hikari.utilities.undefined.UndefinedType
+        text : builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, the message text to send with the message.
-        nonce : str or hikari.utilities.undefined.UndefinedType
-            If specified, an optional ID to send for opportunistic message
-            creation. This doesn't serve any real purpose for general use,
-            and can usually be ignored.
-        tts : bool or hikari.utilities.undefined.UndefinedType
-            If specified, whether the message will be sent as a TTS message.
+        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
+            If specified, the embed object to send with the message.
         attachment : hikari.utilities.files.Resource or builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, a attachment to upload, if desired. This can
             be a resource, or string of a path on your computer or a URL.
@@ -226,20 +224,26 @@ class TextChannel(PartialChannel, abc.ABC):
             Should be between 1 and 10 objects in size (inclusive), also
             including embed attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
-            If specified, the embed object to send with the message.
-        mentions_everyone : bool
+        nonce : builtins.str or hikari.utilities.undefined.UndefinedType
+            If specified, an optional ID to send for opportunistic message
+            creation. This doesn't serve any real purpose for general use,
+            and can usually be ignored.
+        tts : builtins.bool or hikari.utilities.undefined.UndefinedType
+            If specified, whether the message will be sent as a TTS message.
+        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
             Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to `builtins.False`.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+            discord and lead to actual pings, defaults to
+            `hikari.utilities.undefined.UNDEFINED`.
+        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
             Either an array of user objects/IDs to allow mentions for,
             `builtins.True` to allow all user mentions or `builtins.False`
             to block all user mentions from resolving, defaults to
-            `builtins.True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+            `hikari.utilities.undefined.UNDEFINED`.
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
             Either an array of guild role objects/IDs to allow mentions for,
             `builtins.True` to allow all role mentions or `builtins.False` to
-            block all role mentions from resolving, defaults to `builtins.True`.
+            block all role mentions from resolving, defaults to
+            `hikari.utilities.undefined.UNDEFINED`.
 
         Returns
         -------
@@ -313,7 +317,20 @@ class TextChannel(PartialChannel, abc.ABC):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class DMChannel(TextChannel):
+class PrivateChannel(PartialChannel):
+    """The base for anything that is a private (non-guild bound) channel."""
+
+    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    """The ID of the last message sent in this channel.
+
+    !!! warning
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.
+    """
+
+
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class DMChannel(PrivateChannel, TextChannel):
     """Represents a DM channel."""
 
     last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
@@ -324,16 +341,22 @@ class DMChannel(TextChannel):
         this will always be valid.
     """
 
-    recipients: typing.Mapping[snowflake.Snowflake, users.UserImpl] = attr.ib(eq=False, hash=False, repr=False)
-    """The recipients of the DM."""
+    recipient: users.UserImpl = attr.ib(eq=False, hash=False, repr=False)
+    """The user recipient of this DM."""
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__} with: {', '.join(str(user) for user in self.recipients.values())}"
+        return f"{self.__class__.__name__} with: {self.recipient}"
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class GroupDMChannel(DMChannel):
-    """Represents a DM group channel."""
+class GroupDMChannel(PrivateChannel):
+    """Represents a DM group channel.
+
+    !!! note
+        This doesn't have the methods found on `TextChannel` as bots cannot
+        interact with a group DM that they own by sending or seeing messages in
+        it.
+    """
 
     owner_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the owner of the group."""
@@ -344,6 +367,9 @@ class GroupDMChannel(DMChannel):
     nicknames: typing.MutableMapping[snowflake.Snowflake, str] = attr.ib(eq=False, hash=False, repr=False)
     """A mapping of set nicknames within this group DMs to user IDs."""
 
+    recipients: typing.Mapping[snowflake.Snowflake, users.UserImpl] = attr.ib(eq=False, hash=False, repr=False)
+    """The recipients of the group DM."""
+
     application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the application that created the group DM.
 
@@ -351,7 +377,10 @@ class GroupDMChannel(DMChannel):
     """
 
     def __str__(self) -> str:
-        return self.name if self.name is not None else super().__str__()
+        if self.name is None:
+            return f"{self.__class__.__name__} with: {', '.join(str(user) for user in self.recipients.values())}"
+
+        return self.name
 
     @property
     def icon(self) -> typing.Optional[files.URL]:
@@ -393,13 +422,8 @@ class GroupDMChannel(DMChannel):
 class GuildChannel(PartialChannel):
     """The base for anything that is a guild channel."""
 
-    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
-    """The ID of the guild the channel belongs to.
-
-    !!! warning
-        This will be `builtins.None` when received over the gateway in certain events
-        (e.g Guild Create).
-    """
+    guild_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    """The ID of the guild the channel belongs to."""
 
     position: int = attr.ib(eq=False, hash=False, repr=False)
     """The sorting position of the channel.
@@ -428,6 +452,22 @@ class GuildChannel(PartialChannel):
 
     If no parent category is set for the channel, this will be `builtins.None`.
     """
+
+    @property
+    def shard_id(self) -> typing.Optional[int]:
+        """Return the shard ID for the shard.
+
+        This may be `builtins.None` if this channel was not received over the
+        gateway in an event, or if the guild is not known.
+        """
+        try:
+            # This is only sensible if there is a shard.
+            if self.guild_id is not None:
+                return (self.guild_id >> 22) % typing.cast(int, getattr(self.app, "shard_count"))
+        except (TypeError, AttributeError, NameError):
+            pass
+
+        return None
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

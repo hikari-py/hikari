@@ -284,6 +284,9 @@ class KnownCustomEmoji(CustomEmoji):
     _are_ part of. Ass a result, it contains a lot more information with it.
     """
 
+    guild_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=False)
+    """The ID of the guild this emoji belongs to."""
+
     role_ids: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The IDs of the roles that are whitelisted to use this emoji.
 

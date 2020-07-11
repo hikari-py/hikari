@@ -206,93 +206,202 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_guild_category(self, payload: data_binding.JSONObject) -> channel_models.GuildCategory:
+    def deserialize_guild_category(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> channel_models.GuildCategory:
         """Parse a raw payload from Discord into a guild category object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this channel belongs to. If passed then this
+            will be prioritised over `"guild_id"` in the payload.
+
+        !!! note
+            `guild_id` currently only covers the gateway GUILD_CREATE event
+            where `"guild_id"` isn't included in the channel's payload.
 
         Returns
         -------
         hikari.models.channels.GuildCategory
             The deserialized partial channel object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
+            `"guild_id"` isn't present in the passed payload.
         """
 
     @abc.abstractmethod
-    def deserialize_guild_text_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildTextChannel:
+    def deserialize_guild_text_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> channel_models.GuildTextChannel:
         """Parse a raw payload from Discord into a guild text channel object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this channel belongs to. If passed then this
+            will be prioritised over `"guild_id"` in the payload.
+
+        !!! note
+            `guild_id` currently only covers the gateway GUILD_CREATE event
+            where `"guild_id"` isn't included in the channel's payload.
 
         Returns
         -------
         hikari.models.channels.GuildTextChannel
             The deserialized guild text channel object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
+            `"guild_id"` isn't present in the passed payload.
         """
 
     @abc.abstractmethod
-    def deserialize_guild_news_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildNewsChannel:
+    def deserialize_guild_news_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> channel_models.GuildNewsChannel:
         """Parse a raw payload from Discord into a guild news channel object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this channel belongs to. If passed then this
+            will be prioritised over `"guild_id"` in the payload.
+
+        !!! note
+            `guild_id` currently only covers the gateway GUILD_CREATE event
+            where `"guild_id"` isn't included in the channel's payload.
 
         Returns
         -------
         hikari.models.channels.GuildNewsChannel
             The deserialized guild news channel object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
+            `"guild_id"` isn't present in the passed payload.
         """
 
     @abc.abstractmethod
-    def deserialize_guild_store_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildStoreChannel:
+    def deserialize_guild_store_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> channel_models.GuildStoreChannel:
         """Parse a raw payload from Discord into a guild store channel object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this channel belongs to. If passed then this
+            will be prioritised over `"guild_id"` in the payload.
+
+        !!! note
+            `guild_id` currently only covers the gateway GUILD_CREATE event
+            where `"guild_id"` isn't included in the channel's payload.
 
         Returns
         -------
         hikari.models.channels.GuildStoreChannel
             The deserialized guild store channel object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
+            `"guild_id"` isn't present in the passed payload.
         """
 
     @abc.abstractmethod
-    def deserialize_guild_voice_channel(self, payload: data_binding.JSONObject) -> channel_models.GuildVoiceChannel:
+    def deserialize_guild_voice_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> channel_models.GuildVoiceChannel:
         """Parse a raw payload from Discord into a guild voice channel object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this channel belongs to. If passed then this
+            will be prioritised over `"guild_id"` in the payload.
+
+        !!! note
+            `guild_id` currently only covers the gateway GUILD_CREATE event
+            where `"guild_id"` isn't included in the channel's payload.
 
         Returns
         -------
         hikari.models.channels.GuildVoiceChannel
             The deserialized guild voice channel object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
+            `"guild_id"` isn't present in the passed payload.
         """
 
     @abc.abstractmethod
-    def deserialize_channel(self, payload: data_binding.JSONObject) -> channel_models.PartialChannel:
+    def deserialize_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> channel_models.PartialChannel:
         """Parse a raw payload from Discord into a channel object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this channel belongs to. This will be ignored
+            for DM and group DM channels and will be prioritised over
+            `"guild_id"` in the payload when passed.
+
+        !!! note
+            `guild_id` currently only covers the gateway GUILD_CREATE event
+            where `"guild_id"` isn't included in the channel's payload.
 
         Returns
         -------
         hikari.models.channels.PartialChannel
             The deserialized partial channel-derived object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
+            `"guild_id"` isn't present in the passed payload of a guild channel.
         """
 
     ################
@@ -368,13 +477,19 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_known_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.KnownCustomEmoji:
+    def deserialize_known_custom_emoji(
+        self, payload: data_binding.JSONObject, *, guild_id: snowflake.Snowflake
+    ) -> emoji_models.KnownCustomEmoji:
         """Parse a raw payload from Discord into a known custom emoji object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this emoji belongs to. This is used to ensure
+            that the guild a known custom emoji belongs to is remembered by
+            allowing for a context based artificial `guild_id` attribute.
 
         Returns
         -------
@@ -442,7 +557,8 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
-        user: typing.Union[undefined.UndefinedType, user_models.UserImpl] = undefined.UNDEFINED,
+        user: typing.Union[undefined.UndefinedType, user_models.User] = undefined.UNDEFINED,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> guild_models.Member:
         """Parse a raw payload from Discord into a member object.
 
@@ -453,21 +569,41 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         user : hikari.models.users.UserImpl or hikari.utilities.undefined.UndefinedType
             The user to attach to this member, should only be passed in
             situations where "user" is not included in the payload.
+        guild_id : hikari.utilities.snowflake.Snowflake or hikari.utilities.undefined.UndefinedType
+            The ID of the guild this member belongs to. If this is specified
+            then this will be prioritised over `"guild_id"` in the payload.
+
+        !!! note
+            `guild_id` covers cases such as the GUILD_CREATE gateway event and
+            GET Guild Member where `"guild_id"` isn't included in the returned
+            payload.
 
         Returns
         -------
         hikari.models.guilds.Member
             The deserialized member object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
+            `"guild_id"` isn't present in the passed payload.
         """
 
     @abc.abstractmethod
-    def deserialize_role(self, payload: data_binding.JSONObject) -> guild_models.Role:
+    def deserialize_role(
+        self, payload: data_binding.JSONObject, *, guild_id: snowflake.Snowflake,
+    ) -> guild_models.Role:
         """Parse a raw payload from Discord into a role object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild this role belongs to. This is used to ensure
+            that the guild a role belongs to is remembered by allowing for a
+            context based artificial `guild_id` attribute.
 
         Returns
         -------
@@ -692,18 +828,37 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
     ################
 
     @abc.abstractmethod
-    def deserialize_voice_state(self, payload: data_binding.JSONObject) -> voice_models.VoiceState:
+    def deserialize_voice_state(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> voice_models.VoiceState:
         """Parse a raw payload from Discord into a voice state object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.snowflake.Snowflake or hikari.utilities.undefined.UndefinedType
+            The ID of the guild this voice state belongs to. If this is specified
+            then this will be prioritised over `"guild_id"` in the payload.
+
+        !!! note
+            `guild_id` currently only covers the guild create event where
+            `"guild_id"` isn't included in the returned payloads.
 
         Returns
         -------
         hikari.models.voices.VoiceState
             The deserialized voice state object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
+            `"guild_id"` isn't present in the passed payload for the payload of
+            the voice state.
         """
 
     @abc.abstractmethod
@@ -750,7 +905,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -765,7 +920,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -780,7 +935,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -797,7 +952,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -812,7 +967,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -827,7 +982,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -842,7 +997,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -857,7 +1012,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -876,7 +1031,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -891,7 +1046,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -906,7 +1061,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -923,7 +1078,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -938,7 +1093,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -953,7 +1108,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -970,7 +1125,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -987,7 +1142,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1002,7 +1157,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1019,7 +1174,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1036,7 +1191,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1053,7 +1208,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1070,7 +1225,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1087,7 +1242,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1102,7 +1257,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1121,7 +1276,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1136,7 +1291,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1151,7 +1306,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1168,7 +1323,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1185,7 +1340,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1202,7 +1357,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1219,7 +1374,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1236,7 +1391,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1259,7 +1414,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ----------
         shard : hikari.api.gateway.IGatewayShard
             The shard that was ready.
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1274,13 +1429,28 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
         -------
         hikari.events.other.OwnUserUpdateEvent
             The parsed own user update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_member_chunk_event(self, payload: data_binding.JSONObject) -> other_events.MemberChunkEvent:
+        """Parse a raw payload from Discord into a member chunk event object.
+
+        Parameters
+        ----------
+        payload : hikari.utilities.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.other_events.MemberChunk
+            The parsed member chunk object.
         """
 
     ################
@@ -1295,7 +1465,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
@@ -1312,7 +1482,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        payload : typing.Mapping[builtins.str, typing.Any]
+        payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.
 
         Returns
