@@ -47,7 +47,7 @@ def test_PartialChannel_str_operator_when_name_is_None():
     channel = channels.PartialChannel()
     channel.id = 1234567
     channel.name = None
-    assert str(channel) == "Unnamed channel ID 1234567"
+    assert str(channel) == "Unnamed PartialChannel ID 1234567"
 
 
 def test_DMChannel_str_operator():
@@ -55,7 +55,7 @@ def test_DMChannel_str_operator():
     user = users.UserImpl()
     user.discriminator = "0420"
     user.username = "snoop"
-    channel.recipients = {1: user}
+    channel.recipient = user
     assert str(channel) == "DMChannel with: snoop#0420"
 
 
