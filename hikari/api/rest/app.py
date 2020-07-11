@@ -74,7 +74,7 @@ class IRESTAppContextManager(IRESTApp):
         ...
 
 
-class IRESTAppFactory(app.IApp, abc.ABC):
+class IRESTAppFactory(abc.ABC):
     """A client factory that emits clients.
 
     This enables a connection pool to be shared for stateless HTTP-only

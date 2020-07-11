@@ -125,7 +125,7 @@ class VoiceComponentImpl(voice.IVoiceComponent):
             "waiting for voice events for connecting to voice channel %s in %s via shard %s", channel, guild, shard_id
         )
 
-        state, server = await asyncio.wait_for(
+        state_event, server_event = await asyncio.wait_for(
             asyncio.gather(
                 # Voice state update:
                 self._dispatcher.wait_for(
@@ -144,14 +144,25 @@ class VoiceComponentImpl(voice.IVoiceComponent):
         )
 
         _LOGGER.debug(
-            "joined voice channel %s in guild %s via shard %s using endpoint %s, starting voice websocket",
-            state.state.channel_id,
-            state.state.guild_id,
+            "joined voice channel %s in guild %s via shard %s using endpoint %s. Session will be %s. "
+            "Delegating to voice websocket",
+            state_event.state.channel_id,
+            state_event.state.guild_id,
             shard_id,
-            server.endpoint,
+            server_event.endpoint,
+            state_event.state.session_id,
         )
 
-        voice_connection = await voice_connection_type.initialize(**kwargs)
+        voice_connection = await voice_connection_type.initialize(
+            debug=self._app.debug,
+            endpoint=server_event.endpoint,
+            guild_id=guild_id,
+            owner=self,
+            session_id=state_event.state.session_id,
+            token=server_event.token,
+            user_id=user_id,
+            **kwargs,
+        )
         self._connections[guild_id] = voice_connection
         return voice_connection
 

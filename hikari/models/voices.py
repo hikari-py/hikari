@@ -38,23 +38,14 @@ class VoiceState:
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    guild_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
-    """The ID of the guild this voice state is in."""
-
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the channel this user is connected to.
 
     This will be `builtins.None` if they are leaving voice.
     """
 
-    user_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
-    """The ID of the user this voice state is for."""
-
-    member: guilds.Member = attr.ib(eq=False, hash=False, repr=False)
-    """The guild member this voice state is for."""
-
-    session_id: str = attr.ib(eq=True, hash=True, repr=True)
-    """The string ID of this voice state's session."""
+    guild_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    """The ID of the guild this voice state is in."""
 
     is_guild_deafened: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is deafened by the guild."""
@@ -71,11 +62,20 @@ class VoiceState:
     is_streaming: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is streaming using "Go Live"."""
 
+    is_suppressed: bool = attr.ib(eq=False, hash=False, repr=False)
+    """Whether this user is muted by the current user."""
+
     is_video_enabled: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user's camera is enabled."""
 
-    is_suppressed: bool = attr.ib(eq=False, hash=False, repr=False)
-    """Whether this user is muted by the current user."""
+    user_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    """The ID of the user this voice state is for."""
+
+    member: guilds.Member = attr.ib(eq=False, hash=False, repr=False)
+    """The guild member this voice state is for."""
+
+    session_id: str = attr.ib(eq=True, hash=True, repr=True)
+    """The string ID of this voice state's session."""
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)

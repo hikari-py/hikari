@@ -51,15 +51,19 @@ class RESTAppImpl(app.IRESTAppContextManager):
 
     Parameters
     ----------
+    connector : aiohttp.BaseConnector
+        The AIOHTTP connector to use. This must be closed by the caller, and
+        will not be terminated when this class closes (since you will generally
+        expect this to be a connection pool).
     debug : builtins.bool
         Defaulting to `builtins.False`, if `builtins.True`, then each payload
         sent and received in HTTP requests will be dumped to debug logs. This
         will provide useful debugging context at the cost of performance.
         Generally you do not need to enable this.
-    connector : aiohttp.BaseConnector
-        The AIOHTTP connector to use. This must be closed by the caller, and
-        will not be terminated when this class closes (since you will generally
-        expect this to be a connection pool).
+    executor : concurrent.futures.Executor or builtins.None
+        The executor to use for blocking file IO operations. If `builtins.None`
+        is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
+        the `asyncio.AbstractEventLoop` will be used instead.
     global_ratelimit : hikari.impl.rate_limits.ManualRateLimiter
         The global ratelimiter.
     http_settings : hikari.config.HTTPSettings
@@ -83,8 +87,9 @@ class RESTAppImpl(app.IRESTAppContextManager):
     def __init__(
         self,
         *,
-        debug: bool = False,
         connector: aiohttp.BaseConnector,
+        debug: bool = False,
+        executor: typing.Optional[concurrent.futures.Executor],
         global_ratelimit: rate_limits.ManualRateLimiter,
         http_settings: config.HTTPSettings,
         proxy_settings: config.ProxySettings,
@@ -94,11 +99,11 @@ class RESTAppImpl(app.IRESTAppContextManager):
         version: int,
     ) -> None:
         self._cache: cache_.ICacheComponent = stateless.StatelessCacheImpl()
+        self._debug = debug
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(self)
-        self._executor = None
+        self._executor = executor
         self._http_settings = http_settings
         self._proxy_settings = proxy_settings
-
         self._rest = rest_client_impl.RESTClientImpl(
             app=self,
             connector=connector,
@@ -121,6 +126,10 @@ class RESTAppImpl(app.IRESTAppContextManager):
             This will always return `builtins.NotImplemented` for HTTP-only applications.
         """
         return self._cache
+
+    @property
+    def debug(self) -> bool:
+        return self._debug
 
     @property
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
@@ -166,10 +175,29 @@ class RESTAppFactoryImpl(app.IRESTAppFactory):
 
     Parameters
     ----------
+    connector : aiohttp.BaseConnector or builtins.None
+        The connector to use for HTTP sockets. If `builtins.None`, this will be
+        automatically created for you.
+    connector_owner : builtins.bool
+        If you created the connector yourself, set this to `builtins.True` if
+        you want this component to destroy the connector once closed. Otherwise,
+        `builtins.False` will prevent this and you will have to do this
+        manually. The latter is useful if you wish to maintain a shared
+        connection pool across your application.
     debug : builtins.bool
         If `builtins.True`, then much more information is logged each time a
         request is made. Generally you do not need this to be on, so it will
         default to `builtins.False` instead.
+    executor : concurrent.futures.Executor or builtins.None
+        The executor to use for blocking file IO operations. If `builtins.None`
+        is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
+        the `asyncio.AbstractEventLoop` will be used instead.
+    http_settings : hikari.config.HTTPSettings or builtins.None
+        HTTP settings to use. Sane defaults are used if this is
+        `builtins.None`.
+    proxy_settings : hikari.config.ProxySettings or builtins.None
+        Proxy settings to use. If `builtins.None` then no proxy configuration
+        will be used.
     url : str or hikari.utilities.undefined.UndefinedType
         The base URL for the API. You can generally leave this as being
         `undefined` and the correct default API base URL will be generated.
@@ -184,6 +212,7 @@ class RESTAppFactoryImpl(app.IRESTAppFactory):
         connector: typing.Optional[aiohttp.BaseConnector] = None,
         connector_owner: bool = True,
         debug: bool = False,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         url: typing.Optional[str] = None,
@@ -192,11 +221,16 @@ class RESTAppFactoryImpl(app.IRESTAppFactory):
         self._connector = aiohttp.TCPConnector() if connector is None else connector
         self._connector_owner = connector_owner
         self._debug = debug
+        self._executor = executor
         self._global_ratelimit = rate_limits.ManualRateLimiter()
         self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
         self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
         self._url = url
         self._version = version
+
+    @property
+    def debug(self) -> bool:
+        return self._debug
 
     @property
     def http_settings(self) -> config.HTTPSettings:
@@ -210,6 +244,7 @@ class RESTAppFactoryImpl(app.IRESTAppFactory):
         return RESTAppImpl(
             connector=self._connector,
             debug=self._debug,
+            executor=self._executor,
             http_settings=self._http_settings,
             global_ratelimit=self._global_ratelimit,
             proxy_settings=self._proxy_settings,
