@@ -313,7 +313,20 @@ class TextChannel(PartialChannel, abc.ABC):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class DMChannel(TextChannel):
+class PrivateChannel(PartialChannel):
+    """The base for anything that is a private (non-guild bound) channel."""
+
+    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    """The ID of the last message sent in this channel.
+
+    !!! warning
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.
+    """
+
+
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class DMChannel(PrivateChannel, TextChannel):
     """Represents a DM channel."""
 
     last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
@@ -332,15 +345,13 @@ class DMChannel(TextChannel):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class GroupDMChannel(TextChannel):
-    """Represents a DM group channel."""
+class GroupDMChannel(PrivateChannel):
+    """Represents a DM group channel.
 
-    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
-    """The ID of the last message sent in this channel.
-
-    !!! warning
-        This might point to an invalid or deleted message. Do not assume that
-        this will always be valid.
+    !!! note
+        This doesn't have the methods found on `TextChannel` as bots cannot
+        interact with a group DM that they own by sending or seeing messages in
+        it.
     """
 
     owner_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
