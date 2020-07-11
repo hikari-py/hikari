@@ -756,8 +756,8 @@ class Embed:
             non-whitespace character to be valid.
         inline : bool
             If `builtins.True`, the embed field may be shown "inline" on some
-            Discord clients with other fields. If `False`, it is always placed
-            on a separate line. This will default to `False`.
+            Discord clients with other fields. If `builtins.False`, it is always placed
+            on a separate line. This will default to `builtins.False`.
 
         Returns
         -------

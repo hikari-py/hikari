@@ -25,6 +25,7 @@ import asyncio
 import contextlib
 import datetime
 import logging
+import math
 import os
 import reprlib
 import signal
@@ -34,6 +35,7 @@ import typing
 
 from hikari import config
 from hikari.api import bot
+from hikari.api.gateway import shard as gateway_shard
 from hikari.events import other as other_events
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
@@ -42,6 +44,7 @@ from hikari.impl.cache import stateless as stateless_cache_impl
 from hikari.impl.gateway import manager
 from hikari.impl.gateway import shard as gateway_shard_impl
 from hikari.impl.rest import client as rest_client_impl
+from hikari.impl.voice import voice_component
 from hikari.models import presences
 from hikari.utilities import constants
 from hikari.utilities import date
@@ -51,11 +54,7 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
 
     from hikari.api import cache as cache_
-    from hikari.api import entity_factory as entity_factory_
-    from hikari.api.gateway import consumer as event_consumer_
     from hikari.api.gateway import dispatcher as event_dispatcher_
-    from hikari.api.gateway import shard as gateway_shard
-    from hikari.api.rest import client
     from hikari.events import base as base_events
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
@@ -202,6 +201,7 @@ class BotAppImpl(bot.IBotApp):
         self._event_manager = manager.EventManagerImpl(app=self, intents_=intents)
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
         self._global_ratelimit = rate_limits.ManualRateLimiter()
+        self._voice = voice_component.VoiceComponentImpl(self, self._event_manager)
 
         self._started_at_monotonic: typing.Optional[float] = None
         self._started_at_timestamp: typing.Optional[datetime.datetime] = None
@@ -249,24 +249,39 @@ class BotAppImpl(bot.IBotApp):
         )
 
     @property
-    def event_dispatcher(self) -> event_dispatcher_.IEventDispatcherComponent:
-        return self._event_manager
-
-    @property
     def cache(self) -> cache_.ICacheComponent:
         return self._cache
 
     @property
-    def entity_factory(self) -> entity_factory_.IEntityFactoryComponent:
+    def entity_factory(self) -> entity_factory_impl.EntityFactoryComponentImpl:
         return self._entity_factory
 
     @property
-    def event_consumer(self) -> event_consumer_.IEventConsumerComponent:
+    def event_consumer(self) -> manager.EventManagerImpl:
+        return self._event_manager
+
+    @property
+    def event_dispatcher(self) -> manager.EventManagerImpl:
         return self._event_manager
 
     @property
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
         return self._executor
+
+    @property
+    def heartbeat_latencies(self) -> typing.Mapping[int, typing.Optional[float]]:
+        return {
+            shard_id: None if math.isnan(shard.heartbeat_latency) else shard.heartbeat_latency
+            for shard_id, shard in self._shards.items()
+        }
+
+    @property
+    def heartbeat_latency(self) -> typing.Optional[float]:
+        started_shards = [shard for shard in self._shards.values() if not math.isnan(shard.heartbeat_latency)]
+        if not started_shards:
+            return None
+
+        return sum(shard.heartbeat_latency for shard in started_shards) / len(started_shards)
 
     @property
     def http_settings(self) -> config.HTTPSettings:
@@ -277,7 +292,7 @@ class BotAppImpl(bot.IBotApp):
         return self._proxy_settings
 
     @property
-    def rest(self) -> client.IRESTClient:
+    def rest(self) -> rest_client_impl.RESTClientImpl:
         return self._rest
 
     @property
@@ -287,6 +302,9 @@ class BotAppImpl(bot.IBotApp):
     @property
     def shard_count(self) -> int:
         return self._shard_count
+
+    def voice(self) -> voice_component.VoiceComponentImpl:
+        return self._voice
 
     @property
     def started_at(self) -> typing.Optional[datetime.datetime]:
@@ -375,41 +393,50 @@ class BotAppImpl(bot.IBotApp):
 
     def listen(
         self,
-        event_type: typing.Union[undefined.UndefinedType, typing.Type[event_dispatcher_.EventT]] = undefined.UNDEFINED,
-    ) -> typing.Callable[[event_dispatcher_.CallbackT], event_dispatcher_.CallbackT]:
+        event_type: typing.Union[
+            undefined.UndefinedType, typing.Type[event_dispatcher_.EventT_co]
+        ] = undefined.UNDEFINED,
+    ) -> typing.Callable[
+        [event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co]],
+        event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co],
+    ]:
         return self.event_dispatcher.listen(event_type)
 
     def get_listeners(
-        self, event_type: typing.Type[event_dispatcher_.EventT], *, polymorphic: bool = True,
-    ) -> typing.Collection[event_dispatcher_.AsyncCallbackT]:
+        self, event_type: typing.Type[event_dispatcher_.EventT_co], *, polymorphic: bool = True,
+    ) -> typing.Collection[event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co]]:
         return self.event_dispatcher.get_listeners(event_type, polymorphic=polymorphic)
 
     def has_listener(
         self,
-        event_type: typing.Type[event_dispatcher_.EventT],
-        callback: event_dispatcher_.AsyncCallbackT,
+        event_type: typing.Type[event_dispatcher_.EventT_co],
+        callback: event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co],
         *,
         polymorphic: bool = True,
     ) -> bool:
         return self.event_dispatcher.has_listener(event_type, callback, polymorphic=polymorphic)
 
     def subscribe(
-        self, event_type: typing.Type[event_dispatcher_.EventT], callback: event_dispatcher_.CallbackT,
-    ) -> event_dispatcher_.CallbackT:
+        self,
+        event_type: typing.Type[event_dispatcher_.EventT_co],
+        callback: event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co],
+    ) -> event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co]:
         return self.event_dispatcher.subscribe(event_type, callback)
 
     def unsubscribe(
-        self, event_type: typing.Type[event_dispatcher_.EventT], callback: event_dispatcher_.AsyncCallbackT,
+        self,
+        event_type: typing.Type[event_dispatcher_.EventT_co],
+        callback: event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co],
     ) -> None:
         return self.event_dispatcher.unsubscribe(event_type, callback)
 
     async def wait_for(
         self,
-        event_type: typing.Type[event_dispatcher_.EventT],
+        event_type: typing.Type[event_dispatcher_.EventT_co],
         /,
         timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[event_dispatcher_.PredicateT] = None,
-    ) -> event_dispatcher_.EventT:
+        predicate: typing.Optional[event_dispatcher_.PredicateT[event_dispatcher_.EventT_co]] = None,
+    ) -> event_dispatcher_.EventT_co:
         return await self.event_dispatcher.wait_for(event_type, predicate=predicate, timeout=timeout)
 
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:

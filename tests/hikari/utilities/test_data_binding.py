@@ -242,3 +242,13 @@ class TestCastJSONArray:
         arr = ["foo", "bar", "baz"]
 
         assert data_binding.cast_json_array(arr, cast) == [r1, r2, r3]
+
+    def test_passes_kwargs_for_every_cast(self):
+        cast = mock.MagicMock()
+        arr = ["foo", "bar", "baz"]
+
+        data_binding.cast_json_array(arr, cast, foo=42, bar="OK")
+
+        assert cast.call_args_list[0] == mock.call("foo", foo=42, bar="OK")
+        assert cast.call_args_list[1] == mock.call("bar", foo=42, bar="OK")
+        assert cast.call_args_list[2] == mock.call("baz", foo=42, bar="OK")

@@ -24,20 +24,24 @@ __all__: typing.Final[typing.List[str]] = ["IBotApp"]
 import abc
 import typing
 
+from hikari.api import voice
 from hikari.api.gateway import consumer
 from hikari.api.gateway import dispatcher
+from hikari.api.gateway import shard
 
 if typing.TYPE_CHECKING:
     import datetime
 
 
-class IBotApp(consumer.IEventConsumerApp, dispatcher.IEventDispatcherApp, abc.ABC):
+class IBotApp(consumer.IEventConsumerApp, dispatcher.IEventDispatcherApp, voice.IVoiceApp, abc.ABC):
     """Base for bot applications.
 
     Bots are components that have access to a HTTP API, an event dispatcher,
     and an event consumer.
 
-    Additionally, bots will contain a collection of Gateway client objects.
+    Additionally, bots may contain a collection of Gateway client objects. This
+    is not mandatory though, as the bot may consume its events from another managed
+    component that manages gateway zookeeping instead.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -69,4 +73,69 @@ class IBotApp(consumer.IEventConsumerApp, dispatcher.IEventDispatcherApp, abc.AB
         datetime.datetime or builtins.None
             The date/time that the application started at, or `builtins.None` if
             not yet running.
+        """
+
+    @property
+    @abc.abstractmethod
+    def shards(self) -> typing.Mapping[int, shard.IGatewayShard]:
+        """Return a mapping of the shards managed by this process.
+
+        This mapping will map each shard ID to the shard instance.
+
+        If the application has not started, it is acceptable to assume that
+        this will be empty.
+
+        Returns
+        -------
+        typing.Mapping[builtins.int, hikari.api.gateway.shard.IGatewayShard]
+            The mapping of shard ID to shard instance.
+        """
+
+    @property
+    @abc.abstractmethod
+    def shard_count(self) -> int:
+        """Return the number of shards in the application in total.
+
+        This does not count the active shards, but produces the total shard
+        count sent when you connected. If you distribute your shards between
+        multiple processes or hosts, this will represent the combined total
+        shard count (minus any duplicates).
+
+        For the instance specific shard count, return the `builtins.len` of
+        `IBotApp.shards`.
+
+        If you are using auto-sharding (i.e. not providing explicit sharding
+        preferences on startup), then this will be `0` until the application
+        has been started properly.
+
+        Returns
+        -------
+        builtins.int
+            The number of shards in the entire application.
+        """
+
+    @property
+    @abc.abstractmethod
+    def heartbeat_latencies(self) -> typing.Mapping[int, typing.Optional[float]]:
+        """Return a mapping of shard ID to heartbeat latency.
+
+        Any shards that are not yet started will be `builtins.None`.
+
+        Returns
+        -------
+        typing.Mapping[builtins.int, builtins.float]
+            Each shard ID mapped to the corresponding heartbeat latency.
+        """
+
+    @property
+    @abc.abstractmethod
+    def heartbeat_latency(self) -> typing.Optional[float]:
+        """Return the average heartbeat latency of all started shards.
+
+        If no shards are started, this will return `None`.
+
+        Returns
+        -------
+        builtins.float or builtins.None
+            The average heartbeat latency of all started shards, or `builtins.None`.
         """

@@ -38,8 +38,8 @@ class VoiceState:
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
-    """The ID of the guild this voice state is in, if applicable."""
+    guild_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    """The ID of the guild this voice state is in."""
 
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the channel this user is connected to.
@@ -50,8 +50,8 @@ class VoiceState:
     user_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the user this voice state is for."""
 
-    member: typing.Optional[guilds.Member] = attr.ib(eq=False, hash=False, repr=False)
-    """The guild member this voice state is for if the voice state is in a guild."""
+    member: guilds.Member = attr.ib(eq=False, hash=False, repr=False)
+    """The guild member this voice state is for."""
 
     session_id: str = attr.ib(eq=True, hash=True, repr=True)
     """The string ID of this voice state's session."""
