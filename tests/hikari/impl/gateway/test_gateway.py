@@ -469,15 +469,7 @@ class TestRunOnce:
         )
         client = hikari_test_helpers.mock_methods_on(
             client,
-            except_=(
-                "_run_once",
-                "_InvalidSession",
-                "_Reconnect",
-                "_SocketClosed",
-                "_now",
-                "_CloseCode",
-                "_Opcode",
-            ),
+            except_=("_run_once", "_InvalidSession", "_Reconnect", "_SocketClosed", "_now", "_CloseCode", "_Opcode",),
             also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger",],
         )
         # Disable backoff checking by making the condition a negative tautology.
@@ -716,14 +708,7 @@ class TestUpdatePresence:
         )
         return hikari_test_helpers.mock_methods_on(
             client,
-            except_=(
-                "update_presence",
-                "_InvalidSession",
-                "_Reconnect",
-                "_SocketClosed",
-                "_CloseCode",
-                "_Opcode",
-            ),
+            except_=("update_presence", "_InvalidSession", "_Reconnect", "_SocketClosed", "_CloseCode", "_Opcode",),
         )
 
     async def test_update_presence_transforms_all_params(self, client):
@@ -744,9 +729,7 @@ class TestUpdatePresence:
             idle_since=idle_since, afk=afk, activity=activity, status=status,
         )
 
-        client._send_json.assert_awaited_once_with(
-            {"op": shard.GatewayShardImpl._Opcode.PRESENCE_UPDATE, "d": result}
-        )
+        client._send_json.assert_awaited_once_with({"op": shard.GatewayShardImpl._Opcode.PRESENCE_UPDATE, "d": result})
 
     @pytest.mark.parametrize("idle_since", [undefined.UNDEFINED, datetime.datetime.now()])
     @pytest.mark.parametrize("afk", [undefined.UNDEFINED, True, False])
@@ -823,14 +806,7 @@ class TestUpdateVoiceState:
         )
         return hikari_test_helpers.mock_methods_on(
             client,
-            except_=(
-                "update_voice_state",
-                "_InvalidSession",
-                "_Reconnect",
-                "_SocketClosed",
-                "_CloseCode",
-                "_Opcode",
-            ),
+            except_=("update_voice_state", "_InvalidSession", "_Reconnect", "_SocketClosed", "_CloseCode", "_Opcode",),
         )
 
     @pytest.mark.parametrize("channel", ["12345", None])
