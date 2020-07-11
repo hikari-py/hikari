@@ -204,7 +204,7 @@ class TestClose:
 
         await client.close()
 
-        client._close_ws.assert_awaited_once_with(client._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "client shut down")
+        client._close_ws.assert_awaited_once_with(client._CloseCode.RFC_6455_NORMAL_CLOSURE, "client shut down")
 
     @pytest.mark.parametrize("is_alive", [True, False])
     async def test_websocket_not_closed_if_None(self, client, is_alive):
@@ -279,8 +279,8 @@ class TestRunOnceShielded:
                 "_SocketClosed",
                 "_dispatch",
                 "_now",
-                "_GatewayCloseCode",
-                "_GatewayOpcode",
+                "_CloseCode",
+                "_Opcode",
             ),
             also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger",],
         )
@@ -360,7 +360,7 @@ class TestRunOnceShielded:
         client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession(True))
         await client._run_once_shielded(client_session)
         client._close_ws.assert_awaited_once_with(
-            shard.GatewayShardImpl._GatewayCloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)"
+            shard.GatewayShardImpl._CloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)"
         )
 
     @hikari_test_helpers.timeout()
@@ -368,7 +368,7 @@ class TestRunOnceShielded:
         client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession(False))
         await client._run_once_shielded(client_session)
         client._close_ws.assert_awaited_once_with(
-            shard.GatewayShardImpl._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)"
+            shard.GatewayShardImpl._CloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)"
         )
 
     @hikari_test_helpers.timeout()
@@ -398,7 +398,7 @@ class TestRunOnceShielded:
         client._run_once = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, True))
         assert await client._run_once_shielded(client_session) is True
         client._close_ws.assert_awaited_once_with(
-            shard.GatewayShardImpl._GatewayCloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me"
+            shard.GatewayShardImpl._CloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me"
         )
 
     @hikari_test_helpers.timeout()
@@ -418,7 +418,7 @@ class TestRunOnceShielded:
         with pytest.raises(errors.GatewayServerClosedConnectionError):
             await client._run_once_shielded(client_session)
         client._close_ws.assert_awaited_once_with(
-            shard.GatewayShardImpl._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection"
+            shard.GatewayShardImpl._CloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection"
         )
 
     @pytest.mark.parametrize(
@@ -450,7 +450,7 @@ class TestRunOnceShielded:
             await client._run_once_shielded(client_session)
 
         client._close_ws.assert_awaited_once_with(
-            shard.GatewayShardImpl._GatewayCloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred"
+            shard.GatewayShardImpl._CloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred"
         )
 
 
@@ -475,8 +475,8 @@ class TestRunOnce:
                 "_Reconnect",
                 "_SocketClosed",
                 "_now",
-                "_GatewayCloseCode",
-                "_GatewayOpcode",
+                "_CloseCode",
+                "_Opcode",
             ),
             also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger",],
         )
@@ -721,8 +721,8 @@ class TestUpdatePresence:
                 "_InvalidSession",
                 "_Reconnect",
                 "_SocketClosed",
-                "_GatewayCloseCode",
-                "_GatewayOpcode",
+                "_CloseCode",
+                "_Opcode",
             ),
         )
 
@@ -745,7 +745,7 @@ class TestUpdatePresence:
         )
 
         client._send_json.assert_awaited_once_with(
-            {"op": shard.GatewayShardImpl._GatewayOpcode.PRESENCE_UPDATE, "d": result}
+            {"op": shard.GatewayShardImpl._Opcode.PRESENCE_UPDATE, "d": result}
         )
 
     @pytest.mark.parametrize("idle_since", [undefined.UNDEFINED, datetime.datetime.now()])
@@ -828,8 +828,8 @@ class TestUpdateVoiceState:
                 "_InvalidSession",
                 "_Reconnect",
                 "_SocketClosed",
-                "_GatewayCloseCode",
-                "_GatewayOpcode",
+                "_CloseCode",
+                "_Opcode",
             ),
         )
 
@@ -847,7 +847,7 @@ class TestUpdateVoiceState:
         await client.update_voice_state("6969420", "12345")
 
         client._send_json.assert_awaited_once_with(
-            {"op": shard.GatewayShardImpl._GatewayOpcode.VOICE_STATE_UPDATE, "d": payload}
+            {"op": shard.GatewayShardImpl._Opcode.VOICE_STATE_UPDATE, "d": payload}
         )
 
 
