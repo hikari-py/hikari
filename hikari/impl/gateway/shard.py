@@ -353,7 +353,7 @@ class GatewayShardImpl(shard.IGatewayShard):
                 self._backoff.reset()
 
             if not self._request_close_event.is_set():
-                self._logger.warning("unexpected socket closure, will attempt to reconnect")
+                self._logger.warning("unexpected socket closure, will attempt to resume")
 
             return not self._request_close_event.is_set()
 
@@ -373,6 +373,8 @@ class GatewayShardImpl(shard.IGatewayShard):
 
         except Exception as ex:
             self._logger.error("unexpected exception occurred, shard will now die", exc_info=ex)
+            self._seq = None
+            self.session_id = None
             await self._close_ws(self._CloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
             raise
 
