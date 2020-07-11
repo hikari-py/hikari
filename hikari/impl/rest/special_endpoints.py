@@ -403,7 +403,7 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
 class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
     """Implementation of an iterator for retrieving members in a guild."""
 
-    __slots__: typing.Sequence[str] = ("_app", "_request_call", "_route", "_first_id")
+    __slots__: typing.Sequence[str] = ("_app", "_guild_id", "_request_call", "_route", "_first_id")
 
     def __init__(
         self,
@@ -414,6 +414,7 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         guild_id: str,
     ) -> None:
         super().__init__()
+        self._guild_id = snowflake.Snowflake(guild_id)
         self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild_id)
         self._request_call = request_call
         self._app = app
@@ -435,7 +436,7 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         # noinspection PyTypeChecker
         self._first_id = chunk[-1]["user"]["id"]
 
-        return (self._app.entity_factory.deserialize_member(m) for m in chunk)
+        return (self._app.entity_factory.deserialize_member(m, guild_id=self._guild_id) for m in chunk)
 
 
 # We use an explicit forward reference for this, since this breaks potential
