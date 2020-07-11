@@ -88,9 +88,6 @@ class IRESTClient(component.IComponent, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    if typing.TYPE_CHECKING:
-        _GuildChannelT = typing.TypeVar("_GuildChannelT", bound=channels.GuildChannel, contravariant=True)
-
     @abc.abstractmethod
     async def edit_channel(
         self,
@@ -603,11 +600,13 @@ class IRESTClient(component.IComponent, abc.ABC):
         ] = undefined.UNDEFINED,
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        mentions_everyone: bool = True,
+        mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool
-        ] = True,
-        role_mentions: typing.Union[typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]], bool] = True,
+            typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]], bool, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Create a message in the given channel.
 
@@ -630,13 +629,13 @@ class IRESTClient(component.IComponent, abc.ABC):
             If specified, whether the message will be TTS (Text To Speech).
         nonce : hikari.utilities.undefined.UndefinedType or builtins.str
             If specified, a nonce that can be used for optimistic message sending.
-        mentions_everyone : builtins.bool
+        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
             If specified, whether the message should parse @everyone/@here mentions.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
             If specified, and a `builtins.bool`, whether to parse user mentions.
             If specified and a `builtins.list`, the users to parse the mention
             for. This may be a user object, or the ID of an existing user.
-        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
             If specified and `builtins.bool`, whether to parse role mentions. If specified and
             `builtins.list`, the roles to parse the mention for. This may be a role object, or
             the ID of an existing role.
@@ -955,11 +954,13 @@ class IRESTClient(component.IComponent, abc.ABC):
             undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
         ] = undefined.UNDEFINED,
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        mentions_everyone: bool = True,
+        mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool
-        ] = True,
-        role_mentions: typing.Union[typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool] = True,
+            typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool, undefined.UndefinedType,
+        ] = undefined.UNDEFINED,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool, undefined.UndefinedType,
+        ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         ...
 
