@@ -270,18 +270,18 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
             self[key] = [str(int(value)) for value in values]
 
 
-def cast_json_array(array: JSONArray, cast: typing.Callable[[typing.Any], T]) -> typing.List[T]:
+def cast_json_array(array: JSONArray, /, cast: typing.Callable[..., T], **kwargs: typing.Any) -> typing.List[T]:
     """Cast a JSON array to a given generic collection type.
 
     This will perform casts on each internal item individually.
 
     Note that
 
-        >>> cast_json_array(raw_list, foo, bar)
+        >>> cast_json_array(raw_list, foo, bar="OK")
 
     ...is equivalent to doing....
 
-        >>> bar(foo(item) for item in raw_list)
+        >>> [foo(item, bar="OK") for item in raw_list]
 
     Parameters
     ----------
@@ -291,6 +291,8 @@ def cast_json_array(array: JSONArray, cast: typing.Callable[[typing.Any], T]) ->
         The cast to apply to each item in the array. This should
         consume any valid JSON-decoded type and return the type
         corresponding to the generic type of the provided collection.
+    **kwargs : typing.Any
+        Extra keyword arguments to be passed during every call to cast.
 
     Returns
     -------
@@ -305,4 +307,4 @@ def cast_json_array(array: JSONArray, cast: typing.Callable[[typing.Any], T]) ->
     ["123", "456", "789", "123"]
     ```
     """
-    return [cast(item) for item in array]
+    return [cast(item, **kwargs) for item in array]
