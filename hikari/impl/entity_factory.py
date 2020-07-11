@@ -154,9 +154,13 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         own_connection.name = payload["name"]
         own_connection.type = payload["type"]
         own_connection.is_revoked = payload["revoked"]
-        own_connection.integrations = [
-            self.deserialize_partial_integration(integration) for integration in payload.get("integrations", ())
-        ]
+
+        if (integration_payloads := payload.get("integrations")) is not None:
+            integrations = [self.deserialize_partial_integration(integration) for integration in integration_payloads]
+        else:
+            integrations = []
+        own_connection.integrations = integrations
+
         own_connection.is_verified = payload["verified"]
         own_connection.is_friend_sync_enabled = payload["friend_sync"]
         own_connection.is_activity_visible = payload["show_activity"]
@@ -321,24 +325,25 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             entry.target_id = target_id
 
             changes = []
-            for change_payload in entry_payload.get("changes", ()):
-                change = audit_log_models.AuditLogChange()
+            if (change_payloads := entry_payload.get("changes")) is not None:
+                for change_payload in change_payloads:
+                    change = audit_log_models.AuditLogChange()
 
-                try:
-                    # noinspection PyArgumentList
-                    change.key = audit_log_models.AuditLogChangeKey(change_payload["key"])
-                except ValueError:
-                    change.key = change_payload["key"]
+                    try:
+                        # noinspection PyArgumentList
+                        change.key = audit_log_models.AuditLogChangeKey(change_payload["key"])
+                    except ValueError:
+                        change.key = change_payload["key"]
 
-                new_value = change_payload.get("new_value")
-                old_value = change_payload.get("old_value")
-                if value_converter := self._audit_log_entry_converters.get(change.key):
-                    new_value = value_converter(new_value) if new_value is not None else None
-                    old_value = value_converter(old_value) if old_value is not None else None
-                change.new_value = new_value
-                change.old_value = old_value
+                    new_value = change_payload.get("new_value")
+                    old_value = change_payload.get("old_value")
+                    if value_converter := self._audit_log_entry_converters.get(change.key):
+                        new_value = value_converter(new_value) if new_value is not None else None
+                        old_value = value_converter(old_value) if old_value is not None else None
+                    change.new_value = new_value
+                    change.old_value = old_value
 
-                changes.append(change)
+                    changes.append(change)
             entry.changes = changes
 
             if (user_id := entry_payload["user_id"]) is not None:
@@ -431,9 +436,13 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         self._set_dm_channel_attributes(payload, group_dm_channel)
         group_dm_channel.owner_id = snowflake.Snowflake(payload["owner_id"])
         group_dm_channel.icon_hash = payload["icon"]
-        group_dm_channel.nicknames = {
-            snowflake.Snowflake(entry["id"]): entry["nick"] for entry in payload.get("nicks", ())
-        }
+
+        if (nicks := payload.get("nicks")) is not None:
+            nicknames = {snowflake.Snowflake(entry["id"]): entry["nick"] for entry in nicks}
+        else:
+            nicknames = {}
+        group_dm_channel.nicknames = nicknames
+
         group_dm_channel.application_id = (
             snowflake.Snowflake(payload["application_id"]) if "application_id" in payload else None
         )
@@ -792,7 +801,9 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         known_custom_emoji.name = payload["name"]
         known_custom_emoji.is_animated = payload.get("animated", False)
         known_custom_emoji.guild_id = guild_id
-        known_custom_emoji.role_ids = {snowflake.Snowflake(role_id) for role_id in payload.get("roles", ())}
+        known_custom_emoji.role_ids = (
+            {snowflake.Snowflake(role_id) for role_id in payload["roles"]} if "roles" in payload else set()
+        )
 
         if (user := payload.get("user")) is not None:
             user = self.deserialize_user(user)
@@ -1192,9 +1203,12 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         message.is_mentioning_everyone = payload["mention_everyone"]
         message.user_mentions = {snowflake.Snowflake(mention["id"]) for mention in payload["mentions"]}
         message.role_mentions = {snowflake.Snowflake(mention) for mention in payload["mention_roles"]}
-        message.channel_mentions = {
-            snowflake.Snowflake(mention["id"]) for mention in payload.get("mention_channels", ())
-        }
+
+        if (mention_payloads := payload.get("mention_channels")) is not None:
+            channel_mentions = {snowflake.Snowflake(mention["id"]) for mention in mention_payloads}
+        else:
+            channel_mentions = set()
+        message.channel_mentions = channel_mentions
 
         attachments = []
         for attachment_payload in payload["attachments"]:
@@ -1212,12 +1226,13 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         message.embeds = [self.deserialize_embed(embed) for embed in payload["embeds"]]
 
         reactions = []
-        for reaction_payload in payload.get("reactions", ()):
-            reaction = message_models.Reaction()
-            reaction.count = int(reaction_payload["count"])
-            reaction.emoji = self.deserialize_emoji(reaction_payload["emoji"])
-            reaction.is_reacted_by_me = reaction_payload["me"]
-            reactions.append(reaction)
+        if "reactions" in payload:
+            for reaction_payload in payload["reactions"]:
+                reaction = message_models.Reaction()
+                reaction.count = int(reaction_payload["count"])
+                reaction.emoji = self.deserialize_emoji(reaction_payload["emoji"])
+                reaction.is_reacted_by_me = reaction_payload["me"]
+                reactions.append(reaction)
         message.reactions = reactions
 
         message.is_pinned = payload["pinned"]
@@ -1670,6 +1685,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         user_payload = payload["user"]
         user: typing.Optional[user_models.PartialUser]
+        # Here we're told that the only guaranteed field is "id", so if we only get 1 field in the user payload then
+        # then we've only got an ID and there's no reason to form a user object.
         if len(user_payload) > 1:
             # PartialUser
             user = user_models.PartialUser()
@@ -1678,10 +1695,10 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             user.discriminator = (
                 user_payload["discriminator"] if "discriminator" in user_payload else undefined.UNDEFINED
             )
-            user.username = user_payload["username"] if "username" in user_payload else undefined.UNDEFINED
-            user.avatar_hash = user_payload["avatar"] if "avatar" in user_payload else undefined.UNDEFINED
-            user.is_bot = user_payload["bot"] if "bot" in user_payload else undefined.UNDEFINED
-            user.is_system = user_payload["system"] if "system" in user_payload else undefined.UNDEFINED
+            user.username = user_payload.get("username", undefined.UNDEFINED)
+            user.avatar_hash = user_payload.get("avatar", undefined.UNDEFINED)
+            user.is_bot = user_payload.get("bot", undefined.UNDEFINED)
+            user.is_system = user_payload.get("system", undefined.UNDEFINED)
             # noinspection PyArgumentList
             user.flags = (
                 user_models.UserFlag(user_payload["public_flags"])
@@ -1949,11 +1966,18 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         }
         chunk.index = int(payload["chunk_index"])
         chunk.count = int(payload["chunk_count"])
-        chunk.not_found = [snowflake.Snowflake(sn) for sn in payload.get("not_found", ())]
-        chunk.presences = {
-            snowflake.Snowflake(presence["user"]["id"]): self.deserialize_member_presence(presence)
-            for presence in payload.get("presences", ())
-        }
+        # Note, these IDs may be returned as ints or strings based on whether they're over the max safe js number size.
+        chunk.not_found = [snowflake.Snowflake(sn) for sn in payload["not_found"]] if "not_found" in payload else []
+
+        if (presence_payloads := payload.get("presences")) is not None:
+            presences = {
+                snowflake.Snowflake(presence["user"]["id"]): self.deserialize_member_presence(presence)
+                for presence in presence_payloads
+            }
+        else:
+            presences = {}
+        chunk.presences = presences
+
         chunk.nonce = payload.get("nonce")
         return chunk
 

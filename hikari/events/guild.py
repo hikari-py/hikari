@@ -248,7 +248,6 @@ class GuildRoleDeleteEvent(GuildRoleEvent):
     """The client application that models may use for procedures."""
 
     # TODO: make any event with a guild ID into a custom base event.
-    # https://pypi.org/project/stupid/ could this work around the multiple inheritance problem?
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the guild where this role is being deleted."""
 
