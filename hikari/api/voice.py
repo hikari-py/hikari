@@ -124,13 +124,39 @@ class IVoiceConnection(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    async def initialize(cls: typing.Type[_T], owner: IVoiceComponent, **kwargs: typing.Any) -> _T:
+    async def initialize(
+        cls: typing.Type[_T],
+        debug: bool,
+        endpoint: str,
+        guild_id: snowflake.Snowflake,
+        owner: IVoiceComponent,
+        session_id: str,
+        token: str,
+        user_id: snowflake.Snowflake,
+        **kwargs: typing.Any,
+    ) -> _T:
         """Initialize and connect the voice connection.
 
         Parameters
         ----------
+        debug : builtins.bool
+            `builtins.True` if debugging mode should be enabled. This is up to
+            each implementation to decide how to provide this, if at all.
+        endpoint : str
+            The voice websocket endpoint to connect to. Will contain the
+            protocol at the start (i.e. `wss://`), and end with the **correct**
+            port (the port and protocol are sanitized since Discord still
+            provide the wrong information four years later).
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The guild ID that the websocket should connect to.
         owner : IVoiceComponent
             The component that made this connection object.
+        session_id : builtins.str
+            The voice session ID to use.
+        token : builtins.str
+            The voice token to use.
+        user_id : hikari.utilities.snowflake.Snowflake
+            The user ID of the account that just joined the voice channel.
         **kwargs : typing.Any
             Any implementation-specific arguments to provide to the
             voice connection that is being initialized.

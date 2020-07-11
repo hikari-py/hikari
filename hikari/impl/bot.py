@@ -192,31 +192,21 @@ class BotAppImpl(bot.IBotApp):
 
         self._dump_banner()
 
+        if undefined.count(shard_ids, shard_count) == 1:
+            raise TypeError("You must provide values for both shard_ids and shard_count, or neither.")
+
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl()
             _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
             self._cache = cache_impl.InMemoryCacheComponentImpl(app=self)
 
-        self._event_manager = manager.EventManagerImpl(app=self, intents_=intents)
-        self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
-        self._global_ratelimit = rate_limits.ManualRateLimiter()
-        self._voice = voice_component.VoiceComponentImpl(self, self._event_manager)
-
-        self._started_at_monotonic: typing.Optional[float] = None
-        self._started_at_timestamp: typing.Optional[datetime.datetime] = None
-
-        self._executor = executor
-
-        http_settings = config.HTTPSettings() if http_settings is None else http_settings
-        proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
-
-        if undefined.count(shard_ids, shard_count) == 1:
-            raise TypeError("You must provide values for both shard_ids and shard_count, or neither.")
-
         self._debug = debug
-        self._gather_task: typing.Optional[asyncio.Task[None]] = None
-        self._http_settings = http_settings
+        self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
+        self._event_manager = manager.EventManagerImpl(app=self, intents_=intents)
+        self._executor = executor
+        self._global_ratelimit = rate_limits.ManualRateLimiter()
+        self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
         self._initial_activity = initial_activity
         self._initial_idle_since = initial_idle_since
         self._initial_is_afk = initial_is_afk
@@ -224,16 +214,8 @@ class BotAppImpl(bot.IBotApp):
         self._intents = intents
         self._large_threshold = large_threshold
         self._max_concurrency = 1
-        self._proxy_settings = proxy_settings
+        self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
         self._request_close_event = asyncio.Event()
-        self._shard_count: int = shard_count if shard_count is not None else 0
-        self._shard_ids: typing.Set[int] = set() if shard_ids is None else shard_ids
-        self._shards: typing.Dict[int, gateway_shard.IGatewayShard] = {}
-        self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
-        self._token = token
-        self._use_compression = gateway_compression
-        self._version = gateway_version
-
         self._rest = rest_client_impl.RESTClientImpl(  # noqa: S106 - Possible hardcoded password
             app=self,
             connector=None,
@@ -247,10 +229,25 @@ class BotAppImpl(bot.IBotApp):
             rest_url=rest_url,
             version=rest_version,
         )
+        self._shard_count: int = shard_count if shard_count is not None else 0
+        self._shard_gather_task: typing.Optional[asyncio.Task[None]] = None
+        self._shard_ids: typing.Set[int] = set() if shard_ids is None else shard_ids
+        self._shards: typing.Dict[int, gateway_shard.IGatewayShard] = {}
+        self._started_at_monotonic: typing.Optional[float] = None
+        self._started_at_timestamp: typing.Optional[datetime.datetime] = None
+        self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
+        self._token = token
+        self._use_compression = gateway_compression
+        self._version = gateway_version
+        self._voice = voice_component.VoiceComponentImpl(self, self._event_manager)
 
     @property
     def cache(self) -> cache_.ICacheComponent:
         return self._cache
+
+    @property
+    def debug(self) -> bool:
+        return self._debug
 
     @property
     def entity_factory(self) -> entity_factory_impl.EntityFactoryComponentImpl:
@@ -333,7 +330,7 @@ class BotAppImpl(bot.IBotApp):
             asyncio.get_event_loop().set_debug(True)
 
         self._tasks.clear()
-        self._gather_task = None
+        self._shard_gather_task = None
 
         await self._init()
 
@@ -383,7 +380,9 @@ class BotAppImpl(bot.IBotApp):
                 raise
 
             finish_time = time.perf_counter()
-            self._gather_task = asyncio.create_task(self._gather(), name=f"zookeeper for {len(self._shards)} shard(s)")
+            self._shard_gather_task = asyncio.create_task(
+                self._gather(), name=f"zookeeper for {len(self._shards)} shard(s)"
+            )
 
             # Don't bother logging this if we are single sharded. It is useless information.
             if len(self._shard_ids) > 1:
@@ -484,8 +483,8 @@ class BotAppImpl(bot.IBotApp):
             _LOGGER.info("client has shut down")
 
     async def join(self) -> None:
-        if self._gather_task is not None:
-            await self._gather_task
+        if self._shard_gather_task is not None:
+            await self._shard_gather_task
 
     async def update_presence(
         self,
