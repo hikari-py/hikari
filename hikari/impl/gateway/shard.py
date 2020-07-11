@@ -542,10 +542,7 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     async def _resume(self) -> None:
         await self._send_json(
-            {
-                "op": self._Opcode.RESUME,
-                "d": {"token": self._token, "seq": self._seq, "session_id": self.session_id},
-            }
+            {"op": self._Opcode.RESUME, "d": {"token": self._token, "seq": self._seq, "session_id": self.session_id}}
         )
 
     async def _heartbeat_keepalive(self) -> None:
@@ -651,7 +648,7 @@ class GatewayShardImpl(shard.IGatewayShard):
             self._logger.debug("connection closed with code %s", close_code)
 
             if close_code in self._CloseCode.__members__.values():
-                reason = self._GatewayCloseCode(close_code).name  # type: ignore[arg-type]
+                reason = self._CloseCode(close_code).name  # type: ignore[arg-type]
             else:
                 reason = f"unknown close code {close_code}"
 
