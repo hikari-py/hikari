@@ -118,13 +118,13 @@ class PermissionOverwrite(snowflake.Unique):
     overwrite = PermissionOverwrite(
         type=PermissionOverwriteType.MEMBER,
         allow=(
-            Permissions.VIEW_CHANNEL
-            | Permissions.READ_MESSAGE_HISTORY
-            | Permissions.SEND_MESSAGES
+            Permission.VIEW_CHANNEL
+            | Permission.READ_MESSAGE_HISTORY
+            | Permission.SEND_MESSAGES
         ),
         deny=(
-            Permissions.MANAGE_MESSAGES
-            | Permissions.SPEAK
+            Permission.MANAGE_MESSAGES
+            | Permission.SPEAK
         ),
     )
     ```
@@ -196,28 +196,26 @@ class TextChannel(PartialChannel, abc.ABC):
         attachments: typing.Union[
             undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
         ] = undefined.UNDEFINED,
-        mentions_everyone: bool = False,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]], bool
-        ] = True,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
-        ] = True,
         nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        mentions_everyone: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]],
+            bool,
+            undefined.UndefinedType,
+        ] = undefined.UNDEFINED,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
     ) -> messages.Message:
-        """Create a message in this channel.
+        """Create a message in the channel this message belongs to.
 
         Parameters
         ----------
-        text : str or hikari.utilities.undefined.UndefinedType
+        text : builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, the message text to send with the message.
-        nonce : str or hikari.utilities.undefined.UndefinedType
-            If specified, an optional ID to send for opportunistic message
-            creation. This doesn't serve any real purpose for general use,
-            and can usually be ignored.
-        tts : bool or hikari.utilities.undefined.UndefinedType
-            If specified, whether the message will be sent as a TTS message.
+        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
+            If specified, the embed object to send with the message.
         attachment : hikari.utilities.files.Resource or builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, a attachment to upload, if desired. This can
             be a resource, or string of a path on your computer or a URL.
@@ -226,20 +224,26 @@ class TextChannel(PartialChannel, abc.ABC):
             Should be between 1 and 10 objects in size (inclusive), also
             including embed attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
-            If specified, the embed object to send with the message.
-        mentions_everyone : bool
+        nonce : builtins.str or hikari.utilities.undefined.UndefinedType
+            If specified, an optional ID to send for opportunistic message
+            creation. This doesn't serve any real purpose for general use,
+            and can usually be ignored.
+        tts : builtins.bool or hikari.utilities.undefined.UndefinedType
+            If specified, whether the message will be sent as a TTS message.
+        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
             Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to `builtins.False`.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+            discord and lead to actual pings, defaults to
+            `hikari.utilities.undefined.UNDEFINED`.
+        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
             Either an array of user objects/IDs to allow mentions for,
             `builtins.True` to allow all user mentions or `builtins.False`
             to block all user mentions from resolving, defaults to
-            `builtins.True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+            `hikari.utilities.undefined.UNDEFINED`.
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
             Either an array of guild role objects/IDs to allow mentions for,
             `builtins.True` to allow all role mentions or `builtins.False` to
-            block all role mentions from resolving, defaults to `builtins.True`.
+            block all role mentions from resolving, defaults to
+            `hikari.utilities.undefined.UNDEFINED`.
 
         Returns
         -------

@@ -144,13 +144,15 @@ class Webhook(snowflake.Unique):
             undefined.UndefinedType, typing.Sequence[typing.Union[str, files_.Resource]]
         ] = undefined.UNDEFINED,
         embeds: typing.Union[undefined.UndefinedType, typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        mentions_everyone: bool = True,
+        mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users_.UserImpl]], bool
-        ] = True,
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users_.UserImpl]],
+            bool,
+            undefined.UndefinedType,
+        ] = undefined.UNDEFINED,
         role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds_.Role]], bool
-        ] = True,
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds_.Role]], bool, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Execute the webhook to create a message.
 
@@ -175,17 +177,20 @@ class Webhook(snowflake.Unique):
         embeds : typing.Sequence[hikari.models.embeds.Embed] or hikari.utilities.undefined.UndefinedType
             If specified, a sequence of between `1` to `10` embed objects
             (inclusive) to send with the embed.
-        mentions_everyone : builtins.bool
+        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
             Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to `builtins.True`.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+            discord and lead to actual pings, defaults to
+            `hikari.utilities.undefined.UNDEFINED`.
+        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
             Either an array of user objects/IDs to allow mentions for,
             `builtins.True` to allow all user mentions or `builtins.False` to
-            block all user mentions from resolving, defaults to `builtins.True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+            block all user mentions from resolving, defaults to
+            `hikari.utilities.undefined.UNDEFINED`.
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
             Either an array of guild role objects/IDs to allow mentions for,
             `builtins.True` to allow all role mentions or `builtins.False` to
-            block all role mentions from resolving, defaults to `builtins.True`.
+            block all role mentions from resolving, defaults to
+            `hikari.utilities.undefined.UNDEFINED`.
 
         Returns
         -------

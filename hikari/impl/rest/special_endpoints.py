@@ -21,7 +21,7 @@ You should never need to make any of these objects manually.
 """
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["TypingIndicator", "GuildBuilder"]
+__all__: typing.Final[typing.List[str]] = []
 
 import asyncio
 import contextlib
@@ -31,6 +31,7 @@ import typing
 import attr
 
 from hikari.api.rest import special_endpoints
+from hikari.models import emojis
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import iterators
@@ -65,10 +66,10 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
     def __init__(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
     ) -> None:
         self._channel = channel
         self._request_call = request_call
@@ -291,7 +292,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
-        channel_id: str,
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         direction: str,
         first_id: typing.Union[str, undefined.UndefinedType],
     ) -> None:
@@ -300,7 +301,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
         self._request_call = request_call
         self._direction = direction
         self._first_id = first_id
-        self._route = routes.GET_CHANNEL_MESSAGES.compile(channel=channel_id)
+        self._route = routes.GET_CHANNEL_MESSAGES.compile(channel=channel)
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[messages.Message, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
@@ -333,15 +334,19 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.UserImpl"]):
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
-        channel_id: str,
-        message_id: str,
-        emoji: str,
+        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        message: typing.Union[messages.Message, snowflake.UniqueObject],
+        emoji: typing.Union[str, emojis.Emoji],
     ) -> None:
         super().__init__()
         self._app = app
         self._request_call = request_call
         self._first_id = undefined.UNDEFINED
-        self._route = routes.GET_REACTIONS.compile(channel=channel_id, message=message_id, emoji=emoji)
+        self._route = routes.GET_REACTIONS.compile(
+            channel=channel,
+            message=message,
+            emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
+        )
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[users.UserImpl, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
@@ -411,11 +416,11 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
-        guild_id: str,
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
     ) -> None:
         super().__init__()
-        self._guild_id = snowflake.Snowflake(guild_id)
-        self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild_id)
+        self._guild_id = snowflake.Snowflake(str(int(guild)))
+        self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild)
         self._request_call = request_call
         self._app = app
         # This starts at the default provided by discord instead of the max snowflake
@@ -451,22 +456,22 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
-        guild_id: str,
+        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
         before: typing.Union[str, undefined.UndefinedType],
-        user_id: typing.Union[str, undefined.UndefinedType],
+        user: typing.Union[users.User, snowflake.UniqueObject, undefined.UndefinedType],
         action_type: typing.Union[int, undefined.UndefinedType],
     ) -> None:
         self._action_type = action_type
         self._app = app
         self._first_id = before
         self._request_call = request_call
-        self._route = routes.GET_GUILD_AUDIT_LOGS.compile(guild=guild_id)
-        self._user_id = user_id
+        self._route = routes.GET_GUILD_AUDIT_LOGS.compile(guild=guild)
+        self._user = user
 
     async def __anext__(self) -> audit_logs.AuditLog:
         query = data_binding.StringMapBuilder()
         query.put("limit", 100)
-        query.put("user_id", self._user_id)
+        query.put("user_id", self._user)
         query.put("event_type", self._action_type)
         query.put("before", self._first_id)
 
