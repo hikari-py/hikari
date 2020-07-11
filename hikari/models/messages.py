@@ -379,18 +379,20 @@ class Message(snowflake.Unique):
         embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType or builtins.None
             If specified, the embed object to set on the message. If
             `builtins.None`, then the embed is removed if already present.
-        mentions_everyone : builtins.bool
+        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
             Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to `builtins.False`.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+            discord and lead to actual pings, defaults to
+            `hikari.utilities.undefined.UNDEFINED`.
+        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
             Either an array of user objects/IDs to allow mentions for,
             `builtins.True` to allow all user mentions or `builtins.False`
             to block all user mentions from resolving. Defaults to
-            `builtins.True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+            `hikari.utilities.undefined.UNDEFINED`.
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
             Either an array of guild role objects/IDs to allow mentions for,
             `builtins.True` to allow all role mentions or `builtins.False` to
-            block all role mentions from resolving. Defaults to `builtins.True`.
+            block all role mentions from resolving. Defaults to
+            `hikari.utilities.undefined.UNDEFINED`.
 
         Returns
         -------
@@ -436,15 +438,17 @@ class Message(snowflake.Unique):
         attachments: typing.Union[
             undefined.UndefinedType, typing.Sequence[typing.Union[str, files_.Resource]]
         ] = undefined.UNDEFINED,
-        mentions_everyone: bool = False,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]], bool
-        ] = True,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool
-        ] = True,
         nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        user_mentions: typing.Union[
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]],
+            bool,
+            undefined.UndefinedType,
+        ] = undefined.UNDEFINED,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
     ) -> Message:
         """Create a message in the channel this message belongs to.
 
@@ -452,12 +456,8 @@ class Message(snowflake.Unique):
         ----------
         text : builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, the message text to send with the message.
-        nonce : builtins.str or hikari.utilities.undefined.UndefinedType
-            If specified, an optional ID to send for opportunistic message
-            creation. This doesn't serve any real purpose for general use,
-            and can usually be ignored.
-        tts : builtins.bool or hikari.utilities.undefined.UndefinedType
-            If specified, whether the message will be sent as a TTS message.
+        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
+            If specified, the embed object to send with the message.
         attachment : hikari.utilities.files.Resource or builtins.str or hikari.utilities.undefined.UndefinedType
             If specified, a attachment to upload, if desired. This can
             be a resource, or string of a path on your computer or a URL.
@@ -466,19 +466,26 @@ class Message(snowflake.Unique):
             Should be between 1 and 10 objects in size (inclusive), also
             including embed attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
-            If specified, the embed object to send with the message.
-        mentions_everyone : builtins.bool
+        nonce : builtins.str or hikari.utilities.undefined.UndefinedType
+            If specified, an optional ID to send for opportunistic message
+            creation. This doesn't serve any real purpose for general use,
+            and can usually be ignored.
+        tts : builtins.bool or hikari.utilities.undefined.UndefinedType
+            If specified, whether the message will be sent as a TTS message.
+        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
             Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to `builtins.False`.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+            discord and lead to actual pings, defaults to
+            `hikari.utilities.undefined.UNDEFINED`.
+        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
             Either an array of user objects/IDs to allow mentions for,
             `builtins.True` to allow all user mentions or `builtins.False` to block all
-            user mentions from resolving, defaults to `builtins.True`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool
+            user mentions from resolving, defaults to
+            `hikari.utilities.undefined.UNDEFINED`.
+        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
             Either an array of guild role objects/IDs to allow mentions for,
             `builtins.True` to allow all role mentions or `builtins.False` to block all
-            role mentions from resolving, defaults to `builtins.True`.
+            role mentions from resolving, defaults to
+            `hikari.utilities.undefined.UNDEFINED`.
 
         Returns
         -------

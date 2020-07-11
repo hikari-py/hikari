@@ -79,7 +79,7 @@ class RESTClientImpl(client.IRESTClient):
 
     Parameters
     ----------
-    app : hikari.api.rest_app.IRESTApp
+    app : hikari.api.rest.app.IRESTApp
         The HTTP application containing all other application components
         that Hikari uses.
     debug : builtins.bool
@@ -303,10 +303,10 @@ class RESTClientImpl(client.IRESTClient):
                     real_url = str(response.real_url)
                     raise errors.HTTPError(real_url, f"Expected JSON response but received {response.content_type}")
 
-                return await self._handle_error_response(response)
+                await self._handle_error_response(response)
 
             except self._RetryRequest:
-                pass
+                continue
 
     @staticmethod
     @typing.final
@@ -408,7 +408,7 @@ class RESTClientImpl(client.IRESTClient):
         role_mentions: typing.Union[
             undefined.UndefinedType, typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool
         ],
-    ) -> typing.Union[undefined.UndefinedType, data_binding.JSONObject]:
+    ) -> data_binding.JSONObject:
         parsed_mentions: typing.List[str] = []
         allowed_mentions = {"parse": parsed_mentions}
 
@@ -418,18 +418,16 @@ class RESTClientImpl(client.IRESTClient):
         if user_mentions is True:
             parsed_mentions.append("users")
         elif isinstance(user_mentions, typing.Collection):
-            # Duplicates are an error.
+            # Duplicates will cause discord to error.
             snowflakes = {str(int(u)) for u in user_mentions}
             allowed_mentions["users"] = list(snowflakes)
 
         if role_mentions is True:
             parsed_mentions.append("roles")
         elif isinstance(role_mentions, typing.Collection):
+            # Duplicates will cause discord to error.
             snowflakes = {str(int(r)) for r in role_mentions}
             allowed_mentions["roles"] = list(snowflakes)
-
-        if not parsed_mentions and not allowed_mentions:
-            return undefined.UNDEFINED
 
         return allowed_mentions
 
@@ -447,9 +445,6 @@ class RESTClientImpl(client.IRESTClient):
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_channel(response)
-
-    if typing.TYPE_CHECKING:
-        _GuildChannelT = typing.TypeVar("_GuildChannelT", bound=channels.GuildChannel, contravariant=True)
 
     async def edit_channel(
         self,
@@ -570,7 +565,7 @@ class RESTClientImpl(client.IRESTClient):
     def trigger_typing(
         self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
     ) -> special_endpoints.TypingIndicator:
-        return special_endpoints.TypingIndicator(channel, self._request)
+        return special_endpoints.TypingIndicator(self._request, channel)
 
     async def fetch_pins(
         self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
@@ -622,7 +617,7 @@ class RESTClientImpl(client.IRESTClient):
         elif timestamp is not undefined.UNDEFINED:
             timestamp = str(timestamp)
 
-        return special_endpoints.MessageIterator(self._app, self._request, str(int(channel)), direction, timestamp)
+        return special_endpoints.MessageIterator(self._app, self._request, channel, direction, timestamp)
 
     async def fetch_message(
         self,
@@ -646,11 +641,13 @@ class RESTClientImpl(client.IRESTClient):
         ] = undefined.UNDEFINED,
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        mentions_everyone: bool = True,
+        mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool
-        ] = True,
-        role_mentions: typing.Union[typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]], bool] = True,
+            typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]], bool, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         if attachment is not undefined.UNDEFINED and attachments is not undefined.UNDEFINED:
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
@@ -715,7 +712,14 @@ class RESTClientImpl(client.IRESTClient):
         route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         body = data_binding.JSONObjectBuilder()
         body.put("flags", flags)
-        body.put("allowed_mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions))
+        if (
+            mentions_everyone is not undefined.UNDEFINED
+            or user_mentions is not undefined.UNDEFINED
+            or role_mentions is not undefined.UNDEFINED
+        ):
+            body.put(
+                "allowed_mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions)
+            )
 
         if text is not None:
             body.put("content", text, conversion=str)
@@ -822,13 +826,7 @@ class RESTClientImpl(client.IRESTClient):
         message: typing.Union[messages_.Message, snowflake.UniqueObject],
         emoji: typing.Union[str, emojis.Emoji],
     ) -> iterators.LazyIterator[users.UserImpl]:
-        return special_endpoints.ReactorIterator(
-            app=self._app,
-            request_call=self._request,
-            channel_id=str(int(channel)),
-            message_id=str(int(message)),
-            emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
-        )
+        return special_endpoints.ReactorIterator(self._app, self._request, channel, message, emoji)
 
     async def create_webhook(
         self,
@@ -946,11 +944,13 @@ class RESTClientImpl(client.IRESTClient):
             undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
         ] = undefined.UNDEFINED,
         tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        mentions_everyone: bool = True,
+        mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         user_mentions: typing.Union[
-            typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool
-        ] = True,
-        role_mentions: typing.Union[typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool] = True,
+            typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
+        role_mentions: typing.Union[
+            typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool, undefined.UndefinedType
+        ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         if attachment is not undefined.UNDEFINED and attachments is not undefined.UNDEFINED:
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
@@ -1144,15 +1144,10 @@ class RESTClientImpl(client.IRESTClient):
         user: typing.Union[undefined.UndefinedType, users.UserImpl, snowflake.UniqueObject] = undefined.UNDEFINED,
         event_type: typing.Union[undefined.UndefinedType, audit_logs.AuditLogEventType] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
-        guild = str(int(guild))
-
         if isinstance(before, datetime.datetime):
             before = str(snowflake.Snowflake.from_datetime(before))
         elif before is not undefined.UNDEFINED:
             before = str(before)
-
-        if user is not undefined.UNDEFINED:
-            user = str(int(user))
 
         return special_endpoints.AuditLogIterator(self._app, self._request, guild, before, user, event_type)
 
@@ -1521,7 +1516,7 @@ class RESTClientImpl(client.IRESTClient):
     def fetch_members(
         self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
     ) -> iterators.LazyIterator[guilds.Member]:
-        return special_endpoints.MemberIterator(self._app, self._request, str(int(guild)))
+        return special_endpoints.MemberIterator(self._app, self._request, guild)
 
     async def edit_member(
         self,

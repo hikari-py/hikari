@@ -187,7 +187,7 @@ class CDNRoute:
             raise ValueError(f"{self.path_template} must have at least one valid format set")
 
     sizable: bool = attr.ib(default=True, kw_only=True, repr=False, hash=False, eq=False)
-    """`True` if a `size` param can be specified, or `False` otherwise."""
+    """`builtins.True` if a `size` param can be specified, or `builtins.False` otherwise."""
 
     def compile(
         self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any,
