@@ -457,7 +457,7 @@ class TestEntityFactoryImpl:
         assert dm_channel.name is None
         assert dm_channel.last_message_id == 456
         assert dm_channel.type is channel_models.ChannelType.DM
-        assert dm_channel.recipients == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
+        assert dm_channel.recipient == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(dm_channel, channel_models.DMChannel)
 
     def test_deserialize_dm_channel_with_null_fields(self, entity_factory_impl, user_payload):

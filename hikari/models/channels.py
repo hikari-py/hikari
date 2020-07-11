@@ -178,7 +178,7 @@ class PartialChannel(snowflake.Unique):
     """The channel's type."""
 
     def __str__(self) -> str:
-        return self.name if self.name is not None else f"Unnamed channel ID {self.id}"
+        return self.name if self.name is not None else f"Unnamed {self.__class__.__name__} ID {self.id}"
 
 
 class TextChannel(PartialChannel, abc.ABC):
@@ -324,16 +324,24 @@ class DMChannel(TextChannel):
         this will always be valid.
     """
 
-    recipients: typing.Mapping[snowflake.Snowflake, users.UserImpl] = attr.ib(eq=False, hash=False, repr=False)
-    """The recipients of the DM."""
+    recipient: users.UserImpl = attr.ib(eq=False, hash=False, repr=False)
+    """The user recipient of this DM."""
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__} with: {', '.join(str(user) for user in self.recipients.values())}"
+        return f"{self.__class__.__name__} with: {self.recipient}"
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class GroupDMChannel(DMChannel):
+class GroupDMChannel(TextChannel):
     """Represents a DM group channel."""
+
+    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    """The ID of the last message sent in this channel.
+
+    !!! warning
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.
+    """
 
     owner_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The ID of the owner of the group."""
@@ -344,6 +352,9 @@ class GroupDMChannel(DMChannel):
     nicknames: typing.MutableMapping[snowflake.Snowflake, str] = attr.ib(eq=False, hash=False, repr=False)
     """A mapping of set nicknames within this group DMs to user IDs."""
 
+    recipients: typing.Mapping[snowflake.Snowflake, users.UserImpl] = attr.ib(eq=False, hash=False, repr=False)
+    """The recipients of the group DM."""
+
     application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the application that created the group DM.
 
@@ -351,7 +362,10 @@ class GroupDMChannel(DMChannel):
     """
 
     def __str__(self) -> str:
-        return self.name if self.name is not None else super().__str__()
+        if self.name is None:
+            return f"{self.__class__.__name__} with: {', '.join(str(user) for user in self.recipients.values())}"
+
+        return self.name
 
     @property
     def icon(self) -> typing.Optional[files.URL]:

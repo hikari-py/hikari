@@ -396,10 +396,10 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     def serialize_permission_overwrite(self, overwrite: channel_models.PermissionOverwrite) -> data_binding.JSONObject:
         return {"id": str(overwrite.id), "type": overwrite.type, "allow": overwrite.allow, "deny": overwrite.deny}
 
-    @staticmethod
     def _set_partial_channel_attributes(
-        payload: data_binding.JSONObject, channel: channel_models.PartialChannel
+        self, payload: data_binding.JSONObject, channel: channel_models.PartialChannel
     ) -> None:
+        channel.app = self._app
         channel.id = snowflake.Snowflake(payload["id"])
         channel.name = payload.get("name")
         # noinspection PyArgumentList
@@ -407,33 +407,28 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
     def deserialize_partial_channel(self, payload: data_binding.JSONObject) -> channel_models.PartialChannel:
         partial_channel = channel_models.PartialChannel()
-        partial_channel.app = self._app
         self._set_partial_channel_attributes(payload, partial_channel)
         return partial_channel
 
-    def _set_dm_channel_attributes(
-        self, payload: data_binding.JSONObject, dm_channel: channel_models.DMChannel
-    ) -> None:
+    def deserialize_dm_channel(self, payload: data_binding.JSONObject) -> channel_models.DMChannel:
+        dm_channel = channel_models.DMChannel()
         self._set_partial_channel_attributes(payload, dm_channel)
 
         if (last_message_id := payload["last_message_id"]) is not None:
             last_message_id = snowflake.Snowflake(last_message_id)
-
         dm_channel.last_message_id = last_message_id
-        dm_channel.recipients = {
-            snowflake.Snowflake(user["id"]): self.deserialize_user(user) for user in payload["recipients"]
-        }
 
-    def deserialize_dm_channel(self, payload: data_binding.JSONObject) -> channel_models.DMChannel:
-        dm_channel = channel_models.DMChannel()
-        dm_channel.app = self._app
-        self._set_dm_channel_attributes(payload, dm_channel)
+        dm_channel.recipient = self.deserialize_user(payload["recipients"][0])
         return dm_channel
 
     def deserialize_group_dm_channel(self, payload: data_binding.JSONObject) -> channel_models.GroupDMChannel:
         group_dm_channel = channel_models.GroupDMChannel()
-        group_dm_channel.app = self._app
-        self._set_dm_channel_attributes(payload, group_dm_channel)
+        self._set_partial_channel_attributes(payload, group_dm_channel)
+
+        if (last_message_id := payload["last_message_id"]) is not None:
+            last_message_id = snowflake.Snowflake(last_message_id)
+        group_dm_channel.last_message_id = last_message_id
+
         group_dm_channel.owner_id = snowflake.Snowflake(payload["owner_id"])
         group_dm_channel.icon_hash = payload["icon"]
 
@@ -446,6 +441,9 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         group_dm_channel.application_id = (
             snowflake.Snowflake(payload["application_id"]) if "application_id" in payload else None
         )
+        group_dm_channel.recipients = {
+            snowflake.Snowflake(user["id"]): self.deserialize_user(user) for user in payload["recipients"]
+        }
         return group_dm_channel
 
     def _set_guild_channel_attributes(
@@ -479,7 +477,6 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channel_models.GuildCategory:
         category = channel_models.GuildCategory()
-        category.app = self._app
         self._set_guild_channel_attributes(payload, category, guild_id=guild_id)
         return category
 
@@ -490,7 +487,6 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channel_models.GuildTextChannel:
         guild_text_channel = channel_models.GuildTextChannel()
-        guild_text_channel.app = self._app
         self._set_guild_channel_attributes(payload, guild_text_channel, guild_id=guild_id)
         guild_text_channel.topic = payload["topic"]
 
@@ -516,7 +512,6 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channel_models.GuildNewsChannel:
         guild_news_channel = channel_models.GuildNewsChannel()
-        guild_news_channel.app = self._app
         self._set_guild_channel_attributes(payload, guild_news_channel, guild_id=guild_id)
         guild_news_channel.topic = payload["topic"]
 
@@ -537,7 +532,6 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channel_models.GuildStoreChannel:
         guild_store_channel = channel_models.GuildStoreChannel()
-        guild_store_channel.app = self._app
         self._set_guild_channel_attributes(payload, guild_store_channel, guild_id=guild_id)
         return guild_store_channel
 
@@ -548,7 +542,6 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> channel_models.GuildVoiceChannel:
         guild_voice_channel = channel_models.GuildVoiceChannel()
-        guild_voice_channel.app = self._app
         self._set_guild_channel_attributes(payload, guild_voice_channel, guild_id=guild_id)
         guild_voice_channel.bitrate = int(payload["bitrate"])
         guild_voice_channel.user_limit = int(payload["user_limit"])
