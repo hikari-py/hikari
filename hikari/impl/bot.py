@@ -252,8 +252,7 @@ class BotAppImpl(bot.IBotApp):
     def __del__(self) -> None:
         if self._start_count == 0:
             warnings.warn(
-                "Looks like your bot never started. Make sure you called bot.run() "
-                "after you set the bot object up.",
+                "Looks like your bot never started. Make sure you called bot.run() " "after you set the bot object up.",
                 category=errors.HikariWarning,
             )
 
