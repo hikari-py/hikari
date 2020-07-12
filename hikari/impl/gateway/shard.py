@@ -273,7 +273,14 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     async def start(self) -> asyncio.Task[None]:
         run_task = asyncio.create_task(self._run(), name=f"shard {self._shard_id} keep-alive")
-        await self._handshake_event.wait()
+        handshake_future = asyncio.ensure_future(self._handshake_event.wait())
+        await asyncio.wait([run_task, handshake_future], return_when=asyncio.FIRST_COMPLETED)  # type: ignore
+
+        # Ensure we propogate a startup error without joining the run task first.
+        # We shouldn't need to kill the handshake event, that should be done for us.
+        if run_task.done() and (exception := run_task.exception()) is not None:
+            raise exception
+
         return run_task
 
     async def close(self) -> None:
