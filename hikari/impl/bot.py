@@ -300,6 +300,7 @@ class BotAppImpl(bot.IBotApp):
     def shard_count(self) -> int:
         return self._shard_count
 
+    @property
     def voice(self) -> voice_component.VoiceComponentImpl:
         return self._voice
 
