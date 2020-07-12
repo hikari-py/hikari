@@ -32,8 +32,10 @@ import signal
 import sys
 import time
 import typing
+import warnings
 
 from hikari import config
+from hikari import errors
 from hikari.api import bot
 from hikari.api.gateway import shard as gateway_shard
 from hikari.events import other as other_events
@@ -235,11 +237,20 @@ class BotAppImpl(bot.IBotApp):
         self._shards: typing.Dict[int, gateway_shard.IGatewayShard] = {}
         self._started_at_monotonic: typing.Optional[float] = None
         self._started_at_timestamp: typing.Optional[datetime.datetime] = None
+        self._start_count: int = 0
         self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
         self._use_compression = gateway_compression
         self._version = gateway_version
         self._voice = voice_component.VoiceComponentImpl(self, self._event_manager)
+
+    def __del__(self) -> None:
+        if self._start_count == 0:
+            warnings.warn(
+                "Looks like your bot never started. Make sure you called bot.run() "
+                "after you set the bot object up.",
+                category=errors.HikariWarning,
+            )
 
     @property
     def cache(self) -> cache_.ICacheComponent:
@@ -314,6 +325,7 @@ class BotAppImpl(bot.IBotApp):
         return datetime.timedelta(seconds=raw_uptime)
 
     async def start(self) -> None:
+        self._start_count += 1
         self._started_at_monotonic = time.perf_counter()
         self._started_at_timestamp = date.local_datetime()
 
