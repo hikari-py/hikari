@@ -83,6 +83,9 @@ class BotAppImpl(bot.IBotApp):
         The version of the gateway to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to using v6.
+    hide_banner : builtins.bool
+        If `builtins.True`, then the banner will not be shown on startup.
+        Defaults to `builtins.False`.
     http_settings : hikari.config.HTTPSettings or builtins.None
         The HTTP-related settings to use.
     initial_activity : hikari.models.presences.Activity or builtins.None or hikari.utilities.undefined.UndefinedType
@@ -171,6 +174,7 @@ class BotAppImpl(bot.IBotApp):
         executor: typing.Optional[concurrent.futures.Executor] = None,
         gateway_compression: bool = True,
         gateway_version: int = 6,
+        hide_banner: bool = False,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         initial_activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
         initial_idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
@@ -187,15 +191,16 @@ class BotAppImpl(bot.IBotApp):
         stateless: bool = False,
         token: str,
     ) -> None:
+        if undefined.count(shard_ids, shard_count) == 1:
+            raise TypeError("You must provide values for both shard_ids and shard_count, or neither.")
+
         if logging_level is not None and not _LOGGER.hasHandlers():
             logging.captureWarnings(True)
             logging.basicConfig(format=self._determine_default_logging_format())
             _LOGGER.setLevel(logging_level)
 
-        self._dump_banner()
-
-        if undefined.count(shard_ids, shard_count) == 1:
-            raise TypeError("You must provide values for both shard_ids and shard_count, or neither.")
+        if not hide_banner:
+            self._dump_banner()
 
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl()
