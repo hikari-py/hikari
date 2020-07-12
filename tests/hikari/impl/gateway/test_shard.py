@@ -158,6 +158,15 @@ class TestStart:
         await client.start()
         client._handshake_event.wait.assert_awaited_once_with()
 
+    @hikari_test_helpers.timeout()
+    async def test_exception_is_raised_immediately(self, client):
+        client._handshake_event = mock.MagicMock()
+        client._handshake_event.wait = mock.AsyncMock()
+        client._run = mock.AsyncMock(side_effect=RuntimeError)
+
+        with pytest.raises(RuntimeError):
+            await client.start()
+
 
 @pytest.mark.asyncio
 class TestClose:

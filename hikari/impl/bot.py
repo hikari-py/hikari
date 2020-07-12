@@ -32,8 +32,10 @@ import signal
 import sys
 import time
 import typing
+import warnings
 
 from hikari import config
+from hikari import errors
 from hikari.api import bot
 from hikari.api.gateway import shard as gateway_shard
 from hikari.events import other as other_events
@@ -81,6 +83,9 @@ class BotAppImpl(bot.IBotApp):
         The version of the gateway to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to using v6.
+    hide_banner : builtins.bool
+        If `builtins.True`, then the banner will not be shown on startup.
+        Defaults to `builtins.False`.
     http_settings : hikari.config.HTTPSettings or builtins.None
         The HTTP-related settings to use.
     initial_activity : hikari.models.presences.Activity or builtins.None or hikari.utilities.undefined.UndefinedType
@@ -169,6 +174,7 @@ class BotAppImpl(bot.IBotApp):
         executor: typing.Optional[concurrent.futures.Executor] = None,
         gateway_compression: bool = True,
         gateway_version: int = 6,
+        hide_banner: bool = False,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         initial_activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
         initial_idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
@@ -185,15 +191,16 @@ class BotAppImpl(bot.IBotApp):
         stateless: bool = False,
         token: str,
     ) -> None:
+        if undefined.count(shard_ids, shard_count) == 1:
+            raise TypeError("You must provide values for both shard_ids and shard_count, or neither.")
+
         if logging_level is not None and not _LOGGER.hasHandlers():
             logging.captureWarnings(True)
             logging.basicConfig(format=self._determine_default_logging_format())
             _LOGGER.setLevel(logging_level)
 
-        self._dump_banner()
-
-        if undefined.count(shard_ids, shard_count) == 1:
-            raise TypeError("You must provide values for both shard_ids and shard_count, or neither.")
+        if not hide_banner:
+            self._dump_banner()
 
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl()
@@ -235,11 +242,19 @@ class BotAppImpl(bot.IBotApp):
         self._shards: typing.Dict[int, gateway_shard.IGatewayShard] = {}
         self._started_at_monotonic: typing.Optional[float] = None
         self._started_at_timestamp: typing.Optional[datetime.datetime] = None
+        self._start_count: int = 0
         self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
         self._use_compression = gateway_compression
         self._version = gateway_version
         self._voice = voice_component.VoiceComponentImpl(self, self._event_manager)
+
+    def __del__(self) -> None:
+        if self._start_count == 0:
+            warnings.warn(
+                "Looks like your bot never started. Make sure you called bot.run() " "after you set the bot object up.",
+                category=errors.HikariWarning,
+            )
 
     @property
     def cache(self) -> cache_.ICacheComponent:
@@ -314,6 +329,7 @@ class BotAppImpl(bot.IBotApp):
         return datetime.timedelta(seconds=raw_uptime)
 
     async def start(self) -> None:
+        self._start_count += 1
         self._started_at_monotonic = time.perf_counter()
         self._started_at_timestamp = date.local_datetime()
 
