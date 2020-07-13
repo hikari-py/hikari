@@ -17,8 +17,10 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """A sane Python framework for writing modern Discord bots.
 
-To get started, you will want to initialize an instance of `Bot` for writing
-a bot, or `RESTClientFactory` if you only need to use the REST API.
+To get started, you will want to initialize an instance of `Bot`
+(an alias for `hikari.impl.bot.BotAppImpl`) for writing a bot, or `REST` (an
+alias for `hikari.impl.rest.app.RESTAppFactoryImpl`) if you only need to use
+the REST API.
 """
 
 from __future__ import annotations
