@@ -47,9 +47,9 @@ _TWEMOJI_SVG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/r
 class Emoji(files.WebResource, abc.ABC):
     """Base class for all emojis.
 
-    Any emoji implementation supports being used as a 
-    `hikari.utilities.files.Resource` when uploading an attachment to the API. 
-    This is achieved in the same way as using a 
+    Any emoji implementation supports being used as a
+    `hikari.utilities.files.Resource` when uploading an attachment to the API.
+    This is achieved in the same way as using a
     `hikari.utilities.files.WebResource` would achieve this.
     """
 
@@ -305,7 +305,7 @@ class KnownCustomEmoji(CustomEmoji):
     is_animated: bool = attr.ib(eq=False, hash=False, repr=True)
     """Whether the emoji is animated.
 
-    Unlike in `CustomEmoji`, this information is always known, and will thus 
+    Unlike in `CustomEmoji`, this information is always known, and will thus
     never be `builtins.None`.
     """
 

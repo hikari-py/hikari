@@ -546,8 +546,8 @@ class Message(snowflake.Unique):
         Parameters
         ----------
         emoji : builtins.str or hikari.models.emojis.Emoji
-            The emoji to add. This may be a unicode emoji string, the 
-            `name:id` of a custom emoji, or a subclass of 
+            The emoji to add. This may be a unicode emoji string, the
+            `name:id` of a custom emoji, or a subclass of
             `hikari.models.emojis.Emoji`.
 
             Note that if the emoji is an `hikari.models.emojis.CustomEmoji`
