@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Application and entities that are used to describe both custom and Unicode emojis on Discord."""
+"""Application and entities that are used to describe emojis on Discord."""
 
 from __future__ import annotations
 
@@ -47,9 +47,10 @@ _TWEMOJI_SVG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/r
 class Emoji(files.WebResource, abc.ABC):
     """Base class for all emojis.
 
-    Any emoji implementation supports being used as a `hikari.utilities.files.Resource`
-    when uploading an attachment to the API. This is achieved in the same
-    way as using a `hikari.utilities.files.WebResource` would achieve this.
+    Any emoji implementation supports being used as a 
+    `hikari.utilities.files.Resource` when uploading an attachment to the API. 
+    This is achieved in the same way as using a 
+    `hikari.utilities.files.WebResource` would achieve this.
     """
 
     @property
@@ -281,7 +282,7 @@ class KnownCustomEmoji(CustomEmoji):
     """Represents an emoji that is known from a guild the bot is in.
 
     This is a specialization of `CustomEmoji` that is from a guild that you
-    _are_ part of. Ass a result, it contains a lot more information with it.
+    _are_ part of. As a result, it contains a lot more information with it.
     """
 
     guild_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=False)
@@ -304,7 +305,8 @@ class KnownCustomEmoji(CustomEmoji):
     is_animated: bool = attr.ib(eq=False, hash=False, repr=True)
     """Whether the emoji is animated.
 
-    Unlike in `CustomEmoji`, this information is always known, and will thus never be `builtins.None`.
+    Unlike in `CustomEmoji`, this information is always known, and will thus 
+    never be `builtins.None`.
     """
 
     is_colons_required: bool = attr.ib(eq=False, hash=False, repr=False)
