@@ -19,11 +19,9 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["UndefinedType", "UNDEFINED"]
+__all__: typing.Final[typing.List[str]] = ["UndefinedType", "UNDEFINED", "count"]
 
 import enum
-
-# noinspection PyUnresolvedReferences
 import typing
 
 
@@ -47,15 +45,37 @@ class _UndefinedType:
 # we do `is` and `is not` checks on values, which removes the need for casts.
 @typing.final
 class _UndefinedTypeWrapper(_UndefinedType, enum.Enum):
+    """Wrapper type around the undefined value.
+
+    If you see this in a signature somewhere, it means you can pass a
+    value of `UNDEFINED` and it will be valid.
+
+    If you see this as the type of an attribute somewhere, it means that
+    the attribute may be `UNDEFINED` in some edge cases.
+
+    This exists to allow static type checkers to dereference this value
+    using `typing.Literal`, which aids in static type analysis by treating
+    this value as a true singleton. This can only be achieved by using
+    an `enum.Enum` of a single value to enforce this.
+
+    For all other purposes, you can treat this as the type of the
+    `UNDEFINED` sentinel in this module. You should generally not need to
+    use this, however.
+    """
+
+    # Don't document this.
+    __pdoc__: typing.Final[typing.ClassVar[typing.Mapping[str, bool]]] = {
+        "__init__": False,
+        "UNDEFINED_VALUE": False,
+    }
+
     UNDEFINED_VALUE = _UndefinedType()
 
 
 # Prevent making any more instances as much as possible.
 setattr(_UndefinedType, "__new__", NotImplemented)
-setattr(_UndefinedTypeWrapper, "__new__", NotImplemented)
+del _UndefinedType
 
-UndefinedType = typing.Literal[_UndefinedTypeWrapper.UNDEFINED_VALUE]
-"""Type hint for the literal `UNDEFINED` object."""
 
 # noinspection PyTypeChecker
 UNDEFINED: typing.Final[UndefinedType] = _UndefinedTypeWrapper.UNDEFINED_VALUE
@@ -65,6 +85,12 @@ This will behave as a false value in conditions.
 """
 
 
+if typing.TYPE_CHECKING:
+    UndefinedType = typing.Literal[_UndefinedTypeWrapper.UNDEFINED_VALUE]
+else:
+    UndefinedType = type(UNDEFINED)
+
+
 def count(*items: typing.Any) -> int:
-    """Count the number of items that are provided that are UNDEFINED."""
+    """Count the number of items that are provided that are `UNDEFINED`."""
     return sum(1 for item in items if item is UNDEFINED)
