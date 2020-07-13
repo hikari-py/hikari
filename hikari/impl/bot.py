@@ -197,7 +197,7 @@ class BotAppImpl(bot.IBotApp):
         if logging_level is not None and not _LOGGER.hasHandlers():
             logging.captureWarnings(True)
             logging.basicConfig(format=self._determine_default_logging_format())
-            _LOGGER.setLevel(logging_level)
+            logging.root.setLevel(logging_level)
 
         if not hide_banner:
             self._dump_banner()
