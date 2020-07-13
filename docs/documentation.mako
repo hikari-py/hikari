@@ -1,7 +1,5 @@
 <%!
     import typing
-    typing.TYPE_CHECKING = True
-
     import builtins
     import importlib
     import inspect
@@ -80,6 +78,7 @@
 %>
 <%
     import abc
+    import ast
     import enum
     import functools
     import inspect
@@ -89,6 +88,10 @@
     import pdoc
 
     from pdoc.html_helpers import extract_toc, glimpse, to_html as _to_html, format_git_link
+
+    # Allow imports to resolve properly.
+    typing.TYPE_CHECKING = True
+
 
     QUAL_ABC = "<abbr title='An abstract base class which may have abstract methods and abstract properties.'>abstract</abbr>"
     QUAL_ABSTRACT = "<abbr title='An abstract method or property that must be overridden in a derived class.'>abstract</abbr>"
@@ -112,6 +115,160 @@
     QUAL_VAR = "<abbr title='A standard variable'>var</abbr>"
     QUAL_WARNING = "<abbr title='A standard Python warning that can be raised.'>warning</abbr>"
 
+    def get_url_for_object_from_imports(name, dobj):
+        if dobj.module:
+            fqn = dobj.module.obj.__name__ + "." + dobj.obj.__qualname__
+        elif hasattr(dobj.obj, "__module__"):
+            fqn = dobj.obj.__module__ + "." + dobj.obj.__qualname__
+        else:
+            fqn = dobj.name
+
+        url = discover_source(fqn)
+        if url is None:
+            url = discover_source(name)
+
+        if url is None:
+            url = get_url_from_imports(fqn)
+        
+        return url
+
+    def get_url_from_imports(fqn):
+        if fqn_match := re.match(r"([a-z_]+)\.((?:[^\.]|^\s)+)", fqn):
+            if import_match := re.search(f"from (.*) import (.*) as {fqn_match.group(1)}", module.source):
+                old_fqn = fqn
+                fqn = import_match.group(1) + "." + import_match.group(2) + "." + fqn_match.group(2)
+                try:
+                    return pdoc._global_context[fqn].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+                    # print(old_fqn, "->", fqn, "via", url)
+                except KeyError:
+                    # print("maybe", fqn, "is external but aliased?")
+                    return discover_source(fqn)
+            elif import_match := re.search(f"from (.*) import {fqn_match.group(1)}", module.source):
+                old_fqn = fqn
+                fqn = import_match.group(1) + "." + fqn_match.group(1) + "." + fqn_match.group(2)
+                try:
+                    return pdoc._global_context[fqn].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+                    # print(old_fqn, "->", fqn, "via", url)
+                except KeyError:
+                    # print("maybe", fqn, "is external but aliased?")
+                    return discover_source(fqn)
+            elif import_match := re.search(f"import (.*) as {fqn_match.group(1)}", module.source):
+                old_fqn = fqn
+                fqn = import_match.group(1) + "." + fqn_match.group(2)
+                try:
+                    return pdoc._global_context[fqn].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+                    # print(old_fqn, "->", fqn, "via", url)
+                except KeyError:
+                    # print("maybe", fqn, "is external but aliased?")
+                    return discover_source(fqn)
+            else:
+                return None
+
+    def get_url_to_object_maybe_module(dobj):
+        try:
+            # ref = dobj if not hasattr(dobj.obj, "__module__") else pdoc._global_context[dobj.obj.__module__ + "." + dobj.obj.__qualname__]
+            ref = pdoc._global_context[dobj.obj.__module__ + "." + dobj.obj.__qualname__]
+            return ref.url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+        except Exception:
+            return dobj.url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+
+    def debuiltinify(phrase: str):
+        if phrase.startswith("builtins."):
+            phrase = phrase[len("builtins."):]
+        elif phrase.startswith("typing."):
+            phrase = phrase[len("typing."):]
+        elif phrase.startswith("asyncio."):
+            phrase = phrase[len("asyncio."):]
+        return phrase
+
+    # Fixed Linkify that works with nested type hints...
+    def _fixed_linkify(match: typing.Match, *, link: typing.Callable[..., str], module: pdoc.Module, wrap_code=False):
+        #print("matched", match.groups(), match.group())
+
+        try:
+            code_span = match.group('code')
+        except IndexError:
+            code_span = match.group()
+
+        if code_span.startswith("`") and code_span.endswith("`"):
+            code_span = codespan[1:-1]
+
+        try:
+            # If it doesn't parse, it isn't a valid reference.
+            ast.parse(code_span)
+
+            # Extract identifiers.
+            items = list(re.finditer(r"(\w|\.)+", code_span))[::-1]
+
+            # For each identifier, replace it with a link.
+            for match in items:
+                phrase = match.group()
+                
+                ident = module.find_ident(phrase)
+
+                if isinstance(ident, pdoc.External):
+                    phrase = debuiltinify(ident.name)
+
+                    url = get_url_for_object_from_imports(phrase, ident)
+                    
+                    if url is None:
+                        bits = ident.name.split(".")[:-1]
+
+                        while bits:
+                            partial_phrase = ".".join(bits)
+                            if partial_phrase in pdoc._global_context:
+                                url = pdoc._global_context[partial_phrase].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+                                a_tag = f"<a href={url!r}>{repr(phrase)[1:-1]}</a>"
+                                break
+                            
+                            bits = bits[:-1]
+                        else:
+                            a_tag = phrase
+                    else:
+                        a_tag = f"<a href={url!r}>{repr(phrase)[1:-1]}</a>"
+
+
+                else:
+                    url = ident.url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+                    a_tag = f"<a href={url!r}>{repr(ident.name)[1:-1]}</a>"
+
+                chunk = slice(*match.span())
+                code_span = "".join((
+                    code_span[:chunk.start],
+                    a_tag,
+                    code_span[chunk.stop:],
+                ))
+
+            if wrap_code:
+                code_span = code_span.replace('[', '\\[')
+                
+
+        except SyntaxError:
+            """Raised if it wasn't a valid piece of Python that was given. 
+            
+            This can happen with `builtins.True`, `builtins.False` or 
+            `builtins.None`
+            """
+            if code_span.startswith("builtins."):
+                phrase = debuiltinify(code_span)
+                url = discover_source(code_span)
+                code_span = f"<a href={url!r}>{repr(phrase)[1:-1]}</a>"
+                
+
+        if wrap_code:
+            # Wrapping in HTML <code> as opposed to backticks evaluates markdown */_ markers,
+            # so let's escape them in text (but not in HTML tag attributes).
+            # Backticks also cannot be used because html returned from `link()`
+            # would then become escaped.
+            # This finds overlapping matches, https://stackoverflow.com/a/5616910/1090455
+            cleaned = re.sub(r'(_(?=[^>]*?(?:<|$)))', r'\\\1', code_span)
+            return '<code>{}</code>'.format(cleaned)
+        return code_span
+
+
+    from pdoc import html_helpers
+    html_helpers._linkify = _fixed_linkify
+
     # Help, it is a monster!
     def link(
         dobj: pdoc.Doc,
@@ -130,21 +287,21 @@
         prefix = ""
         name = name or dobj.name
 
-        if name.startswith("builtins."):
-            _, _, name = name.partition("builtins.")
+        name = debuiltinify(name)
 
         show_object = False
         if with_prefixes:
             if isinstance(dobj, pdoc.Function):
                 qual = dobj.funcdef()
 
-                if getattr(dobj.obj, "__isabstractmethod__", False):
-                    prefix = f"{QUAL_ABSTRACT} "
-
+                if not simple_names:
+                    if getattr(dobj.obj, "__isabstractmethod__", False):
+                        prefix = f"{QUAL_ABSTRACT} "
+                
                 prefix = "<small class='text-muted'><em>" + prefix + qual + "</em></small> "
 
             elif isinstance(dobj, pdoc.Variable):
-                if getattr(dobj.obj, "__isabstractmethod__", False):
+                if getattr(dobj.obj, "__isabstractmethod__", False) and not simple_names:
                     prefix = f"{QUAL_ABSTRACT} "
 
                 descriptor = None
@@ -186,11 +343,12 @@
                     else:
                         qual += QUAL_CLASS
 
-                    if inspect.isabstract(dobj.obj):
-                        if re.match(r"^I[A-Za-z]", dobj.name):
-                            qual = f"{QUAL_INTERFACE} {qual}"
-                        else:
-                            qual = f"{QUAL_ABC} {qual}"
+                    if not simple_names:
+                        if inspect.isabstract(dobj.obj):
+                            if re.match(r"^I[A-Za-z]", dobj.name):
+                                qual = f"{QUAL_INTERFACE} {qual}"
+                            else:
+                                qual = f"{QUAL_ABC} {qual}"
 
                 prefix = f"<small class='text-muted'><em>{qual}</em></small> "
 
@@ -210,53 +368,13 @@
             name = dobj.module.name + "." + dobj.obj.__qualname__
 
         if isinstance(dobj, pdoc.External):
-            if dobj.module:
-                fqn = dobj.module.obj.__name__ + "." + dobj.obj.__qualname__
-            elif hasattr(dobj.obj, "__module__"):
-                fqn = dobj.obj.__module__ + "." + dobj.obj.__qualname__
-            else:
-                fqn = dobj.name
-
-            url = discover_source(fqn)
-            if url is None:
-                url = discover_source(name)
-
-            if url is None:
-                if fqn_match := re.match(r"([a-z_]+)\.((?:[^\.]|^\s)+)", fqn):
-                    # print("Struggling to resolve", fqn, "in", module.name, "so attempting to see if it is an import alias now instead.")
-
-                    if import_match := re.search(f"from (.*) import (.*) as {fqn_match.group(1)}", module.source):
-                        old_fqn = fqn
-                        fqn = import_match.group(1) + "." + import_match.group(2) + "." + fqn_match.group(2)
-                        try:
-                            url = pdoc._global_context[fqn].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
-                            # print(old_fqn, "->", fqn, "via", url)
-                        except KeyError:
-                            # print("maybe", fqn, "is external but aliased?")
-                            url = discover_source(fqn)
-                    elif import_match := re.search(f"import (.*) as {fqn_match.group(1)}", module.source):
-                        old_fqn = fqn
-                        fqn = import_match.group(1) + "." + fqn_match.group(2)
-                        try:
-                            url = pdoc._global_context[fqn].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
-                            # print(old_fqn, "->", fqn, "via", url)
-                        except KeyError:
-                            # print("maybe", fqn, "is external but aliased?")
-                            url = discover_source(fqn)
-                    else:
-                        # print("No clue where", fqn, "came from --- it isn't an import that i can see.")
-                        pass
-
+            url = get_url_for_object_from_imports(name, dobj)
 
             if url is None:
                 # print("Could not resolve where", fqn, "came from :(")
                 return name
         else:
-            try:
-                ref = dobj if not hasattr(dobj.obj, "__module__") else pdoc._global_context[dobj.obj.__module__ + "." + dobj.obj.__qualname__]
-                url = ref.url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
-            except Exception:
-                url = dobj.url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+            url = get_url_to_object_maybe_module(dobj)
 
         if simple_names:
             name = simple_name(name)
@@ -290,6 +408,10 @@
         # Remove quotes.
         if annot.startswith("'") and annot.endswith("'"):
             annot = annot[1:-1]
+
+        if annot.startswith("builtins."):
+            annot = annot[len("builtins."):]
+
         if annot:
             annot = ' ' + sep + '\N{NBSP}' + annot
 
@@ -378,12 +500,13 @@
     <%
         params = f.params(annotate=show_type_annotations, link=link)
         return_type = get_annotation(f.return_annotation, '->')
+
         example_str = f.funcdef() + f.name + "(" + ", ".join(params) + ")" + return_type
 
         if params and params[0] in ("self", "mcs", "mcls", "metacls"):
             params = params[1:]
 
-        if len(params) > 4 or len(example_str) > 70:
+        if len(params) > 4 or len(params) > 0 and len(example_str) > 70:
             representation = "\n".join((
                 f.funcdef() + " " + f.name + "(",
                 *(f"    {p}," for p in params),
@@ -394,9 +517,6 @@
             representation = f"{f.funcdef()} {f.name}({', '.join(params)}){return_type}: ..."
         else:
             representation = f"{f.funcdef()} {f.name}(){return_type}: ..."
-
-        for pattern in builtin_patterns:
-            representation = pattern.sub(r"builtins.\1", representation)
 
         if f.module.name != f.obj.__module__:
             try:
@@ -446,7 +566,9 @@
         mro = c.mro()
         subclasses = c.subclasses()
 
-        params = c.params(annotate=show_type_annotations, link=link)
+        # No clue why I need to do this, and I don't care at this point. This hurts my brain.
+        params = [p.replace("builtins.", "") for p in c.params(annotate=show_type_annotations, link=link)]
+
         example_str = f"{QUAL_CLASS} " + c.name + "(" + ", ".join(params) + ")"
 
         if len(params) > 4 or len(example_str) > 70 and len(params) > 0:
@@ -459,9 +581,6 @@
             representation = f"{QUAL_CLASS} {c.name} (" + ", ".join(params) + "): ..."
         else:
             representation = f"{QUAL_CLASS} {c.name}: ..."
-
-        for pattern in builtin_patterns:
-            representation = pattern.sub(r"builtins.\1", representation)
 
         if c.module.name != c.obj.__module__:
             try:
