@@ -43,6 +43,7 @@ import pathlib
 import time
 import typing
 import urllib.parse
+import urllib.request
 
 import aiohttp.client
 import attr
@@ -94,6 +95,12 @@ def ensure_resource(url_or_resource: typing.Union[None, str, Resource], /) -> ty
 
     if url_or_resource.startswith(("https://", "http://")):
         return URL(url_or_resource)
+    if url_or_resource.startswith("data:"):
+        try:
+            return Bytes.from_data_uri(url_or_resource)
+        except ValueError:
+            # If we can't parse it, maybe it is some malformed file?
+            pass
 
     path = pathlib.Path(url_or_resource)
     return File(path, path.name)
@@ -658,6 +665,43 @@ class Bytes(Resource[ByteReader]):
             data stream.
         """
         return _NoOpAsyncReaderContextManagerImpl(ByteReader(self.filename, self.mimetype, self.data))
+
+    @staticmethod
+    def from_data_uri(data_uri: str) -> Bytes:
+        """Parse a given data URI.
+
+        Parameters
+        ----------
+        data_uri : builtins.str
+            The data URI to parse.
+
+        Returns
+        -------
+        Bytes
+            The parsed data URI as a `Bytes` object.
+
+        Raises
+        ------
+        builtins.ValueError
+            If the parsed argument is not a data URI.
+        """
+        if not data_uri.startswith("data:"):
+            raise ValueError("Invalid data URI passed")
+
+        # This won't block for a data URI; if it was a URL, it would block, so
+        # we guard against this with the check above.
+        try:
+            with urllib.request.urlopen(data_uri) as response:  # noqa: S310   audit url open for permitted schemes
+                # TODO: make this smarter by using regex or something to get the mimetype.
+                # We can't always "just parse" the whole uri using regex, as extra
+                # params like encoding can be included, e.g.
+                # data:text/plain;charset=utf-8;base64,aGVsbG8gPDM=
+                mimetype = data_uri.split(";", 1)[0][5:]
+                data = response.read()
+        except Exception as ex:
+            raise ValueError("Failed to decode data URI") from ex
+
+        return Bytes(data, mimetype=mimetype)
 
 
 class WebResource(Resource[WebReader], abc.ABC):
