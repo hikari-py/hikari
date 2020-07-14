@@ -15,6 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+from __future__ import annotations
+
 import aiohttp
 import asyncio
 import mock
@@ -59,6 +61,19 @@ class ClientSessionStub:
         self.request = mock.MagicMock(wraps=lambda *args, **kwargs: self.request_context_stub)
         self.ws_connect = mock.MagicMock(wraps=lambda *args, **kwargs: self.ws_connect_stub)
 
+        for method in "get put patch post delete head options".split():
+            self._make_method(method)
+
+    def _make_method(self, method) -> None:
+        shim = mock.MagicMock(wraps=lambda *a, **k: self.request(method, *a, **k))
+        setattr(self, method, shim)
+
     @property
     def loop(self):
         return asyncio.current_task().get_loop()
+
+    async def __aenter__(self) -> ClientSessionStub:
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
