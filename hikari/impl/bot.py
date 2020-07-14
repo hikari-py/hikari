@@ -330,6 +330,8 @@ class BotAppImpl(bot.IBotApp):
         return datetime.timedelta(seconds=raw_uptime)
 
     async def start(self) -> None:
+        await self._check_for_updates()
+
         self._start_count += 1
         self._started_at_monotonic = time.perf_counter()
         self._started_at_timestamp = date.local_datetime()
@@ -721,3 +723,30 @@ class BotAppImpl(bot.IBotApp):
                 palette[key] = ""
 
         return palette
+
+    @staticmethod
+    async def _check_for_updates() -> None:
+        from hikari.utilities import version_sniffer
+
+        try:
+            version_info = await version_sniffer.fetch_version_info_from_pypi()
+
+            if version_info.this == version_info.latest:
+                _LOGGER.info("everything is up to date!")
+            else:
+                if version_info.this != version_info.latest_compatible:
+                    _LOGGER.warning(
+                        "non-breaking updates are available for hikari, update from v%s to v%s!",
+                        version_info.this,
+                        version_info.latest_compatible,
+                    )
+
+                if version_info.latest != version_info.latest_compatible:
+                    _LOGGER.info(
+                        "breaking updates are available for hikari, consider upgrading from v%s to v%s!",
+                        version_info.this,
+                        version_info.latest,
+                    )
+
+        except Exception as ex:
+            _LOGGER.debug("Error occurred fetching version info", exc_info=ex)
