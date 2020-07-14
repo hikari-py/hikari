@@ -32,6 +32,16 @@ def update_version_string(version):
     nox.shell("sed", shlex.quote(f's|^__version__.*|__version__ = "{version}"|g'), "-i", config.VERSION_FILE)
 
 
+def set_official_release_flag(value: bool):
+    print("Marking as", "official" if value else "unofficial", "release")
+    nox.shell(
+        "sed",
+        shlex.quote(f's|^__is_official_distributed_release__.*|__is_official_distributed_release__ = "{value}"|g'),
+        "-i",
+        config.VERSION_FILE,
+    )
+
+
 def increment_prod_to_next_dev(version):
     version_obj = LooseVersion(version)
     last_index = len(version_obj.version) - 1
@@ -190,7 +200,9 @@ def deploy(session: nox.Session) -> None:
         print("preprod release!")
         next_version = get_next_dev_version(current_version)
         update_version_string(next_version)
+        set_official_release_flag(True)
         deploy_to_pypi()
+        set_official_release_flag(False)
         send_notification(
             next_version,
             f"{config.API_NAME} v{next_version} has been released",
@@ -205,7 +217,9 @@ def deploy(session: nox.Session) -> None:
         print("prod release!")
         next_version = get_next_prod_version_from_dev(current_version)
         update_version_string(next_version)
+        set_official_release_flag(True)
         deploy_to_pypi()
+        set_official_release_flag(False)
         send_notification(
             next_version,
             f"{config.API_NAME} v{next_version} has been released",

@@ -304,7 +304,7 @@ class IEventDispatcherBase(abc.ABC):
         event_type : typing.Type[hikari.events.base.Event]
             The event type to listen for. This will listen for subclasses of
             this type additionally.
-        predicate :
+        predicate
             A function or coroutine taking the event as the single parameter.
             This should return `builtins.True` if the event is one you want to
             return, or `builtins.False` if the event should not be returned.

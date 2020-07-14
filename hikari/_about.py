@@ -29,6 +29,7 @@ __discord_invite__ = "https://discord.gg/Jx4cNGG"
 __docs__ = "https://nekokatt.gitlab.io/hikari"
 __email__ = "3903853-nekokatt@users.noreply.gitlab.com"
 __issue_tracker__ = "https://gitlab.com/nekokatt/hikari/issues"
+__is_official_distributed_release__ = False
 __license__ = "LGPL-3.0-ONLY"
 __url__ = "https://gitlab.com/nekokatt/hikari"
 __version__ = "2.0.0.dev0"

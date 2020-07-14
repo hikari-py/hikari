@@ -69,6 +69,10 @@ class BotAppImpl(bot.IBotApp):
 
     Parameters
     ----------
+    banner_package : builtins.str or builtins.None
+        The package to look for a `banner.txt` in. Will default to Hikari's
+        banner if unspecified. If you set this to `builtins.None`, then no
+        banner will be displayed.
     debug : builtins.bool
         Defaulting to `builtins.False`, if `builtins.True`, then each payload sent and received
         on the gateway will be dumped to debug logs, and every HTTP API request
@@ -77,25 +81,22 @@ class BotAppImpl(bot.IBotApp):
         need to enable this.
     gateway_compression : builtins.bool
         Defaulting to `builtins.True`, if `builtins.True`, then zlib transport
-        compression is usedfor each shard connection. If `builtins.False`, no
+        compression is used for each shard connection. If `builtins.False`, no
         compression is used.
     gateway_version : builtins.int
         The version of the gateway to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to using v6.
-    hide_banner : builtins.bool
-        If `builtins.True`, then the banner will not be shown on startup.
-        Defaults to `builtins.False`.
     http_settings : hikari.config.HTTPSettings or builtins.None
         The HTTP-related settings to use.
     initial_activity : hikari.models.presences.Activity or builtins.None or hikari.utilities.undefined.UndefinedType
         The initial activity to have on each shard.
-    initial_activity : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
+    initial_status : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
         The initial status to have on each shard.
     initial_idle_since : datetime.datetime or builtins.None or hikari.utilities.undefined.UndefinedType
         The initial time to show as being idle since, or `builtins.None` if not
         idle, for each shard.
-    initial_idle_since : builtins.bool or hikari.utilities.undefined.UndefinedType
+    initial_is_afk : builtins.bool or hikari.utilities.undefined.UndefinedType
         If `builtins.True`, each shard will appear as being AFK on startup. If `builtins.False`,
         each shard will appear as _not_ being AFK.
     intents : hikari.models.intents.Intent or builtins.None
@@ -170,11 +171,11 @@ class BotAppImpl(bot.IBotApp):
     def __init__(
         self,
         *,
+        banner_package: typing.Optional[str] = "hikari.impl",
         debug: bool = False,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         gateway_compression: bool = True,
         gateway_version: int = 6,
-        hide_banner: bool = False,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         initial_activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
         initial_idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
@@ -199,8 +200,8 @@ class BotAppImpl(bot.IBotApp):
             logging.basicConfig(format=self._determine_default_logging_format())
             logging.root.setLevel(logging_level)
 
-        if not hide_banner:
-            self._dump_banner()
+        if banner_package is not None:
+            self._dump_banner(banner_package)
 
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl()
@@ -329,6 +330,8 @@ class BotAppImpl(bot.IBotApp):
         return datetime.timedelta(seconds=raw_uptime)
 
     async def start(self) -> None:
+        await self._check_for_updates()
+
         self._start_count += 1
         self._started_at_monotonic = time.perf_counter()
         self._started_at_timestamp = date.local_datetime()
@@ -622,13 +625,10 @@ class BotAppImpl(bot.IBotApp):
                 with contextlib.suppress(NotImplementedError):
                     mapping_function(interrupt, *args)
 
-    def _dump_banner(self) -> None:
+    def _dump_banner(self, banner_package: str) -> None:
         from importlib import resources
         import platform
         import string
-
-        import aiohttp
-        import attr
 
         from hikari import _about
 
@@ -654,14 +654,11 @@ class BotAppImpl(bot.IBotApp):
             # System stuff.
             "platform_system": platform.system(),
             "platform_architecture": " ".join(platform.architecture()),
-            # Dependencies.
-            "aiohttp_version": aiohttp.__version__,
-            "attrs_version": attr.__version__,
         }
 
         args.update(self._determine_console_colour_palette())
 
-        with resources.open_text("hikari.impl", "banner.txt") as banner_fp:
+        with resources.open_text(banner_package, "banner.txt") as banner_fp:
             banner = string.Template(banner_fp.read()).safe_substitute(args)
 
         sys.stdout.write(banner + "\n")
@@ -726,3 +723,36 @@ class BotAppImpl(bot.IBotApp):
                 palette[key] = ""
 
         return palette
+
+    @staticmethod
+    async def _check_for_updates() -> None:
+        from hikari import _about
+        from hikari.utilities import version_sniffer
+
+        if not _about.__is_official_distributed_release__:
+            # If we are on a non-released version, it could be modified or a
+            # fork, so don't do any checks.
+            return
+
+        try:
+            version_info = await version_sniffer.fetch_version_info_from_pypi()
+
+            if version_info.this == version_info.latest:
+                _LOGGER.info("everything is up to date!")
+            else:
+                if version_info.this != version_info.latest_compatible:
+                    _LOGGER.warning(
+                        "non-breaking updates are available for hikari, update from v%s to v%s!",
+                        version_info.this,
+                        version_info.latest_compatible,
+                    )
+
+                if version_info.latest != version_info.latest_compatible:
+                    _LOGGER.info(
+                        "breaking updates are available for hikari, consider upgrading from v%s to v%s!",
+                        version_info.this,
+                        version_info.latest,
+                    )
+
+        except Exception as ex:
+            _LOGGER.debug("Error occurred fetching version info", exc_info=ex)
