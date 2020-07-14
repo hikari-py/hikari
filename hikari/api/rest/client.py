@@ -74,7 +74,25 @@ class IRESTClient(component.IComponent, abc.ABC):
         Returns
         -------
         hikari.models.channels.PartialChannel
-            The fetched channel.
+            The channel. This will be a _derivative_ of
+            `hikari.models.channels.PartialChannel`, depending on the type of
+            channel you request for.
+
+            This means that you may get one of
+            `hikari.models.channels.DMChannel`,
+            `hikari.models.channels.GroupDMChannel`,
+            `hikari.models.channels.GuildTextChannel`,
+            `hikari.models.channels.GuildVoiceChannel`,
+            `hikari.models.channels.GuildStoreChannel`,
+            `hikari.models.channels.GuildNewsChannel`.
+
+            Likewise, the `hikari.models.channels.GuildChannel` can be used to
+            determine if a channel is guild-bound, and
+            `hikari.models.channels.TextChannel` can be used to determine
+            if the channel provides textual functionality to the application.
+
+            You can check for these using the `builtins.isinstance`
+            builtin function.
 
         Raises
         ------
