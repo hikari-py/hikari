@@ -726,7 +726,13 @@ class BotAppImpl(bot.IBotApp):
 
     @staticmethod
     async def _check_for_updates() -> None:
+        from hikari import _about
         from hikari.utilities import version_sniffer
+
+        if not _about.__is_official_distributed_release__:
+            # If we are on a non-released version, it could be modified or a
+            # fork, so don't do any checks.
+            return
 
         try:
             version_info = await version_sniffer.fetch_version_info_from_pypi()
