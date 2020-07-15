@@ -154,19 +154,26 @@ class VoiceComponentImpl(voice.IVoiceComponent):
             state_event.state.session_id,
         )
 
-        voice_connection = await voice_connection_type.initialize(
-            channel_id=snowflake.Snowflake(int(channel)),
-            debug=self._app.debug,
-            endpoint=server_event.endpoint,
-            guild_id=guild_id,
-            on_close=self._on_connection_close,
-            owner=self,
-            session_id=state_event.state.session_id,
-            shard_id=shard_id,
-            token=server_event.token,
-            user_id=user_id,
-            **kwargs,
-        )
+        try:
+            voice_connection = await voice_connection_type.initialize(
+                channel_id=snowflake.Snowflake(int(channel)),
+                debug=self._app.debug,
+                endpoint=server_event.endpoint,
+                guild_id=guild_id,
+                on_close=self._on_connection_close,
+                owner=self,
+                session_id=state_event.state.session_id,
+                shard_id=shard_id,
+                token=server_event.token,
+                user_id=user_id,
+                **kwargs,
+            )
+        except Exception:
+            _LOGGER.debug(
+                "error occurred in initialization, leaving voice channel %s in guild %s again", channel, guild
+            )
+            await asyncio.wait_for(shard.update_voice_state(guild, None), timeout=5.0)
+            raise
 
         self._connections[guild_id] = voice_connection
         return voice_connection
