@@ -155,16 +155,19 @@ class VoiceComponentImpl(voice.IVoiceComponent):
         )
 
         voice_connection = await voice_connection_type.initialize(
+            channel_id=snowflake.Snowflake(int(channel)),
             debug=self._app.debug,
             endpoint=server_event.endpoint,
             guild_id=guild_id,
             on_close=self._on_connection_close,
             owner=self,
             session_id=state_event.state.session_id,
+            shard_id=shard_id,
             token=server_event.token,
             user_id=user_id,
             **kwargs,
         )
+
         self._connections[guild_id] = voice_connection
         return voice_connection
 
@@ -189,7 +192,20 @@ class VoiceComponentImpl(voice.IVoiceComponent):
     async def _on_connection_close(self, connection: voice.IVoiceConnection) -> None:
         try:
             del self._connections[connection.guild_id]
-            _LOGGER.debug("successfully unregistered voice connection %s to guild %s", connection, connection.guild_id)
+
+            # Leave the voice channel explicitly, otherwise we will just appear to
+            # not leave properly.
+            await self._app.shards[connection.shard_id].update_voice_state(
+                guild=connection.guild_id, channel=None,
+            )
+
+            _LOGGER.debug(
+                "successfully unregistered voice connection %s to guild %s and left voice channel %s",
+                connection,
+                connection.guild_id,
+                connection.channel_id,
+            )
+
         except KeyError:
             _LOGGER.warning(
                 "ignored closure of phantom unregistered voice connection %s to guild %s. Perhaps this is a bug?",
