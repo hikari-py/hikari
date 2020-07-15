@@ -59,7 +59,6 @@ class VoiceComponentImpl(voice.IVoiceComponent):
         self._app = app
         self._dispatcher = event_dispatcher
         self._connections: typing.Dict[snowflake.Snowflake, voice.IVoiceConnection] = {}
-
         self._dispatcher.subscribe(voice_events.VoiceEvent, self._on_voice_event)
 
     @property
@@ -70,11 +69,13 @@ class VoiceComponentImpl(voice.IVoiceComponent):
     def connections(self) -> typing.Mapping[snowflake.Snowflake, voice.IVoiceConnection]:
         return self._connections.copy()
 
-    async def close(self) -> None:
+    async def disconnect(self) -> None:
         if self._connections:
             _LOGGER.info("shutting down %s voice connection(s)", len(self._connections))
             await asyncio.gather(*(c.disconnect() for c in self._connections.values()))
 
+    async def close(self) -> None:
+        await self.disconnect()
         self._dispatcher.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
 
     async def connect_to(
@@ -157,6 +158,7 @@ class VoiceComponentImpl(voice.IVoiceComponent):
             debug=self._app.debug,
             endpoint=server_event.endpoint,
             guild_id=guild_id,
+            on_close=self._on_connection_close,
             owner=self,
             session_id=state_event.state.session_id,
             token=server_event.token,
@@ -183,6 +185,17 @@ class VoiceComponentImpl(voice.IVoiceComponent):
             return event.guild_id == guild_id
 
         return predicate
+
+    async def _on_connection_close(self, connection: voice.IVoiceConnection) -> None:
+        try:
+            del self._connections[connection.guild_id]
+            _LOGGER.debug("successfully unregistered voice connection %s to guild %s", connection, connection.guild_id)
+        except KeyError:
+            _LOGGER.warning(
+                "ignored closure of phantom unregistered voice connection %s to guild %s. Perhaps this is a bug?",
+                connection,
+                connection.guild_id,
+            )
 
     async def _on_voice_event(self, event: voice_events.VoiceEvent) -> None:
         if event.guild_id is not None and event.guild_id in self._connections:
