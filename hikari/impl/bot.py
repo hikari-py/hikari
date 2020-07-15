@@ -46,7 +46,7 @@ from hikari.impl.cache import stateless as stateless_cache_impl
 from hikari.impl.gateway import manager
 from hikari.impl.gateway import shard as gateway_shard_impl
 from hikari.impl.rest import client as rest_client_impl
-from hikari.impl.voice import voice_component
+from hikari.impl import voice
 from hikari.models import presences
 from hikari.utilities import constants
 from hikari.utilities import date
@@ -248,7 +248,7 @@ class BotAppImpl(bot.IBotApp):
         self._token = token
         self._use_compression = gateway_compression
         self._version = gateway_version
-        self._voice = voice_component.VoiceComponentImpl(self, self._event_manager)
+        self._voice = voice.VoiceComponentImpl(self, self._event_manager)
 
     def __del__(self) -> None:
         if self._start_count == 0:
@@ -317,7 +317,7 @@ class BotAppImpl(bot.IBotApp):
         return self._shard_count
 
     @property
-    def voice(self) -> voice_component.VoiceComponentImpl:
+    def voice(self) -> voice.VoiceComponentImpl:
         return self._voice
 
     @property

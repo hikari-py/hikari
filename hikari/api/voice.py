@@ -59,7 +59,20 @@ class IVoiceComponent(component.IComponent, abc.ABC):
 
     @abc.abstractmethod
     async def close(self) -> None:
-        """Shut down all connections, waiting for them to terminate."""
+        """Shut down all connections, waiting for them to terminate.
+
+        Once this is done, unsubscribe from any events.
+
+        If you simply wish to disconnect every connection, use `disconnect`
+        instead.
+        """
+
+    @abc.abstractmethod
+    async def disconnect(self) -> None:
+        """Shut down all connections, waiting for them to terminate.
+
+        This will not close the voice component.
+        """
 
     @abc.abstractmethod
     async def connect_to(
@@ -129,6 +142,7 @@ class IVoiceConnection(abc.ABC):
         debug: bool,
         endpoint: str,
         guild_id: snowflake.Snowflake,
+        on_close: typing.Callable[[_T], typing.Awaitable[None]],
         owner: IVoiceComponent,
         session_id: str,
         token: str,
@@ -149,6 +163,9 @@ class IVoiceConnection(abc.ABC):
             provide the wrong information four years later).
         guild_id : hikari.utilities.snowflake.Snowflake
             The guild ID that the websocket should connect to.
+        on_close : typing.Callable[[T], typing.Awaitable[None]]
+            A shutdown hook to invoke when closing a connection to ensure the
+            connection is unregistered from the voice component safely.
         owner : IVoiceComponent
             The component that made this connection object.
         session_id : builtins.str
@@ -160,6 +177,11 @@ class IVoiceConnection(abc.ABC):
         **kwargs : typing.Any
             Any implementation-specific arguments to provide to the
             voice connection that is being initialized.
+
+        Returns
+        -------
+        T
+            The type of this connection object.
         """
 
     @property
