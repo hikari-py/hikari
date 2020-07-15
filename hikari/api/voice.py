@@ -139,12 +139,14 @@ class IVoiceConnection(abc.ABC):
     @abc.abstractmethod
     async def initialize(
         cls: typing.Type[_T],
+        channel_id: snowflake.Snowflake,
         debug: bool,
         endpoint: str,
         guild_id: snowflake.Snowflake,
         on_close: typing.Callable[[_T], typing.Awaitable[None]],
         owner: IVoiceComponent,
         session_id: str,
+        shard_id: int,
         token: str,
         user_id: snowflake.Snowflake,
         **kwargs: typing.Any,
@@ -153,6 +155,8 @@ class IVoiceConnection(abc.ABC):
 
         Parameters
         ----------
+        channel_id : hikari.utilities.snowflake.Snowflake
+            The channel ID that the voice connection is actively connected to.
         debug : builtins.bool
             `builtins.True` if debugging mode should be enabled. This is up to
             each implementation to decide how to provide this, if at all.
@@ -170,6 +174,9 @@ class IVoiceConnection(abc.ABC):
             The component that made this connection object.
         session_id : builtins.str
             The voice session ID to use.
+        shard_id : builtins.int
+            The associated shard ID that the voice connection was generated
+            from.
         token : builtins.str
             The voice token to use.
         user_id : hikari.utilities.snowflake.Snowflake
@@ -186,8 +193,13 @@ class IVoiceConnection(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def owner(self) -> IVoiceComponent:
-        """Return the component that is managing this connection."""
+    def channel_id(self) -> snowflake.Snowflake:
+        """Return the ID of the voice channel this voice connection is in."""
+
+    @property
+    @abc.abstractmethod
+    def guild_id(self) -> snowflake.Snowflake:
+        """Return the ID of the guild this voice connection is in."""
 
     @property
     @abc.abstractmethod
@@ -196,8 +208,13 @@ class IVoiceConnection(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def guild_id(self) -> snowflake.Snowflake:
-        """Return the ID of the guild this voice connection is in."""
+    def shard_id(self) -> int:
+        """Return the ID of the shard that requested the connection."""
+
+    @property
+    @abc.abstractmethod
+    def owner(self) -> IVoiceComponent:
+        """Return the component that is managing this connection."""
 
     @abc.abstractmethod
     async def disconnect(self) -> None:
