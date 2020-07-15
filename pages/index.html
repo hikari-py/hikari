@@ -37,60 +37,78 @@
 </head>
 
 <body>
+    <div class="pre mono background-only-base">
+        <pre class="background-only">
+            <span class="red">  oooo         o8o  oooo                            o8o   </span>  <span class="bwh">  © 2019-2020 Nekokatt LGPL-3.0-ONLY   </span>
+            <span class="ora">  `888         `"'  `888                            `"'   </span>  <span class="whi">  Installed at:  </span><span class="lin">/home/nekokatt/code/hikari/hikari</span>
+            <span class="yel">   888 .oo.   oooo   888  oooo   .oooo.   oooo d8b oooo   </span>  <span class="whi">  Support:       </span><span class="lin">https://discord.gg/Jx4cNGG</span>
+            <span class="gre">   888P"Y88b  `888   888 .8P'   `P  )88b  `888""8P `888   </span>  <span class="whi">  Documentation: </span><span class="lin">https://nekokatt.gitlab.io/hikari</span>
+            <span class="cya">   888   888   888   888888.     .oP"888   888      888   </span>
+            <span class="blu">   888   888   888   888 `88b.  d8(  888   888      888   </span>  <span class="bwh">  CPython 3.8.4  </span>
+            <span class="pur">  o888o o888o o888o o888o o888o `Y888""8o d888b    o888o  </span>  <span class="whi">  compiled with GCC 10.1.0 (default May 17 2020 18:15:42)  </span>
+            <span class="gra"> ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  </span>  <span class="whi">  glibc 2.31 on Linux 64bit ELF  </span>
+            <span class="gra">                                        v2.0.0.dev43      </span>
 
-    <pre class="background-only">
-    <code class="python">
-        #!/usr/bin/env python
-        # -*- coding: utf-8 -*-
-        import asyncio
-        import functools
-        import os
+            <span class="red">I</span> <span class="yel">2020-07-15 16:45:11,476</span><span class="gre">               hikari:</span><span class="cya"> single-sharded configuration -- you have started 29/1000 sessions prior to connecting (resets at 16/07/20 11:38:05 BST)</span>
+            <span class="red">I</span> <span class="yel">2020-07-15 16:45:11,779</span><span class="gre">     hikari.gateway.0:</span><span class="cya"> received HELLO, heartbeat interval is 41.25s</span>
+            <span class="red">I</span> <span class="yel">2020-07-15 16:45:11,958</span><span class="gre">     hikari.gateway.0:</span><span class="cya"> shard is ready [session:1aa5f3fde733687ae7b41b1b55b29792, user_id:572144340277919754, tag:hikari#5863]</span>
 
-        import hikari
+            <span class="whi">^C</span>
+            <span class="whi">Terminated 13897</span>
+            <span class="gre">[nekokatt@pc <span class="gra">~/hikari</span> ] $ </span> <span class="whi">cat bot.py</span>
+            <code class="python">
+            #!/usr/bin/env python
+            # -*- coding: utf-8 -*-
+            import asyncio
+            import functools
+            import os
 
-        bot = hikari.Bot(token=os.environ["BOT_TOKEN"])
+            import hikari
 
-        def command(name):
-            def decorator(fn):
-                @functools.wraps(fn)
-                async def wrapper(event):
-                    if not event.message.author.is_bot and event.message.content.startswith(name):
-                        await fn(event)
-                return wrapper
-            return decorator
+            bot = hikari.Bot(token=os.environ["BOT_TOKEN"])
 
-        @bot.listen()
-        @command("hk.ping")
-        async def ping(message: hikari.MessageCreateEvent) -> None:
-            await event.message.reply("Pong!")
+            def command(name):
+                def decorator(fn):
+                    @functools.wraps(fn)
+                    async def wrapper(event):
+                        if not event.message.author.is_bot and event.message.content.startswith(name):
+                            await fn(event)
+                    return wrapper
+                return decorator
 
-        @bot.event()
-        @command("hk.add")
-        async def add_numbers(event: hikari.MessageCreateEvent) -> None:
-            await event.message.reply("Please enter the first number")
+            @bot.listen()
+            @command("hk.ping")
+            async def ping(message: hikari.MessageCreateEvent) -> None:
+                await event.message.reply("Pong!")
 
-            def is_number_check(e):
-                return event.message.author == e.message.author and e.message.content.isdigit()
+            @bot.event()
+            @command("hk.add")
+            async def add_numbers(event: hikari.MessageCreateEvent) -> None:
+                await event.message.reply("Please enter the first number")
 
-            try:
-                e1 = await bot.wait_for(MessageCreateEvent, predicate=is_number_check, timeout=30)
-                await event.reply("Please enter the second number")
-                e2 = await bot.wait_for(MessageCreateEvent, predicate=is_number_check, timeout=30)
+                def is_number_check(e):
+                    return event.message.author == e.message.author and e.message.content.isdigit()
 
-            except asyncio.TimeoutError:
-                await event.message.reply("You took too long...")
+                try:
+                    e1 = await bot.wait_for(MessageCreateEvent, predicate=is_number_check, timeout=30)
+                    await event.reply("Please enter the second number")
+                    e2 = await bot.wait_for(MessageCreateEvent, predicate=is_number_check, timeout=30)
 
-            else:
-                val1 = int(e1.message.content)
-                val2 = int(e2.message.content)
+                except asyncio.TimeoutError:
+                    await event.message.reply("You took too long...")
 
-                embed = hikari.Embed(title="Result!", description=f"{val1} + {val2}" color="#3f3")
+                else:
+                    val1 = int(e1.message.content)
+                    val2 = int(e2.message.content)
 
-                await event.message.reply(embed=embed)
+                    embed = hikari.Embed(title="Result!", description=f"{val1} + {val2}" color="#3f3")
 
-        bot.run()
-    </code>
-</pre>
+                    await event.message.reply(embed=embed)
+
+            bot.run()
+            </code>
+        </pre>
+    </div>
 
     <div class="cover-container d-flex h-100 p-3 mx-auto flex-column text-center" id="main-content">
         <header class="masthead mb-auto">
