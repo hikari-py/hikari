@@ -29,8 +29,8 @@ import typing
 
 from hikari import errors
 from hikari.api import bot
+from hikari.api import event_dispatcher
 from hikari.api import voice
-from hikari.api.gateway import dispatcher
 from hikari.events import voice as voice_events
 from hikari.models import channels
 from hikari.models import guilds
@@ -55,7 +55,7 @@ class VoiceComponentImpl(voice.IVoiceComponent):
 
     __slots__ = ("_app", "_connections", "_dispatcher")
 
-    def __init__(self, app: bot.IBotApp, event_dispatcher: dispatcher.IEventDispatcherComponent) -> None:
+    def __init__(self, app: bot.IBotApp, event_dispatcher: event_dispatcher.IEventDispatcherComponent) -> None:
         self._app = app
         self._dispatcher = event_dispatcher
         self._connections: typing.Dict[snowflake.Snowflake, voice.IVoiceConnection] = {}

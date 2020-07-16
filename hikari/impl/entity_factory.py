@@ -25,8 +25,8 @@ import datetime
 import typing
 
 from hikari.api import entity_factory
-from hikari.api.gateway import shard as gateway_shard
-from hikari.api.rest import app as rest_app
+from hikari.api import shard as gateway_shard
+from hikari.api import rest as rest_app
 from hikari.events import channel as channel_events
 from hikari.events import guild as guild_events
 from hikari.events import message as message_events

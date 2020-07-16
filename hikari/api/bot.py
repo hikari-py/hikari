@@ -24,16 +24,16 @@ __all__: typing.Final[typing.List[str]] = ["IBotApp"]
 import abc
 import typing
 
+from hikari.api import event_consumer
+from hikari.api import event_dispatcher
+from hikari.api import shard
 from hikari.api import voice
-from hikari.api.gateway import consumer
-from hikari.api.gateway import dispatcher
-from hikari.api.gateway import shard
 
 if typing.TYPE_CHECKING:
     import datetime
 
 
-class IBotApp(consumer.IEventConsumerApp, dispatcher.IEventDispatcherApp, voice.IVoiceApp, abc.ABC):
+class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatcherApp, voice.IVoiceApp, abc.ABC):
     """Base for bot applications.
 
     Bots are components that have access to a HTTP API, an event dispatcher,
