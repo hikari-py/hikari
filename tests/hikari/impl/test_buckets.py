@@ -21,7 +21,7 @@ import time
 import mock
 import pytest
 
-from hikari.impl.rest import buckets
+from hikari.impl import buckets
 from hikari.utilities import routes
 from tests.hikari import hikari_test_helpers
 

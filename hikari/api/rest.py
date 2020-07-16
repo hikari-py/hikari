@@ -23,13 +23,16 @@ __all__: typing.Final[typing.List[str]] = ["IRESTClient"]
 import abc
 import typing
 
+from hikari.api import app
 from hikari.api import component
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import datetime
+    import types
 
-    from hikari.api.rest import special_endpoints
+    from hikari import config
+    from hikari.api import special_endpoints
     from hikari.models import applications
     from hikari.models import audit_logs
     from hikari.models import channels
@@ -48,6 +51,102 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import files
     from hikari.utilities import iterators
     from hikari.utilities import snowflake
+
+
+class IRESTApp(app.IApp, abc.ABC):
+    """Component specialization that is used for HTTP-only applications.
+
+    This is a specific instance of a HTTP-only client provided by pooled
+    implementations of `IRESTAppFactory`. It may also be used by bots
+    as a base if they require HTTP-API access.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def rest(self) -> IRESTClient:
+        """HTTP API Client.
+
+        Use this to make calls to Discord's HTTP API over HTTPS.
+
+        Returns
+        -------
+        IRESTClient
+            The HTTP API client.
+        """
+
+
+class IRESTAppContextManager(IRESTApp):
+    """An IRESTApp that may behave as a context manager."""
+
+    @abc.abstractmethod
+    async def __aenter__(self) -> IRESTAppContextManager:
+        ...
+
+    @abc.abstractmethod
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_val: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        ...
+
+
+class IRESTAppFactory(abc.ABC):
+    """A client factory that emits clients.
+
+    This enables a connection pool to be shared for stateless HTTP-only
+    applications such as web dashboards, while still using the HTTP architecture
+    that the bot system will use.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @abc.abstractmethod
+    def acquire(self, token: str, token_type: str) -> IRESTAppContextManager:
+        """Acquire a HTTP client for the given authentication details.
+
+        Parameters
+        ----------
+        token : builtins.str
+            The token to use.
+        token_type : builtins.str
+            The token type to use.
+
+        Returns
+        -------
+        IRESTApp
+            The HTTP client to use.
+        """
+
+    @abc.abstractmethod
+    async def close(self) -> None:
+        """Safely shut down all resources."""
+
+    @property
+    @abc.abstractmethod
+    def http_settings(self) -> config.HTTPSettings:
+        """HTTP-specific settings."""
+
+    @property
+    @abc.abstractmethod
+    def proxy_settings(self) -> config.ProxySettings:
+        """Proxy-specific settings."""
+
+    @abc.abstractmethod
+    async def __aenter__(self) -> IRESTAppFactory:
+        ...
+
+    @abc.abstractmethod
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_val: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        ...
 
 
 class IRESTClient(component.IComponent, abc.ABC):

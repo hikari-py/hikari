@@ -37,11 +37,11 @@ import typing
 
 import attr
 
-from hikari.api.gateway import shard as gateway_shard
+from hikari.api import shard as gateway_shard
 from hikari.events import base as base_events
 
 if typing.TYPE_CHECKING:
-    from hikari.api.rest import app as rest_app
+    from hikari.api import rest as rest_app
     from hikari.models import guilds
     from hikari.models import presences as presences_
     from hikari.models import users
