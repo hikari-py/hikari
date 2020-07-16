@@ -132,7 +132,7 @@ class GatewayServerClosedConnectionError(GatewayError):
         super().__init__(reason)
 
     def __str__(self) -> str:
-        return f"Server closed connection with code {self.code} because {self.reason}"
+        return f"Server closed connection with code {self.code} ({self.reason})"
 
 
 class HTTPError(HikariError):

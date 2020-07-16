@@ -37,16 +37,16 @@ import warnings
 from hikari import config
 from hikari import errors
 from hikari.api import bot
-from hikari.api.gateway import shard as gateway_shard
+from hikari.api import shard as gateway_shard
 from hikari.events import other as other_events
 from hikari.impl import entity_factory as entity_factory_impl
+from hikari.impl import event_manager
+from hikari.impl import in_memory_cache as cache_impl
 from hikari.impl import rate_limits
-from hikari.impl.cache import in_memory as cache_impl
-from hikari.impl.cache import stateless as stateless_cache_impl
-from hikari.impl.gateway import manager
-from hikari.impl.gateway import shard as gateway_shard_impl
-from hikari.impl.rest import client as rest_client_impl
-from hikari.impl.voice import voice_component
+from hikari.impl import rest as rest_client_impl
+from hikari.impl import shard as gateway_shard_impl
+from hikari.impl import stateless_cache as stateless_cache_impl
+from hikari.impl import voice
 from hikari.models import presences
 from hikari.utilities import constants
 from hikari.utilities import date
@@ -56,7 +56,7 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
 
     from hikari.api import cache as cache_
-    from hikari.api.gateway import dispatcher as event_dispatcher_
+    from hikari.api import event_dispatcher as event_dispatcher_
     from hikari.events import base as base_events
     from hikari.models import gateway as gateway_models
     from hikari.models import intents as intents_
@@ -211,7 +211,7 @@ class BotAppImpl(bot.IBotApp):
 
         self._debug = debug
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
-        self._event_manager = manager.EventManagerImpl(app=self, intents_=intents)
+        self._event_manager = event_manager.EventManagerComponentImpl(app=self, intents_=intents)
         self._executor = executor
         self._global_ratelimit = rate_limits.ManualRateLimiter()
         self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
@@ -248,7 +248,7 @@ class BotAppImpl(bot.IBotApp):
         self._token = token
         self._use_compression = gateway_compression
         self._version = gateway_version
-        self._voice = voice_component.VoiceComponentImpl(self, self._event_manager)
+        self._voice = voice.VoiceComponentImpl(self, self._event_manager)
 
     def __del__(self) -> None:
         if self._start_count == 0:
@@ -270,11 +270,11 @@ class BotAppImpl(bot.IBotApp):
         return self._entity_factory
 
     @property
-    def event_consumer(self) -> manager.EventManagerImpl:
+    def event_consumer(self) -> event_manager.EventManagerComponentImpl:
         return self._event_manager
 
     @property
-    def event_dispatcher(self) -> manager.EventManagerImpl:
+    def event_dispatcher(self) -> event_manager.EventManagerComponentImpl:
         return self._event_manager
 
     @property
@@ -317,7 +317,7 @@ class BotAppImpl(bot.IBotApp):
         return self._shard_count
 
     @property
-    def voice(self) -> voice_component.VoiceComponentImpl:
+    def voice(self) -> voice.VoiceComponentImpl:
         return self._voice
 
     @property

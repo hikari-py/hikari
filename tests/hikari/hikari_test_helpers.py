@@ -29,7 +29,6 @@ import async_timeout
 import mock
 import pytest
 
-
 # Value that is considered a reasonable time to wait for something asyncio-based
 # to occur in the background. This is long enough that a shit computer will
 # generally still be able to do some stuff with asyncio even if being tanked,

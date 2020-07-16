@@ -24,10 +24,10 @@ import abc
 import typing
 
 from hikari.api import component
-from hikari.api.rest import app
+from hikari.api import rest as rest_api
 
 if typing.TYPE_CHECKING:
-    from hikari.api.gateway import shard as gateway_shard
+    from hikari.api import shard as gateway_shard
     from hikari.utilities import data_binding
 
 
@@ -59,7 +59,8 @@ class IEventConsumerComponent(component.IComponent, abc.ABC):
         """
 
 
-class IEventConsumerApp(app.IRESTApp, abc.ABC):
+# TODO: generify and remove requirement for REST for event handling only.
+class IEventConsumerApp(rest_api.IRESTApp, abc.ABC):
     """Application specialization that supports consumption of raw events.
 
     This may be combined with `IGatewayZookeeperApp` for most single-process

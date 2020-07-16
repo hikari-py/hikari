@@ -15,11 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import asyncio
 import sys
 
-import asyncio
 import pytest
-
 
 sys.set_coroutine_origin_tracking_depth(100)
 

@@ -20,13 +20,13 @@ import datetime
 import mock
 import pytest
 
-from hikari.api.rest import app
-from hikari.impl import entity_factory
+from hikari.api import rest
 from hikari.events import channel as channel_events
 from hikari.events import guild as guild_events
 from hikari.events import message as message_events
 from hikari.events import other as other_events
 from hikari.events import voice as voice_events
+from hikari.impl import entity_factory
 from hikari.models import applications as application_models
 from hikari.models import audit_logs as audit_log_models
 from hikari.models import channels as channel_models
@@ -76,8 +76,8 @@ def test__deserialize_max_age_returns_null():
 
 class TestEntityFactoryImpl:
     @pytest.fixture()
-    def mock_app(self) -> app.IRESTApp:
-        return mock.MagicMock(app.IRESTApp)
+    def mock_app(self) -> rest.IRESTApp:
+        return mock.MagicMock(rest.IRESTApp)
 
     @pytest.fixture()
     def entity_factory_impl(self, mock_app) -> entity_factory.EntityFactoryComponentImpl:
