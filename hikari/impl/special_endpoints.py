@@ -36,6 +36,7 @@ from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import iterators
 from hikari.utilities import routes
+from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -50,7 +51,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import messages
     from hikari.models import permissions as permissions_
     from hikari.models import users
-    from hikari.utilities import snowflake
 
 
 @typing.final
