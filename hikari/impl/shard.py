@@ -34,7 +34,7 @@ import aiohttp
 import attr
 
 from hikari import errors
-from hikari.api.gateway import shard
+from hikari.api import shard
 from hikari.impl import rate_limits
 from hikari.models import presences
 from hikari.utilities import constants
@@ -46,7 +46,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import config
-    from hikari.api.gateway import consumer
+    from hikari.api import event_consumer
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import intents as intents_
@@ -182,7 +182,7 @@ class GatewayShardImpl(shard.IGatewayShard):
     def __init__(
         self,
         *,
-        app: consumer.IEventConsumerApp,
+        app: event_consumer.IEventConsumerApp,
         debug: bool = False,
         http_settings: config.HTTPSettings,
         initial_activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
@@ -252,7 +252,7 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     @property
     @typing.final
-    def app(self) -> consumer.IEventConsumerApp:
+    def app(self) -> event_consumer.IEventConsumerApp:
         return self._app
 
     @property
@@ -369,9 +369,7 @@ class GatewayShardImpl(shard.IGatewayShard):
                 self._logger.warning(
                     "server closed the connection with %s (%s), will attempt to reconnect", ex.code, ex.reason,
                 )
-                await self._close_ws(self._CloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me")
             else:
-                await self._close_ws(self._CloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection")
                 self._seq = None
                 self.session_id = None
                 self._backoff.reset()
@@ -506,53 +504,46 @@ class GatewayShardImpl(shard.IGatewayShard):
             await self._ws.close(code=code, message=bytes(message, "utf-8"))
 
     async def _handshake(self) -> None:
-        await self._hello()
-        await self._identify() if self.session_id is None else await self._resume()
-
-    async def _hello(self) -> None:
-        message = await self._receive_json_payload()
-        op = message["op"]
-        if message["op"] != self._Opcode.HELLO:
-            await self._close_ws(self._CloseCode.RFC_6455_POLICY_VIOLATION.value, "did not receive HELLO")
-            raise errors.GatewayError(f"Expected HELLO opcode {self._Opcode.HELLO.value} but received {op}")
-
-        self.heartbeat_interval = message["d"]["heartbeat_interval"] / 1_000.0
+        hello = await self._expect_opcode(self._Opcode.HELLO)
+        self.heartbeat_interval = hello["heartbeat_interval"] / 1_000.0
         self._logger.info("received HELLO, heartbeat interval is %ss", self.heartbeat_interval)
 
-    async def _identify(self) -> None:
-        payload: data_binding.JSONObject = {
-            "op": self._Opcode.IDENTIFY,
-            "d": {
-                "token": self._token,
-                "compress": False,
-                "large_threshold": self.large_threshold,
-                "properties": {
-                    "$os": constants.SYSTEM_TYPE,
-                    "$browser": constants.AIOHTTP_VERSION,
-                    "$device": constants.LIBRARY_VERSION,
-                },
-                "shard": [self._shard_id, self._shard_count],
-            },
-        }
-
-        if self._intents is not None:
-            payload["d"]["intents"] = self._intents
-
-        if undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
-            # noinspection PyTypeChecker
-            payload["d"]["presence"] = self._app.entity_factory.serialize_gateway_presence(
-                idle_since=self._idle_since if self._idle_since is not undefined.UNDEFINED else None,
-                afk=self._is_afk if self._is_afk is not undefined.UNDEFINED else False,
-                status=self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE,
-                activity=self._activity if self._activity is not undefined.UNDEFINED else None,
+        if self.session_id is not None:
+            await self._send_json(
+                {
+                    "op": self._Opcode.RESUME,
+                    "d": {"token": self._token, "seq": self._seq, "session_id": self.session_id},
+                }
             )
+        else:
+            payload: data_binding.JSONObject = {
+                "op": self._Opcode.IDENTIFY,
+                "d": {
+                    "token": self._token,
+                    "compress": False,
+                    "large_threshold": self.large_threshold,
+                    "properties": {
+                        "$os": constants.SYSTEM_TYPE,
+                        "$browser": constants.AIOHTTP_VERSION,
+                        "$device": constants.LIBRARY_VERSION,
+                    },
+                    "shard": [self._shard_id, self._shard_count],
+                },
+            }
 
-        await self._send_json(payload)
+            if self._intents is not None:
+                payload["d"]["intents"] = self._intents
 
-    async def _resume(self) -> None:
-        await self._send_json(
-            {"op": self._Opcode.RESUME, "d": {"token": self._token, "seq": self._seq, "session_id": self.session_id}}
-        )
+            if undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
+                # noinspection PyTypeChecker
+                payload["d"]["presence"] = self._app.entity_factory.serialize_gateway_presence(
+                    idle_since=self._idle_since if self._idle_since is not undefined.UNDEFINED else None,
+                    afk=self._is_afk if self._is_afk is not undefined.UNDEFINED else False,
+                    status=self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE,
+                    activity=self._activity if self._activity is not undefined.UNDEFINED else None,
+                )
+
+            await self._send_json(payload)
 
     async def _heartbeat_keepalive(self) -> None:
         try:
@@ -568,7 +559,6 @@ class GatewayShardImpl(shard.IGatewayShard):
                         time_since_heartbeat_sent,
                     )
                     self._zombied = True
-                    await self._close_ws(self._CloseCode.DO_NOT_INVALIDATE_SESSION, "zombie connection")
                     return
 
                 self._logger.debug(
@@ -588,7 +578,7 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     async def _poll_events(self) -> None:
         while not self._request_close_event.is_set():
-            message = await self._receive_json_payload()
+            message = await self._receive_json()
 
             op = message["op"]
             data = message["d"]
@@ -633,7 +623,18 @@ class GatewayShardImpl(shard.IGatewayShard):
             else:
                 self._logger.debug("ignoring unrecognised opcode %s", op)
 
-    async def _receive_json_payload(self) -> data_binding.JSONObject:
+    async def _expect_opcode(self, opcode: _Opcode) -> typing.Mapping[str, typing.Any]:
+        message = await self._receive_json()
+        op = message["op"]
+
+        if op == opcode:
+            return message["d"]  # type: ignore[no-any-return]
+
+        error_message = f"Unexpected opcode {op} received, expected {opcode}"
+        await self._close_ws(self._CloseCode.RFC_6455_PROTOCOL_ERROR, error_message)
+        raise errors.GatewayError(error_message)
+
+    async def _receive_json(self) -> data_binding.JSONObject:
         message = await self._receive_raw()
 
         payload: data_binding.JSONObject
@@ -652,33 +653,8 @@ class GatewayShardImpl(shard.IGatewayShard):
             self._log_debug_payload(string, "received text payload [t:%s, op:%s]", payload.get("t"), payload.get("op"))
             return payload
 
-        if message.type == aiohttp.WSMsgType.CLOSE:
-            close_code = self._ws.close_code  # type: ignore[union-attr]
-            self._logger.debug("connection closed with code %s", close_code)
-
-            if close_code in self._CloseCode.__members__.values():
-                reason = self._CloseCode(close_code).name  # type: ignore[arg-type]
-            else:
-                reason = f"unknown close code {close_code}"
-
-            can_reconnect = close_code < 4000 or close_code in (  # type: ignore[operator]
-                self._CloseCode.DECODE_ERROR,
-                self._CloseCode.INVALID_SEQ,
-                self._CloseCode.UNKNOWN_ERROR,
-                self._CloseCode.SESSION_TIMEOUT,
-                self._CloseCode.RATE_LIMITED,
-            )
-
-            # Assume we can always resume first.
-            raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect)
-
-        if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
-            raise self._SocketClosed
-
-        # Assume exception for now.
-        ex = self._ws.exception()  # type: ignore[union-attr]
-        self._logger.debug("encountered unexpected error", exc_info=ex)
-        raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
+        # This should NEVER occur unless we broke this badly.
+        raise TypeError("Unexpected message type " + message.type)
 
     async def _receive_zlib_message(self, first_packet: bytes) -> typing.Tuple[int, str]:
         # Alloc new array each time; this prevents consuming a large amount of
@@ -699,9 +675,39 @@ class GatewayShardImpl(shard.IGatewayShard):
         return packets, self._zlib.decompress(buff).decode("utf-8")
 
     async def _receive_raw(self) -> aiohttp.WSMessage:
-        packet: aiohttp.WSMessage = await self._ws.receive()  # type: ignore[union-attr]
+        message: aiohttp.WSMessage = await self._ws.receive()  # type: ignore[union-attr]
         self.last_message_received = self._now()
-        return packet
+
+        if message.type == aiohttp.WSMsgType.CLOSE:
+            close_code = int(message.data)
+            reason = message.extra
+            self._logger.error("connection closed with code %s (%s)", close_code, reason)
+
+            can_reconnect = close_code < 4000 or close_code in (
+                self._CloseCode.DECODE_ERROR,
+                self._CloseCode.INVALID_SEQ,
+                self._CloseCode.UNKNOWN_ERROR,
+                self._CloseCode.SESSION_TIMEOUT,
+                self._CloseCode.RATE_LIMITED,
+            )
+
+            # Assume we can always resume first.
+            raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect)
+
+        if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
+            raise self._SocketClosed
+
+        if message.type == aiohttp.WSMsgType.ERROR:
+            # Assume exception for now.
+            ex = self._ws.exception()  # type: ignore[union-attr]
+            self._logger.warning(
+                "encountered unexpected error: %s",
+                ex,
+                exc_info=ex if self._logger.isEnabledFor(logging.DEBUG) else None,
+            )
+            raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
+
+        return message
 
     async def _send_json(self, payload: data_binding.JSONObject) -> None:
         await self.ratelimiter.acquire()

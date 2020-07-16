@@ -26,8 +26,8 @@ import pytest
 
 from hikari import config
 from hikari import errors
+from hikari.impl import shard
 from hikari.models import presences
-from hikari.impl.gateway import shard
 from hikari.utilities import undefined
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
@@ -403,13 +403,6 @@ class TestRunOnceShielded:
         assert client._seq == 1234
         assert client.session_id == "69420"
 
-    async def test_server_connection_error_closes_websocket_if_reconnectable(self, client, client_session):
-        client._run_once = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, True))
-        assert await client._run_once_shielded(client_session) is True
-        client._close_ws.assert_awaited_once_with(
-            shard.GatewayShardImpl._CloseCode.RFC_6455_NORMAL_CLOSURE, "you hung up on me"
-        )
-
     @hikari_test_helpers.timeout()
     async def test_server_connection_error_does_not_reconnect_if_not_reconnectable(self, client, client_session):
         client._run_once = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, False))
@@ -421,14 +414,6 @@ class TestRunOnceShielded:
         assert client._seq is None
         assert client.session_id is None
         client._backoff.reset.assert_called_once_with()
-
-    async def test_server_connection_error_closes_websocket_if_not_reconnectable(self, client, client_session):
-        client._run_once = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, False))
-        with pytest.raises(errors.GatewayServerClosedConnectionError):
-            await client._run_once_shielded(client_session)
-        client._close_ws.assert_awaited_once_with(
-            shard.GatewayShardImpl._CloseCode.RFC_6455_UNEXPECTED_CONDITION, "you broke the connection"
-        )
 
     @pytest.mark.parametrize(
         ["zombied", "request_close", "expect_backoff_called"],

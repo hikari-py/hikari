@@ -30,18 +30,19 @@ import typing
 
 import attr
 
-from hikari.api.rest import special_endpoints
+from hikari.api import special_endpoints
 from hikari.models import emojis
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import iterators
 from hikari.utilities import routes
+from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import types
 
-    from hikari.api.rest import app
+    from hikari.api import rest
     from hikari.models import applications
     from hikari.models import audit_logs
     from hikari.models import channels
@@ -50,7 +51,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import messages
     from hikari.models import permissions as permissions_
     from hikari.models import users
-    from hikari.utilities import snowflake
 
 
 @typing.final
@@ -110,7 +110,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     """
 
     # Required arguments.
-    _app: app.IRESTApp
+    _app: rest.IRESTApp
     _name: str
 
     # Optional args that we kept hidden.
@@ -288,7 +288,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
 
     def __init__(
         self,
-        app: app.IRESTApp,
+        app: rest.IRESTApp,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -330,7 +330,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.UserImpl"]):
 
     def __init__(
         self,
-        app: app.IRESTApp,
+        app: rest.IRESTApp,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -373,7 +373,7 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
 
     def __init__(
         self,
-        app: app.IRESTApp,
+        app: rest.IRESTApp,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -412,7 +412,7 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
 
     def __init__(
         self,
-        app: app.IRESTApp,
+        app: rest.IRESTApp,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -452,7 +452,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
 
     def __init__(
         self,
-        app: app.IRESTApp,
+        app: rest.IRESTApp,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],

@@ -48,7 +48,7 @@ from hikari.config import *
 from hikari.errors import *
 from hikari.events import *
 from hikari.impl.bot import BotAppImpl as Bot
-from hikari.impl.rest.app import RESTAppFactoryImpl as REST
+from hikari.impl.rest import RESTAppFactoryImpl as REST
 from hikari.models import *
 from hikari.utilities import files as _files
 from hikari.utilities import iterators as _iterators

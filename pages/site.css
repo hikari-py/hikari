@@ -32,12 +32,18 @@ a:hover {
   font-family: 'Source Code Pro', monospace;
 }
 
+.mono {
+  font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace
+}
+
 /*
  * Base structure
  */
 
 html,
 body {
+  margin: 0;
+  padding: 0;
   height: 100%;
   min-width: 360px;
   background-color: var(--dark-bg);
@@ -58,8 +64,8 @@ html, body, .lead {
 }
 
 strong {
-    font-weight: 400 !important;
-    text-decoration: underline;
+  font-weight: 400 !important;
+  text-decoration: underline;
 }
 
 body {
@@ -68,8 +74,8 @@ body {
   display: flex;
   -ms-flex-pack: center;
   -webkit-box-pack: center;
-  color: rgba(255, 255, 255, 0.75);
-  box-shadow: inset 0 0 10rem rgba(0, 0, 0, 1);
+  color: rgba(255, 255, 255, 255);
+  box-shadow: inset 0 0 100rem rgba(0, 0, 0, 1);
 }
 
 .cover-container {
@@ -79,7 +85,6 @@ body {
   position: absolute;
   justify-content: center;
 }
-
 
 /*
  * Header
@@ -112,10 +117,10 @@ body {
 
 @media (min-width: 48em) {
   .masthead-brand {
-    float: left;
+  float: left;
   }
   .nav-masthead {
-    /*float: right;*/
+  /*float: right;*/
   }
 }
 
@@ -141,7 +146,8 @@ body {
 /*
  * Add text to the background
  */
-.background-only {
+.background-only-base {
+  background: inherit;
   display: contents;
   position: absolute;
   top: 0;
@@ -149,6 +155,12 @@ body {
   bottom: 0;
   right: 0;
   z-index: -1;
+  overflow: hidden;
+}
+
+.background-only {
+  padding-top: 100px;
+  filter: blur(2px) contrast(45%) brightness(50%);
   overflow: hidden;
 }
 
@@ -160,10 +172,7 @@ body {
   display: block;
   overflow-x: hidden;
   overflow-y: hidden;
-  padding: 0.5em;
-  /*background: #23241f;*/
   background: inherit;
-  filter: blur(1px) brightness(20%);
 }
 
 .hljs,
@@ -235,4 +244,19 @@ body {
 .hljs-deletion,
 .hljs-meta {
   color: #75715e;
+}
+
+.red { color: red !important; }
+.ora { color: orange !important; }
+.yel { color: yellow !important; }
+.gre { color: green !important; }
+.cya { color: cyan !important; }
+.blu { color: blue !important; }
+.pur { color: purple !important; }
+.gra { color: gray !important; }
+.whi { color: white !important; }
+.bwh { color: white !important; font-weight: bold; }
+.lin { color: aqua !important; text-decoration: underline; }
+.pre {
+  white-space: pre;
 }
