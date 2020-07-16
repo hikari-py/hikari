@@ -1,4 +1,3 @@
-import pytest
 import attr
 
 import hikari.events.base as base
