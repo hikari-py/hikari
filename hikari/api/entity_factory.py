@@ -29,7 +29,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api.gateway import shard as gateway_shard
+    from hikari.api import shard as gateway_shard
     from hikari.events import channel as channel_events
     from hikari.events import guild as guild_events
     from hikari.events import message as message_events

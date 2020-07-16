@@ -26,8 +26,8 @@ import pytest
 
 from hikari import config
 from hikari import errors
+from hikari.impl import shard
 from hikari.models import presences
-from hikari.impl.gateway import shard
 from hikari.utilities import undefined
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers

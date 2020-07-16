@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import attr
-import pytest
 import mock
+import pytest
 
 from hikari.utilities import files
 from hikari.utilities import routes

@@ -15,38 +15,37 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import aiohttp
-import contextlib
 import asyncio
 import http
 
+import aiohttp
 import mock
 import pytest
 
-from hikari import errors
 from hikari import config
+from hikari import errors
+from hikari.api import rest as rest_api
+from hikari.impl import rate_limits
+from hikari.impl import rest
 from hikari.models import channels
 from hikari.models import permissions
-from hikari.impl import rate_limits
-from hikari.impl.rest import client
-from hikari.api.rest import app
+from hikari.utilities import constants
+from hikari.utilities import net
 from hikari.utilities import routes
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
-from hikari.utilities import constants
-from hikari.utilities import net
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture
 def stub_app():
-    return mock.Mock(spec=app.IRESTApp, entity_factory=mock.Mock())
+    return mock.Mock(spec=rest_api.IRESTApp, entity_factory=mock.Mock())
 
 
 @pytest.fixture
 def rest_client(stub_app):
-    obj = hikari_test_helpers.unslot_class(client.RESTClientImpl)(
+    obj = hikari_test_helpers.unslot_class(rest.RESTClientImpl)(
         app=stub_app,
         connector=mock.Mock(),
         connector_owner=True,
@@ -77,7 +76,7 @@ def stub_model():
 
 class TestRESTClientImpl:
     def test__init__when_token_is_None_sets_token_to_None(self):
-        obj = client.RESTClientImpl(
+        obj = rest.RESTClientImpl(
             app=mock.Mock(),
             connector=mock.Mock(),
             connector_owner=True,
@@ -93,7 +92,7 @@ class TestRESTClientImpl:
         assert obj._token is None
 
     def test__init__when_token_is_not_None_and_token_type_is_None_generates_token_with_default_type(self):
-        obj = client.RESTClientImpl(
+        obj = rest.RESTClientImpl(
             app=mock.Mock(),
             connector=mock.Mock(),
             connector_owner=True,
@@ -109,7 +108,7 @@ class TestRESTClientImpl:
         assert obj._token == "Bot some_token"
 
     def test__init__when_token_and_token_type_is_not_None_generates_token_with_type(self):
-        obj = client.RESTClientImpl(
+        obj = rest.RESTClientImpl(
             app=mock.Mock(),
             connector=mock.Mock(),
             connector_owner=True,
@@ -125,7 +124,7 @@ class TestRESTClientImpl:
         assert obj._token == "Type some_token"
 
     def test__init__when_rest_url_is_None_generates_url_using_default_url(self):
-        obj = client.RESTClientImpl(
+        obj = rest.RESTClientImpl(
             app=mock.Mock(),
             connector=mock.Mock(),
             connector_owner=True,
@@ -141,7 +140,7 @@ class TestRESTClientImpl:
         assert obj._rest_url == "https://discord.com/api/v1"
 
     def test__init__when_rest_url_is_not_None_generates_url_using_given_url(self):
-        obj = client.RESTClientImpl(
+        obj = rest.RESTClientImpl(
             app=mock.Mock(),
             connector=mock.Mock(),
             connector_owner=True,

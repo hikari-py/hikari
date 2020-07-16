@@ -17,12 +17,12 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import datetime
 
-import pytest
 import mock
+import pytest
 
 from hikari.models import channels
-from hikari.models import users
 from hikari.models import permissions
+from hikari.models import users
 from hikari.utilities import files
 from tests.hikari import hikari_test_helpers
 

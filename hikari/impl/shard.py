@@ -34,7 +34,7 @@ import aiohttp
 import attr
 
 from hikari import errors
-from hikari.api.gateway import shard
+from hikari.api import shard
 from hikari.impl import rate_limits
 from hikari.models import presences
 from hikari.utilities import constants
@@ -46,7 +46,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import config
-    from hikari.api.gateway import consumer
+    from hikari.api import event_consumer
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import intents as intents_
@@ -182,7 +182,7 @@ class GatewayShardImpl(shard.IGatewayShard):
     def __init__(
         self,
         *,
-        app: consumer.IEventConsumerApp,
+        app: event_consumer.IEventConsumerApp,
         debug: bool = False,
         http_settings: config.HTTPSettings,
         initial_activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
@@ -252,7 +252,7 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     @property
     @typing.final
-    def app(self) -> consumer.IEventConsumerApp:
+    def app(self) -> event_consumer.IEventConsumerApp:
         return self._app
 
     @property

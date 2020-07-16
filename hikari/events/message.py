@@ -44,7 +44,7 @@ from hikari.utilities import snowflake
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api.rest import app as rest_app
+    from hikari.api import rest as rest_app
     from hikari.models import applications
     from hikari.models import embeds as embed_models
     from hikari.models import emojis
