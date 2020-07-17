@@ -123,8 +123,9 @@ class IGatewayShard(component.IComponent, abc.ABC):
         Returns
         -------
         datetime.timedelta or builtins.None
-            Heartbeat latency measured in seconds. If the information is
-            not yet available, then this will be `builtins.None`.
+            How often the shard will send a heartbeat in seconds. If the
+            information is not yet available, this returns `builtins.None`
+            instead.
         """
 
     @property
@@ -136,7 +137,7 @@ class IGatewayShard(component.IComponent, abc.ABC):
         -------
         datetime.timedelta or builtins.None
             Heartbeat latency measured in seconds. If the information is
-            not yet available, then this will be `builtins.None`.
+            not yet available, then this will be `builtins.None` instead.
         """
 
     @property
