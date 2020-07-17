@@ -18,7 +18,6 @@
 import asyncio
 import contextlib
 import datetime
-import math
 
 import aiohttp.client_reqrep
 import mock
@@ -28,6 +27,7 @@ from hikari import config
 from hikari import errors
 from hikari.impl import shard
 from hikari.models import presences
+from hikari.utilities import date as hikari_date
 from hikari.utilities import undefined
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
@@ -63,15 +63,15 @@ def client(http_settings, proxy_settings):
 
 class TestInit:
     @pytest.mark.parametrize(
-        ["v", "use_compression", "expect"],
+        ["v", "compression", "expect"],
         [
-            (6, False, "v=6&encoding=json"),
-            (6, True, "v=6&encoding=json&compress=zlib-stream"),
-            (7, False, "v=7&encoding=json"),
-            (7, True, "v=7&encoding=json&compress=zlib-stream"),
+            (6, None, "v=6&encoding=json"),
+            (6, "payload_zlib_stream", "v=6&encoding=json&compress=zlib-stream"),
+            (7, None, "v=7&encoding=json"),
+            (7, "payload_zlib_stream", "v=7&encoding=json&compress=zlib-stream"),
         ],
     )
-    def test_url_is_correct_json(self, v, use_compression, expect, http_settings, proxy_settings):
+    def test_url_is_correct_json(self, v, compression, expect, http_settings, proxy_settings):
         g = shard.GatewayShardImpl(
             app=mock.MagicMock(),
             token=mock.MagicMock(),
@@ -79,14 +79,16 @@ class TestInit:
             proxy_settings=proxy_settings,
             url="wss://gaytewhuy.discord.meh",
             version=v,
-            use_etf=False,
-            use_compression=use_compression,
+            data_format="json",
+            compression=compression,
         )
 
         assert g.url == f"wss://gaytewhuy.discord.meh?{expect}"
 
-    @pytest.mark.parametrize(["v", "use_compression"], [(6, False), (6, True), (7, False), (7, True),])
+    @pytest.mark.parametrize(["v", "use_compression"], [(6, False), (6, True), (7, False), (7, True)])
     def test_using_etf_is_unsupported(self, v, use_compression, http_settings, proxy_settings):
+        compression = "payload_zlib_stream" if use_compression else None
+
         with pytest.raises(NotImplementedError):
             shard.GatewayShardImpl(
                 app=mock.MagicMock(),
@@ -95,8 +97,8 @@ class TestInit:
                 token=mock.MagicMock(),
                 url="wss://erlpack-is-broken-lol.discord.meh",
                 version=v,
-                use_etf=True,
-                use_compression=use_compression,
+                data_format="etf",
+                compression=compression,
             )
 
 
@@ -115,11 +117,11 @@ class TestAppProperty:
 
 class TestIsAliveProperty:
     def test_is_alive(self, client):
-        client.connected_at = 1234
+        client._connected_at = 1234
         assert client.is_alive
 
     def test_not_is_alive(self, client):
-        client.connected_at = float("nan")
+        client._connected_at = None
         assert not client.is_alive
 
 
@@ -287,11 +289,10 @@ class TestRunOnceShielded:
                 "_Reconnect",
                 "_SocketClosed",
                 "_dispatch",
-                "_now",
                 "_CloseCode",
                 "_Opcode",
             ),
-            also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger",],
+            also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger"],
         )
         client._dispatch = mock.AsyncMock()
         # Disable backoff checking by making the condition a negative tautology.
@@ -299,7 +300,7 @@ class TestRunOnceShielded:
         # First call is used for backoff checks, the second call is used
         # for updating the _last_run_started_at attribute.
         # 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, ..., ..., ...
-        client._now = mock.MagicMock(side_effect=map(lambda n: n / 2, range(1, 100)))
+        client._now_monotonic = mock.MagicMock(side_effect=map(lambda n: n / 2, range(1, 100)))
         return client
 
     @hikari_test_helpers.timeout()
@@ -337,10 +338,10 @@ class TestRunOnceShielded:
     async def test_invalid_session_resume_does_not_clear_seq_or_session_id(self, client, client_session):
         client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession(True))
         client._seq = 1234
-        client.session_id = "69420"
+        client._session_id = "69420"
         await client._run_once_shielded(client_session)
         assert client._seq == 1234
-        assert client.session_id == "69420"
+        assert client._session_id == "69420"
 
     @pytest.mark.parametrize("request_close", [True, False])
     @hikari_test_helpers.timeout()
@@ -384,10 +385,10 @@ class TestRunOnceShielded:
     async def test_invalid_session_no_resume_clears_seq_and_session_id(self, client, client_session):
         client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession(False))
         client._seq = 1234
-        client.session_id = "69420"
+        client._session_id = "69420"
         await client._run_once_shielded(client_session)
         assert client._seq is None
-        assert client.session_id is None
+        assert client._session_id is None
 
     @hikari_test_helpers.timeout()
     async def test_reconnect_is_restartable(self, client, client_session):
@@ -398,21 +399,21 @@ class TestRunOnceShielded:
     async def test_server_connection_error_resumes_if_reconnectable(self, client, client_session):
         client._run_once = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, True))
         client._seq = 1234
-        client.session_id = "69420"
+        client._session_id = "69420"
         assert await client._run_once_shielded(client_session) is True
         assert client._seq == 1234
-        assert client.session_id == "69420"
+        assert client._session_id == "69420"
 
     @hikari_test_helpers.timeout()
     async def test_server_connection_error_does_not_reconnect_if_not_reconnectable(self, client, client_session):
         client._run_once = mock.AsyncMock(side_effect=errors.GatewayServerClosedConnectionError("blah", None, False))
         client._seq = 1234
-        client.session_id = "69420"
+        client._session_id = "69420"
         with pytest.raises(errors.GatewayServerClosedConnectionError):
             await client._run_once_shielded(client_session)
         client._request_close_event.set.assert_called_once_with()
         assert client._seq is None
-        assert client.session_id is None
+        assert client._session_id is None
         client._backoff.reset.assert_called_once_with()
 
     @pytest.mark.parametrize(
@@ -463,15 +464,11 @@ class TestRunOnce:
         )
         client = hikari_test_helpers.mock_methods_on(
             client,
-            except_=("_run_once", "_InvalidSession", "_Reconnect", "_SocketClosed", "_now", "_CloseCode", "_Opcode",),
+            except_=("_run_once", "_InvalidSession", "_Reconnect", "_SocketClosed", "_CloseCode", "_Opcode",),
             also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger",],
         )
         # Disable backoff checking by making the condition a negative tautology.
         client._RESTART_RATELIMIT_WINDOW = -1
-        # First call is used for backoff checks, the second call is used
-        # for updating the _last_run_started_at attribute.
-        # 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, ..., ..., ...
-        client._now = mock.MagicMock(side_effect=map(lambda n: n / 2, range(1, 100)))
         return client
 
     @hikari_test_helpers.timeout()
@@ -490,7 +487,6 @@ class TestRunOnce:
 
     @hikari_test_helpers.timeout()
     async def test_backoff_and_waits_if_restarted_too_quickly(self, client, client_session):
-        client._now = mock.MagicMock(return_value=60)
         client._RESTART_RATELIMIT_WINDOW = 30
         client._last_run_started_at = 40
         client._backoff.__next__ = mock.MagicMock(return_value=24.37)
@@ -501,6 +497,7 @@ class TestRunOnce:
         stack = contextlib.ExitStack()
         wait_for = stack.enter_context(mock.patch.object(asyncio, "wait_for", side_effect=asyncio.TimeoutError))
         create_task = stack.enter_context(mock.patch.object(asyncio, "create_task"))
+        stack.enter_context(mock.patch.object(hikari_date, "monotonic", return_value=60))
 
         with stack:
             await client._run_once(client_session)
@@ -511,35 +508,36 @@ class TestRunOnce:
 
     @hikari_test_helpers.timeout()
     async def test_closing_bot_during_backoff_immediately_interrupts_it(self, client, client_session):
-        client._now = mock.MagicMock(return_value=60)
         client._RESTART_RATELIMIT_WINDOW = 30
         client._last_run_started_at = 40
         client._backoff.__next__ = mock.MagicMock(return_value=24.37)
         client._request_close_event = asyncio.Event()
 
-        task = asyncio.create_task(client._run_once(client_session))
+        # use 60s since it is outside the 30s backoff window.
+        with mock.patch.object(hikari_date, "monotonic", return_value=60.0):
+            task = asyncio.create_task(client._run_once(client_session))
 
-        try:
-            # Let the backoff spin up and start waiting in the background.
-            await hikari_test_helpers.idle()
+            try:
+                # Let the backoff spin up and start waiting in the background.
+                await hikari_test_helpers.idle()
 
-            # Should be pretty much immediate.
-            with hikari_test_helpers.ensure_occurs_quickly():
-                assert task.done() is False
-                client._request_close_event.set()
-                await task
+                # Should be pretty much immediate.
+                with hikari_test_helpers.ensure_occurs_quickly():
+                    assert task.done() is False
+                    client._request_close_event.set()
+                    await task
 
-            # The false instructs the caller to not restart again, but to just
-            # drop everything and stop execution.
-            # We never return a value on this task anymore.
-            assert task.result() is None
+                # The false instructs the caller to not restart again, but to just
+                # drop everything and stop execution.
+                # We never return a value on this task anymore.
+                assert task.result() is None
 
-        finally:
-            task.cancel()
+            finally:
+                task.cancel()
 
     @hikari_test_helpers.timeout()
     async def test_backoff_does_not_trigger_if_not_restarting_in_small_window(self, client, client_session):
-        client._now = mock.MagicMock(return_value=60)
+        client._now_monotonic = mock.MagicMock(return_value=60)
         client._last_run_started_at = 40
         client._backoff.__next__ = mock.MagicMock(
             side_effect=AssertionError(
@@ -566,7 +564,8 @@ class TestRunOnce:
         # code doesn't really care what this value is contextually.
         client._last_run_started_at = -100_000
 
-        await client._run_once(client_session)
+        with mock.patch.object(hikari_date, "monotonic", return_value=1.0):
+            await client._run_once(client_session)
 
         assert client._last_run_started_at == 1.0
 
@@ -682,9 +681,9 @@ class TestRunOnce:
             await client._run_once(client_session)
         client._dispatch.assert_not_called()
 
-    async def test_connected_at_reset_to_nan_on_exit(self, client, client_session):
+    async def test_connected_at_reset_to_None_on_exit(self, client, client_session):
         await client._run_once(client_session)
-        assert math.isnan(client.connected_at)
+        assert client._connected_at is None
 
 
 @pytest.mark.asyncio

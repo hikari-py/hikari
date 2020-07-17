@@ -29,12 +29,17 @@ __all__: typing.Final[typing.List[str]] = [
     "timespan_to_int",
     "local_datetime",
     "utc_datetime",
+    "monotonic",
+    "monotonic_ns",
+    "uuid",
 ]
 
 import datetime
 import email.utils
 import re
+import time
 import typing
+import uuid as uuid_
 
 TimeSpan = typing.Union[int, float, datetime.timedelta]
 """Type hint representing a naive time period or time span.
@@ -207,3 +212,17 @@ def local_datetime() -> datetime.datetime:
 def utc_datetime() -> datetime.datetime:
     """Return the current date/time for UTC (GMT+0)."""
     return datetime.datetime.now(tz=datetime.timezone.utc)
+
+
+# date.monotonic_ns is no slower than time.monotonic, but is more accurate.
+# Also, fun fact that monotonic_ns appears to be 1µs faster on average than
+# monotonic on AARM64 architectures, but on x86, monotonic is around 1ns faster
+# than monotonic_ns. Just thought that was kind of interesting to note down.
+# (RPi 3B versus i7 6700)
+monotonic = time.perf_counter
+monotonic_ns = time.perf_counter_ns
+
+
+def uuid() -> str:
+    """Generate a unique UUID (1ns precision)."""
+    return uuid_.uuid1(None, monotonic_ns()).hex
