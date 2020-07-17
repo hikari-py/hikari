@@ -52,7 +52,14 @@ class IGatewayShard(component.IComponent, abc.ABC):
     @property
     @abc.abstractmethod
     def heartbeat_latency(self) -> float:
-        """Return the shard's most recent heartbeat latency."""
+        """Return the shard's most recent heartbeat latency.
+
+        Returns
+        -------
+        builtins.float
+            Heartbeat latency measured in seconds. If the information is
+            not yet available, then this will be `nan`.
+        """
 
     @abc.abstractmethod
     async def get_user_id(self) -> snowflake.Snowflake:
