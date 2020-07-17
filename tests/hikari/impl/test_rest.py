@@ -931,7 +931,7 @@ class TestRESTClientImplAsync:
                 return "this is not json :)"
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        with pytest.raises(errors.HTTPErrorResponse):
+        with pytest.raises(errors.HTTPResponseError):
             await rest_client._parse_ratelimits(route, StubResponse())
 
     async def test__parse_ratelimits_when_global_ratelimit(self, rest_client):
@@ -964,7 +964,7 @@ class TestRESTClientImplAsync:
                 return {"retry_after": "2"}
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        with pytest.raises(errors.RateLimited):
+        with pytest.raises(errors.RateLimitedError):
             await rest_client._parse_ratelimits(route, StubResponse())
 
     async def test__parse_ratelimits_when_retry_after_is_close_enough(self, rest_client):
