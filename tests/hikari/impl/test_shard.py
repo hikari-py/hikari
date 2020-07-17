@@ -297,10 +297,6 @@ class TestRunOnceShielded:
         client._dispatch = mock.AsyncMock()
         # Disable backoff checking by making the condition a negative tautology.
         client._RESTART_RATELIMIT_WINDOW = -1
-        # First call is used for backoff checks, the second call is used
-        # for updating the _last_run_started_at attribute.
-        # 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, ..., ..., ...
-        client._now_monotonic = mock.MagicMock(side_effect=map(lambda n: n / 2, range(1, 100)))
         return client
 
     @hikari_test_helpers.timeout()
@@ -537,24 +533,24 @@ class TestRunOnce:
 
     @hikari_test_helpers.timeout()
     async def test_backoff_does_not_trigger_if_not_restarting_in_small_window(self, client, client_session):
-        client._now_monotonic = mock.MagicMock(return_value=60)
-        client._last_run_started_at = 40
-        client._backoff.__next__ = mock.MagicMock(
-            side_effect=AssertionError(
-                "backoff was incremented, but this is not expected to occur in this test case scenario!"
+        with mock.patch.object(hikari_date, "monotonic", return_value=60):
+            client._last_run_started_at = 40
+            client._backoff.__next__ = mock.MagicMock(
+                side_effect=AssertionError(
+                    "backoff was incremented, but this is not expected to occur in this test case scenario!"
+                )
             )
-        )
 
-        # We mock create_task, so this will never be awaited if not.
-        client._heartbeat_keepalive = mock.MagicMock()
+            # We mock create_task, so this will never be awaited if not.
+            client._heartbeat_keepalive = mock.MagicMock()
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(asyncio, "wait_for"))
-        stack.enter_context(mock.patch.object(asyncio, "create_task"))
+            stack = contextlib.ExitStack()
+            stack.enter_context(mock.patch.object(asyncio, "wait_for"))
+            stack.enter_context(mock.patch.object(asyncio, "create_task"))
 
-        with stack:
-            # This will raise an assertion error if the backoff is incremented.
-            await client._run_once(client_session)
+            with stack:
+                # This will raise an assertion error if the backoff is incremented.
+                await client._run_once(client_session)
 
     @hikari_test_helpers.timeout()
     async def test_last_run_started_at_set_to_current_time(self, client, client_session):
