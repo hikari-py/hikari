@@ -25,7 +25,6 @@ import asyncio
 import contextlib
 import datetime
 import logging
-import math
 import os
 import reprlib
 import signal
@@ -79,10 +78,6 @@ class BotAppImpl(bot.IBotApp):
         and response will also be dumped to logs. This will provide useful
         debugging context at the cost of performance. Generally you do not
         need to enable this.
-    gateway_compression : builtins.bool
-        Defaulting to `builtins.True`, if `builtins.True`, then zlib transport
-        compression is used for each shard connection. If `builtins.False`, no
-        compression is used.
     gateway_version : builtins.int
         The version of the gateway to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
@@ -135,8 +130,11 @@ class BotAppImpl(bot.IBotApp):
         instead, which is the default.
     stateless : builtins.bool
         If `builtins.True`, the bot will not implement a cache, and will be
-        considered stateless. If `builtins.False`, then a cache will be used
-        (this is the default).
+        considered stateless. If `builtins.False`, then a cache will be used.
+
+        While the cache components are a WIP, this will default to
+        `builtins.True`. This should be expected to be changed to
+        `builtins.False` before the first non-development release is made.
     token : builtins.str
         The bot token to use. This should not start with a prefix such as
         `Bot `, but instead only contain the token itself.
@@ -174,7 +172,6 @@ class BotAppImpl(bot.IBotApp):
         banner_package: typing.Optional[str] = "hikari.impl",
         debug: bool = False,
         executor: typing.Optional[concurrent.futures.Executor] = None,
-        gateway_compression: bool = True,
         gateway_version: int = 6,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         initial_activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
@@ -189,7 +186,7 @@ class BotAppImpl(bot.IBotApp):
         rest_url: typing.Optional[str] = None,
         shard_ids: typing.Optional[typing.Set[int]] = None,
         shard_count: typing.Optional[int] = None,
-        stateless: bool = False,
+        stateless: bool = True,
         token: str,
     ) -> None:
         if undefined.count(shard_ids, shard_count) == 1:
@@ -246,7 +243,6 @@ class BotAppImpl(bot.IBotApp):
         self._start_count: int = 0
         self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
-        self._use_compression = gateway_compression
         self._version = gateway_version
         self._voice = voice.VoiceComponentImpl(self, self._event_manager)
 
@@ -282,19 +278,22 @@ class BotAppImpl(bot.IBotApp):
         return self._executor
 
     @property
-    def heartbeat_latencies(self) -> typing.Mapping[int, typing.Optional[float]]:
-        return {
-            shard_id: None if math.isnan(shard.heartbeat_latency) else shard.heartbeat_latency
-            for shard_id, shard in self._shards.items()
-        }
+    def heartbeat_latencies(self) -> typing.Mapping[int, typing.Optional[datetime.timedelta]]:
+        return {shard_id: shard.heartbeat_latency for shard_id, shard in self._shards.items()}
 
     @property
-    def heartbeat_latency(self) -> typing.Optional[float]:
-        started_shards = [shard for shard in self._shards.values() if not math.isnan(shard.heartbeat_latency)]
+    def heartbeat_latency(self) -> typing.Optional[datetime.timedelta]:
+        started_shards = [
+            shard.heartbeat_latency.total_seconds()
+            for shard in self._shards.values()
+            if shard.heartbeat_latency is not None
+        ]
+
         if not started_shards:
             return None
 
-        return sum(shard.heartbeat_latency for shard in started_shards) / len(started_shards)
+        raw = sum(started_shards) / len(started_shards)
+        return datetime.timedelta(seconds=raw)
 
     @property
     def http_settings(self) -> config.HTTPSettings:
@@ -326,14 +325,17 @@ class BotAppImpl(bot.IBotApp):
 
     @property
     def uptime(self) -> datetime.timedelta:
-        raw_uptime = time.perf_counter() - self._started_at_monotonic if self._started_at_monotonic is not None else 0.0
+        if self._started_at_monotonic:
+            raw_uptime = date.monotonic() - self._started_at_monotonic
+        else:
+            raw_uptime = 0.0
         return datetime.timedelta(seconds=raw_uptime)
 
     async def start(self) -> None:
         await self._check_for_updates()
 
         self._start_count += 1
-        self._started_at_monotonic = time.perf_counter()
+        self._started_at_monotonic = date.monotonic_ns()
         self._started_at_timestamp = date.local_datetime()
 
         if self._debug is True:
@@ -358,7 +360,7 @@ class BotAppImpl(bot.IBotApp):
 
         await self.dispatch(other_events.StartingEvent())
 
-        start_time = time.perf_counter()
+        start_time = date.monotonic_ns()
 
         try:
             for i, shard_ids in enumerate(self._max_concurrency_chunker()):
@@ -399,7 +401,7 @@ class BotAppImpl(bot.IBotApp):
                 # We know an error occurred if this condition is met, so re-raise it.
                 raise
 
-            finish_time = time.perf_counter()
+            finish_time = date.monotonic_ns()
             self._shard_gather_task = asyncio.create_task(
                 self._gather(), name=f"zookeeper for {len(self._shards)} shard(s)"
             )
@@ -536,6 +538,8 @@ class BotAppImpl(bot.IBotApp):
         for shard_id in self._shard_ids:
             shard = gateway_shard_impl.GatewayShardImpl(
                 app=self,
+                compression=gateway_shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
+                data_format=gateway_shard.GatewayDataFormat.JSON,
                 debug=self._debug,
                 http_settings=self._http_settings,
                 initial_activity=self._initial_activity,
@@ -549,7 +553,6 @@ class BotAppImpl(bot.IBotApp):
                 shard_count=self._shard_count,
                 token=self._token,
                 url=url,
-                use_compression=self._use_compression,
                 version=self._version,
             )
             shard_clients[shard_id] = shard
