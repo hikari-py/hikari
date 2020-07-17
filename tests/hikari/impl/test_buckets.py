@@ -22,6 +22,7 @@ import mock
 import pytest
 
 from hikari.impl import buckets
+from hikari.utilities import date as hikari_date
 from hikari.utilities import routes
 from tests.hikari import hikari_test_helpers
 
@@ -47,7 +48,7 @@ class TestRESTBucket:
             rl.reset_at = 3
             rl.period = 2
 
-            with mock.patch("time.perf_counter", return_value=4.20):
+            with mock.patch.object(hikari_date, "monotonic", return_value=4.20):
                 rl.update_rate_limit(9, 18, 27)
 
             assert rl.remaining == 9
@@ -294,7 +295,7 @@ class TestRESTBucketManager:
             date = datetime.datetime.now().replace(year=2004)
             reset_at = datetime.datetime.now()
 
-            with mock.patch("time.perf_counter", return_value=27):
+            with mock.patch.object(hikari_date, "monotonic", return_value=27):
                 expect_reset_at_monotonic = 27 + (reset_at - date).total_seconds()
                 mgr.update_rate_limits(route, "123", 22, 23, date, reset_at)
                 bucket.update_rate_limit.assert_called_once_with(22, 23, expect_reset_at_monotonic)
