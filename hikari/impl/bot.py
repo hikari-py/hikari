@@ -130,8 +130,11 @@ class BotAppImpl(bot.IBotApp):
         instead, which is the default.
     stateless : builtins.bool
         If `builtins.True`, the bot will not implement a cache, and will be
-        considered stateless. If `builtins.False`, then a cache will be used
-        (this is the default).
+        considered stateless. If `builtins.False`, then a cache will be used.
+
+        While the cache components are a WIP, this will default to
+        `builtins.True`. This should be expected to be changed to
+        `builtins.False` before the first non-development release is made.
     token : builtins.str
         The bot token to use. This should not start with a prefix such as
         `Bot `, but instead only contain the token itself.
@@ -183,7 +186,7 @@ class BotAppImpl(bot.IBotApp):
         rest_url: typing.Optional[str] = None,
         shard_ids: typing.Optional[typing.Set[int]] = None,
         shard_count: typing.Optional[int] = None,
-        stateless: bool = False,
+        stateless: bool = True,
         token: str,
     ) -> None:
         if undefined.count(shard_ids, shard_count) == 1:
