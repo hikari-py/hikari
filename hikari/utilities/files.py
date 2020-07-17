@@ -40,7 +40,6 @@ import logging
 import mimetypes
 import os
 import pathlib
-import time
 import typing
 import urllib.parse
 import urllib.request
@@ -48,6 +47,7 @@ import urllib.request
 import aiohttp.client
 import attr
 
+from hikari.utilities import date
 from hikari.utilities import net
 
 if typing.TYPE_CHECKING:
@@ -210,7 +210,8 @@ def generate_filename_from_details(
     elif not extension.startswith("."):
         extension = f".{extension}"
 
-    return str(time.perf_counter_ns()) + extension
+    # Nanosecond precision will be less likely to collide.
+    return date.uuid() + extension
 
 
 def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:

@@ -31,9 +31,7 @@ import datetime
 import http
 import logging
 import math
-import time
 import typing
-import uuid
 
 import aiohttp
 
@@ -472,24 +470,24 @@ class RESTClientImpl(rest_api.IRESTClient):
                 # Wait for any rate-limits to finish.
                 await asyncio.gather(self.buckets.acquire(compiled_route), self.global_rate_limit.acquire())
 
-                uuid4 = str(uuid.uuid4())
+                uuid = date.uuid()
 
                 if self._debug:
                     headers_str = "\n".join(f"\t\t{name}:{value}" for name, value in headers.items())
                     _LOGGER.debug(
                         "%s %s %s\n\theaders:\n%s\n\tbody:\n\t\t%r",
-                        uuid4,
+                        uuid,
                         compiled_route.method,
                         url,
                         headers_str,
                         json,
                     )
                 else:
-                    _LOGGER.debug("%s %s %s", uuid4, compiled_route.method, url)
+                    _LOGGER.debug("%s %s %s", uuid, compiled_route.method, url)
 
                 # Make the request.
                 session = self._acquire_client_session()
-                start = time.perf_counter()
+                start = date.monotonic()
                 response = await session.request(
                     compiled_route.method,
                     url,
@@ -503,7 +501,7 @@ class RESTClientImpl(rest_api.IRESTClient):
                     proxy_headers=self._proxy_settings.all_headers,
                     verify_ssl=self._http_settings.verify_ssl,
                 )
-                time_taken = (time.perf_counter() - start) * 1_000
+                time_taken = (date.monotonic() - start) * 1_000
 
                 if self._debug:
                     headers_str = "\n".join(
@@ -511,7 +509,7 @@ class RESTClientImpl(rest_api.IRESTClient):
                     )
                     _LOGGER.debug(
                         "%s %s %s in %sms\n\theaders:\n%s\n\tbody:\n\t\t%r",
-                        uuid4,
+                        uuid,
                         response.status,
                         response.reason,
                         time_taken,
@@ -519,7 +517,7 @@ class RESTClientImpl(rest_api.IRESTClient):
                         await response.read(),
                     )
                 else:
-                    _LOGGER.debug("%s %s %s in %sms", uuid4, response.status, response.reason, time_taken)
+                    _LOGGER.debug("%s %s %s in %sms", uuid, response.status, response.reason, time_taken)
 
                 # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
                 await self._parse_ratelimits(compiled_route, response)

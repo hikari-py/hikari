@@ -48,16 +48,28 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
 
     @property
     @abc.abstractmethod
-    def uptime(self) -> datetime.timedelta:
-        """Return how long the bot has been alive for.
+    def heartbeat_latencies(self) -> typing.Mapping[int, typing.Optional[datetime.timedelta]]:
+        """Return a mapping of shard ID to heartbeat latency.
 
-        If the application has not been started, then this will return
-        a `datetime.timedelta` of 0 seconds.
+        Any shards that are not yet started will be `builtins.None`.
 
         Returns
         -------
-        datetime.timedelta
-            The number of seconds the application has been running.
+        typing.Mapping[builtins.int, datetime.timedelta]
+            Each shard ID mapped to the corresponding heartbeat latency.
+        """
+
+    @property
+    @abc.abstractmethod
+    def heartbeat_latency(self) -> typing.Optional[datetime.timedelta]:
+        """Return the average heartbeat latency of all started shards.
+
+        If no shards are started, this will return `None`.
+
+        Returns
+        -------
+        datetime.timedelta or builtins.None
+            The average heartbeat latency of all started shards, or `builtins.None`.
         """
 
     @property
@@ -116,26 +128,14 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
 
     @property
     @abc.abstractmethod
-    def heartbeat_latencies(self) -> typing.Mapping[int, typing.Optional[float]]:
-        """Return a mapping of shard ID to heartbeat latency.
+    def uptime(self) -> datetime.timedelta:
+        """Return how long the bot has been alive for.
 
-        Any shards that are not yet started will be `builtins.None`.
-
-        Returns
-        -------
-        typing.Mapping[builtins.int, builtins.float]
-            Each shard ID mapped to the corresponding heartbeat latency.
-        """
-
-    @property
-    @abc.abstractmethod
-    def heartbeat_latency(self) -> typing.Optional[float]:
-        """Return the average heartbeat latency of all started shards.
-
-        If no shards are started, this will return `None`.
+        If the application has not been started, then this will return
+        a `datetime.timedelta` of 0 seconds.
 
         Returns
         -------
-        builtins.float or builtins.None
-            The average heartbeat latency of all started shards, or `builtins.None`.
+        datetime.timedelta
+            The number of seconds the application has been running.
         """

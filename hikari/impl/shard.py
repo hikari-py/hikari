@@ -22,10 +22,10 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = ["GatewayShardImpl"]
 
 import asyncio
+import datetime
 import enum
 import logging
 import math
-import time
 import typing
 import urllib.parse
 import zlib
@@ -39,12 +39,11 @@ from hikari.impl import rate_limits
 from hikari.models import presences
 from hikari.utilities import constants
 from hikari.utilities import data_binding
+from hikari.utilities import date
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    import datetime
-
     from hikari import config
     from hikari.api import event_consumer
     from hikari.models import channels
@@ -52,6 +51,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import intents as intents_
 
 
+@typing.final
 class GatewayShardImpl(shard.IGatewayShard):
     """Implementation of a V6 and V7 compatible gateway.
 
@@ -59,6 +59,12 @@ class GatewayShardImpl(shard.IGatewayShard):
     ----------
     app : hikari.api.gateway.consumer.IEventConsumerApp
         The base application.
+    compression : buitlins.str or buitlins.None
+        Compression format to use for the shard. Only supported values are
+        `"payload_zlib_stream"` or `builtins.None` to disable it.
+    data_format : builtins.str
+        Data format to use for inbound data. Only supported format is
+        `"json"`.
     debug : builtins.bool
         If `builtins.True`, each sent and received payload is dumped to the
         logs. If `builtins.False`, only the fact that data has been
@@ -89,12 +95,6 @@ class GatewayShardImpl(shard.IGatewayShard):
     url : builtins.str
         The gateway URL to use. This should not contain a query-string or
         fragments.
-    use_compression : builtins.bool
-        If `builtins.True`, then transport compression is enabled.
-    use_etf : builtins.bool
-        If `builtins.True`, ETF is used to receive payloads instead of JSON.
-        Defaults to `builtins.False`. Currently, setting this to `builtins.True`
-        will raise a `builtins.NotImplementedError`.
     version : builtins.int
         Gateway API version to use.
 
@@ -112,7 +112,6 @@ class GatewayShardImpl(shard.IGatewayShard):
     """
 
     @enum.unique
-    @typing.final
     class _CloseCode(enum.IntEnum):
         RFC_6455_NORMAL_CLOSURE = 1000
         RFC_6455_GOING_AWAY = 1001
@@ -144,7 +143,6 @@ class GatewayShardImpl(shard.IGatewayShard):
         DISALLOWED_INTENT = 4014
 
     @enum.unique
-    @typing.final
     class _Opcode(enum.IntEnum):
         DISPATCH = 0
         HEARTBEAT = 1
@@ -158,11 +156,9 @@ class GatewayShardImpl(shard.IGatewayShard):
         HELLO = 10
         HEARTBEAT_ACK = 11
 
-    @typing.final
     class _Reconnect(RuntimeError):
         __slots__: typing.Sequence[str] = ()
 
-    @typing.final
     class _SocketClosed(RuntimeError):
         __slots__: typing.Sequence[str] = ()
 
@@ -183,6 +179,8 @@ class GatewayShardImpl(shard.IGatewayShard):
         self,
         *,
         app: event_consumer.IEventConsumerApp,
+        compression: typing.Optional[str] = shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
+        data_format: str = shard.GatewayDataFormat.JSON,
         debug: bool = False,
         http_settings: config.HTTPSettings,
         initial_activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
@@ -196,74 +194,126 @@ class GatewayShardImpl(shard.IGatewayShard):
         shard_count: int = 1,
         token: str,
         url: str,
-        use_compression: bool = True,
-        use_etf: bool = False,
         version: int = 6,
     ) -> None:
         self._activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = initial_activity
         self._app = app
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
+        self._compression = compression.lower() if compression is not None else None
+        self._connected_at: typing.Optional[float] = None
+        self._data_format = data_format.lower()
         self._debug = debug
         self._handshake_event = asyncio.Event()
+        self._heartbeat_interval = float("nan")
+        self._heartbeat_latency = float("nan")
         self._http_settings = http_settings
         self._idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = initial_idle_since
         self._intents: typing.Optional[intents_.Intent] = intents
         self._is_afk: typing.Union[undefined.UndefinedType, bool] = initial_is_afk
+        self._large_threshold = large_threshold
+        self._last_heartbeat_sent = float("nan")
+        self._last_message_received = float("nan")
         self._last_run_started_at = float("nan")
         self._logger = logging.getLogger(f"hikari.gateway.{shard_id}")
         self._proxy_settings = proxy_settings
+        self._ratelimiter = rate_limits.WindowedBurstRateLimiter(str(shard_id), 60.0, 120)
         self._request_close_event = asyncio.Event()
-        self._seq: typing.Optional[str] = None
+        self._seq: typing.Optional[int] = None
+        self._session_id: typing.Optional[str] = None
+        self._session_started_at: typing.Optional[float] = None
         self._shard_id: int = shard_id
         self._shard_count: int = shard_count
         self._status: typing.Union[undefined.UndefinedType, presences.Status] = initial_status
         self._token = token
-        self._use_compression = use_compression
         self._user_id: typing.Optional[snowflake.Snowflake] = None
         self._version = version
         self._ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
-        # No typeshed/stub.
-        self._zlib: typing.Any = None
+        self._zlib: typing.Any = None  # No typeshed/stub.
         self._zombied = False
-
-        # TODO: make these all private.
-        self.connected_at = float("nan")
-        self.heartbeat_interval = float("nan")
-        self._heartbeat_latency = float("nan")
-        self._last_heartbeat_sent = float("nan")
-        self.last_message_received = float("nan")
-        self.large_threshold = large_threshold
-        self.ratelimiter = rate_limits.WindowedBurstRateLimiter(str(shard_id), 60.0, 120)
-        self.session_id: typing.Optional[str] = None
 
         scheme, netloc, path, params, _, _ = urllib.parse.urlparse(url, allow_fragments=True)
 
-        if use_etf:
-            raise NotImplementedError("ETF support is not available currently")
+        if self._data_format != shard.GatewayDataFormat.JSON:
+            raise NotImplementedError(f"Unsupported gateway data format: {self._data_format}")
 
-        new_query = dict(v=int(version), encoding="etf" if use_etf else "json")
-        if use_compression:
-            # payload compression
-            new_query["compress"] = "zlib-stream"
+        new_query = dict(v=int(version), encoding=self._data_format)
+
+        if self._compression is not None:
+            if self._compression == shard.GatewayCompression.PAYLOAD_ZLIB_STREAM:
+                new_query["compress"] = "zlib-stream"
+            else:
+                raise NotImplementedError(f"Unsupported compression format {self._compression}")
 
         new_query = urllib.parse.urlencode(new_query)
-
         self.url = urllib.parse.urlunparse((scheme, netloc, path, params, new_query, ""))
 
     @property
-    @typing.final
     def app(self) -> event_consumer.IEventConsumerApp:
         return self._app
 
     @property
-    @typing.final
-    def is_alive(self) -> bool:
-        return not math.isnan(self.connected_at)
+    def compression(self) -> typing.Optional[str]:
+        return self._compression
 
     @property
-    @typing.final
-    def heartbeat_latency(self) -> float:
-        return self._heartbeat_latency
+    def connection_uptime(self) -> datetime.timedelta:
+        delta = date.monotonic() - self._connected_at if self._connected_at is not None else 0
+        return datetime.timedelta(seconds=delta)
+
+    @property
+    def data_format(self) -> str:
+        return self._data_format
+
+    @property
+    def heartbeat_interval(self) -> typing.Optional[datetime.timedelta]:
+        interval = self._heartbeat_interval
+        return datetime.timedelta(seconds=interval) if not math.isnan(interval) else None
+
+    @property
+    def heartbeat_latency(self) -> typing.Optional[datetime.timedelta]:
+        latency = self._heartbeat_latency
+        return datetime.timedelta(seconds=latency) if not math.isnan(latency) else None
+
+    @property
+    def http_settings(self) -> config.HTTPSettings:
+        return self._http_settings
+
+    @property
+    def id(self) -> int:
+        return self._shard_id
+
+    @property
+    def intents(self) -> typing.Optional[intents_.Intent]:
+        return self._intents
+
+    @property
+    def is_alive(self) -> bool:
+        return self._connected_at is not None
+
+    @property
+    def proxy_settings(self) -> config.ProxySettings:
+        return self._proxy_settings
+
+    @property
+    def sequence(self) -> typing.Optional[int]:
+        return self._seq
+
+    @property
+    def session_id(self) -> typing.Optional[str]:
+        return self._session_id
+
+    @property
+    def session_uptime(self) -> datetime.timedelta:
+        delta = date.monotonic() - self._session_started_at if self._session_started_at is not None else 0
+        return datetime.timedelta(seconds=delta)
+
+    @property
+    def shard_count(self) -> int:
+        return self._shard_count
+
+    @property
+    def version(self) -> int:
+        return self._version
 
     async def get_user_id(self) -> snowflake.Snowflake:
         await self._handshake_event.wait()
@@ -295,165 +345,6 @@ class GatewayShardImpl(shard.IGatewayShard):
             if self._ws is not None:
                 self._logger.warning("gateway client closed, will not attempt to restart")
                 await self._close_ws(self._CloseCode.RFC_6455_NORMAL_CLOSURE, "client shut down")
-
-    async def _run(self) -> None:
-        """Start the shard and wait for it to shut down."""
-        async with aiohttp.ClientSession(
-            connector_owner=True,
-            connector=aiohttp.TCPConnector(
-                verify_ssl=self._http_settings.verify_ssl,
-                # We are never going to want more than one connection. This will be spammy on
-                # big sharded bots and waste a lot of time, so theres no reason to bother.
-                limit=1,
-                limit_per_host=1,
-            ),
-            version=aiohttp.HttpVersion11,
-            timeout=aiohttp.ClientTimeout(
-                total=self._http_settings.timeouts.total,
-                connect=self._http_settings.timeouts.acquire_and_connect,
-                sock_read=self._http_settings.timeouts.request_socket_read,
-                sock_connect=self._http_settings.timeouts.request_socket_connect,
-            ),
-            trust_env=self._proxy_settings.trust_env,
-        ) as client_session:
-            try:
-                # This may be set if we are stuck in a reconnect loop.
-                while not self._request_close_event.is_set() and await self._run_once_shielded(client_session):
-                    pass
-
-                # Allow zookeepers to stop gathering tasks for each shard.
-                raise errors.GatewayClientClosedError
-            finally:
-                # This is set to ensure that the `start' waiter does not deadlock if
-                # we cannot connect successfully. It is a hack, but it works.
-                self._handshake_event.set()
-
-    async def _run_once_shielded(self, client_session: aiohttp.ClientSession) -> bool:
-        # Returns `builtins.True` if we can reconnect, or `builtins.False` otherwise.
-        # Wraps the runner logic in the standard exception handling mechanisms.
-        try:
-            await self._run_once(client_session)
-            return False
-        except aiohttp.ClientConnectorError as ex:
-            self._logger.error(
-                "failed to connect to Discord because %s.%s: %s", type(ex).__module__, type(ex).__qualname__, str(ex),
-            )
-
-        except self._InvalidSession as ex:
-            if ex.can_resume:
-                self._logger.warning("invalid session, so will attempt to resume session %s", self.session_id)
-                await self._close_ws(self._CloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
-            else:
-                self._logger.warning("invalid session, so will attempt to reconnect with new session")
-                await self._close_ws(self._CloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
-                self._seq = None
-                self.session_id = None
-
-        except self._Reconnect:
-            self._logger.warning("instructed by Discord to reconnect and resume session %s", self.session_id)
-            self._backoff.reset()
-            await self._close_ws(self._CloseCode.DO_NOT_INVALIDATE_SESSION, "reconnecting")
-
-        except self._SocketClosed:
-            # The socket has already closed, so no need to close it again.
-            if self._zombied:
-                self._backoff.reset()
-
-            if not self._request_close_event.is_set():
-                self._logger.warning("unexpected socket closure, will attempt to resume")
-
-            return not self._request_close_event.is_set()
-
-        except errors.GatewayServerClosedConnectionError as ex:
-            if ex.can_reconnect:
-                self._logger.warning(
-                    "server closed the connection with %s (%s), will attempt to reconnect", ex.code, ex.reason,
-                )
-            else:
-                self._seq = None
-                self.session_id = None
-                self._backoff.reset()
-                self._request_close_event.set()
-                raise
-
-        except Exception as ex:
-            self._logger.error("unexpected exception occurred, shard will now die", exc_info=ex)
-            self._seq = None
-            self.session_id = None
-            await self._close_ws(self._CloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
-            raise
-
-        return True
-
-    async def _run_once(self, client_session: aiohttp.ClientSession) -> None:
-        # Physical runner logic without error handling.
-        self._request_close_event.clear()
-
-        self._zombied = False
-
-        if self._now() - self._last_run_started_at < self._RESTART_RATELIMIT_WINDOW:
-            # Interrupt sleep immediately if a request to close is fired.
-            wait_task = asyncio.create_task(
-                self._request_close_event.wait(), name=f"gateway shard {self._shard_id} backing off"
-            )
-            try:
-                backoff = next(self._backoff)
-                self._logger.debug("backing off for %ss", backoff)
-                await asyncio.wait_for(wait_task, timeout=backoff)
-
-                # If this line gets reached, the wait didn't time out, meaning
-                # the user told the client to shut down gracefully before the
-                # backoff completed.
-                return
-            except asyncio.TimeoutError:
-                pass
-
-        # Do this after. It prevents backing off on the first try.
-        self._last_run_started_at = self._now()
-
-        self._logger.debug("creating websocket connection to %s", self.url)
-        self._ws = await client_session.ws_connect(
-            url=self.url,
-            autoping=True,
-            autoclose=True,
-            proxy=self._proxy_settings.url,
-            proxy_headers=self._proxy_settings.all_headers,
-            verify_ssl=self._http_settings.verify_ssl,
-            # Discord can send massive messages that lead us to being disconnected
-            # without this. It is a bit shit that there is no guarantee of the size
-            # of these messages, but there isn't much we can do about this one.
-            max_msg_size=0,
-        )
-
-        self.connected_at = self._now()
-
-        # Technically we are connected after the hello, but this ensures we can send and receive
-        # before firing that event.
-        self._dispatch("CONNECTED", {})
-
-        try:
-
-            self._zlib = zlib.decompressobj()
-
-            self._handshake_event.clear()
-            self._request_close_event.clear()
-
-            await self._handshake()
-
-            # We should ideally set this after HELLO, but it should be fine
-            # here as well. If we don't heartbeat in time, something probably
-            # went majorly wrong anyway.
-            heartbeat = asyncio.create_task(
-                self._heartbeat_keepalive(), name=f"gateway shard {self._shard_id} heartbeat"
-            )
-
-            try:
-                await self._poll_events()
-            finally:
-                heartbeat.cancel()
-        finally:
-            self._dispatch("DISCONNECTED", {})
-            self.connected_at = float("nan")
 
     async def update_presence(
         self,
@@ -497,6 +388,172 @@ class GatewayShardImpl(shard.IGatewayShard):
         payload = self._app.entity_factory.serialize_gateway_voice_state_update(guild, channel, self_mute, self_deaf)
         await self._send_json({"op": self._Opcode.VOICE_STATE_UPDATE, "d": payload})
 
+    async def _run(self) -> None:
+        """Start the shard and wait for it to shut down."""
+        async with aiohttp.ClientSession(
+            connector_owner=True,
+            connector=aiohttp.TCPConnector(
+                verify_ssl=self._http_settings.verify_ssl,
+                # We are never going to want more than one connection. This will be spammy on
+                # big sharded bots and waste a lot of time, so theres no reason to bother.
+                limit=1,
+                limit_per_host=1,
+            ),
+            version=aiohttp.HttpVersion11,
+            timeout=aiohttp.ClientTimeout(
+                total=self._http_settings.timeouts.total,
+                connect=self._http_settings.timeouts.acquire_and_connect,
+                sock_read=self._http_settings.timeouts.request_socket_read,
+                sock_connect=self._http_settings.timeouts.request_socket_connect,
+            ),
+            trust_env=self._proxy_settings.trust_env,
+        ) as client_session:
+            try:
+                # This may be set if we are stuck in a reconnect loop.
+                while not self._request_close_event.is_set() and await self._run_once_shielded(client_session):
+                    pass
+
+                # Allow zookeepers to stop gathering tasks for each shard.
+                raise errors.GatewayClientClosedError
+            finally:
+                # This is set to ensure that the `start' waiter does not deadlock if
+                # we cannot connect successfully. It is a hack, but it works.
+                self._handshake_event.set()
+
+    async def _run_once_shielded(self, client_session: aiohttp.ClientSession) -> bool:
+        # Returns `builtins.True` if we can reconnect, or `builtins.False` otherwise.
+        # Wraps the runner logic in the standard exception handling mechanisms.
+        try:
+            await self._run_once(client_session)
+            return False
+
+        except aiohttp.ClientConnectorError as ex:
+            # TODO: will I need to reset the session_id and seq ever here? I don't think I do, but I should check
+            self._logger.error(
+                "failed to connect to Discord because %s.%s: %s", type(ex).__module__, type(ex).__qualname__, str(ex),
+            )
+
+        except self._InvalidSession as ex:
+            if ex.can_resume:
+                self._logger.warning("invalid session, so will attempt to resume session %s", self._session_id)
+                await self._close_ws(self._CloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
+            else:
+                self._logger.warning("invalid session, so will attempt to reconnect with new session")
+                await self._close_ws(self._CloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
+                self._seq = None
+                self._session_id = None
+                self._session_started_at = None
+
+        except self._Reconnect:
+            self._logger.warning("instructed by Discord to reconnect and resume session %s", self._session_id)
+            self._backoff.reset()
+            await self._close_ws(self._CloseCode.DO_NOT_INVALIDATE_SESSION, "reconnecting")
+
+        except self._SocketClosed:
+            # The socket has already closed, so no need to close it again.
+            if self._zombied:
+                self._backoff.reset()
+
+            if not self._request_close_event.is_set():
+                self._logger.warning("unexpected socket closure, will attempt to resume")
+            else:
+                self._session_started_at = None
+
+            return not self._request_close_event.is_set()
+
+        except errors.GatewayServerClosedConnectionError as ex:
+            if ex.can_reconnect:
+                self._logger.warning(
+                    "server closed the connection with %s (%s), will attempt to reconnect", ex.code, ex.reason,
+                )
+            else:
+                self._seq = None
+                self._session_id = None
+                self._session_started_at = None
+                self._backoff.reset()
+                self._request_close_event.set()
+                raise
+
+        except Exception as ex:
+            self._logger.error("unexpected exception occurred, shard will now die", exc_info=ex)
+            self._seq = None
+            self._session_id = None
+            self._session_started_at = None
+            await self._close_ws(self._CloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
+            raise
+
+        return True
+
+    async def _run_once(self, client_session: aiohttp.ClientSession) -> None:
+        # Physical runner logic without error handling.
+        self._request_close_event.clear()
+
+        self._zombied = False
+
+        if date.monotonic() - self._last_run_started_at < self._RESTART_RATELIMIT_WINDOW:
+            # Interrupt sleep immediately if a request to close is fired.
+            wait_task = asyncio.create_task(
+                self._request_close_event.wait(), name=f"gateway shard {self._shard_id} backing off"
+            )
+            try:
+                backoff = next(self._backoff)
+                self._logger.debug("backing off for %ss", backoff)
+                await asyncio.wait_for(wait_task, timeout=backoff)
+
+                # If this line gets reached, the wait didn't time out, meaning
+                # the user told the client to shut down gracefully before the
+                # backoff completed.
+                return
+            except asyncio.TimeoutError:
+                pass
+
+        # Do this after. It prevents backing off on the first try.
+        self._last_run_started_at = date.monotonic()
+
+        self._logger.debug("creating websocket connection to %s", self.url)
+        self._ws = await client_session.ws_connect(
+            url=self.url,
+            autoping=True,
+            autoclose=True,
+            proxy=self._proxy_settings.url,
+            proxy_headers=self._proxy_settings.all_headers,
+            verify_ssl=self._http_settings.verify_ssl,
+            # Discord can send massive messages that lead us to being disconnected
+            # without this. It is a bit shit that there is no guarantee of the size
+            # of these messages, but there isn't much we can do about this one.
+            max_msg_size=0,
+        )
+
+        self._connected_at = date.monotonic()
+
+        # Technically we are connected after the hello, but this ensures we can send and receive
+        # before firing that event.
+        self._dispatch("CONNECTED", {})
+
+        try:
+
+            self._zlib = zlib.decompressobj()
+
+            self._handshake_event.clear()
+            self._request_close_event.clear()
+
+            await self._handshake()
+
+            # We should ideally set this after HELLO, but it should be fine
+            # here as well. If we don't heartbeat in time, something probably
+            # went majorly wrong anyway.
+            heartbeat = asyncio.create_task(
+                self._heartbeat_keepalive(), name=f"gateway shard {self._shard_id} heartbeat"
+            )
+
+            try:
+                await self._poll_events()
+            finally:
+                heartbeat.cancel()
+        finally:
+            self._dispatch("DISCONNECTED", {})
+            self._connected_at = None
+
     async def _close_ws(self, code: int, message: str) -> None:
         self._logger.debug("sending close frame with code %s and message %r", int(code), message)
         # None if the websocket error'ed on initialization.
@@ -505,14 +562,14 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     async def _handshake(self) -> None:
         hello = await self._expect_opcode(self._Opcode.HELLO)
-        self.heartbeat_interval = hello["heartbeat_interval"] / 1_000.0
-        self._logger.info("received HELLO, heartbeat interval is %ss", self.heartbeat_interval)
+        self._heartbeat_interval = hello["heartbeat_interval"] / 1_000.0
+        self._logger.info("received HELLO, heartbeat interval is %ss", self._heartbeat_interval)
 
-        if self.session_id is not None:
+        if self._session_id is not None:
             await self._send_json(
                 {
                     "op": self._Opcode.RESUME,
-                    "d": {"token": self._token, "seq": self._seq, "session_id": self.session_id},
+                    "d": {"token": self._token, "seq": self._seq, "session_id": self._session_id},
                 }
             )
         else:
@@ -521,7 +578,7 @@ class GatewayShardImpl(shard.IGatewayShard):
                 "d": {
                     "token": self._token,
                     "compress": False,
-                    "large_threshold": self.large_threshold,
+                    "large_threshold": self._large_threshold,
                     "properties": {
                         "$os": constants.SYSTEM_TYPE,
                         "$browser": constants.AIOHTTP_VERSION,
@@ -548,11 +605,11 @@ class GatewayShardImpl(shard.IGatewayShard):
     async def _heartbeat_keepalive(self) -> None:
         try:
             while not self._request_close_event.is_set():
-                now = self._now()
-                time_since_message = now - self.last_message_received
+                now = date.monotonic()
+                time_since_message = now - self._last_message_received
                 time_since_heartbeat_sent = now - self._last_heartbeat_sent
 
-                if self.heartbeat_interval < time_since_message:
+                if self._heartbeat_interval < time_since_message:
                     self._logger.error(
                         "connection is a zombie, haven't received any message for %ss, last heartbeat sent %ss ago",
                         time_since_message,
@@ -562,13 +619,13 @@ class GatewayShardImpl(shard.IGatewayShard):
                     return
 
                 self._logger.debug(
-                    "preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, self.heartbeat_interval
+                    "preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, self._heartbeat_interval
                 )
                 await self._send_json({"op": self._Opcode.HEARTBEAT, "d": self._seq})
-                self._last_heartbeat_sent = self._now()
+                self._last_heartbeat_sent = date.monotonic()
 
                 try:
-                    await asyncio.wait_for(self._request_close_event.wait(), timeout=self.heartbeat_interval)
+                    await asyncio.wait_for(self._request_close_event.wait(), timeout=self._heartbeat_interval)
                 except asyncio.TimeoutError:
                     pass
 
@@ -588,18 +645,19 @@ class GatewayShardImpl(shard.IGatewayShard):
                 self._seq = message["s"]
 
                 if event == "READY":
-                    self.session_id = data["session_id"]
+                    self._session_id = data["session_id"]
                     user_pl = data["user"]
                     user_id = user_pl["id"]
                     self._user_id = snowflake.Snowflake(user_id)
                     tag = user_pl["username"] + "#" + user_pl["discriminator"]
                     self._logger.info(
-                        "shard is ready [session:%s, user_id:%s, tag:%s]", self.session_id, user_id, tag,
+                        "shard is ready [session:%s, user_id:%s, tag:%s]", self._session_id, user_id, tag,
                     )
                     self._handshake_event.set()
+                    self._session_started_at = date.monotonic()
 
                 elif event == "RESUME":
-                    self._logger.info("shard has resumed [session:%s, seq:%s]", self.session_id, self._seq)
+                    self._logger.info("shard has resumed [session:%s, seq:%s]", self._session_id, self._seq)
                     self._handshake_event.set()
 
                 self._dispatch(event, data)
@@ -609,7 +667,7 @@ class GatewayShardImpl(shard.IGatewayShard):
                 await self._send_json({"op": self._Opcode.HEARTBEAT_ACK})
 
             elif op == self._Opcode.HEARTBEAT_ACK:
-                self._heartbeat_latency = self._now() - self._last_heartbeat_sent
+                self._heartbeat_latency = date.monotonic() - self._last_heartbeat_sent
                 self._logger.debug("received HEARTBEAT ACK [latency:%ss]", self._heartbeat_latency)
 
             elif op == self._Opcode.RECONNECT:
@@ -676,7 +734,7 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     async def _receive_raw(self) -> aiohttp.WSMessage:
         message: aiohttp.WSMessage = await self._ws.receive()  # type: ignore[union-attr]
-        self.last_message_received = self._now()
+        self._last_message_received = date.monotonic()
 
         if message.type == aiohttp.WSMsgType.CLOSE:
             close_code = int(message.data)
@@ -710,7 +768,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         return message
 
     async def _send_json(self, payload: data_binding.JSONObject) -> None:
-        await self.ratelimiter.acquire()
+        await self._ratelimiter.acquire()
         message = data_binding.dump_json(payload)
         self._log_debug_payload(message, "sending json payload [op:%s]", payload.get("op"))
         await self._ws.send_str(message)  # type: ignore[union-attr]
@@ -721,10 +779,6 @@ class GatewayShardImpl(shard.IGatewayShard):
             name=f"gateway shard {self._shard_id} dispatch {event_name}",
         )
 
-    @staticmethod
-    def _now() -> float:
-        return time.perf_counter()
-
     def _log_debug_payload(self, payload: str, message: str, *args: typing.Any) -> None:
         # Prevent logging these payloads if logging isn't enabled. This aids performance a little.
         if not self._logger.isEnabledFor(logging.DEBUG):
@@ -733,8 +787,8 @@ class GatewayShardImpl(shard.IGatewayShard):
         message = f"{message} [seq:%s, session:%s, size:%s]"
         if self._debug:
             message = f"{message} with raw payload: %s"
-            args = (*args, self._seq, self.session_id, len(payload), payload)
+            args = (*args, self._seq, self._session_id, len(payload), payload)
         else:
-            args = (*args, self._seq, self.session_id, len(payload))
+            args = (*args, self._seq, self._session_id, len(payload))
 
         self._logger.debug(message, *args)
