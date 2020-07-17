@@ -36,31 +36,15 @@ _T_co = typing.TypeVar("_T_co", bound="snowflake.Unique")
 _U = typing.TypeVar("_U")
 
 
-class ICacheView(typing.Collection[_T], abc.ABC):
+class ICacheView(typing.Mapping["snowflake.Snowflake", _T], abc.ABC):
     """Interface describing an immutable snapshot view of part of a cache."""
-
-    @abc.abstractmethod
-    def __len__(self) -> int:
-        ...
-
-    @abc.abstractmethod
-    def __iter__(self) -> typing.Iterator[_T_co]:
-        ...
-
-    @abc.abstractmethod
-    def __contains__(self, item: typing.Any) -> bool:
-        ...
 
     @abc.abstractmethod
     def get_item_at(self, index: int) -> _T:
         ...
 
     @abc.abstractmethod
-    def get_item_with_id(self, sf: snowflake.Snowflake, default: _U = None) -> typing.Union[_T, _U]:
-        ...
-
-    @abc.abstractmethod
-    def iterator(self, sf: snowflake.Snowflake) -> iterators.LazyIterator[_T_co]:
+    def iterator(self) -> iterators.LazyIterator[_T_co]:
         ...
 
 
