@@ -211,7 +211,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         *,
         parent_id: typing.Union[undefined.UndefinedType, snowflake.Snowflake] = undefined.UNDEFINED,
         topic: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        rate_limit_per_user: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
+        rate_limit_per_user: typing.Union[undefined.UndefinedType, date.TimeSpanLike] = undefined.UNDEFINED,
         position: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
         permission_overwrites: typing.Union[
             undefined.UndefinedType, typing.Collection[channels.PermissionOverwrite]
