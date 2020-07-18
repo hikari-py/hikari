@@ -353,7 +353,7 @@ class Message(snowflake.Unique):
 
     async def edit(
         self,
-        text: typing.Union[undefined.UndefinedType, str, None] = undefined.UNDEFINED,
+        content: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
         *,
         embed: typing.Union[undefined.UndefinedType, embeds_.Embed, None] = undefined.UNDEFINED,
         mentions_everyone: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
@@ -365,6 +365,7 @@ class Message(snowflake.Unique):
         role_mentions: typing.Union[
             typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.UndefinedType
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, MessageFlag] = undefined.UNDEFINED,
     ) -> Message:
         """Edit this message.
 
@@ -373,26 +374,72 @@ class Message(snowflake.Unique):
 
         Parameters
         ----------
-        text : builtins.str or hikari.utilities.undefined.UndefinedType or builtins.None
-            If specified, the message text to set on the message. If
-            `builtins.None`, then the content is removed if already present.
-        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType or builtins.None
-            If specified, the embed object to set on the message. If
-            `builtins.None`, then the embed is removed if already present.
-        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
-            Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            Either an array of user objects/IDs to allow mentions for,
-            `builtins.True` to allow all user mentions or `builtins.False`
-            to block all user mentions from resolving. Defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            Either an array of guild role objects/IDs to allow mentions for,
-            `builtins.True` to allow all role mentions or `builtins.False` to
-            block all role mentions from resolving. Defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
+        content : hikari.utilities.undefined.UndefinedType or builtins.None or typing.Any
+            The message content to update with. If
+            `hikari.utilities.undefined.UNDEFINED`, then the content will not
+            be changed. If `builtins.None`, then the content will be removed.
+
+            Any other value will be cast to a `builtins.str` before sending.
+
+            If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
+            provided, then this will instead update the embed. This allows for
+            simpler syntax when sending an embed alone.
+        embed : hikari.utilities.undefined.UndefinedType or builtins.None or hikari.models.embeds.Embed
+            The embed to set on the message. If
+            `hikari.utilities.undefined.UNDEFINED`, the previous embed if
+            present is not changed. If this is `builtins.None`, then the embed
+            is removed if present. Otherwise, the new embed value that was
+            provided will be used as the replacement.
+        mentions_everyone : hikari.utilities.undefined.UndefinedType or bool
+            Sanitation for `@everyone` mentions. If
+            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            not changed. If `builtins.True`, then `@everyone`/`@here` mentions
+            in the message content will show up as mentioning everyone that can
+            view the chat.
+        user_mentions : hikari.utilities.undefined.UndefinedType or bool or typing.Collection[hikari.utilities.snowflake.UniqueObject]
+            Sanitation for user mentions. If
+            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            not changed. If `builtins.True`, all valid user mentions will behave
+            as mentions. If `builtins.False`, all valid user mentions will not
+            behave as mentions.
+
+            You may alternatively pass a collection of
+            `hikari.utilities.snowflake.Snowflake` user IDs, or
+            `hikari.utilities.snowflake.Unique` objects that represent users.
+        role_mentions : hikari.utilities.undefined.UndefinedType or bool or typing.Collection[hikari.utilities.snowflake.UniqueObject]
+            Sanitation for role mentions. If
+            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            not changed. If `builtins.True`, all valid role mentions will behave
+            as mentions. If `builtins.False`, all valid role mentions will not
+            behave as mentions.
+
+            You may alternatively pass a collection of
+            `hikari.utilities.snowflake.Snowflake` user IDs, or
+            `hikari.utilities.snowflake.Unique` objects that represent roles.
+        flags : hikari.utilities.undefined.UndefinedType or hikari.models.messages.MessageFlag
+            Optional flags to set on the message. If
+            `hikari.utilities.undefined.UNDEFINED`, then nothing is changed.
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`. If you
+            have `MANAGE_MESSAGES` permissions, you can use this call to
+            suppress embeds on another user's message.
+
+        !!! note
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
+
+        !!! note
+            There is currently no documented way to clear attachments or edit
+            attachments from a previously sent message on Discord's API. To
+            do this, `delete` the message and re-send it.
+
+        !!! warning
+            If the message was not sent by your user, the only parameter
+            you may provide to this call is the `flags` parameter. Anything
+            else will result in a `hikari.errors.Forbidden` being raised.
 
         Returns
         -------
@@ -401,37 +448,40 @@ class Message(snowflake.Unique):
 
         Raises
         ------
+        hikari.errors.BadRequest
+            This may be raised in several discrete situations, such as messages
+            being empty with no embeds; messages with more than 2000 characters
+            in them, embeds that exceed one of the many embed
+            limits; invalid image URLs in embeds; users in `user_mentions` not
+            being mentioned in the message content; roles in `role_mentions` not
+            being mentioned in the message content.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to send messages in the given channel; if
+            you try to change the contents of another user's message; or if you
+            try to edit the flags on another user's message without the
+            permissions to manage messages_.
         hikari.errors.NotFound
             If the channel or message is not found.
-        hikari.errors.BadRequest
-            This can be raised if the embed exceeds the defined limits;
-            if the message content is specified only and empty or greater
-            than `2000` characters; if neither content, file or embed
-            are specified.
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
-        hikari.errors.Forbidden
-            If you try to edit `content` or `embed` or `allowed_mentions`
-            on a message you did not author.
-            If you try to edit the flags on a message you did not author without
-            the `MANAGE_MESSAGES` permission.
-        builtins.ValueError
-            If more than 100 unique objects/entities are passed for
-            `role_mentions` or `user_mentions`.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
         return await self.app.rest.edit_message(
             message=self.id,
             channel=self.channel_id,
-            text=text,
+            content=content,
             embed=embed,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
+            flags=flags,
         )
 
     async def reply(
         self,
-        text: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        content: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
+        /,
         *,
         embed: typing.Union[undefined.UndefinedType, embeds_.Embed] = undefined.UNDEFINED,
         attachment: typing.Union[undefined.UndefinedType, str, files_.Resource] = undefined.UNDEFINED,
@@ -454,74 +504,84 @@ class Message(snowflake.Unique):
 
         Parameters
         ----------
-        text : builtins.str or hikari.utilities.undefined.UndefinedType
-            If specified, the message text to send with the message.
-        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
-            If specified, the embed object to send with the message.
-        attachment : hikari.utilities.files.Resource or builtins.str or hikari.utilities.undefined.UndefinedType
-            If specified, a attachment to upload, if desired. This can
-            be a resource, or string of a path on your computer or a URL.
-        attachments : typing.Sequence[hikari.utilities.files.Resource or builtins.str] or hikari.utilities.undefined.UndefinedType
-            If specified, a sequence of attachments to upload, if desired.
-            Should be between 1 and 10 objects in size (inclusive), also
-            including embed attachments. These can be resources, or
+        content : hikari.utilities.undefined.UndefinedType or typing.Any
+            If specified, the message contents. If `UNDEFINED`, then nothing
+            will be sent in the content. Any other value here will be cast to a
+            `builtins.str`.
+
+            If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
+            provided, then this will instead update the embed. This allows for
+            simpler syntax when sending an embed alone.
+
+            Likewise, if this is a `hikari.utilities.files.Resource`, then the
+            content is instead treated as an attachment if no `attachment` and
+            no `attachments` kwargs are provided.
+        embed : hikari.utilities.undefined.UndefinedType or hikari.models.embeds.Embed
+            If specified, the message embed.
+        attachment : hikari.utilities.undefined.UndefinedType or builtins.str or hikari.utilities.files.Resource
+            If specified, the message attachment. This can be a resource,
+            or string of a path on your computer or a URL.
+        attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[builtins.str or hikari.utilities.files.Resource]
+            If specified, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        nonce : builtins.str or hikari.utilities.undefined.UndefinedType
-            If specified, an optional ID to send for opportunistic message
-            creation. This doesn't serve any real purpose for general use,
-            and can usually be ignored.
-        tts : builtins.bool or hikari.utilities.undefined.UndefinedType
-            If specified, whether the message will be sent as a TTS message.
+        tts : hikari.utilities.undefined.UndefinedType or builtins.bool
+            If specified, whether the message will be TTS (Text To Speech).
+        nonce : hikari.utilities.undefined.UndefinedType or builtins.str
+            If specified, a nonce that can be used for optimistic message
+            sending.
         mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
-            Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
+            If specified, whether the message should parse @everyone/@here
+            mentions.
         user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            Either an array of user objects/IDs to allow mentions for,
-            `builtins.True` to allow all user mentions or `builtins.False` to block all
-            user mentions from resolving, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            Either an array of guild role objects/IDs to allow mentions for,
-            `builtins.True` to allow all role mentions or `builtins.False` to block all
-            role mentions from resolving, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
+            If specified, and a `builtins.bool`, whether to parse user mentions.
+            If specified and a `builtins.list`, the users to parse the mention
+            for. This may be a user object, or the ID of an existing user.
+        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
+            If specified and `builtins.bool`, whether to parse role mentions.
+            If specified and `builtins.list`, the roles to parse the mention
+            for. This may be a role object, or the ID of an existing role.
 
         Returns
         -------
         hikari.models.messages.Message
-            The created message object.
+            The created message.
 
         Raises
         ------
-        hikari.errors.NotFound
-            If the channel this message was created in is not found.
         hikari.errors.BadRequest
-            This can be raised if the file is too large; if the embed exceeds
-            the defined limits; if the message content is specified only and
-            empty or greater than `2000` characters; if neither content, files
-            or embed are specified.
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
-            If you are trying to upload more than 10 files in total (including
-            embed attachments).
+            This may be raised in several discrete situations, such as messages
+            being empty with no attachments or embeds; messages with more than
+            2000 characters in them, embeds that exceed one of the many embed
+            limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; users in `user_mentions` not being
+            mentioned in the message content; roles in `role_mentions` not
+            being mentioned in the message content.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.Forbidden
-            If you lack permissions to send to the channel this message belongs
-            to.
+            If you lack permissions to send messages in the given channel.
+        hikari.errors.NotFound
+            If the channel is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
         builtins.ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
         builtins.TypeError
             If both `attachment` and `attachments` are specified.
+
+        !!! warning
+            You are expected to make a connection to the gateway and identify
+            once before being able to use this _endpoint for a bot.
         """  # noqa: E501 - Line too long
         return await self.app.rest.create_message(
             channel=self.channel_id,
-            text=text,
-            nonce=nonce,
-            tts=tts,
+            content=content,
+            embed=embed,
             attachment=attachment,
             attachments=attachments,
-            embed=embed,
+            nonce=nonce,
+            tts=tts,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
