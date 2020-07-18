@@ -1171,6 +1171,136 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     # MESSAGE MODELS #
     ##################
 
+    def deserialize_partial_message(self, payload: data_binding.JSONObject) -> message_models.PartialMessage:
+        partial_message = message_models.PartialMessage()
+        partial_message.app = self._app
+        partial_message.id = snowflake.Snowflake(payload["id"])
+        partial_message.channel_id = snowflake.Snowflake(payload["channel_id"])
+        partial_message.guild_id = (
+            snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else undefined.UNDEFINED
+        )
+        partial_message.author = (
+            self.deserialize_user(payload["author"]) if "author" in payload else undefined.UNDEFINED
+        )
+        partial_message.member = (
+            self.deserialize_member(payload["member"], user=partial_message.author, guild_id=partial_message.guild_id)
+            if "member" in payload
+            else undefined.UNDEFINED
+        )
+        partial_message.content = payload["content"] if "content" in payload else undefined.UNDEFINED
+        partial_message.timestamp = (
+            date.iso8601_datetime_string_to_datetime(payload["timestamp"])
+            if "timestamp" in payload
+            else undefined.UNDEFINED
+        )
+
+        if "edited_timestamp" in payload:
+            if (edited_timestamp := payload["edited_timestamp"]) is not None:
+                edited_timestamp = date.iso8601_datetime_string_to_datetime(edited_timestamp)
+            else:
+                edited_timestamp = None
+        else:
+            edited_timestamp = undefined.UNDEFINED
+
+        partial_message.edited_timestamp = edited_timestamp
+
+        partial_message.is_tts = payload["tts"] if "tts" in payload else undefined.UNDEFINED
+        partial_message.is_mentioning_everyone = (
+            payload["mention_everyone"] if "mention_everyone" in payload else undefined.UNDEFINED
+        )
+        partial_message.user_mentions = (
+            {snowflake.Snowflake(mention["id"]) for mention in payload["mentions"]}
+            if "mentions" in payload
+            else undefined.UNDEFINED
+        )
+        partial_message.role_mentions = (
+            {snowflake.Snowflake(mention) for mention in payload["mention_roles"]}
+            if "mention_roles" in payload
+            else undefined.UNDEFINED
+        )
+        partial_message.channel_mentions = (
+            {snowflake.Snowflake(mention["id"]) for mention in payload["mention_channels"]}
+            if "mention_channels" in payload
+            else undefined.UNDEFINED
+        )
+
+        if "attachments" in payload:
+            attachments = []
+            for attachment_payload in payload["attachments"]:
+                attachment = message_models.Attachment()
+                attachment.id = snowflake.Snowflake(attachment_payload["id"])
+                attachment.filename = attachment_payload["filename"]
+                attachment.size = int(attachment_payload["size"])
+                attachment.url = attachment_payload["url"]
+                attachment.proxy_url = attachment_payload["proxy_url"]
+                attachment.height = attachment_payload.get("height")
+                attachment.width = attachment_payload.get("width")
+                attachments.append(attachment)
+            partial_message.attachments = attachments
+        else:
+            partial_message.attachments = undefined.UNDEFINED
+
+        partial_message.embeds = (
+            [self.deserialize_embed(embed) for embed in payload["embeds"]]
+            if "embeds" in payload
+            else undefined.UNDEFINED
+        )
+
+        if "reactions" in payload:
+            reactions = []
+            for reaction_payload in payload["reactions"]:
+                reaction = message_models.Reaction()
+                reaction.count = int(reaction_payload["count"])
+                reaction.emoji = self.deserialize_emoji(reaction_payload["emoji"])
+                reaction.is_me = reaction_payload["me"]
+                reactions.append(reaction)
+            partial_message.reactions = reactions
+        else:
+            partial_message.reactions = undefined.UNDEFINED
+
+        partial_message.is_pinned = payload["pinned"] if "pinned" in payload else undefined.UNDEFINED
+        partial_message.webhook_id = (
+            snowflake.Snowflake(payload["webhook_id"]) if "webhook_id" in payload else undefined.UNDEFINED
+        )
+        # noinspection PyArgumentList
+        partial_message.type = message_models.MessageType(payload["type"]) if "type" in payload else undefined.UNDEFINED
+
+        if "activity" in payload:
+            activity_payload = payload["activity"]
+            activity = message_models.MessageActivity()
+            # noinspection PyArgumentList
+            activity.type = message_models.MessageActivityType(activity_payload["type"])
+            activity.party_id = activity_payload.get("party_id")
+            partial_message.activity = activity
+        else:
+            partial_message.activity = undefined.UNDEFINED
+
+        partial_message.application = (
+            self.deserialize_application(payload["application"]) if "application" in payload else undefined.UNDEFINED
+        )
+
+        if "message_reference" in payload:
+            crosspost_payload = payload["message_reference"]
+            crosspost = message_models.MessageCrosspost()
+            crosspost.app = self._app
+            crosspost.id = (
+                snowflake.Snowflake(crosspost_payload["message_id"]) if "message_id" in crosspost_payload else None
+            )
+            crosspost.channel_id = snowflake.Snowflake(crosspost_payload["channel_id"])
+            crosspost.guild_id = (
+                snowflake.Snowflake(crosspost_payload["guild_id"]) if "guild_id" in crosspost_payload else None
+            )
+            partial_message.message_reference = crosspost
+        else:
+            partial_message.message_reference = undefined.UNDEFINED
+
+        # noinspection PyArgumentList
+        partial_message.flags = (
+            message_models.MessageFlag(payload["flags"]) if "flags" in payload else undefined.UNDEFINED
+        )
+        partial_message.nonce = payload["nonce"] if "nonce" in payload else undefined.UNDEFINED
+        return partial_message
+
     def deserialize_message(self, payload: data_binding.JSONObject) -> message_models.Message:
         message = message_models.Message()
         message.app = self._app
@@ -1717,144 +1847,12 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         self, payload: data_binding.JSONObject
     ) -> message_events.MessageUpdateEvent:
         message_update = message_events.MessageUpdateEvent()
-
-        updated_message = message_events.UpdatedMessageFields()
-        updated_message.app = self._app
-        updated_message.id = snowflake.Snowflake(payload["id"])
-        updated_message.channel_id = snowflake.Snowflake(payload["channel_id"])
-        updated_message.guild_id = (
-            snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else undefined.UNDEFINED
-        )
-        updated_message.author = (
-            self.deserialize_user(payload["author"]) if "author" in payload else undefined.UNDEFINED
-        )
-        updated_message.member = (
-            self.deserialize_member(payload["member"], user=updated_message.author, guild_id=updated_message.guild_id)
-            if "member" in payload
-            else undefined.UNDEFINED
-        )
-        updated_message.content = payload["content"] if "content" in payload else undefined.UNDEFINED
-        updated_message.timestamp = (
-            date.iso8601_datetime_string_to_datetime(payload["timestamp"])
-            if "timestamp" in payload
-            else undefined.UNDEFINED
-        )
-
-        if "edited_timestamp" in payload:
-            if (edited_timestamp := payload["edited_timestamp"]) is not None:
-                edited_timestamp = date.iso8601_datetime_string_to_datetime(edited_timestamp)
-            else:
-                edited_timestamp = None
-        else:
-            edited_timestamp = undefined.UNDEFINED
-
-        updated_message.edited_timestamp = edited_timestamp
-
-        updated_message.is_tts = payload["tts"] if "tts" in payload else undefined.UNDEFINED
-        updated_message.is_mentioning_everyone = (
-            payload["mention_everyone"] if "mention_everyone" in payload else undefined.UNDEFINED
-        )
-        updated_message.user_mentions = (
-            {snowflake.Snowflake(mention["id"]) for mention in payload["mentions"]}
-            if "mentions" in payload
-            else undefined.UNDEFINED
-        )
-        updated_message.role_mentions = (
-            {snowflake.Snowflake(mention) for mention in payload["mention_roles"]}
-            if "mention_roles" in payload
-            else undefined.UNDEFINED
-        )
-        updated_message.channel_mentions = (
-            {snowflake.Snowflake(mention["id"]) for mention in payload["mention_channels"]}
-            if "mention_channels" in payload
-            else undefined.UNDEFINED
-        )
-
-        if "attachments" in payload:
-            attachments = []
-            for attachment_payload in payload["attachments"]:
-                attachment = message_models.Attachment()
-                attachment.id = snowflake.Snowflake(attachment_payload["id"])
-                attachment.filename = attachment_payload["filename"]
-                attachment.size = int(attachment_payload["size"])
-                attachment.url = attachment_payload["url"]
-                attachment.proxy_url = attachment_payload["proxy_url"]
-                attachment.height = attachment_payload.get("height")
-                attachment.width = attachment_payload.get("width")
-                attachments.append(attachment)
-            updated_message.attachments = attachments
-        else:
-            updated_message.attachments = undefined.UNDEFINED
-
-        updated_message.embeds = (
-            [self.deserialize_embed(embed) for embed in payload["embeds"]]
-            if "embeds" in payload
-            else undefined.UNDEFINED
-        )
-
-        if "reactions" in payload:
-            reactions = []
-            for reaction_payload in payload["reactions"]:
-                reaction = message_models.Reaction()
-                reaction.count = int(reaction_payload["count"])
-                reaction.emoji = self.deserialize_emoji(reaction_payload["emoji"])
-                reaction.is_me = reaction_payload["me"]
-                reactions.append(reaction)
-            updated_message.reactions = reactions
-        else:
-            updated_message.reactions = undefined.UNDEFINED
-
-        updated_message.is_pinned = payload["pinned"] if "pinned" in payload else undefined.UNDEFINED
-        updated_message.webhook_id = (
-            snowflake.Snowflake(payload["webhook_id"]) if "webhook_id" in payload else undefined.UNDEFINED
-        )
-        # noinspection PyArgumentList
-        updated_message.type = message_models.MessageType(payload["type"]) if "type" in payload else undefined.UNDEFINED
-
-        if "activity" in payload:
-            activity_payload = payload["activity"]
-            activity = message_models.MessageActivity()
-            # noinspection PyArgumentList
-            activity.type = message_models.MessageActivityType(activity_payload["type"])
-            activity.party_id = activity_payload.get("party_id")
-            updated_message.activity = activity
-        else:
-            updated_message.activity = undefined.UNDEFINED
-
-        updated_message.application = (
-            self.deserialize_application(payload["application"]) if "application" in payload else undefined.UNDEFINED
-        )
-
-        if "message_reference" in payload:
-            crosspost_payload = payload["message_reference"]
-            crosspost = message_models.MessageCrosspost()
-            crosspost.app = self._app
-            crosspost.id = (
-                snowflake.Snowflake(crosspost_payload["message_id"]) if "message_id" in crosspost_payload else None
-            )
-            crosspost.channel_id = snowflake.Snowflake(crosspost_payload["channel_id"])
-            crosspost.guild_id = (
-                snowflake.Snowflake(crosspost_payload["guild_id"]) if "guild_id" in crosspost_payload else None
-            )
-            updated_message.message_reference = crosspost
-        else:
-            updated_message.message_reference = undefined.UNDEFINED
-
-        # noinspection PyArgumentList
-        updated_message.flags = (
-            message_models.MessageFlag(payload["flags"]) if "flags" in payload else undefined.UNDEFINED
-        )
-        updated_message.nonce = payload["nonce"] if "nonce" in payload else undefined.UNDEFINED
-
-        message_update.message = updated_message
+        message_update.message = self.deserialize_partial_message(payload)
         return message_update
 
     def deserialize_message_delete_event(self, payload: data_binding.JSONObject) -> message_events.MessageDeleteEvent:
         message_delete = message_events.MessageDeleteEvent()
-        message_delete.app = self._app
-        message_delete.channel_id = snowflake.Snowflake(payload["channel_id"])
-        message_delete.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
-        message_delete.message_id = snowflake.Snowflake(payload["id"])
+        message_delete.message = self.deserialize_partial_message(payload)
         return message_delete
 
     def deserialize_message_delete_bulk_event(

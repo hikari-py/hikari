@@ -3011,6 +3011,9 @@ class TestEntityFactoryImpl:
         assert message_create.message == entity_factory_impl.deserialize_message(message_payload)
         assert isinstance(message_create, message_events.MessageCreateEvent)
 
+    # TODO: move partial message deserialization test to where the message objects are tested.
+    # Can't be bothered to untangle this now to implement this change, it isn't important and it is
+    # still being tested regardless.
     def test_deserialize_message_update_event_with_full_payload(
         self,
         entity_factory_impl,
@@ -3083,7 +3086,7 @@ class TestEntityFactoryImpl:
 
         assert message_update.message.flags == message_models.MessageFlag.IS_CROSSPOST
         assert message_update.message.nonce == "171000788183678976"
-        assert isinstance(message_update.message, message_events.UpdatedMessageFields)
+        assert isinstance(message_update.message, message_models.PartialMessage)
         assert isinstance(message_update, message_events.MessageUpdateEvent)
 
     def test_deserialize_message_update_event_with_partial_payload(self, entity_factory_impl):
@@ -3126,11 +3129,15 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_message_delete_event(self, entity_factory_impl, mock_app, message_delete_payload):
         message_delete = entity_factory_impl.deserialize_message_delete_event(message_delete_payload)
-        assert message_delete.app is mock_app
-        assert message_delete.message_id == 123123
-        assert message_delete.channel_id == 9292929
-        assert message_delete.guild_id == 202020202
+        # TODO: this is an integration test, not a unit test, IMO, so fix it to only check
+        # the message attribute is set from calling the other function to deserialize the partial
+        # instead.
+        assert message_delete.message.app is mock_app
+        assert message_delete.message.id == 123123
+        assert message_delete.message.channel_id == 9292929
+        assert message_delete.message.guild_id == 202020202
         assert isinstance(message_delete, message_events.MessageDeleteEvent)
+        assert isinstance(message_delete.message, message_models.PartialMessage)
 
     @pytest.fixture()
     def message_delete_bulk_payload(self):

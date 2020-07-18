@@ -755,7 +755,20 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
     # MESSAGE MODELS #
     ##################
 
-    @abc.abstractmethod
+    def deserialize_partial_message(self, payload: data_binding.JSONObject) -> message_models.PartialMessage:
+        """Parse a raw payload from Discord into a partial message object.
+
+        Parameters
+        ----------
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.models.messages.PartialMessage
+            The deserialized partial message object.
+        """
+
     @abc.abstractmethod
     def deserialize_message(self, payload: data_binding.JSONObject) -> message_models.Message:
         """Parse a raw payload from Discord into a message object.
