@@ -28,7 +28,6 @@ from hikari.api import component
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    import datetime
     import types
 
     from hikari import config
@@ -37,6 +36,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import audit_logs
     from hikari.models import channels
     from hikari.models import colors
+    from hikari.models import colours
     from hikari.models import emojis
     from hikari.models import embeds as embeds_
     from hikari.models import gateway
@@ -160,14 +160,15 @@ class IRESTClient(component.IComponent, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_channel(
-        self, channel: typing.Union[channels.PartialChannel, snowflake.UniqueObject]
+        self, channel: snowflake.SnowflakeishOr[channels.PartialChannel]
     ) -> channels.PartialChannel:
         """Fetch a channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to fetch. This may be a channel object, or the ID of an
+        channel : hikari.utilities.snowflake.SnowflakeishOr
+            The channel to fetch. This may be a
+            `hikari.models.channels.PartialChannel` object, or the ID of an
             existing channel.
 
         Returns
@@ -208,51 +209,48 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def edit_channel(
         self,
-        channel: typing.Union[channels.PartialChannel, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.GuildChannel],
         /,
         *,
-        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        position: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-        topic: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        nsfw: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        bitrate: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-        user_limit: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-        rate_limit_per_user: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
-        permission_overwrites: typing.Union[
-            undefined.UndefinedType, typing.Sequence[channels.PermissionOverwrite]
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        parent_category: typing.Union[
-            undefined.UndefinedType, channels.GuildCategory, snowflake.UniqueObject
-        ] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        parent_category: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels.PartialChannel:
         """Edit a channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildChannel]
             The channel to edit. This may be a channel object, or the ID of an
             existing channel.
-        name : hikari.utilities.undefined.UndefinedType or builtins.str
+        name : hikari.utilities.undefined.UndefinedOr[[builtins.str]
             If provided, the new name for the channel.
-        position : hikari.utilities.undefined.UndefinedType or builtins.int
+        position : hikari.utilities.undefined.UndefinedOr[[builtins.int]
             If provided, the new position for the channel.
-        topic : hikari.utilities.undefined.UndefinedType or builtins.str
+        topic : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If provided, the new topic for the channel.
-        nsfw : hikari.utilities.undefined.UndefinedType or builtins.bool
+        nsfw : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If provided, whether the channel should be marked as NSFW or not.
-        bitrate : hikari.utilities.undefined.UndefinedType or builtins.int
+        bitrate : hikari.utilities.undefined.UndefinedOr[builtins.int]
             If provided, the new bitrate for the channel.
-        user_limit : hikari.utilities.undefined.UndefinedType or builtins.int
+        user_limit : hikari.utilities.undefined.UndefinedOr[builtins.int]
             If provided, the new user limit in the channel.
-        rate_limit_per_user : hikari.utilities.undefined.UndefinedType or datetime.timedelta or builtins.float or builtins.int
+        rate_limit_per_user : hikari.utilities.date.Intervalish
             If provided, the new rate limit per user in the channel.
-        permission_overwrites : hikari.utilities.undefined.UndefinedType or typing.Sequence[hikari.models.channels.PermissionOverwrite]
+        permission_overwrites : hikari.utilities.undefined.UndefinedOr[typing.Sequence[hikari.models.channels.PermissionOverwrite]]
             If provided, the new permission overwrites for the channel.
-        parent_category : hikari.utilities.undefined.UndefinedType or hikari.models.channels.GuildCategory or hikari.utilities.snowflake.UniqueObject
-            If provided, the new guild category for the channel. This may be
-            a category object, or the ID of an existing category.
-        reason : hikari.utilities.undefined.UndefinedType or builtins.str
+        parent_category : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildCategory]]
+            If provided, the new guild category for the channel.
+        reason : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
 
         Returns
@@ -275,12 +273,12 @@ class IRESTClient(component.IComponent, abc.ABC):
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
-    async def delete_channel(self, channel: typing.Union[channels.PartialChannel, snowflake.UniqueObject]) -> None:
+    async def delete_channel(self, channel: snowflake.SnowflakeishOr[channels.PartialChannel]) -> None:
         """Delete a channel in a guild, or close a DM.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.PartialChannel]
             The channel to delete. This may be a channel object, or the ID of an
             existing channel.
 
@@ -304,12 +302,12 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def edit_permission_overwrites(
         self,
-        channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
-        target: typing.Union[channels.PermissionOverwrite, users.UserImpl, guilds.Role],
+        channel: snowflake.SnowflakeishOr[channels.GuildChannel],
+        target: typing.Union[channels.PermissionOverwrite, users.PartialUser, guilds.PartialRole],
         *,
-        allow: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
-        deny: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Edit permissions for a target entity."""
 
@@ -317,45 +315,47 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def edit_permission_overwrites(
         self,
-        channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
-        target: typing.Union[int, str, snowflake.Snowflake],
+        channel: snowflake.SnowflakeishOr[channels.GuildChannel],
+        target: snowflake.Snowflakeish,
         *,
         target_type: typing.Union[channels.PermissionOverwriteType, str],
-        allow: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
-        deny: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Edit permissions for a given entity ID and type."""
 
     @abc.abstractmethod
     async def edit_permission_overwrites(
         self,
-        channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
-        target: typing.Union[snowflake.UniqueObject, users.UserImpl, guilds.Role, channels.PermissionOverwrite],
+        channel: snowflake.SnowflakeishOr[channels.GuildChannel],
+        target: typing.Union[
+            snowflake.Snowflakeish, users.PartialUser, guilds.PartialRole, channels.PermissionOverwrite
+        ],
         *,
-        target_type: typing.Union[undefined.UndefinedType, channels.PermissionOverwriteType, str] = undefined.UNDEFINED,
-        allow: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
-        deny: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        target_type: undefined.UndefinedOr[typing.Union[channels.PermissionOverwriteType, str]] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Edit permissions for a specific entity in the given guild channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to edit a permission overwrite in. This may be a channel object, or
-            the ID of an existing channel.
-        target : hikari.models.users.UserImpl or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.UniqueObject
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildChannel]
+            The channel to edit a permission overwrite in. This may be a
+            channel object, or the ID of an existing channel.
+        target : hikari.models.users.PartialUser or hikari.models.guilds.PartialRole or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflakeish
             The channel overwrite to edit. This may be a overwrite object, or the ID of an
             existing channel.
-        target_type : hikari.utilities.undefined.UndefinedType or hikari.models.channels.PermissionOverwriteType or builtins.str
+        target_type : hikari.utilities.undefined.UndefinedOr[hikari.models.channels.PermissionOverwriteType or builtins.str]
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
-        allow : hikari.utilities.undefined.UndefinedType or hikari.models.permissions.Permission
+        allow : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permission]
             If provided, the new vale of all allowed permissions.
-        deny : hikari.utilities.undefined.UndefinedType or hikari.models.permissions.Permission
+        deny : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permission]
             If provided, the new vale of all disallowed permissions.
-        reason : hikari.utilities.undefined.UndefinedType or builtins.str
+        reason : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
 
         Raises
@@ -379,17 +379,19 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def delete_permission_overwrite(
         self,
-        channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
-        target: typing.Union[channels.PermissionOverwrite, guilds.Role, users.UserImpl, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.GuildChannel],
+        target: snowflake.SnowflakeishOr[
+            typing.Union[channels.PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflake.Snowflakeish]
+        ],
     ) -> None:
         """Delete a custom permission for an entity in a given guild channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to delete a permission overwrite in. This may be a channel
-            object, or the ID of an existing channel.
-        target : hikari.models.users.UserImpl or hikari.models.guilds.Role or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.UniqueObject
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildChannel]
+            The channel to delete a permission overwrite in. This may be a
+            channel object, or the ID of an existing channel.
+        target : hikari.models.users.PartialUser or hikari.models.guilds.PartialRole or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflakeish
             The channel overwrite to delete.
 
         Raises
@@ -406,13 +408,13 @@ class IRESTClient(component.IComponent, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_channel_invites(
-        self, channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject]
+        self, channel: snowflake.SnowflakeishOr[channels.GuildChannel]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         """Fetch all invites pointing to the given guild channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildChannel]
             The channel to fetch the invites from. This may be a channel
             object, or the ID of an existing channel.
 
@@ -436,39 +438,37 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def create_invite(
         self,
-        channel: typing.Union[channels.GuildChannel, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.GuildChannel],
         *,
-        max_age: typing.Union[undefined.UndefinedType, int, float, datetime.timedelta] = undefined.UNDEFINED,
-        max_uses: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-        temporary: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        unique: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        target_user: typing.Union[
-            undefined.UndefinedType, users.UserImpl, snowflake.UniqueObject
-        ] = undefined.UNDEFINED,
-        target_user_type: typing.Union[undefined.UndefinedType, invites.TargetUserType] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        max_age: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
+        max_uses: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        temporary: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        unique: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        target_user: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.UserImpl]] = undefined.UNDEFINED,
+        target_user_type: undefined.UndefinedOr[invites.TargetUserType] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
         """Create an invite to the given guild channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildChannel]
             The channel to create a invite for. This may be a channel object,
             or the ID of an existing channel.
-        max_age : hikari.utilities.undefined.UndefinedType or datetime.timedelta or builtins.float or builtins.int
+        max_age : hikari.utilities.undefined.UndefinedOr[datetime.timedelta or builtins.float or builtins.int]
             If provided, the duration of the invite before expiry.
-        max_uses : hikari.utilities.undefined.UndefinedType or builtins.int
+        max_uses : hikari.utilities.undefined.UndefinedOr[builtins.int]
             If provided, the max uses the invite can have.
-        temporary : hikari.utilities.undefined.UndefinedType or builtins.bool
+        temporary : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If provided, whether the invite only grants temporary membership.
-        unique : hikari.utilities.undefined.UndefinedType or builtins.bool
-            If provided, wheter the invite should be unique.
-        target_user : hikari.utilities.undefined.UndefinedType or hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject
+        unique : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+            If provided, whether the invite should be unique.
+        target_user : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser]]
             If provided, the target user id for this invite. This may be a
             user object, or the ID of an existing user.
-        target_user_type : hikari.utilities.undefined.UndefinedType or hikari.models.invites.TargetUserType or builtins.int
+        target_user_type : hikari.utilities.undefined.UndefinedOr[hikari.models.invites.TargetUserType or builtins.int]
             If provided, the type of target user for this invite.
-        reason : hikari.utilities.undefined.UndefinedType or builtins.str
+        reason : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
 
         Returns
@@ -493,13 +493,32 @@ class IRESTClient(component.IComponent, abc.ABC):
 
     @abc.abstractmethod
     def trigger_typing(
-        self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
+        self, channel: snowflake.SnowflakeishOr[channels.TextChannel]
     ) -> special_endpoints.TypingIndicator:
         """Trigger typing in a text channel.
 
+        The result of this call can be awaited to trigger typing once, or
+        can be used as an async context manager to continually type until the
+        context manager is left.
+
+        Examples
+        --------
+        ```py
+        # Trigger typing just once.
+        await rest.trigger_typing(channel)
+
+        # Trigger typing repeatedly for 1 minute.
+        async with rest.trigger_typing(channel):
+            await asyncio.sleep(60)
+        ```
+
+        !!! warning
+            Sending a message to the channel will cause the typing indicator
+            to disappear until it is re-triggered.
+
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
             The channel to trigger typing in. This may be a channel object, or
             the ID of an existing channel.
 
@@ -528,13 +547,13 @@ class IRESTClient(component.IComponent, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_pins(
-        self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
+        self, channel: snowflake.SnowflakeishOr[channels.TextChannel]
     ) -> typing.Sequence[messages_.Message]:
         """Fetch the pinned messages in this text channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
             The channel to fetch pins from. This may be a channel object, or
             the ID of an existing channel.
 
@@ -559,17 +578,17 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def pin_message(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        message: typing.Union[messages_.Message, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        message: snowflake.SnowflakeishOr[messages_.Message],
     ) -> None:
         """Pin an existing message in the given text channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
             The channel to pin a message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
+        message : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]
             The message to pin. This may be a message object,
             or the ID of an existing message.
 
@@ -589,17 +608,17 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def unpin_message(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        message: typing.Union[messages_.Message, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        message: snowflake.SnowflakeishOr[messages_.Message],
     ) -> None:
         """Unpin a given message from a given text channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
             The channel to unpin a message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
+        message : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]
             The message to unpin. This may be a message object, or the ID of an
             existing message.
 
@@ -619,28 +638,34 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def fetch_messages(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
         *,
-        before: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
-        after: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
-        around: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
+        around: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[messages_.Message]:
         """Browse the message history for a given text channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
             The channel to fetch messages in. This may be a channel object, or
             the ID of an existing channel.
-        before : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
+        before : hikari.utilities.undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[hikari.utilities.snowflake.Unique]]
             If provided, fetch messages before this snowflake. If you provide
-            a datetime object, it will be transformed into a snowflake.
-        after : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
+            a datetime object, it will be transformed into a snowflake. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
+        after : hikari.utilities.undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[hikari.utilities.snowflake.Unique]]
             If provided, fetch messages after this snowflake. If you provide
-            a datetime object, it will be transformed into a snowflake.
-        around : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
+            a datetime object, it will be transformed into a snowflake. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
+        around : hikari.utilities.undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[hikari.utilities.snowflake.Unique]]
             If provided, fetch messages around this snowflake. If you provide
-            a datetime object, it will be transformed into a snowflake.
+            a datetime object, it will be transformed into a snowflake. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
 
         Returns
         -------
@@ -671,17 +696,17 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def fetch_message(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        message: typing.Union[messages_.Message, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        message: snowflake.SnowflakeishOr[messages_.Message],
     ) -> messages_.Message:
         """Fetch a specific message in the given text channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
             The channel to fetch messages in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
+        message : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]
             The message to fetch. This may be a channel object, or the ID of an
             existing channel.
 
@@ -707,55 +732,70 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def create_message(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: typing.Union[undefined.UndefinedType, embeds_.Embed] = undefined.UNDEFINED,
-        attachment: typing.Union[undefined.UndefinedType, str, files.Resource] = undefined.UNDEFINED,
-        attachments: typing.Union[
-            undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[users.PartialUser]], bool]
         ] = undefined.UNDEFINED,
-        tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool, undefined.UndefinedType
-        ] = undefined.UNDEFINED,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]], bool, undefined.UndefinedType
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Create a message in the given channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to create the message in. This may be a channel object, or
-            the ID of an existing channel.
-        text : hikari.utilities.undefined.UndefinedType or builtins.str
-            If specified, the message contents.
-        embed : hikari.utilities.undefined.UndefinedType or hikari.models.embeds.Embed
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
+            The channel to create the message in.
+        content : hikari.utilities.undefined.UndefinedOr[typing.Any]
+            If specified, the message contents. If `UNDEFINED`, then nothing
+            will be sent in the content. Any other value here will be cast to a
+            `builtins.str`.
+
+            If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
+            provided, then this will instead update the embed. This allows for
+            simpler syntax when sending an embed alone.
+
+            Likewise, if this is a `hikari.utilities.files.Resource`, then the
+            content is instead treated as an attachment if no `attachment` and
+            no `attachments` kwargs are provided.
+        embed : hikari.utilities.undefined.UndefinedOr[hikari.models.embeds.Embed]
             If specified, the message embed.
-        attachment : hikari.utilities.undefined.UndefinedType or builtins.str or hikari.utilities.files.Resource
+        attachment : hikari.utilities.undefined.UndefinedOr[hikari.utilities.files.Resourceish],
             If specified, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
-        attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[builtins.str or hikari.utilities.files.Resource]
+        attachments : hikari.utilities.undefined.UndefinedOr[typing.Sequence[hikari.utilities.files.Resourceish]],
             If specified, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        tts : hikari.utilities.undefined.UndefinedType or builtins.bool
+        tts : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message will be TTS (Text To Speech).
-        nonce : hikari.utilities.undefined.UndefinedType or builtins.str
-            If specified, a nonce that can be used for optimistic message sending.
-        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
-            If specified, whether the message should parse @everyone/@here mentions.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            If specified, and a `builtins.bool`, whether to parse user mentions.
-            If specified and a `builtins.list`, the users to parse the mention
-            for. This may be a user object, or the ID of an existing user.
-        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            If specified and `builtins.bool`, whether to parse role mentions. If specified and
-            `builtins.list`, the roles to parse the mention for. This may be a role object, or
-            the ID of an existing role.
+        nonce : hikari.utilities.undefined.UndefinedOr[builtins.str]
+            If specified, a nonce that can be used for optimistic message
+            sending.
+        mentions_everyone : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+            If specified, whether the message should parse @everyone/@here
+            mentions.
+        user_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser] or builtins.bool]
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.utilities.snowflake.Snowflake`, or
+            `hikari.models.users.PartialUser` derivatives to enforce mentioning
+            specific users.
+        role_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole] or builtins.bool]
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.utilities.snowflake.Snowflake`, or
+            `hikari.models.guilds.PartialRole` derivatives to enforce mentioning
+            specific roles.
 
         Returns
         -------
@@ -794,35 +834,97 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def edit_message(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        message: typing.Union[messages_.Message, snowflake.UniqueObject],
-        text: typing.Union[undefined.UndefinedType, None, typing.Any] = undefined.UNDEFINED,
+        channel: typing.Union[snowflake.SnowflakeishOr[channels.TextChannel]],
+        message: typing.Union[snowflake.SnowflakeishOr[messages_.Message]],
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: typing.Union[undefined.UndefinedType, None, embeds_.Embed] = undefined.UNDEFINED,
-        mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        user_mentions: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool
+        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[users.PartialUser]], bool]
         ] = undefined.UNDEFINED,
-        role_mentions: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, messages_.MessageFlag] = undefined.UNDEFINED,
+        flags: undefined.UndefinedOr[messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Edit an existing message in a given channel.
 
         Parameters
         ----------
-        channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to edit the message in. This may be a channel object, or
-            the ID of an existing channel.
-        message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
-            The message to fetch.
-        text
-        embed
-        mentions_everyone
-        user_mentions
-        role_mentions
-        flags
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
+            The channel to create the message in. This may be
+            a `hikari.models.channels.TextChannel` or the ID of an existing
+            channel.
+        message : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]
+            The message to edit. This may be a `hikari.models.messages.Message`
+            or the ID of an existing message.
+        content : hikari.utilities.undefined.UndefinedOr[typing.Any]
+            The message content to update with. If
+            `hikari.utilities.undefined.UNDEFINED`, then the content will not
+            be changed. If `builtins.None`, then the content will be removed.
+
+            Any other value will be cast to a `builtins.str` before sending.
+
+            If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
+            provided, then this will instead update the embed. This allows for
+            simpler syntax when sending an embed alone.
+        embed : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.embeds.Embed]
+            The embed to set on the message. If
+            `hikari.utilities.undefined.UNDEFINED`, the previous embed if
+            present is not changed. If this is `builtins.None`, then the embed
+            is removed if present. Otherwise, the new embed value that was
+            provided will be used as the replacement.
+        mentions_everyone : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+            Sanitation for `@everyone` mentions. If
+            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            not changed. If `builtins.True`, then `@everyone`/`@here` mentions
+            in the message content will show up as mentioning everyone that can
+            view the chat.
+        user_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser] or builtins.bool]
+            Sanitation for user mentions. If
+            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            not changed. If `builtins.True`, all valid user mentions will behave
+            as mentions. If `builtins.False`, all valid user mentions will not
+            behave as mentions.
+
+            You may alternatively pass a collection of
+            `hikari.utilities.snowflake.Snowflake` user IDs, or
+            `hikari.models.users.PartialUser`-derived objects.
+        role_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole] or builtins.bool]
+            Sanitation for role mentions. If
+            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            not changed. If `builtins.True`, all valid role mentions will behave
+            as mentions. If `builtins.False`, all valid role mentions will not
+            behave as mentions.
+
+            You may alternatively pass a collection of
+            `hikari.utilities.snowflake.Snowflake` role IDs, or
+            `hikari.models.guilds.PartialRole`-derived objects.
+        flags : hikari.utilities.undefined.UndefinedOr[hikari.models.messages.MessageFlag]
+            Optional flags to set on the message. If
+            `hikari.utilities.undefined.UNDEFINED`, then nothing is changed.
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`. If you
+            have `MANAGE_MESSAGES` permissions, you can use this call to
+            suppress embeds on another user's message.
+
+        !!! note
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
+
+        !!! note
+            There is currently no documented way to clear attachments or edit
+            attachments from a previously sent message on Discord's API. To
+            do this, `delete` the message and re-send it.
+
+        !!! warning
+            If the message was not sent by your user, the only parameter
+            you may provide to this call is the `flags` parameter. Anything
+            else will result in a `hikari.errors.Forbidden` being raised.
 
         Returns
         -------
@@ -849,13 +951,13 @@ class IRESTClient(component.IComponent, abc.ABC):
             If the channel or message is not found.
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
-        """
+        """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     async def delete_message(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        message: typing.Union[messages_.Message, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        message: snowflake.SnowflakeishOr[messages_.Message],
     ) -> None:
         """Delete a given message in a given channel.
 
@@ -880,11 +982,22 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def delete_messages(
         self,
-        channel: typing.Union[channels.GuildTextChannel, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
         /,
-        *messages: typing.Union[messages_.Message, snowflake.UniqueObject],
+        *messages: snowflake.SnowflakeishOr[messages_.Message],
     ) -> None:
-        """Bulk-delete between 2 and 100 messages from the given guild channel.
+        """Bulk-delete messages from the channel.
+
+        !!! note
+            This API endpoint will only be able to delete 100 messages
+            at a time. For anything more than this, multiple requests will
+            be queued asynchronously and then awaited in bulk.
+
+            If one message is left over from chunking per 100 messages, or
+            only one message is passed to this coroutine function, then the
+            logic is expected to defer to `delete_message`. The implication
+            of this is that the `delete_message` endpoint is ratelimited
+            by a different bucket with different usage rates.
 
         Parameters
         ----------
@@ -902,16 +1015,14 @@ class IRESTClient(component.IComponent, abc.ABC):
             If the channel or message is not found.
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
-        TypeError
-            If you do not provide between 2 and 100 messages (inclusive).
         """
 
     @abc.abstractmethod
     async def add_reaction(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        message: typing.Union[messages_.Message, snowflake.UniqueObject],
-        emoji: typing.Union[str, emojis.Emoji],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        message: snowflake.SnowflakeishOr[messages_.Message],
+        emoji: emojis.Emojiish,
     ) -> None:
         """Add a reaction emoji to a message in a given channel.
 
@@ -939,9 +1050,9 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def delete_my_reaction(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        message: typing.Union[messages_.Message, snowflake.UniqueObject],
-        emoji: typing.Union[str, emojis.Emoji],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        message: snowflake.SnowflakeishOr[messages_.Message],
+        emoji: emojis.Emojiish,
     ) -> None:
         """Delete a reaction that your application user created.
 
@@ -967,116 +1078,112 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def delete_all_reactions_for_emoji(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        message: typing.Union[messages_.Message, snowflake.UniqueObject],
-        emoji: typing.Union[str, emojis.Emoji],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        message: snowflake.SnowflakeishOr[messages_.Message],
+        emoji: emojis.Emojiish,
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def delete_reaction(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        message: typing.Union[messages_.Message, snowflake.UniqueObject],
-        emoji: typing.Union[str, emojis.Emoji],
-        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        message: snowflake.SnowflakeishOr[messages_.Message],
+        emoji: emojis.Emojiish,
+        user: snowflake.SnowflakeishOr[users.PartialUser],
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def delete_all_reactions(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        message: typing.Union[messages_.Message, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        message: snowflake.SnowflakeishOr[messages_.Message],
     ) -> None:
         ...
 
     @abc.abstractmethod
     def fetch_reactions_for_emoji(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        message: typing.Union[messages_.Message, snowflake.UniqueObject],
-        emoji: typing.Union[str, emojis.Emoji],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        message: snowflake.SnowflakeishOr[messages_.Message],
+        emoji: emojis.Emojiish,
     ) -> iterators.LazyIterator[users.UserImpl]:
         ...
 
     @abc.abstractmethod
     async def create_webhook(
         self,
-        channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
         name: str,
         *,
-        avatar: typing.Union[undefined.UndefinedType, files.Resource, str] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        avatar: typing.Optional[files.Resourceish] = None,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
         ...
 
     @abc.abstractmethod
     async def fetch_webhook(
         self,
-        webhook: typing.Union[webhooks.Webhook, snowflake.UniqueObject],
+        webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
         *,
-        token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
         ...
 
     @abc.abstractmethod
     async def fetch_channel_webhooks(
-        self, channel: typing.Union[channels.TextChannel, snowflake.UniqueObject]
+        self, channel: snowflake.SnowflakeishOr[channels.TextChannel],
     ) -> typing.Sequence[webhooks.Webhook]:
         ...
 
     @abc.abstractmethod
     async def fetch_guild_webhooks(
-        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
+        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[webhooks.Webhook]:
         ...
 
     @abc.abstractmethod
     async def edit_webhook(
         self,
-        webhook: typing.Union[webhooks.Webhook, snowflake.UniqueObject],
+        webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
         *,
-        token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        avatar: typing.Union[None, undefined.UndefinedType, files.Resource, str] = undefined.UNDEFINED,
-        channel: typing.Union[
-            undefined.UndefinedType, channels.TextChannel, snowflake.UniqueObject
-        ] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        channel: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels.TextChannel]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
         ...
 
     @abc.abstractmethod
     async def delete_webhook(
         self,
-        webhook: typing.Union[webhooks.Webhook, snowflake.UniqueObject],
+        webhook: typing.Union[webhooks.Webhook, snowflake.SnowflakeishOr],
         *,
-        token: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def execute_webhook(
         self,
-        webhook: typing.Union[webhooks.Webhook, snowflake.UniqueObject],
+        webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
         token: str,
-        text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
+        text: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        username: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        avatar_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        embeds: typing.Union[undefined.UndefinedType, typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        attachment: typing.Union[undefined.UndefinedType, str, files.Resource] = undefined.UNDEFINED,
-        attachments: typing.Union[
-            undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
+        username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[users.PartialUser]], bool]
         ] = undefined.UNDEFINED,
-        tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool, undefined.UndefinedType,
-        ] = undefined.UNDEFINED,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool, undefined.UndefinedType,
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         ...
@@ -1090,11 +1197,11 @@ class IRESTClient(component.IComponent, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_invite(self, invite: typing.Union[invites.Invite, str]) -> invites.Invite:
+    async def fetch_invite(self, invite: invites.Inviteish) -> invites.Invite:
         ...
 
     @abc.abstractmethod
-    async def delete_invite(self, invite: typing.Union[invites.Invite, str]) -> None:
+    async def delete_invite(self, invite: invites.Inviteish) -> None:
         ...
 
     @abc.abstractmethod
@@ -1105,8 +1212,8 @@ class IRESTClient(component.IComponent, abc.ABC):
     async def edit_my_user(
         self,
         *,
-        username: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        avatar: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
+        username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
     ) -> users.OwnUser:
         ...
 
@@ -1119,39 +1226,38 @@ class IRESTClient(component.IComponent, abc.ABC):
         self,
         *,
         newest_first: bool = False,
-        start_at: typing.Union[
-            undefined.UndefinedType, guilds.PartialGuild, snowflake.UniqueObject, datetime.datetime
-        ] = undefined.UNDEFINED,
+        start_at: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[applications.OwnGuild]:
         ...
 
     @abc.abstractmethod
-    async def leave_guild(self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject], /) -> None:
+    async def leave_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild], /) -> None:
         ...
 
+    # THIS IS AN OAUTH2 FLOW ONLY
     @abc.abstractmethod
-    async def create_dm_channel(
-        self, user: typing.Union[users.UserImpl, snowflake.UniqueObject], /
-    ) -> channels.DMChannel:
+    async def create_dm_channel(self, user: snowflake.SnowflakeishOr[users.PartialUser], /) -> channels.DMChannel:
         ...
 
+    # THIS IS AN OAUTH2 FLOW BUT CAN BE USED BY BOTS ALSO
     @abc.abstractmethod
     async def fetch_application(self) -> applications.Application:
         ...
 
+    # THIS IS AN OAUTH2 FLOW ONLY
     @abc.abstractmethod
     async def add_user_to_guild(
         self,
         access_token: str,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflake.SnowflakeishOr[users.PartialUser],
         *,
-        nick: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        roles: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
+        nick: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        roles: undefined.UndefinedOr[
+            typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]]
         ] = undefined.UNDEFINED,
-        mute: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        deaf: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Optional[guilds.Member]:
         ...
 
@@ -1160,70 +1266,73 @@ class IRESTClient(component.IComponent, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_user(self, user: typing.Union[users.UserImpl, snowflake.UniqueObject]) -> users.UserImpl:
+    async def fetch_user(self, user: snowflake.SnowflakeishOr[users.PartialUser]) -> users.UserImpl:
         ...
 
     def fetch_audit_log(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         *,
-        before: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
-        user: typing.Union[undefined.UndefinedType, users.UserImpl, snowflake.UniqueObject] = undefined.UNDEFINED,
-        event_type: typing.Union[undefined.UndefinedType, audit_logs.AuditLogEventType] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
+        user: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        event_type: undefined.UndefinedOr[audit_logs.AuditLogEventType] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         ...
 
     @abc.abstractmethod
     async def fetch_emoji(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
-        emoji: typing.Union[emojis.CustomEmoji, snowflake.UniqueObject],
+        # likewise this only is valid for custom emojis, unicode emojis make little sense here.
+        emoji: typing.Union[str, emojis.CustomEmoji],
     ) -> emojis.KnownCustomEmoji:
         ...
 
     @abc.abstractmethod
     async def fetch_guild_emojis(
-        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
+        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Set[emojis.KnownCustomEmoji]:
         ...
 
     @abc.abstractmethod
     async def create_emoji(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         name: str,
-        image: typing.Union[files.Resource, str],
+        image: files.Resourceish,
         *,
-        roles: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
+        roles: undefined.UndefinedOr[
+            typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]]
         ] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
         ...
 
     @abc.abstractmethod
     async def edit_emoji(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
-        emoji: typing.Union[emojis.CustomEmoji, snowflake.UniqueObject],
+        # likewise this only is valid for custom emojis, unicode emojis make little sense here.
+        emoji: typing.Union[str, emojis.CustomEmoji],
         *,
-        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        roles: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        roles: undefined.UndefinedOr[
+            typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]]
         ] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
         ...
 
     @abc.abstractmethod
     async def delete_emoji(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
-        emoji: typing.Union[emojis.CustomEmoji, snowflake.UniqueObject],
-        # Reason is not currently supported for some reason. See
+        emoji: typing.Union[str, emojis.CustomEmoji],
+        # TODO: check this is still true? iirc I got yelled at about something similar to this when I reported it.
+        # Reason is not currently supported for some reason.
     ) -> None:
         ...
 
@@ -1232,210 +1341,198 @@ class IRESTClient(component.IComponent, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_guild(self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]) -> guilds.Guild:
+    async def fetch_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.Guild:
         ...
 
     @abc.abstractmethod
-    async def fetch_guild_preview(
-        self, guild: typing.Union[guilds.PartialGuild, snowflake.UniqueObject]
-    ) -> guilds.GuildPreview:
+    async def fetch_guild_preview(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],) -> guilds.GuildPreview:
         ...
 
     @abc.abstractmethod
     async def edit_guild(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         *,
-        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        region: typing.Union[undefined.UndefinedType, voices.VoiceRegion, str] = undefined.UNDEFINED,
-        verification_level: typing.Union[undefined.UndefinedType, guilds.GuildVerificationLevel] = undefined.UNDEFINED,
-        default_message_notifications: typing.Union[
-            undefined.UndefinedType, guilds.GuildMessageNotificationsLevel
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
+        verification_level: undefined.UndefinedOr[guilds.GuildVerificationLevel] = undefined.UNDEFINED,
+        default_message_notifications: undefined.UndefinedOr[
+            guilds.GuildMessageNotificationsLevel
         ] = undefined.UNDEFINED,
-        explicit_content_filter_level: typing.Union[
-            undefined.UndefinedType, guilds.GuildExplicitContentFilterLevel
+        explicit_content_filter_level: undefined.UndefinedOr[
+            guilds.GuildExplicitContentFilterLevel
         ] = undefined.UNDEFINED,
-        afk_channel: typing.Union[
-            undefined.UndefinedType, channels.GuildVoiceChannel, snowflake.UniqueObject
-        ] = undefined.UNDEFINED,
-        afk_timeout: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
-        icon: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
-        owner: typing.Union[undefined.UndefinedType, users.UserImpl, snowflake.UniqueObject] = undefined.UNDEFINED,
-        splash: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
-        banner: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
-        system_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
-        rules_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
-        public_updates_channel: typing.Union[undefined.UndefinedType, channels.GuildTextChannel] = undefined.UNDEFINED,
-        preferred_locale: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        afk_channel: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels.GuildVoiceChannel]] = undefined.UNDEFINED,
+        afk_timeout: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        owner: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        system_channel: undefined.UndefinedNoneOr[channels.GuildTextChannel] = undefined.UNDEFINED,
+        rules_channel: undefined.UndefinedNoneOr[channels.GuildTextChannel] = undefined.UNDEFINED,
+        public_updates_channel: undefined.UndefinedNoneOr[channels.GuildTextChannel] = undefined.UNDEFINED,
+        preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Guild:
         ...
 
     @abc.abstractmethod
-    async def delete_guild(self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]) -> None:
+    async def delete_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> None:
         ...
 
     @abc.abstractmethod
     async def fetch_guild_channels(
-        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
+        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[channels.GuildChannel]:
         ...
 
     @abc.abstractmethod
     async def create_guild_text_channel(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         name: str,
         *,
-        position: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
-        topic: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
-        nsfw: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
-        rate_limit_per_user: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
-        permission_overwrites: typing.Union[
-            typing.Sequence[channels.PermissionOverwrite], undefined.UndefinedType
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        category: typing.Union[
-            channels.GuildCategory, snowflake.UniqueObject, undefined.UndefinedType
-        ] = undefined.UNDEFINED,
-        reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels.GuildTextChannel:
         ...
 
     @abc.abstractmethod
     async def create_guild_news_channel(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         name: str,
         *,
-        position: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
-        topic: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
-        nsfw: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
-        rate_limit_per_user: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
-        permission_overwrites: typing.Union[
-            typing.Sequence[channels.PermissionOverwrite], undefined.UndefinedType
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        category: typing.Union[
-            channels.GuildCategory, snowflake.UniqueObject, undefined.UndefinedType
-        ] = undefined.UNDEFINED,
-        reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels.GuildNewsChannel:
         ...
 
     @abc.abstractmethod
     async def create_guild_voice_channel(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         name: str,
         *,
-        position: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
-        nsfw: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
-        user_limit: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
-        bitrate: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
-        permission_overwrites: typing.Union[
-            typing.Sequence[channels.PermissionOverwrite], undefined.UndefinedType
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        category: typing.Union[
-            channels.GuildCategory, snowflake.UniqueObject, undefined.UndefinedType
-        ] = undefined.UNDEFINED,
-        reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels.GuildVoiceChannel:
         ...
 
     @abc.abstractmethod
     async def create_guild_category(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         name: str,
         *,
-        position: typing.Union[int, undefined.UndefinedType] = undefined.UNDEFINED,
-        nsfw: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
-        permission_overwrites: typing.Union[
-            typing.Sequence[channels.PermissionOverwrite], undefined.UndefinedType
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels.GuildCategory:
         ...
 
     @abc.abstractmethod
     async def reposition_channels(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        positions: typing.Mapping[int, typing.Union[channels.GuildChannel, snowflake.UniqueObject]],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        positions: typing.Mapping[int, typing.Union[snowflake.SnowflakeishOr[channels.GuildChannel]]],
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def fetch_member(
-        self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
+        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild], user: snowflake.SnowflakeishOr[users.PartialUser],
     ) -> guilds.Member:
         ...
 
     @abc.abstractmethod
     def fetch_members(
-        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
+        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
     ) -> iterators.LazyIterator[guilds.Member]:
         ...
 
     @abc.abstractmethod
     async def edit_member(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflake.SnowflakeishOr[users.PartialUser],
         *,
-        nick: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        roles: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
+        nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        roles: undefined.UndefinedOr[
+            typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]]
         ] = undefined.UNDEFINED,
-        mute: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        deaf: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        voice_channel: typing.Union[
-            undefined.UndefinedType, channels.GuildVoiceChannel, snowflake.UniqueObject, None
+        mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        voice_channel: undefined.UndefinedNoneOr[
+            snowflake.SnowflakeishOr[channels.GuildVoiceChannel]
         ] = undefined.UNDEFINED,
-        reason: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def edit_my_nick(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.Guild],
         nick: typing.Optional[str],
         *,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def add_role_to_member(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
-        role: typing.Union[guilds.Role, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflake.SnowflakeishOr[users.PartialUser],
+        role: snowflake.SnowflakeishOr[guilds.PartialRole],
         *,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def remove_role_from_member(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
-        role: typing.Union[guilds.Role, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflake.SnowflakeishOr[users.PartialUser],
+        role: snowflake.SnowflakeishOr[guilds.PartialRole],
         *,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def kick_user(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflake.SnowflakeishOr[users.PartialUser],
         *,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         ...
 
@@ -1445,11 +1542,11 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def ban_user(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflake.SnowflakeishOr[users.PartialUser],
         *,
-        delete_message_days: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        delete_message_days: undefined.UndefinedNoneOr[int] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         ...
 
@@ -1459,10 +1556,10 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def unban_user(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflake.SnowflakeishOr[users.PartialUser],
         *,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         ...
 
@@ -1471,91 +1568,85 @@ class IRESTClient(component.IComponent, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_ban(
-        self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        user: typing.Union[users.UserImpl, snowflake.UniqueObject],
+        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild], user: snowflake.SnowflakeishOr[users.PartialUser],
     ) -> guilds.GuildMemberBan:
         ...
 
     @abc.abstractmethod
     async def fetch_bans(
-        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
+        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[guilds.GuildMemberBan]:
         ...
 
     @abc.abstractmethod
-    async def fetch_roles(
-        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
-    ) -> typing.Sequence[guilds.Role]:
+    async def fetch_roles(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],) -> typing.Sequence[guilds.Role]:
         ...
 
     @abc.abstractmethod
     async def create_role(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         *,
-        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        permissions: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
-        color: typing.Union[undefined.UndefinedType, colors.Color] = undefined.UNDEFINED,
-        colour: typing.Union[undefined.UndefinedType, colors.Color] = undefined.UNDEFINED,
-        hoist: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        mentionable: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colours.Colour] = undefined.UNDEFINED,
+        hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
         ...
 
     @abc.abstractmethod
     async def reposition_roles(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        positions: typing.Mapping[int, typing.Union[guilds.Role, snowflake.UniqueObject]],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        positions: typing.Mapping[int, snowflake.SnowflakeishOr[guilds.PartialRole]],
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def edit_role(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        role: typing.Union[guilds.Role, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        role: snowflake.SnowflakeishOr[guilds.PartialRole],
         *,
-        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        permissions: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
-        color: typing.Union[undefined.UndefinedType, colors.Color] = undefined.UNDEFINED,
-        colour: typing.Union[undefined.UndefinedType, colors.Color] = undefined.UNDEFINED,
-        hoist: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        mentionable: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colours.Colour] = undefined.UNDEFINED,
+        hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
         ...
 
     @abc.abstractmethod
     async def delete_role(
-        self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        role: typing.Union[guilds.Role, snowflake.UniqueObject],
+        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild], role: snowflake.SnowflakeishOr[guilds.PartialRole],
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def estimate_guild_prune_count(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         *,
-        days: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-        include_roles: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
+        days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        include_roles: undefined.UndefinedOr[
+            typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]]
         ] = undefined.UNDEFINED,
     ) -> int:
         """Estimate the guild prune count.
 
         Parameters
         ----------
-        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
+        guild : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialGuild]
             The guild to estimate the guild prune count for. This may be a guild object,
             or the ID of an existing channel.
-        days : hikari.utilities.undefined.UndefinedType or builtins.int
+        days : hikari.utilities.undefined.UndefinedOr[builtins.int]
             If provided, number of days to count prune for.
-        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject]
+        include_roles : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole][
             If provided, the role(s) to include. By default, this _endpoint will
             not count users with roles. Providing roles using this attribute
             will make members with the specified roles also get included into
@@ -1583,33 +1674,33 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def begin_guild_prune(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         *,
-        days: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-        compute_prune_count: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        include_roles: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[guilds.Role, snowflake.UniqueObject]]
+        days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        compute_prune_count: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        include_roles: undefined.UndefinedOr[
+            typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]]
         ] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> typing.Optional[int]:
         """Begin the guild prune.
 
         Parameters
         ----------
-        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
+        guild : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialGuild]
             The guild to begin the guild prune in. This may be a guild object,
             or the ID of an existing channel.
-        days : hikari.utilities.undefined.UndefinedType or builtins.int
+        days : hikari.utilities.undefined.UndefinedOr[builtins.int]
             If provided, number of days to count prune for.
-        compute_prune_count: hikari.utilities.undefined.UndefinedType or builtins.bool
+        compute_prune_count: hikari.utilities.snowflake.SnowflakeishOr[builtins.bool]
             If provided, whether to return the prune count. This is discouraged
             for large guilds.
-        include_roles : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject]
+        include_roles : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole]]]
             If provided, the role(s) to include. By default, this _endpoint will
             not count users with roles. Providing roles using this attribute
             will make members with the specified roles also get included into
             the count.
-        reason : hikari.utilities.undefined.UndefinedType or builtins.str
+        reason : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
 
         Returns
@@ -1634,72 +1725,68 @@ class IRESTClient(component.IComponent, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_guild_voice_regions(
-        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
+        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[voices.VoiceRegion]:
         ...
 
     @abc.abstractmethod
     async def fetch_guild_invites(
-        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
+        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         ...
 
     @abc.abstractmethod
     async def fetch_integrations(
-        self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]
+        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[guilds.Integration]:
         ...
 
     @abc.abstractmethod
     async def edit_integration(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        integration: typing.Union[guilds.Integration, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        integration: snowflake.SnowflakeishOr[guilds.Integration],
         *,
-        expire_behaviour: typing.Union[
-            undefined.UndefinedType, guilds.IntegrationExpireBehaviour
-        ] = undefined.UNDEFINED,
-        expire_grace_period: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
-        enable_emojis: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        expire_behaviour: undefined.UndefinedOr[guilds.IntegrationExpireBehaviour] = undefined.UNDEFINED,
+        expire_grace_period: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
+        enable_emojis: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def delete_integration(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        integration: typing.Union[guilds.Integration, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        integration: snowflake.SnowflakeishOr[guilds.Integration],
         *,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def sync_integration(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
-        integration: typing.Union[guilds.Integration, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        integration: snowflake.SnowflakeishOr[guilds.Integration],
     ) -> None:
         ...
 
     @abc.abstractmethod
-    async def fetch_widget(self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]) -> guilds.GuildWidget:
+    async def fetch_widget(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildWidget:
         ...
 
     @abc.abstractmethod
     async def edit_widget(
         self,
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         *,
-        channel: typing.Union[
-            undefined.UndefinedType, channels.GuildChannel, snowflake.UniqueObject, None
-        ] = undefined.UNDEFINED,
-        enabled: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        channel: undefined.UndefinedNoneOr[snowflake.SnowflakeishOr[channels.GuildChannel]] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.GuildWidget:
         ...
 
     @abc.abstractmethod
-    async def fetch_vanity_url(self, guild: typing.Union[guilds.Guild, snowflake.UniqueObject]) -> invites.VanityURL:
+    async def fetch_vanity_url(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> invites.VanityURL:
         ...

@@ -84,14 +84,14 @@ class BotAppImpl(bot.IBotApp):
         are supported. This defaults to using v6.
     http_settings : hikari.config.HTTPSettings or builtins.None
         The HTTP-related settings to use.
-    initial_activity : hikari.models.presences.Activity or builtins.None or hikari.utilities.undefined.UndefinedType
+    initial_activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.presences.Activity]
         The initial activity to have on each shard.
-    initial_status : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
+    initial_status : hikari.utilities.undefined.UndefinedOr[hikari.models.presences.Status]
         The initial status to have on each shard.
-    initial_idle_since : datetime.datetime or builtins.None or hikari.utilities.undefined.UndefinedType
+    initial_idle_since : hikari.utilities.undefined.UndefinedNoneOr[datetime.datetime]
         The initial time to show as being idle since, or `builtins.None` if not
         idle, for each shard.
-    initial_is_afk : builtins.bool or hikari.utilities.undefined.UndefinedType
+    initial_is_afk : hikari.utilities.undefined.UndefinedOr[builtins.bool]
         If `builtins.True`, each shard will appear as being AFK on startup. If `builtins.False`,
         each shard will appear as _not_ being AFK.
     intents : hikari.models.intents.Intent or builtins.None
@@ -174,10 +174,10 @@ class BotAppImpl(bot.IBotApp):
         executor: typing.Optional[concurrent.futures.Executor] = None,
         gateway_version: int = 6,
         http_settings: typing.Optional[config.HTTPSettings] = None,
-        initial_activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
-        initial_idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
-        initial_is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        initial_status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
+        initial_activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
+        initial_idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+        initial_is_afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        initial_status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
         logging_level: typing.Union[str, int, None] = "INFO",
@@ -335,7 +335,7 @@ class BotAppImpl(bot.IBotApp):
         await self._check_for_updates()
 
         self._start_count += 1
-        self._started_at_monotonic = date.monotonic_ns()
+        self._started_at_monotonic = date.monotonic()
         self._started_at_timestamp = date.local_datetime()
 
         if self._debug is True:
@@ -413,10 +413,7 @@ class BotAppImpl(bot.IBotApp):
             await self.dispatch(other_events.StartedEvent())
 
     def listen(
-        self,
-        event_type: typing.Union[
-            undefined.UndefinedType, typing.Type[event_dispatcher_.EventT_co]
-        ] = undefined.UNDEFINED,
+        self, event_type: typing.Optional[typing.Type[event_dispatcher_.EventT_co]] = None,
     ) -> typing.Callable[
         [event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co]],
         event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co],
@@ -511,10 +508,10 @@ class BotAppImpl(bot.IBotApp):
     async def update_presence(
         self,
         *,
-        status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
-        activity: typing.Union[undefined.UndefinedType, presences.Activity, None] = undefined.UNDEFINED,
-        idle_since: typing.Union[undefined.UndefinedType, datetime.datetime, None] = undefined.UNDEFINED,
-        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
+        activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
+        idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+        afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
         await asyncio.gather(
             *(

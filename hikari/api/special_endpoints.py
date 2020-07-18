@@ -34,6 +34,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import colors
     from hikari.models import guilds
     from hikari.models import permissions as permissions_
+    from hikari.models import voices
     from hikari.utilities import date
     from hikari.utilities import files
     from hikari.utilities import snowflake
@@ -61,7 +62,12 @@ class TypingIndicator(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def __aexit__(self, ex_t: typing.Type[Exception], ex_v: Exception, exc_tb: types.TracebackType) -> None:
+    async def __aexit__(
+        self,
+        exception_type: typing.Type[BaseException],
+        exception: BaseException,
+        exception_traceback: types.TracebackType,
+    ) -> None:
         ...
 
 
@@ -134,35 +140,31 @@ class GuildBuilder:
     ```
     """
 
-    default_message_notifications: typing.Union[
-        undefined.UndefinedType, guilds.GuildMessageNotificationsLevel
-    ] = undefined.UNDEFINED
+    default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel] = undefined.UNDEFINED
     """Default message notification level that can be overwritten.
 
     If not overridden, this will use the Discord default level.
     """
 
-    explicit_content_filter_level: typing.Union[
-        undefined.UndefinedType, guilds.GuildExplicitContentFilterLevel
-    ] = undefined.UNDEFINED
+    explicit_content_filter_level: undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel] = undefined.UNDEFINED
     """Explicit content filter level that can be overwritten.
 
     If not overridden, this will use the Discord default level.
     """
 
-    icon: typing.Union[undefined.UndefinedType, files.URL] = undefined.UNDEFINED
+    icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED
     """Guild icon to use that can be overwritten.
 
     If not overridden, the guild will not have an icon.
     """
 
-    region: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED
+    region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED
     """Guild voice channel region to use that can be overwritten.
 
     If not overridden, the guild will use the default voice region for Discord.
     """
 
-    verification_level: typing.Union[undefined.UndefinedType, guilds.GuildVerificationLevel] = undefined.UNDEFINED
+    verification_level: undefined.UndefinedOr[guilds.GuildVerificationLevel] = undefined.UNDEFINED
     """Verification level required to join the guild that can be overwritten.
 
     If not overridden, the guild will use the default verification level for
@@ -205,12 +207,12 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        color: typing.Union[undefined.UndefinedType, colors.Color] = undefined.UNDEFINED,
-        colour: typing.Union[undefined.UndefinedType, colors.Color] = undefined.UNDEFINED,
-        hoisted: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        mentionable: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        permissions: typing.Union[undefined.UndefinedType, permissions_.Permission] = undefined.UNDEFINED,
-        position: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
+        hoisted: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflake.Snowflake:
         """Create a role.
 
@@ -223,18 +225,18 @@ class GuildBuilder:
         ----------
         name : builtins.str
             The role name.
-        color : hikari.utilities.undefined.UndefinedType or hikari.models.colors.Color
+        color : hikari.utilities.undefined.UndefinedOr[hikari.models.colors.Color]
             The colour of the role to use. If unspecified, then the default
             colour is used instead.
-        colour : hikari.utilities.undefined.UndefinedType or hikari.models.colors.Color
+        colour : hikari.utilities.undefined.UndefinedOr[hikari.models.colors.Color]
             Alias for the `color` parameter for non-american users.
-        hoisted : hikari.utilities.undefined.UndefinedType or builtins.bool
+        hoisted : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If `builtins.True`, the role will show up in the user sidebar in a separate
             category if it is the highest hoisted role. If `builtins.False`, or
             unspecified, then this will not occur.
-        mentionable : hikari.utilities.undefined.UndefinedType or builtins.bool
+        mentionable : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If `builtins.True`, then the role will be able to be mentioned.
-        permissions : hikari.utilities.undefined.UndefinedType or hikari.models.permissions.Permission
+        permissions : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permission]
             The optional permissions to enforce on the role. If unspecified,
             the default permissions for roles will be used.
 
@@ -242,7 +244,7 @@ class GuildBuilder:
                 The default permissions are **NOT** the same as providing
                 zero permissions. To set no permissions, you should
                 pass `Permission(0)` explicitly.
-        position : hikari.utilities.undefined.UndefinedType or builtins.int
+        position : hikari.utilities.undefined.UndefinedOr[builtins.int]
             If specified, the position to place the role in.
 
         Returns
@@ -268,11 +270,11 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        position: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-        permission_overwrites: typing.Union[
-            undefined.UndefinedType, typing.Collection[channels.PermissionOverwrite]
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        nsfw: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> snowflake.Snowflake:
         """Create a category channel.
 
@@ -280,12 +282,12 @@ class GuildBuilder:
         ----------
         name : builtins.str
             The name of the category.
-        position : hikari.utilities.undefined.UndefinedType or builtins.int
+        position : hikari.utilities.undefined.UndefinedOr[builtins.int]
             The position to place the category in, if specified.
-        permission_overwrites : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.channels.PermissionOverwrite]
+        permission_overwrites : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.models.channels.PermissionOverwrite]]
             If defined, a collection of one or more
             `hikari.models.channels.PermissionOverwrite` objects.
-        nsfw : hikari.utilities.undefined.UndefinedType or builtins.bool
+        nsfw : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If `builtins.True`, the channel is marked as NSFW and only users
             over 18 years of age should be given access.
 
@@ -305,14 +307,14 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        parent_id: typing.Union[undefined.UndefinedType, snowflake.Snowflake] = undefined.UNDEFINED,
-        topic: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        rate_limit_per_user: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
-        position: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-        permission_overwrites: typing.Union[
-            undefined.UndefinedType, typing.Collection[channels.PermissionOverwrite]
+        parent_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        nsfw: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> snowflake.Snowflake:
         """Create a text channel.
 
@@ -320,21 +322,21 @@ class GuildBuilder:
         ----------
         name : builtins.str
             The name of the category.
-        position : hikari.utilities.undefined.UndefinedType or builtins.int
+        position : hikari.utilities.undefined.UndefinedOr[builtins.int]
             The position to place the category in, if specified.
-        permission_overwrites : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.channels.PermissionOverwrite]
+        permission_overwrites : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.models.channels.PermissionOverwrite]]
             If defined, a collection of one or more
             `hikari.models.channels.PermissionOverwrite` objects.
-        nsfw : hikari.utilities.undefined.UndefinedType or builtins.bool
+        nsfw : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If `builtins.True`, the channel is marked as NSFW and only users
             over 18 years of age should be given access.
-        parent_id : hikari.utilities.undefined.UndefinedType or hikari.utilities.snowflake.Snowflake
+        parent_id : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.Snowflake]
             If defined, should be a snowflake ID of a category channel
             that was made with this builder. If provided, this channel will
             become a child channel of that category.
-        topic : hikari.utilities.undefined.UndefinedType or builtins.str
+        topic : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If specified, the topic to set on the channel.
-        rate_limit_per_user : hikari.utilities.undefined.UndefinedType or hikari.utilities.date.TimeSpan
+        rate_limit_per_user : hikari.utilities.undefined.UndefinedOr[hikari.utilities.date.TimeSpan]
             If specified, the time to wait between allowing consecutive messages
             to be sent. If not specified, this will not be enabled.
 
@@ -354,14 +356,14 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        parent_id: typing.Union[undefined.UndefinedType, snowflake.Snowflake] = undefined.UNDEFINED,
-        bitrate: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-        position: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-        permission_overwrites: typing.Union[
-            undefined.UndefinedType, typing.Collection[channels.PermissionOverwrite]
+        parent_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
+        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        nsfw: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        user_limit: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflake.Snowflake:
         """Create a voice channel.
 
@@ -369,21 +371,21 @@ class GuildBuilder:
         ----------
         name : builtins.str
             The name of the category.
-        position : hikari.utilities.undefined.UndefinedType or builtins.int
+        position : hikari.utilities.undefined.UndefinedOr[builtins.int]
             The position to place the category in, if specified.
-        permission_overwrites : hikari.utilities.undefined.UndefinedType or typing.Collection[hikari.models.channels.PermissionOverwrite]
+        permission_overwrites : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.models.channels.PermissionOverwrite]]
             If defined, a collection of one or more
             `hikari.models.channels.PermissionOverwrite` objects.
-        nsfw : hikari.utilities.undefined.UndefinedType or builtins.bool
+        nsfw : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If `builtins.True`, the channel is marked as NSFW and only users
             over 18 years of age should be given access.
-        parent_id : hikari.utilities.undefined.UndefinedType or hikari.utilities.snowflake.Snowflake
+        parent_id : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.Snowflake]
             If defined, should be a snowflake ID of a category channel
             that was made with this builder. If provided, this channel will
             become a child channel of that category.
-        bitrate : hikari.utilities.undefined.UndefinedType or builtins.int
+        bitrate : hikari.utilities.undefined.UndefinedOr[builtins.int]
             If specified, the bitrate to set on the channel.
-        user_limit : hikari.utilities.undefined.UndefinedType or builtins.int
+        user_limit : hikari.utilities.undefined.UndefinedOr[builtins.int]
             If specified, the maximum number of users to allow in the voice
             channel.
 
