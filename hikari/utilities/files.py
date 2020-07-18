@@ -20,6 +20,8 @@
 from __future__ import annotations
 
 __all__ = [
+    "Pathish",
+    "Resourceish",
     "AsyncReader",
     "ByteReader",
     "FileReader",
@@ -57,22 +59,43 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 _MAGIC: typing.Final[int] = 50 * 1024
 
 
+Pathish = typing.Union["os.PathLike[str]", str]
+"""Type hint representing a literal file or path.
+
+This may be one of:
+
+- `builtins.str` path.
+- `os.PathLike` derivative, such as `pathlib.PurePath` and `pathlib.Path`.
+"""
+
+
+Resourceish = typing.Union["Resource", Pathish]
+"""Type hint representing a file or path to a file/URL/data URI.
+
+This may be one of:
+
+- `Resource` or a derivative.
+- `builtins.str` path.
+- `os.PathLike` derivative, such as `pathlib.PurePath` and `pathlib.Path`.
+"""
+
+
+def ensure_path(pathish: Pathish) -> pathlib.Path:
+    """Convert a path-like object to a `pathlib.Path` instance."""
+    return pathlib.Path(pathish)
+
+
 @typing.overload
 def ensure_resource(url_or_resource: None, /) -> None:
     """Given None, return None."""
 
 
 @typing.overload
-def ensure_resource(url_or_resource: str, /) -> Resource:
-    """Given a string, convert it to a resource."""
+def ensure_resource(url_or_resource: Resourceish, /) -> Resource:
+    """Given a non null value, parse a resource from it.."""
 
 
-@typing.overload
-def ensure_resource(url_or_resource: Resource, /) -> Resource:
-    """Given a resource, return it."""
-
-
-def ensure_resource(url_or_resource: typing.Union[None, str, Resource], /) -> typing.Optional[Resource]:
+def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.Optional[Resource]:
     """Given a resource or string, convert it to a valid resource as needed.
 
     Parameters
@@ -92,6 +115,8 @@ def ensure_resource(url_or_resource: typing.Union[None, str, Resource], /) -> ty
 
     if url_or_resource is None:
         return None
+
+    url_or_resource = str(url_or_resource)
 
     if url_or_resource.startswith(("https://", "http://")):
         return URL(url_or_resource)
@@ -336,7 +361,7 @@ class FileReader(AsyncReader, abc.ABC):
     executor: typing.Optional[concurrent.futures.Executor]
     """The associated `concurrent.futures.Executor` to use for blocking IO."""
 
-    path: typing.Union[str, pathlib.Path]
+    path: pathlib.Path = attr.ib(converter=ensure_path)
     """The path to the resource to read."""
 
 
@@ -380,7 +405,7 @@ class ThreadedFileReader(FileReader):
         return fp.read(n)
 
     @staticmethod
-    def _open(path: typing.Union[str, os.PathLike]) -> typing.IO[bytes]:
+    def _open(path: Pathish) -> typing.IO[bytes]:
         return open(path, "rb")
 
     @staticmethod
@@ -411,6 +436,7 @@ class MultiprocessingFileReader(FileReader):
         self.mimetype = None
 
     def _read_all(self) -> bytes:
+        # noinspection PyTypeChecker
         with open(self.path, "rb") as fp:
             return fp.read()
 
@@ -849,11 +875,13 @@ class File(Resource[FileReader]):
 
     __slots__: typing.Sequence[str] = ("path", "_filename")
 
-    path: typing.Union[str, pathlib.Path]
+    path: pathlib.Path
+    """The path to the file."""
+
     _filename: typing.Optional[str]
 
-    def __init__(self, path: typing.Union[str, pathlib.Path], filename: typing.Optional[str] = None) -> None:
-        self.path = path
+    def __init__(self, path: Pathish, filename: typing.Optional[str] = None) -> None:
+        self.path = ensure_path(path)
         self._filename = filename
 
     @property
@@ -864,7 +892,7 @@ class File(Resource[FileReader]):
     @property
     def filename(self) -> str:
         if self._filename is None:
-            return os.path.basename(self.path)
+            return self.path.name
         return self._filename
 
     def stream(
@@ -891,4 +919,5 @@ class File(Resource[FileReader]):
         # so this is safe enough to do.:
         is_threaded = executor is None or isinstance(executor, concurrent.futures.ThreadPoolExecutor)
         impl = ThreadedFileReader if is_threaded else MultiprocessingFileReader
+        # noinspection PyArgumentList
         return _NoOpAsyncReaderContextManagerImpl(impl(self.filename, None, executor, self.path))

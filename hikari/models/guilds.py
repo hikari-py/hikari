@@ -24,6 +24,7 @@ __all__: typing.Final[typing.List[str]] = [
     "GuildWidget",
     "Role",
     "GuildFeature",
+    "GuildFeatureish",
     "GuildSystemChannelFlag",
     "GuildMessageNotificationsLevel",
     "GuildExplicitContentFilterLevel",
@@ -59,6 +60,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_app
     from hikari.models import channels as channels_
     from hikari.models import colors
+    from hikari.models import colours
     from hikari.models import emojis as emojis_
     from hikari.models import permissions as permissions_
     from hikari.models import presences as presences_
@@ -141,6 +143,15 @@ class GuildFeature(str, enum.Enum):
 
     def __str__(self) -> str:
         return self.name
+
+
+GuildFeatureish = typing.Union[str, GuildFeature]
+"""Type hint for possible guild features.
+
+Generally these will be of type `GuildFeature`, but undocumented or new
+fields may just be `builtins.str` until they are documented and amended to the
+library.
+"""
 
 
 @enum.unique
@@ -260,10 +271,11 @@ class Member(users.User):
     # entity factory to always provide the user object in these cases, so we
     # can assume this is always set, and thus we are always able to get info
     # such as the ID of the user this member represents.
+    # TODO: make member generic on this field (e.g. Member[PartialUser], Member[UserImpl], Member[OwnUser], etc)?
     user: users.UserImpl = attr.ib(eq=True, hash=True, repr=True)
     """This member's corresponding user object."""
 
-    nickname: typing.Union[str, None, undefined.UndefinedType] = attr.ib(
+    nickname: undefined.UndefinedNoneOr[str] = attr.ib(
         eq=False, hash=False, repr=True,
     )
     """This member's nickname.
@@ -275,12 +287,10 @@ class Member(users.User):
     role_ids: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """A sequence of the IDs of the member's current roles."""
 
-    joined_at: typing.Union[datetime.datetime, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
+    joined_at: undefined.UndefinedOr[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this member joined the guild they belong to."""
 
-    premium_since: typing.Union[datetime.datetime, None, undefined.UndefinedType] = attr.ib(
-        eq=False, hash=False, repr=False
-    )
+    premium_since: undefined.UndefinedNoneOr[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this member started "boosting" this guild.
 
     This will be `builtins.None` if they aren't boosting and
@@ -288,14 +298,14 @@ class Member(users.User):
     unknown.
     """
 
-    is_deaf: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
+    is_deaf: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=False)
     """`builtins.True` if this member is deafened in the current voice channel.
 
     This will be `hikari.utilities.undefined.UndefinedType if it's state is
     unknown.
     """
 
-    is_mute: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
+    is_mute: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=False)
     """`builtins.True` if this member is muted in the current voice channel.
 
     This will be `hikari.utilities.undefined.UndefinedType if it's state is unknown.
@@ -383,13 +393,13 @@ class Member(users.User):
 class PartialRole(snowflake.Unique):
     """Represents a partial guild bound Role object."""
 
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
+
     id: snowflake.Snowflake = attr.ib(
         converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
     )
     """The ID of this entity."""
-
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
-    """The client application that models may use for procedures."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
     """The role's name."""
@@ -431,6 +441,11 @@ class Role(PartialRole):
 
     is_mentionable: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this role can be mentioned by all regardless of permissions."""
+
+    @property
+    def colour(self) -> colours.Colour:
+        """Alias for the `color` field."""
+        return self.color
 
 
 @enum.unique
@@ -555,13 +570,13 @@ class UnavailableGuild(snowflake.Unique):
 class PartialGuild(snowflake.Unique):
     """Base object for any partial guild objects."""
 
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
+
     id: snowflake.Snowflake = attr.ib(
         converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
     )
     """The ID of this entity."""
-
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
-    """The client application that models may use for procedures."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
     """The name of the guild."""
@@ -569,7 +584,7 @@ class PartialGuild(snowflake.Unique):
     icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash for the guild icon, if there is one."""
 
-    features: typing.Set[typing.Union[GuildFeature, str]] = attr.ib(eq=False, hash=False, repr=False)
+    features: typing.Set[GuildFeatureish] = attr.ib(eq=False, hash=False, repr=False)
     """A set of the features in this guild."""
 
     def __str__(self) -> str:

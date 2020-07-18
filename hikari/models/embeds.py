@@ -284,8 +284,8 @@ class Embed:
         title: typing.Any = None,
         description: typing.Any = None,
         url: typing.Optional[str] = None,
-        color: typing.Optional[colors.ColorLike] = None,
-        colour: typing.Optional[colors.ColorLike] = None,
+        color: typing.Optional[colors.Colorish] = None,
+        colour: typing.Optional[colors.Colorish] = None,
         timestamp: typing.Optional[datetime.datetime] = None,
     ) -> None:
         if color is not None and colour is not None:
@@ -386,7 +386,7 @@ class Embed:
         return self._color
 
     @color.setter
-    def color(self, value: typing.Optional[colors.ColorLike]) -> None:
+    def color(self, value: typing.Optional[colors.Colorish]) -> None:
         self._color = colors.Color.of(value) if value is not None else None
 
     # Alias.
@@ -620,7 +620,7 @@ class Embed:
         *,
         name: typing.Optional[str] = None,
         url: typing.Optional[str] = None,
-        icon: typing.Union[None, str, files.Resource] = None,
+        icon: typing.Optional[files.Resourceish] = None,
     ) -> Embed:
         """Set the author of this embed.
 
@@ -630,7 +630,7 @@ class Embed:
             The optional name of the author.
         url : builtins.str or builtins.None
             The optional URL of the author.
-        icon : hikari.utilities.files.Resource or builtins.str or builtins.None
+        icon : hikari.utilities.files.Resourceish or builtins.None
             The optional resource to show next to the embed author. Can be set
             to a string URL alternatively, or `None` to clear it.
             Setting a `hikari.utilities.files.Bytes` or
@@ -657,7 +657,7 @@ class Embed:
                 self._author.icon = None
         return self
 
-    def set_footer(self, *, text: typing.Optional[str], icon: typing.Union[None, str, files.Resource] = None) -> Embed:
+    def set_footer(self, *, text: typing.Optional[str], icon: typing.Optional[files.Resourceish] = None) -> Embed:
         """Set the footer of this embed.
 
         Parameters
@@ -665,7 +665,7 @@ class Embed:
         text : str or builtins.None
             The mandatory text string to set in the footer.
             If `builtins.None`, the footer is removed.
-        icon : hikari.utilities.files.Resource or builtins.str or builtins.None
+        icon : hikari.utilities.files.Resourceish or builtins.None
             The optional resource to show next to the embed footer. Can be set
             to a string URL alternatively, or `None` to clear it.
             Setting a `hikari.utilities.files.Bytes` or
@@ -697,12 +697,12 @@ class Embed:
                 self._footer.icon = None
         return self
 
-    def set_image(self, image: typing.Union[None, str, files.Resource] = None, /) -> Embed:
+    def set_image(self, image: typing.Optional[files.Resourceish] = None, /) -> Embed:
         """Set the image on this embed.
 
         Parameters
         ----------
-        image : hikari.utilities.files.Resource or builtins.str or builtins.None
+        image : hikari.utilities.files.Resourceish or builtins.None
             The optional resource to show for the embed image. Can be set
             to a string URL alternatively, or `None` to clear it.
             Setting a `hikari.utilities.files.Bytes` or
@@ -720,12 +720,12 @@ class Embed:
         self._image = EmbedImage(resource=files.ensure_resource(image)) if image is not None else None
         return self
 
-    def set_thumbnail(self, image: typing.Union[None, str, files.Resource] = None, /) -> Embed:
+    def set_thumbnail(self, image: typing.Optional[files.Resourceish] = None, /) -> Embed:
         """Set the image on this embed.
 
         Parameters
         ----------
-        image : hikari.utilities.files.Resource or builtins.str or builtins.None
+        image : hikari.utilities.files.Resourceish or builtins.None
             The optional resource to show for the embed thumbnail. Can be set
             to a string URL alternatively, or `None` to clear it.
             Setting a `hikari.utilities.files.Bytes` or
@@ -772,11 +772,11 @@ class Embed:
     def edit_field(
         self,
         index: int,
-        name: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
-        value: typing.Union[str, undefined.UndefinedType] = undefined.UNDEFINED,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        value: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         /,
         *,
-        inline: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
+        inline: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> Embed:
         """Edit an existing field on this embed.
 
@@ -784,13 +784,13 @@ class Embed:
         ----------
         index : int
             The index of the field to edit.
-        name : str or hikari.utilities.undefined.UndefinedType
+        name : hikari.utilities.undefined.UndefinedOr[str]
             The new field name to use. If left to the default (`undefined`),
             then it will not be changed.
-        value : str or hikari.utilities.undefined.UndefinedType
+        value : hikari.utilities.undefined.UndefinedOr[str]
             The new field value to use. If left to the default (`undefined`),
             then it will not be changed.
-        inline : bool or hikari.utilities.undefined.UndefinedType
+        inline : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             `builtins.True` to inline the field, or `builtins.False` to force
             it to be on a separate line. If left to the default (`undefined`),
             then it will not be changed.

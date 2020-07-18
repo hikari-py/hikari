@@ -25,7 +25,7 @@ __all__: typing.Final[typing.List[str]] = [
     "datetime_to_discord_epoch",
     "discord_epoch_to_datetime",
     "unix_epoch_to_datetime",
-    "TimeSpanLike",
+    "Intervalish",
     "timespan_to_int",
     "local_datetime",
     "utc_datetime",
@@ -41,8 +41,10 @@ import time
 import typing
 import uuid as uuid_
 
-TimeSpanLike = typing.Union[int, float, datetime.timedelta]
+Intervalish = typing.Union[int, float, datetime.timedelta]
 """Type hint representing a naive time period or time span.
+
+This is a type that is like an interval of some sort.
 
 This is an alias for `typing.Union[int, float, datetime.datetime]`,
 where `builtins.int` and `builtins.float` types are interpreted as a number of seconds.
@@ -185,7 +187,7 @@ def unix_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
             return datetime.datetime.min
 
 
-def timespan_to_int(value: TimeSpanLike, /) -> int:
+def timespan_to_int(value: Intervalish, /) -> int:
     """Cast the given timespan in seconds to an integer value.
 
     Parameters

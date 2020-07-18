@@ -24,6 +24,7 @@ import abc
 import typing
 
 from hikari.api import component
+from hikari.models import guilds
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -210,7 +211,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildCategory:
         """Parse a raw payload from Discord into a guild category object.
 
@@ -218,7 +219,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
-        guild_id : hikari.utilities.snowflake.Snowflake
+        guild_id : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.Snowflake]
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
@@ -243,7 +244,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildTextChannel:
         """Parse a raw payload from Discord into a guild text channel object.
 
@@ -251,7 +252,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
-        guild_id : hikari.utilities.snowflake.Snowflake
+        guild_id : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.Snowflake]
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
@@ -276,7 +277,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildNewsChannel:
         """Parse a raw payload from Discord into a guild news channel object.
 
@@ -309,7 +310,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildStoreChannel:
         """Parse a raw payload from Discord into a guild store channel object.
 
@@ -342,7 +343,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildVoiceChannel:
         """Parse a raw payload from Discord into a guild voice channel object.
 
@@ -375,7 +376,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.PartialChannel:
         """Parse a raw payload from Discord into a channel object.
 
@@ -383,7 +384,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
-        guild_id : hikari.utilities.snowflake.Snowflake
+        guild_id : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.Snowflake]
             The ID of the guild this channel belongs to. This will be ignored
             for DM and group DM channels and will be prioritised over
             `"guild_id"` in the payload when passed.
@@ -557,8 +558,8 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
-        user: typing.Union[undefined.UndefinedType, user_models.User] = undefined.UNDEFINED,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        user: undefined.UndefinedOr[user_models.User] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> guild_models.Member:
         """Parse a raw payload from Discord into a member object.
 
@@ -566,10 +567,10 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
-        user : hikari.models.users.UserImpl or hikari.utilities.undefined.UndefinedType
+        user : hikari.utilities.undefined.UndefinedOr[hikari.models.users.User]
             The user to attach to this member, should only be passed in
             situations where "user" is not included in the payload.
-        guild_id : hikari.utilities.snowflake.Snowflake or hikari.utilities.undefined.UndefinedType
+        guild_id : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.Snowflake]
             The ID of the guild this member belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
 
@@ -832,7 +833,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> voice_models.VoiceState:
         """Parse a raw payload from Discord into a voice state object.
 
@@ -840,7 +841,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
-        guild_id : hikari.utilities.snowflake.Snowflake or hikari.utilities.undefined.UndefinedType
+        guild_id : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.Snowflake]
             The ID of the guild this voice state belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
 
@@ -1528,8 +1529,8 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def serialize_gateway_voice_state_update(
         self,
-        guild: typing.Union[guild_models.Guild, snowflake.UniqueObject],
-        channel: typing.Union[channel_models.GuildVoiceChannel, snowflake.UniqueObject, None],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        channel: typing.Optional[snowflake.SnowflakeishOr[channel_models.GuildVoiceChannel]],
         self_mute: bool,
         self_deaf: bool,
     ) -> data_binding.JSONObject:
@@ -1537,9 +1538,9 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
+        guild : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.Guild]
             The guild to update the voice state in.
-        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.UniqueObject or builtins.None
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildVoiceChannel] or builtins.None
             The voice channel to change to, or `builtins.None` if attempting to
             leave a voice channel and disconnect entirely.
         self_mute : builtins.bool
