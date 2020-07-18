@@ -47,3 +47,19 @@ def test_Reaction_str_operator():
     emoji.name = "\N{OK HAND SIGN}"
     reaction.emoji = emoji
     assert str(reaction) == "\N{OK HAND SIGN}"
+
+
+def test_Message_link_property_when_guild_is_not_None():
+    message = messages.Message()
+    message.id = 123
+    message.guild_id = 456
+    message.channel_id = 890
+    assert message.link == "https://discord.com/channels/456/890/123"
+
+
+def test_Message_link_property_when_guild_is_None():
+    message = messages.Message()
+    message.id = 123
+    message.guild_id = None
+    message.channel_id = 890
+    assert message.link == "https://discord.com/channels/@me/890/123"
