@@ -241,22 +241,22 @@ class PartialUser(snowflake.Unique):
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """Reference to the client application that models may use for procedures."""
 
-    discriminator: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)
+    discriminator: undefined.UndefinedOr[str] = attr.ib(eq=False, hash=False, repr=True)
     """Four-digit discriminator for the user."""
 
-    username: typing.Union[str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=True)
+    username: undefined.UndefinedOr[str] = attr.ib(eq=False, hash=False, repr=True)
     """Username of the user."""
 
-    avatar_hash: typing.Union[None, str, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
+    avatar_hash: undefined.UndefinedNoneOr[str] = attr.ib(eq=False, hash=False, repr=False)
     """Avatar hash of the user, if a custom avatar is set."""
 
-    is_bot: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False, repr=False)
+    is_bot: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is a bot account."""
 
-    is_system: typing.Union[bool, undefined.UndefinedType] = attr.ib(eq=False, hash=False)
+    is_system: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False)
     """Whether this user is a system account."""
 
-    flags: typing.Union[UserFlag, undefined.UndefinedType] = attr.ib(eq=False, hash=False)
+    flags: undefined.UndefinedOr[UserFlag] = attr.ib(eq=False, hash=False)
     """Public flags for this user."""
 
     @property

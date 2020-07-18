@@ -32,8 +32,6 @@ import typing
 EMPTY: typing.Final[inspect.Parameter.empty] = inspect.Parameter.empty
 """A singleton that empty annotations will be set to in `resolve_signature`."""
 
-_T = typing.TypeVar("_T")
-
 
 def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signature:
     """Get the `inspect.Signature` of `func` with resolved forward annotations.
@@ -73,22 +71,23 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
     return signature.replace(parameters=params, return_annotation=return_annotation)
 
 
-def get_logger(obj: typing.Union[typing.Type[typing.Any], typing.Any], *additional_args: str) -> logging.Logger:
-    """Get an appropriately named _LOGGER for the given class or object.
+def get_logger(obj: typing.Any, *additional_args: str) -> logging.Logger:
+    """Get an appropriately named logger for the given class or object.
 
     Parameters
     ----------
-    obj : typing.Type or typing.Any
-        A type or instance of a type to make a _LOGGER in the name of.
+    obj : typing.Any
+        A `builtins.type` or instance of a type to make a logger in the name
+        of.
     *additional_args : builtins.str
-        Additional tokens to append onto the _LOGGER name, separated by `.`.
+        Additional tokens to append onto the logger name, separated by `.`.
         This is useful in some places to append info such as shard ID to each
-        _LOGGER to enable shard-specific logging, for example.
+        logger to enable shard-specific logging, for example.
 
     Returns
     -------
     logging.Logger
-        The _LOGGER to use.
+        The logger to use.
     """
     if isinstance(obj, str):
         str_obj = obj

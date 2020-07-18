@@ -55,9 +55,9 @@ class VoiceComponentImpl(voice.IVoiceComponent):
 
     __slots__ = ("_app", "_connections", "_dispatcher")
 
-    def __init__(self, app: bot.IBotApp, event_dispatcher: event_dispatcher.IEventDispatcherComponent) -> None:
+    def __init__(self, app: bot.IBotApp, dispatcher: event_dispatcher.IEventDispatcherComponent) -> None:
         self._app = app
-        self._dispatcher = event_dispatcher
+        self._dispatcher = dispatcher
         self._connections: typing.Dict[snowflake.Snowflake, voice.IVoiceConnection] = {}
         self._dispatcher.subscribe(voice_events.VoiceEvent, self._on_voice_event)
 
@@ -80,8 +80,8 @@ class VoiceComponentImpl(voice.IVoiceComponent):
 
     async def connect_to(
         self,
-        channel: typing.Union[channels.GuildVoiceChannel, snowflake.UniqueObject],
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.GuildVoiceChannel],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         *,
         deaf: bool = False,
         mute: bool = False,
@@ -89,6 +89,7 @@ class VoiceComponentImpl(voice.IVoiceComponent):
         **kwargs: typing.Any,
     ) -> _VoiceConnectionT:
         guild_id = snowflake.Snowflake(int(guild))
+        # TODO: this and the same logic in channels.py and guilds.py logic should go in a file somewhere
         shard_id = (guild_id >> 22) % self._app.shard_count
 
         if shard_id is None:

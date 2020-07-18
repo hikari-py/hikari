@@ -163,13 +163,13 @@ class PartialChannel(snowflake.Unique):
     not available from Discord.
     """
 
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
+
     id: snowflake.Snowflake = attr.ib(
         converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
     )
     """The ID of this entity."""
-
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
-    """The client application that models may use for procedures."""
 
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The channel's name. This will be missing for DM channels."""
@@ -189,30 +189,26 @@ class TextChannel(PartialChannel, abc.ABC):
 
     async def send(
         self,
-        content: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: typing.Union[undefined.UndefinedType, embeds.Embed] = undefined.UNDEFINED,
-        attachment: typing.Union[undefined.UndefinedType, str, files.Resource] = undefined.UNDEFINED,
-        attachments: typing.Union[
-            undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
+        embed: undefined.UndefinedOr[embeds.Embed] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[users.PartialUser]], bool]
         ] = undefined.UNDEFINED,
-        nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        mentions_everyone: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]],
-            bool,
-            undefined.UndefinedType,
-        ] = undefined.UNDEFINED,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.UndefinedType
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
     ) -> messages.Message:
         """Create a message in the channel this message belongs to.
 
         Parameters
         ----------
-        content : hikari.utilities.undefined.UndefinedType or typing.Any
+        content : hikari.utilities.undefined.UndefinedOr[typing.Any]
             If specified, the message contents. If `UNDEFINED`, then nothing
             will be sent in the content. Any other value here will be cast to a
             `builtins.str`.
@@ -224,30 +220,36 @@ class TextChannel(PartialChannel, abc.ABC):
             Likewise, if this is a `hikari.utilities.files.Resource`, then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
-        embed : hikari.utilities.undefined.UndefinedType or hikari.models.embeds.Embed
+        embed : hikari.utilities.undefined.UndefinedOr[hikari.models.embeds.Embed]
             If specified, the message embed.
-        attachment : hikari.utilities.undefined.UndefinedType or builtins.str or hikari.utilities.files.Resource
+        attachment : hikari.utilities.undefined.UndefinedOr[hikari.utilities.files.Resourceish],
             If specified, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
-        attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[builtins.str or hikari.utilities.files.Resource]
+        attachments : hikari.utilities.undefined.UndefinedOr[typing.Sequence[hikari.utilities.files.Resourceish]],
             If specified, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        tts : hikari.utilities.undefined.UndefinedType or builtins.bool
+        tts : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message will be TTS (Text To Speech).
-        nonce : hikari.utilities.undefined.UndefinedType or builtins.str
+        nonce : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If specified, a nonce that can be used for optimistic message
             sending.
-        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
+        mentions_everyone : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            If specified, and a `builtins.bool`, whether to parse user mentions.
-            If specified and a `builtins.list`, the users to parse the mention
-            for. This may be a user object, or the ID of an existing user.
-        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            If specified and `builtins.bool`, whether to parse role mentions.
-            If specified and `builtins.list`, the roles to parse the mention
-            for. This may be a role object, or the ID of an existing role.
+        user_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser] or builtins.bool]
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.utilities.snowflake.Snowflake`, or
+            `hikari.models.users.PartialUser` derivatives to enforce mentioning
+            specific users.
+        role_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole] or builtins.bool]
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.utilities.snowflake.Snowflake`, or
+            `hikari.models.guilds.PartialRole` derivatives to enforce mentioning
+            specific roles.
 
         Returns
         -------
@@ -295,33 +297,58 @@ class TextChannel(PartialChannel, abc.ABC):
             role_mentions=role_mentions,
         )
 
-    # TODO: add examples
+    # TODO: add examples to this and the REST method this invokes.
     def history(
         self,
         *,
-        before: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
-        after: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
-        around: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
+        around: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[messages.Message]:
-        """Get a lazy iterator across the message history for this channel.
+        """Browse the message history for a given text channel.
 
         Parameters
         ----------
-        before : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
-            The message or object to find messages BEFORE.
-        after : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
-            The message or object to find messages AFTER.
-        around : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
-            The message or object to find messages AROUND.
-
-        !!! warn
-            You may provide a maximum of one of the parameters for this method
-            only.
+        before : hikari.utilities.undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[hikari.utilities.snowflake.Unique]]
+            If provided, fetch messages before this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
+        after : hikari.utilities.undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[hikari.utilities.snowflake.Unique]]
+            If provided, fetch messages after this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
+        around : hikari.utilities.undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[hikari.utilities.snowflake.Unique]]
+            If provided, fetch messages around this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
 
         Returns
         -------
         hikari.utilities.iterators.LazyIterator[hikari.models.messages.Message]
-            A lazy async iterator across the messages.
+            A iterator to fetch the messages.
+
+        Raises
+        ------
+        builtins.TypeError
+            If you specify more than one of `before`, `after`, `about`.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to read message history in the given
+            channel.
+        hikari.errors.NotFound
+            If the channel is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+
+        !!! note
+            The exceptions on this _endpoint (other than `builtins.TypeError`) will only
+            be raised once the result is awaited or interacted with. Invoking
+            this function itself will not raise anything (other than
+            `builtins.TypeError`).
         """  # noqa: E501 - Line too long
         return self.app.rest.fetch_messages(self.id, before=before, after=after, around=around)
 

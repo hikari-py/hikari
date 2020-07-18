@@ -294,34 +294,34 @@ class IGatewayShard(component.IComponent, abc.ABC):
     async def update_presence(
         self,
         *,
-        idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = undefined.UNDEFINED,
-        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
-        status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
+        idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+        afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
+        status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
     ) -> None:
         """Update the presence of the shard user.
 
         Parameters
         ----------
-        idle_since : datetime.datetime or builtins.None or hikari.utilities.undefined.UndefinedType
+        idle_since : hikari.utilities.undefined.UndefinedNoneOr[datetime.datetime]
             The datetime that the user started being idle. If undefined, this
             will not be changed.
-        afk : builtins.bool or hikari.utilities.undefined.UndefinedType
+        afk : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If `builtins.True`, the user is marked as AFK. If `builtins.False`,
             the user is marked as being active. If undefined, this will not be
             changed.
-        activity : hikari.models.presences.Activity or builtins.None or hikari.utilities.undefined.UndefinedType
+        activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.presences.Activity]
             The activity to appear to be playing. If undefined, this will not be
             changed.
-        status : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
+        status : hikari.utilities.undefined.UndefinedOr[hikari.models.presences.Status]
             The web status to show. If undefined, this will not be changed.
         """
 
     @abc.abstractmethod
     async def update_voice_state(
         self,
-        guild: typing.Union[guilds.PartialGuild, snowflake.UniqueObject],
-        channel: typing.Union[channels.GuildVoiceChannel, snowflake.UniqueObject, None],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        channel: typing.Optional[snowflake.SnowflakeishOr[channels.GuildVoiceChannel]],
         *,
         self_mute: bool = False,
         self_deaf: bool = False,
@@ -330,9 +330,9 @@ class IGatewayShard(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.models.guilds.PartialGuild or hikari.utilities.snowflake.UniqueObject
+        guild : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialGuild]
             The guild or guild ID to update the voice state for.
-        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.UniqueObject or builtins.None
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildVoiceChannel] or builtins.None
             The channel or channel ID to update the voice state for. If `builtins.None`
             then the bot will leave the voice channel that it is in for the
             given guild.
