@@ -303,7 +303,3 @@ class MemberPresence(snowflake.Unique):
 
     nickname: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """This member's nickname, if set."""
-
-    @property
-    def id(self) -> snowflake.Snowflake:
-        return self.user.id

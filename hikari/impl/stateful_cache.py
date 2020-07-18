@@ -218,7 +218,7 @@ class _BaseData(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def get_blacklisted_fields():
+    def get_blacklisted_fields() -> typing.Collection[str]:
         ...
 
     def build_entity(self, target: _TargetEntityT) -> _TargetEntityT:
@@ -247,22 +247,11 @@ class _BaseData(abc.ABC):
 _DataT = typing.TypeVar("_DataT", bound=_BaseData)
 
 
-def _set_fields_if_defined(
-    target: _TargetEntityT, source: typing.Any, *, blacklist: typing.Tuple[str, ...] = ()
-) -> _TargetEntityT:
-    for field in attr.fields(type(source)):
-        value = getattr(source, field.name, undefined.UNDEFINED)
-        if value is not undefined.UNDEFINED and hasattr(target, field.name) and field.name not in blacklist:
-            setattr(target, field.name, value)
-
-    return target
-
-
 @attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
 class _MemberData(_BaseData):
     @staticmethod
     def get_blacklisted_fields() -> typing.Collection[str]:
-        return ("user",)
+        return "user",
 
     id: snowflake.Snowflake
     guild_id: snowflake.Snowflake
@@ -272,6 +261,71 @@ class _MemberData(_BaseData):
     premium_since: typing.Union[datetime.date, None, undefined.UndefinedType]
     is_deaf: typing.Union[bool, undefined.UndefinedType]
     is_mute: typing.Union[bool, undefined.UndefinedType]
+
+
+@attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
+class _DMChannelData(_BaseData):
+    @staticmethod
+    def get_blacklisted_fields() -> typing.Collection[str]:
+        return "app", "recipient", "type"
+
+    id: snowflake.Snowflake
+    name: typing.Optional[str]
+    last_message_id: typing.Optional[snowflake.Snowflake]
+    recipient_id: snowflake.Snowflake
+
+    def build_entity(self, target: channels.DMChannel) -> channels.DMChannel:
+        super().build_entity(target)
+        target.type = channels.ChannelType.DM
+        return target
+
+
+@attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
+class _VoiceStateData(_BaseData):
+    @staticmethod
+    def get_blacklisted_fields() -> typing.Collection[str]:
+        return "app", "member"
+
+    channel_id: typing.Optional[snowflake.Snowflake]
+    guild_id: snowflake.Snowflake
+    is_guild_deafened: bool
+    is_guild_muted: bool
+    is_self_deafened: bool
+    is_self_muted: bool
+    is_streaming: bool
+    is_suppressed: bool
+    is_video_enabled: bool
+    user_id: snowflake.Snowflake
+    session_id: str
+
+
+@attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
+class _KnownCustomEmojiData(_BaseData):
+    @staticmethod
+    def get_blacklisted_fields() -> typing.Collection[str]:
+        return "app", "user"
+
+    id: snowflake.Snowflake
+    name: typing.Optional[str]  # TODO: Shouldn't ever be None here
+    is_animated: typing.Optional[bool]  # TODO: Shouldn't ever be None here
+    guild_id: snowflake.Snowflake
+    role_ids: snowflake.Snowflake
+    user_id: typing.Optional[snowflake.Snowflake]
+    is_animated: bool
+    is_colons_required: bool
+    is_managed: bool
+    is_available: bool
+
+
+def _set_fields_if_defined(
+    target: _TargetEntityT, source: typing.Any, *, blacklist: typing.Tuple[str, ...] = ()
+) -> _TargetEntityT:
+    for field in attr.fields(type(source)):
+        value = getattr(source, field.name, undefined.UNDEFINED)
+        if value is not undefined.UNDEFINED and hasattr(target, field.name) and field.name not in blacklist:
+            setattr(target, field.name, value)
+
+    return target
 
 
 class StatefulCacheComponentImpl(cache.ICacheComponent):
