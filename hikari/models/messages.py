@@ -27,6 +27,7 @@ __all__: typing.Final[typing.List[str]] = [
     "Reaction",
     "MessageActivity",
     "MessageCrosspost",
+    "PartialMessage",
     "Message",
 ]
 
@@ -224,7 +225,7 @@ class MessageCrosspost:
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    # TODO: get clarification on this!
+    # TODO: get clarification on this! If it can't happen, this should subclass PartialMessage too.
     id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the message.
 
@@ -247,9 +248,20 @@ class MessageCrosspost:
     """
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class Message(snowflake.Unique):
-    """Represents a message."""
+@attr.s(slots=True, kw_only=True, init=False, repr=True, eq=False)
+class PartialMessage(snowflake.Unique):
+    """A message representation containing partially populated information.
+
+    This contains arbitrary fields that may be updated in a
+    `MessageUpdateEvent`, but for all other purposes should be treated as
+    being optionally specified.
+
+    !!! warn
+        All fields on this model except `channel` and `id` may be set to
+        `hikari.utilities.undefined.UndefinedType` (a singleton) if we have not
+        received information about their state from Discord alongside field
+        nullability.
+    """
 
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
@@ -259,77 +271,81 @@ class Message(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    channel_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel that the message was sent in."""
 
-    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    guild_id: undefined.UndefinedNoneOr[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild that the message was sent in."""
 
-    author: users.UserImpl = attr.ib(eq=False, hash=False, repr=True)
+    author: undefined.UndefinedOr[users.UserImpl] = attr.ib(repr=True)
     """The author of this message."""
 
-    member: typing.Optional[guilds.Member] = attr.ib(eq=False, hash=False, repr=True)
+    member: undefined.UndefinedNoneOr[guilds.Member] = attr.ib(repr=False)
     """The member properties for the message's author."""
 
-    content: str = attr.ib(eq=False, hash=False, repr=False)
+    content: undefined.UndefinedNoneOr[str] = attr.ib(repr=False)
     """The content of the message."""
 
-    timestamp: datetime.datetime = attr.ib(eq=False, hash=False, repr=True)
+    timestamp: undefined.UndefinedOr[datetime.datetime] = attr.ib(repr=False)
     """The timestamp that the message was sent at."""
 
-    edited_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
+    edited_timestamp: undefined.UndefinedNoneOr[datetime.datetime] = attr.ib(repr=False)
     """The timestamp that the message was last edited at.
 
-    Will be `builtins.None` if it wasn't ever edited.
+    Will be `builtins.None` if the message wasn't ever edited, or `undefined`
+    if the info is not available.
     """
 
-    is_tts: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_tts: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """Whether the message is a TTS message."""
 
-    is_mentioning_everyone: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_mentioning_everyone: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """Whether the message mentions `@everyone` or `@here`."""
 
-    user_mentions: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    user_mentions: undefined.UndefinedOr[typing.Set[snowflake.Snowflake]] = attr.ib(repr=False)
     """The users the message mentions."""
 
-    role_mentions: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    role_mentions: undefined.UndefinedOr[typing.Set[snowflake.Snowflake]] = attr.ib(repr=False)
     """The roles the message mentions."""
 
-    channel_mentions: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    channel_mentions: undefined.UndefinedOr[typing.Set[snowflake.Snowflake]] = attr.ib(repr=False)
     """The channels the message mentions."""
 
-    attachments: typing.Sequence[Attachment] = attr.ib(eq=False, hash=False, repr=False)
+    attachments: undefined.UndefinedOr[typing.Sequence[Attachment]] = attr.ib(repr=False)
     """The message attachments."""
 
-    embeds: typing.Sequence[embeds_.Embed] = attr.ib(eq=False, hash=False, repr=False)
-    """The message embeds."""
+    embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = attr.ib(repr=False)
+    """The message's embeds."""
 
-    reactions: typing.Sequence[Reaction] = attr.ib(eq=False, hash=False, repr=False)
-    """The message reactions."""
+    reactions: undefined.UndefinedOr[typing.Sequence[Reaction]] = attr.ib(repr=False)
+    """The message's reactions."""
 
-    is_pinned: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_pinned: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """Whether the message is pinned."""
 
-    webhook_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
-    """If the message was generated by a webhook, the webhook's id."""
+    webhook_id: undefined.UndefinedNoneOr[snowflake.Snowflake] = attr.ib(repr=False)
+    """If the message was generated by a webhook, the webhook's ID."""
 
-    type: MessageType = attr.ib(eq=False, hash=False, repr=False)
-    """The message type."""
+    type: undefined.UndefinedOr[MessageType] = attr.ib(repr=False)
+    """The message's type."""
 
-    activity: typing.Optional[MessageActivity] = attr.ib(eq=False, hash=False, repr=False)
-    """The message activity."""
+    activity: undefined.UndefinedNoneOr[MessageActivity] = attr.ib(repr=False)
+    """The message's activity."""
 
-    application: typing.Optional[applications.Application] = attr.ib(eq=False, hash=False, repr=False)
-    """The message application."""
+    application: undefined.UndefinedNoneOr[applications.Application] = attr.ib(repr=False)
+    """The message's application."""
 
-    message_reference: typing.Optional[MessageCrosspost] = attr.ib(eq=False, hash=False, repr=False)
-    """The message crossposted reference data."""
+    message_reference: undefined.UndefinedNoneOr[MessageCrosspost] = attr.ib(repr=False)
+    """The message's cross-posted reference data."""
 
-    flags: typing.Optional[MessageFlag] = attr.ib(eq=False, hash=False, repr=False)
-    """The message flags."""
+    flags: undefined.UndefinedNoneOr[MessageFlag] = attr.ib(repr=False)
+    """The message's flags."""
 
-    nonce: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
-    """The message nonce. This is a string used for validating a message was sent."""
+    nonce: undefined.UndefinedNoneOr[str] = attr.ib(repr=False)
+    """The message nonce.
+
+    This is a string used for validating a message was sent.
+    """
 
     async def fetch_channel(self) -> channels.PartialChannel:
         """Fetch the channel this message was created in.
@@ -741,3 +757,85 @@ class Message(snowflake.Unique):
             await self.app.rest.delete_all_reactions(channel=self.channel_id, message=self.id)
         else:
             await self.app.rest.delete_all_reactions_for_emoji(channel=self.channel_id, message=self.id, emoji=emoji)
+
+
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class Message(PartialMessage):
+    """Represents a message with all known details."""
+
+    # These are purposely not auto attribs, but instead just specify a
+    # tighter type bounds (i.e. none are allowed to be undefined.Undefined
+    # in this model). We use this in cases where we know all information is
+    # present. DO NOT ADD attr.ib TO ANY OF THESE, OR ENABLE auto_attribs
+    # IN THIS CLASS, the latter will mess up slotting or cause layout conflicts
+    # and possibly result in large amounts of unwasted memory if you get that
+    # far.
+
+    guild_id: typing.Optional[snowflake.Snowflake]
+    """The ID of the guild that the message was sent in."""
+
+    author: users.UserImpl
+    """The author of this message."""
+
+    member: typing.Optional[guilds.Member]
+    """The member properties for the message's author."""
+
+    content: typing.Optional[str]
+    """The content of the message."""
+
+    timestamp: datetime.datetime
+    """The timestamp that the message was sent at."""
+
+    edited_timestamp: typing.Optional[datetime.datetime]
+    """The timestamp that the message was last edited at.
+
+    Will be `builtins.None` if it wasn't ever edited.
+    """
+
+    is_tts: bool
+    """Whether the message is a TTS message."""
+
+    is_mentioning_everyone: bool
+    """Whether the message mentions `@everyone` or `@here`."""
+
+    user_mentions: typing.Set[snowflake.Snowflake]
+    """The users the message mentions."""
+
+    role_mentions: typing.Set[snowflake.Snowflake]
+    """The roles the message mentions."""
+
+    channel_mentions: typing.Set[snowflake.Snowflake]
+    """The channels the message mentions."""
+
+    attachments: typing.Sequence[Attachment]
+    """The message attachments."""
+
+    embeds: typing.Sequence[embeds_.Embed]
+    """The message embeds."""
+
+    reactions: typing.Sequence[Reaction]
+    """The message reactions."""
+
+    is_pinned: bool
+    """Whether the message is pinned."""
+
+    webhook_id: typing.Optional[snowflake.Snowflake]
+    """If the message was generated by a webhook, the webhook's id."""
+
+    type: MessageType
+    """The message type."""
+
+    activity: typing.Optional[MessageActivity]
+    """The message activity."""
+
+    application: typing.Optional[applications.Application]
+    """The message application."""
+
+    message_reference: typing.Optional[MessageCrosspost]
+    """The message crossposted reference data."""
+
+    flags: typing.Optional[MessageFlag]
+    """The message flags."""
+
+    nonce: typing.Optional[str]
+    """The message nonce. This is a string used for validating a message was sent."""
