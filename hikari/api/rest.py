@@ -217,7 +217,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         nsfw: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         bitrate: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
         user_limit: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-        rate_limit_per_user: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
+        rate_limit_per_user: typing.Union[undefined.UndefinedType, date.TimeSpanLike] = undefined.UNDEFINED,
         permission_overwrites: typing.Union[
             undefined.UndefinedType, typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -708,7 +708,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     async def create_message(
         self,
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
+        content: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
         *,
         embed: typing.Union[undefined.UndefinedType, embeds_.Embed] = undefined.UNDEFINED,
         attachment: typing.Union[undefined.UndefinedType, str, files.Resource] = undefined.UNDEFINED,
@@ -730,10 +730,20 @@ class IRESTClient(component.IComponent, abc.ABC):
         Parameters
         ----------
         channel : hikari.models.channels.PartialChannel or hikari.utilities.snowflake.UniqueObject
-            The channel to create the message in. This may be a channel object, or
-            the ID of an existing channel.
-        text : hikari.utilities.undefined.UndefinedType or builtins.str
-            If specified, the message contents.
+            The channel to create the message in. This may be a channel object,
+            or the ID of an existing channel.
+        content : hikari.utilities.undefined.UndefinedType or typing.Any
+            If specified, the message contents. If `UNDEFINED`, then nothing
+            will be sent in the content. Any other value here will be cast to a
+            `builtins.str`.
+
+            If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
+            provided, then this will instead update the embed. This allows for
+            simpler syntax when sending an embed alone.
+
+            Likewise, if this is a `hikari.utilities.files.Resource`, then the
+            content is instead treated as an attachment if no `attachment` and
+            no `attachments` kwargs are provided.
         embed : hikari.utilities.undefined.UndefinedType or hikari.models.embeds.Embed
             If specified, the message embed.
         attachment : hikari.utilities.undefined.UndefinedType or builtins.str or hikari.utilities.files.Resource
@@ -745,17 +755,19 @@ class IRESTClient(component.IComponent, abc.ABC):
         tts : hikari.utilities.undefined.UndefinedType or builtins.bool
             If specified, whether the message will be TTS (Text To Speech).
         nonce : hikari.utilities.undefined.UndefinedType or builtins.str
-            If specified, a nonce that can be used for optimistic message sending.
+            If specified, a nonce that can be used for optimistic message
+            sending.
         mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
-            If specified, whether the message should parse @everyone/@here mentions.
+            If specified, whether the message should parse @everyone/@here
+            mentions.
         user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
             If specified, and a `builtins.bool`, whether to parse user mentions.
             If specified and a `builtins.list`, the users to parse the mention
             for. This may be a user object, or the ID of an existing user.
         role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            If specified and `builtins.bool`, whether to parse role mentions. If specified and
-            `builtins.list`, the roles to parse the mention for. This may be a role object, or
-            the ID of an existing role.
+            If specified and `builtins.bool`, whether to parse role mentions.
+            If specified and `builtins.list`, the roles to parse the mention
+            for. This may be a role object, or the ID of an existing role.
 
         Returns
         -------
@@ -796,12 +808,12 @@ class IRESTClient(component.IComponent, abc.ABC):
         self,
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         message: typing.Union[messages_.Message, snowflake.UniqueObject],
-        text: typing.Union[undefined.UndefinedType, None, typing.Any] = undefined.UNDEFINED,
+        content: typing.Union[undefined.UndefinedType, None, typing.Any] = undefined.UNDEFINED,
         *,
         embed: typing.Union[undefined.UndefinedType, None, embeds_.Embed] = undefined.UNDEFINED,
         mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         user_mentions: typing.Union[
-            undefined.UndefinedType, typing.Collection[typing.Union[users.UserImpl, snowflake.UniqueObject]], bool
+            undefined.UndefinedType, typing.Collection[typing.Union[snowflake.UniqueObject, users.PartialUser]], bool
         ] = undefined.UNDEFINED,
         role_mentions: typing.Union[
             undefined.UndefinedType, typing.Collection[typing.Union[snowflake.UniqueObject, guilds.Role]], bool
@@ -817,12 +829,72 @@ class IRESTClient(component.IComponent, abc.ABC):
             the ID of an existing channel.
         message : hikari.models.messages.Message or hikari.utilities.snowflake.UniqueObject
             The message to fetch.
-        text
-        embed
-        mentions_everyone
-        user_mentions
-        role_mentions
-        flags
+        content : hikari.utilities.undefined.UndefinedType or builtins.None or typing.Any
+            The message content to update with. If
+            `hikari.utilities.undefined.UNDEFINED`, then the content will not
+            be changed. If `builtins.None`, then the content will be removed.
+
+            Any other value will be cast to a `builtins.str` before sending.
+
+            If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
+            provided, then this will instead update the embed. This allows for
+            simpler syntax when sending an embed alone.
+        embed : hikari.utilities.undefined.UndefinedType or builtins.None or hikari.models.embeds.Embed
+            The embed to set on the message. If
+            `hikari.utilities.undefined.UNDEFINED`, the previous embed if
+            present is not changed. If this is `builtins.None`, then the embed
+            is removed if present. Otherwise, the new embed value that was
+            provided will be used as the replacement.
+        mentions_everyone : hikari.utilities.undefined.UndefinedType or bool
+            Sanitation for `@everyone` mentions. If
+            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            not changed. If `builtins.True`, then `@everyone`/`@here` mentions
+            in the message content will show up as mentioning everyone that can
+            view the chat.
+        user_mentions : hikari.utilities.undefined.UndefinedType or bool or typing.Collection[hikari.utilities.snowflake.UniqueObject]
+            Sanitation for user mentions. If
+            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            not changed. If `builtins.True`, all valid user mentions will behave
+            as mentions. If `builtins.False`, all valid user mentions will not
+            behave as mentions.
+
+            You may alternatively pass a collection of
+            `hikari.utilities.snowflake.Snowflake` user IDs, or
+            `hikari.utilities.snowflake.Unique` objects that represent users.
+        role_mentions : hikari.utilities.undefined.UndefinedType or bool or typing.Collection[hikari.utilities.snowflake.UniqueObject]
+            Sanitation for role mentions. If
+            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            not changed. If `builtins.True`, all valid role mentions will behave
+            as mentions. If `builtins.False`, all valid role mentions will not
+            behave as mentions.
+
+            You may alternatively pass a collection of
+            `hikari.utilities.snowflake.Snowflake` user IDs, or
+            `hikari.utilities.snowflake.Unique` objects that represent roles.
+        flags : hikari.utilities.undefined.UndefinedType or hikari.models.messages.MessageFlag
+            Optional flags to set on the message. If
+            `hikari.utilities.undefined.UNDEFINED`, then nothing is changed.
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`. If you
+            have `MANAGE_MESSAGES` permissions, you can use this call to
+            suppress embeds on another user's message.
+
+        !!! note
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
+
+        !!! note
+            There is currently no documented way to clear attachments or edit
+            attachments from a previously sent message on Discord's API. To
+            do this, `delete` the message and re-send it.
+
+        !!! warning
+            If the message was not sent by your user, the only parameter
+            you may provide to this call is the `flags` parameter. Anything
+            else will result in a `hikari.errors.Forbidden` being raised.
 
         Returns
         -------
@@ -849,7 +921,7 @@ class IRESTClient(component.IComponent, abc.ABC):
             If the channel or message is not found.
         hikari.errors.ServerHTTPErrorResponse
             If an internal error occurs on Discord while handling the request.
-        """
+        """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     async def delete_message(
@@ -1258,7 +1330,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         afk_channel: typing.Union[
             undefined.UndefinedType, channels.GuildVoiceChannel, snowflake.UniqueObject
         ] = undefined.UNDEFINED,
-        afk_timeout: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
+        afk_timeout: typing.Union[undefined.UndefinedType, date.TimeSpanLike] = undefined.UNDEFINED,
         icon: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
         owner: typing.Union[undefined.UndefinedType, users.UserImpl, snowflake.UniqueObject] = undefined.UNDEFINED,
         splash: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
@@ -1659,7 +1731,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         expire_behaviour: typing.Union[
             undefined.UndefinedType, guilds.IntegrationExpireBehaviour
         ] = undefined.UNDEFINED,
-        expire_grace_period: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
+        expire_grace_period: typing.Union[undefined.UndefinedType, date.TimeSpanLike] = undefined.UNDEFINED,
         enable_emojis: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
