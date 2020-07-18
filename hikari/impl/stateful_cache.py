@@ -376,7 +376,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
     def _build_member(
         self,
         member_data: _MemberData,
-        user_entries: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = None
+        user_entries: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = None,
     ) -> guilds.Member:
         member = member_data.build_entity(guilds.Member())
         user = user_entries[member_data.id] if user_entries is not None else self._user_entries[member_data.id]
@@ -399,8 +399,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
                 self._garbage_collect_user(user_id)
 
             members = _StatefulCacheMappingView(
-                cached_members,
-                builder=lambda member: self._build_member(member, user_entries=cached_users)
+                cached_members, builder=lambda member: self._build_member(member, user_entries=cached_users)
             )
         else:
             members = None
@@ -412,9 +411,16 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
     ) -> typing.Optional[guilds.Member]:
         guild_record = self._guild_entries.get(guild_id)
         member = guild_record.members.pop(user_id, None) if guild_record and guild_record.members else None
-        self._delete_guild_record_if_empty(guild_id)
-        self._garbage_collect_user(member.id)
-        return self._build_member(member) if member is not None else None
+
+        built_member: typing.Optional[guilds.Member]
+        if member is not None:
+            self._delete_guild_record_if_empty(guild_id)
+            self._garbage_collect_user(member.id)
+            built_member = self._build_member(member)
+        else:
+            built_member = None
+
+        return built_member
 
     def get_member(self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake) -> typing.Optional[guilds.Member]:
         guild_record = self._guild_entries.get(guild_id)
@@ -426,14 +432,14 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
 
     def get_members_view(self, guild_id: snowflake.Snowflake, /) -> cache.ICacheView[guilds.Member]:
         guild_record = self._guild_entries.get(guild_id)
-        if guild_record is not None and guild_record.members is not None:
-            cached_users = {sf: self._user_entries[sf] for sf in guild_record.members.keys()}
-            return _StatefulCacheMappingView(
-                guild_record.members.copy(),
-                builder=lambda member: self._build_member(member, user_entries=cached_users)
-            )
+        if guild_record is None or guild_record.members is None:
+            return _EmptyCacheView()
 
-        return _EmptyCacheView()
+        cached_users = {sf: self._user_entries[sf] for sf in guild_record.members.keys()}
+        return _StatefulCacheMappingView(
+            copy.deepcopy(guild_record.members),
+            builder=lambda member: self._build_member(member, user_entries=cached_users),
+        )
 
     def set_member(self, member_obj: guilds.Member, /) -> None:
         guild_record = self._get_or_create_guild_record(member_obj.guild_id)
@@ -452,6 +458,9 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         return cached_member, self.get_member(member_obj.guild_id, member_obj.user.id)
 
     def clear_users(self) -> cache.ICacheView[users.User]:
+        if not self._user_entries:
+            return _EmptyCacheView()
+
         cached_users = self._user_entries.copy()
         self._user_entries.clear()
         return _StatefulCacheMappingView(cached_users)
@@ -460,10 +469,13 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         return self._user_entries.pop(user_id, None)
 
     def get_user(self, user_id: snowflake.Snowflake) -> typing.Optional[users.User]:
-        return self._user_entries.get(user_id)
+        return copy.deepcopy(self._user_entries.get(user_id))
 
     def get_users_view(self) -> cache.ICacheView[users.User]:
-        return _StatefulCacheMappingView(self._user_entries.copy())
+        if not self._user_entries:
+            return _EmptyCacheView()
+
+        return _StatefulCacheMappingView(copy.deepcopy(self._user_entries))
 
     def set_user(self, user: users.User) -> None:
         self._user_entries[user.id] = user
