@@ -335,7 +335,7 @@ class BotAppImpl(bot.IBotApp):
         await self._check_for_updates()
 
         self._start_count += 1
-        self._started_at_monotonic = date.monotonic_ns()
+        self._started_at_monotonic = date.monotonic()
         self._started_at_timestamp = date.local_datetime()
 
         if self._debug is True:
