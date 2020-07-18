@@ -95,7 +95,7 @@ async def test_TextChannel_send():
     mock_attachments = [mock.Mock(), mock.Mock(), mock.Mock()]
 
     await channel.send(
-        text="test content",
+        content="test content",
         nonce="abc123",
         tts=True,
         attachment=mock_attachment,
@@ -108,7 +108,7 @@ async def test_TextChannel_send():
 
     channel.app.rest.create_message.assert_called_once_with(
         channel=123,
-        text="test content",
+        content="test content",
         nonce="abc123",
         tts=True,
         attachment=mock_attachment,

@@ -27,6 +27,7 @@ __all__: typing.Final[typing.List[str]] = [
     "Reaction",
     "MessageActivity",
     "MessageCrosspost",
+    "PartialMessage",
     "Message",
 ]
 
@@ -35,7 +36,8 @@ import typing
 
 import attr
 
-from hikari.utilities import files as files_
+from hikari.utilities import files
+from hikari.utilities import constants
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -151,7 +153,7 @@ class MessageActivityType(int, enum.Enum):
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class Attachment(snowflake.Unique, files_.WebResource):
+class Attachment(snowflake.Unique, files.WebResource):
     """Represents a file attached to a message.
 
     You can use this object in the same way as a `hikari.utilities.files.WebResource`,
@@ -195,7 +197,7 @@ class Reaction:
     emoji: typing.Union[emojis_.UnicodeEmoji, emojis_.CustomEmoji] = attr.ib(eq=True, hash=True, repr=True)
     """The emoji used to react."""
 
-    is_reacted_by_me: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_me: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether the current user reacted using this emoji."""
 
     def __str__(self) -> str:
@@ -224,7 +226,7 @@ class MessageCrosspost:
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    # TODO: get clarification on this!
+    # TODO: get clarification on this! If it can't happen, this should subclass PartialMessage too.
     id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the message.
 
@@ -247,9 +249,20 @@ class MessageCrosspost:
     """
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class Message(snowflake.Unique):
-    """Represents a message."""
+@attr.s(slots=True, kw_only=True, init=False, repr=True, eq=False)
+class PartialMessage(snowflake.Unique):
+    """A message representation containing partially populated information.
+
+    This contains arbitrary fields that may be updated in a
+    `MessageUpdateEvent`, but for all other purposes should be treated as
+    being optionally specified.
+
+    !!! warn
+        All fields on this model except `channel` and `id` may be set to
+        `hikari.utilities.undefined.UndefinedType` (a singleton) if we have not
+        received information about their state from Discord alongside field
+        nullability.
+    """
 
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
@@ -259,77 +272,94 @@ class Message(snowflake.Unique):
     )
     """The ID of this entity."""
 
-    channel_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    channel_id: snowflake.Snowflake = attr.ib(repr=True)
     """The ID of the channel that the message was sent in."""
 
-    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    guild_id: undefined.UndefinedNoneOr[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild that the message was sent in."""
 
-    author: users.UserImpl = attr.ib(eq=False, hash=False, repr=True)
+    author: undefined.UndefinedOr[users.UserImpl] = attr.ib(repr=True)
     """The author of this message."""
 
-    member: typing.Optional[guilds.Member] = attr.ib(eq=False, hash=False, repr=True)
+    member: undefined.UndefinedNoneOr[guilds.Member] = attr.ib(repr=False)
     """The member properties for the message's author."""
 
-    content: str = attr.ib(eq=False, hash=False, repr=False)
+    content: undefined.UndefinedNoneOr[str] = attr.ib(repr=False)
     """The content of the message."""
 
-    timestamp: datetime.datetime = attr.ib(eq=False, hash=False, repr=True)
+    timestamp: undefined.UndefinedOr[datetime.datetime] = attr.ib(repr=False)
     """The timestamp that the message was sent at."""
 
-    edited_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
+    edited_timestamp: undefined.UndefinedNoneOr[datetime.datetime] = attr.ib(repr=False)
     """The timestamp that the message was last edited at.
 
-    Will be `builtins.None` if it wasn't ever edited.
+    Will be `builtins.None` if the message wasn't ever edited, or `undefined`
+    if the info is not available.
     """
 
-    is_tts: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_tts: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """Whether the message is a TTS message."""
 
-    is_mentioning_everyone: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_mentioning_everyone: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """Whether the message mentions `@everyone` or `@here`."""
 
-    user_mentions: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    user_mentions: undefined.UndefinedOr[typing.Set[snowflake.Snowflake]] = attr.ib(repr=False)
     """The users the message mentions."""
 
-    role_mentions: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    role_mentions: undefined.UndefinedOr[typing.Set[snowflake.Snowflake]] = attr.ib(repr=False)
     """The roles the message mentions."""
 
-    channel_mentions: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    channel_mentions: undefined.UndefinedOr[typing.Set[snowflake.Snowflake]] = attr.ib(repr=False)
     """The channels the message mentions."""
 
-    attachments: typing.Sequence[Attachment] = attr.ib(eq=False, hash=False, repr=False)
+    attachments: undefined.UndefinedOr[typing.Sequence[Attachment]] = attr.ib(repr=False)
     """The message attachments."""
 
-    embeds: typing.Sequence[embeds_.Embed] = attr.ib(eq=False, hash=False, repr=False)
-    """The message embeds."""
+    embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = attr.ib(repr=False)
+    """The message's embeds."""
 
-    reactions: typing.Sequence[Reaction] = attr.ib(eq=False, hash=False, repr=False)
-    """The message reactions."""
+    reactions: undefined.UndefinedOr[typing.Sequence[Reaction]] = attr.ib(repr=False)
+    """The message's reactions."""
 
-    is_pinned: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_pinned: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """Whether the message is pinned."""
 
-    webhook_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
-    """If the message was generated by a webhook, the webhook's id."""
+    webhook_id: undefined.UndefinedNoneOr[snowflake.Snowflake] = attr.ib(repr=False)
+    """If the message was generated by a webhook, the webhook's ID."""
 
-    type: MessageType = attr.ib(eq=False, hash=False, repr=False)
-    """The message type."""
+    type: undefined.UndefinedOr[MessageType] = attr.ib(repr=False)
+    """The message's type."""
 
-    activity: typing.Optional[MessageActivity] = attr.ib(eq=False, hash=False, repr=False)
-    """The message activity."""
+    activity: undefined.UndefinedNoneOr[MessageActivity] = attr.ib(repr=False)
+    """The message's activity."""
 
-    application: typing.Optional[applications.Application] = attr.ib(eq=False, hash=False, repr=False)
-    """The message application."""
+    application: undefined.UndefinedNoneOr[applications.Application] = attr.ib(repr=False)
+    """The message's application."""
 
-    message_reference: typing.Optional[MessageCrosspost] = attr.ib(eq=False, hash=False, repr=False)
-    """The message crossposted reference data."""
+    message_reference: undefined.UndefinedNoneOr[MessageCrosspost] = attr.ib(repr=False)
+    """The message's cross-posted reference data."""
 
-    flags: typing.Optional[MessageFlag] = attr.ib(eq=False, hash=False, repr=False)
-    """The message flags."""
+    flags: undefined.UndefinedNoneOr[MessageFlag] = attr.ib(repr=False)
+    """The message's flags."""
 
-    nonce: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
-    """The message nonce. This is a string used for validating a message was sent."""
+    nonce: undefined.UndefinedNoneOr[str] = attr.ib(repr=False)
+    """The message nonce.
+
+    This is a string used for validating a message was sent.
+    """
+
+    @property
+    def link(self) -> str:
+        """Jump link to the message.
+
+        Returns
+        -------
+        builtins.str
+            The jump link to the message.
+        """
+        if self.guild_id is None:
+            return f"{constants.BASE_URL}/channels/@me/{self.channel_id}/{self.id}"
+        return f"{constants.BASE_URL}/channels/{self.guild_id}/{self.channel_id}/{self.id}"
 
     async def fetch_channel(self) -> channels.PartialChannel:
         """Fetch the channel this message was created in.
@@ -353,46 +383,88 @@ class Message(snowflake.Unique):
 
     async def edit(
         self,
-        text: typing.Union[undefined.UndefinedType, str, None] = undefined.UNDEFINED,
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: typing.Union[undefined.UndefinedType, embeds_.Embed, None] = undefined.UNDEFINED,
-        mentions_everyone: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]],
-            bool,
-            undefined.UndefinedType,
+        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[users.PartialUser]], bool]
         ] = undefined.UNDEFINED,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.UndefinedType
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
+        flags: undefined.UndefinedOr[MessageFlag] = undefined.UNDEFINED,
     ) -> Message:
-        """Edit this message.
-
-        All parameters are optional, meaning that if you do not specify one,
-        then the corresponding piece of information will not be changed.
+        """Edit an existing message in a given channel.
 
         Parameters
         ----------
-        text : builtins.str or hikari.utilities.undefined.UndefinedType or builtins.None
-            If specified, the message text to set on the message. If
-            `builtins.None`, then the content is removed if already present.
-        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType or builtins.None
-            If specified, the embed object to set on the message. If
-            `builtins.None`, then the embed is removed if already present.
-        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
-            Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            Either an array of user objects/IDs to allow mentions for,
-            `builtins.True` to allow all user mentions or `builtins.False`
-            to block all user mentions from resolving. Defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            Either an array of guild role objects/IDs to allow mentions for,
-            `builtins.True` to allow all role mentions or `builtins.False` to
-            block all role mentions from resolving. Defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
+        content : hikari.utilities.undefined.UndefinedOr[typing.Any]
+            The message content to update with. If
+            `hikari.utilities.undefined.UNDEFINED`, then the content will not
+            be changed. If `builtins.None`, then the content will be removed.
+
+            Any other value will be cast to a `builtins.str` before sending.
+
+            If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
+            provided, then this will instead update the embed. This allows for
+            simpler syntax when sending an embed alone.
+        embed : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.embeds.Embed]
+            The embed to set on the message. If
+            `hikari.utilities.undefined.UNDEFINED`, the previous embed if
+            present is not changed. If this is `builtins.None`, then the embed
+            is removed if present. Otherwise, the new embed value that was
+            provided will be used as the replacement.
+        mentions_everyone : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+            Sanitation for `@everyone` mentions. If
+            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            not changed. If `builtins.True`, then `@everyone`/`@here` mentions
+            in the message content will show up as mentioning everyone that can
+            view the chat.
+        user_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser] or builtins.bool]
+            Sanitation for user mentions. If
+            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            not changed. If `builtins.True`, all valid user mentions will behave
+            as mentions. If `builtins.False`, all valid user mentions will not
+            behave as mentions.
+
+            You may alternatively pass a collection of
+            `hikari.utilities.snowflake.Snowflake` user IDs, or
+            `hikari.models.users.PartialUser`-derived objects.
+        role_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole] or builtins.bool]
+            Sanitation for role mentions. If
+            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            not changed. If `builtins.True`, all valid role mentions will behave
+            as mentions. If `builtins.False`, all valid role mentions will not
+            behave as mentions.
+
+            You may alternatively pass a collection of
+            `hikari.utilities.snowflake.Snowflake` role IDs, or
+            `hikari.models.guilds.PartialRole`-derived objects.
+        flags : hikari.utilities.undefined.UndefinedOr[hikari.models.messages.MessageFlag]
+            Optional flags to set on the message. If
+            `hikari.utilities.undefined.UNDEFINED`, then nothing is changed.
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`. If you
+            have `MANAGE_MESSAGES` permissions, you can use this call to
+            suppress embeds on another user's message.
+
+        !!! note
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
+
+        !!! note
+            There is currently no documented way to clear attachments or edit
+            attachments from a previously sent message on Discord's API. To
+            do this, `delete` the message and re-send it.
+
+        !!! warning
+            If the message was not sent by your user, the only parameter
+            you may provide to this call is the `flags` parameter. Anything
+            else will result in a `hikari.errors.Forbidden` being raised.
 
         Returns
         -------
@@ -401,127 +473,141 @@ class Message(snowflake.Unique):
 
         Raises
         ------
+        hikari.errors.BadRequest
+            This may be raised in several discrete situations, such as messages
+            being empty with no embeds; messages with more than 2000 characters
+            in them, embeds that exceed one of the many embed
+            limits; invalid image URLs in embeds; users in `user_mentions` not
+            being mentioned in the message content; roles in `role_mentions` not
+            being mentioned in the message content.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to send messages in the given channel; if
+            you try to change the contents of another user's message; or if you
+            try to edit the flags on another user's message without the
+            permissions to manage messages_.
         hikari.errors.NotFound
             If the channel or message is not found.
-        hikari.errors.BadRequest
-            This can be raised if the embed exceeds the defined limits;
-            if the message content is specified only and empty or greater
-            than `2000` characters; if neither content, file or embed
-            are specified.
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
-        hikari.errors.Forbidden
-            If you try to edit `content` or `embed` or `allowed_mentions`
-            on a message you did not author.
-            If you try to edit the flags on a message you did not author without
-            the `MANAGE_MESSAGES` permission.
-        builtins.ValueError
-            If more than 100 unique objects/entities are passed for
-            `role_mentions` or `user_mentions`.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
         return await self.app.rest.edit_message(
             message=self.id,
             channel=self.channel_id,
-            text=text,
+            content=content,
             embed=embed,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
+            flags=flags,
         )
 
     async def reply(
         self,
-        text: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: typing.Union[undefined.UndefinedType, embeds_.Embed] = undefined.UNDEFINED,
-        attachment: typing.Union[undefined.UndefinedType, str, files_.Resource] = undefined.UNDEFINED,
-        attachments: typing.Union[
-            undefined.UndefinedType, typing.Sequence[typing.Union[str, files_.Resource]]
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[users.PartialUser]], bool]
         ] = undefined.UNDEFINED,
-        nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]],
-            bool,
-            undefined.UndefinedType,
-        ] = undefined.UNDEFINED,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.UndefinedType
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
     ) -> Message:
-        """Create a message in the channel this message belongs to.
+        """Create a message in the given channel.
 
         Parameters
         ----------
-        text : builtins.str or hikari.utilities.undefined.UndefinedType
-            If specified, the message text to send with the message.
-        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
-            If specified, the embed object to send with the message.
-        attachment : hikari.utilities.files.Resource or builtins.str or hikari.utilities.undefined.UndefinedType
-            If specified, a attachment to upload, if desired. This can
-            be a resource, or string of a path on your computer or a URL.
-        attachments : typing.Sequence[hikari.utilities.files.Resource or builtins.str] or hikari.utilities.undefined.UndefinedType
-            If specified, a sequence of attachments to upload, if desired.
-            Should be between 1 and 10 objects in size (inclusive), also
-            including embed attachments. These can be resources, or
+        content : hikari.utilities.undefined.UndefinedOr[typing.Any]
+            If specified, the message contents. If `UNDEFINED`, then nothing
+            will be sent in the content. Any other value here will be cast to a
+            `builtins.str`.
+
+            If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
+            provided, then this will instead update the embed. This allows for
+            simpler syntax when sending an embed alone.
+
+            Likewise, if this is a `hikari.utilities.files.Resource`, then the
+            content is instead treated as an attachment if no `attachment` and
+            no `attachments` kwargs are provided.
+        embed : hikari.utilities.undefined.UndefinedOr[hikari.models.embeds.Embed]
+            If specified, the message embed.
+        attachment : hikari.utilities.undefined.UndefinedOr[hikari.utilities.files.Resourceish],
+            If specified, the message attachment. This can be a resource,
+            or string of a path on your computer or a URL.
+        attachments : hikari.utilities.undefined.UndefinedOr[typing.Sequence[hikari.utilities.files.Resourceish]],
+            If specified, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        nonce : builtins.str or hikari.utilities.undefined.UndefinedType
-            If specified, an optional ID to send for opportunistic message
-            creation. This doesn't serve any real purpose for general use,
-            and can usually be ignored.
-        tts : builtins.bool or hikari.utilities.undefined.UndefinedType
-            If specified, whether the message will be sent as a TTS message.
-        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
-            Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            Either an array of user objects/IDs to allow mentions for,
-            `builtins.True` to allow all user mentions or `builtins.False` to block all
-            user mentions from resolving, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            Either an array of guild role objects/IDs to allow mentions for,
-            `builtins.True` to allow all role mentions or `builtins.False` to block all
-            role mentions from resolving, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
+        tts : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+            If specified, whether the message will be TTS (Text To Speech).
+        nonce : hikari.utilities.undefined.UndefinedOr[builtins.str]
+            If specified, a nonce that can be used for optimistic message
+            sending.
+        mentions_everyone : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+            If specified, whether the message should parse @everyone/@here
+            mentions.
+        user_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser] or builtins.bool]
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.utilities.snowflake.Snowflake`, or
+            `hikari.models.users.PartialUser` derivatives to enforce mentioning
+            specific users.
+        role_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole] or builtins.bool]
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.utilities.snowflake.Snowflake`, or
+            `hikari.models.guilds.PartialRole` derivatives to enforce mentioning
+            specific roles.
 
         Returns
         -------
         hikari.models.messages.Message
-            The created message object.
+            The created message.
 
         Raises
         ------
-        hikari.errors.NotFound
-            If the channel this message was created in is not found.
         hikari.errors.BadRequest
-            This can be raised if the file is too large; if the embed exceeds
-            the defined limits; if the message content is specified only and
-            empty or greater than `2000` characters; if neither content, files
-            or embed are specified.
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
-            If you are trying to upload more than 10 files in total (including
-            embed attachments).
+            This may be raised in several discrete situations, such as messages
+            being empty with no attachments or embeds; messages with more than
+            2000 characters in them, embeds that exceed one of the many embed
+            limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; users in `user_mentions` not being
+            mentioned in the message content; roles in `role_mentions` not
+            being mentioned in the message content.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.Forbidden
-            If you lack permissions to send to the channel this message belongs
-            to.
+            If you lack permissions to send messages in the given channel.
+        hikari.errors.NotFound
+            If the channel is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
         builtins.ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
         builtins.TypeError
             If both `attachment` and `attachments` are specified.
+
+        !!! warning
+            You are expected to make a connection to the gateway and identify
+            once before being able to use this _endpoint for a bot.
         """  # noqa: E501 - Line too long
         return await self.app.rest.create_message(
             channel=self.channel_id,
-            text=text,
-            nonce=nonce,
-            tts=tts,
+            content=content,
+            embed=embed,
             attachment=attachment,
             attachments=attachments,
-            embed=embed,
+            nonce=nonce,
+            tts=tts,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
@@ -540,12 +626,12 @@ class Message(snowflake.Unique):
         """
         await self.app.rest.delete_message(self.channel_id, self.id)
 
-    async def add_reaction(self, emoji: typing.Union[str, emojis_.Emoji]) -> None:
+    async def add_reaction(self, emoji: emojis_.Emojiish) -> None:
         r"""Add a reaction to this message.
 
         Parameters
         ----------
-        emoji : builtins.str or hikari.models.emojis.Emoji
+        emoji : hikari.models.emojis.Emojiish
             The emoji to add. This may be a unicode emoji string, the
             `name:id` of a custom emoji, or a subclass of
             `hikari.models.emojis.Emoji`.
@@ -555,17 +641,23 @@ class Message(snowflake.Unique):
 
         Examples
         --------
-            # Using a unicode emoji.
-            await message.add_reaction("👌")
+        ```py
+        # Using a unicode emoji.
+        await message.add_reaction("👌")
 
-            # Using a unicode emoji name.
-            await message.add_reaction("\N{OK HAND SIGN}")
+        # Using a unicode emoji name.
+        await message.add_reaction("\N{OK HAND SIGN}")
 
-            # Using the `name:id` format.
-            await message.add_reaction("rooAYAYA:705837374319493284")
+        # Using the `name:id` format.
+        await message.add_reaction("rooAYAYA:705837374319493284")
 
-            # Using an Emoji object.
-            await message.add_reaction(some_emoji_object)
+        # Using a raw custom emoji mention (unanimated and animated)
+        await message.add_reaction("<:rooAYAYA:705837374319493284>")
+        await message.add_reaction("<a:rooAYAYA:705837374319493284>")
+
+        # Using an Emoji-derived object.
+        await message.add_reaction(some_emoji_object)
+        ```
 
         Raises
         ------
@@ -587,17 +679,17 @@ class Message(snowflake.Unique):
 
     async def remove_reaction(
         self,
-        emoji: typing.Union[str, emojis_.Emoji],
+        emoji: emojis_.Emojiish,
         *,
-        user: typing.Union[users.UserImpl, undefined.UndefinedType] = undefined.UNDEFINED,
+        user: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
     ) -> None:
         r"""Remove a reaction from this message.
 
         Parameters
         ----------
-        emoji : builtins.str or hikari.models.emojis.Emoji
+        emoji : hikari.models.emojis.Emojiish
             The emoji to remove.
-        user : hikari.models.users.UserImpl or hikari.utilities.undefined.UndefinedType
+        user : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser]]
             The user of the reaction to remove. If unspecified, then the bot's
             reaction is removed instead.
 
@@ -610,6 +702,10 @@ class Message(snowflake.Unique):
             # Using a unicode emoji and removing a specific user from this
             # reaction.
             await message.remove_reaction("\N{OK HAND SIGN}", some_user)
+
+            # Using a raw custom emoji mention (unanimated and animated)
+            await message.remove_reaction("<:rooAYAYA:705837374319493284>", some_user)
+            await message.remove_reaction("<a:rooAYAYA:705837374319493284>", some_user)
 
             # Using an Emoji object and removing a specific user from this
             # reaction.
@@ -636,14 +732,12 @@ class Message(snowflake.Unique):
         else:
             await self.app.rest.delete_reaction(channel=self.channel_id, message=self.id, emoji=emoji, user=user)
 
-    async def remove_all_reactions(
-        self, emoji: typing.Union[str, emojis_.Emoji, undefined.UndefinedType] = undefined.UNDEFINED
-    ) -> None:
+    async def remove_all_reactions(self, emoji: undefined.UndefinedOr[emojis_.Emojiish] = undefined.UNDEFINED) -> None:
         r"""Remove all users' reactions for a specific emoji from the message.
 
         Parameters
         ----------
-        emoji : builtins.str or hikari.models.emojis.Emoji or hikari.utilities.undefined.UndefinedType
+        emoji : hikari.utilities.undefined.UndefinedOr[hikari.models.emojis.Emojiish]
             The emoji to remove all reactions for. If not specified, then all
             emojis are removed.
 
@@ -652,6 +746,10 @@ class Message(snowflake.Unique):
             # Using a unicode emoji and removing all 👌 reacts from the message.
             # reaction.
             await message.remove_all_reactions("\N{OK HAND SIGN}")
+
+            # Using a raw custom emoji mention (unanimated and animated)
+            await message.remove_all_reactions("<:rooAYAYA:705837374319493284>")
+            await message.remove_all_reactions("<a:rooAYAYA:705837374319493284>")
 
             # Removing all reactions entirely.
             await message.remove_all_reactions()
@@ -673,3 +771,85 @@ class Message(snowflake.Unique):
             await self.app.rest.delete_all_reactions(channel=self.channel_id, message=self.id)
         else:
             await self.app.rest.delete_all_reactions_for_emoji(channel=self.channel_id, message=self.id, emoji=emoji)
+
+
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+class Message(PartialMessage):
+    """Represents a message with all known details."""
+
+    # These are purposely not auto attribs, but instead just specify a
+    # tighter type bounds (i.e. none are allowed to be undefined.Undefined
+    # in this model). We use this in cases where we know all information is
+    # present. DO NOT ADD attr.ib TO ANY OF THESE, OR ENABLE auto_attribs
+    # IN THIS CLASS, the latter will mess up slotting or cause layout conflicts
+    # and possibly result in large amounts of unwasted memory if you get that
+    # far.
+
+    guild_id: typing.Optional[snowflake.Snowflake]
+    """The ID of the guild that the message was sent in."""
+
+    author: users.UserImpl
+    """The author of this message."""
+
+    member: typing.Optional[guilds.Member]
+    """The member properties for the message's author."""
+
+    content: typing.Optional[str]
+    """The content of the message."""
+
+    timestamp: datetime.datetime
+    """The timestamp that the message was sent at."""
+
+    edited_timestamp: typing.Optional[datetime.datetime]
+    """The timestamp that the message was last edited at.
+
+    Will be `builtins.None` if it wasn't ever edited.
+    """
+
+    is_tts: bool
+    """Whether the message is a TTS message."""
+
+    is_mentioning_everyone: bool
+    """Whether the message mentions `@everyone` or `@here`."""
+
+    user_mentions: typing.Set[snowflake.Snowflake]
+    """The users the message mentions."""
+
+    role_mentions: typing.Set[snowflake.Snowflake]
+    """The roles the message mentions."""
+
+    channel_mentions: typing.Set[snowflake.Snowflake]
+    """The channels the message mentions."""
+
+    attachments: typing.Sequence[Attachment]
+    """The message attachments."""
+
+    embeds: typing.Sequence[embeds_.Embed]
+    """The message embeds."""
+
+    reactions: typing.Sequence[Reaction]
+    """The message reactions."""
+
+    is_pinned: bool
+    """Whether the message is pinned."""
+
+    webhook_id: typing.Optional[snowflake.Snowflake]
+    """If the message was generated by a webhook, the webhook's id."""
+
+    type: MessageType
+    """The message type."""
+
+    activity: typing.Optional[MessageActivity]
+    """The message activity."""
+
+    application: typing.Optional[applications.Application]
+    """The message application."""
+
+    message_reference: typing.Optional[MessageCrosspost]
+    """The message crossposted reference data."""
+
+    flags: typing.Optional[MessageFlag]
+    """The message flags."""
+
+    nonce: typing.Optional[str]
+    """The message nonce. This is a string used for validating a message was sent."""

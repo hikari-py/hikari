@@ -163,13 +163,13 @@ class PartialChannel(snowflake.Unique):
     not available from Discord.
     """
 
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
+
     id: snowflake.Snowflake = attr.ib(
         converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
     )
     """The ID of this entity."""
-
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
-    """The client application that models may use for procedures."""
 
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The channel's name. This will be missing for DM channels."""
@@ -189,129 +189,166 @@ class TextChannel(PartialChannel, abc.ABC):
 
     async def send(
         self,
-        text: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: typing.Union[undefined.UndefinedType, embeds.Embed] = undefined.UNDEFINED,
-        attachment: typing.Union[undefined.UndefinedType, str, files.Resource] = undefined.UNDEFINED,
-        attachments: typing.Union[
-            undefined.UndefinedType, typing.Sequence[typing.Union[str, files.Resource]]
+        embed: undefined.UndefinedOr[embeds.Embed] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[users.PartialUser]], bool]
         ] = undefined.UNDEFINED,
-        nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        mentions_everyone: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]],
-            bool,
-            undefined.UndefinedType,
-        ] = undefined.UNDEFINED,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.UndefinedType
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
     ) -> messages.Message:
         """Create a message in the channel this message belongs to.
 
         Parameters
         ----------
-        text : builtins.str or hikari.utilities.undefined.UndefinedType
-            If specified, the message text to send with the message.
-        embed : hikari.models.embeds.Embed or hikari.utilities.undefined.UndefinedType
-            If specified, the embed object to send with the message.
-        attachment : hikari.utilities.files.Resource or builtins.str or hikari.utilities.undefined.UndefinedType
-            If specified, a attachment to upload, if desired. This can
-            be a resource, or string of a path on your computer or a URL.
-        attachments : typing.Sequence[hikari.utilities.files.Resource or builtins.str] or hikari.utilities.undefined.UndefinedType
-            If specified, a sequence of attachments to upload, if desired.
-            Should be between 1 and 10 objects in size (inclusive), also
-            including embed attachments. These can be resources, or
+        content : hikari.utilities.undefined.UndefinedOr[typing.Any]
+            If specified, the message contents. If `UNDEFINED`, then nothing
+            will be sent in the content. Any other value here will be cast to a
+            `builtins.str`.
+
+            If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
+            provided, then this will instead update the embed. This allows for
+            simpler syntax when sending an embed alone.
+
+            Likewise, if this is a `hikari.utilities.files.Resource`, then the
+            content is instead treated as an attachment if no `attachment` and
+            no `attachments` kwargs are provided.
+        embed : hikari.utilities.undefined.UndefinedOr[hikari.models.embeds.Embed]
+            If specified, the message embed.
+        attachment : hikari.utilities.undefined.UndefinedOr[hikari.utilities.files.Resourceish],
+            If specified, the message attachment. This can be a resource,
+            or string of a path on your computer or a URL.
+        attachments : hikari.utilities.undefined.UndefinedOr[typing.Sequence[hikari.utilities.files.Resourceish]],
+            If specified, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        nonce : builtins.str or hikari.utilities.undefined.UndefinedType
-            If specified, an optional ID to send for opportunistic message
-            creation. This doesn't serve any real purpose for general use,
-            and can usually be ignored.
-        tts : builtins.bool or hikari.utilities.undefined.UndefinedType
-            If specified, whether the message will be sent as a TTS message.
-        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
-            Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            Either an array of user objects/IDs to allow mentions for,
-            `builtins.True` to allow all user mentions or `builtins.False`
-            to block all user mentions from resolving, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            Either an array of guild role objects/IDs to allow mentions for,
-            `builtins.True` to allow all role mentions or `builtins.False` to
-            block all role mentions from resolving, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
+        tts : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+            If specified, whether the message will be TTS (Text To Speech).
+        nonce : hikari.utilities.undefined.UndefinedOr[builtins.str]
+            If specified, a nonce that can be used for optimistic message
+            sending.
+        mentions_everyone : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+            If specified, whether the message should parse @everyone/@here
+            mentions.
+        user_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser] or builtins.bool]
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.utilities.snowflake.Snowflake`, or
+            `hikari.models.users.PartialUser` derivatives to enforce mentioning
+            specific users.
+        role_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole] or builtins.bool]
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.utilities.snowflake.Snowflake`, or
+            `hikari.models.guilds.PartialRole` derivatives to enforce mentioning
+            specific roles.
 
         Returns
         -------
         hikari.models.messages.Message
-            The created message object.
+            The created message.
 
         Raises
         ------
-        hikari.errors.NotFound
-            If the channel this message was created in is not found.
         hikari.errors.BadRequest
-            This can be raised if the file is too large; if the embed exceeds
-            the defined limits; if the message content is specified only and
-            empty or greater than `2000` characters; if neither content, files
-            or embed are specified.
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
-            If you are trying to upload more than 10 files in total (including
-            embed attachments).
+            This may be raised in several discrete situations, such as messages
+            being empty with no attachments or embeds; messages with more than
+            2000 characters in them, embeds that exceed one of the many embed
+            limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; users in `user_mentions` not being
+            mentioned in the message content; roles in `role_mentions` not
+            being mentioned in the message content.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.Forbidden
-            If you lack permissions to send to the channel this message belongs
-            to.
+            If you lack permissions to send messages in the given channel.
+        hikari.errors.NotFound
+            If the channel is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
         builtins.ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
         builtins.TypeError
             If both `attachment` and `attachments` are specified.
+
+        !!! warning
+            You are expected to make a connection to the gateway and identify
+            once before being able to use this _endpoint for a bot.
         """  # noqa: E501 - Line too long
         return await self.app.rest.create_message(
             channel=self.id,
-            text=text,
-            nonce=nonce,
-            tts=tts,
+            content=content,
+            embed=embed,
             attachment=attachment,
             attachments=attachments,
-            embed=embed,
+            nonce=nonce,
+            tts=tts,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
         )
 
-    # TODO: add examples
+    # TODO: add examples to this and the REST method this invokes.
     def history(
         self,
         *,
-        before: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
-        after: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
-        around: typing.Union[undefined.UndefinedType, datetime.datetime, snowflake.UniqueObject] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
+        around: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[messages.Message]:
-        """Get a lazy iterator across the message history for this channel.
+        """Browse the message history for a given text channel.
 
         Parameters
         ----------
-        before : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
-            The message or object to find messages BEFORE.
-        after : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
-            The message or object to find messages AFTER.
-        around : hikari.utilities.undefined.UndefinedType or datetime.datetime or hikari.utilities.snowflake.UniqueObject
-            The message or object to find messages AROUND.
-
-        !!! warn
-            You may provide a maximum of one of the parameters for this method
-            only.
+        before : hikari.utilities.undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[hikari.utilities.snowflake.Unique]]
+            If provided, fetch messages before this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
+        after : hikari.utilities.undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[hikari.utilities.snowflake.Unique]]
+            If provided, fetch messages after this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
+        around : hikari.utilities.undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[hikari.utilities.snowflake.Unique]]
+            If provided, fetch messages around this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
 
         Returns
         -------
         hikari.utilities.iterators.LazyIterator[hikari.models.messages.Message]
-            A lazy async iterator across the messages.
+            A iterator to fetch the messages.
+
+        Raises
+        ------
+        builtins.TypeError
+            If you specify more than one of `before`, `after`, `about`.
+        hikari.errors.Unauthorized
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.Forbidden
+            If you lack permissions to read message history in the given
+            channel.
+        hikari.errors.NotFound
+            If the channel is not found.
+        hikari.errors.ServerHTTPErrorResponse
+            If an internal error occurs on Discord while handling the request.
+
+        !!! note
+            The exceptions on this _endpoint (other than `builtins.TypeError`) will only
+            be raised once the result is awaited or interacted with. Invoking
+            this function itself will not raise anything (other than
+            `builtins.TypeError`).
         """  # noqa: E501 - Line too long
         return self.app.rest.fetch_messages(self.id, before=before, after=after, around=around)
 
