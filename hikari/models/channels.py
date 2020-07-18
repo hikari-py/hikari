@@ -400,14 +400,6 @@ class PrivateChannel(PartialChannel):
 class PrivateTextChannel(PrivateChannel, TextChannel):
     """Represents a private text channel that is between you and another user."""
 
-    last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
-    """The ID of the last message sent in this channel.
-
-    !!! warning
-        This might point to an invalid or deleted message. Do not assume that
-        this will always be valid.
-    """
-
     recipient: users.UserImpl = attr.ib(eq=False, hash=False, repr=False)
     """The user recipient of this DM."""
 
