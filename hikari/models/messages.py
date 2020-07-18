@@ -37,6 +37,7 @@ import typing
 import attr
 
 from hikari.utilities import files
+from hikari.utilities import constants
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -346,6 +347,19 @@ class PartialMessage(snowflake.Unique):
 
     This is a string used for validating a message was sent.
     """
+
+    @property
+    def link(self) -> str:
+        """Jump link to the message.
+
+        Returns
+        -------
+        builtins.str
+            The jump link to the message.
+        """
+        if self.guild_id is None:
+            return f"{constants.BASE_URL}/channels/@me/{self.channel_id}/{self.id}"
+        return f"{constants.BASE_URL}/channels/{self.guild_id}/{self.channel_id}/{self.id}"
 
     async def fetch_channel(self) -> channels.PartialChannel:
         """Fetch the channel this message was created in.
