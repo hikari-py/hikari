@@ -19,13 +19,18 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["UndefinedType", "UNDEFINED", "count"]
+__all__: typing.Final[typing.List[str]] = [
+    "UNDEFINED",
+    "count",
+    "UndefinedOr",
+    "UndefinedNoneOr",
+]
 
 import enum
 import typing
 
 
-class _UndefinedType:
+class _UndefinedSentinel:
     __slots__: typing.Sequence[str] = ()
 
     def __bool__(self) -> bool:
@@ -44,7 +49,7 @@ class _UndefinedType:
 # MyPy to determine it can statically cast a value to a different type when
 # we do `is` and `is not` checks on values, which removes the need for casts.
 @typing.final
-class _UndefinedTypeWrapper(_UndefinedType, enum.Enum):
+class UndefinedType(_UndefinedSentinel, enum.Enum):
     """Wrapper type around the undefined value.
 
     If you see this in a signature somewhere, it means you can pass a
@@ -63,32 +68,60 @@ class _UndefinedTypeWrapper(_UndefinedType, enum.Enum):
     use this, however.
     """
 
-    # Don't document this.
-    __pdoc__: typing.Final[typing.ClassVar[typing.Mapping[str, bool]]] = {
-        "__init__": False,
-        "UNDEFINED_VALUE": False,
-    }
-
-    UNDEFINED_VALUE = _UndefinedType()
+    UNDEFINED_VALUE = _UndefinedSentinel()
 
 
 # Prevent making any more instances as much as possible.
-setattr(_UndefinedType, "__new__", NotImplemented)
-del _UndefinedType
+setattr(_UndefinedSentinel, "__new__", NotImplemented)
+del _UndefinedSentinel
 
 
 # noinspection PyTypeChecker
-UNDEFINED: typing.Final[UndefinedType] = _UndefinedTypeWrapper.UNDEFINED_VALUE
+UNDEFINED: typing.Final[typing.Literal[UndefinedType.UNDEFINED_VALUE]] = UndefinedType.UNDEFINED_VALUE
 """Undefined sentinel value.
 
 This will behave as a false value in conditions.
 """
 
 
-if typing.TYPE_CHECKING:
-    UndefinedType = typing.Literal[_UndefinedTypeWrapper.UNDEFINED_VALUE]
-else:
-    UndefinedType = type(UNDEFINED)
+T = typing.TypeVar("T", covariant=True)
+UndefinedOr = typing.Union[T, UndefinedType]
+"""Type hint to mark a type as being semantically optional.
+
+**NOTE THAT THIS IS NOT THE SAME AS `typing.Optional` BY DEFINITION**.
+
+If you see a type with this marker, it may be `UNDEFINED` or the value it wraps.
+For example, `UndefinedOr[float]` would mean the value could be a
+`builtins.float`, or the literal `UNDEFINED` value.
+
+On the other hand, `typing.Optional[float]` would mean the value could be
+a `builtins.float`, or the literal `builtins.None` value.
+
+The reason for using this is in some places, there is a semantic difference
+between specifying something as being `builtins.None`, i.e. "no value", and
+having a default to specify that the value has just not been mentioned. The
+main example of this is in `edit` endpoints where the contents will only be
+changed if they are explicitly mentioned in the call. Editing a message content
+and setting it to `builtins.None` would be expected to clear the content,
+whereas setting it to `UNDEFINED` would be expected to leave the value as it
+is without changing it.
+
+Consider `UndefinedOr[T]` semantically equivalent to `undefined` versus
+`null` in JavaScript, or `Optional<T>` versus `null` in Java and C#.
+
+If in doubt, remember:
+
+- `UNDEFINED` means there is no value present.
+- `builtins.None` means the value is present and explicitly empty/null/void.
+"""
+
+UndefinedNoneOr = typing.Union[UndefinedOr[T], None]
+"""Type hint for a value that may be `undefined.UNDEFINED`, or `builtins.None`.
+
+`UndefinedNoneOr[T]` is simply an alias for
+`UndefinedOr[typing.Optional[T]]`, which would expand to
+`typing.Union[UndefinedType, T, None]`.
+"""
 
 
 def count(*items: typing.Any) -> int:

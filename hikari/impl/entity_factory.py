@@ -451,7 +451,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         payload: data_binding.JSONObject,
         guild_channel: channel_models.GuildChannel,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType],
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake],
     ) -> None:
         self._set_partial_channel_attributes(payload, guild_channel)
         guild_channel.guild_id = (
@@ -474,7 +474,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildCategory:
         category = channel_models.GuildCategory()
         self._set_guild_channel_attributes(payload, category, guild_id=guild_id)
@@ -484,7 +484,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildTextChannel:
         guild_text_channel = channel_models.GuildTextChannel()
         self._set_guild_channel_attributes(payload, guild_text_channel, guild_id=guild_id)
@@ -509,7 +509,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildNewsChannel:
         guild_news_channel = channel_models.GuildNewsChannel()
         self._set_guild_channel_attributes(payload, guild_news_channel, guild_id=guild_id)
@@ -529,7 +529,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildStoreChannel:
         guild_store_channel = channel_models.GuildStoreChannel()
         self._set_guild_channel_attributes(payload, guild_store_channel, guild_id=guild_id)
@@ -539,7 +539,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildVoiceChannel:
         guild_voice_channel = channel_models.GuildVoiceChannel()
         self._set_guild_channel_attributes(payload, guild_voice_channel, guild_id=guild_id)
@@ -551,7 +551,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.PartialChannel:
         channel_type = payload["type"]
         if channel_model := self._guild_channel_type_mapping.get(channel_type):
@@ -852,8 +852,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         self,
         payload: data_binding.JSONObject,
         *,
-        user: typing.Union[undefined.UndefinedType, user_models.User] = undefined.UNDEFINED,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        user: undefined.UndefinedOr[user_models.User] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> guild_models.Member:
         guild_member = guild_models.Member()
         guild_member.user = typing.cast(user_models.UserImpl, user or self.deserialize_user(payload["user"]))
@@ -1224,7 +1224,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
                 reaction = message_models.Reaction()
                 reaction.count = int(reaction_payload["count"])
                 reaction.emoji = self.deserialize_emoji(reaction_payload["emoji"])
-                reaction.is_reacted_by_me = reaction_payload["me"]
+                reaction.is_me = reaction_payload["me"]
                 reactions.append(reaction)
         message.reactions = reactions
 
@@ -1436,7 +1436,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         self,
         payload: data_binding.JSONObject,
         *,
-        guild_id: typing.Union[snowflake.Snowflake, undefined.UndefinedType] = undefined.UNDEFINED,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> voice_models.VoiceState:
         voice_state = voice_models.VoiceState()
         voice_state.app = self._app
@@ -1798,7 +1798,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
                 reaction = message_models.Reaction()
                 reaction.count = int(reaction_payload["count"])
                 reaction.emoji = self.deserialize_emoji(reaction_payload["emoji"])
-                reaction.is_reacted_by_me = reaction_payload["me"]
+                reaction.is_me = reaction_payload["me"]
                 reactions.append(reaction)
             updated_message.reactions = reactions
         else:
@@ -2021,8 +2021,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
     def serialize_gateway_voice_state_update(
         self,
-        guild: typing.Union[guild_models.Guild, snowflake.UniqueObject],
-        channel: typing.Union[channel_models.GuildVoiceChannel, snowflake.UniqueObject, None],
+        guild: typing.Union[guild_models.Guild, snowflake.SnowflakeishOr],
+        channel: typing.Union[channel_models.GuildVoiceChannel, snowflake.SnowflakeishOr, None],
         self_mute: bool,
         self_deaf: bool,
     ) -> data_binding.JSONObject:

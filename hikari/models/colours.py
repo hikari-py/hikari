@@ -19,10 +19,10 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Colour", "ColourLike"]
+__all__: typing.Final[typing.List[str]] = ["Colour", "Colourish"]
 
 # noinspection PyUnresolvedReferences
 import typing
 
 from hikari.models.colors import Color as Colour
-from hikari.models.colors import ColorLike as ColourLike
+from hikari.models.colors import Colorish as Colourish

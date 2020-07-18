@@ -28,8 +28,6 @@ import abc
 import asyncio
 import typing
 
-from hikari.utilities import undefined
-
 if typing.TYPE_CHECKING:
     from hikari.events import base
 
@@ -259,7 +257,7 @@ class IEventDispatcherBase(abc.ABC):
 
     @abc.abstractmethod
     def listen(
-        self, event_type: typing.Union[undefined.UndefinedType, typing.Type[EventT_co]] = undefined.UNDEFINED,
+        self, event_type: typing.Optional[typing.Type[EventT_co]] = None,
     ) -> typing.Callable[[AsyncCallbackT[EventT_co]], AsyncCallbackT[EventT_co]]:
         """Generate a decorator to subscribe a callback to an event type.
 
@@ -267,7 +265,7 @@ class IEventDispatcherBase(abc.ABC):
 
         Parameters
         ----------
-        event_type : hikari.utilities.undefined.UndefinedType or typing.Type[T]
+        event_type : typing.Type[T] or builtins.None
             The event type to subscribe to. The implementation may allow this
             to be undefined. If this is the case, the event type will be inferred
             instead from the type hints on the function signature.

@@ -15,11 +15,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Bitfield of permissions."""
+"""Bitfield of permissions.
+
+All permissions in the `Permissions` class are exported to this package,
+thus `permissions.Permission.MANAGE_MESSAGES` will behave the same as
+`permissions.MANAGE_MESSAGES`.
+"""
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Permission"]
+__all__: typing.Final[typing.List[str]] = ["Permission", "Permissions"]
 
 import enum
 
@@ -186,3 +191,11 @@ class Permission(enum.IntFlag):
 
     def __str__(self) -> str:
         return self.name
+
+
+Permissions = Permission
+"""Alias for `Permission`."""
+
+
+def __getattr__(name: str) -> Permission:
+    return typing.cast("Permission", getattr(Permission, name))

@@ -77,8 +77,8 @@ class IVoiceComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def connect_to(
         self,
-        channel: typing.Union[channels.GuildVoiceChannel, snowflake.UniqueObject],
-        guild: typing.Union[guilds.Guild, snowflake.UniqueObject],
+        channel: snowflake.SnowflakeishOr[channels.GuildVoiceChannel],
+        guild: snowflake.SnowflakeishOr[guilds.Guild],
         *,
         deaf: bool = False,
         mute: bool = False,
@@ -89,9 +89,9 @@ class IVoiceComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.models.channels.GuildVoiceChannel or hikari.utilities.snowflake.UniqueObject
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildVoiceChannel]
             The channel or channel ID to connect to.
-        guild : hikari.models.guilds.Guild or hikari.utilities.snowflake.UniqueObject
+        guild : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.Guild]
             The guild to connect to.
         deaf : builtins.bool
             Defaulting to `builtins.False`, if `builtins.True`, the client will

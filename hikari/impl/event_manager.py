@@ -35,7 +35,6 @@ from hikari.events import other as other_events
 from hikari.models import intents
 from hikari.utilities import aio
 from hikari.utilities import reflect
-from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
@@ -184,10 +183,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
                 del self._listeners[event_type]
 
     def listen(
-        self,
-        event_type: typing.Union[
-            undefined.UndefinedType, typing.Type[event_dispatcher.EventT_co]
-        ] = undefined.UNDEFINED,
+        self, event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None,
     ) -> typing.Callable[
         [event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]],
         event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
@@ -205,7 +201,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
 
             event_param = next(iter(params))
 
-            if event_type is undefined.UNDEFINED:
+            if event_type is None:
                 if event_param.annotation is event_param.empty:
                     raise TypeError("Must provide the event type in the @listen decorator or as a type hint!")
 

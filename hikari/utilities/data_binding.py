@@ -23,7 +23,7 @@ __all__: typing.Final[typing.List[str]] = [
     "Query",
     "JSONObject",
     "JSONArray",
-    "JSONAny",
+    "JSONish",
     "URLEncodedForm",
     "MultipartForm",
     "ContentDisposition",
@@ -69,7 +69,7 @@ JSONObject = typing.Dict[str, typing.Any]
 JSONArray = typing.List[typing.Any]
 """Type hint for a JSON-decoded array representation as a sequence."""
 
-JSONAny = typing.Union[str, int, float, bool, None, JSONArray, JSONObject]
+JSONish = typing.Union[str, int, float, bool, None, JSONArray, JSONObject]
 """Type hint for any valid JSON-decoded type."""
 
 if typing.TYPE_CHECKING:
@@ -112,7 +112,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
     def put(
         self,
         key: str,
-        value: typing.Union[undefined.UndefinedType, typing.Any],
+        value: undefined.UndefinedOr[typing.Any],
         /,
         *,
         conversion: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
@@ -123,7 +123,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
         ----------
         key : builtins.str
             The string key.
-        value : hikari.utilities.undefined.UndefinedType or typing.Any
+        value : hikari.utilities.undefined.UndefinedOr[typing.Any]
             The value to set.
         conversion : typing.Callable[[typing.Any], typing.Any] or builtins.None
             An optional conversion to perform.
@@ -155,7 +155,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
 
 
 @typing.final
-class JSONObjectBuilder(typing.Dict[str, JSONAny]):
+class JSONObjectBuilder(typing.Dict[str, JSONish]):
     """Helper class used to quickly build JSON objects from various values.
 
     If provided with any values that are `hikari.utilities.undefined.UndefinedType`,
@@ -181,7 +181,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
         value: typing.Any,
         /,
         *,
-        conversion: typing.Optional[typing.Callable[[typing.Any], JSONAny]] = None,
+        conversion: typing.Optional[typing.Callable[[typing.Any], JSONish]] = None,
     ) -> None:
         """Put a JSON value.
 
@@ -195,7 +195,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
             The JSON type to put. This may be a non-JSON type if a conversion
             is also specified. This may alternatively be undefined. In the latter
             case, nothing is performed.
-        conversion : typing.Callable[[typing.Any], JSONAny] or builtins.None
+        conversion : typing.Callable[[typing.Any], JSONish] or builtins.None
             Optional conversion to apply.
         """
         if value is not undefined.UNDEFINED:
@@ -207,10 +207,10 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
     def put_array(
         self,
         key: str,
-        values: typing.Union[undefined.UndefinedType, typing.Iterable[T]],
+        values: undefined.UndefinedOr[typing.Iterable[T]],
         /,
         *,
-        conversion: typing.Optional[typing.Callable[[T], JSONAny]] = None,
+        conversion: typing.Optional[typing.Callable[[T], JSONish]] = None,
     ) -> None:
         """Put a JSON array.
 
@@ -235,14 +235,14 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
             else:
                 self[key] = list(values)
 
-    def put_snowflake(self, key: str, value: typing.Union[undefined.UndefinedType, snowflake.UniqueObject], /) -> None:
+    def put_snowflake(self, key: str, value: undefined.UndefinedOr[snowflake.SnowflakeishOr], /) -> None:
         """Put a key with a snowflake value into the builder.
 
         Parameters
         ----------
         key : builtins.str
             The key to give the element.
-        value : hikari.utilities.snowflake.UniqueObject or hikari.utilities.undefined.UndefinedType
+        value : hikari.utilities.snowflake.SnowflakeishOr or hikari.utilities.undefined.UndefinedType
             The JSON type to put. This may alternatively be undefined. In the latter
             case, nothing is performed.
         """
@@ -250,7 +250,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONAny]):
             self[key] = str(int(value))
 
     def put_snowflake_array(
-        self, key: str, values: typing.Union[undefined.UndefinedType, typing.Iterable[snowflake.UniqueObject]], /,
+        self, key: str, values: undefined.UndefinedOr[typing.Iterable[snowflake.SnowflakeishOr]], /,
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
 
@@ -287,7 +287,7 @@ def cast_json_array(array: JSONArray, /, cast: typing.Callable[..., T], **kwargs
     ----------
     array : JSONArray
         The raw JSON-decoded array.
-    cast : typing.Callable[[JSONAny], T]
+    cast : typing.Callable[[JSONish], T]
         The cast to apply to each item in the array. This should
         consume any valid JSON-decoded type and return the type
         corresponding to the generic type of the provided collection.

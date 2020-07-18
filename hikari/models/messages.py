@@ -35,7 +35,7 @@ import typing
 
 import attr
 
-from hikari.utilities import files as files_
+from hikari.utilities import files
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -151,7 +151,7 @@ class MessageActivityType(int, enum.Enum):
 
 
 @attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
-class Attachment(snowflake.Unique, files_.WebResource):
+class Attachment(snowflake.Unique, files.WebResource):
     """Represents a file attached to a message.
 
     You can use this object in the same way as a `hikari.utilities.files.WebResource`,
@@ -195,7 +195,7 @@ class Reaction:
     emoji: typing.Union[emojis_.UnicodeEmoji, emojis_.CustomEmoji] = attr.ib(eq=True, hash=True, repr=True)
     """The emoji used to react."""
 
-    is_reacted_by_me: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_me: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether the current user reacted using this emoji."""
 
     def __str__(self) -> str:
@@ -353,28 +353,23 @@ class Message(snowflake.Unique):
 
     async def edit(
         self,
-        content: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: typing.Union[undefined.UndefinedType, embeds_.Embed, None] = undefined.UNDEFINED,
-        mentions_everyone: typing.Union[bool, undefined.UndefinedType] = undefined.UNDEFINED,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]],
-            bool,
-            undefined.UndefinedType,
+        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[users.PartialUser]], bool]
         ] = undefined.UNDEFINED,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.UndefinedType
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, MessageFlag] = undefined.UNDEFINED,
+        flags: undefined.UndefinedOr[MessageFlag] = undefined.UNDEFINED,
     ) -> Message:
-        """Edit this message.
-
-        All parameters are optional, meaning that if you do not specify one,
-        then the corresponding piece of information will not be changed.
+        """Edit an existing message in a given channel.
 
         Parameters
         ----------
-        content : hikari.utilities.undefined.UndefinedType or builtins.None or typing.Any
+        content : hikari.utilities.undefined.UndefinedOr[typing.Any]
             The message content to update with. If
             `hikari.utilities.undefined.UNDEFINED`, then the content will not
             be changed. If `builtins.None`, then the content will be removed.
@@ -384,19 +379,19 @@ class Message(snowflake.Unique):
             If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
             provided, then this will instead update the embed. This allows for
             simpler syntax when sending an embed alone.
-        embed : hikari.utilities.undefined.UndefinedType or builtins.None or hikari.models.embeds.Embed
+        embed : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.embeds.Embed]
             The embed to set on the message. If
             `hikari.utilities.undefined.UNDEFINED`, the previous embed if
             present is not changed. If this is `builtins.None`, then the embed
             is removed if present. Otherwise, the new embed value that was
             provided will be used as the replacement.
-        mentions_everyone : hikari.utilities.undefined.UndefinedType or bool
+        mentions_everyone : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             Sanitation for `@everyone` mentions. If
             `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
-        user_mentions : hikari.utilities.undefined.UndefinedType or bool or typing.Collection[hikari.utilities.snowflake.UniqueObject]
+        user_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser] or builtins.bool]
             Sanitation for user mentions. If
             `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid user mentions will behave
@@ -405,8 +400,8 @@ class Message(snowflake.Unique):
 
             You may alternatively pass a collection of
             `hikari.utilities.snowflake.Snowflake` user IDs, or
-            `hikari.utilities.snowflake.Unique` objects that represent users.
-        role_mentions : hikari.utilities.undefined.UndefinedType or bool or typing.Collection[hikari.utilities.snowflake.UniqueObject]
+            `hikari.models.users.PartialUser`-derived objects.
+        role_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole] or builtins.bool]
             Sanitation for role mentions. If
             `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid role mentions will behave
@@ -414,9 +409,9 @@ class Message(snowflake.Unique):
             behave as mentions.
 
             You may alternatively pass a collection of
-            `hikari.utilities.snowflake.Snowflake` user IDs, or
-            `hikari.utilities.snowflake.Unique` objects that represent roles.
-        flags : hikari.utilities.undefined.UndefinedType or hikari.models.messages.MessageFlag
+            `hikari.utilities.snowflake.Snowflake` role IDs, or
+            `hikari.models.guilds.PartialRole`-derived objects.
+        flags : hikari.utilities.undefined.UndefinedOr[hikari.models.messages.MessageFlag]
             Optional flags to set on the message. If
             `hikari.utilities.undefined.UNDEFINED`, then nothing is changed.
 
@@ -480,31 +475,26 @@ class Message(snowflake.Unique):
 
     async def reply(
         self,
-        content: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
-        /,
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: typing.Union[undefined.UndefinedType, embeds_.Embed] = undefined.UNDEFINED,
-        attachment: typing.Union[undefined.UndefinedType, str, files_.Resource] = undefined.UNDEFINED,
-        attachments: typing.Union[
-            undefined.UndefinedType, typing.Sequence[typing.Union[str, files_.Resource]]
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[users.PartialUser]], bool]
         ] = undefined.UNDEFINED,
-        nonce: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users.UserImpl]],
-            bool,
-            undefined.UndefinedType,
-        ] = undefined.UNDEFINED,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds.Role]], bool, undefined.UndefinedType
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
     ) -> Message:
-        """Create a message in the channel this message belongs to.
+        """Create a message in the given channel.
 
         Parameters
         ----------
-        content : hikari.utilities.undefined.UndefinedType or typing.Any
+        content : hikari.utilities.undefined.UndefinedOr[typing.Any]
             If specified, the message contents. If `UNDEFINED`, then nothing
             will be sent in the content. Any other value here will be cast to a
             `builtins.str`.
@@ -516,30 +506,36 @@ class Message(snowflake.Unique):
             Likewise, if this is a `hikari.utilities.files.Resource`, then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
-        embed : hikari.utilities.undefined.UndefinedType or hikari.models.embeds.Embed
+        embed : hikari.utilities.undefined.UndefinedOr[hikari.models.embeds.Embed]
             If specified, the message embed.
-        attachment : hikari.utilities.undefined.UndefinedType or builtins.str or hikari.utilities.files.Resource
+        attachment : hikari.utilities.undefined.UndefinedOr[hikari.utilities.files.Resourceish],
             If specified, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
-        attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[builtins.str or hikari.utilities.files.Resource]
+        attachments : hikari.utilities.undefined.UndefinedOr[typing.Sequence[hikari.utilities.files.Resourceish]],
             If specified, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        tts : hikari.utilities.undefined.UndefinedType or builtins.bool
+        tts : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message will be TTS (Text To Speech).
-        nonce : hikari.utilities.undefined.UndefinedType or builtins.str
+        nonce : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If specified, a nonce that can be used for optimistic message
             sending.
-        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
+        mentions_everyone : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            If specified, and a `builtins.bool`, whether to parse user mentions.
-            If specified and a `builtins.list`, the users to parse the mention
-            for. This may be a user object, or the ID of an existing user.
-        role_mentions : typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            If specified and `builtins.bool`, whether to parse role mentions.
-            If specified and `builtins.list`, the roles to parse the mention
-            for. This may be a role object, or the ID of an existing role.
+        user_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser] or builtins.bool]
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.utilities.snowflake.Snowflake`, or
+            `hikari.models.users.PartialUser` derivatives to enforce mentioning
+            specific users.
+        role_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole] or builtins.bool]
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.utilities.snowflake.Snowflake`, or
+            `hikari.models.guilds.PartialRole` derivatives to enforce mentioning
+            specific roles.
 
         Returns
         -------
@@ -600,12 +596,12 @@ class Message(snowflake.Unique):
         """
         await self.app.rest.delete_message(self.channel_id, self.id)
 
-    async def add_reaction(self, emoji: typing.Union[str, emojis_.Emoji]) -> None:
+    async def add_reaction(self, emoji: emojis_.Emojiish) -> None:
         r"""Add a reaction to this message.
 
         Parameters
         ----------
-        emoji : builtins.str or hikari.models.emojis.Emoji
+        emoji : hikari.models.emojis.Emojiish
             The emoji to add. This may be a unicode emoji string, the
             `name:id` of a custom emoji, or a subclass of
             `hikari.models.emojis.Emoji`.
@@ -647,17 +643,17 @@ class Message(snowflake.Unique):
 
     async def remove_reaction(
         self,
-        emoji: typing.Union[str, emojis_.Emoji],
+        emoji: emojis_.Emojiish,
         *,
-        user: typing.Union[users.UserImpl, undefined.UndefinedType] = undefined.UNDEFINED,
+        user: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
     ) -> None:
         r"""Remove a reaction from this message.
 
         Parameters
         ----------
-        emoji : builtins.str or hikari.models.emojis.Emoji
+        emoji : hikari.models.emojis.Emojiish
             The emoji to remove.
-        user : hikari.models.users.UserImpl or hikari.utilities.undefined.UndefinedType
+        user : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser]]
             The user of the reaction to remove. If unspecified, then the bot's
             reaction is removed instead.
 
@@ -696,14 +692,12 @@ class Message(snowflake.Unique):
         else:
             await self.app.rest.delete_reaction(channel=self.channel_id, message=self.id, emoji=emoji, user=user)
 
-    async def remove_all_reactions(
-        self, emoji: typing.Union[str, emojis_.Emoji, undefined.UndefinedType] = undefined.UNDEFINED
-    ) -> None:
+    async def remove_all_reactions(self, emoji: undefined.UndefinedOr[emojis_.Emojiish] = undefined.UNDEFINED) -> None:
         r"""Remove all users' reactions for a specific emoji from the message.
 
         Parameters
         ----------
-        emoji : builtins.str or hikari.models.emojis.Emoji or hikari.utilities.undefined.UndefinedType
+        emoji : hikari.utilities.undefined.UndefinedOr[hikari.models.emojis.Emojiish]
             The emoji to remove all reactions for. If not specified, then all
             emojis are removed.
 

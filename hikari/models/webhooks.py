@@ -134,63 +134,62 @@ class Webhook(snowflake.Unique):
 
     async def execute(
         self,
-        text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
+        text: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        username: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        avatar_url: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        tts: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        attachment: typing.Union[undefined.UndefinedType, str, files_.Resource] = undefined.UNDEFINED,
-        attachments: typing.Union[
-            undefined.UndefinedType, typing.Sequence[typing.Union[str, files_.Resource]]
+        username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files_.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files_.Resourceish]] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[users_.PartialUser]], bool]
         ] = undefined.UNDEFINED,
-        embeds: typing.Union[undefined.UndefinedType, typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        user_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, users_.UserImpl]],
-            bool,
-            undefined.UndefinedType,
-        ] = undefined.UNDEFINED,
-        role_mentions: typing.Union[
-            typing.Collection[typing.Union[snowflake.Snowflake, int, str, guilds_.Role]], bool, undefined.UndefinedType
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds_.PartialRole]], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Execute the webhook to create a message.
 
         Parameters
         ----------
-        text : builtins.str or hikari.utilities.undefined.UndefinedType
+        text : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If specified, the message content to send with the message.
-        username : builtins.str or hikari.utilities.undefined.UndefinedType
+        username : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If specified, the username to override the webhook's username
             for this request.
-        avatar_url : builtins.str or hikari.utilities.undefined.UndefinedType
+        avatar_url : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If specified, the url of an image to override the webhook's
             avatar with for this request.
-        tts : builtins.bool or hikari.utilities.undefined.UndefinedType
+        tts : hikari.utilities.undefined.UndefinedOr[bool]
             If specified, whether the message will be sent as a TTS message.
-        attachment : hikari.utilities.undefined.UndefinedType or builtins.str or hikari.utilities.files.Resource
+        attachment : hikari.utilities.undefined.UndefinedOr[hikari.utilities.files.Resourceish]
             If specified, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
-        attachments : hikari.utilities.undefined.UndefinedType or typing.Sequence[builtins.str or hikari.utilities.files.Resource]
+        attachments : hikari.utilities.undefined.UndefinedOr[typing.Sequence[hikari.utilities.files.Resourceish]]
             If specified, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        embeds : typing.Sequence[hikari.models.embeds.Embed] or hikari.utilities.undefined.UndefinedType
+        embeds : hikari.utilities.undefined.UndefinedOr[typing.Sequence[hikari.models.embeds.Embed]]
             If specified, a sequence of between `1` to `10` embed objects
             (inclusive) to send with the embed.
-        mentions_everyone : builtins.bool or hikari.utilities.undefined.UndefinedType
-            Whether `@everyone` and `@here` mentions should be resolved by
-            discord and lead to actual pings, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
-        user_mentions : typing.Collection[hikari.models.users.UserImpl or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            Either an array of user objects/IDs to allow mentions for,
-            `builtins.True` to allow all user mentions or `builtins.False` to
-            block all user mentions from resolving, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
-        role_mentions: typing.Collection[hikari.models.guilds.Role or hikari.utilities.snowflake.UniqueObject] or builtins.bool or hikari.utilities.undefined.UndefinedType
-            Either an array of guild role objects/IDs to allow mentions for,
-            `builtins.True` to allow all role mentions or `builtins.False` to
-            block all role mentions from resolving, defaults to
-            `hikari.utilities.undefined.UNDEFINED`.
+        mentions_everyone : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+            If specified, whether the message should parse @everyone/@here
+            mentions.
+        user_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser] or builtins.bool]
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.utilities.snowflake.Snowflake`, or
+            `hikari.models.users.PartialUser` derivatives to enforce mentioning
+            specific users.
+        role_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole] or builtins.bool]
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.utilities.snowflake.Snowflake`, or
+            `hikari.models.guilds.PartialRole` derivatives to enforce mentioning
+            specific roles.
 
         Returns
         -------
@@ -217,7 +216,7 @@ class Webhook(snowflake.Unique):
             If both `attachment` and `attachments` are specified.
         """  # noqa: E501 - Line too long
         if not self.token:
-            raise ValueError("Cannot send a message using a webhook where we don't know it's token.")
+            raise ValueError("Cannot send a message using a webhook where we don't know the token.")
 
         return await self.app.rest.execute_webhook(
             webhook=self.id,
@@ -234,12 +233,12 @@ class Webhook(snowflake.Unique):
             role_mentions=role_mentions,
         )
 
-    async def delete(self, *, use_token: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED) -> None:
+    async def delete(self, *, use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED) -> None:
         """Delete this webhook.
 
         Parameters
         ----------
-        use_token : builtins.bool or hikari.utilities.undefined.UndefinedType
+        use_token : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If set to `builtins.True` then the webhook's token will be used for
             this request; if set to `builtins.False` then bot authorization will
             be used; if not specified then the webhook's token will be used for
@@ -259,7 +258,7 @@ class Webhook(snowflake.Unique):
         if use_token and self.token is None:
             raise ValueError("This webhook's token is unknown, so cannot be used.")
 
-        token: typing.Union[undefined.UndefinedType, str]
+        token: undefined.UndefinedOr[str]
         token = typing.cast(str, self.token) if use_token else undefined.UNDEFINED
 
         await self.app.rest.delete_webhook(self.id, token=token)
@@ -267,31 +266,29 @@ class Webhook(snowflake.Unique):
     async def edit(
         self,
         *,
-        name: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        avatar: typing.Union[undefined.UndefinedType, None, files_.Resource] = undefined.UNDEFINED,
-        channel: typing.Union[
-            undefined.UndefinedType, snowflake.UniqueObject, channels_.GuildChannel
-        ] = undefined.UNDEFINED,
-        reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
-        use_token: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar: undefined.UndefinedNoneOr[files_.Resource] = undefined.UNDEFINED,
+        channel: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels_.TextChannel]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> Webhook:
         """Edit this webhook.
 
         Parameters
         ----------
-        name : builtins.str or hikari.utilities.undefined.UndefinedType
+        name : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If specified, the new name string.
-        avatar : hikari.utilities.files.Resource or None or hikari.utilities.undefined.UndefinedType
+        avatar : hikari.utilities.undefined.UndefinedOr[hikari.utilities.files.Resourceish]
             If specified, the new avatar image. If `builtins.None`, then
             it is removed. If not specified, nothing is changed.
-        channel : hikari.models.channels.GuildChannel or hikari.utilities.snowflake.UniqueObject or hikari.utilities.undefined.UndefinedType
+        channel : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]]
             If specified, the object or ID of the new channel the given
             webhook should be moved to.
-        reason : builtins.str or hikari.utilities.undefined.UndefinedType
+        reason : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If specified, the audit log reason explaining why the operation
             was performed. This field will be used when using the webhook's
             token rather than bot authorization.
-        use_token : builtins.bool or hikari.utilities.undefined.UndefinedType
+        use_token : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If set to `builtins.True` then the webhook's token will be used for
             this request; if set to `builtins.False` then bot authorization will
             be used; if not specified then the webhook's token will be used for
@@ -320,7 +317,7 @@ class Webhook(snowflake.Unique):
         if use_token and self.token is None:
             raise ValueError("This webhook's token is unknown, so cannot be used.")
 
-        token: typing.Union[undefined.UndefinedType, str]
+        token: undefined.UndefinedOr[str]
         token = typing.cast(str, self.token) if use_token else undefined.UNDEFINED
 
         return await self.app.rest.edit_webhook(
@@ -344,14 +341,12 @@ class Webhook(snowflake.Unique):
         """
         return await self.app.rest.fetch_channel(self.channel_id)
 
-    async def fetch_self(
-        self, *, use_token: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED
-    ) -> Webhook:
+    async def fetch_self(self, *, use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED) -> Webhook:
         """Fetch this webhook.
 
         Parameters
         ----------
-        use_token : builtins.bool or hikari.utilities.undefined.UndefinedType
+        use_token : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If set to `builtins.True` then the webhook's token will be used for
             this request; if set to `builtins.False` then bot authorization will
             be used; if not specified then the webhook's token will be used for
@@ -381,7 +376,7 @@ class Webhook(snowflake.Unique):
         if use_token and not self.token:
             raise ValueError("This webhook's token is unknown, so cannot be used.")
 
-        token: typing.Union[undefined.UndefinedType, str]
+        token: undefined.UndefinedOr[str]
         token = typing.cast(str, self.token) if use_token else undefined.UNDEFINED
 
         return await self.app.rest.fetch_webhook(self.id, token=token)

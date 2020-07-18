@@ -2078,7 +2078,7 @@ class TestEntityFactoryImpl:
         # Reaction
         reaction = message.reactions[0]
         assert reaction.count == 100
-        assert reaction.is_reacted_by_me is True
+        assert reaction.is_me is True
         expected_emoji = entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         assert reaction.emoji == expected_emoji
         assert isinstance(reaction, message_models.Reaction)
@@ -3060,7 +3060,7 @@ class TestEntityFactoryImpl:
         # Reaction
         reaction = message_update.message.reactions[0]
         assert reaction.count == 100
-        assert reaction.is_reacted_by_me is True
+        assert reaction.is_me is True
         assert reaction.emoji == entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         assert isinstance(reaction, message_models.Reaction)
 
