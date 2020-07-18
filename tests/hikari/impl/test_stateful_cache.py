@@ -34,7 +34,7 @@ class TestStatefulCacheComponentImpl:
         return mock.Mock(rest_app.IApp)
 
     @pytest.fixture()
-    def cache_impl(self, app_impl):
+    def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheComponentImpl:
         return hikari_test_helpers.unslot_class(stateful_cache.StatefulCacheComponentImpl)(app=app_impl, intents=None)
 
     def test_clear_members_for_known_member_cache(self, cache_impl):
@@ -130,10 +130,11 @@ class TestStatefulCacheComponentImpl:
         cache_impl._guild_entries = {snowflake.Snowflake(42334): guild_record}
         cache_impl._user_entries = {snowflake.Snowflake(3214321): mock_user_1, snowflake.Snowflake(53224): mock_user_2}
         members_iterator = cache_impl.get_members_view(snowflake.Snowflake(42334))
-        assert await members_iterator.iterator() == [mock_member_1, mock_member_2]
-        assert members_iterator[snowflake.Snowflake(3214321)] is mock_member_1
+        assert members_iterator == {
+            snowflake.Snowflake(3214321): mock_member_1,
+            snowflake.Snowflake(53224): mock_member_2,
+        }
         assert members_iterator[snowflake.Snowflake(3214321)].user == mock_user_1
-        assert members_iterator[snowflake.Snowflake(53224)] is mock_member_2
         assert members_iterator[snowflake.Snowflake(53224)].user == mock_user_2
 
     def test_set_member(self, cache_impl):
@@ -170,3 +171,84 @@ class TestStatefulCacheComponentImpl:
 
     def test_update_member(self, cache_impl):
         ...
+
+    def test_clear_users_for_cached_users(self, cache_impl):
+        mock_user_1 = mock.MagicMock(users.User)
+        mock_user_2 = mock.MagicMock(users.User)
+        cache_impl._user_entries = {
+            snowflake.Snowflake(5432123): mock_user_1,
+            snowflake.Snowflake(7654433245): mock_user_2,
+        }
+        users_iterator = cache_impl.clear_users()
+        assert users_iterator == {
+            snowflake.Snowflake(5432123): mock_user_1,
+            snowflake.Snowflake(7654433245): mock_user_2,
+        }
+        assert cache_impl._user_entries == {}
+
+    def test_clear_users_for_empty_user_cache(self, cache_impl):
+        assert cache_impl.clear_users() == {}
+        assert cache_impl._user_entries == {}
+
+    def test_delete_user_for_known_user(self, cache_impl):
+        mock_user = mock.MagicMock(users.User)
+        mock_other_user = mock.MagicMock(users.User)
+        cache_impl._user_entries = {
+            snowflake.Snowflake(21231234): mock_user,
+            snowflake.Snowflake(645234): mock_other_user,
+        }
+        assert cache_impl.delete_user(snowflake.Snowflake(21231234)) is mock_user
+        assert cache_impl._user_entries == {snowflake.Snowflake(645234): mock_other_user}
+
+    def test_delete_user_for_unknown_user(self, cache_impl):
+        mock_user = mock.MagicMock(users.User)
+        mock_other_user = mock.MagicMock(users.User)
+        cache_impl._user_entries = {
+            snowflake.Snowflake(21231234): mock_user,
+            snowflake.Snowflake(645234): mock_other_user,
+        }
+        assert cache_impl.delete_user(snowflake.Snowflake(75423423)) is None
+        assert cache_impl._user_entries == {
+            snowflake.Snowflake(21231234): mock_user,
+            snowflake.Snowflake(645234): mock_other_user,
+        }
+
+    def test_get_user_for_known_user(self, cache_impl):
+        mock_user = mock.MagicMock(users.User)
+        cache_impl._user_entries = {
+            snowflake.Snowflake(21231234): mock_user,
+            snowflake.Snowflake(645234): mock.MagicMock(users.User),
+        }
+        assert cache_impl.get_user(snowflake.Snowflake(21231234)) == mock_user
+
+    def test_get_users_view_for_filled_user_cache(self, cache_impl):
+        mock_user_1 = mock.MagicMock(users.User)
+        mock_user_2 = mock.MagicMock(users.User)
+        cache_impl._user_entries = {snowflake.Snowflake(54123): mock_user_1, snowflake.Snowflake(76345): mock_user_2}
+        assert cache_impl.get_users_view() == {
+            snowflake.Snowflake(54123): mock_user_1,
+            snowflake.Snowflake(76345): mock_user_2,
+        }
+
+    def test_get_users_view_for_empty_user_cache(self, cache_impl):
+        assert cache_impl.get_users_view() == {}
+
+    def test_set_user(self, cache_impl):
+        mock_user = mock.MagicMock(users.User, id=snowflake.Snowflake(6451234123))
+        mock_cached_user = mock.MagicMock(users.User)
+        cache_impl._user_entries = {snowflake.Snowflake(542143): mock_cached_user}
+        assert cache_impl.set_user(mock_user) is None
+        assert cache_impl._user_entries == {
+            snowflake.Snowflake(542143): mock_cached_user,
+            snowflake.Snowflake(6451234123): mock_user,
+        }
+
+    def test_update_user(self, cache_impl):
+        mock_old_cached_user = mock.MagicMock(users.User)
+        mock_new_cached_user = mock.MagicMock(users.User)
+        mock_user = mock.MagicMock(users.User, id=snowflake.Snowflake(54123123))
+        cache_impl.get_user = mock.MagicMock(side_effect=(mock_old_cached_user, mock_new_cached_user))
+        cache_impl.set_user = mock.MagicMock()
+        assert cache_impl.update_user(mock_user) == (mock_old_cached_user, mock_new_cached_user)
+        cache_impl.set_user.assert_called_once_with(mock_user)
+        cache_impl.get_user.assert_has_calls([mock.call(54123123), mock.call(54123123)])
