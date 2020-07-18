@@ -70,7 +70,8 @@ PYTHON_PLATFORM_VERSION: typing.Final[str] = (
 ).replace(" " * 2, " ")
 
 # URLs
-REST_API_URL: typing.Final[str] = "https://discord.com/api/v{0.version}"  # noqa: FS003  fstring missing prefix
+BASE_URL: typing.Final[str] = "https://discord.com"
+REST_API_URL: typing.Final[str] = BASE_URL + "/api/v{0.version}"  # noqa: FS003  fstring missing prefix
 OAUTH2_API_URL: typing.Final[str] = f"{REST_API_URL}/oauth2"
 CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
 TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/72x72/"
