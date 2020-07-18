@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Color", "ColorLike"]
+__all__: typing.Final[typing.List[str]] = ["Color", "Colorish"]
 
 import string
 import typing
@@ -347,7 +347,7 @@ class Color(int):
         return Color(int.from_bytes(bytes_, byteorder, signed=signed))
 
     @classmethod
-    def of(cls, value: ColorLike, /) -> Color:
+    def of(cls, value: Colorish, /) -> Color:
         """Convert the value to a `Color`.
 
         This attempts to determine the correct data format based on the
@@ -355,7 +355,7 @@ class Color(int):
 
         Parameters
         ----------
-        value : ColorLike
+        value : Colorish
             A color compatible values.
 
         Examples
@@ -436,7 +436,7 @@ class Color(int):
         return int(self).to_bytes(length, byteorder, signed=signed)
 
 
-ColorLike = typing.Union[
+Colorish = typing.Union[
     Color,
     typing.SupportsInt,
     typing.Tuple[typing.SupportsInt, typing.SupportsInt, typing.SupportsInt],
@@ -445,4 +445,30 @@ ColorLike = typing.Union[
     typing.Sequence[typing.SupportsFloat],
     str,
 ]
-"""Type hint representing types of value compatible with a color type."""
+"""Type hint representing types of value compatible with a colour type.
+
+This may be:
+
+1. `hikari.models.colors.Color`
+2. `hikari.models.colours.Colour` (an alias for `hikari.models.colors.Color`).
+3. A value that can be cast to an `builtins.int` (RGB hex-code).
+4. a 3-`builtins.tuple` of `builtins.int` (RGB integers in range 0 through 255).
+5. a 3-`builtins.tuple` of `builtins.int` (RGB floats in range 0 through 1).
+6. a list of `builtins.int`.
+7. a list of `builtins.float`.
+8. a `builtins.str` hex colour code.
+
+A hex colour code is expected to be in one of the following formats. Each of the
+following examples means the same thing semantically.
+
+1. (web-safe) `"12F"` (equivalent to `"1122FF"`)
+2. (web-safe) `"0x12F"` (equivalent to `"0x1122FF"`)
+3. (web-safe) `"0X12F"` (equivalent to `"0X1122FF"`)
+4. (web-safe) `"#12F"` (equivalent to `"#1122FF"`)
+5. `"1122FF"`
+6. `"0x1122FF"`
+7. `"0X1122FF"`
+8. `"#1122FF"`
+
+Web-safe colours are three hex-digits wide, `XYZ` becomes `XXYYZZ` in full-form.
+"""

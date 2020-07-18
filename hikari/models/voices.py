@@ -15,11 +15,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Application and entities that are used to describe voice states on Discord."""
+"""Application and entities that are used to describe voice state on Discord."""
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["VoiceRegion", "VoiceState"]
+__all__: typing.Final[typing.List[str]] = ["VoiceRegion", "VoiceState", "VoiceRegionish"]
 
 import typing
 
@@ -107,3 +107,10 @@ class VoiceRegion:
 
     def __str__(self) -> str:
         return self.id
+
+
+VoiceRegionish = typing.Union[str, VoiceRegion]
+"""Type hint for a voice region or name of a voice region.
+
+Must be either a `VoiceRegion` or `builtins.str`.
+"""

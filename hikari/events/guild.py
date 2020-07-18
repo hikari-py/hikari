@@ -108,13 +108,13 @@ class GuildUnavailableEvent(GuildEvent, snowflake.Unique):
         This is fired based on Discord's Guild Delete gateway event.
     """
 
+    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    """The client application that models may use for procedures."""
+
     id: snowflake.Snowflake = attr.ib(
         converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
     )
     """The ID of this entity."""
-
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
-    """The client application that models may use for procedures."""
 
 
 @base_events.requires_intents(intents.Intent.GUILD_BANS)

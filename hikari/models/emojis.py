@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji"]
+__all__: typing.Final[typing.List[str]] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji", "Emojiish"]
 
 import abc
 import typing
@@ -35,12 +35,6 @@ from hikari.utilities import snowflake
 if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_app
     from hikari.models import users
-
-_TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/72x72/"
-"""URL for Twemoji PNG artwork for built-in emojis."""
-
-_TWEMOJI_SVG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/svg/"
-"""URL for Twemoji SVG artwork for built-in emojis."""
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -161,7 +155,7 @@ class UnicodeEmoji(Emoji):
         -------
             https://github.com/twitter/twemoji/raw/master/assets/72x72/1f004.png
         """
-        return _TWEMOJI_PNG_BASE_URL + self.filename
+        return constants.TWEMOJI_PNG_BASE_URL + self.filename
 
     @property
     @typing.final
@@ -274,7 +268,7 @@ class CustomEmoji(snowflake.Unique, Emoji):
     def url(self) -> str:
         ext = "gif" if self.is_animated else "png"
 
-        return routes.CDN_CUSTOM_EMOJI.compile(constants.CDN_URL, emoji_id=self.id, file_format=ext,)
+        return routes.CDN_CUSTOM_EMOJI.compile(constants.CDN_URL, emoji_id=self.id, file_format=ext)
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
@@ -320,3 +314,17 @@ class KnownCustomEmoji(CustomEmoji):
 
     May be `builtins.False` due to a loss of Sever Boosts on the emoji's guild.
     """
+
+
+Emojiish = typing.Union[str, Emoji]
+"""Type hint representing a string emoji or an `Emoji`-derived object.
+
+Examples include:
+
+- Unicode emoji strings, such as `"\N{OK HAND SIGN}"`, `"\\N{OK HAND SIGN}"`,
+    `"\\U0001f44c"`.
+- Custom emoji names in the format `name:id`, such as
+    `"rosaThonk:733073048646713364"`.
+- Derivative instances of `Emoji`, i.e. `UnicodeEmoji`, `CustomEmoji` and
+    `KnownCustomEmoji`.
+"""

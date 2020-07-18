@@ -42,7 +42,7 @@ class Event(abc.ABC):
     """The base class that all events inherit from."""
 
 
-EventT = typing.TypeVar("EventT", contravariant=True)
+EventT = typing.TypeVar("EventT")
 _REQUIRED_INTENTS_ATTR: typing.Final[str] = "___required_intents___"
 _NO_THROW_ATTR: typing.Final[str] = "___no_throw___"
 

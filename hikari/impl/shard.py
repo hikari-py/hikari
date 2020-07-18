@@ -71,13 +71,13 @@ class GatewayShardImpl(shard.IGatewayShard):
         sent/received will be logged.
     http_settings : hikari.config.HTTPSettings
         The HTTP-related settings to use while negotiating a websocket.
-    initial_activity : hikari.models.presences.Activity or builtins.None or hikari.utilities.undefined.UndefinedType
+    initial_activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.presences.Activity]
         The initial activity to appear to have for this shard.
-    initial_idle_since : datetime.datetime or builtins.None or hikari.utilities.undefined.UndefinedType
+    initial_idle_since : hikari.utilities.undefined.UndefinedNoneOr[datetime.datetime]
         The datetime to appear to be idle since.
-    initial_is_afk : builtins.bool or hikari.utilities.undefined.UndefinedType
+    initial_is_afk : hikari.utilities.undefined.UndefinedOr[bool]
         Whether to appear to be AFK or not on login.
-    initial_status : hikari.models.presences.Status or hikari.utilities.undefined.UndefinedType
+    initial_status : hikari.utilities.undefined.UndefinedOr[hikari.models.presences.Status]
         The initial status to set on login for the shard.
     intents : hikari.models.intents.Intent or builtins.None
         Collection of intents to use, or `builtins.None` to not use intents at
@@ -183,10 +183,10 @@ class GatewayShardImpl(shard.IGatewayShard):
         data_format: str = shard.GatewayDataFormat.JSON,
         debug: bool = False,
         http_settings: config.HTTPSettings,
-        initial_activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
-        initial_idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = undefined.UNDEFINED,
-        initial_is_afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        initial_status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
+        initial_activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
+        initial_idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+        initial_is_afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        initial_status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
         intents: typing.Optional[intents_.Intent] = None,
         large_threshold: int = 250,
         proxy_settings: config.ProxySettings,
@@ -196,7 +196,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         url: str,
         version: int = 6,
     ) -> None:
-        self._activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = initial_activity
+        self._activity: undefined.UndefinedNoneOr[presences.Activity] = initial_activity
         self._app = app
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         self._compression = compression.lower() if compression is not None else None
@@ -207,9 +207,9 @@ class GatewayShardImpl(shard.IGatewayShard):
         self._heartbeat_interval = float("nan")
         self._heartbeat_latency = float("nan")
         self._http_settings = http_settings
-        self._idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = initial_idle_since
+        self._idle_since: undefined.UndefinedNoneOr[datetime.datetime] = initial_idle_since
         self._intents: typing.Optional[intents_.Intent] = intents
-        self._is_afk: typing.Union[undefined.UndefinedType, bool] = initial_is_afk
+        self._is_afk: undefined.UndefinedOr[bool] = initial_is_afk
         self._large_threshold = large_threshold
         self._last_heartbeat_sent = float("nan")
         self._last_message_received = float("nan")
@@ -223,7 +223,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         self._session_started_at: typing.Optional[float] = None
         self._shard_id: int = shard_id
         self._shard_count: int = shard_count
-        self._status: typing.Union[undefined.UndefinedType, presences.Status] = initial_status
+        self._status: undefined.UndefinedOr[presences.Status] = initial_status
         self._token = token
         self._user_id: typing.Optional[snowflake.Snowflake] = None
         self._version = version
@@ -349,10 +349,10 @@ class GatewayShardImpl(shard.IGatewayShard):
     async def update_presence(
         self,
         *,
-        idle_since: typing.Union[undefined.UndefinedType, None, datetime.datetime] = undefined.UNDEFINED,
-        afk: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
-        activity: typing.Union[undefined.UndefinedType, None, presences.Activity] = undefined.UNDEFINED,
-        status: typing.Union[undefined.UndefinedType, presences.Status] = undefined.UNDEFINED,
+        idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+        afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
+        status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
     ) -> None:
         if idle_since is undefined.UNDEFINED:
             idle_since = self._idle_since if self._idle_since is not undefined.UNDEFINED else None
@@ -379,8 +379,8 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     async def update_voice_state(
         self,
-        guild: typing.Union[guilds.PartialGuild, snowflake.UniqueObject],
-        channel: typing.Union[channels.GuildVoiceChannel, snowflake.UniqueObject, None],
+        guild: typing.Union[guilds.PartialGuild, snowflake.SnowflakeishOr],
+        channel: typing.Union[channels.GuildVoiceChannel, snowflake.SnowflakeishOr, None],
         *,
         self_mute: bool = False,
         self_deaf: bool = False,

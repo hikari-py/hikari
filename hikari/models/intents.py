@@ -15,11 +15,15 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Shard intents for controlling which events the application receives."""
+"""Shard intents for controlling which events the application receives.
+
+All intents in the `Intent` class are exported to this package,
+thus `intents.Intent.GUILDS` will behave the same as `intents.GUILDS`.
+"""
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Intent"]
+__all__: typing.Final[typing.List[str]] = ["Intent", "Intents"]
 
 import enum
 
@@ -185,3 +189,11 @@ class Intent(enum.IntFlag):
         application.
         """
         return bool(self & (Intent.GUILD_MEMBERS | Intent.GUILD_PRESENCES))
+
+
+Intents = Intent
+"""Alias for `Intent`."""
+
+
+def __getattr__(name: str) -> Intent:
+    return typing.cast("Intent", getattr(Intent, name))

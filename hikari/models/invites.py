@@ -25,8 +25,10 @@ __all__: typing.Final[typing.List[str]] = [
     "InviteGuild",
     "Invite",
     "InviteWithMetadata",
+    "Inviteish",
 ]
 
+import abc
 import enum
 import typing
 
@@ -58,8 +60,25 @@ class TargetUserType(int, enum.Enum):
         return self.name
 
 
+class InviteCode(abc.ABC):
+    """A representation of a guild/channel invite."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def code(self) -> str:
+        """Return the code for this invite.
+
+        Returns
+        -------
+        builtins.str
+            The invite code that can be appended to a URL.
+        """
+
+
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class VanityURL:
+class VanityURL(InviteCode):
     """A special case invite object, that represents a guild's vanity url."""
 
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
@@ -77,7 +96,7 @@ class VanityURL:
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
 class InviteGuild(guilds.PartialGuild):
-    """Represents the partial data of a guild that'll be attached to invites."""
+    """Represents the partial data of a guild that is attached to invites."""
 
     splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash of the splash for the guild, if there is one."""
@@ -176,7 +195,7 @@ class InviteGuild(guilds.PartialGuild):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class Invite:
+class Invite(InviteCode):
     """Represents an invite that's used to add users to a guild or group dm."""
 
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
@@ -275,3 +294,12 @@ class InviteWithMetadata(Invite):
         if self.max_age is not None:
             return self.created_at + self.max_age
         return None
+
+
+# TODO: converter to remove discord.gg part to allow URLs here too.
+Inviteish = typing.Union[str, InviteCode]
+"""Type hint for an invite, vanity URL, or invite code.
+
+This must be a representation of an invite that is a `builtins.str` containing
+the invite code, an `Invite`/`InviteWithMetadata`, or a `VanityURL` instance.
+"""
