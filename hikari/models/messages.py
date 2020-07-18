@@ -611,17 +611,23 @@ class Message(snowflake.Unique):
 
         Examples
         --------
-            # Using a unicode emoji.
-            await message.add_reaction("👌")
+        ```py
+        # Using a unicode emoji.
+        await message.add_reaction("👌")
 
-            # Using a unicode emoji name.
-            await message.add_reaction("\N{OK HAND SIGN}")
+        # Using a unicode emoji name.
+        await message.add_reaction("\N{OK HAND SIGN}")
 
-            # Using the `name:id` format.
-            await message.add_reaction("rooAYAYA:705837374319493284")
+        # Using the `name:id` format.
+        await message.add_reaction("rooAYAYA:705837374319493284")
 
-            # Using an Emoji object.
-            await message.add_reaction(some_emoji_object)
+        # Using a raw custom emoji mention (unanimated and animated)
+        await message.add_reaction("<:rooAYAYA:705837374319493284>")
+        await message.add_reaction("<a:rooAYAYA:705837374319493284>")
+
+        # Using an Emoji-derived object.
+        await message.add_reaction(some_emoji_object)
+        ```
 
         Raises
         ------
@@ -667,6 +673,10 @@ class Message(snowflake.Unique):
             # reaction.
             await message.remove_reaction("\N{OK HAND SIGN}", some_user)
 
+            # Using a raw custom emoji mention (unanimated and animated)
+            await message.remove_reaction("<:rooAYAYA:705837374319493284>", some_user)
+            await message.remove_reaction("<a:rooAYAYA:705837374319493284>", some_user)
+
             # Using an Emoji object and removing a specific user from this
             # reaction.
             await message.remove_reaction(some_emoji_object, some_user)
@@ -706,6 +716,10 @@ class Message(snowflake.Unique):
             # Using a unicode emoji and removing all 👌 reacts from the message.
             # reaction.
             await message.remove_all_reactions("\N{OK HAND SIGN}")
+
+            # Using a raw custom emoji mention (unanimated and animated)
+            await message.remove_all_reactions("<:rooAYAYA:705837374319493284>")
+            await message.remove_all_reactions("<a:rooAYAYA:705837374319493284>")
 
             # Removing all reactions entirely.
             await message.remove_all_reactions()
