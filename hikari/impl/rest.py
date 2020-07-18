@@ -690,7 +690,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         nsfw: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         bitrate: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
         user_limit: typing.Union[undefined.UndefinedType, int] = undefined.UNDEFINED,
-        rate_limit_per_user: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
+        rate_limit_per_user: typing.Union[undefined.UndefinedType, date.TimeSpanLike] = undefined.UNDEFINED,
         permission_overwrites: typing.Union[
             undefined.UndefinedType, typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -865,7 +865,7 @@ class RESTClientImpl(rest_api.IRESTClient):
     async def create_message(
         self,
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
-        text: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
+        content: typing.Union[undefined.UndefinedType, typing.Any] = undefined.UNDEFINED,
         *,
         embed: typing.Union[undefined.UndefinedType, embeds_.Embed] = undefined.UNDEFINED,
         attachment: typing.Union[undefined.UndefinedType, str, files.Resource] = undefined.UNDEFINED,
@@ -887,13 +887,28 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
 
+        if embed is undefined.UNDEFINED and isinstance(content, embeds_.Embed):
+            # Syntatic sugar, common mistake to accidentally send an embed
+            # as the content, so lets detect this and fix it for the user.
+            embed = content
+            content = undefined.UNDEFINED
+
+        elif undefined.count(attachment, attachments) == 2 and isinstance(content, files.Resource):
+            # Syntatic sugar, common mistake to accidentally send an attachment
+            # as the content, so lets detect this and fix it for the user. This
+            # will still then work with normal implicit embed attachments as
+            # we work this out later.
+            attachment = content
+            content = undefined.UNDEFINED
+
         body = data_binding.JSONObjectBuilder()
         body.put("allowed_mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions))
-        body.put("content", text, conversion=str)
+        body.put("content", content, conversion=str)
         body.put("nonce", nonce)
         body.put("tts", tts)
 
         final_attachments: typing.List[files.Resource] = []
+
         if attachment is not undefined.UNDEFINED:
             final_attachments.append(files.ensure_resource(attachment))
         if attachments is not undefined.UNDEFINED:
@@ -930,7 +945,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         self,
         channel: typing.Union[channels.TextChannel, snowflake.UniqueObject],
         message: typing.Union[messages_.Message, snowflake.UniqueObject],
-        text: typing.Union[undefined.UndefinedType, None, typing.Any] = undefined.UNDEFINED,
+        content: typing.Union[undefined.UndefinedType, None, typing.Any] = undefined.UNDEFINED,
         *,
         embed: typing.Union[undefined.UndefinedType, None, embeds_.Embed] = undefined.UNDEFINED,
         mentions_everyone: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
@@ -954,8 +969,14 @@ class RESTClientImpl(rest_api.IRESTClient):
                 "allowed_mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions)
             )
 
-        if text is not None:
-            body.put("content", text, conversion=str)
+        if embed is undefined.UNDEFINED and isinstance(content, embeds_.Embed):
+            # Syntatic sugar, common mistake to accidentally send an embed
+            # as the content, so lets detect this and fix it for the user.
+            embed = content
+            content = undefined.UNDEFINED
+
+        if content is not None:
+            body.put("content", content, conversion=str)
         else:
             body.put("content", None)
 
@@ -1502,7 +1523,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         afk_channel: typing.Union[
             undefined.UndefinedType, channels.GuildVoiceChannel, snowflake.UniqueObject
         ] = undefined.UNDEFINED,
-        afk_timeout: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
+        afk_timeout: typing.Union[undefined.UndefinedType, date.TimeSpanLike] = undefined.UNDEFINED,
         icon: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
         owner: typing.Union[undefined.UndefinedType, users.UserImpl, snowflake.UniqueObject] = undefined.UNDEFINED,
         splash: typing.Union[undefined.UndefinedType, None, files.Resource, str] = undefined.UNDEFINED,
@@ -2031,7 +2052,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         expire_behaviour: typing.Union[
             undefined.UndefinedType, guilds.IntegrationExpireBehaviour
         ] = undefined.UNDEFINED,
-        expire_grace_period: typing.Union[undefined.UndefinedType, date.TimeSpan] = undefined.UNDEFINED,
+        expire_grace_period: typing.Union[undefined.UndefinedType, date.TimeSpanLike] = undefined.UNDEFINED,
         enable_emojis: typing.Union[undefined.UndefinedType, bool] = undefined.UNDEFINED,
         reason: typing.Union[undefined.UndefinedType, str] = undefined.UNDEFINED,
     ) -> None:
