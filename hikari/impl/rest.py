@@ -31,6 +31,7 @@ import datetime
 import http
 import logging
 import math
+import re
 import typing
 
 import aiohttp
@@ -1027,6 +1028,27 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         await asyncio.gather(*coroutines)
 
+    # Custom emoji mentions are in the format of <:name:id> for static emoji, or
+    # <a:name:id> for animated emoji.
+    _CUSTOM_EMOJI_PATTERN: typing.Final[typing.ClassVar[re.Pattern[str]]] = re.compile(r"<a?:([^:]+:\d+)>")
+
+    def _transform_emoji_to_url_format(self, emoji: emojis.Emojiish) -> str:
+        # Given an emojiish, check if it is a valid custom emoji mention. If it
+        # is, then convert it to the name:id format (remove the wrapping
+        # characters), then return it. If the emoji is an emojis.CustomEmoji
+        # directly, then get the url_name of it. All other emojis and objects
+        # can just be cast to string, as they are probably unicode emoji objects
+        # or unicode emoji strings.
+        if isinstance(emoji, emojis.CustomEmoji):
+            return emoji.url_name
+
+        if isinstance(emoji, str) and (custom_mention_match := self._CUSTOM_EMOJI_PATTERN.match(emoji)) is not None:
+            # False positive in PyCharm, yet again.
+            # noinspection PyUnboundLocalVariable
+            return custom_mention_match.group(1)
+
+        return str(emoji)
+
     async def add_reaction(
         self,
         channel: snowflake.SnowflakeishOr[channels.TextChannel],
@@ -1034,9 +1056,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         emoji: emojis.Emojiish,
     ) -> None:
         route = routes.PUT_MY_REACTION.compile(
-            emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
-            channel=channel,
-            message=message,
+            emoji=self._transform_emoji_to_url_format(emoji), channel=channel, message=message,
         )
         await self._request(route)
 
@@ -1047,9 +1067,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         emoji: emojis.Emojiish,
     ) -> None:
         route = routes.DELETE_MY_REACTION.compile(
-            emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
-            channel=channel,
-            message=message,
+            emoji=self._transform_emoji_to_url_format(emoji), channel=channel, message=message,
         )
         await self._request(route)
 
@@ -1060,9 +1078,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         emoji: emojis.Emojiish,
     ) -> None:
         route = routes.DELETE_REACTION_EMOJI.compile(
-            emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
-            channel=channel,
-            message=message,
+            emoji=self._transform_emoji_to_url_format(emoji), channel=channel, message=message,
         )
         await self._request(route)
 
@@ -1074,10 +1090,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         user: snowflake.SnowflakeishOr[users.PartialUser],
     ) -> None:
         route = routes.DELETE_REACTION_USER.compile(
-            emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
-            channel=channel,
-            message=message,
-            user=user,
+            emoji=self._transform_emoji_to_url_format(emoji), channel=channel, message=message, user=user,
         )
         await self._request(route)
 
@@ -1095,7 +1108,13 @@ class RESTClientImpl(rest_api.IRESTClient):
         message: snowflake.SnowflakeishOr[messages_.Message],
         emoji: emojis.Emojiish,
     ) -> iterators.LazyIterator[users.UserImpl]:
-        return special_endpoints.ReactorIterator(self._app, self._request, channel, message, emoji)
+        return special_endpoints.ReactorIterator(
+            app=self._app,
+            request_call=self._request,
+            channel=channel,
+            message=message,
+            emoji=self._transform_emoji_to_url_format(emoji),
+        )
 
     async def create_webhook(
         self,

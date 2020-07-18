@@ -31,7 +31,6 @@ import typing
 import attr
 
 from hikari.api import special_endpoints
-from hikari.models import emojis
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
@@ -344,17 +343,13 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.UserImpl"]):
         ],
         channel: snowflake.SnowflakeishOr[channels.TextChannel],
         message: snowflake.SnowflakeishOr[messages.Message],
-        emoji: emojis.Emojiish,
+        emoji: str,
     ) -> None:
         super().__init__()
         self._app = app
         self._request_call = request_call
         self._first_id = undefined.UNDEFINED
-        self._route = routes.GET_REACTIONS.compile(
-            channel=channel,
-            message=message,
-            emoji=emoji.url_name if isinstance(emoji, emojis.CustomEmoji) else str(emoji),
-        )
+        self._route = routes.GET_REACTIONS.compile(channel=channel, message=message, emoji=emoji)
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[users.UserImpl, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
