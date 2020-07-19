@@ -28,6 +28,8 @@ import abc
 import asyncio
 import typing
 
+from hikari.api import rest
+
 if typing.TYPE_CHECKING:
     from hikari.events import base
 
@@ -345,7 +347,7 @@ class IEventDispatcherComponent(IEventDispatcherBase, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
 
-class IEventDispatcherApp(IEventDispatcherBase, abc.ABC):
+class IEventDispatcherApp(IEventDispatcherBase, rest.IRESTApp, abc.ABC):
     """Application specialization that supports dispatching of events.
 
     These events are expected to be instances of
@@ -371,6 +373,9 @@ class IEventDispatcherApp(IEventDispatcherBase, abc.ABC):
     >>> @bot.event_dispatcher.listen(hikari.MessageCreateEvent)
     >>> async def on_message(event: hikari.MessageCreateEvent) -> None: ...
     ```
+
+    This app type must derive from `hikari.api.rest.IRESTApp`, since almost
+    all event and model types will have REST functionality built-in.
     """
 
     __slots__: typing.Sequence[str] = ()
