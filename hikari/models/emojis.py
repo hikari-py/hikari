@@ -282,7 +282,7 @@ class KnownCustomEmoji(CustomEmoji):
     guild_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the guild this emoji belongs to."""
 
-    role_ids: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    role_ids: typing.Sequence[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The IDs of the roles that are whitelisted to use this emoji.
 
     If this is empty then any user can use this emoji regardless of their roles.

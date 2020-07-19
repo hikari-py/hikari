@@ -284,7 +284,7 @@ class Member(users.User):
     if unknown.
     """
 
-    role_ids: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    role_ids: typing.Sequence[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """A sequence of the IDs of the member's current roles."""
 
     joined_at: undefined.UndefinedOr[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
@@ -584,8 +584,8 @@ class PartialGuild(snowflake.Unique):
     icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash for the guild icon, if there is one."""
 
-    features: typing.Set[GuildFeatureish] = attr.ib(eq=False, hash=False, repr=False)
-    """A set of the features in this guild."""
+    features: typing.Sequence[GuildFeatureish] = attr.ib(eq=False, hash=False, repr=False)
+    """A list of the features in this guild."""
 
     def __str__(self) -> str:
         return self.name
