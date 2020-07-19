@@ -31,7 +31,7 @@ from hikari import errors
 from hikari.api import bot
 from hikari.api import event_dispatcher
 from hikari.api import voice
-from hikari.events import voice as voice_events
+from hikari.events import voice_events
 from hikari.models import channels
 from hikari.models import guilds
 from hikari.utilities import snowflake

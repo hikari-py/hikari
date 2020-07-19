@@ -1481,7 +1481,9 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.DELETE_MY_GUILD.compile(guild=guild)
         await self._request(route)
 
-    async def create_dm_channel(self, user: snowflake.SnowflakeishOr[users.PartialUser], /) -> channels.DMChannel:
+    async def create_dm_channel(
+        self, user: snowflake.SnowflakeishOr[users.PartialUser], /
+    ) -> channels.PrivateTextChannel:
         route = routes.POST_MY_CHANNELS.compile()
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("recipient_id", user)

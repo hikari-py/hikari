@@ -25,8 +25,8 @@ __all__: typing.Final[typing.List[str]] = [
     "PermissionOverwriteType",
     "PartialChannel",
     "TextChannel",
-    "DMChannel",
-    "GroupDMChannel",
+    "PrivateTextChannel",
+    "GroupPrivateTextChannel",
     "GuildCategory",
     "GuildChannel",
     "GuildTextChannel",
@@ -396,8 +396,8 @@ class PrivateChannel(PartialChannel):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class DMChannel(PrivateChannel, TextChannel):
-    """Represents a DM channel."""
+class PrivateTextChannel(PrivateChannel, TextChannel):
+    """Represents a private text channel that is between you and another user."""
 
     last_message_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
@@ -415,8 +415,8 @@ class DMChannel(PrivateChannel, TextChannel):
 
 
 @attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
-class GroupDMChannel(PrivateChannel):
-    """Represents a DM group channel.
+class GroupPrivateTextChannel(PrivateChannel):
+    """Represents a group private channel.
 
     !!! note
         This doesn't have the methods found on `TextChannel` as bots cannot

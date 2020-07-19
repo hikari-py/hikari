@@ -27,6 +27,7 @@ from hikari.api import component
 from hikari.api import rest as rest_api
 
 if typing.TYPE_CHECKING:
+    from hikari.api import event_factory as event_factory_
     from hikari.api import shard as gateway_shard
     from hikari.utilities import data_binding
 
@@ -82,4 +83,17 @@ class IEventConsumerApp(rest_api.IRESTApp, abc.ABC):
         -------
         hikari.api.event_consumer.IEventConsumerComponent
             The event consumer implementation in-use.
+        """
+
+    @property
+    @abc.abstractmethod
+    def event_factory(self) -> event_factory_.IEventFactoryComponent:
+        """Event factory.
+
+        This is a component that builds event models.
+
+        Returns
+        -------
+        hikari.api.event_factory.IEventFactory.
+            The model factory for events.
         """
