@@ -32,6 +32,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import config
+    from hikari.api import event_consumer
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import intents as intents_
@@ -68,6 +69,11 @@ class IGatewayShard(component.IComponent, abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def app(self) -> event_consumer.IEventConsumerApp:
+        ...
 
     @property
     @abc.abstractmethod

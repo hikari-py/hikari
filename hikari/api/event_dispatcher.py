@@ -31,10 +31,10 @@ import typing
 from hikari.api import rest
 
 if typing.TYPE_CHECKING:
-    from hikari.events import base
+    from hikari.events import base_events
 
-    EventT_co = typing.TypeVar("EventT_co", bound=base.Event, covariant=True)
-    EventT_inv = typing.TypeVar("EventT_inv", bound=base.Event)
+    EventT_co = typing.TypeVar("EventT_co", bound=base_events.Event, covariant=True)
+    EventT_inv = typing.TypeVar("EventT_inv", bound=base_events.Event)
     PredicateT = typing.Callable[[EventT_co], typing.Union[bool, typing.Coroutine[typing.Any, typing.Any, bool]]]
     AsyncCallbackT = typing.Callable[[EventT_inv], typing.Coroutine[typing.Any, typing.Any, None]]
 
@@ -183,7 +183,7 @@ class IEventDispatcherBase(abc.ABC):
         event_type : typing.Type[T]
             The event type to unsubscribe from. This must be the same exact
             type as was originally subscribed with to be removed correctly.
-            `EventT` must derive from `hikari.events.base.Event`.
+            `T` must derive from `hikari.events.base.Event`.
         callback
             The callback to unsubscribe.
 

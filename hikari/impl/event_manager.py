@@ -29,14 +29,14 @@ import warnings
 from hikari import errors
 from hikari.api import event_consumer
 from hikari.api import event_dispatcher
-from hikari.api import rest
-from hikari.events import base as base_events
-from hikari.events import other as other_events
+from hikari.events import base_events
+from hikari.events import shard_events
 from hikari.models import intents
 from hikari.utilities import aio
 from hikari.utilities import reflect
 
 if typing.TYPE_CHECKING:
+    from hikari.api import bot
     from hikari.api import shard as gateway_shard
     from hikari.utilities import data_binding
 
@@ -68,7 +68,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
 
     __slots__: typing.Sequence[str] = ("_app", "_intents", "_listeners", "_waiters")
 
-    def __init__(self, app: event_dispatcher.IEventDispatcherApp, intents_: typing.Optional[intents.Intent]) -> None:
+    def __init__(self, app: bot.IBotApp, intents_: typing.Optional[intents.Intent]) -> None:
         self._app = app
         self._intents = intents_
         self._listeners: ListenerMapT = {}
@@ -76,7 +76,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
 
     @property
     @typing.final
-    def app(self) -> rest.IRESTApp:
+    def app(self) -> bot.IBotApp:
         return self._app
 
     async def consume_raw_event(
@@ -300,11 +300,19 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
             # Skip the first frame in logs, we don't care for it.
             trio = type(ex), ex, ex.__traceback__.tb_next if ex.__traceback__ is not None else None
 
-            if base_events.is_no_catch_event(event):
+            if base_events.is_no_recursive_throw_event(event):
                 _LOGGER.error("an exception occurred handling an event, but it has been ignored", exc_info=trio)
             else:
                 _LOGGER.error("an exception occurred handling an event", exc_info=trio)
-                await self.dispatch(other_events.ExceptionEvent(exception=ex, event=event, callback=callback))
+                await self.dispatch(
+                    base_events.ExceptionEvent(
+                        app=self.app,
+                        shard=getattr(event, "shard") if isinstance(event, shard_events.ShardEvent) else None,
+                        exception=ex,
+                        failed_event=event,
+                        failed_callback=callback,
+                    )
+                )
 
 
 class EventManagerComponentImpl(EventManagerComponentBase):
@@ -318,8 +326,7 @@ class EventManagerComponentImpl(EventManagerComponentBase):
         This is a synthetic event produced by the gateway implementation in
         Hikari.
         """
-        # TODO: this should be in entity factory
-        await self.dispatch(other_events.ConnectedEvent(shard=shard))
+        await self.dispatch(shard_events.ShardConnectedEvent(shard=shard))
 
     async def on_disconnected(self, shard: gateway_shard.IGatewayShard, _: data_binding.JSONObject) -> None:
         """Handle disconnection events.
@@ -327,162 +334,177 @@ class EventManagerComponentImpl(EventManagerComponentBase):
         This is a synthetic event produced by the gateway implementation in
         Hikari.
         """
-        # TODO: this should be in entity factory
-        await self.dispatch(other_events.DisconnectedEvent(shard=shard))
+        await self.dispatch(shard_events.ShardDisconnectedEvent(shard=shard))
 
     async def on_ready(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#ready for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_ready_event(shard, payload))
+        await self.dispatch(self.app.event_factory.deserialize_ready_event(shard, payload))
 
     async def on_resumed(self, shard: gateway_shard.IGatewayShard, _: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#resumed for more info."""
         # TODO: this should be in entity factory
-        await self.dispatch(other_events.ResumedEvent(shard=shard))
+        await self.dispatch(shard_events.ShardResumedEvent(shard=shard))
 
-    async def on_channel_create(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_channel_create(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-create for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_channel_create_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_channel_create_event(shard, payload))
 
-    async def on_channel_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_channel_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-update for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_channel_update_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_channel_update_event(shard, payload))
 
-    async def on_channel_delete(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_channel_delete(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-delete for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_channel_delete_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_channel_delete_event(shard, payload))
 
-    async def on_channel_pins_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_channel_pins_update(
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
+    ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-pins-update for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_channel_pins_update_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_channel_pins_update_event(shard, payload))
 
-    async def on_guild_create(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_guild_create(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_guild_create_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_guild_create_event(shard, payload))
 
-    async def on_guild_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_guild_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-update for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_guild_update_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_guild_update_event(shard, payload))
 
-    async def on_guild_delete(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_guild_delete(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-delete for more info."""
         if payload.get("unavailable", False):
-            await self.dispatch(self.app.entity_factory.deserialize_guild_unavailable_event(payload))
+            await self.dispatch(self.app.event_factory.deserialize_guild_unavailable_event(shard, payload))
         else:
-            await self.dispatch(self.app.entity_factory.deserialize_guild_leave_event(payload))
+            await self.dispatch(self.app.event_factory.deserialize_guild_leave_event(shard, payload))
 
-    async def on_guild_ban_add(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_guild_ban_add(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-ban-add for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_guild_ban_add_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_guild_ban_add_event(shard, payload))
 
-    async def on_guild_ban_remove(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_guild_ban_remove(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-ban-remove for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_guild_ban_remove_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_guild_ban_remove_event(shard, payload))
 
-    async def on_guild_emojis_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_guild_emojis_update(
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
+    ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-emojis-update for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_guild_emojis_update_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_guild_emojis_update_event(shard, payload))
 
     async def on_guild_integrations_update(
-        self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-integrations-update for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_guild_integrations_update_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_guild_integrations_update_event(shard, payload))
 
-    async def on_guild_member_add(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_guild_member_add(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-member-add for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_guild_member_add_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_guild_member_add_event(shard, payload))
 
-    async def on_guild_member_remove(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_guild_member_remove(
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
+    ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-member-remove for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_guild_member_remove_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_guild_member_remove_event(shard, payload))
 
-    async def on_guild_member_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_guild_member_update(
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
+    ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-member-update for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_guild_member_update_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_guild_member_update_event(shard, payload))
 
-    async def on_guild_members_chunk(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_guild_members_chunk(
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
+    ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-members-chunk for more info."""
         # TODO: implement chunking components.
-        await self.dispatch(self.app.entity_factory.deserialize_guild_member_chunk_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_guild_member_chunk_event(shard, payload))
 
-    async def on_guild_role_create(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_guild_role_create(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-role-create for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_guild_role_create_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_guild_role_create_event(shard, payload))
 
-    async def on_guild_role_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_guild_role_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-role-update for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_guild_role_update_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_guild_role_update_event(shard, payload))
 
-    async def on_guild_role_delete(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_guild_role_delete(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-role-delete for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_guild_role_delete_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_guild_role_delete_event(shard, payload))
 
-    async def on_invite_create(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_invite_create(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#invite-create for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_invite_create_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_invite_create_event(shard, payload))
 
-    async def on_invite_delete(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_invite_delete(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#invite-delete for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_invite_delete_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_invite_delete_event(shard, payload))
 
-    async def on_message_create(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_message_create(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-create for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_message_create_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_message_create_event(shard, payload))
 
-    async def on_message_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_message_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-update for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_message_update_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_message_update_event(shard, payload))
 
-    async def on_message_delete(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_message_delete(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-delete for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_message_delete_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_message_delete_event(shard, payload))
 
-    async def on_message_delete_bulk(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_message_delete_bulk(
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
+    ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-delete-bulk for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_message_delete_bulk_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_message_delete_bulk_event(shard, payload))
 
-    async def on_message_reaction_add(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_message_reaction_add(
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
+    ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-reaction-add for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_message_reaction_add_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_message_reaction_add_event(shard, payload))
 
     async def on_message_reaction_remove(
-        self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-reaction-remove for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_message_reaction_remove_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_message_reaction_remove_event(shard, payload))
 
     async def on_message_reaction_remove_all(
-        self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-reaction-remove-all for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_message_reaction_remove_all_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_message_reaction_remove_all_event(shard, payload))
 
     async def on_message_reaction_remove_emoji(
-        self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-reaction-remove-emoji for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_message_reaction_remove_emoji_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_message_reaction_remove_emoji_event(shard, payload))
 
-    async def on_presence_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_presence_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#presence-update for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_presence_update_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_presence_update_event(shard, payload))
 
-    async def on_typing_start(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_typing_start(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#typing-start for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_typing_start_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_typing_start_event(shard, payload))
 
-    async def on_user_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_user_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#user-update for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_own_user_update_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_own_user_update_event(shard, payload))
 
-    async def on_voice_state_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_voice_state_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#voice-state-update for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_voice_state_update_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_voice_state_update_event(shard, payload))
 
-    async def on_voice_server_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_voice_server_update(
+        self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
+    ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#voice-server-update for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_voice_server_update_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_voice_server_update_event(shard, payload))
 
-    async def on_webhooks_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_webhooks_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#webhooks-update for more info."""
-        await self.dispatch(self.app.entity_factory.deserialize_webhook_update_event(payload))
+        await self.dispatch(self.app.event_factory.deserialize_webhook_update_event(shard, payload))

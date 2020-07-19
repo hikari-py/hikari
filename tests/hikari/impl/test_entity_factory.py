@@ -460,7 +460,7 @@ class TestEntityFactoryImpl:
         assert dm_channel.last_message_id == 456
         assert dm_channel.type is channel_models.ChannelType.DM
         assert dm_channel.recipient == entity_factory_impl.deserialize_user(user_payload)
-        assert isinstance(dm_channel, channel_models.DMChannel)
+        assert isinstance(dm_channel, channel_models.PrivateTextChannel)
 
     def test_deserialize_dm_channel_with_null_fields(self, entity_factory_impl, user_payload):
         dm_channel = entity_factory_impl.deserialize_dm_channel(
@@ -493,7 +493,7 @@ class TestEntityFactoryImpl:
         assert group_dm.last_message_id == 456
         assert group_dm.type == channel_models.ChannelType.GROUP_DM
         assert group_dm.recipients == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
-        assert isinstance(group_dm, channel_models.GroupDMChannel)
+        assert isinstance(group_dm, channel_models.GroupPrivateTextChannel)
 
     def test_test_deserialize_group_dm_channel_with_unset_fields(self, entity_factory_impl, user_payload):
         group_dm = entity_factory_impl.deserialize_group_dm_channel(
@@ -861,8 +861,8 @@ class TestEntityFactoryImpl:
         guild_voice_channel_payload,
     ):
         for payload, expected_type in [
-            (dm_channel_payload, channel_models.DMChannel),
-            (group_dm_channel_payload, channel_models.GroupDMChannel),
+            (dm_channel_payload, channel_models.PrivateTextChannel),
+            (group_dm_channel_payload, channel_models.GroupPrivateTextChannel),
             (guild_category_payload, channel_models.GuildCategory),
             (guild_text_channel_payload, channel_models.GuildTextChannel),
             (guild_news_channel_payload, channel_models.GuildNewsChannel),
