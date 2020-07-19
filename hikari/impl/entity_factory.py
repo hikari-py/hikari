@@ -25,8 +25,8 @@ import datetime
 import typing
 
 from hikari.api import entity_factory
-from hikari.api import shard as gateway_shard
 from hikari.api import rest as rest_app
+from hikari.api import shard as gateway_shard
 from hikari.events import channel as channel_events
 from hikari.events import guild as guild_events
 from hikari.events import message as message_events
@@ -1640,11 +1640,11 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         channel_pins_update.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         channel_pins_update.channel_id = snowflake.Snowflake(payload["channel_id"])
 
-        channel_pins_update.last_pin_timestamp = (
-            date.iso8601_datetime_string_to_datetime(payload["last_pin_timestamp"])
-            if "last_pin_timestamp" in payload
-            else None
-        )
+        # Turns out this _can_ be None or not present. Only set it if it is actually available.
+        if (raw_timestamp := payload.get("last_pin_timestamp")) is not None:
+            channel_pins_update.last_pin_timestamp = date.iso8601_datetime_string_to_datetime(raw_timestamp)
+        else:
+            channel_pins_update.last_pin_timestamp = None
 
         return channel_pins_update
 
