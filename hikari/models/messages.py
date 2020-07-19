@@ -486,7 +486,7 @@ class PartialMessage(snowflake.Unique):
             If you lack permissions to send messages in the given channel; if
             you try to change the contents of another user's message; or if you
             try to edit the flags on another user's message without the
-            permissions to manage messages_.
+            permissions to manage messages.
         hikari.errors.NotFound
             If the channel or message is not found.
         hikari.errors.ServerHTTPErrorResponse

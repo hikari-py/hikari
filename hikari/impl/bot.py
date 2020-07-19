@@ -169,7 +169,7 @@ class BotAppImpl(bot.IBotApp):
     def __init__(
         self,
         *,
-        banner_package: typing.Optional[str] = "hikari.impl",
+        banner_package: typing.Optional[str] = "hikari",
         debug: bool = False,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         gateway_version: int = 6,
@@ -240,16 +240,17 @@ class BotAppImpl(bot.IBotApp):
         self._shards: typing.Dict[int, gateway_shard.IGatewayShard] = {}
         self._started_at_monotonic: typing.Optional[float] = None
         self._started_at_timestamp: typing.Optional[datetime.datetime] = None
-        self._start_count: int = 0
         self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
         self._version = gateway_version
         self._voice = voice.VoiceComponentImpl(self, self._event_manager)
+        self._start_count: int = 0  # This should always be last so that we dont get an extra error when failed to initialize
 
     def __del__(self) -> None:
-        if self._start_count == 0:
+        # If something goes wrong while initializing the bot, `_start_count` might not be there.
+        if hasattr(self, "_start_count") and self._start_count == 0:
             warnings.warn(
-                "Looks like your bot never started. Make sure you called bot.run() " "after you set the bot object up.",
+                "Looks like your bot never started. Make sure you called bot.run() after you set the bot object up.",
                 category=errors.HikariWarning,
             )
 
