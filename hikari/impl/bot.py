@@ -739,7 +739,7 @@ class BotAppImpl(bot.IBotApp):
             version_info = await version_sniffer.fetch_version_info_from_pypi()
 
             if version_info.this == version_info.latest:
-                _LOGGER.info("everything is up to date!")
+                _LOGGER.info("package is up to date!")
             else:
                 if version_info.this != version_info.latest_compatible:
                     _LOGGER.warning(
