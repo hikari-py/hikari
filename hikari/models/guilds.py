@@ -280,8 +280,10 @@ class Member(users.User):
     )
     """This member's nickname.
 
-    This will be `builtins.None` if not set and `hikari.utilities.undefined.UndefinedType`
-    if unknown.
+    This will be `builtins.None` if not set.
+
+    On member update events, this may not be included at all.
+    In this case, this will be undefined.
     """
 
     role_ids: typing.Sequence[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
