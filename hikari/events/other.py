@@ -200,7 +200,4 @@ class MemberChunkEvent(base_events.Event):
     """
 
     nonce: typing.Optional[str] = attr.ib(repr=True)
-    """The string nonce used to identify the request member chunks are associated with.
-
-    This is the nonce value passed while requesting member chunks.
-    """
+    """The nonce value passed while requesting member chunks."""

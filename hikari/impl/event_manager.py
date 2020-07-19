@@ -68,7 +68,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
 
     __slots__: typing.Sequence[str] = ("_app", "_intents", "_listeners", "_waiters")
 
-    def __init__(self, app: rest.IRESTApp, intents_: typing.Optional[intents.Intent]) -> None:
+    def __init__(self, app: event_dispatcher.IEventDispatcherApp, intents_: typing.Optional[intents.Intent]) -> None:
         self._app = app
         self._intents = intents_
         self._listeners: ListenerMapT = {}
