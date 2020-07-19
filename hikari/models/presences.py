@@ -274,7 +274,7 @@ class MemberPresence:
     user_id: snowflake.Snowflake = attr.ib(repr=True, eq=False, hash=True)
     """The ID of the user this presence belongs to."""
 
-    role_ids: typing.Optional[typing.Set[snowflake.Snowflake]] = attr.ib(eq=False, hash=False, repr=False)
+    role_ids: typing.Optional[typing.Sequence[snowflake.Snowflake]] = attr.ib(eq=False, hash=False, repr=False)
     """The ids of the user's current roles in the guild this presence belongs to.
 
     !!! info
