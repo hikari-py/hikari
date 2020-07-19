@@ -268,11 +268,11 @@ class TeamMember:
     membership_state: TeamMembershipState = attr.ib(eq=False, hash=False, repr=False)
     """The state of this user's membership."""
 
-    permissions: typing.Set[str] = attr.ib(eq=False, hash=False, repr=False)
+    permissions: typing.Sequence[str] = attr.ib(eq=False, hash=False, repr=False)
     """This member's permissions within a team.
 
-    At the time of writing, this will always be a set of one `builtins.str`, which
-    will always be `"*"`. This may change in the future, however.
+    At the time of writing, this will always be a sequence of one `builtins.str`,
+    which will always be `"*"`. This may change in the future, however.
     """
 
     team_id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
@@ -397,7 +397,7 @@ class Application(snowflake.Unique):
     Discord's oauth2 flow.
     """
 
-    rpc_origins: typing.Optional[typing.Set[str]] = attr.ib(eq=False, hash=False, repr=False)
+    rpc_origins: typing.Optional[typing.Sequence[str]] = attr.ib(eq=False, hash=False, repr=False)
     """A collection of this application's RPC origin URLs, if RPC is enabled."""
 
     summary: str = attr.ib(eq=False, hash=False, repr=False)

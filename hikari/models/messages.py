@@ -303,13 +303,13 @@ class PartialMessage(snowflake.Unique):
     is_mentioning_everyone: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """Whether the message mentions `@everyone` or `@here`."""
 
-    user_mentions: undefined.UndefinedOr[typing.Set[snowflake.Snowflake]] = attr.ib(repr=False)
+    user_mentions: undefined.UndefinedOr[typing.Sequence[snowflake.Snowflake]] = attr.ib(repr=False)
     """The users the message mentions."""
 
-    role_mentions: undefined.UndefinedOr[typing.Set[snowflake.Snowflake]] = attr.ib(repr=False)
+    role_mentions: undefined.UndefinedOr[typing.Sequence[snowflake.Snowflake]] = attr.ib(repr=False)
     """The roles the message mentions."""
 
-    channel_mentions: undefined.UndefinedOr[typing.Set[snowflake.Snowflake]] = attr.ib(repr=False)
+    channel_mentions: undefined.UndefinedOr[typing.Sequence[snowflake.Snowflake]] = attr.ib(repr=False)
     """The channels the message mentions."""
 
     attachments: undefined.UndefinedOr[typing.Sequence[Attachment]] = attr.ib(repr=False)
@@ -812,13 +812,13 @@ class Message(PartialMessage):
     is_mentioning_everyone: bool
     """Whether the message mentions `@everyone` or `@here`."""
 
-    user_mentions: typing.Set[snowflake.Snowflake]
+    user_mentions: typing.Sequence[snowflake.Snowflake]
     """The users the message mentions."""
 
-    role_mentions: typing.Set[snowflake.Snowflake]
+    role_mentions: typing.Sequence[snowflake.Snowflake]
     """The roles the message mentions."""
 
-    channel_mentions: typing.Set[snowflake.Snowflake]
+    channel_mentions: typing.Sequence[snowflake.Snowflake]
     """The channels the message mentions."""
 
     attachments: typing.Sequence[Attachment]
