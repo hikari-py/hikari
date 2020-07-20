@@ -430,7 +430,11 @@ class Role(PartialRole):
     """
 
     position: int = attr.ib(eq=False, hash=False, repr=True)
-    """The position of this role in the role hierarchy."""
+    """The position of this role in the role hierarchy.
+
+    This will start at `0` for the lowest role (@everyone)
+    and increase as you go up the hierarchy.
+    """
 
     permissions: permissions_.Permission = attr.ib(eq=False, hash=False, repr=False)
     """The guild wide permissions this role gives to the members it's attached to,
