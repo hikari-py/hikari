@@ -1527,11 +1527,13 @@ class RESTClientImpl(rest_api.IRESTClient):
 
     async def fetch_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.Guild:
         route = routes.GET_GUILD.compile(guild=guild)
-        raw_response = await self._request(route)
+        query = data_binding.StringMapBuilder()
+        query.put("with_counts", True)
+        raw_response = await self._request(route, query=query)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild(response)
 
-    async def fetch_guild_preview(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],) -> guilds.GuildPreview:
+    async def fetch_guild_preview(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildPreview:
         route = routes.GET_GUILD_PREVIEW.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
