@@ -280,11 +280,13 @@ class Member(users.User):
     )
     """This member's nickname.
 
-    This will be `builtins.None` if not set and `hikari.utilities.undefined.UndefinedType`
-    if unknown.
+    This will be `builtins.None` if not set.
+
+    On member update events, this may not be included at all.
+    In this case, this will be undefined.
     """
 
-    role_ids: typing.Set[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    role_ids: typing.Sequence[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """A sequence of the IDs of the member's current roles."""
 
     joined_at: undefined.UndefinedOr[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
@@ -428,7 +430,11 @@ class Role(PartialRole):
     """
 
     position: int = attr.ib(eq=False, hash=False, repr=True)
-    """The position of this role in the role hierarchy."""
+    """The position of this role in the role hierarchy.
+
+    This will start at `0` for the lowest role (@everyone)
+    and increase as you go up the hierarchy.
+    """
 
     permissions: permissions_.Permission = attr.ib(eq=False, hash=False, repr=False)
     """The guild wide permissions this role gives to the members it's attached to,
@@ -584,8 +590,8 @@ class PartialGuild(snowflake.Unique):
     icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash for the guild icon, if there is one."""
 
-    features: typing.Set[GuildFeatureish] = attr.ib(eq=False, hash=False, repr=False)
-    """A set of the features in this guild."""
+    features: typing.Sequence[GuildFeatureish] = attr.ib(eq=False, hash=False, repr=False)
+    """A list of the features in this guild."""
 
     def __str__(self) -> str:
         return self.name

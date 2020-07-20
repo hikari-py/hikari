@@ -129,7 +129,7 @@
 
         if url is None:
             url = get_url_from_imports(fqn)
-        
+
         return url
 
     def get_url_from_imports(fqn):
@@ -203,14 +203,14 @@
             # For each identifier, replace it with a link.
             for match in items:
                 phrase = match.group()
-                
+
                 ident = module.find_ident(phrase)
 
                 if isinstance(ident, pdoc.External):
                     phrase = debuiltinify(ident.name)
 
                     url = get_url_for_object_from_imports(phrase, ident)
-                    
+
                     if url is None:
                         bits = ident.name.split(".")[:-1]
 
@@ -220,7 +220,7 @@
                                 url = pdoc._global_context[partial_phrase].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
                                 a_tag = f"<a href={url!r}>{repr(phrase)[1:-1]}</a>"
                                 break
-                            
+
                             bits = bits[:-1]
                         else:
                             a_tag = phrase
@@ -241,19 +241,19 @@
 
             if wrap_code:
                 code_span = code_span.replace('[', '\\[')
-                
+
 
         except SyntaxError:
-            """Raised if it wasn't a valid piece of Python that was given. 
-            
-            This can happen with `builtins.True`, `builtins.False` or 
+            """Raised if it wasn't a valid piece of Python that was given.
+
+            This can happen with `builtins.True`, `builtins.False` or
             `builtins.None`
             """
             if code_span.startswith("builtins."):
                 phrase = debuiltinify(code_span)
                 url = discover_source(code_span)
                 code_span = f"<a href={url!r}>{repr(phrase)[1:-1]}</a>"
-                
+
 
         if wrap_code:
             # Wrapping in HTML <code> as opposed to backticks evaluates markdown */_ markers,
@@ -297,7 +297,7 @@
                 if not simple_names:
                     if getattr(dobj.obj, "__isabstractmethod__", False):
                         prefix = f"{QUAL_ABSTRACT} "
-                
+
                 prefix = "<small class='text-muted'><em>" + prefix + qual + "</em></small> "
 
             elif isinstance(dobj, pdoc.Variable):
@@ -445,7 +445,7 @@
         while sm is not None:
             module_breadcrumb.append(sm)
             sm = sm.supermodule
-        
+
         module_breadcrumb.reverse()
     %>
 
@@ -464,7 +464,7 @@
 </%def>
 
 <%def name="show_var(v, is_nested=False)">
-    <% 
+    <%
         return_type = get_annotation(v.type_annotation)
         if return_type == "":
             parent = v.cls.obj if v.cls is not None else v.module.obj
@@ -478,6 +478,29 @@
 
             if hasattr(parent, "__annotations__") and v.name in parent.__annotations__:
                 return_type = get_annotation(lambda *_, **__: parent.__annotations__[v.name])
+
+        value = None
+        try:
+            obj = getattr(v.cls.obj, v.name)
+
+            simple_bases = (
+                bytes, int, bool, str, float, complex, list, set, frozenset, dict, tuple, type(None),
+                enum.Enum, typing.Container
+            )
+
+            if isinstance(obj, simple_bases):
+                value = str(obj)
+
+                # Combined enum tidyup
+                if value.count("|") > 3 and isinstance(obj, enum.Enum):
+                    start = "\n\N{EM SPACE}\N{EM SPACE}\N{EM SPACE}"
+                    value = f"({start}   " + f"{start} | ".join(value.split(" | ")) + "\n)"
+
+        except Exception as ex:
+            print(v.name, type(ex).__name__, ex)
+
+        if value:
+            return_type += f" = {value}"
 
         project_inventory.objects.append(
             sphobjinv.DataObjStr(
@@ -807,10 +830,10 @@
 
                                     if list_class_variables_in_index:
                                         members += (c.instance_variables(sort=sort_identifiers) + c.class_variables(sort=sort_identifiers))
-                                    
+
                                     if not show_inherited_members:
                                         members = [i for i in members if not i.inherits]
-                                    
+
                                     if sort_identifiers:
                                         members = sorted(members)
                                 %>
@@ -856,7 +879,7 @@
 
             % if variables:
                 <h2 id="variables-heading">Variables and Type Hints</h2>
-                <section class="definition">                    
+                <section class="definition">
                     <dl class="no-nest root">
                         % for v in variables:
                             ${show_var(v)}

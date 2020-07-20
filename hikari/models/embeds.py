@@ -631,14 +631,27 @@ class Embed:
         url : builtins.str or builtins.None
             The optional URL of the author.
         icon : hikari.utilities.files.Resourceish or builtins.None
-            The optional resource to show next to the embed author. Can be set
-            to a string URL alternatively, or `None` to clear it.
-            Setting a `hikari.utilities.files.Bytes` or
-            `hikari.utilities.files.File` will result in the image being
-            uploaded as an attachment with the message when sent. Setting a
-            `hikari.utilities.files.WebResource` or `hikari.utilities.files.URL`
-            will simply link to that URL from Discord rather than re-uploading
-            it.
+            The optional image to show next to the embed author.
+
+            This can be many different things, to aid in convenience.
+
+            - If `builtins.None`, nothing is set.
+            - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the URL
+                is linked to directly.
+            - Subclasses of `hikari.utilities.files.WebResource` such as
+                `hikari.utilities.files.URL`,
+                `hikari.models.messages.Attachment`,
+                `hikari.models.emojis.Emoji`,
+                `EmbedResource`, etc will have their URL linked to directly.
+                this field.
+            - If a `hikari.utilities.files.Bytes` is passed, or a `builtins.str`
+                that contains a valid data URI is passed, then this is uploaded
+                as an attachment and linked into the embed.
+            - If a `hikari.utilities.files.File`, `pathlib.PurePath` or
+                `builtins.str` that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and linked
+                into the embed.
 
         Returns
         -------
@@ -666,14 +679,27 @@ class Embed:
             The mandatory text string to set in the footer.
             If `builtins.None`, the footer is removed.
         icon : hikari.utilities.files.Resourceish or builtins.None
-            The optional resource to show next to the embed footer. Can be set
-            to a string URL alternatively, or `None` to clear it.
-            Setting a `hikari.utilities.files.Bytes` or
-            `hikari.utilities.files.File` will result in the image being
-            uploaded as an attachment with the message when sent. Setting a
-            `hikari.utilities.files.WebResource` or `hikari.utilities.files.URL`
-            will simply link to that URL from Discord rather than re-uploading
-            it.
+            The optional image to show next to the embed footer.
+
+            This can be many different things, to aid in convenience.
+
+            - If `builtins.None`, nothing is set.
+            - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the URL
+                is linked to directly.
+            - Subclasses of `hikari.utilities.files.WebResource` such as
+                `hikari.utilities.files.URL`,
+                `hikari.models.messages.Attachment`,
+                `hikari.models.emojis.Emoji`,
+                `EmbedResource`, etc will have their URL linked to directly.
+                this field.
+            - If a `hikari.utilities.files.Bytes` is passed, or a `builtins.str`
+                that contains a valid data URI is passed, then this is uploaded
+                as an attachment and linked into the embed.
+            - If a `hikari.utilities.files.File`, `pathlib.PurePath` or
+                `builtins.str` that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and linked
+                into the embed.
 
         Returns
         -------
@@ -703,14 +729,27 @@ class Embed:
         Parameters
         ----------
         image : hikari.utilities.files.Resourceish or builtins.None
-            The optional resource to show for the embed image. Can be set
-            to a string URL alternatively, or `None` to clear it.
-            Setting a `hikari.utilities.files.Bytes` or
-            `hikari.utilities.files.File` will result in the image being
-            uploaded as an attachment with the message when sent. Setting a
-            `hikari.utilities.files.WebResource` or `hikari.utilities.files.URL`
-            will simply link to that URL from Discord rather than re-uploading
-            it.
+            The optional resource to show for the embed image.
+
+            This can be many different things, to aid in convenience.
+
+            - If `builtins.None`, nothing is set.
+            - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the URL
+                is linked to directly.
+            - Subclasses of `hikari.utilities.files.WebResource` such as
+                `hikari.utilities.files.URL`,
+                `hikari.models.messages.Attachment`,
+                `hikari.models.emojis.Emoji`,
+                `EmbedResource`, etc will have their URL linked to directly.
+                this field.
+            - If a `hikari.utilities.files.Bytes` is passed, or a `builtins.str`
+                that contains a valid data URI is passed, then this is uploaded
+                as an attachment and linked into the embed.
+            - If a `hikari.utilities.files.File`, `pathlib.PurePath` or
+                `builtins.str` that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and linked
+                into the embed.
 
         Returns
         -------
@@ -726,14 +765,26 @@ class Embed:
         Parameters
         ----------
         image : hikari.utilities.files.Resourceish or builtins.None
-            The optional resource to show for the embed thumbnail. Can be set
-            to a string URL alternatively, or `None` to clear it.
-            Setting a `hikari.utilities.files.Bytes` or
-            `hikari.utilities.files.File` will result in the image being
-            uploaded as an attachment with the message when sent. Setting a
-            `hikari.utilities.files.WebResource` or `hikari.utilities.files.URL`
-            will simply link to that URL from Discord rather than re-uploading
-            it.
+            The optional resource to show for the embed thumbnail.
+
+            This can be many different things, to aid in convenience.
+
+            - If `builtins.None`, nothing is set.
+            - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the URL
+                is linked to directly.
+            - Subclasses of `hikari.utilities.files.WebResource` such as
+                `hikari.utilities.files.URL`,
+                `hikari.models.messages.Attachment`,
+                `hikari.models.emojis.Emoji`,
+                `EmbedResource`, etc will have their URL linked to directly.
+            - If a `hikari.utilities.files.Bytes` is passed, or a `builtins.str`
+                that contains a valid data URI is passed, then this is uploaded
+                as an attachment and linked into the embed.
+            - If a `hikari.utilities.files.File`, `pathlib.PurePath` or
+                `builtins.str` that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and linked
+                into the embed.
 
         Returns
         -------

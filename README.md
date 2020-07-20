@@ -1,16 +1,16 @@
 **Note:** this API is still under active daily development, and is in a
-**pre-alpha** stage. If you are looking to give feedback, or want to help us 
+**pre-alpha** stage. If you are looking to give feedback, or want to help us
 out, then feel free to join our [Discord server](https://discord.gg/Jx4cNGG) and
-chat to us. Any help is greatly appreciated, no matter what your experience 
+chat to us. Any help is greatly appreciated, no matter what your experience
 level may be! :-)
 
---- 
+---
 
 # _hikari_
 
-An opinionated, static typed Discord API for Python3 and asyncio. 
+An opinionated, static typed Discord API for Python3 and asyncio.
 
-Built on good intentions and the hope that it will be extendable and reusable, 
+Built on good intentions and the hope that it will be extendable and reusable,
 rather than an obstacle for future development.
 
 ```py
@@ -49,7 +49,7 @@ Install hikari from PyPI with the following command:
 ```bash
 python -m pip install hikari -U --pre
 # Windows users may need to run this instead...
-py -3 -m pip install hikari -U --pre 
+py -3 -m pip install hikari -U --pre
 ```
 
 ----

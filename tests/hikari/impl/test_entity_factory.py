@@ -144,7 +144,7 @@ class TestEntityFactoryImpl:
         assert own_guild.id == 152559372126519269
         assert own_guild.name == "Isopropyl"
         assert own_guild.icon_hash == "d4a983885dsaa7691ce8bcaaf945a"
-        assert own_guild.features == {guild_models.GuildFeature.DISCOVERABLE, "FORCE_RELAY"}
+        assert own_guild.features == [guild_models.GuildFeature.DISCOVERABLE, "FORCE_RELAY"]
         assert own_guild.is_owner is False
         assert own_guild.my_permissions == permission_models.Permission(2147483647)
 
@@ -203,7 +203,7 @@ class TestEntityFactoryImpl:
         assert application.is_bot_public is True
         assert application.is_bot_code_grant_required is False
         assert application.owner == entity_factory_impl.deserialize_user(owner_payload)
-        assert application.rpc_origins == {"127.0.0.0"}
+        assert application.rpc_origins == ["127.0.0.0"]
         assert application.summary == "not a blank string"
         assert application.verify_key == b"698c5d0859abb686be1f8a19e0e7634d8471e33817650f9fb29076de227bca90"
         assert application.icon_hash == "iwiwiwiwiw"
@@ -216,7 +216,7 @@ class TestEntityFactoryImpl:
         assert len(application.team.members) == 1
         member = application.team.members[115590097100865541]
         assert member.membership_state == application_models.TeamMembershipState.INVITED
-        assert member.permissions == {"*"}
+        assert member.permissions == ["*"]
         assert member.team_id == 209333111222
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(member, application_models.TeamMember)
@@ -1188,7 +1188,7 @@ class TestEntityFactoryImpl:
         assert emoji.guild_id == 1235123
         assert emoji.name == "testing"
         assert emoji.is_animated is False
-        assert emoji.role_ids == {123, 456}
+        assert emoji.role_ids == [123, 456]
         assert emoji.user == entity_factory_impl.deserialize_user(user_payload)
         assert emoji.is_colons_required is True
         assert emoji.is_managed is False
@@ -1278,7 +1278,7 @@ class TestEntityFactoryImpl:
         assert member.guild_id == 76543325
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.nickname == "foobarbaz"
-        assert member.role_ids == {11111, 22222, 33333, 44444}
+        assert member.role_ids == [11111, 22222, 33333, 44444]
         assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.is_deaf is False
@@ -1484,7 +1484,7 @@ class TestEntityFactoryImpl:
         assert guild_preview.id == 152559372126519269
         assert guild_preview.name == "Isopropyl"
         assert guild_preview.icon_hash == "d4a983885dsaa7691ce8bcaaf945a"
-        assert guild_preview.features == {guild_models.GuildFeature.DISCOVERABLE, "FORCE_RELAY"}
+        assert guild_preview.features == [guild_models.GuildFeature.DISCOVERABLE, "FORCE_RELAY"]
         assert guild_preview.splash_hash == "dsa345tfcdg54b"
         assert guild_preview.discovery_splash_hash == "lkodwaidi09239uid"
         assert guild_preview.emojis == {
@@ -1596,12 +1596,12 @@ class TestEntityFactoryImpl:
         assert guild.id == 265828729970753537
         assert guild.name == "L33t guild"
         assert guild.icon_hash == "1a2b3c4d"
-        assert guild.features == {
+        assert guild.features == [
             guild_models.GuildFeature.ANIMATED_ICON,
             guild_models.GuildFeature.MORE_EMOJI,
             guild_models.GuildFeature.NEWS,
             "SOME_UNDOCUMENTED_FEATURE",
-        }
+        ]
         assert guild.splash_hash == "0ff0ff0ff"
         assert guild.discovery_splash_hash == "famfamFAMFAMfam"
         assert guild.owner_id == 6969696
@@ -1841,7 +1841,7 @@ class TestEntityFactoryImpl:
         assert invite.guild.id == 56188492224814744
         assert invite.guild.name == "Testin' Your Scene"
         assert invite.guild.icon_hash == "bb71f469c158984e265093a81b3397fb"
-        assert invite.guild.features == {"FORCE_RELAY"}
+        assert invite.guild.features == ["FORCE_RELAY"]
         assert invite.guild.splash_hash == "aSplashForSure"
         assert invite.guild.banner_hash == "aBannerForSure"
         assert invite.guild.description == "Describe me cute kitty."
@@ -1920,7 +1920,7 @@ class TestEntityFactoryImpl:
         assert invite_with_metadata.guild.id == 56188492224814744
         assert invite_with_metadata.guild.name == "Testin' Your Scene"
         assert invite_with_metadata.guild.icon_hash == "bb71f469c158984e265093a81b3397fb"
-        assert invite_with_metadata.guild.features == {"FORCE_RELAY"}
+        assert invite_with_metadata.guild.features == ["FORCE_RELAY"]
         assert invite_with_metadata.guild.splash_hash == "aSplashForSure"
         assert invite_with_metadata.guild.banner_hash == "aBannerForSure"
         assert invite_with_metadata.guild.description == "Describe me cute kitty."
@@ -2058,9 +2058,9 @@ class TestEntityFactoryImpl:
         )
         assert message.is_tts is True
         assert message.is_mentioning_everyone is True
-        assert message.user_mentions == {5678}
-        assert message.role_mentions == {987}
-        assert message.channel_mentions == {456}
+        assert message.user_mentions == [5678]
+        assert message.role_mentions == [987]
+        assert message.channel_mentions == [456]
         # Attachment
         assert len(message.attachments) == 1
         attachment = message.attachments[0]
@@ -2127,9 +2127,9 @@ class TestEntityFactoryImpl:
         assert message.guild_id is None
         assert message.member is None
         assert message.edited_timestamp is None
-        assert message.channel_mentions == set()
-        assert message.role_mentions == set()
-        assert message.channel_mentions == set()
+        assert message.channel_mentions == []
+        assert message.role_mentions == []
+        assert message.channel_mentions == []
         assert message.attachments == []
         assert message.embeds == []
         assert message.reactions == []
@@ -2187,7 +2187,7 @@ class TestEntityFactoryImpl:
         presence = entity_factory_impl.deserialize_member_presence(member_presence_payload)
         assert presence.app is mock_app
         assert presence.user_id == 115590097100865541
-        assert presence.role_ids == {49494949}
+        assert presence.role_ids == [49494949]
         assert presence.guild_id == 44004040
         assert presence.visible_status == presence_models.Status.DND
         # PresenceActivity
@@ -3044,9 +3044,9 @@ class TestEntityFactoryImpl:
         )
         assert message_update.message.is_tts is True
         assert message_update.message.is_mentioning_everyone is True
-        assert message_update.message.user_mentions == {5678}
-        assert message_update.message.role_mentions == {987}
-        assert message_update.message.channel_mentions == {456}
+        assert message_update.message.user_mentions == [5678]
+        assert message_update.message.role_mentions == [987]
+        assert message_update.message.channel_mentions == [456]
         # Attachment
         assert len(message_update.message.attachments) == 1
         attachment = message_update.message.attachments[0]

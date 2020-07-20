@@ -303,13 +303,13 @@ class PartialMessage(snowflake.Unique):
     is_mentioning_everyone: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """Whether the message mentions `@everyone` or `@here`."""
 
-    user_mentions: undefined.UndefinedOr[typing.Set[snowflake.Snowflake]] = attr.ib(repr=False)
+    user_mentions: undefined.UndefinedOr[typing.Sequence[snowflake.Snowflake]] = attr.ib(repr=False)
     """The users the message mentions."""
 
-    role_mentions: undefined.UndefinedOr[typing.Set[snowflake.Snowflake]] = attr.ib(repr=False)
+    role_mentions: undefined.UndefinedOr[typing.Sequence[snowflake.Snowflake]] = attr.ib(repr=False)
     """The roles the message mentions."""
 
-    channel_mentions: undefined.UndefinedOr[typing.Set[snowflake.Snowflake]] = attr.ib(repr=False)
+    channel_mentions: undefined.UndefinedOr[typing.Sequence[snowflake.Snowflake]] = attr.ib(repr=False)
     """The channels the message mentions."""
 
     attachments: undefined.UndefinedOr[typing.Sequence[Attachment]] = attr.ib(repr=False)
@@ -486,7 +486,7 @@ class PartialMessage(snowflake.Unique):
             If you lack permissions to send messages in the given channel; if
             you try to change the contents of another user's message; or if you
             try to edit the flags on another user's message without the
-            permissions to manage messages_.
+            permissions to manage messages.
         hikari.errors.NotFound
             If the channel or message is not found.
         hikari.errors.ServerHTTPErrorResponse
@@ -566,6 +566,33 @@ class PartialMessage(snowflake.Unique):
             `hikari.utilities.snowflake.Snowflake`, or
             `hikari.models.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
+
+        !!! note
+            Attachments can be passed as many different things, to aid in
+            convenience.
+
+            - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the
+                resource at the given URL will be streamed to Discord when
+                sending the message. Subclasses of
+                `hikari.utilities.files.WebResource` such as
+                `hikari.utilities.files.URL`,
+                `hikari.models.messages.Attachment`,
+                `hikari.models.emojis.Emoji`,
+                `EmbedResource`, etc will also be uploaded this way.
+                This will use bit-inception, so only a small percentage of the
+                resource will remain in memory at any one time, thus aiding in
+                scalability.
+            - If a `hikari.utilities.files.Bytes` is passed, or a `builtins.str`
+                that contains a valid data URI is passed, then this is uploaded
+                with a randomized file name if not provided.
+            - If a `hikari.utilities.files.File`, `pathlib.PurePath` or
+                `builtins.str` that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and streamed
+                using bit-inception where possible. This depends on the
+                type of `concurrent.futures.Executor` that is being used for
+                the application (default is a thread pool which supports this
+                behaviour).
 
         Returns
         -------
@@ -812,13 +839,13 @@ class Message(PartialMessage):
     is_mentioning_everyone: bool
     """Whether the message mentions `@everyone` or `@here`."""
 
-    user_mentions: typing.Set[snowflake.Snowflake]
+    user_mentions: typing.Sequence[snowflake.Snowflake]
     """The users the message mentions."""
 
-    role_mentions: typing.Set[snowflake.Snowflake]
+    role_mentions: typing.Sequence[snowflake.Snowflake]
     """The roles the message mentions."""
 
-    channel_mentions: typing.Set[snowflake.Snowflake]
+    channel_mentions: typing.Sequence[snowflake.Snowflake]
     """The channels the message mentions."""
 
     attachments: typing.Sequence[Attachment]
