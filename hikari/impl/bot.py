@@ -46,6 +46,7 @@ from hikari.impl import rest as rest_client_impl
 from hikari.impl import shard as gateway_shard_impl
 from hikari.impl import stateless_cache as stateless_cache_impl
 from hikari.impl import voice
+from hikari.models import intents as intents_
 from hikari.models import presences
 from hikari.utilities import constants
 from hikari.utilities import date
@@ -58,7 +59,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_dispatcher as event_dispatcher_
     from hikari.events import base as base_events
     from hikari.models import gateway as gateway_models
-    from hikari.models import intents as intents_
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
@@ -98,6 +98,15 @@ class BotAppImpl(bot.IBotApp):
         The intents to use for each shard. If `builtins.None`, then no intents
         are passed. Note that on the version `7` gateway, this will cause an
         immediate connection close with an error code.
+
+        The default for this is to enable all intents that do not require
+        privileges.
+
+        !!! warning
+            Enabling privileged intents without enabling the intent
+            in the Discord developer dashboard will result in shards immediately
+            being disconnected on startup and the application raising an
+            exception.
     large_threshold : builtins.int
         The number of members that need to be in a guild for the guild to be
         considered large. Defaults to the maximum, which is `250`.
@@ -178,7 +187,7 @@ class BotAppImpl(bot.IBotApp):
         initial_idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         initial_is_afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         initial_status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
-        intents: typing.Optional[intents_.Intent] = None,
+        intents: typing.Optional[intents_.Intent] = intents_.Intent.all_unprivileged(),
         large_threshold: int = 250,
         logging_level: typing.Union[str, int, None] = "INFO",
         proxy_settings: typing.Optional[config.ProxySettings] = None,
