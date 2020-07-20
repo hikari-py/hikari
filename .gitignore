@@ -27,8 +27,8 @@ build/
 dist/
 *.egg-info/
 pip-wheel-metadata/
-*.so 
-*.o 
+*.so
+*.o
 *.pyd
 
 # Tox/Nox-generated files

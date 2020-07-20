@@ -91,17 +91,22 @@ async def try_fetch(i, n, emoji_surrogates, name):
 
     if isinstance(ex, errors.ServerHTTPErrorResponse):
         skipped_emojis.append((emoji_surrogates, name))
-        print("\033[1;38m[ SKIP ]\033[0m", f"{i}/{n}",
-              name, *map(hex, map(ord, emoji_surrogates)), emoji.url, str(ex))
+        print("\033[1;38m[ SKIP ]\033[0m", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url, str(ex))
 
     if ex is None:
         valid_emojis.append((emoji_surrogates, name))
-        print("\033[1;32m[  OK  ]\033[0m", f"{i}/{n}",
-              name, *map(hex, map(ord, emoji_surrogates)), emoji.url)
+        print("\033[1;32m[  OK  ]\033[0m", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url)
     else:
         invalid_emojis.append((emoji_surrogates, name))
-        print("\033[1;31m[ FAIL ]\033[0m", f"{i}/{n}",
-              name, *map(hex, map(ord, emoji_surrogates)), type(ex), ex, emoji.url)
+        print(
+            "\033[1;31m[ FAIL ]\033[0m",
+            f"{i}/{n}",
+            name,
+            *map(hex, map(ord, emoji_surrogates)),
+            type(ex),
+            ex,
+            emoji.url,
+        )
 
 
 asyncio.run(run())

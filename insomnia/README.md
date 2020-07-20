@@ -1,9 +1,9 @@
 # Insomnia bundle
 
-This contains a useful [Insomnia V4](https://insomnia.rest/download/) 
+This contains a useful [Insomnia V4](https://insomnia.rest/download/)
 YAML environment you can use to test HTTP endpoints out with.
 
-To use it, you should set up the following variables in a PRIVATE environment 
+To use it, you should set up the following variables in a PRIVATE environment
 (and make sure you do not push these ever!). All variables are strings
 
 | Variable name         | Description                                                                                  |

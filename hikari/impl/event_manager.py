@@ -101,18 +101,21 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
         if self._intents is not None:
             # Collection of combined bitfield combinations of intents that
             # could be enabled to receive this event.
-            expected_intent_sets = base_events.get_required_intents_for(event_type)
-            if not any(self._intents & expected_intent_set for expected_intent_set in expected_intent_sets):
-                expected_intents_str = ", ".join(
-                    str(expected_intent_set) for expected_intent_set in expected_intent_sets
-                )
+            expected_intent_groups = base_events.get_required_intents_for(event_type)
 
-                warnings.warn(
-                    f"You have tried to listen to {event_type.__name__}, but this will only ever be triggered if you "
-                    f"enable one of the following intents: {expected_intents_str}.",
-                    category=errors.IntentWarning,
-                    stacklevel=_nested + 2,
-                )
+            if expected_intent_groups:
+                for expected_intent_group in expected_intent_groups:
+                    if (self._intents & expected_intent_group) == expected_intent_group:
+                        break
+                else:
+                    expected_intents_str = ", ".join(map(str, expected_intent_groups))
+
+                    warnings.warn(
+                        f"You have tried to listen to {event_type.__name__}, but this will only ever be triggered if "
+                        f"you enable one of the following intents: {expected_intents_str}.",
+                        category=errors.IntentWarning,
+                        stacklevel=_nested + 2,
+                    )
 
         if event_type not in self._listeners:
             self._listeners[event_type] = []

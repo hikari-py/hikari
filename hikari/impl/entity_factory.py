@@ -25,8 +25,8 @@ import datetime
 import typing
 
 from hikari.api import entity_factory
-from hikari.api import shard as gateway_shard
 from hikari.api import rest as rest_app
+from hikari.api import shard as gateway_shard
 from hikari.events import channel as channel_events
 from hikari.events import guild as guild_events
 from hikari.events import message as message_events
@@ -186,7 +186,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         application.is_bot_public = payload.get("bot_public")
         application.is_bot_code_grant_required = payload.get("bot_require_code_grant")
         application.owner = self.deserialize_user(payload["owner"]) if "owner" in payload else None
-        application.rpc_origins = set(payload["rpc_origins"]) if "rpc_origins" in payload else None
+        application.rpc_origins = payload["rpc_origins"] if "rpc_origins" in payload else None
         application.summary = payload["summary"]
         application.verify_key = bytes(payload["verify_key"], "utf-8") if "verify_key" in payload else None
         application.icon_hash = payload.get("icon")
@@ -205,7 +205,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
                 team_member.membership_state = application_models.TeamMembershipState(
                     member_payload["membership_state"]
                 )
-                team_member.permissions = set(member_payload["permissions"])
+                team_member.permissions = member_payload["permissions"]
                 team_member.team_id = snowflake.Snowflake(member_payload["team_id"])
                 team_member.user = self.deserialize_user(member_payload["user"])
                 members[team_member.user.id] = team_member
@@ -795,7 +795,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         known_custom_emoji.is_animated = payload.get("animated", False)
         known_custom_emoji.guild_id = guild_id
         known_custom_emoji.role_ids = (
-            {snowflake.Snowflake(role_id) for role_id in payload["roles"]} if "roles" in payload else set()
+            [snowflake.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else []
         )
 
         if (user := payload.get("user")) is not None:
@@ -860,7 +860,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild_member.guild_id = (
             snowflake.Snowflake(payload["guild_id"]) if guild_id is undefined.UNDEFINED else guild_id
         )
-        guild_member.role_ids = {snowflake.Snowflake(role_id) for role_id in payload["roles"]}
+        guild_member.role_ids = [snowflake.Snowflake(role_id) for role_id in payload["roles"]]
 
         joined_at = payload.get("joined_at")
         guild_member.joined_at = (
@@ -962,7 +962,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
                 features.append(guild_models.GuildFeature(feature))
             except ValueError:
                 features.append(feature)
-        guild.features = set(features)
+        guild.features = features
 
     def deserialize_guild_preview(self, payload: data_binding.JSONObject) -> guild_models.GuildPreview:
         guild_preview = guild_models.GuildPreview()
@@ -1209,17 +1209,17 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             payload["mention_everyone"] if "mention_everyone" in payload else undefined.UNDEFINED
         )
         partial_message.user_mentions = (
-            {snowflake.Snowflake(mention["id"]) for mention in payload["mentions"]}
+            [snowflake.Snowflake(mention["id"]) for mention in payload["mentions"]]
             if "mentions" in payload
             else undefined.UNDEFINED
         )
         partial_message.role_mentions = (
-            {snowflake.Snowflake(mention) for mention in payload["mention_roles"]}
+            [snowflake.Snowflake(mention) for mention in payload["mention_roles"]]
             if "mention_roles" in payload
             else undefined.UNDEFINED
         )
         partial_message.channel_mentions = (
-            {snowflake.Snowflake(mention["id"]) for mention in payload["mention_channels"]}
+            [snowflake.Snowflake(mention["id"]) for mention in payload["mention_channels"]]
             if "mention_channels" in payload
             else undefined.UNDEFINED
         )
@@ -1324,14 +1324,13 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         message.is_tts = payload["tts"]
         message.is_mentioning_everyone = payload["mention_everyone"]
-        message.user_mentions = {snowflake.Snowflake(mention["id"]) for mention in payload["mentions"]}
-        message.role_mentions = {snowflake.Snowflake(mention) for mention in payload["mention_roles"]}
-
-        if (mention_payloads := payload.get("mention_channels")) is not None:
-            channel_mentions = {snowflake.Snowflake(mention["id"]) for mention in mention_payloads}
-        else:
-            channel_mentions = set()
-        message.channel_mentions = channel_mentions
+        message.user_mentions = [snowflake.Snowflake(mention["id"]) for mention in payload["mentions"]]
+        message.role_mentions = [snowflake.Snowflake(mention) for mention in payload["mention_roles"]]
+        message.channel_mentions = (
+            [snowflake.Snowflake(mention["id"]) for mention in payload["mention_channels"]]
+            if "mention_channels" in payload
+            else []
+        )
 
         attachments = []
         for attachment_payload in payload["attachments"]:
@@ -1406,9 +1405,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild_member_presence.app = self._app
         guild_member_presence.user_id = snowflake.Snowflake(payload["user"]["id"])
         guild_member_presence.role_ids = (
-            {snowflake.Snowflake(role_id) for role_id in role_ids}
-            if (role_ids := payload.get("roles")) is not None
-            else None
+            [snowflake.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else None
         )
         guild_member_presence.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         # noinspection PyArgumentList
@@ -1643,11 +1640,11 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         channel_pins_update.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         channel_pins_update.channel_id = snowflake.Snowflake(payload["channel_id"])
 
-        channel_pins_update.last_pin_timestamp = (
-            date.iso8601_datetime_string_to_datetime(payload["last_pin_timestamp"])
-            if "last_pin_timestamp" in payload
-            else None
-        )
+        # Turns out this _can_ be None or not present. Only set it if it is actually available.
+        if (raw_timestamp := payload.get("last_pin_timestamp")) is not None:
+            channel_pins_update.last_pin_timestamp = date.iso8601_datetime_string_to_datetime(raw_timestamp)
+        else:
+            channel_pins_update.last_pin_timestamp = None
 
         return channel_pins_update
 
