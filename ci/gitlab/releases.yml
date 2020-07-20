@@ -98,6 +98,6 @@ release:master:
     url: https://nekokatt.gitlab.io/hikari
   extends: .release
   rules:
-    - if: "$CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_TAG == null && $CI_COMMIT_REF_NAME == 'master'"    
+    - if: "$CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_TAG == null && $CI_COMMIT_REF_NAME == 'master'"
   variables:
     TARGET_BRANCH: master

@@ -14,7 +14,7 @@
             <li class="nav-item"><a class="nav-link" href="https://discord.gg/Jx4cNGG">Discord Server</a></li>
         </ul>
     </div>
-        
+
     <!--<form class="form-inline my-2 my-lg-0">
         <div class="gcse-search"
             data-as_oq="${' '.join(search_query.strip().split()) | h }"

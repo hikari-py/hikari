@@ -26,7 +26,7 @@ variables:
   # https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
   # https://docs.gitlab.com/ee/ci/variables/README.html#syntax-of-environment-variable-expressions
   DOCKER_DRIVER: "overlay2"
- 
+
 include:
   - local: "/ci/gitlab/bases.yml"
   - local: "/ci/gitlab/installations.yml"
