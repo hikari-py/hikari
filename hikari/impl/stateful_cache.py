@@ -155,7 +155,7 @@ class _StatefulCacheMappingView(cache.ICacheView[_T], typing.Generic[_T]):
             while i < index:
                 next(items)
         except StopIteration:
-            raise IndexError(index)
+            raise IndexError(index) from None
 
         return self[next(items)]
 
@@ -185,7 +185,7 @@ class _EmptyCacheView(cache.ICacheView[_T], typing.Generic[_T]):
 
 @attr.s(slots=True, repr=False, hash=False)
 class _GuildRecord:
-    is_available: typing.Optional[bool] = attr.ib(default=False)
+    is_available: typing.Optional[bool] = attr.ib(default=None)
     guild: typing.Optional[guilds.GatewayGuild] = attr.ib(default=None)
     # TODO: some of these will be iterated across more than they will searched by a specific ID...
     # ... identify these cases and convert to lists.
@@ -251,7 +251,7 @@ _DataT = typing.TypeVar("_DataT", bound=_BaseData)
 class _MemberData(_BaseData):
     @staticmethod
     def get_blacklisted_fields() -> typing.Collection[str]:
-        return "user",
+        return ("user",)
 
     id: snowflake.Snowflake
     guild_id: snowflake.Snowflake
@@ -395,23 +395,75 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
     def _is_intent_enabled(self, intents: intents_.Intent, /) -> bool:
         return self._intents is None or self._intents & intents
 
-    def delete_guild(self, guild_id: snowflake.Snowflake) -> typing.Optional[guilds.Guild]:
+    def clear_guilds(self) -> cache.ICacheView[guilds.Guild]:
+        result = {}
+
+        for sf, record in tuple(self._guild_entries.items()):
+            if record.guild is None:
+                continue
+
+            result[sf] = record.guild
+            record.guild = None
+            record.is_available = None
+            self._delete_guild_record_if_empty(sf)
+
+        return _StatefulCacheMappingView(result) if result else _EmptyCacheView()
+
+    def delete_guild(self, guild_id: snowflake.Snowflake, /) -> typing.Optional[guilds.Guild]:
         if guild_id not in self._guild_entries:
             return None
 
-        guild_record = self._guild_entries[guild_id]
-        del self._guild_entries[guild_id]
-        return guild_record.guild
+        record = self._guild_entries[guild_id]
+        guild = record.guild
+
+        if guild is not None:
+            record.guild = None
+            record.is_available = None
+            self._delete_guild_record_if_empty(guild_id)
+
+        return guild
+
+    def get_guild(self, guild_id: snowflake.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
+        if (record := self._guild_entries.get(guild_id)) is not None:
+            if record.guild and not record.is_available:
+                raise errors.UnavailableGuildError(record.guild)
+
+            return record.guild
+
+        return None
+
+    def get_guilds_view(self) -> cache.ICacheView[guilds.GatewayGuild]:
+        results = {sf: record.guild for sf, record in self._guild_entries.items() if record.guild}
+        return _StatefulCacheMappingView(results) if results else _EmptyCacheView()
+
+    def set_guild(self, guild: guilds.GatewayGuild, /):
+        record = self._get_or_create_guild_record(guild.id)
+        record.guild = copy.deepcopy(guild)
+        record.is_available = True
+
+    def set_guild_availability(self, guild_id: snowflake.Snowflake, is_available: bool) -> None:
+        record = self._get_or_create_guild_record(guild_id=guild_id)  # TODO: only set this if guild object cached?
+        record.is_available = is_available
+
+    def update_guild(
+        self, guild: guilds.GatewayGuild, /
+    ) -> typing.Tuple[typing.Optional[guilds.GatewayGuild], typing.Optional[guilds.GatewayGuild]]:
+        guild = copy.copy(guild)
+        record = self._guild_entries.get(guild.id)
+        cached_guild = record.guild if record is not None else None
+
+        # We have to manually update these because inconsistency by Discord.
+        if cached_guild is not None:
+            guild.member_count = cached_guild.member_count
+            guild.joined_at = cached_guild.joined_at
+            guild.is_large = cached_guild.is_large
+
+        self.set_guild(guild)
+        record = self._guild_entries.get(guild.id)
+        return cached_guild, record.guild if record is not None else None
 
     def get_me(self) -> typing.Optional[users.OwnUser]:
         return self._me
-
-    def get_guild(self, guild_id: snowflake.Snowflake) -> typing.Optional[guilds.GatewayGuild]:
-        if (entry := self._guild_entries.get(guild_id)) is not None:
-            if not entry.is_available:
-                raise errors.UnavailableGuildError(entry.guild)
-            return entry.guild
-        return None
 
     def get_guild_channel(
         self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake
@@ -532,7 +584,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         return _StatefulCacheMappingView(copy.deepcopy(self._user_entries))
 
     def set_user(self, user: users.User) -> None:
-        self._user_entries[user.id] = user
+        self._user_entries[user.id] = copy.deepcopy(user)
 
     def update_user(self, user: users.User) -> typing.Tuple[typing.Optional[users.User], typing.Optional[users.User]]:
         cached_user = self.get_user(user.id)
@@ -554,11 +606,6 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         if guild_record.emojis is None or guild_record.roles is None:
             return None
         return guild_record.roles[role_id]
-
-    def get_guilds_view(self) -> cache.ICacheView[guilds.GatewayGuild]:
-        for record in self._guild_entries.values():
-            if record.guild is not None:
-                yield record.guild
 
     def get_guild_channels_view(self, guild_id: snowflake.Snowflake) -> cache.ICacheView[channels.GuildChannel]:
         guild_record = self._guild_entries.get(guild_id)
@@ -589,12 +636,6 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
     def set_initial_unavailable_guilds(self, guild_ids: typing.Collection[snowflake.Snowflake]) -> None:
         # Invoked when we receive ON_READY, assume all of these are unavailable on startup.
         self._guild_entries = {guild_id: _GuildRecord(is_available=False) for guild_id in guild_ids}
-
-    def set_guild_availability(self, guild_id: snowflake.Snowflake, is_available: bool) -> None:
-        if guild_id not in self._guild_entries:
-            self._guild_entries[guild_id] = _GuildRecord()
-
-        self._guild_entries[guild_id].is_available = is_available
 
     def replace_all_guild_channels(
         self, guild_id: snowflake.Snowflake, channel_objs: typing.Collection[channels.GuildChannel]
@@ -630,24 +671,6 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         self._guild_entries[guild_id].roles = {
             role.id: role for role in sorted(roles, key=lambda r: r.position, reverse=True)
         }
-
-    def replace_guild(self, new: guilds.GatewayGuild) -> typing.Optional[guilds.GatewayGuild]:
-        if new.id not in self._guild_entries:
-            self._guild_entries[new.id] = _GuildRecord(guild=new, is_available=True)
-            return None
-
-        guild_record = self._guild_entries[new.id]
-        old = guild_record.guild
-
-        # We have to manually update these because inconsistency by Discord.
-        if old is not None:
-            new.member_count = old.member_count
-            new.joined_at = old.joined_at
-            new.is_large = old.is_large
-
-        guild_record.guild = new
-        guild_record.is_available = True
-        return old
 
     def replace_me(self, new: users.OwnUser, /) -> typing.Optional[users.OwnUser]:
         _LOGGER.debug("setting my user to %s", new)
