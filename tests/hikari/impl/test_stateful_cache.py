@@ -20,6 +20,7 @@ import pytest
 
 import mock
 
+from hikari import errors
 from hikari.api.rest import app as rest_app
 from hikari.impl import stateful_cache
 from hikari.models import guilds
@@ -36,6 +37,153 @@ class TestStatefulCacheComponentImpl:
     @pytest.fixture()
     def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheComponentImpl:
         return hikari_test_helpers.unslot_class(stateful_cache.StatefulCacheComponentImpl)(app=app_impl, intents=None)
+
+    def test_clear_guilds_when_no_guilds_cached(self, cache_impl):
+        cache_impl._guild_entries = {
+            snowflake.Snowflake(423123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(675345): stateful_cache._GuildRecord(),
+        }
+        assert cache_impl.clear_guilds() == {}
+        assert cache_impl._guild_entries == {
+            snowflake.Snowflake(423123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(675345): stateful_cache._GuildRecord(),
+        }
+
+    def test_clear_guilds(self, cache_impl):
+        mock_guild_1 = mock.MagicMock(guilds.GatewayGuild)
+        mock_guild_2 = mock.MagicMock(guilds.GatewayGuild)
+        mock_member = mock.MagicMock(guilds.Member)
+        mock_guild_3 = mock.MagicMock(guilds.GatewayGuild)
+        cache_impl._guild_entries = {
+            snowflake.Snowflake(423123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(675345): stateful_cache._GuildRecord(guild=mock_guild_1),
+            snowflake.Snowflake(32142): stateful_cache._GuildRecord(
+                guild=mock_guild_2, members={snowflake.Snowflake(3241123): mock_member}
+            ),
+            snowflake.Snowflake(765345): stateful_cache._GuildRecord(guild=mock_guild_3),
+            snowflake.Snowflake(321132): stateful_cache._GuildRecord(),
+        }
+        assert cache_impl.clear_guilds() == {675345: mock_guild_1, 32142: mock_guild_2, 765345: mock_guild_3}
+        assert cache_impl._guild_entries == {
+            snowflake.Snowflake(423123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(32142): stateful_cache._GuildRecord(
+                members={snowflake.Snowflake(3241123): mock_member}
+            ),
+            snowflake.Snowflake(321132): stateful_cache._GuildRecord(),
+        }
+
+    def test_delete_guild_for_known_guild(self, cache_impl):
+        mock_guild = mock.MagicMock(guilds.GatewayGuild)
+        mock_member = mock.MagicMock(guilds.Member)
+        cache_impl._guild_entries = {
+            snowflake.Snowflake(354123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(543123): stateful_cache._GuildRecord(
+                guild=mock_guild, is_available=True, members={snowflake.Snowflake(43123): mock_member}
+            ),
+        }
+        assert cache_impl.delete_guild(snowflake.Snowflake(543123)) is mock_guild
+        assert cache_impl._guild_entries == {
+            snowflake.Snowflake(354123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(543123): stateful_cache._GuildRecord(members={snowflake.Snowflake(43123): mock_member}),
+        }
+
+    def test_delete_guild_for_removes_emptied_record(self, cache_impl):
+        mock_guild = mock.MagicMock(guilds.GatewayGuild)
+        cache_impl._guild_entries = {
+            snowflake.Snowflake(354123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(543123): stateful_cache._GuildRecord(guild=mock_guild, is_available=True),
+        }
+        assert cache_impl.delete_guild(snowflake.Snowflake(543123)) is mock_guild
+        assert cache_impl._guild_entries == {
+            snowflake.Snowflake(354123): stateful_cache._GuildRecord(),
+        }
+
+    def test_delete_guild_for_unknown_guild(self, cache_impl):
+        cache_impl._guild_entries = {
+            snowflake.Snowflake(354123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(543123): stateful_cache._GuildRecord(),
+        }
+        assert cache_impl.delete_guild(snowflake.Snowflake(543123)) is None
+        assert cache_impl._guild_entries == {
+            snowflake.Snowflake(354123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(543123): stateful_cache._GuildRecord(),
+        }
+
+    def test_delete_guild_for_unknown_record(self, cache_impl):
+        cache_impl._guild_entries = {snowflake.Snowflake(354123): stateful_cache._GuildRecord()}
+        assert cache_impl.delete_guild(snowflake.Snowflake(543123)) is None
+        assert cache_impl._guild_entries == {snowflake.Snowflake(354123): stateful_cache._GuildRecord()}
+
+    def test_get_guild_for_known_guild_when_available(self, cache_impl):
+        mock_guild = mock.MagicMock(guilds.GatewayGuild)
+        cache_impl._guild_entries = {
+            snowflake.Snowflake(54234123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(543123): stateful_cache._GuildRecord(guild=mock_guild, is_available=True),
+        }
+        assert cache_impl.get_guild(snowflake.Snowflake(543123)) is mock_guild
+
+    def test_get_guild_for_known_guild_when_unavailable(self, cache_impl):
+        mock_guild = mock.MagicMock(guilds.GatewayGuild)
+        cache_impl._guild_entries = {
+            snowflake.Snowflake(54234123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(543123): stateful_cache._GuildRecord(guild=mock_guild, is_available=False),
+        }
+        try:
+            assert cache_impl.get_guild(snowflake.Snowflake(543123))
+            assert False, "Excepted unavailable guild error to be raised"
+        except errors.UnavailableGuildError:
+            pass
+        except Exception as exc:
+            assert False, f"Expected unavailable guild error but got {exc}"
+
+    def test_get_guild_for_unknown_guild(self, cache_impl):
+        cache_impl._guild_entries = {
+            snowflake.Snowflake(54234123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(543123): stateful_cache._GuildRecord(),
+        }
+        assert cache_impl.get_guild(snowflake.Snowflake(543123)) is None
+
+    def test_get_guild_for_unknown_guild_record(self, cache_impl):
+        cache_impl._guild_entries = {
+            snowflake.Snowflake(54234123): stateful_cache._GuildRecord(),
+        }
+        assert cache_impl.get_guild(snowflake.Snowflake(543123)) is None
+
+    def test_get_guilds_view(self, cache_impl):
+        mock_guild_1 = mock.MagicMock(guilds.GatewayGuild)
+        mock_guild_2 = mock.MagicMock(guilds.GatewayGuild)
+        cache_impl._guild_entries = {
+            snowflake.Snowflake(4312312): stateful_cache._GuildRecord(guild=mock_guild_1),
+            snowflake.Snowflake(34123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(73453): stateful_cache._GuildRecord(guild=mock_guild_2),
+        }
+        assert cache_impl.get_guilds_view() == {
+            snowflake.Snowflake(4312312): mock_guild_1,
+            snowflake.Snowflake(73453): mock_guild_2,
+        }
+
+    def test_get_guilds_view_when_no_guilds_cached(self, cache_impl):
+        cache_impl._guild_entries = {
+            snowflake.Snowflake(4312312): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(34123): stateful_cache._GuildRecord(),
+            snowflake.Snowflake(73453): stateful_cache._GuildRecord(),
+        }
+        assert cache_impl.get_guilds_view() == {}
+
+    def test_set_guild(self, cache_impl):
+        mock_guild = mock.MagicMock(guilds.GatewayGuild, id=snowflake.Snowflake(5123123))
+        cache_impl.set_guild(mock_guild)
+        assert 5123123 in cache_impl._guild_entries
+        assert cache_impl._guild_entries[snowflake.Snowflake(5123123)].guild == mock_guild
+        assert cache_impl._guild_entries[snowflake.Snowflake(5123123)].is_available is True
+
+    def test_set_guild_availability(self, cache_impl):
+        cache_impl.set_guild_availability(snowflake.Snowflake(43123), True)
+        assert 43123 in cache_impl._guild_entries
+        assert cache_impl._guild_entries[snowflake.Snowflake(43123)].is_available is True
+
+    def test_update_guild(self, cache_impl):
+        ...
 
     def test_clear_members_for_known_member_cache(self, cache_impl):
         ...
