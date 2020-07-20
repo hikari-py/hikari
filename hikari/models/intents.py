@@ -28,6 +28,8 @@ __all__: typing.Final[typing.List[str]] = ["Intent", "Intents"]
 import enum
 
 # noinspection PyUnresolvedReferences
+import functools
+import operator
 import typing
 
 
@@ -189,6 +191,16 @@ class Intent(enum.IntFlag):
         application.
         """
         return bool(self & (Intent.GUILD_MEMBERS | Intent.GUILD_PRESENCES))
+
+    @classmethod
+    def all_unprivileged(cls) -> Intent:
+        """Combination of all intents that do not require privileges."""
+        return functools.reduce(operator.or_, (i for i in cls.__members__.values() if not i.is_privileged))
+
+    @classmethod
+    def all(cls) -> Intent:
+        """Combination of all intents."""
+        return functools.reduce(operator.or_, cls.__members__.values())
 
 
 Intents = Intent
