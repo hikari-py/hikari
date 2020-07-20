@@ -192,10 +192,20 @@ class Permission(enum.IntFlag):
 
     def __str__(self) -> str:
         names = []
+
+        if self.value == 0:
+            # MyPy doesn't like me doing self.NONE.name.
+            return "NONE"
+
         for member in type(self).__members__.values():
+            # Don't show `NONE` values, it breaks stuff and makes no sense here.
+            if member.value == 0:
+                continue
+
             # If it isn't a combined value, and it is contained in the bitfield:
             if math.log2(member.value).is_integer() and member & self:
                 names.append(member.name)
+
         return " | ".join(sorted(names))
 
 
