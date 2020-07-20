@@ -185,6 +185,40 @@ class TestStatefulCacheComponentImpl:
     def test_update_guild(self, cache_impl):
         ...
 
+    def test_delete_me_for_known_me(self, cache_impl):
+        mock_own_user = mock.MagicMock(users.OwnUser)
+        cache_impl._me = mock_own_user
+        assert cache_impl.delete_me() is mock_own_user
+        assert cache_impl._me is None
+
+    def test_delete_me_for_unknown_me(self, cache_impl):
+        assert cache_impl.delete_me() is None
+        assert cache_impl._me is None
+
+    def test_get_me_for_known_me(self, cache_impl):
+        mock_own_user = mock.MagicMock(users.OwnUser)
+        cache_impl._me = mock_own_user
+        assert cache_impl.get_me() == mock_own_user
+
+    def test_get_me_for_unknown_me(self, cache_impl):
+        assert cache_impl.get_me() is None
+
+    def test_set_me(self, cache_impl):
+        mock_own_user = mock.MagicMock(users.OwnUser)
+        assert cache_impl.set_me(mock_own_user)
+
+    def test_update_me_for_cached_me(self, cache_impl):
+        mock_cached_own_user = mock.MagicMock(users.OwnUser)
+        mock_own_user = mock.MagicMock(users.OwnUser)
+        cache_impl._me = mock_cached_own_user
+        assert cache_impl.update_me(mock_own_user) == (mock_cached_own_user, mock_own_user)
+        assert cache_impl._me == mock_own_user
+
+    def test_update_me_for_uncached_me(self, cache_impl):
+        mock_own_user = mock.MagicMock(users.OwnUser)
+        assert cache_impl.update_me(mock_own_user) == (None, mock_own_user)
+        assert cache_impl._me == mock_own_user
+
     def test_clear_members_for_known_member_cache(self, cache_impl):
         ...
 

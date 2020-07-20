@@ -462,9 +462,6 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         record = self._guild_entries.get(guild.id)
         return cached_guild, record.guild if record is not None else None
 
-    def get_me(self) -> typing.Optional[users.OwnUser]:
-        return self._me
-
     def get_guild_channel(
         self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake
     ) -> typing.Optional[channels.GuildChannel]:
@@ -478,6 +475,25 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         guild_record = self._guild_entries.get(guild_id)
         if guild_record is not None:
             return guild_record.emojis.get(emoji_id)
+
+    def delete_me(self) -> typing.Optional[users.OwnUser]:
+        cached_user = self._me
+        self._me = None
+        return cached_user
+
+    def get_me(self) -> typing.Optional[users.OwnUser]:
+        return copy.deepcopy(self._me)
+
+    def set_me(self, user: users.OwnUser, /):
+        self._me = copy.deepcopy(user)
+
+    def update_me(
+        self, user: users.OwnUser, /
+    ) -> typing.Tuple[typing.Optional[users.OwnUser], typing.Optional[users.OwnUser]]:
+        _LOGGER.debug("setting my user to %s", user)
+        cached_user = self._me
+        self.set_me(user)
+        return cached_user, self._me
 
     def _build_member(
         self,
@@ -671,9 +687,3 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         self._guild_entries[guild_id].roles = {
             role.id: role for role in sorted(roles, key=lambda r: r.position, reverse=True)
         }
-
-    def replace_me(self, new: users.OwnUser, /) -> typing.Optional[users.OwnUser]:
-        _LOGGER.debug("setting my user to %s", new)
-        old = self._me
-        self._me = new
-        return old
