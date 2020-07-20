@@ -24,9 +24,10 @@ thus `permissions.Permission.MANAGE_MESSAGES` will behave the same as
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Permission", "Permissions"]
+__all__: typing.Final[typing.List[str]] = ["Permission"]
 
 import enum
+import math
 
 # noinspection PyUnresolvedReferences
 import typing
@@ -190,11 +191,12 @@ class Permission(enum.IntFlag):
     """Allows management and editing of emojis."""
 
     def __str__(self) -> str:
-        return self.name
-
-
-Permissions = Permission
-"""Alias for `Permission`."""
+        names = []
+        for member in type(self).__members__.values():
+            # If it isn't a combined value, and it is contained in the bitfield:
+            if math.log2(member.value).is_integer() and member & self:
+                names.append(member.name)
+        return " | ".join(sorted(names))
 
 
 def __getattr__(name: str) -> Permission:

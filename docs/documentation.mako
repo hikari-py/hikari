@@ -479,6 +479,29 @@
             if hasattr(parent, "__annotations__") and v.name in parent.__annotations__:
                 return_type = get_annotation(lambda *_, **__: parent.__annotations__[v.name])
 
+        value = None
+        try:
+            obj = getattr(v.cls.obj, v.name)
+
+            simple_bases = (
+                bytes, int, bool, str, float, complex, list, set, frozenset, dict, tuple, type(None),
+                enum.Enum, typing.Container
+            )
+
+            if isinstance(obj, simple_bases):
+                value = str(obj)
+
+                # Combined enum tidyup
+                if value.count("|") > 3 and isinstance(obj, enum.Enum):
+                    start = "\n\N{EM SPACE}\N{EM SPACE}\N{EM SPACE}"
+                    value = f"({start}   " + f"{start} | ".join(value.split(" | ")) + "\n)"
+
+        except Exception as ex:
+            print(v.name, type(ex).__name__, ex)
+
+        if value:
+            return_type += f" = {value}"
+
         project_inventory.objects.append(
             sphobjinv.DataObjStr(
                 name = f"{v.module.name}.{v.qualname}",
