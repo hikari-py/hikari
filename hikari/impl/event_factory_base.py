@@ -184,8 +184,7 @@ class EventFactoryComponentBase(event_dispatcher.IEventDispatcherComponent, even
                 del self._listeners[event_type]
 
     def listen(
-        self,
-        event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None,
+        self, event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None,
     ) -> typing.Callable[
         [event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]],
         event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
