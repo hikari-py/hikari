@@ -51,10 +51,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import undefined
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.cache")
-
 _T = typing.TypeVar("_T", bound=snowflake.Unique)
-_T_co = typing.TypeVar("_T_co", bound=snowflake.Unique)
-_U = typing.TypeVar("_U")
 
 
 class _IDTable(typing.MutableSet[snowflake.Snowflake]):
@@ -103,6 +100,7 @@ class _IDTable(typing.MutableSet[snowflake.Snowflake]):
     def __contains__(self, value: typing.Any) -> bool:
         if not isinstance(value, int):
             return False
+
         return self._index_of(value) != -1
 
     def __len__(self) -> int:
@@ -159,7 +157,7 @@ class _StatefulCacheMappingView(cache.ICacheView[_T], typing.Generic[_T]):
 
         return self[next(items)]
 
-    def iterator(self) -> iterators.LazyIterator[_T_co]:
+    def iterator(self) -> iterators.LazyIterator[_T]:
         return iterators.FlatLazyIterator(self.values())
 
 
@@ -179,7 +177,7 @@ class _EmptyCacheView(cache.ICacheView[_T], typing.Generic[_T]):
     def get_item_at(self, index: int) -> typing.NoReturn:
         raise IndexError(index)
 
-    def iterator(self) -> iterators.LazyIterator[_T_co]:
+    def iterator(self) -> iterators.LazyIterator[_T]:
         return iterators.FlatLazyIterator(())
 
 
@@ -248,6 +246,23 @@ _DataT = typing.TypeVar("_DataT", bound=_BaseData)
 
 
 @attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
+class _DMChannelData(_BaseData):
+    @staticmethod
+    def get_blacklisted_fields() -> typing.Collection[str]:
+        return "app", "recipient", "type"
+
+    id: snowflake.Snowflake
+    name: typing.Optional[str]
+    last_message_id: typing.Optional[snowflake.Snowflake]
+    recipient_id: snowflake.Snowflake
+
+    def build_entity(self, target: channels.DMChannel) -> channels.DMChannel:
+        super().build_entity(target)
+        target.type = channels.ChannelType.DM
+        return target
+
+
+@attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
 class _MemberData(_BaseData):
     @staticmethod
     def get_blacklisted_fields() -> typing.Collection[str]:
@@ -264,20 +279,21 @@ class _MemberData(_BaseData):
 
 
 @attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
-class _DMChannelData(_BaseData):
+class _KnownCustomEmojiData(_BaseData):
     @staticmethod
     def get_blacklisted_fields() -> typing.Collection[str]:
-        return "app", "recipient", "type"
+        return "app", "user"
 
     id: snowflake.Snowflake
-    name: typing.Optional[str]
-    last_message_id: typing.Optional[snowflake.Snowflake]
-    recipient_id: snowflake.Snowflake
-
-    def build_entity(self, target: channels.DMChannel) -> channels.DMChannel:
-        super().build_entity(target)
-        target.type = channels.ChannelType.DM
-        return target
+    name: typing.Optional[str]  # TODO: Shouldn't ever be None here
+    is_animated: typing.Optional[bool]  # TODO: Shouldn't ever be None here
+    guild_id: snowflake.Snowflake
+    role_ids: snowflake.Snowflake
+    user_id: typing.Optional[snowflake.Snowflake]
+    is_animated: bool
+    is_colons_required: bool
+    is_managed: bool
+    is_available: bool
 
 
 @attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
@@ -297,24 +313,6 @@ class _VoiceStateData(_BaseData):
     is_video_enabled: bool
     user_id: snowflake.Snowflake
     session_id: str
-
-
-@attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
-class _KnownCustomEmojiData(_BaseData):
-    @staticmethod
-    def get_blacklisted_fields() -> typing.Collection[str]:
-        return "app", "user"
-
-    id: snowflake.Snowflake
-    name: typing.Optional[str]  # TODO: Shouldn't ever be None here
-    is_animated: typing.Optional[bool]  # TODO: Shouldn't ever be None here
-    guild_id: snowflake.Snowflake
-    role_ids: snowflake.Snowflake
-    user_id: typing.Optional[snowflake.Snowflake]
-    is_animated: bool
-    is_colons_required: bool
-    is_managed: bool
-    is_available: bool
 
 
 def _set_fields_if_defined(
@@ -346,7 +344,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
 
     def __init__(self, app: rest_app.IRESTApp, intents: typing.Optional[intents_.Intent]) -> None:
         self._me: typing.Optional[users.OwnUser] = None
-        self._dm_channel_entries: typing.Dict[snowflake.Snowflake, channels.DMChannel] = {}
+        self._dm_channel_entries: typing.Dict[snowflake.Snowflake, _DMChannelData] = {}
         self._emoji_entries: typing.Dict[snowflake.Snowflake, emojis.KnownCustomEmoji] = {}
         self._guild_channel_entries: typing.Dict[snowflake.Snowflake, channels.GuildChannel] = {}
         self._guild_entries: typing.Dict[snowflake.Snowflake, _GuildRecord] = {}
@@ -381,6 +379,72 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
 
     def _is_intent_enabled(self, intents: intents_.Intent, /) -> bool:
         return self._intents is None or self._intents & intents
+
+    def _build_dm_channel(
+        self,
+        channel_data: _DMChannelData,
+        cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = None,
+    ):
+        channel = channel_data.build_entity(channels.DMChannel())
+        channel.app = self._app
+        recipient = (
+            cached_users[channel_data.recipient_id] if cached_users else self._user_entries[channel_data.recipient_id]
+        )
+        channel.recipient = copy.copy(recipient)
+        return channel
+
+    def clear_dm_channels(self) -> cache.ICacheView[channels.DMChannel]:
+        if not self._dm_channel_entries:
+            return _EmptyCacheView()
+
+        cached_dm_channels = self._dm_channel_entries.copy()
+        self._dm_channel_entries.clear()
+        cached_users = {}
+
+        for user_id in cached_dm_channels.keys():
+            cached_users[user_id] = self._user_entries[user_id]
+            self._garbage_collect_user(user_id)
+
+        return _StatefulCacheMappingView(
+            cached_dm_channels, builder=lambda channel: self._build_dm_channel(channel, cached_users)
+        )
+
+    def delete_dm_channel(self, user_id: snowflake.Snowflake) -> typing.Optional[channels.DMChannel]:
+        channel_data = self._dm_channel_entries.pop(user_id, None)
+
+        channel: typing.Optional[channels.DMChannel]
+        if channel_data is not None:
+            channel = self._build_dm_channel(channel_data)
+            self._garbage_collect_user(user_id)
+        else:
+            channel = None
+
+        return channel
+
+    def get_dm_channel(self, user_id: snowflake.Snowflake) -> typing.Optional[channels.DMChannel]:
+        channel_data = self._dm_channel_entries.get(user_id)
+        return self._build_dm_channel(channel_data) if channel_data is not None else None
+
+    def get_dm_channel_view(self) -> cache.ICacheView[channels.DMChannel]:
+        if not self._dm_channel_entries:
+            return _EmptyCacheView()
+
+        cached_users = {sf: user for sf, user in self._user_entries.items() if sf in self._dm_channel_entries}
+        return _StatefulCacheMappingView(
+            self._dm_channel_entries.copy(), builder=lambda channel: self._build_dm_channel(channel, cached_users)
+        )
+
+    def set_dm_channel(self, channel: channels.DMChannel) -> None:  # TODO: cache the user object here.
+        self._dm_channel_entries[channel.recipient.id] = _DMChannelData.build_from_entity(
+            channel, recipient_id=channel.recipient.id
+        )
+
+    def update_dm_channel(
+        self, channel: channels.DMChannel
+    ) -> typing.Tuple[typing.Optional[channels.DMChannel], typing.Optional[channels.DMChannel]]:
+        cached_dm_channel = self.get_dm_channel(channel.recipient.id)
+        self.set_dm_channel(channel)
+        return cached_dm_channel, self.get_dm_channel(channel.recipient.id)
 
     def clear_guilds(self) -> cache.ICacheView[guilds.GatewayGuild]:
         result = {}
@@ -478,7 +542,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         self, user: users.OwnUser, /
     ) -> typing.Tuple[typing.Optional[users.OwnUser], typing.Optional[users.OwnUser]]:
         _LOGGER.debug("setting my user to %s", user)
-        cached_user = self._me
+        cached_user = self.get_me()
         self.set_me(user)
         return cached_user, self._me
 
@@ -521,9 +585,9 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
 
         built_member: typing.Optional[guilds.Member]
         if member is not None:
+            built_member = self._build_member(member)
             self._delete_guild_record_if_empty(guild_id)
             self._garbage_collect_user(member.id)
-            built_member = self._build_member(member)
         else:
             built_member = None
 
@@ -546,11 +610,10 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
 
         cached_users = {sf: self._user_entries[sf] for sf in guild_record.members.keys()}
         return _StatefulCacheMappingView(
-            copy.deepcopy(guild_record.members),
-            builder=lambda member: self._build_member(member, user_entries=cached_users),
+            guild_record.members.copy(), builder=lambda member: self._build_member(member, user_entries=cached_users),
         )
 
-    def set_member(self, member: guilds.Member, /) -> None:
+    def set_member(self, member: guilds.Member, /) -> None:  # TODO: add recipient to cache here.
         guild_record = self._get_or_create_guild_record(member.guild_id)
         member_data = _MemberData.build_from_entity(member, id=member.user.id)
 
@@ -567,7 +630,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         return cached_member, self.get_member(member.guild_id, member.user.id)
 
     def _can_user_be_removed(self, user_id: snowflake.Snowflake) -> bool:
-        if user_id in self._user_entries or user_id in self._dm_channel_entries:
+        if user_id not in self._user_entries or user_id in self._dm_channel_entries:
             return False
 
         return not any(

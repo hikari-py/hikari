@@ -29,14 +29,13 @@ from hikari.api import rest
 from hikari.utilities import iterators
 
 if typing.TYPE_CHECKING:
+    from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import users
     from hikari.utilities import snowflake
 
 
 _T = typing.TypeVar("_T", bound="snowflake.Unique")
-_T_co = typing.TypeVar("_T_co", bound="snowflake.Unique")
-_U = typing.TypeVar("_U")
 
 
 class ICacheView(typing.Mapping["snowflake.Snowflake", _T], abc.ABC):
@@ -47,7 +46,7 @@ class ICacheView(typing.Mapping["snowflake.Snowflake", _T], abc.ABC):
         ...
 
     @abc.abstractmethod
-    def iterator(self) -> iterators.LazyIterator[_T_co]:
+    def iterator(self) -> iterators.LazyIterator[_T]:
         ...
 
 
@@ -71,6 +70,89 @@ class ICacheComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def app(self) -> rest.IRESTApp:
         """The app this cache is bound by."""
+
+    @abc.abstractmethod
+    def clear_dm_channels(self) -> ICacheView[channels.DMChannel]:
+        """Remove all the DM channel objects from the cache.
+
+        Returns
+        -------
+        ICacheView[hikari.models.channels.DMChannel]
+            The cache view of the DM channel objects that were removed from the
+            cache.
+        """
+
+    @abc.abstractmethod
+    def delete_dm_channel(self, user_id: snowflake.Snowflake) -> typing.Optional[channels.DMChannel]:
+        """Remove a DM channel object from the cache.
+
+        Parameters
+        ----------
+        user_id : hikari.utilities.snowflake.Snowflake
+            The ID of the user that the DM channel to remove from the cache is
+            with.
+
+        Returns
+        -------
+        hikari.models.channels.DMChannel or builtins.None
+            The object of the DM channel that was removed from the cache if
+            found, else `builtins.None`
+        """
+
+    @abc.abstractmethod
+    def get_dm_channel(self, user_id: snowflake.Snowflake) -> typing.Optional[channels.DMChannel]:
+        """Get a DM channel object from the cache.
+
+        Parameters
+        ----------
+        user_id : hikari.utilities.snowflake.Snowflake
+            The ID of the user that the DM channel to get from the cache is with.
+
+        Returns
+        -------
+        hikari.models.channels.DMChannel or builtins.None
+            The object of the DM channel that was found in the cache or
+            `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_dm_channel_view(self) -> ICacheView[channels.DMChannel]:
+        """Get a view of the DM channel objects in the cache.
+
+        Returns
+        -------
+        ICacheView[hikari.models.channels.DMChannel]
+            The view of the DM channel objects in the cache.
+        """
+
+    @abc.abstractmethod
+    def set_dm_channel(self, channel: channels.DMChannel) -> None:
+        """Add a DM channel object to the cache.
+
+        Parameters
+        ----------
+        channel : hikari.models.channels.DMChannel
+            The object of the DM channel to add to the cache.
+        """
+
+    @abc.abstractmethod
+    def update_dm_channel(
+        self, channel: channels.DMChannel
+    ) -> typing.Tuple[typing.Optional[channels.DMChannel], typing.Optional[channels.DMChannel]]:
+        """Update a DM Channel object in the cache.
+
+        Parameters
+        ----------
+        channel : hikari.models.channels.DMChannel
+            The object of the channel to update in the cache.
+
+        Returns
+        -------
+        typing.Tuple[hikari.models.channels.DMChannel or builtins.None, hikari.models.channels.DMChannel or builtins.None]
+            A tuple of the old cached DM channel if found (else `builtins.None`)
+            and the new cached DM channel if it could be cached (else
+            `builtins.None`).
+        """
 
     @abc.abstractmethod
     def clear_guilds(self) -> ICacheView[guilds.GatewayGuild]:
