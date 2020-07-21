@@ -30,6 +30,13 @@
   retry: 0
   stage: test
 
+check-versions:
+  extends:
+    - .lint
+  script:
+    - pip install -Ur *requirements.txt
+    - pip list -o --format
+
 
 ###
 ### Flake8 linter.
