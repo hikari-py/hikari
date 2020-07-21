@@ -31,6 +31,7 @@ import datetime
 import http
 import logging
 import math
+import os
 import re
 import typing
 
@@ -902,7 +903,9 @@ class RESTClientImpl(rest_api.IRESTClient):
             embed = content
             content = undefined.UNDEFINED
 
-        elif undefined.count(attachment, attachments) == 2 and isinstance(content, files.Resource):
+        elif undefined.count(attachment, attachments) == 2 and isinstance(
+            content, (files.Resource, files.RawishTypes, os.PathLike)
+        ):
             # Syntatic sugar, common mistake to accidentally send an attachment
             # as the content, so lets detect this and fix it for the user. This
             # will still then work with normal implicit embed attachments as

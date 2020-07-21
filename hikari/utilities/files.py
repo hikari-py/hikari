@@ -21,6 +21,7 @@ from __future__ import annotations
 
 __all__ = [
     "Pathish",
+    "Rawish",
     "Resourceish",
     "AsyncReader",
     "ByteReader",
@@ -38,6 +39,7 @@ import abc
 import asyncio
 import base64
 import concurrent.futures
+import io
 import logging
 import mimetypes
 import os
@@ -68,8 +70,20 @@ This may be one of:
 - `os.PathLike` derivative, such as `pathlib.PurePath` and `pathlib.Path`.
 """
 
+RawishTypes = (bytes, bytearray, memoryview, io.BytesIO, io.StringIO)
+Rawish = typing.Union[bytes, bytearray, memoryview, io.BytesIO, io.StringIO]
+"""Type hint representing valid raw data types.
 
-Resourceish = typing.Union["Resource", Pathish]
+This may be one of:
+
+- `bytes`
+- `bytearray`
+- `memoryview`
+- `io.BytesIO`
+- `io.StringIO` (assuming UTF-8 encoding).
+"""
+
+Resourceish = typing.Union["Resource", Pathish, Rawish]
 """Type hint representing a file or path to a file/URL/data URI.
 
 This may be one of:
@@ -77,6 +91,11 @@ This may be one of:
 - `Resource` or a derivative.
 - `builtins.str` path.
 - `os.PathLike` derivative, such as `pathlib.PurePath` and `pathlib.Path`.
+- `bytes`
+- `bytearray`
+- `memoryview`
+- `io.BytesIO`
+- `io.StringIO` (assuming UTF-8 encoding).
 """
 
 
@@ -100,7 +119,7 @@ def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.
 
     Parameters
     ----------
-    url_or_resource : builtins.None or builtins.str or Resource
+    url_or_resource : Resourceish
         The item to convert. If the item is `builtins.None`, then
         `builtins.None` is returned. Likewise if a `Resource` is passed, it is
         simply returned again. Anything else is converted to a `Resource` first.
@@ -110,6 +129,9 @@ def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.
     Resource or builtins.None
         The resource to use, or `builtins.None` if `builtins.None` was input.
     """
+    if isinstance(url_or_resource, (bytes, bytearray, memoryview, io.BytesIO, io.StringIO)):
+        return Bytes(url_or_resource)
+
     if isinstance(url_or_resource, Resource):
         return url_or_resource
 
@@ -639,12 +661,21 @@ class Bytes(Resource[ByteReader]):
 
     def __init__(
         self,
-        data: bytes,
+        data: Rawish,
         /,
         mimetype: typing.Optional[str] = None,
         filename: typing.Optional[str] = None,
         extension: typing.Optional[str] = None,
     ) -> None:
+        if isinstance(data, bytearray):
+            data = bytes(data)
+        elif isinstance(data, memoryview):
+            data = data.tobytes()
+        elif isinstance(data, io.StringIO):
+            data = bytes(data.read(), "utf-8")
+        elif isinstance(data, io.BytesIO):
+            data = data.read()
+
         self.data = data
 
         if filename is None:
@@ -658,8 +689,8 @@ class Bytes(Resource[ByteReader]):
         if mimetype is None:
             # TODO: should I just default to application/octet-stream here?
             if extension is None:
-                raise TypeError("Cannot infer data type details, please specify a mimetype or an extension")
-            raise TypeError("Cannot infer data type details from extension. Please specify a mimetype")
+                extension = ".txt"
+            mimetype = "text/plain"
 
         self._filename = filename
         self.mimetype = mimetype
