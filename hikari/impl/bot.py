@@ -679,7 +679,7 @@ class BotAppImpl(bot.IBotApp):
     def _determine_default_logging_format(self) -> str:
         format_str = (
             "{red}%(levelname)-1.1s{default} {yellow}%(asctime)23.23s"  # noqa: FS003 f-string missing prefix
-            "{default} {bright}{green}%(name)20.20s: {default}{cyan}%(message)s{default}"  # noqa: FS003
+            "{default} {bright}{green}%(name)s: {default}{cyan}%(message)s{default}"  # noqa: FS003
         )
 
         return format_str.format(**self._determine_console_colour_palette())
