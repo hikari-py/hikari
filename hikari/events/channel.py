@@ -125,7 +125,7 @@ class WebhookUpdateEvent(base_events.Event):
     """The ID of the channel this webhook is being updated in."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_TYPING, intents.Intent.DIRECT_MESSAGE_TYPING)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_TYPING, intents.Intent.PRIVATE_MESSAGE_TYPING)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class TypingStartEvent(base_events.Event):
     """Used to represent typing start gateway events.
