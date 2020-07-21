@@ -35,7 +35,7 @@ check-versions:
     - .lint
   script:
     - time eval "pip install -Ur $(echo *requirements.txt | sed 's/ / -Ur /g')"
-    - pip list -o --format
+    - pip list -o
 
 
 ###
