@@ -25,15 +25,14 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = ["Intent"]
 
-import enum
-import math
-
 # noinspection PyUnresolvedReferences
 import typing
 
+from hikari.utilities import flag
+
 
 @typing.final
-class Intent(enum.IntFlag):
+class Intent(flag.Flag):
     """Represents an intent on the gateway.
 
     This is a bitfield representation of all the categories of event
@@ -266,7 +265,7 @@ class Intent(enum.IntFlag):
     * `TYPING_START` (in guilds only)
     """
 
-    DIRECT_MESSAGES = 1 << 12
+    PRIVATE_MESSAGES = 1 << 12
     """Subscribes to the following events:
 
     * `CHANNEL_CREATE` (in private message channels only)
@@ -275,7 +274,7 @@ class Intent(enum.IntFlag):
     * `MESSAGE_DELETE` (in private message channels only)
     """
 
-    DIRECT_MESSAGE_REACTIONS = 1 << 13
+    PRIVATE_MESSAGE_REACTIONS = 1 << 13
     """Subscribes to the following events:
 
     * `MESSAGE_REACTION_ADD` (in private message channels only)
@@ -284,7 +283,7 @@ class Intent(enum.IntFlag):
     * `MESSAGE_REACTION_REMOVE_EMOJI` (in private message channels only)
     """
 
-    DIRECT_MESSAGE_TYPING = 1 << 14
+    PRIVATE_MESSAGE_TYPING = 1 << 14
     """Subscribes to the following events
 
     * `TYPING_START` (in private message channels only)
@@ -320,16 +319,16 @@ class Intent(enum.IntFlag):
         use.
     """
 
-    ALL_DIRECT = DIRECT_MESSAGES | DIRECT_MESSAGE_TYPING | DIRECT_MESSAGE_REACTIONS
+    ALL_DIRECT = PRIVATE_MESSAGES | PRIVATE_MESSAGE_TYPING | PRIVATE_MESSAGE_REACTIONS
     """All direct message intents."""
 
-    ALL_MESSAGES = DIRECT_MESSAGES | GUILD_MESSAGES
+    ALL_MESSAGES = PRIVATE_MESSAGES | GUILD_MESSAGES
     """All message intents."""
 
-    ALL_MESSAGE_REACTIONS = DIRECT_MESSAGE_REACTIONS | GUILD_MESSAGE_REACTIONS
+    ALL_MESSAGE_REACTIONS = PRIVATE_MESSAGE_REACTIONS | GUILD_MESSAGE_REACTIONS
     """All message reaction intents."""
 
-    ALL_MESSAGE_TYPING = DIRECT_MESSAGE_TYPING | GUILD_MESSAGE_TYPING
+    ALL_MESSAGE_TYPING = PRIVATE_MESSAGE_TYPING | GUILD_MESSAGE_TYPING
     """All typing indicator intents."""
 
     ALL = (
@@ -343,9 +342,9 @@ class Intent(enum.IntFlag):
         | GUILD_MESSAGES
         | GUILD_MESSAGE_REACTIONS
         | GUILD_MESSAGE_TYPING
-        | DIRECT_MESSAGES
-        | DIRECT_MESSAGE_REACTIONS
-        | DIRECT_MESSAGE_TYPING
+        | PRIVATE_MESSAGES
+        | PRIVATE_MESSAGE_REACTIONS
+        | PRIVATE_MESSAGE_TYPING
     )
     """All unprivileged intents."""
 
@@ -356,24 +355,6 @@ class Intent(enum.IntFlag):
         This set of intent is privileged, and requires enabling/whitelisting to
         use.
     """
-
-    def __str__(self) -> str:
-        names = []
-
-        if self.value == 0:
-            # MyPy doesn't like me doing self.NONE.name.
-            return "NONE"
-
-        for member in type(self).__members__.values():
-            # Don't show `NONE` values, it breaks stuff and makes no sense here.
-            if member.value == 0:
-                continue
-
-            # If it isn't a combined value, and it is contained in the bitfield:
-            if math.log2(member.value).is_integer() and member & self:
-                names.append(member.name)
-
-        return " | ".join(sorted(names))
 
     @property
     def is_privileged(self) -> bool:
