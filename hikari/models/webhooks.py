@@ -43,7 +43,7 @@ if typing.TYPE_CHECKING:
 
 @enum.unique
 @typing.final
-class WebhookType(int, enum.Enum):
+class WebhookType(enum.IntEnum):
     """Types of webhook."""
 
     INCOMING = 1

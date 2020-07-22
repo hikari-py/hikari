@@ -50,7 +50,7 @@ if typing.TYPE_CHECKING:
 
 @enum.unique
 @typing.final
-class TargetUserType(int, enum.Enum):
+class TargetUserType(enum.IntEnum):
     """The reason a invite targets a user."""
 
     STREAM = 1
