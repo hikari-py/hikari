@@ -15,9 +15,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-###
-### Base for a generic linting pipeline that is invoked via Nox.
-###
 .lint:
   allow_failure: false
   before_script:
@@ -30,18 +27,7 @@
   retry: 0
   stage: test
 
-check-versions:
-  extends:
-    - .lint
-  script:
-    - time eval "pip install -Ur $(echo *requirements.txt | sed 's/ / -Ur /g')"
-    - pip list -o
-
-
-###
-### Flake8 linter.
-###
-flake8:
+lint:flake8:
   artifacts:
     expire_in: 2 days
     reports:
@@ -51,21 +37,12 @@ flake8:
   script:
     - nox -s flake8 --no-error-on-external-run
 
-###
-### Security checks.
-###
-### This runs static application security tests in addition to those that
-### GitLab provides. Any issues are reported and the pipeline is aborted.
-###
-safety:
+lint:safety:
   extends: .lint
   script:
    - nox -s safety --no-error-on-external-run
 
-###
-### MyPy static type checker.
-###
-mypy:
+lint:mypy:
   extends: .lint
   script:
     - nox -s mypy --no-error-on-external-run
@@ -74,3 +51,15 @@ mypy:
     reports:
       junit: public/mypy.xml
     when: always
+
+lint:results:
+  extends:
+    - .busybox:musl
+    - .reactive-job
+  needs:
+    - lint:flake8
+    - lint:mypy
+    - lint:safety
+  script:
+    - uname
+  stage: report
