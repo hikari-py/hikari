@@ -15,9 +15,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-###
-### Base for making a release to PyPI.
-###
 .release:
   allow_failure: false
   before_script:
@@ -42,6 +39,10 @@
     - pip install twine wheel nox
   extends: .cpython
   interruptible: false
+  needs:
+    - test:results
+    - install:results
+    - lint:results
   resource_group: deploy
   retry: 1
   script:
@@ -70,12 +71,6 @@
     - nox -s deploy --no-error-on-external-run
   stage: deploy
 
-###
-### Make a dev release.
-###
-### Upload the current code to PyPI as a .dev release.
-### This will only work on the staging branch.
-###
 release:staging:
   environment:
     name: staging
@@ -86,12 +81,6 @@ release:staging:
   variables:
     TARGET_BRANCH: staging
 
-###
-### Make a production release.
-###
-### Upload the current code to PyPI as a production release. This will only
-### work on the master branch.
-###
 release:master:
   environment:
     name: prod
