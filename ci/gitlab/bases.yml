@@ -51,6 +51,12 @@
 .cpython:3.8.3:
   image: python:3.8.3
 
+.cpython:3.8.4:
+  image: python:3.8.4
+
+.cpython:3.8.5:
+  image: python:3.8.5
+
 .cpython:3.8:
   image: python:3.8
 
