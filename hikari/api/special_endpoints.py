@@ -50,9 +50,6 @@ class TypingIndicator(abc.ABC):
 
     __slots__ = ()
 
-    def __enter__(self) -> typing.NoReturn:
-        raise TypeError("Use 'async with' rather than 'with' when triggering the typing indicator.")
-
     @abc.abstractmethod
     def __await__(self) -> typing.Generator[None, typing.Any, None]:
         ...

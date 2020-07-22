@@ -172,3 +172,26 @@ def test_GroupDMChannel_format_icon_when_hash_is_None():
     channel.icon_hash = None
 
     assert channel.format_icon() is None
+
+
+def test_GuildChannel_shard_id_property_when_guild_id_is_None():
+    channel = channels.GuildChannel()
+    channel.guild_id = None
+
+    assert channel.shard_id is None
+
+
+@pytest.mark.parametrize("error", (TypeError, AttributeError, NameError))
+def test_GuildChannel_shard_id_property_when_guild_id_error_raised(error):
+    channel = channels.GuildChannel()
+    channel.guild_id = mock.Mock(side_effect=error)
+
+    assert channel.shard_id is None
+
+
+def test_GuildChannel_shard_id_property_when_guild_id_is_not_None():
+    channel = channels.GuildChannel()
+    channel.guild_id = 123456789
+    channel.app = mock.Mock(shard_count=3)
+
+    assert channel.shard_id == 2

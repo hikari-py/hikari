@@ -16,24 +16,25 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-from hikari.models import intents
+import datetime
+
+from hikari.models import gateway
 
 
-def test_Intent_str_operator():
-    intent = intents.Intent.GUILD_MESSAGES
-    assert str(intent) == "GUILD_MESSAGES"
+def test_SessionStartLimit_used_property():
+    obj = gateway.SessionStartLimit(
+        total=100, remaining=2, reset_after=datetime.timedelta(seconds=1), max_concurrency=1
+    )
+    obj.total = 100
+    obj.remaining = 12
+
+    assert obj.used == 88
 
 
-def test_Intent_str_operator_when_value_is_zero():
-    intent = intents.Intent(0)
-    assert str(intent) == "NONE"
+def test_SessionStartLimit_reset_at_property():
+    obj = gateway.SessionStartLimit(
+        total=100, remaining=2, reset_after=datetime.timedelta(hours=1, days=10), max_concurrency=1
+    )
+    obj._created_at = datetime.datetime(2020, 7, 22, 22, 22, 36, 988017, tzinfo=datetime.timezone.utc)
 
-
-def test_Intent_is_privileged():
-    intent = intents.Intent.GUILD_MESSAGES
-    intent2 = intents.Intent.GUILD_MEMBERS
-    intent3 = intents.Intent.GUILD_PRESENCES
-
-    assert not intent.is_privileged
-    assert intent2.is_privileged
-    assert intent3.is_privileged
+    assert obj.reset_at == datetime.datetime(2020, 8, 1, 23, 22, 36, 988017, tzinfo=datetime.timezone.utc)
