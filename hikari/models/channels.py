@@ -522,7 +522,8 @@ class GuildChannel(PartialChannel):
         """Return the shard ID for the shard.
 
         This may be `builtins.None` if this channel was not received over the
-        gateway in an event, or if the guild is not known.
+        gateway in an event, or if the guild is not known, or if the shard count
+        is not known.
         """
         try:
             # This is only sensible if there is a shard.
