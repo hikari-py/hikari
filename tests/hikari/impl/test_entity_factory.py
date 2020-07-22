@@ -3366,6 +3366,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_voice_state_update_event(self, entity_factory_impl, voice_state_payload):
         voice_state_update = entity_factory_impl.deserialize_voice_state_update_event(voice_state_payload)
         assert voice_state_update.state == entity_factory_impl.deserialize_voice_state(voice_state_payload)
+        assert voice_state_update.guild_id == voice_state_update.state.guild_id
         assert isinstance(voice_state_update, voice_events.VoiceStateUpdateEvent)
 
     @pytest.fixture()
