@@ -38,6 +38,168 @@ from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 
 
+###############
+# RESTAppImpl #
+###############
+
+
+@pytest.fixture
+def rest_app():
+    return hikari_test_helpers.unslot_class(rest.RESTAppImpl)(
+        connector=mock.Mock(),
+        debug=True,
+        executor=mock.Mock(),
+        global_ratelimit=mock.Mock(spec=rate_limits.ManualRateLimiter),
+        http_settings=mock.Mock(spec=config.HTTPSettings),
+        proxy_settings=mock.Mock(spec=config.ProxySettings),
+        token="some_token",
+        token_type="tYpe",
+        url="https://some.url",
+        version=3,
+    )
+
+
+class TestRESTAppImpl:
+    def test_cache_property(self, rest_app):
+        mock_cache = mock.Mock()
+        rest_app._cache = mock_cache
+        assert rest_app.cache is mock_cache
+
+    def test_debug_property(self, rest_app):
+        rest_app._debug = True
+        assert rest_app.debug is True
+
+    def test_executor_property(self, rest_app):
+        mock_executor = mock.Mock()
+        rest_app._executor = mock_executor
+        assert rest_app.executor is mock_executor
+
+    def test_entity_factory_property(self, rest_app):
+        mock_entity_factory = mock.Mock()
+        rest_app._entity_factory = mock_entity_factory
+        assert rest_app.entity_factory is mock_entity_factory
+
+    def test_http_settings_property(self, rest_app):
+        mock_http_settings = mock.Mock()
+        rest_app._http_settings = mock_http_settings
+        assert rest_app.http_settings is mock_http_settings
+
+    def test_entity_proxy_settings(self, rest_app):
+        mock_proxy_settings = mock.Mock()
+        rest_app._proxy_settings = mock_proxy_settings
+        assert rest_app.proxy_settings is mock_proxy_settings
+
+    def test_entity_rest(self, rest_app):
+        mock_rest = mock.Mock()
+        rest_app._rest = mock_rest
+        assert rest_app.rest is mock_rest
+
+
+@pytest.mark.asyncio
+class TestRESTAppImplAsync:
+    async def test_close(self, rest_app):
+        rest_app._rest = mock.Mock(close=mock.AsyncMock())
+        await rest_app.close()
+        rest_app._rest.close.assert_called_once()
+
+    async def test__aenter__(self, rest_app):
+        async with rest_app as returned:
+            assert returned is rest_app
+
+    async def test__aexit__(self, rest_app):
+        rest_app.close = mock.AsyncMock()
+        async with rest_app:
+            pass
+        rest_app.close.assert_called_once()
+
+
+######################
+# RESTAppFactoryImpl #
+######################
+
+
+@pytest.fixture
+def rest_factory():
+    return hikari_test_helpers.unslot_class(rest.RESTAppFactoryImpl)(
+        connector=mock.Mock(),
+        connector_owner=False,
+        debug=True,
+        executor=mock.Mock(),
+        http_settings=mock.Mock(spec=config.HTTPSettings),
+        proxy_settings=mock.Mock(spec=config.ProxySettings),
+        url="https://some.url",
+        version=3,
+    )
+
+
+class TestRESTAppFactoryImpl:
+    def test_debug_property(self, rest_factory):
+        rest_factory._debug = True
+        assert rest_factory.debug is True
+
+    def test_http_settings_property(self, rest_factory):
+        mock_http_settings = mock.Mock()
+        rest_factory._http_settings = mock_http_settings
+        assert rest_factory.http_settings is mock_http_settings
+
+    def test_entity_proxy_settings(self, rest_factory):
+        mock_proxy_settings = mock.Mock()
+        rest_factory._proxy_settings = mock_proxy_settings
+        assert rest_factory.proxy_settings is mock_proxy_settings
+
+    def test_acquire(self, rest_factory):
+        with mock.patch.object(rest, "RESTAppImpl") as mock_app:
+            rest_factory.acquire(token="token", token_type="Type")
+
+        mock_app.assert_called_once_with(
+            connector=rest_factory._connector,
+            debug=rest_factory._debug,
+            executor=rest_factory._executor,
+            http_settings=rest_factory._http_settings,
+            global_ratelimit=rest_factory._global_ratelimit,
+            proxy_settings=rest_factory._proxy_settings,
+            token="token",
+            token_type="Type",
+            url=rest_factory._url,
+            version=3,
+        )
+
+
+@pytest.mark.asyncio
+class TestRESTAppFactoryImplAsync:
+    async def test_close_when_connector_owner(self, rest_factory):
+        rest_factory._connector_owner = True
+        rest_factory._global_ratelimit = mock.Mock(close=mock.Mock())
+        rest_factory._connector.close = mock.AsyncMock()
+        await rest_factory.close()
+        rest_factory._connector.close.assert_called_once()
+        rest_factory._global_ratelimit.close.assert_called_once()
+
+    async def test_close_when_not_connector_owner(self, rest_factory):
+        rest_factory._connector_owner = False
+        rest_factory._global_ratelimit = mock.Mock(close=mock.Mock())
+        rest_factory._connector.close = mock.AsyncMock()
+        await rest_factory.close()
+        rest_factory._connector.close.assert_not_called()
+        rest_factory._global_ratelimit.close.assert_called_once()
+
+    async def test__aenter__(self, rest_factory):
+        rest_factory.close = mock.AsyncMock()
+        async with rest_factory as returned:
+            assert returned is rest_factory
+
+    async def test__aexit__(self, rest_factory):
+        rest_factory.close = mock.AsyncMock()
+        async with rest_factory:
+            pass
+        rest_factory.close.assert_called_once()
+
+
+##################
+# RESTClientImpl #
+##################
+
+
 @pytest.fixture
 def stub_app():
     return mock.Mock(spec=rest_api.IRESTApp, entity_factory=mock.Mock())
