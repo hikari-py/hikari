@@ -189,7 +189,7 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
     async def close(self) -> None:
         await self._rest.close()
 
-    async def __aenter__(self) -> rest_api.IRESTAppContextManager:
+    async def __aenter__(self) -> RESTAppImpl:
         return self
 
     async def __aexit__(
