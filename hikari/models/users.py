@@ -29,6 +29,7 @@ import attr
 
 from hikari.utilities import constants
 from hikari.utilities import files
+from hikari.utilities import flag
 from hikari.utilities import routes
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
@@ -39,7 +40,7 @@ if typing.TYPE_CHECKING:
 
 @enum.unique
 @typing.final
-class UserFlag(enum.IntFlag):
+class UserFlag(flag.Flag):
     """The known user flags that represent account badges."""
 
     NONE = 0
@@ -84,13 +85,10 @@ class UserFlag(enum.IntFlag):
     VERIFIED_BOT_DEVELOPER = 1 << 17
     """Verified Bot Developer"""
 
-    def __str__(self) -> str:
-        return self.name
-
 
 @enum.unique
 @typing.final
-class PremiumType(int, enum.Enum):
+class PremiumType(enum.IntEnum):
     """The types of Nitro."""
 
     NONE = 0

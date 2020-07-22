@@ -60,7 +60,7 @@ if typing.TYPE_CHECKING:
 
 @enum.unique
 @typing.final
-class ChannelType(int, enum.Enum):
+class ChannelType(enum.IntEnum):
     """The known channel types that are exposed to us by the API."""
 
     GUILD_TEXT = 0

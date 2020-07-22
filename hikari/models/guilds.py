@@ -51,6 +51,7 @@ import attr
 from hikari.models import users
 from hikari.utilities import constants
 from hikari.utilities import files
+from hikari.utilities import flag
 from hikari.utilities import routes
 from hikari.utilities import snowflake
 
@@ -69,7 +70,7 @@ if typing.TYPE_CHECKING:
 
 @enum.unique
 @typing.final
-class GuildExplicitContentFilterLevel(int, enum.Enum):
+class GuildExplicitContentFilterLevel(enum.IntEnum):
     """Represents the explicit content filter setting for a guild."""
 
     DISABLED = 0
@@ -156,7 +157,7 @@ library.
 
 @enum.unique
 @typing.final
-class GuildMessageNotificationsLevel(int, enum.Enum):
+class GuildMessageNotificationsLevel(enum.IntEnum):
     """Represents the default notification level for new messages in a guild."""
 
     ALL_MESSAGES = 0
@@ -171,7 +172,7 @@ class GuildMessageNotificationsLevel(int, enum.Enum):
 
 @enum.unique
 @typing.final
-class GuildMFALevel(int, enum.Enum):
+class GuildMFALevel(enum.IntEnum):
     """Represents the multi-factor authorization requirement for a guild."""
 
     NONE = 0
@@ -186,7 +187,7 @@ class GuildMFALevel(int, enum.Enum):
 
 @enum.unique
 @typing.final
-class GuildPremiumTier(int, enum.Enum):
+class GuildPremiumTier(enum.IntEnum):
     """Tier for Discord Nitro boosting in a guild."""
 
     NONE = 0
@@ -207,7 +208,7 @@ class GuildPremiumTier(int, enum.Enum):
 
 @enum.unique
 @typing.final
-class GuildSystemChannelFlag(enum.IntFlag):
+class GuildSystemChannelFlag(flag.Flag):
     """Defines which features are suppressed in the system channel."""
 
     SUPPRESS_USER_JOIN = 1 << 0
@@ -216,13 +217,10 @@ class GuildSystemChannelFlag(enum.IntFlag):
     SUPPRESS_PREMIUM_SUBSCRIPTION = 1 << 1
     """Display a message when the guild is Nitro boosted."""
 
-    def __str__(self) -> str:
-        return self.name
-
 
 @enum.unique
 @typing.final
-class GuildVerificationLevel(int, enum.Enum):
+class GuildVerificationLevel(enum.IntEnum):
     """Represents the level of verification of a guild."""
 
     NONE = 0
@@ -456,7 +454,7 @@ class Role(PartialRole):
 
 @enum.unique
 @typing.final
-class IntegrationExpireBehaviour(int, enum.Enum):
+class IntegrationExpireBehaviour(enum.IntEnum):
     """Behavior for expiring integration subscribers."""
 
     REMOVE_ROLE = 0

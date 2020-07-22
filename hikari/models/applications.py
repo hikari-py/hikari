@@ -181,7 +181,7 @@ class OAuth2Scope(str, enum.Enum):
 
 @enum.unique
 @typing.final
-class ConnectionVisibility(int, enum.Enum):
+class ConnectionVisibility(enum.IntEnum):
     """Describes who can see a connection with a third party account."""
 
     NONE = 0
@@ -245,7 +245,7 @@ class OwnGuild(guilds.PartialGuild):
 
 
 @enum.unique
-class TeamMembershipState(int, enum.Enum):
+class TeamMembershipState(enum.IntEnum):
     """Represents the state of a user's team membership."""
 
     INVITED = 1

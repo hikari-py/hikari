@@ -38,6 +38,7 @@ import typing
 
 import attr
 
+from hikari.utilities import flag
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
@@ -49,7 +50,7 @@ if typing.TYPE_CHECKING:
 
 @enum.unique
 @typing.final
-class ActivityType(int, enum.Enum):
+class ActivityType(enum.IntEnum):
     """The activity type."""
 
     PLAYING = 0
@@ -141,7 +142,7 @@ class ActivitySecret:
 
 @enum.unique
 @typing.final
-class ActivityFlag(enum.IntFlag):
+class ActivityFlag(flag.Flag):
     """Flags that describe what an activity includes.
 
     This can be more than one using bitwise-combinations.
@@ -164,9 +165,6 @@ class ActivityFlag(enum.IntFlag):
 
     PLAY = 1 << 5
     """Play"""
-
-    def __str__(self) -> str:
-        return self.name
 
 
 # TODO: add strict type checking to gateway for this type in an invariant way.
@@ -237,11 +235,8 @@ class Status(str, enum.Enum):
     IDLE = "idle"
     """Idle/yellow."""
 
-    DND = "dnd"
+    DO_NOT_DISTURB = "dnd"
     """Do not disturb/red."""
-
-    DO_NOT_DISTURB = DND
-    """An alias for `Status.DND`"""
 
     OFFLINE = "offline"
     """Offline or invisible/grey."""
