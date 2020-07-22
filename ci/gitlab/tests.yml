@@ -104,6 +104,16 @@ test:3.8.3:
     - .cpython:3.8.3
     - .test
 
+test:3.8.4:
+  extends:
+    - .cpython:3.8.4
+    - .test
+
+test:3.8.5:
+  extends:
+    - .cpython:3.8.5
+    - .test
+
 ###
 ### Run CPython 3.9.0 unit tests and collect test coverage stats.
 ###
