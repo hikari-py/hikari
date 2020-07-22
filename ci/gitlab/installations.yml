@@ -24,7 +24,7 @@
     - apt install git -y
     - pip install nox
     - nox --sessions pip-sdist pip-bdist-wheel pip-git --no-error-on-external-run
-  stage: test
+  stage: install-test
 
 ###
 ### Setup script tests for Windows.
@@ -41,16 +41,41 @@
     - py -3 -V
     - py -3 -m pip install nox
     - py -3 -m nox --sessions pip-sdist pip-bdist-wheel --no-error-on-external-run
-  stage: test
+  stage: install-test
 
 ###
 ### Setup script tests for CPython 3.8
 ###
 ### Test locally installing the library via pip in several formats
 ###
-"install:3.8":
+"install:3.8.0":
   extends:
-    - .cpython:3.8
+    - .cpython:3.8.0
+    - .pip
+
+"install:3.8.1":
+  extends:
+    - .cpython:3.8.1
+    - .pip
+
+"install:3.8.2":
+  extends:
+    - .cpython:3.8.2
+    - .pip
+
+"install:3.8.3":
+  extends:
+    - .cpython:3.8.3
+    - .pip
+
+"install:3.8.4":
+  extends:
+    - .cpython:3.8.4
+    - .pip
+
+"install:3.8.5":
+  extends:
+    - .cpython:3.8.5
     - .pip
 
 ###
