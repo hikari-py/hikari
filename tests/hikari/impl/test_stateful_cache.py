@@ -63,25 +63,25 @@ class TestStatefulCacheComponentImpl:
             snowflake.Snowflake(653451234): mock.MagicMock(users.User),
             snowflake.Snowflake(978655): mock_user_2,
         }
-        iterator = cache_impl.clear_dm_channels()
+        dm_mapping = cache_impl.clear_dm_channels()
         assert cache_impl._dm_channel_entries == {}
-        assert 978655 in iterator
-        channel_from_view = iterator[snowflake.Snowflake(978655)]
+        assert 978655 in dm_mapping
+        channel_from_view = dm_mapping[snowflake.Snowflake(978655)]
         assert channel_from_view.app is cache_impl.app
         assert channel_from_view.id == snowflake.Snowflake(5642134)
         assert channel_from_view.name is None
         assert channel_from_view.type is channels.ChannelType.DM
         assert channel_from_view.last_message_id == snowflake.Snowflake(65345)
         assert channel_from_view.recipient == mock_user_1
-        assert 2342344 in iterator
-        channel_from_view = iterator[snowflake.Snowflake(2342344)]
+        assert 2342344 in dm_mapping
+        channel_from_view = dm_mapping[snowflake.Snowflake(2342344)]
         assert channel_from_view.app is cache_impl.app
         assert channel_from_view.id == snowflake.Snowflake(867456345)
         assert channel_from_view.name == "NAME"
         assert channel_from_view.type is channels.ChannelType.DM
         assert channel_from_view.last_message_id == snowflake.Snowflake(76765456)
         assert channel_from_view.recipient == mock_user_2
-        assert len(iterator) == 2
+        assert len(dm_mapping) == 2
 
     def test_clear_dm_channels_when_no_dm_channels_cached(self, cache_impl):
         assert cache_impl.clear_dm_channels() == {}
@@ -162,24 +162,24 @@ class TestStatefulCacheComponentImpl:
             recipient_id=snowflake.Snowflake(65656),
         )
         cache_impl._dm_channel_entries = {snowflake.Snowflake(54213): dm_data_1, snowflake.Snowflake(65656): dm_data_2}
-        iterator = cache_impl.get_dm_channel_view()
-        assert 54213 in iterator
-        current_dm = iterator[snowflake.Snowflake(54213)]
+        dm_mapping = cache_impl.get_dm_channel_view()
+        assert 54213 in dm_mapping
+        current_dm = dm_mapping[snowflake.Snowflake(54213)]
         assert current_dm.app is cache_impl.app
         assert current_dm.id == snowflake.Snowflake(875345)
         assert current_dm.name is None
         assert current_dm.type is channels.ChannelType.DM
         assert current_dm.last_message_id == snowflake.Snowflake(3213)
         assert current_dm.recipient == mock_user_1
-        assert 65656 in iterator
-        current_dm = iterator[snowflake.Snowflake(65656)]
+        assert 65656 in dm_mapping
+        current_dm = dm_mapping[snowflake.Snowflake(65656)]
         assert current_dm.app is cache_impl.app
         assert current_dm.id == snowflake.Snowflake(542134)
         assert current_dm.name == "OKOKOKOKOK"
         assert current_dm.type is channels.ChannelType.DM
         assert current_dm.last_message_id == snowflake.Snowflake(85463)
         assert current_dm.recipient == mock_user_2
-        assert len(iterator) == 2
+        assert len(dm_mapping) == 2
 
     def test_get_dm_channel_view_when_no_dm_channels_cached(self, cache_impl):
         assert cache_impl.get_dm_channel_view() == {}
@@ -272,9 +272,7 @@ class TestStatefulCacheComponentImpl:
             snowflake.Snowflake(543123): stateful_cache._GuildRecord(guild=mock_guild, is_available=True),
         }
         assert cache_impl.delete_guild(snowflake.Snowflake(543123)) is mock_guild
-        assert cache_impl._guild_entries == {
-            snowflake.Snowflake(354123): stateful_cache._GuildRecord(),
-        }
+        assert cache_impl._guild_entries == {snowflake.Snowflake(354123): stateful_cache._GuildRecord()}
 
     def test_delete_guild_for_unknown_guild(self, cache_impl):
         cache_impl._guild_entries = {
@@ -307,7 +305,7 @@ class TestStatefulCacheComponentImpl:
             snowflake.Snowflake(543123): stateful_cache._GuildRecord(guild=mock_guild, is_available=False),
         }
         try:
-            assert cache_impl.get_guild(snowflake.Snowflake(543123))
+            cache_impl.get_guild(snowflake.Snowflake(543123))
             assert False, "Excepted unavailable guild error to be raised"
         except errors.UnavailableGuildError:
             pass
@@ -350,15 +348,27 @@ class TestStatefulCacheComponentImpl:
 
     def test_set_guild(self, cache_impl):
         mock_guild = mock.MagicMock(guilds.GatewayGuild, id=snowflake.Snowflake(5123123))
-        cache_impl.set_guild(mock_guild)
+        assert cache_impl.set_guild(mock_guild) is None
         assert 5123123 in cache_impl._guild_entries
         assert cache_impl._guild_entries[snowflake.Snowflake(5123123)].guild == mock_guild
         assert cache_impl._guild_entries[snowflake.Snowflake(5123123)].is_available is True
 
     def test_set_guild_availability(self, cache_impl):
-        cache_impl.set_guild_availability(snowflake.Snowflake(43123), True)
+        assert cache_impl.set_guild_availability(snowflake.Snowflake(43123), True) is None
         assert 43123 in cache_impl._guild_entries
         assert cache_impl._guild_entries[snowflake.Snowflake(43123)].is_available is True
+
+    def test_set_initial_unavailable_guilds(self, cache_impl):
+        result = cache_impl.set_initial_unavailable_guilds(
+            [snowflake.Snowflake(1234), snowflake.Snowflake(6123123), snowflake.Snowflake(6654234)]
+        )
+        assert result is None
+        assert 1234 in cache_impl._guild_entries
+        assert cache_impl._guild_entries[snowflake.Snowflake(1234)].is_available is False
+        assert 1234 in cache_impl._guild_entries
+        assert cache_impl._guild_entries[snowflake.Snowflake(6123123)].is_available is False
+        assert 1234 in cache_impl._guild_entries
+        assert cache_impl._guild_entries[snowflake.Snowflake(6654234)].is_available is False
 
     def test_update_guild(self, cache_impl):
         ...
@@ -458,14 +468,14 @@ class TestStatefulCacheComponentImpl:
 
     @pytest.mark.asyncio
     async def test_get_members_view_for_unknown_guild_record(self, cache_impl):
-        members_iterator = cache_impl.get_members_view(snowflake.Snowflake(42334))
-        assert await members_iterator.iterator() == []
+        members_mapping = cache_impl.get_members_view(snowflake.Snowflake(42334))
+        assert members_mapping == {}
 
     @pytest.mark.asyncio
     async def test_get_members_view_for_unknown_member_cache(self, cache_impl):
         cache_impl._guild_entries = {snowflake.Snowflake(42334): stateful_cache._GuildRecord()}
-        members_iterator = cache_impl.get_members_view(snowflake.Snowflake(42334))
-        assert await members_iterator.iterator() == []
+        members_mapping = cache_impl.get_members_view(snowflake.Snowflake(42334))
+        assert members_mapping == {}
 
     @pytest.mark.asyncio
     async def test_get_members_view_for_known_guild(self, cache_impl):
@@ -496,9 +506,9 @@ class TestStatefulCacheComponentImpl:
         )
         cache_impl._guild_entries = {snowflake.Snowflake(42334): guild_record}
         cache_impl._user_entries = {snowflake.Snowflake(3214321): mock_user_1, snowflake.Snowflake(53224): mock_user_2}
-        members_iterator = cache_impl.get_members_view(snowflake.Snowflake(42334))
-        assert 3214321 in members_iterator
-        current_member = members_iterator[snowflake.Snowflake(3214321)]
+        members_mapping = cache_impl.get_members_view(snowflake.Snowflake(42334))
+        assert 3214321 in members_mapping
+        current_member = members_mapping[snowflake.Snowflake(3214321)]
         assert current_member.user == mock_user_1
         assert current_member.guild_id == 54234
         assert current_member.nickname == "a nick"
@@ -509,8 +519,8 @@ class TestStatefulCacheComponentImpl:
         assert current_member.premium_since is None
         assert current_member.is_deaf is True
         assert current_member.is_mute is False
-        assert 53224 in members_iterator
-        current_member = members_iterator[snowflake.Snowflake(53224)]
+        assert 53224 in members_mapping
+        current_member = members_mapping[snowflake.Snowflake(53224)]
         assert current_member.user == mock_user_2
         assert current_member.guild_id == 764345123
         assert current_member.nickname == "OKOK"
@@ -523,7 +533,7 @@ class TestStatefulCacheComponentImpl:
         )
         assert current_member.is_deaf is False
         assert current_member.is_mute is True
-        assert len(members_iterator) == 2
+        assert len(members_mapping) == 2
 
     def test_set_member(self, cache_impl):
         mock_user = mock.Mock(users.User, id=snowflake.Snowflake(645234123))
@@ -578,8 +588,8 @@ class TestStatefulCacheComponentImpl:
             snowflake.Snowflake(5432123): mock_user_1,
             snowflake.Snowflake(7654433245): mock_user_2,
         }
-        users_iterator = cache_impl.clear_users()
-        assert users_iterator == {
+        users_mapping = cache_impl.clear_users()
+        assert users_mapping == {
             snowflake.Snowflake(5432123): mock_user_1,
             snowflake.Snowflake(7654433245): mock_user_2,
         }
@@ -651,3 +661,91 @@ class TestStatefulCacheComponentImpl:
         assert cache_impl.update_user(mock_user) == (mock_old_cached_user, mock_new_cached_user)
         cache_impl.set_user.assert_called_once_with(mock_user)
         cache_impl.get_user.assert_has_calls([mock.call(54123123), mock.call(54123123)])
+
+    @pytest.mark.skip(reason="todo")  # TODO: this test case
+    def test_clear_voice_states(self, cache_impl):
+        voice_data_1 = stateful_cache._VoiceStateData(
+            channel_id=snowflake.Snowflake(4651234123),
+            guild_id=snowflake.Snowflake(54123123),
+            is_guild_deafened=True,
+            is_guild_muted=False,
+            is_self_deafened=True,
+            is_self_muted=True,
+            is_streaming=False,
+            is_suppressed=False,
+            is_video_enabled=False,
+            user_id=snowflake.Snowflake(7512312),
+            session_id="lkmdfslkmfdskjlfsdkjlsfdkjldsf",
+        )
+        voice_data_2 = stateful_cache._VoiceStateData(
+            channel_id=snowflake.Snowflake(542134123),
+            guild_id=snowflake.Snowflake(54123123),
+            is_guild_deafened=False,
+            is_guild_muted=False,
+            is_self_deafened=True,
+            is_self_muted=True,
+            is_streaming=True,
+            is_suppressed=False,
+            is_video_enabled=False,
+            user_id=snowflake.Snowflake(43123123),
+            session_id="oeroewrowerkosfdkl",
+        )
+        member_data_1 = stateful_cache._MemberData(
+            id=snowflake.Snowflake(7512312),
+            guild_id=snowflake.Snowflake(54123123),
+            nickname="blam",
+            role_ids={},
+            joined_at=datetime.datetime(2020, 7, 11, 20, 51, 7, 295496, tzinfo=datetime.timezone.utc),
+            premium_since=datetime.datetime(2020, 7, 21, 20, 51, 7, 295496, tzinfo=datetime.timezone.utc),
+            is_mute=True,
+            is_deaf=False,
+        )
+        member_data_2 = stateful_cache._MemberData(
+            id=snowflake.Snowflake(43123123),
+            guild_id=snowflake.Snowflake(54123123),
+            nickname=None,
+            role_ids={snowflake.Snowflake(543123)},
+            joined_at=datetime.datetime(2020, 7, 10, 20, 51, 7, 295496, tzinfo=datetime.timezone.utc),
+            premium_since=None,
+            is_deaf=True,
+            is_mute=False,
+        )
+        record = stateful_cache._GuildRecord(
+            voice_statuses={snowflake.Snowflake(7512312): voice_data_1, snowflake.Snowflake(43123123): voice_data_2},
+            members={snowflake.Snowflake(7512312): member_data_1, snowflake.Snowflake(43123123): member_data_2},
+        )
+        mock_user_1 = mock.MagicMock(users.User)
+        mock_user_2 = mock.MagicMock(users.User)
+        cache_impl._user_entries = {
+            snowflake.Snowflake(7512312): mock_user_1,
+            snowflake.Snowflake(43123123): mock_user_2,
+        }
+        cache_impl._guild_entries = {snowflake.Snowflake(54123123): record}
+        voice_state_mapping = cache_impl.clear_voice_states(snowflake.Snowflake(54123123))
+        assert 7512312 in voice_state_mapping
+        current_voice_state = voice_state_mapping[snowflake.Snowflake(7512312)]
+        assert current_voice_state
+        assert 43123123 in voice_state_mapping
+        current_voice_state = voice_state_mapping[snowflake.Snowflake(43123123)]
+        assert current_voice_state
+        assert len(voice_state_mapping) == 2
+
+    @pytest.mark.skip(reason="todo")
+    def test_delete_voice_state(self, cache_impl):
+        ...
+
+    @pytest.mark.skip(reason="todo")
+    def test_get_voice_state(self, cache_impl):
+        ...
+
+    @pytest.mark.skip(reason="todo")
+    def test_get_voice_state_view(self, cache_impl):
+        ...
+
+    @pytest.mark.skip(reason="todo")
+    def test_set_voice_state(self, cache_impl):
+        ...
+
+    @pytest.mark.skip(reason="todo")
+    def test_update_voice_state(self, cache_impl):
+        ...

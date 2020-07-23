@@ -32,6 +32,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import users
+    from hikari.models import voices
     from hikari.utilities import snowflake
 
 
@@ -203,6 +204,16 @@ class ICacheComponent(component.IComponent, abc.ABC):
         -------
         ICacheView[hikari.models.guilds.GatewayGuild]
             A view of the guild objects found in the cache.
+        """
+
+    @abc.abstractmethod
+    def set_guild(self, guild: guilds.GatewayGuild, /):
+        """Add a guild object to the cache.
+
+        Parameters
+        ----------
+        guild : hikari.models.guilds.GatewayGuild
+            The object of the guild to add to the cache.
         """
 
     @abc.abstractmethod
@@ -457,4 +468,88 @@ class ICacheComponent(component.IComponent, abc.ABC):
         typing.Tuple[hikari.models.users.User or builtins.None, hikari.models.users.User or builtins.None]
             A tuple of the old cached user if found (else `builtins.None`) and
             the newly cached user if it could be cached (else `builtins.None`).
+        """
+
+    @abc.abstractmethod
+    def clear_voice_states(self, guild_id: snowflake.Snowflake) -> ICacheView[voices.VoiceState]:
+        """Clear the voice state objects cached for a specific guild.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild to remove cached voice states for.
+
+        Returns
+        -------
+        ICacheView[hikari.models.voices.VoiceState]
+            A view of the voice state objects that were removed from the cache.
+        """
+
+    @abc.abstractmethod
+    def delete_voice_state(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake
+    ) -> typing.Optional[voices.VoiceState]:
+        """Remove a voice state object from the cache.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild the voice state to remove is related to.
+        user_id : hikari.utilities.snowflake.Snowflake
+            The ID of the user who the voice state to remove belongs to.
+
+        Returns
+        -------
+        hikari.models.voices.VoiceState or builtins.None
+            The object of the voice state that was removed from the cache if
+            found, else `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_voice_state(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake
+    ) -> typing.Optional[voices.VoiceState]:
+        """Get a voice state object from the cache.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild to get a voice state for.
+        user_id :hikari.utilities.snowflake.Snowflake
+            The ID of the user to get a voice state for.
+
+        Returns
+        -------
+        hikari.models.voices.VoiceState or builtins.None
+            The object of the voice state that was found in the cache, or
+            `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def set_voice_state(self, voice_state: voices.VoiceState) -> None:
+        """Add a voice state object to the cache.
+
+        Parameters
+        ----------
+        voice_state : hikari.models.voices.VoiceState
+            The object of the voice state to add to the cache.
+        """
+
+    @abc.abstractmethod
+    def update_voice_state(
+        self, voice_state: voices.VoiceState
+    ) -> typing.Tuple[typing.Optional[voices.VoiceState], typing.Optional[voices.VoiceState]]:
+        """Update a voice state object in the cache.
+
+        Parameters
+        ----------
+        voice_state : hikari.models.voices.VoiceState
+            The object of the voice state to update in the cache.
+
+        Returns
+        -------
+        typing.Tuple[hikari.models.voices.VoiceState or builtins.None, hikari.models.voices.VoiceState or builtins.None]
+            A tuple of the old cached voice state if found (else `builtins.None`)
+            and the new cached voice state object if it could be cached
+            (else `builtins.None`).
         """
