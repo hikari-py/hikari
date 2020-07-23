@@ -115,16 +115,26 @@ class AttrComparator(typing.Generic[ValueT]):
         `str.isupper`, for example).
     expected_value : T
         The expected value.
+    cast : typing.Callable[[T], typing.Any] or builtins.None
+        Optional cast to perform on the input value when being called before
+        comparing it to the expected value but after accessing the attribute.
     """
 
-    __slots__: typing.Sequence[str] = ("attr_getter", "expected_value")
+    __slots__: typing.Sequence[str] = ("attr_getter", "expected_value", "cast")
 
-    def __init__(self, attr_name: str, expected_value: typing.Any) -> None:
+    def __init__(
+        self,
+        attr_name: str,
+        expected_value: typing.Any,
+        cast: typing.Optional[typing.Callable[[ValueT], typing.Any]] = None,
+    ) -> None:
         self.expected_value = expected_value
         self.attr_getter: spel.AttrGetter[ValueT, typing.Any] = spel.AttrGetter(attr_name)
+        self.cast = cast
 
     def __call__(self, item: ValueT) -> bool:
-        return bool(self.attr_getter(item) == self.expected_value)
+        real_item = self.cast(self.attr_getter(item)) if self.cast is not None else self.attr_getter(item)
+        return bool(real_item == self.expected_value)
 
 
 class LazyIterator(typing.Generic[ValueT], abc.ABC):
@@ -596,7 +606,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
                 tuple_comparator: AttrComparator[ValueT] = AttrComparator(name, value)
                 conditions.append(tuple_comparator)
             elif isinstance(p, str):
-                comparator: AttrComparator[ValueT] = AttrComparator(p, bool)
+                comparator: AttrComparator[ValueT] = AttrComparator(p, True, bool)
                 conditions.append(comparator)
             else:
                 conditions.append(p)
