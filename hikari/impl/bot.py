@@ -370,7 +370,7 @@ class BotAppImpl(bot.IBotApp):
 
         await self.dispatch(other_events.StartingEvent())
 
-        start_time = date.monotonic_ns()
+        start_time = date.monotonic()
 
         try:
             for i, shard_ids in enumerate(self._max_concurrency_chunker()):
@@ -411,7 +411,7 @@ class BotAppImpl(bot.IBotApp):
                 # We know an error occurred if this condition is met, so re-raise it.
                 raise
 
-            finish_time = date.monotonic_ns()
+            finish_time = date.monotonic()
             self._shard_gather_task = asyncio.create_task(
                 self._gather(), name=f"zookeeper for {len(self._shards)} shard(s)"
             )
@@ -679,7 +679,7 @@ class BotAppImpl(bot.IBotApp):
     def _determine_default_logging_format(self) -> str:
         format_str = (
             "{red}%(levelname)-1.1s{default} {yellow}%(asctime)23.23s"  # noqa: FS003 f-string missing prefix
-            "{default} {bright}{green}%(name)20.20s: {default}{cyan}%(message)s{default}"  # noqa: FS003
+            "{default} {bright}{green}%(name)s: {default}{cyan}%(message)s{default}"  # noqa: FS003
         )
 
         return format_str.format(**self._determine_console_colour_palette())

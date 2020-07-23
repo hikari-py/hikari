@@ -27,15 +27,16 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = ["Permission"]
 
 import enum
-import math
 
 # noinspection PyUnresolvedReferences
 import typing
 
+from hikari.utilities import flag
+
 
 @enum.unique
 @typing.final
-class Permission(enum.IntFlag):
+class Permission(flag.Flag):
     """Represents the permissions available in a given channel or guild.
 
     This is an int-flag enum. This means that you can **combine multiple
@@ -189,24 +190,6 @@ class Permission(enum.IntFlag):
 
     MANAGE_EMOJIS = 1 << 30
     """Allows management and editing of emojis."""
-
-    def __str__(self) -> str:
-        names = []
-
-        if self.value == 0:
-            # MyPy doesn't like me doing self.NONE.name.
-            return "NONE"
-
-        for member in type(self).__members__.values():
-            # Don't show `NONE` values, it breaks stuff and makes no sense here.
-            if member.value == 0:
-                continue
-
-            # If it isn't a combined value, and it is contained in the bitfield:
-            if math.log2(member.value).is_integer() and member & self:
-                names.append(member.name)
-
-        return " | ".join(sorted(names))
 
 
 def __getattr__(name: str) -> Permission:

@@ -2189,7 +2189,7 @@ class TestEntityFactoryImpl:
         assert presence.user_id == 115590097100865541
         assert presence.role_ids == [49494949]
         assert presence.guild_id == 44004040
-        assert presence.visible_status == presence_models.Status.DND
+        assert presence.visible_status == presence_models.Status.DO_NOT_DISTURB
         # PresenceActivity
         assert len(presence.activities) == 1
         activity = presence.activities[0]
@@ -2235,7 +2235,7 @@ class TestEntityFactoryImpl:
         # ClientStatus
         assert presence.client_status.desktop == presence_models.Status.ONLINE
         assert presence.client_status.mobile == presence_models.Status.IDLE
-        assert presence.client_status.web == presence_models.Status.DND
+        assert presence.client_status.web == presence_models.Status.DO_NOT_DISTURB
         assert isinstance(presence.client_status, presence_models.ClientStatus)
 
         assert presence.premium_since == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
@@ -3366,6 +3366,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_voice_state_update_event(self, entity_factory_impl, voice_state_payload):
         voice_state_update = entity_factory_impl.deserialize_voice_state_update_event(voice_state_payload)
         assert voice_state_update.state == entity_factory_impl.deserialize_voice_state(voice_state_payload)
+        assert voice_state_update.guild_id == voice_state_update.state.guild_id
         assert isinstance(voice_state_update, voice_events.VoiceStateUpdateEvent)
 
     @pytest.fixture()

@@ -38,6 +38,7 @@ import attr
 
 from hikari.utilities import files
 from hikari.utilities import constants
+from hikari.utilities import flag
 from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
@@ -55,7 +56,7 @@ if typing.TYPE_CHECKING:
 
 @enum.unique
 @typing.final
-class MessageType(int, enum.Enum):
+class MessageType(enum.IntEnum):
     """The type of a message."""
 
     DEFAULT = 0
@@ -103,7 +104,7 @@ class MessageType(int, enum.Enum):
 
 @enum.unique
 @typing.final
-class MessageFlag(enum.IntFlag):
+class MessageFlag(flag.Flag):
     """Additional flags for message options."""
 
     NONE = 0
@@ -124,13 +125,10 @@ class MessageFlag(enum.IntFlag):
     URGENT = 1 << 4
     """This message came from the urgent message system."""
 
-    def __str__(self) -> str:
-        return self.name
-
 
 @enum.unique
 @typing.final
-class MessageActivityType(int, enum.Enum):
+class MessageActivityType(enum.IntEnum):
     """The type of a rich presence message activity."""
 
     NONE = 0
