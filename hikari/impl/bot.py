@@ -370,7 +370,7 @@ class BotAppImpl(bot.IBotApp):
 
         await self.dispatch(other_events.StartingEvent())
 
-        start_time = date.monotonic_ns()
+        start_time = date.monotonic()
 
         try:
             for i, shard_ids in enumerate(self._max_concurrency_chunker()):
@@ -411,7 +411,7 @@ class BotAppImpl(bot.IBotApp):
                 # We know an error occurred if this condition is met, so re-raise it.
                 raise
 
-            finish_time = date.monotonic_ns()
+            finish_time = date.monotonic()
             self._shard_gather_task = asyncio.create_task(
                 self._gather(), name=f"zookeeper for {len(self._shards)} shard(s)"
             )
