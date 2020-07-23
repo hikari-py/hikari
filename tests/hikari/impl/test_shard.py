@@ -726,7 +726,7 @@ class TestUpdatePresence:
         "status",
         [
             undefined.UNDEFINED,
-            presences.Status.DND,
+            presences.Status.DO_NOT_DISTURB,
             presences.Status.IDLE,
             presences.Status.ONLINE,
             presences.Status.OFFLINE,

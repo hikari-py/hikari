@@ -46,7 +46,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import guilds
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.PRIVATE_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class MessageCreateEvent(base_events.Event):
     """Used to represent Message Create gateway events."""
@@ -55,7 +55,7 @@ class MessageCreateEvent(base_events.Event):
     """The message that was sent."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.PRIVATE_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class MessageUpdateEvent(base_events.Event):
     """Represents Message Update gateway events.
@@ -72,7 +72,7 @@ class MessageUpdateEvent(base_events.Event):
     """The partial message object with all updated fields."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.DIRECT_MESSAGES)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.PRIVATE_MESSAGES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class MessageDeleteEvent(base_events.Event):
     """Used to represent Message Delete gateway events.
@@ -139,7 +139,7 @@ class MessageReactionEvent(base_events.Event):
     """
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class MessageReactionAddEvent(MessageReactionEvent):
     """Used to represent Message Reaction Add gateway events."""
@@ -158,7 +158,7 @@ class MessageReactionAddEvent(MessageReactionEvent):
     """The object of the emoji being added."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class MessageReactionRemoveEvent(MessageReactionEvent):
     """Used to represent Message Reaction Remove gateway events."""
@@ -170,7 +170,7 @@ class MessageReactionRemoveEvent(MessageReactionEvent):
     """The object of the emoji being removed."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class MessageReactionRemoveAllEvent(MessageReactionEvent):
     """Used to represent Message Reaction Remove All gateway events.
@@ -179,7 +179,7 @@ class MessageReactionRemoveAllEvent(MessageReactionEvent):
     """
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.DIRECT_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class MessageReactionRemoveEmojiEvent(MessageReactionEvent):
     """Represents Message Reaction Remove Emoji events.

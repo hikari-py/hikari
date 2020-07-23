@@ -15,50 +15,71 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
-###
-### Base for testing that the library setup script is valid.
-###
 .pip:
   extends: .reactive-job
+  interruptible: true
+  retry: 0
   script:
     - apt install git -y
     - pip install nox
     - nox --sessions pip-sdist pip-bdist-wheel pip-git --no-error-on-external-run
   stage: test
 
-###
-### Setup script tests for Windows.
-###
-### This simply tests that stuff runs on a Windows runner.
-###
-### Test locally installing the library via pip in several formats
-###
-"install:win32":
+install:win32:
   extends: .win32
   script:
-    - choco install --no-progress python -y
-    - refreshenv
-    - py -3 -V
-    - py -3 -m pip install nox
     - py -3 -m nox --sessions pip-sdist pip-bdist-wheel --no-error-on-external-run
   stage: test
 
-###
-### Setup script tests for CPython 3.8
-###
-### Test locally installing the library via pip in several formats
-###
-"install:3.8":
+install:3.8.0:
   extends:
-    - .cpython:3.8
+    - .cpython:3.8.0
     - .pip
 
-###
-### Setup script tests for CPython 3.9rc
-###
-### Test locally installing the library via pip in several formats
-###
-"install:3.9rc":
+install:3.8.1:
+  extends:
+    - .cpython:3.8.1
+    - .pip
+
+install:3.8.2:
+  extends:
+    - .cpython:3.8.2
+    - .pip
+
+install:3.8.3:
+  extends:
+    - .cpython:3.8.3
+    - .pip
+
+install:3.8.4:
+  extends:
+    - .cpython:3.8.4
+    - .pip
+
+install:3.8.5:
+  extends:
+    - .cpython:3.8.5
+    - .pip
+
+install:3.9rc:
   extends:
     - .cpython:3.9rc
     - .pip
+
+install:results:
+  extends:
+    - .cpython
+    - .reactive-job
+  needs:
+    - install:win32
+    - install:3.8.0
+    - install:3.8.1
+    - install:3.8.2
+    - install:3.8.3
+    - install:3.8.4
+    - install:3.8.5
+    - install:3.9rc
+  script:
+    - time eval "pip install -Ur $(echo *requirements.txt | sed 's/ / -Ur /g')"
+    - pip list -o
+  stage: report
