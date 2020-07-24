@@ -713,7 +713,7 @@ class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
     This can be iterated across as a normal iterator, or as an async iterator.
     """
 
-    __slots__ = ("_iter",)
+    __slots__: typing.Sequence[str] = ("_iter",)
 
     def __init__(self, values: typing.Union[typing.Iterator[ValueT], typing.Iterable[ValueT]]) -> None:
         self._iter = iter(values) if isinstance(values, typing.Iterable) else values
@@ -845,7 +845,7 @@ class _DropWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
 
 
 class _FlatMapLazyIterator(typing.Generic[ValueT, AnotherValueT], LazyIterator[AnotherValueT]):
-    __slots__ = ("_iterator", "_flattener", "_result_iterator")
+    __slots__: typing.Sequence[str] = ("_iterator", "_flattener", "_result_iterator")
 
     def __init__(
         self,

@@ -1036,12 +1036,6 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         rules_channel_id = payload["rules_channel_id"]
         guild.rules_channel_id = snowflake.Snowflake(rules_channel_id) if rules_channel_id is not None else None
 
-        guild.joined_at = (
-            date.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
-        )
-        guild.is_large = payload["large"] if "large" in payload else None
-        guild.member_count = int(payload["member_count"]) if "member_count" in payload else None
-
         max_presences = payload.get("max_presences")
         guild.max_presences = int(max_presences) if max_presences is not None else None
 
@@ -1075,6 +1069,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             int(payload["approximate_presence_count"]) if "approximate_presence_count" in payload else None
         )
         guild.is_widget_enabled = payload["widget_enabled"] if "widget_enabled" in payload else None
+        # TODO: don't we get this on gateway?
 
         guild._roles = {
             snowflake.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild.id) for role in payload["roles"]
@@ -1102,6 +1097,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         channels = {}
         members = {}
         presences = {}
+        voice_states = {}
 
         if "members" in payload:
             for member_payload in payload["members"]:
@@ -1118,7 +1114,12 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         if "presences" in payload:
             for presence_payload in payload["presences"]:
                 presence = self.deserialize_member_presence(presence_payload)
-                presences[presence.user_id] = presence
+                presences[presence.id] = presence
+
+        if "voice_states" in payload:
+            for voice_state_payload in payload["voice_states"]:
+                voice_state = self.deserialize_voice_state(voice_state_payload)
+                voice_states[voice_state.user_id] = voice_state
 
         roles = {
             snowflake.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild.id) for role in payload["roles"]
@@ -1128,7 +1129,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             for emoji in payload["emojis"]
         }
 
-        return entity_factory.GatewayGuildDefinition(guild, channels, members, presences, roles, emojis)
+        return entity_factory.GatewayGuildDefinition(guild, channels, members, presences, roles, emojis, voice_states)
 
     #################
     # INVITE MODELS #
@@ -1438,7 +1439,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ) -> presence_models.MemberPresence:
         guild_member_presence = presence_models.MemberPresence()
         guild_member_presence.app = self._app
-        guild_member_presence.user_id = snowflake.Snowflake(payload["user"]["id"])
+        guild_member_presence.id = snowflake.Snowflake(payload["user"]["id"])
         guild_member_presence.role_ids = (
             [snowflake.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else None
         )

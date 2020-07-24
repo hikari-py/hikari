@@ -267,7 +267,7 @@ class MemberPresence(snowflake.Unique):
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    user_id: snowflake.Snowflake = attr.ib(repr=True, eq=False, hash=True)
+    id: snowflake.Snowflake = attr.ib(repr=True, eq=False, hash=True)
     """The ID of the user this presence belongs to."""
 
     role_ids: typing.Optional[typing.Sequence[snowflake.Snowflake]] = attr.ib(eq=False, hash=False, repr=False)

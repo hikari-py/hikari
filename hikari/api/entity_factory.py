@@ -24,6 +24,8 @@ __all__: typing.Final[typing.List[str]] = ["IEntityFactoryComponent"]
 import abc
 import typing
 
+import attr
+
 from hikari.api import component
 from hikari.utilities import undefined
 
@@ -47,14 +49,15 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-@typing.final
-class GatewayGuildDefinition(typing.NamedTuple):
+@attr.s(auto_attribs=True, slots=True)
+class GatewayGuildDefinition:
     guild: guild_models.GatewayGuild
     channels: typing.Mapping[snowflake.Snowflake, channel_models.GuildChannel]
     members: typing.Mapping[snowflake.Snowflake, guild_models.Member]
     presences: typing.Mapping[snowflake.Snowflake, presence_models.MemberPresence]
     roles: typing.Mapping[snowflake.Snowflake, guild_models.Role]
     emojis: typing.Mapping[snowflake.Snowflake, emoji_models.KnownCustomEmoji]
+    voice_states: typing.Mapping[snowflake.Snowflake, voice_models.VoiceState]
 
 
 class IEntityFactoryComponent(component.IComponent, abc.ABC):

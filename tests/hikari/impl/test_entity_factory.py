@@ -2191,7 +2191,7 @@ class TestEntityFactoryImpl:
     ):
         presence = entity_factory_impl.deserialize_member_presence(member_presence_payload)
         assert presence.app is mock_app
-        assert presence.user_id == 115590097100865541
+        assert presence.id == 115590097100865541
         assert presence.role_ids == [49494949]
         assert presence.guild_id == 44004040
         assert presence.visible_status == presence_models.Status.DO_NOT_DISTURB
