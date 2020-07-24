@@ -1091,41 +1091,41 @@ class GatewayGuild(Guild):
 
     @property
     def roles(self) -> cache.ICacheView[Role]:
-        return self.app.cache.get_roles_view_for_guild(self.id)
+        return self.app.cache.get_roles_view(self.id)
 
     @property
     def emojis(self) -> cache.ICacheView[emojis_.KnownCustomEmoji]:
-        return self.app.cache.get_emojis_view_for_guild(self.id)
+        return self.app.cache.get_emojis_view(self.id)
 
     @property
     def members(self) -> cache.ICacheView[Member]:
-        return self.app.cache.get_members_view_for_guild(self.id)
+        return self.app.cache.get_members_view(self.id)
 
     @property
     def channels(self) -> cache.ICacheView[channels_.GuildChannel]:
-        return self.app.cache.get_channels_view_for_guild(self.id)
+        return self.app.cache.get_guild_channels_view(self.id)
 
     @property
     def presences(self) -> cache.ICacheView[presences_.MemberPresence]:
-        return self.app.cache.get_presences_view_for_guild(self.id)
+        return self.app.cache.get_presences_view(self.id)
 
-    def get_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
-        return self.app.cache.get_guild_role(self.id, snowflake.Snowflake(int(role)))
+    def get_role(self, role: typing.Union[Role, snowflake.Snowflakeish]) -> typing.Optional[Role]:
+        return self.app.cache.get_role(snowflake.Snowflake(int(role)))
 
     def get_emoji(
-        self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.UniqueObject]
+        self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.Snowflakeish]
     ) -> typing.Optional[emojis_.KnownCustomEmoji]:
         return self.app.cache.get_emoji(snowflake.Snowflake(int(emoji)))
 
     def get_channel(
-        self, channel: typing.Union[channels_.GuildChannel, snowflake.UniqueObject],
+        self, channel: typing.Union[channels_.GuildChannel, snowflake.Snowflakeish],
     ) -> typing.Optional[channels_.GuildChannel]:
         return self.app.cache.get_guild_channel(snowflake.Snowflake(int(channel)))
 
-    def get_member(self, user: typing.Union[users.User, snowflake.UniqueObject]) -> typing.Optional[Member]:
-        return self.app.cache.get_guild_member(self.id, snowflake.Snowflake(int(user)))
+    def get_member(self, user: typing.Union[users.User, snowflake.Snowflakeish]) -> typing.Optional[Member]:
+        return self.app.cache.get_member(self.id, snowflake.Snowflake(int(user)))
 
     def get_presence(
-        self, user: typing.Union[users.User, snowflake.UniqueObject]
+        self, user: typing.Union[users.User, snowflake.Snowflakeish]
     ) -> typing.Optional[presences_.MemberPresence]:
-        return self.app.cache.get_guild_presence(self.id, snowflake.Snowflake(int(user)))
+        return self.app.cache.get_presence(self.id, snowflake.Snowflake(int(user)))

@@ -29,6 +29,7 @@ from hikari.models import guilds
 
 if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
+    from hikari.events import guild as guild_events
     from hikari.utilities import data_binding
 
 
@@ -57,7 +58,7 @@ class StatefulEventFactoryImpl(event_factory_base.EventFactoryComponentBase):
         """See https://discord.com/developers/docs/topics/gateway#ready for more info."""
         # TODO: cache unavailable guilds on startup, I didn't bother for the time being.
         event = self.app.entity_factory.deserialize_ready_event(shard, payload)
-        self.app.cache.replace_me(event.my_user)
+        self.app.cache.update_me(event.my_user)
         self.app.cache.set_initial_unavailable_guilds(event.unavailable_guilds.keys())
         await self.dispatch(event)
 
@@ -85,27 +86,51 @@ class StatefulEventFactoryImpl(event_factory_base.EventFactoryComponentBase):
     async def on_guild_create(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
         event = self.app.entity_factory.deserialize_guild_create_event(payload)
-        self.app.cache.replace_guild(event.guild)
-        self.app.cache.replace_all_guild_channels(event.guild.id, event.channels.values())
-        self.app.cache.replace_all_guild_emojis(event.guild.id, event.emojis.values())
-        self.app.cache.replace_all_guild_roles(event.guild.id, event.roles.values())
-        self.app.cache.replace_all_guild_members(event.guild.id, event.members.values())
-        self.app.cache.replace_all_guild_presences(event.guild.id, event.presences.values())
+        self.app.cache.update_guild(event.guild)
+
+        self.app.cache.clear_guild_channels(event.guild.id)
+        for channel in event.channels.values():
+            self.app.cache.set_guild_channel(channel)
+
+        self.app.cache.clear_emojis(event.guild.id)
+        for emoji in event.emojis.values():
+            self.app.cache.set_emoji(emoji)
+
+        self.app.cache.clear_roles(event.guild.id)
+        for role in event.roles.values():
+            self.app.cache.set_role(role)
+
+        self.app.cache.clear_members(event.guild.id)  # TODO: do we really want to invalidate these all after an outage.
+        for member in event.members.values():
+            self.app.cache.set_member(member)
+
+        self.app.cache.clear_presences(event.guild.id)
+        for presence in event.presences.values():
+            self.app.cache.set_presence(presence)
+
+        for voice_state in event.voice_states.values():
+            self.app.cache.set_voice_state(voice_state)
+
         await self.dispatch(event)
 
     async def on_guild_update(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-update for more info."""
         event = self.app.entity_factory.deserialize_guild_update_event(payload)
-        self.app.cache.replace_guild(event.guild)
-        self.app.cache.replace_all_guild_channels(event.guild.id, event.channels.values())
-        self.app.cache.replace_all_guild_emojis(event.guild.id, event.emojis.values())
-        self.app.cache.replace_all_guild_roles(event.guild.id, event.roles.values())
-        self.app.cache.replace_all_guild_members(event.guild.id, event.members.values())
-        self.app.cache.replace_all_guild_presences(event.guild.id, event.presences.values())
+        self.app.cache.update_guild(event.guild)
+
+        self.app.cache.clear_roles(event.guild.id)
+        for role in event.roles.values():
+            self.app.cache.set_role(role)
+
+        self.app.cache.clear_emojis(event.guild.id)
+        for emoji in event.emojis.values():
+            self.app.cache.set_emoji(emoji)
+
         await self.dispatch(event)
 
     async def on_guild_delete(self, _: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-delete for more info."""
+        event: typing.Union[guild_events.GuildUnavailableEvent, guild_events.GuildLeaveEvent]
         if payload.get("unavailable", False):
             event = self.app.entity_factory.deserialize_guild_unavailable_event(payload)
             guild = guilds.UnavailableGuild()

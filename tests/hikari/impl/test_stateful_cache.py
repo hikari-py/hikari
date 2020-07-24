@@ -162,7 +162,7 @@ class TestStatefulCacheComponentImpl:
             recipient_id=snowflake.Snowflake(65656),
         )
         cache_impl._dm_channel_entries = {snowflake.Snowflake(54213): dm_data_1, snowflake.Snowflake(65656): dm_data_2}
-        dm_mapping = cache_impl.get_dm_channel_view()
+        dm_mapping = cache_impl.get_dm_channels_view()
         assert 54213 in dm_mapping
         current_dm = dm_mapping[snowflake.Snowflake(54213)]
         assert current_dm.app is cache_impl.app
@@ -182,7 +182,7 @@ class TestStatefulCacheComponentImpl:
         assert len(dm_mapping) == 2
 
     def test_get_dm_channel_view_when_no_dm_channels_cached(self, cache_impl):
-        assert cache_impl.get_dm_channel_view() == {}
+        assert cache_impl.get_dm_channels_view() == {}
 
     def test_set_dm_channel(self, cache_impl):
         mock_recipient = mock.MagicMock(users.User, id=snowflake.Snowflake(7652341234))
@@ -438,13 +438,11 @@ class TestStatefulCacheComponentImpl:
 
     def test_get_member_for_known_member(self, cache_impl):
         mock_user = mock.MagicMock(users.User)
-        role_ids = stateful_cache._IDTable()
-        role_ids.add_all((snowflake.Snowflake(65234), snowflake.Snowflake(654234123)))
         member_data = stateful_cache._MemberData(
             id=snowflake.Snowflake(512312354),
             guild_id=snowflake.Snowflake(6434435234),
             nickname="NICK",
-            role_ids=role_ids,
+            role_ids={snowflake.Snowflake(65234), snowflake.Snowflake(654234123)},
             joined_at=datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
             premium_since=datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
             is_deaf=False,
@@ -460,7 +458,7 @@ class TestStatefulCacheComponentImpl:
         assert member.user == mock_user
         assert member.guild_id == 6434435234
         assert member.nickname == "NICK"
-        assert list(member.role_ids) == [654234123, 65234]  # TODO: is order guaranteed here or should i use sets?
+        assert member.role_ids == {snowflake.Snowflake(65234), snowflake.Snowflake(654234123)}
         assert member.joined_at == datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc)
         assert member.is_deaf is False

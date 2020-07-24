@@ -30,13 +30,15 @@ from hikari.utilities import iterators
 
 if typing.TYPE_CHECKING:
     from hikari.models import channels
+    from hikari.models import emojis
     from hikari.models import guilds
+    from hikari.models import presences
     from hikari.models import users
     from hikari.models import voices
     from hikari.utilities import snowflake
 
 
-_T = typing.TypeVar("_T", bound="snowflake.Unique")
+_T = typing.TypeVar("_T")
 
 
 class ICacheView(typing.Mapping["snowflake.Snowflake", _T], abc.ABC):
@@ -117,7 +119,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_dm_channel_view(self) -> ICacheView[channels.DMChannel]:
+    def get_dm_channels_view(self) -> ICacheView[channels.DMChannel]:
         """Get a view of the DM channel objects in the cache.
 
         Returns
@@ -154,6 +156,32 @@ class ICacheComponent(component.IComponent, abc.ABC):
             and the new cached DM channel if it could be cached (else
             `builtins.None`).
         """
+
+    @abc.abstractmethod
+    def clear_emojis(self, guild_id: snowflake.Snowflake) -> ICacheView[emojis.KnownCustomEmoji]:
+        ...
+
+    @abc.abstractmethod
+    def delete_emoji(self, emoji_id: snowflake.Snowflake) -> typing.Optional[emojis.KnownCustomEmoji]:
+        ...
+
+    @abc.abstractmethod
+    def get_emoji(self, emoji_id: snowflake.Snowflake) -> typing.Optional[emojis.KnownCustomEmoji]:
+        ...
+
+    @abc.abstractmethod
+    def get_emojis_view(self, guild_id: snowflake.Snowflake) -> ICacheView[emojis.KnownCustomEmoji]:
+        ...
+
+    @abc.abstractmethod
+    def set_emoji(self, emoji: emojis.KnownCustomEmoji) -> None:
+        ...
+
+    @abc.abstractmethod
+    def update_emoji(
+        self, emoji: emojis.KnownCustomEmoji
+    ) -> typing.Tuple[typing.Optional[emojis.KnownCustomEmoji], typing.Optional[emojis.KnownCustomEmoji]]:
+        ...
 
     @abc.abstractmethod
     def clear_guilds(self) -> ICacheView[guilds.GatewayGuild]:
@@ -207,7 +235,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_guild(self, guild: guilds.GatewayGuild, /):
+    def set_guild(self, guild: guilds.GatewayGuild, /) -> None:
         """Add a guild object to the cache.
 
         Parameters
@@ -229,6 +257,10 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
+    def set_initial_unavailable_guilds(self, guild_ids: typing.Collection[snowflake.Snowflake]) -> None:
+        ...
+
+    @abc.abstractmethod
     def update_guild(
         self, guild: guilds.GatewayGuild, /
     ) -> typing.Tuple[typing.Optional[guilds.GatewayGuild], typing.Optional[guilds.GatewayGuild]]:
@@ -246,6 +278,32 @@ class ICacheComponent(component.IComponent, abc.ABC):
             and the object of the guild that was added to the cache if it could
             be added (else `builtins.None`).
         """
+
+    @abc.abstractmethod
+    def clear_guild_channels(self, guild_id: snowflake.Snowflake) -> ICacheView[channels.GuildChannel]:
+        ...
+
+    @abc.abstractmethod
+    def delete_guild_channel(self, channel_id: snowflake.Snowflake) -> typing.Optional[channels.GuildChannel]:
+        ...
+
+    @abc.abstractmethod
+    def get_guild_channel(self, channel_id: snowflake.Snowflake) -> typing.Optional[channels.GuildChannel]:
+        ...
+
+    @abc.abstractmethod
+    def get_guild_channels_view(self, guild_id: snowflake.Snowflake) -> ICacheView[channels.GuildChannel]:
+        ...
+
+    @abc.abstractmethod
+    def set_guild_channel(self, channel: channels.GuildChannel) -> None:
+        ...
+
+    @abc.abstractmethod
+    def update_guild_channel(
+        self, channel: channels.GuildChannel
+    ) -> typing.Tuple[typing.Optional[channels.GuildChannel], typing.Optional[channels.GuildChannel]]:
+        ...
 
     @abc.abstractmethod
     def delete_me(self) -> typing.Optional[users.OwnUser]:
@@ -269,7 +327,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_me(self, user: users.OwnUser, /):
+    def set_me(self, user: users.OwnUser, /) -> None:
         """Set the own user object in the cache.
 
         Parameters
@@ -392,6 +450,62 @@ class ICacheComponent(component.IComponent, abc.ABC):
             and the new cached member object if it could be cached (else
             `builtins.None`)
         """
+
+    @abc.abstractmethod
+    def clear_presences(self, guild_id: snowflake.Snowflake) -> ICacheView[presences.MemberPresence]:
+        ...
+
+    @abc.abstractmethod
+    def delete_presence(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake
+    ) -> typing.Optional[presences.MemberPresence]:
+        ...
+
+    @abc.abstractmethod
+    def get_presence(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake
+    ) -> typing.Optional[presences.MemberPresence]:
+        ...
+
+    @abc.abstractmethod
+    def get_presences_view(self, guild_id: snowflake.Snowflake) -> ICacheView[presences.MemberPresence]:
+        ...
+
+    @abc.abstractmethod
+    def set_presence(self, presence: presences.MemberPresence) -> None:
+        ...
+
+    @abc.abstractmethod
+    def update_presence(
+        self, presence: presences.MemberPresence
+    ) -> typing.Tuple[typing.Optional[presences.MemberPresence], typing.Optional[presences.MemberPresence]]:
+        ...
+
+    @abc.abstractmethod
+    def clear_roles(self, guild_id: snowflake.Snowflake) -> ICacheView[guilds.Role]:
+        ...
+
+    @abc.abstractmethod
+    def delete_role(self, role_id: snowflake.Snowflake) -> typing.Optional[guilds.Role]:
+        ...
+
+    @abc.abstractmethod
+    def get_role(self, role_id: snowflake.Snowflake) -> typing.Optional[guilds.Role]:
+        ...
+
+    @abc.abstractmethod
+    def get_roles_view(self, guild_id: snowflake.Snowflake) -> ICacheView[guilds.Role]:
+        ...
+
+    @abc.abstractmethod
+    def set_role(self, role: guilds.Role) -> None:
+        ...
+
+    @abc.abstractmethod
+    def update_role(
+        self, role: guilds.Role
+    ) -> typing.Tuple[typing.Optional[guilds.Role], typing.Optional[guilds.Role]]:
+        ...
 
     @abc.abstractmethod
     def clear_users(self) -> ICacheView[users.User]:
@@ -524,6 +638,10 @@ class ICacheComponent(component.IComponent, abc.ABC):
             The object of the voice state that was found in the cache, or
             `builtins.None`.
         """
+
+    @abc.abstractmethod
+    def get_voice_state_view(self, guild_id: snowflake.Snowflake) -> cache.ICacheView[voices.VoiceState]:
+        ...
 
     @abc.abstractmethod
     def set_voice_state(self, voice_state: voices.VoiceState) -> None:
