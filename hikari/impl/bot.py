@@ -699,7 +699,7 @@ class BotAppImpl(bot.IBotApp):
             if plat == "win32":
                 supports_color |= os.getenv("TERM_PROGRAM", None) == "mintty"
                 supports_color |= "ANSICON" in os.environ
-                supports_color |= is_a_tty
+                supports_color &= is_a_tty
             else:
                 supports_color = is_a_tty
 
