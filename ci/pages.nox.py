@@ -34,7 +34,7 @@ def copy_from_in(src: str, dest: str) -> None:
             shutil.copy(sub_src, sub_dest)
 
 
-@nox.session(reuse_venv=True, default=True)
+@nox.session(reuse_venv=True)
 def pages(session: nox.Session) -> None:
     """Generate static pages containing resources and tutorials."""
     for n, v in os.environ.items():
