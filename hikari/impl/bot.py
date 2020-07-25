@@ -636,9 +636,9 @@ class BotAppImpl(bot.IBotApp):
                     mapping_function(interrupt, *args)
 
     def _dump_banner(self, banner_package: str) -> None:
-        from importlib import resources
         import platform
         import string
+        from importlib import resources
 
         from hikari import _about
 

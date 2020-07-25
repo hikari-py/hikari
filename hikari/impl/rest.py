@@ -62,6 +62,8 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
     import types
 
+    from hikari.api import cache as cache_
+    from hikari.api import entity_factory as entity_factory_
     from hikari.models import applications
     from hikari.models import audit_logs
     from hikari.models import colors
@@ -74,8 +76,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import users
     from hikari.models import voices
     from hikari.models import webhooks
-    from hikari.api import cache as cache_
-    from hikari.api import entity_factory as entity_factory_
 
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")

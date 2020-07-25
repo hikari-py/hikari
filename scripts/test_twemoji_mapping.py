@@ -21,15 +21,15 @@ does not map these on a 1-to-1 basis.
 """
 
 import asyncio
-import time
 import sys
+import time
 
 sys.path.append(".")
 
 import aiohttp
-from hikari.models import emojis
-from hikari import errors
 
+from hikari import errors
+from hikari.models import emojis
 
 skipped_emojis = []
 valid_emojis = []
