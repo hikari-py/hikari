@@ -23,7 +23,7 @@ from ci import config
 from ci import nox
 
 
-@nox.session(reuse_venv=True, default=True)
+@nox.session(reuse_venv=True)
 @nox.inherit_environment_vars
 def pdoc(session: nox.Session) -> None:
     """Generate documentation with pdoc."""
