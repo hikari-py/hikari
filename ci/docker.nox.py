@@ -26,7 +26,6 @@ from nox import options
 from ci import config
 from ci import nox
 
-
 if shutil.which("docker"):
 
     @nox.session(reuse_venv=True)
