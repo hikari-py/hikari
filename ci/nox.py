@@ -19,7 +19,7 @@
 import functools
 import os
 import subprocess
-from typing import Callable
+import typing
 
 from nox import options as _options
 from nox import session as _session
@@ -27,14 +27,13 @@ from nox.sessions import Session
 
 from ci import config
 
-_options.sessions = []
+# Default sessions should be defined here
+_options.sessions = ["reformat-code", "pytest", "pdoc", "pages", "flake8", "mypy", "safety"]
 
 
-def session(*, only_if=lambda: True, default: bool = False, reuse_venv: bool = False, **kwargs):
-    def decorator(func: Callable[[Session], None]):
+def session(*, only_if=lambda: True, reuse_venv: bool = False, **kwargs):
+    def decorator(func: typing.Callable[[Session], None]):
         func.__name__ = func.__name__.replace("_", "-")
-        if default:
-            _options.sessions.append(func.__name__)
 
         return _session(reuse_venv=reuse_venv, **kwargs)(func) if only_if() else func
 

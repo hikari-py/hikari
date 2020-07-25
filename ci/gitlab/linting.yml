@@ -37,11 +37,6 @@ lint:flake8:
   script:
     - nox -s flake8 --no-error-on-external-run
 
-lint:isort:
-  extends: .lint
-  script:
-    - nox -s check-isort --no-error-on-external-run
-
 lint:safety:
   extends: .lint
   script:
