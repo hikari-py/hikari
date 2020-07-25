@@ -36,8 +36,8 @@ import typing
 
 import attr
 
-from hikari.utilities import files
 from hikari.utilities import constants
+from hikari.utilities import files
 from hikari.utilities import flag
 from hikari.utilities import snowflake
 from hikari.utilities import undefined

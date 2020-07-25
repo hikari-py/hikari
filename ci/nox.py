@@ -21,9 +21,9 @@ import os
 import subprocess
 from typing import Callable
 
-from nox.sessions import Session
-from nox import session as _session
 from nox import options as _options
+from nox import session as _session
+from nox.sessions import Session
 
 from ci import config
 
