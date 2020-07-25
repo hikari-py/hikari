@@ -281,7 +281,7 @@ class Member(users.User):
     # can assume this is always set, and thus we are always able to get info
     # such as the ID of the user this member represents.
     # TODO: make member generic on this field (e.g. Member[PartialUser], Member[UserImpl], Member[OwnUser], etc)?
-    user: users.UserImpl = attr.ib(eq=True, hash=True, repr=True)
+    user: users.User = attr.ib(eq=True, hash=True, repr=True)
     """This member's corresponding user object."""
 
     nickname: undefined.UndefinedNoneOr[str] = attr.ib(

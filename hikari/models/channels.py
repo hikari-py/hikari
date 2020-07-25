@@ -400,7 +400,7 @@ class PrivateChannel(PartialChannel):
 class PrivateTextChannel(PrivateChannel, TextChannel):
     """Represents a private text channel that is between you and another user."""
 
-    recipient: users.UserImpl = attr.ib(eq=False, hash=False, repr=False)
+    recipient: users.User = attr.ib(eq=False, hash=False, repr=False)
     """The user recipient of this DM."""
 
     def __str__(self) -> str:

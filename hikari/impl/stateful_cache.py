@@ -40,6 +40,7 @@ from hikari.models import emojis
 from hikari.models import guilds
 from hikari.models import intents as intents_
 from hikari.models import presences
+from hikari.models import users
 from hikari.models import voices
 from hikari.utilities import iterators
 from hikari.utilities import snowflake
@@ -48,7 +49,6 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari.api import rest as rest_app
-    from hikari.models import users
     from hikari.utilities import undefined
 
 _DataT = typing.TypeVar("_DataT", bound="_BaseData")
@@ -202,7 +202,7 @@ class _GuildRecord:
 
 
 @attr.s(auto_attribs=False, kw_only=True, slots=True, repr=False, hash=False)
-class _BaseData(abc.ABC):
+class _BaseData(abc.ABC, typing.Generic[_T]):
     """A data class used for storing entities in a more primitive form.
 
     !!! note
@@ -267,7 +267,7 @@ class _BaseData(abc.ABC):
 
 
 @attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
-class _DMChannelData(_BaseData):
+class _DMChannelData(_BaseData[channels.DMChannel]):
     id: snowflake.Snowflake
     name: typing.Optional[str]
     last_message_id: typing.Optional[snowflake.Snowflake]
@@ -277,14 +277,14 @@ class _DMChannelData(_BaseData):
     def get_fields(cls) -> typing.Collection[str]:
         return "id", "name", "last_message_id"
 
-    def build_entity(self, target: _T) -> _T:
+    def build_entity(self, target: channels.DMChannel) -> channels.DMChannel:
         super().build_entity(target)
-        target.type = channels.ChannelType.DM  # type: ignore[attr-defined]
+        target.type = channels.ChannelType.DM
         return target
 
 
 @attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
-class _MemberData(_BaseData):
+class _MemberData(_BaseData[guilds.Member]):
     id: snowflake.Snowflake
     guild_id: snowflake.Snowflake
     nickname: undefined.UndefinedNoneOr[str]
@@ -299,19 +299,36 @@ class _MemberData(_BaseData):
         return "guild_id", "nickname", "role_ids", "joined_at", "premium_since", "is_deaf", "is_mute"
 
     @classmethod
-    def build_from_entity(cls: typing.Type[_DataT], entity: _T, **kwargs: typing.Any) -> _DataT:
+    def build_from_entity(cls: typing.Type[_MemberData], entity: guilds.Member, **kwargs: typing.Any) -> _MemberData:
         data_object = super().build_from_entity(entity, **kwargs)
         data_object.role_ids = tuple(data_object.role_ids)
         return data_object
 
 
 @attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
-class _KnownCustomEmojiData(_BaseData):
+class _UserData(_BaseData[users.User]):
+    id: snowflake.Snowflake
+    discriminator: str
+    username: str
+    avatar_hash: typing.Optional[str]
+    is_bot: undefined.UndefinedOr[bool]
+    is_system: undefined.UndefinedOr[bool]
+    flags: users.UserFlag
+    ref_count: int
+    """The amount of reference that are keeping this user alive in the cache."""
+
+    @classmethod
+    def get_fields(cls) -> typing.Collection[str]:
+        return "id", "discriminator", "username", "avatar_hash", "is_bot", "is_system", "flags"
+
+
+@attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
+class _KnownCustomEmojiData(_BaseData[emojis.KnownCustomEmoji]):
     id: snowflake.Snowflake
     name: typing.Optional[str]  # TODO: Shouldn't ever be None here
     is_animated: typing.Optional[bool]  # TODO: Shouldn't ever be None here
     guild_id: snowflake.Snowflake
-    role_ids: snowflake.Snowflake
+    role_ids: typing.Sequence[snowflake.Snowflake]
     user_id: typing.Optional[snowflake.Snowflake]
     is_colons_required: bool
     is_managed: bool
@@ -322,14 +339,16 @@ class _KnownCustomEmojiData(_BaseData):
         return "id", "name", "is_animated", "guild_id", "role_ids", "is_colons_required", "is_managed", "is_available"
 
     @classmethod
-    def build_from_entity(cls: typing.Type[_DataT], entity: _T, **kwargs: typing.Any) -> _DataT:
+    def build_from_entity(
+        cls: typing.Type[_KnownCustomEmojiData], entity: emojis.KnownCustomEmoji, **kwargs: typing.Any
+    ) -> _KnownCustomEmojiData:
         data_object = super().build_from_entity(entity, **kwargs)
         data_object.role_ids = tuple(data_object.role_ids)
         return data_object
 
 
 @attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
-class _VoiceStateData(_BaseData):
+class _VoiceStateData(_BaseData[voices.VoiceState]):
     channel_id: typing.Optional[snowflake.Snowflake]
     guild_id: snowflake.Snowflake
     is_guild_deafened: bool
@@ -432,7 +451,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         recipient = (
             cached_users[channel_data.recipient_id] if cached_users else self._user_entries[channel_data.recipient_id]
         )
-        channel.recipient = copy.copy(recipient)  # type: ignore[assignment]
+        channel.recipient = copy.copy(recipient)
         return channel
 
     def clear_dm_channels(self) -> cache.ICacheView[channels.DMChannel]:
@@ -624,7 +643,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
     ) -> guilds.Member:
         member = member_data.build_entity(guilds.Member())
         user = user_entries[member_data.id] if user_entries is not None else self._user_entries[member_data.id]
-        member.user = copy.copy(user)  # type: ignore[assignment]
+        member.user = copy.copy(user)
         return member
 
     def clear_members(self, guild_id: snowflake.Snowflake, /) -> cache.ICacheView[guilds.Member]:
@@ -865,7 +884,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         if record is None or record.voice_states is None:
             return _EmptyCacheView()
 
-        voice_states = record.voice_states.copy()  # TODO: rename to "states"
+        voice_states = record.voice_states.copy()
         cached_members = {}
         cached_users = {}
 

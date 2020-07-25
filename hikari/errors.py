@@ -53,8 +53,6 @@ from hikari.utilities import snowflake
 if typing.TYPE_CHECKING:
     from hikari.models import guilds
     from hikari.models import intents
-
-    from hikari.utilities import routes
     from hikari.utilities import data_binding
     from hikari.utilities import routes
 
