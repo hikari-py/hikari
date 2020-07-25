@@ -114,6 +114,11 @@ class User(snowflake.Unique, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def app(self) -> rest_app.IRESTApp:
+        """Client application that models may use for procedures."""
+
+    @property
+    @abc.abstractmethod
     def discriminator(self) -> str:
         """Discriminator for the user."""
 

@@ -37,8 +37,8 @@ from hikari.utilities import data_binding
 from hikari.utilities import reflect
 
 if typing.TYPE_CHECKING:
-    from hikari.api import shard as gateway_shard
     from hikari.api import rest as rest_app
+    from hikari.api import shard as gateway_shard
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 

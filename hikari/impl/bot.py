@@ -42,10 +42,10 @@ from hikari.events import lifetime_events
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
 from hikari.impl import event_manager
-from hikari.impl import stateful_cache as cache_impl
 from hikari.impl import rate_limits
 from hikari.impl import rest as rest_client_impl
 from hikari.impl import shard as gateway_shard_impl
+from hikari.impl import stateful_cache as cache_impl
 from hikari.impl import stateful_event_factory
 from hikari.impl import stateless_cache as stateless_cache_impl
 from hikari.impl import stateless_event_factory
@@ -62,8 +62,8 @@ if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_
     from hikari.api import event_consumer as event_consumer_
     from hikari.api import event_dispatcher as event_dispatcher_
-    from hikari.impl import event_factory_base
     from hikari.events import base_events
+    from hikari.impl import event_factory_base
     from hikari.models import gateway as gateway_models
     from hikari.models import users
 
