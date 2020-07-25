@@ -207,7 +207,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     def name(self) -> str:
         return self._name
 
-    async def create(self) -> guilds.GatewayGuild:
+    async def create(self) -> guilds.RESTGuild:
         route = routes.POST_GUILDS.compile()
         payload = data_binding.JSONObjectBuilder()
         payload.put("name", self.name)
@@ -227,7 +227,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
 
         raw_response = await self._request_call(route, json=payload)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_guild(response)
+        return self._app.entity_factory.deserialize_rest_guild(response)
 
     def add_role(
         self,

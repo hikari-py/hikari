@@ -60,7 +60,9 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
 
     from hikari.api import cache as cache_
+    from hikari.api import event_consumer as event_consumer_
     from hikari.api import event_dispatcher as event_dispatcher_
+    from hikari.impl import event_factory_base
     from hikari.events import base_events
     from hikari.models import gateway as gateway_models
     from hikari.models import users
@@ -247,6 +249,7 @@ class BotAppImpl(bot.IBotApp):
         if banner_package is not None:
             self._dump_banner(banner_package)
 
+        self._event_factory: event_factory_base.EventFactoryComponentBase
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl()
             self._event_factory = stateless_event_factory.StatelessEventFactoryImpl(app=self, intents=intents)
@@ -317,11 +320,11 @@ class BotAppImpl(bot.IBotApp):
         return self._entity_factory
 
     @property
-    def event_consumer(self) -> stateful_event_factory.StatefulEventFactoryImpl:
+    def event_consumer(self) -> event_consumer_.IEventConsumerComponent:
         return self._event_factory
 
     @property
-    def event_dispatcher(self) -> stateful_event_factory.StatefulEventFactoryImpl:
+    def event_dispatcher(self) -> event_dispatcher_.IEventDispatcherComponent:
         return self._event_factory
 
     @property

@@ -51,6 +51,8 @@ if typing.TYPE_CHECKING:
 
 @attr.s(auto_attribs=True, slots=True)
 class GatewayGuildDefinition:
+    """A structure for handling entities within guild create and update events."""
+
     guild: guild_models.GatewayGuild
     channels: typing.Mapping[snowflake.Snowflake, channel_models.GuildChannel]
     members: typing.Mapping[snowflake.Snowflake, guild_models.Member]

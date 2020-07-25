@@ -442,7 +442,7 @@ class TestStatefulCacheComponentImpl:
             id=snowflake.Snowflake(512312354),
             guild_id=snowflake.Snowflake(6434435234),
             nickname="NICK",
-            role_ids={snowflake.Snowflake(65234), snowflake.Snowflake(654234123)},
+            role_ids=(snowflake.Snowflake(65234), snowflake.Snowflake(654234123)),
             joined_at=datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
             premium_since=datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
             is_deaf=False,
@@ -458,7 +458,7 @@ class TestStatefulCacheComponentImpl:
         assert member.user == mock_user
         assert member.guild_id == 6434435234
         assert member.nickname == "NICK"
-        assert member.role_ids == {snowflake.Snowflake(65234), snowflake.Snowflake(654234123)}
+        assert member.role_ids == (snowflake.Snowflake(65234), snowflake.Snowflake(654234123))
         assert member.joined_at == datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc)
         assert member.is_deaf is False
@@ -481,7 +481,7 @@ class TestStatefulCacheComponentImpl:
             id=snowflake.Snowflake(3214321),
             guild_id=snowflake.Snowflake(54234),
             nickname="a nick",
-            role_ids={snowflake.Snowflake(312123123)},
+            role_ids=(snowflake.Snowflake(312123123),),
             joined_at=datetime.datetime(2020, 7, 20, 14, 43, 7, 487015, tzinfo=datetime.timezone.utc),
             premium_since=None,
             is_deaf=True,
@@ -491,7 +491,7 @@ class TestStatefulCacheComponentImpl:
             id=snowflake.Snowflake(53224),
             guild_id=snowflake.Snowflake(764345123),
             nickname="OKOK",
-            role_ids={},
+            role_ids=tuple(),
             joined_at=datetime.datetime(2020, 7, 20, 14, 43, 7, 65345, tzinfo=datetime.timezone.utc),
             premium_since=datetime.datetime(2020, 7, 15, 14, 43, 7, 487015, tzinfo=datetime.timezone.utc),
             is_deaf=False,
@@ -510,7 +510,7 @@ class TestStatefulCacheComponentImpl:
         assert current_member.user == mock_user_1
         assert current_member.guild_id == 54234
         assert current_member.nickname == "a nick"
-        assert current_member.role_ids == {312123123}
+        assert current_member.role_ids == (312123123,)
         assert current_member.joined_at == datetime.datetime(
             2020, 7, 20, 14, 43, 7, 487015, tzinfo=datetime.timezone.utc
         )
@@ -522,7 +522,7 @@ class TestStatefulCacheComponentImpl:
         assert current_member.user == mock_user_2
         assert current_member.guild_id == 764345123
         assert current_member.nickname == "OKOK"
-        assert current_member.role_ids == {}
+        assert current_member.role_ids == tuple()
         assert current_member.joined_at == datetime.datetime(
             2020, 7, 20, 14, 43, 7, 65345, tzinfo=datetime.timezone.utc
         )
@@ -539,7 +539,7 @@ class TestStatefulCacheComponentImpl:
         member_model.guild_id = snowflake.Snowflake(67345234)
         member_model.user = mock_user
         member_model.nickname = "A NICK LOL"
-        member_model.role_ids = {snowflake.Snowflake(65345234), snowflake.Snowflake(123123)}
+        member_model.role_ids = (snowflake.Snowflake(65345234), snowflake.Snowflake(123123))
         member_model.joined_at = datetime.datetime(2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc)
         member_model.premium_since = datetime.datetime(2020, 7, 1, 2, 0, 12, 501602, tzinfo=datetime.timezone.utc)
         member_model.is_deaf = True
@@ -554,7 +554,7 @@ class TestStatefulCacheComponentImpl:
         assert member_entry.id == 645234123
         assert member_entry.guild_id == 67345234
         assert member_entry.nickname == "A NICK LOL"
-        assert member_entry.role_ids == {65345234, 123123}
+        assert member_entry.role_ids == (65345234, 123123)
         assert member_entry.joined_at == datetime.datetime(
             2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc
         )
@@ -692,7 +692,7 @@ class TestStatefulCacheComponentImpl:
             id=snowflake.Snowflake(7512312),
             guild_id=snowflake.Snowflake(54123123),
             nickname="blam",
-            role_ids={},
+            role_ids=tuple(),
             joined_at=datetime.datetime(2020, 7, 11, 20, 51, 7, 295496, tzinfo=datetime.timezone.utc),
             premium_since=datetime.datetime(2020, 7, 21, 20, 51, 7, 295496, tzinfo=datetime.timezone.utc),
             is_mute=True,
@@ -702,7 +702,7 @@ class TestStatefulCacheComponentImpl:
             id=snowflake.Snowflake(43123123),
             guild_id=snowflake.Snowflake(54123123),
             nickname=None,
-            role_ids={snowflake.Snowflake(543123)},
+            role_ids=(snowflake.Snowflake(543123)),
             joined_at=datetime.datetime(2020, 7, 10, 20, 51, 7, 295496, tzinfo=datetime.timezone.utc),
             premium_since=None,
             is_deaf=True,
