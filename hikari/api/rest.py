@@ -37,8 +37,8 @@ if typing.TYPE_CHECKING:
     from hikari.models import channels
     from hikari.models import colors
     from hikari.models import colours
-    from hikari.models import emojis
     from hikari.models import embeds as embeds_
+    from hikari.models import emojis
     from hikari.models import gateway
     from hikari.models import guilds
     from hikari.models import invites

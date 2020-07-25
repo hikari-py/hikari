@@ -20,7 +20,6 @@ import json
 import os
 import re
 import shlex
-
 from distutils.version import LooseVersion
 
 from ci import config
