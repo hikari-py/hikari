@@ -52,12 +52,10 @@ import typing
 
 import attr
 
-from hikari.api import cache
 from hikari.models import users
 from hikari.utilities import constants
 from hikari.utilities import files
 from hikari.utilities import flag
-from hikari.utilities import iterators
 from hikari.utilities import routes
 from hikari.utilities import snowflake
 
@@ -71,6 +69,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import emojis as emojis_
     from hikari.models import permissions as permissions_
     from hikari.models import presences as presences_
+    from hikari.models import voices as voices_
     from hikari.utilities import undefined
 
 
@@ -802,6 +801,12 @@ class Guild(PartialGuild):
     This will always be `builtins.None` for guilds that weren't created by a bot.
     """
 
+    is_widget_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
+    """Describes whether the guild widget is enabled or not.
+
+    If this information is not present, this will be `builtins.None`.
+    """
+
     widget_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The channel ID that the widget's generated invite will send the user to.
 
@@ -890,21 +895,21 @@ class Guild(PartialGuild):
 
     @property
     @abc.abstractmethod
-    def roles(self) -> typing.Collection[Role]:
+    def roles(self) -> typing.Mapping[snowflake.Snowflake, Role]:
         """Return the roles in this guild."""
 
     @property
     @abc.abstractmethod
-    def emojis(self) -> typing.Collection[emojis_.KnownCustomEmoji]:
+    def emojis(self) -> typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji]:
         """Return the emojis in this guild."""
 
     @abc.abstractmethod
-    async def get_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
+    def get_role(self, role: snowflake.SnowflakeishOr[Role]) -> typing.Optional[Role]:
         """Get a role from the cache by an ID."""
 
     @abc.abstractmethod
-    async def get_emoji(
-        self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.UniqueObject]
+    def get_emoji(
+        self, emoji: snowflake.SnowflakeishOr[emojis_.CustomEmoji]
     ) -> typing.Optional[emojis_.KnownCustomEmoji]:
         """Get an emoji from the cache by an ID."""
 
@@ -1036,17 +1041,19 @@ class RESTGuild(Guild):
     remain `builtins.None`.
     """
 
-    def roles(self) -> typing.ValuesView[Role]:
-        return self._roles.values()
+    @property
+    def roles(self) -> typing.Mapping[snowflake.Snowflake, Role]:
+        return self._roles
 
-    def emojis(self) -> typing.ValuesView[emojis_.KnownCustomEmoji]:
-        return self._emojis.values()
+    @property
+    def emojis(self) -> typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji]:
+        return self._emojis
 
-    def get_role(self, role: typing.Union[Role, snowflake.UniqueObject]) -> typing.Optional[Role]:
+    def get_role(self, role: snowflake.SnowflakeishOr[Role]) -> typing.Optional[Role]:
         return self._roles.get(snowflake.Snowflake(int(role)))
 
     def get_emoji(
-        self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.UniqueObject]
+        self, emoji: snowflake.SnowflakeishOr[emojis_.CustomEmoji]
     ) -> typing.Optional[emojis_.KnownCustomEmoji]:
         return self._emojis.get(snowflake.Snowflake(int(emoji)))
 
@@ -1090,42 +1097,47 @@ class GatewayGuild(Guild):
     """
 
     @property
-    def roles(self) -> cache.ICacheView[Role]:
+    def roles(self) -> typing.Mapping[snowflake.Snowflake, Role]:
         return self.app.cache.get_roles_view(self.id)
 
     @property
-    def emojis(self) -> cache.ICacheView[emojis_.KnownCustomEmoji]:
+    def emojis(self) -> typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji]:
         return self.app.cache.get_emojis_view(self.id)
 
     @property
-    def members(self) -> cache.ICacheView[Member]:
+    def members(self) -> typing.Mapping[snowflake.Snowflake, Member]:
         return self.app.cache.get_members_view(self.id)
 
     @property
-    def channels(self) -> cache.ICacheView[channels_.GuildChannel]:
+    def channels(self) -> typing.Mapping[snowflake.Snowflake, channels_.GuildChannel]:
         return self.app.cache.get_guild_channels_view(self.id)
 
     @property
-    def presences(self) -> cache.ICacheView[presences_.MemberPresence]:
+    def presences(self) -> typing.Mapping[snowflake.Snowflake, presences_.MemberPresence]:
         return self.app.cache.get_presences_view(self.id)
 
-    def get_role(self, role: typing.Union[Role, snowflake.Snowflakeish]) -> typing.Optional[Role]:
-        return self.app.cache.get_role(snowflake.Snowflake(int(role)))
+    @property
+    def voice_states(self) -> typing.Mapping[snowflake.Snowflake, voices_.VoiceState]:
+        return self.app.cache.get_voice_state_view(self.id)
+
+    def get_role(self, role: snowflake.SnowflakeishOr[Role]) -> typing.Optional[Role]:
+        return self.app.cache.get_role(snowflake.Snowflake(role))
 
     def get_emoji(
-        self, emoji: typing.Union[emojis_.CustomEmoji, snowflake.Snowflakeish]
+        self, emoji: snowflake.SnowflakeishOr[emojis_.CustomEmoji]
     ) -> typing.Optional[emojis_.KnownCustomEmoji]:
-        return self.app.cache.get_emoji(snowflake.Snowflake(int(emoji)))
+        return self.app.cache.get_emoji(snowflake.Snowflake(emoji))
 
     def get_channel(
-        self, channel: typing.Union[channels_.GuildChannel, snowflake.Snowflakeish],
+        self, channel: snowflake.SnowflakeishOr[channels_.GuildChannel],
     ) -> typing.Optional[channels_.GuildChannel]:
-        return self.app.cache.get_guild_channel(snowflake.Snowflake(int(channel)))
+        return self.app.cache.get_guild_channel(snowflake.Snowflake(channel))
 
-    def get_member(self, user: typing.Union[users.User, snowflake.Snowflakeish]) -> typing.Optional[Member]:
-        return self.app.cache.get_member(self.id, snowflake.Snowflake(int(user)))
+    def get_member(self, user: snowflake.SnowflakeishOr[users.User]) -> typing.Optional[Member]:
+        return self.app.cache.get_member(self.id, snowflake.Snowflake(user))
 
-    def get_presence(
-        self, user: typing.Union[users.User, snowflake.Snowflakeish]
-    ) -> typing.Optional[presences_.MemberPresence]:
-        return self.app.cache.get_presence(self.id, snowflake.Snowflake(int(user)))
+    def get_presence(self, user: snowflake.SnowflakeishOr[users.User]) -> typing.Optional[presences_.MemberPresence]:
+        return self.app.cache.get_presence(self.id, snowflake.Snowflake(user))
+
+    def get_voice_state(self, user: snowflake.SnowflakeishOr[users.User]) -> typing.Optional[voices_.VoiceState]:
+        return self.app.cache.get_voice_state(self.id, snowflake.Snowflake(user))

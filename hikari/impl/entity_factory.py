@@ -1030,6 +1030,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         system_channel_id = payload["system_channel_id"]
         guild.system_channel_id = snowflake.Snowflake(system_channel_id) if system_channel_id is not None else None
 
+        guild.is_widget_enabled = payload["widget_enabled"] if "widget_enabled" in payload else None
         # noinspection PyArgumentList
         guild.system_channel_flags = guild_models.GuildSystemChannelFlag(payload["system_channel_flags"])
 
@@ -1068,8 +1069,6 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild.approximate_active_member_count = (
             int(payload["approximate_presence_count"]) if "approximate_presence_count" in payload else None
         )
-        guild.is_widget_enabled = payload["widget_enabled"] if "widget_enabled" in payload else None
-        # TODO: don't we get this on gateway?
 
         guild._roles = {
             snowflake.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild.id) for role in payload["roles"]
@@ -1118,7 +1117,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         if "voice_states" in payload:
             for voice_state_payload in payload["voice_states"]:
-                voice_state = self.deserialize_voice_state(voice_state_payload)
+                voice_state = self.deserialize_voice_state(voice_state_payload, guild_id=guild.id)
                 voice_states[voice_state.user_id] = voice_state
 
         roles = {

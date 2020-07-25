@@ -72,7 +72,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
     @property
     @abc.abstractmethod
     def app(self) -> rest.IRESTApp:
-        """The app this cache is bound by."""
+        """Get the app this cache is bound by."""
 
     @abc.abstractmethod
     def clear_dm_channels(self) -> ICacheView[channels.DMChannel]:
@@ -340,7 +340,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
     def update_me(
         self, user: users.OwnUser, /
     ) -> typing.Tuple[typing.Optional[users.OwnUser], typing.Optional[users.OwnUser]]:
-        """The own user object to update in the cache.
+        """Update the own user entry in the cache.
 
         Parameters
         ----------
@@ -640,7 +640,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_voice_state_view(self, guild_id: snowflake.Snowflake) -> cache.ICacheView[voices.VoiceState]:
+    def get_voice_state_view(self, guild_id: snowflake.Snowflake) -> ICacheView[voices.VoiceState]:
         ...
 
     @abc.abstractmethod

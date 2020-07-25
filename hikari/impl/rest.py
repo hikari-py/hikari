@@ -1734,7 +1734,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> guilds.Guild:
+    ) -> guilds.RESTGuild:
         route = routes.PATCH_GUILD.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
@@ -1783,7 +1783,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_guild(response)
+        return self._app.entity_factory.deserialize_rest_guild(response)
 
     async def delete_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> None:
         route = routes.DELETE_GUILD.compile(guild=guild)
