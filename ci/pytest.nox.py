@@ -45,7 +45,7 @@ FLAGS = [
 ]
 
 
-@nox.session(default=True, reuse_venv=True)
+@nox.session(reuse_venv=True)
 def pytest(session: nox.Session) -> None:
     """Run unit tests and measure code coverage."""
     session.install(

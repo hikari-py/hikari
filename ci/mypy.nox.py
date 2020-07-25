@@ -20,7 +20,7 @@ from ci import config
 from ci import nox
 
 
-@nox.session(reuse_venv=True, default=True)
+@nox.session(reuse_venv=True)
 def mypy(session: nox.Session) -> None:
     """Perform static type analysis on Python source code."""
     session.install("-r", "requirements.txt", "-r", "mypy-requirements.txt")

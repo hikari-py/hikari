@@ -78,16 +78,9 @@ LINE_ENDING_PATHS = {
 }
 
 
-@nox.session(default=True, reuse_venv=True)
-def check_isort(session: nox.Session) -> None:
-    """Check imports using isort."""
-    session.install("isort")
-    session.run("isort", "--check-only", *REFORMATING_PATHS)
-
-
-@nox.session(default=True, reuse_venv=True)
+@nox.session(reuse_venv=True)
 def reformat_code(session: nox.Session) -> None:
-    """Remove trailing whitespace in source, fix order import, then run black code formatter."""
+    """Remove trailing whitespace in source, run isort and then run black code formatter."""
     remove_trailing_whitespaces()
 
     # Isort
@@ -96,7 +89,7 @@ def reformat_code(session: nox.Session) -> None:
 
     # Black
     session.install("black")
-    session.run("black", *REFORMATING_PATHS)
+    session.run("black", "--target-version", "py38", *REFORMATING_PATHS)
 
 
 def remove_trailing_whitespaces() -> None:
