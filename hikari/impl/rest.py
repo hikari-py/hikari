@@ -23,7 +23,12 @@ providing RESTful functionality.
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["RESTAppImpl", "RESTAppFactoryImpl", "RESTClientImpl"]
+__all__: typing.Final[typing.List[str]] = [
+    "BasicLazyCachedTCPConnectorFactory",
+    "RESTAppImpl",
+    "RESTAppFactoryImpl",
+    "RESTClientImpl",
+]
 
 import asyncio
 import contextlib
@@ -77,8 +82,29 @@ if typing.TYPE_CHECKING:
     from hikari.models import voices
     from hikari.models import webhooks
 
-
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
+
+
+@typing.final
+class BasicLazyCachedTCPConnectorFactory(rest_api.IConnectorFactory):
+    """Lazy cached TCP connector factory."""
+
+    __slots__ = ("connector", "connector_kwargs")
+
+    def __init__(self, **kwargs: typing.Any) -> None:
+        self.connector: typing.Optional[aiohttp.TCPConnector] = None
+        self.connector_kwargs = kwargs
+
+    async def close(self) -> None:
+        if self.connector is not None:
+            await self.connector.close()
+            self.connector = None
+
+    def acquire(self) -> aiohttp.BaseConnector:
+        if self.connector is None:
+            self.connector = aiohttp.TCPConnector(**self.connector_kwargs)
+
+        return self.connector
 
 
 class RESTAppImpl(rest_api.IRESTAppContextManager):
@@ -86,10 +112,14 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
 
     Parameters
     ----------
-    connector : aiohttp.BaseConnector
-        The AIOHTTP connector to use. This must be closed by the caller, and
-        will not be terminated when this class closes (since you will generally
-        expect this to be a connection pool).
+    connector_factory : hikari.api.rest.IConnectorFactory or builtins.None
+        A factory that produces an `aiohttp.BaseConnector` when requested.
+
+        Defaults to a connector for a shared `aiohttp.TCPConnector` if
+        `builtins.None`.
+
+        The connector factory is expected to handle providing locks around
+        resources and caching any result as desired.
     debug : builtins.bool
         Defaulting to `builtins.False`, if `builtins.True`, then each payload
         sent and received in HTTP requests will be dumped to debug logs. This
@@ -99,8 +129,6 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
         The executor to use for blocking file IO operations. If `builtins.None`
         is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
         the `asyncio.AbstractEventLoop` will be used instead.
-    global_ratelimit : hikari.impl.rate_limits.ManualRateLimiter
-        The global ratelimiter.
     http_settings : hikari.config.HTTPSettings
         HTTP-related settings.
     proxy_settings : hikari.config.ProxySettings
@@ -122,10 +150,9 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
     def __init__(
         self,
         *,
-        connector: aiohttp.BaseConnector,
+        connector_factory: rest_api.IConnectorFactory,
         debug: bool = False,
         executor: typing.Optional[concurrent.futures.Executor],
-        global_ratelimit: rate_limits.ManualRateLimiter,
         http_settings: config.HTTPSettings,
         proxy_settings: config.ProxySettings,
         token: typing.Optional[str],
@@ -141,11 +168,10 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
         self._proxy_settings = proxy_settings
         self._rest = RESTClientImpl(
             app=self,
-            connector=connector,
+            connector_factory=connector_factory,
             connector_owner=False,
             debug=debug,
             http_settings=http_settings,
-            global_ratelimit=global_ratelimit,
             proxy_settings=proxy_settings,
             token=token,
             token_type=token_type,
@@ -210,15 +236,21 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
 
     Parameters
     ----------
-    connector : aiohttp.BaseConnector or builtins.None
-        The connector to use for HTTP sockets. If `builtins.None`, this will be
-        automatically created for you.
+    connector_factory : IConnectorFactory or builtins.None
+        A factory that produces an `aiohttp.BaseConnector` when requested.
+
+        Defaults to a connector for a shared `aiohttp.TCPConnector` if
+        `builtins.None`.
+
+        The connector factory is expected to handle providing locks around
+        resources and caching any result as desired.
     connector_owner : builtins.bool
         If you created the connector yourself, set this to `builtins.True` if
         you want this component to destroy the connector once closed. Otherwise,
         `builtins.False` will prevent this and you will have to do this
         manually. The latter is useful if you wish to maintain a shared
-        connection pool across your application.
+        connection pool across your application with other non-Hikari
+        components.
     debug : builtins.bool
         If `builtins.True`, then much more information is logged each time a
         request is made. Generally you do not need this to be on, so it will
@@ -239,12 +271,17 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
     version : builtins.int
         The Discord API version to use. Can be `6` (stable, default), or `7`
         (undocumented development release).
+
+    !!! warning
+        You must only use one event loop with each instance of this object.
+        This event loop will be bound to a connector when the first call
+        to `acquire` is made.
     """
 
     def __init__(
         self,
         *,
-        connector: typing.Optional[aiohttp.BaseConnector] = None,
+        connector_factory: typing.Optional[rest_api.IConnectorFactory] = None,
         connector_owner: bool = True,
         debug: bool = False,
         executor: typing.Optional[concurrent.futures.Executor] = None,
@@ -253,11 +290,18 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
         url: typing.Optional[str] = None,
         version: int = 6,
     ) -> None:
-        self._connector = aiohttp.TCPConnector() if connector is None else connector
+        # Lazy initialized later, since we must initialize this in the event
+        # loop we run the application from, otherwise aiohttp throws complaints
+        # at us. Quart, amongst other libraries, causes issues with this by
+        # making a new event loop on startup, which means if we initialised
+        # the connector here and initialised this class in global scope, it
+        # would potentially end up using the wrong event loop and aiohttp
+        # would then fail when creating an HTTP request.
+        self._connector_factory: rest_api.IConnectorFactory = connector_factory or BasicLazyCachedTCPConnectorFactory()
         self._connector_owner = connector_owner
         self._debug = debug
+        self._event_loop: typing.Optional[asyncio.AbstractEventLoop] = None
         self._executor = executor
-        self._global_ratelimit = rate_limits.ManualRateLimiter()
         self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
         self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
         self._url = url
@@ -276,12 +320,16 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
         return self._proxy_settings
 
     def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> rest_api.IRESTAppContextManager:
+        loop = asyncio.get_running_loop()
+
+        if loop != self._event_loop:
+            raise RuntimeError("Cannot use this object on a different event loop... please create a new instance.")
+
         return RESTAppImpl(
-            connector=self._connector,
+            connector_factory=self._connector_factory,
             debug=self._debug,
             executor=self._executor,
             http_settings=self._http_settings,
-            global_ratelimit=self._global_ratelimit,
             proxy_settings=self._proxy_settings,
             token=token,
             token_type=token_type,
@@ -291,8 +339,7 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
 
     async def close(self) -> None:
         if self._connector_owner:
-            await self._connector.close()
-        self._global_ratelimit.close()
+            await self._connector_factory.close()
 
     async def __aenter__(self) -> RESTAppFactoryImpl:
         return self
@@ -318,14 +365,32 @@ class RESTClientImpl(rest_api.IRESTClient):
     app : hikari.api.rest.app.IRESTApp
         The HTTP application containing all other application components
         that Hikari uses.
+        connector_factory : typing.Callable[[], typing.Awaitable[aiohttp.BaseConnector]]
+        A factory function that produces an `aiohttp.BaseConnector` when
+        requested.
+
+        Defaults to a connector for an `aiohttp.TCPConnector`.
+    connector_factory : IConnectorFactory or builtins.None
+        A factory that produces an `aiohttp.BaseConnector` when requested.
+
+        Defaults to a connector for a shared `aiohttp.TCPConnector` if
+        `builtins.None`.
+
+        The connector factory is expected to handle providing locks around
+        resources and caching any result as desired.
+    connector_owner : builtins.bool
+        If you created the connector yourself, set this to `builtins.True` if
+        you want this component to destroy the connector once closed. Otherwise,
+        `builtins.False` will prevent this and you will have to do this
+        manually. The latter is useful if you wish to maintain a shared
+        connection pool across your application with other non-Hikari
+        components.
     debug : builtins.bool
         If `builtins.True`, this will enable logging of each payload sent and
         received, as well as information such as DNS cache hits and misses, and
         other information useful for debugging this application. These logs will
         be written as DEBUG log entries. For most purposes, this should be
         left `builtins.False`.
-    global_ratelimit : hikari.impl.rate_limits.ManualRateLimiter
-        The shared ratelimiter to use for the application.
     token : hikari.utilities.undefined.UndefinedOr[builtins.str]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
@@ -352,6 +417,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         "_app",
         "_client_session",
         "_connector",
+        "_connector_factory",
         "_connector_owner",
         "_debug",
         "_http_settings",
@@ -377,10 +443,9 @@ class RESTClientImpl(rest_api.IRESTClient):
         self,
         *,
         app: rest_api.IRESTApp,
-        connector: typing.Optional[aiohttp.BaseConnector],
+        connector_factory: rest_api.IConnectorFactory,
         connector_owner: bool,
         debug: bool,
-        global_ratelimit: rate_limits.ManualRateLimiter,
         http_settings: config.HTTPSettings,
         proxy_settings: config.ProxySettings,
         token: typing.Optional[str],
@@ -389,12 +454,13 @@ class RESTClientImpl(rest_api.IRESTClient):
         version: int,
     ) -> None:
         self.buckets = buckets.RESTBucketManager()
-        self.global_rate_limit = global_ratelimit
+        # We've been told in DAPI that this is per token.
+        self.global_rate_limit = rate_limits.ManualRateLimiter()
         self.version = version
 
         self._app = app
         self._client_session: typing.Optional[aiohttp.ClientSession] = None
-        self._connector = connector
+        self._connector_factory = connector_factory
         self._connector_owner = connector_owner
         self._debug = debug
         self._http_settings = http_settings
@@ -420,10 +486,20 @@ class RESTClientImpl(rest_api.IRESTClient):
         return self._app
 
     @typing.final
+    async def close(self) -> None:
+        """Close the HTTP client and any open HTTP connections."""
+        if self._client_session is not None:
+            await self._client_session.close()
+        self.global_rate_limit.close()
+        self.buckets.close()
+
+    @typing.final
     def _acquire_client_session(self) -> aiohttp.ClientSession:
         if self._client_session is None:
             self._client_session = aiohttp.ClientSession(
-                connector=self._connector,
+                # Should not need a lock, since we don't technically await anything.
+                connector=self._connector_factory.acquire(),
+                connector_owner=self._connector_owner,
                 version=aiohttp.HttpVersion11,
                 timeout=aiohttp.ClientTimeout(
                     total=self._http_settings.timeouts.total,
@@ -666,13 +742,6 @@ class RESTClientImpl(rest_api.IRESTClient):
             allowed_mentions["roles"] = list(snowflakes)
 
         return allowed_mentions
-
-    @typing.final
-    async def close(self) -> None:
-        """Close the HTTP client and any open HTTP connections."""
-        if self._client_session is not None:
-            await self._client_session.close()
-        self.buckets.close()
 
     async def fetch_channel(
         self, channel: snowflake.SnowflakeishOr[channels.PartialChannel]
