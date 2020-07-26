@@ -37,6 +37,50 @@ from hikari.utilities import undefined
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 
+######################################
+# BasicLazyCachedTCPConnectorFactory #
+######################################
+
+
+@pytest.fixture
+def connector_factory():
+    return rest.BasicLazyCachedTCPConnectorFactory()
+
+
+class TestBasicLazyCachedTCPConnectorFactory:
+    def test_acquire_when_connector_is_None(self, connector_factory):
+        connector_mock = mock.Mock()
+        connector_factory.connector = None
+        connector_factory.connector_kwargs = {"test": 123}
+
+        with mock.patch.object(aiohttp, "TCPConnector", return_value=connector_mock) as tcp_connector:
+            assert connector_factory.acquire() is connector_mock
+            assert connector_factory.connector is connector_mock
+        tcp_connector.assert_called_once_with(test=123)
+
+    def test_acquire_when_connector_is_not_None(self, connector_factory):
+        connector_mock = mock.Mock()
+        connector_factory.connector = connector_mock
+
+        assert connector_factory.acquire() is connector_mock
+
+
+@pytest.mark.asyncio
+class TestBasicLazyCachedTCPConnectorFactoryAsync:
+    async def test_close_when_connector_is_None(self, connector_factory):
+        connector_factory.connector = None
+
+        await connector_factory.close()
+
+    async def test_close_when_connector_is_not_None(self, connector_factory):
+        connector_mock = mock.Mock(close=mock.AsyncMock())
+        connector_factory.connector = connector_mock
+
+        await connector_factory.close()
+        assert connector_factory.connector is None
+        connector_mock.close.assert_awaited_once_with()
+
+
 ###############
 # RESTAppImpl #
 ###############
@@ -45,10 +89,9 @@ from tests.hikari import hikari_test_helpers
 @pytest.fixture
 def rest_app():
     return hikari_test_helpers.unslot_class(rest.RESTAppImpl)(
-        connector=mock.Mock(),
+        connector_factory=mock.Mock(),
         debug=True,
         executor=mock.Mock(),
-        global_ratelimit=mock.Mock(spec=rate_limits.ManualRateLimiter),
         http_settings=mock.Mock(spec=config.HTTPSettings),
         proxy_settings=mock.Mock(spec=config.ProxySettings),
         token="some_token",
@@ -120,7 +163,7 @@ class TestRESTAppImplAsync:
 @pytest.fixture
 def rest_factory():
     return hikari_test_helpers.unslot_class(rest.RESTAppFactoryImpl)(
-        connector=mock.Mock(),
+        connector_factory=mock.Mock(),
         connector_owner=False,
         debug=True,
         executor=mock.Mock(),
@@ -147,15 +190,17 @@ class TestRESTAppFactoryImpl:
         assert rest_factory.proxy_settings is mock_proxy_settings
 
     def test_acquire(self, rest_factory):
+        mock_event_loop = mock.Mock()
+        rest_factory._event_loop = mock_event_loop
         with mock.patch.object(rest, "RESTAppImpl") as mock_app:
-            rest_factory.acquire(token="token", token_type="Type")
+            with mock.patch.object(asyncio, "get_running_loop", return_value=mock_event_loop):
+                rest_factory.acquire(token="token", token_type="Type")
 
         mock_app.assert_called_once_with(
-            connector=rest_factory._connector,
+            connector_factory=rest_factory._connector_factory,
             debug=rest_factory._debug,
             executor=rest_factory._executor,
             http_settings=rest_factory._http_settings,
-            global_ratelimit=rest_factory._global_ratelimit,
             proxy_settings=rest_factory._proxy_settings,
             token="token",
             token_type="Type",
@@ -163,24 +208,26 @@ class TestRESTAppFactoryImpl:
             version=3,
         )
 
+    def test_acquire_when__event_loop_and_loop_dont_equal(self, rest_factory):
+        rest_factory._event_loop = None
+        with mock.patch.object(asyncio, "get_running_loop"):
+            with pytest.raises(RuntimeError):
+                rest_factory.acquire(token="token", token_type="Type")
+
 
 @pytest.mark.asyncio
 class TestRESTAppFactoryImplAsync:
     async def test_close_when_connector_owner(self, rest_factory):
         rest_factory._connector_owner = True
-        rest_factory._global_ratelimit = mock.Mock(close=mock.Mock())
-        rest_factory._connector.close = mock.AsyncMock()
+        rest_factory._connector_factory.close = mock.AsyncMock()
         await rest_factory.close()
-        rest_factory._connector.close.assert_called_once()
-        rest_factory._global_ratelimit.close.assert_called_once()
+        rest_factory._connector_factory.close.assert_awaited_once_with()
 
     async def test_close_when_not_connector_owner(self, rest_factory):
         rest_factory._connector_owner = False
-        rest_factory._global_ratelimit = mock.Mock(close=mock.Mock())
-        rest_factory._connector.close = mock.AsyncMock()
+        rest_factory._connector_factory.close = mock.AsyncMock()
         await rest_factory.close()
-        rest_factory._connector.close.assert_not_called()
-        rest_factory._global_ratelimit.close.assert_called_once()
+        rest_factory._connector_factory.close.assert_not_awaited()
 
     async def test__aenter__(self, rest_factory):
         rest_factory.close = mock.AsyncMock()
@@ -208,10 +255,9 @@ def stub_app():
 def rest_client(stub_app):
     obj = hikari_test_helpers.unslot_class(rest.RESTClientImpl)(
         app=stub_app,
-        connector=mock.Mock(),
-        connector_owner=True,
+        connector_factory=mock.Mock(),
+        connector_owner=False,
         debug=True,
-        global_ratelimit=mock.Mock(spec=rate_limits.ManualRateLimiter),
         http_settings=mock.Mock(spec=config.HTTPSettings),
         proxy_settings=mock.Mock(spec=config.ProxySettings),
         token="some_token",
@@ -239,10 +285,9 @@ class TestRESTClientImpl:
     def test__init__when_token_is_None_sets_token_to_None(self):
         obj = rest.RESTClientImpl(
             app=mock.Mock(),
-            connector=mock.Mock(),
+            connector_factory=mock.Mock(),
             connector_owner=True,
             debug=True,
-            global_ratelimit=mock.Mock(),
             http_settings=mock.Mock(),
             proxy_settings=mock.Mock(),
             token=None,
@@ -255,10 +300,9 @@ class TestRESTClientImpl:
     def test__init__when_token_is_not_None_and_token_type_is_None_generates_token_with_default_type(self):
         obj = rest.RESTClientImpl(
             app=mock.Mock(),
-            connector=mock.Mock(),
+            connector_factory=mock.Mock(),
             connector_owner=True,
             debug=True,
-            global_ratelimit=mock.Mock(),
             http_settings=mock.Mock(),
             proxy_settings=mock.Mock(),
             token="some_token",
@@ -271,10 +315,9 @@ class TestRESTClientImpl:
     def test__init__when_token_and_token_type_is_not_None_generates_token_with_type(self):
         obj = rest.RESTClientImpl(
             app=mock.Mock(),
-            connector=mock.Mock(),
+            connector_factory=mock.Mock(),
             connector_owner=True,
             debug=True,
-            global_ratelimit=mock.Mock(),
             http_settings=mock.Mock(),
             proxy_settings=mock.Mock(),
             token="some_token",
@@ -287,10 +330,9 @@ class TestRESTClientImpl:
     def test__init__when_rest_url_is_None_generates_url_using_default_url(self):
         obj = rest.RESTClientImpl(
             app=mock.Mock(),
-            connector=mock.Mock(),
+            connector_factory=mock.Mock(),
             connector_owner=True,
             debug=True,
-            global_ratelimit=mock.Mock(),
             http_settings=mock.Mock(),
             proxy_settings=mock.Mock(),
             token=None,
@@ -303,10 +345,9 @@ class TestRESTClientImpl:
     def test__init__when_rest_url_is_not_None_generates_url_using_given_url(self):
         obj = rest.RESTClientImpl(
             app=mock.Mock(),
-            connector=mock.Mock(),
+            connector_factory=mock.Mock(),
             connector_owner=True,
             debug=True,
-            global_ratelimit=mock.Mock(),
             http_settings=mock.Mock(),
             proxy_settings=mock.Mock(),
             token=None,
@@ -325,7 +366,7 @@ class TestRESTClientImpl:
     def test__acquire_client_session_when_None(self, rest_client):
         client_session_mock = client_session_stub.ClientSessionStub()
         connector_mock = mock.Mock()
-        rest_client._connector = connector_mock
+        rest_client._connector_factory.acquire = mock.Mock(return_value=connector_mock)
         rest_client._http_settings.timeouts.total = 10
         rest_client._http_settings.timeouts.acquire_and_connect = 5
         rest_client._http_settings.timeouts.request_socket_read = 4
@@ -335,8 +376,10 @@ class TestRESTClientImpl:
 
         with mock.patch.object(aiohttp, "ClientSession", return_value=client_session_mock) as client_session:
             assert rest_client._acquire_client_session() is client_session_mock
+            rest_client._client_session is client_session_mock
             client_session.assert_called_once_with(
                 connector=connector_mock,
+                connector_owner=False,
                 version=aiohttp.HttpVersion11,
                 timeout=aiohttp.ClientTimeout(total=10, connect=5, sock_read=4, sock_connect=1),
                 trust_env=False,

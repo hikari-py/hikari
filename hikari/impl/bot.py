@@ -215,6 +215,7 @@ class BotAppImpl(bot.IBotApp):
         else:
             self._cache = cache_impl.InMemoryCacheComponentImpl(app=self)
 
+        self._connector_factory = rest_client_impl.BasicLazyCachedTCPConnectorFactory()
         self._debug = debug
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
         self._event_manager = event_manager.EventManagerComponentImpl(app=self, intents_=intents)
@@ -232,11 +233,10 @@ class BotAppImpl(bot.IBotApp):
         self._request_close_event = asyncio.Event()
         self._rest = rest_client_impl.RESTClientImpl(  # noqa: S106 - Possible hardcoded password
             app=self,
-            connector=None,
-            connector_owner=True,
+            connector_factory=self._connector_factory,
+            connector_owner=False,
             debug=debug,
             http_settings=self._http_settings,
-            global_ratelimit=self._global_ratelimit,
             proxy_settings=self._proxy_settings,
             token=token,
             token_type=constants.BOT_TOKEN,  # nosec
@@ -472,6 +472,7 @@ class BotAppImpl(bot.IBotApp):
 
     async def close(self) -> None:
         await self._rest.close()
+        await self._connector_factory.close()
         self._global_ratelimit.close()
 
         if self._tasks:

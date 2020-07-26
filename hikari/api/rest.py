@@ -18,7 +18,7 @@
 """Provides an interface for REST API implementations to follow."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IRESTClient"]
+__all__: typing.Final[typing.List[str]] = ["IConnectorFactory", "IRESTApp", "IRESTAppFactory", "IRESTClient"]
 
 import abc
 import typing
@@ -29,6 +29,8 @@ from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import types
+
+    import aiohttp
 
     from hikari import config
     from hikari.api import special_endpoints
@@ -51,6 +53,20 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import files
     from hikari.utilities import iterators
     from hikari.utilities import snowflake
+
+
+class IConnectorFactory(abc.ABC):
+    """Provider of a connector."""
+
+    __slots__ = ()
+
+    @abc.abstractmethod
+    async def close(self) -> None:
+        """Close any resources if they exist."""
+
+    @abc.abstractmethod
+    def acquire(self) -> aiohttp.BaseConnector:
+        """Acquire the connector."""
 
 
 class IRESTApp(app.IApp, abc.ABC):
