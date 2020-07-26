@@ -364,6 +364,10 @@ class ICacheComponent(component.IComponent, abc.ABC):
         guild_id : hikari.utilities.snowflake.Snowflake
             The ID of the guild to remove cached members for.
 
+        !!! note
+            This will skip members that are being referenced by other entries in
+            the cache; a matching voice state will keep a member entry alive.
+
         Returns
         -------
         ICacheView[hikari.models.guilds.Member]
@@ -382,6 +386,11 @@ class ICacheComponent(component.IComponent, abc.ABC):
             The ID of the guild to remove a member from the cache for.
         user_id : hikari.utilities.snowflake.Snowflake
             The ID of the user to remove a member from the cache for.
+
+        !!! note
+            You cannot delete a member entry that's being referenced by other
+            entries in the cache; a matching voice state will keep a member
+            entry alive.
 
         Returns
         -------
@@ -511,6 +520,11 @@ class ICacheComponent(component.IComponent, abc.ABC):
     def clear_users(self) -> ICacheView[users.User]:
         """Clear the user objects from the cache.
 
+        !!! note
+            This will skip users that are being referenced by other entries
+            within the cache; member entries and DM channel entries will keep a
+            user alive within the cache.
+
         Returns
         -------
         ICacheView[hikari.models.users.User]
@@ -525,6 +539,11 @@ class ICacheComponent(component.IComponent, abc.ABC):
         ----------
         user_id : hikari.utilities.snowflake.Snowflake
             The ID of the user to remove from the cache.
+
+        !!! note
+            You cannot delete a user object while it's being referenced by other
+            entries within the cache; member entries and DM channel entries
+            will keep a user alive within the cache.
 
         Returns
         -------
