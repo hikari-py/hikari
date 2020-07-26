@@ -21,7 +21,6 @@ import shutil
 import subprocess
 import time
 
-from ci import config
 from ci import nox
 
 REFORMATING_PATHS = [
