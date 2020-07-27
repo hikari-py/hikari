@@ -975,7 +975,7 @@ class RESTClientImpl(rest_api.IRESTClient):
             content = undefined.UNDEFINED
 
         elif undefined.count(attachment, attachments) == 2 and isinstance(
-            content, (files.Resource, files.RawishTypes, os.PathLike)
+            content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
         ):
             # Syntatic sugar, common mistake to accidentally send an attachment
             # as the content, so lets detect this and fix it for the user. This
