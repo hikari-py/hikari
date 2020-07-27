@@ -441,7 +441,7 @@ class OwnUser(UserImpl):
 
         Returns
         -------
-        hikari.models.users.UserImpl
+        hikari.models.users.OwnUser
             The requested user object.
         """
         return await self.app.rest.fetch_my_user()
