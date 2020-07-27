@@ -41,8 +41,8 @@ import http
 import typing
 
 if typing.TYPE_CHECKING:
-    from hikari.utilities import routes
     from hikari.utilities import data_binding
+    from hikari.utilities import routes
 
 
 class HikariError(RuntimeError):

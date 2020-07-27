@@ -23,7 +23,12 @@ providing RESTful functionality.
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["RESTAppImpl", "RESTAppFactoryImpl", "RESTClientImpl"]
+__all__: typing.Final[typing.List[str]] = [
+    "BasicLazyCachedTCPConnectorFactory",
+    "RESTAppImpl",
+    "RESTAppFactoryImpl",
+    "RESTClientImpl",
+]
 
 import asyncio
 import contextlib
@@ -48,6 +53,8 @@ from hikari.impl import stateless_cache
 from hikari.models import channels
 from hikari.models import embeds as embeds_
 from hikari.models import emojis
+from hikari.models import guilds
+from hikari.models import users
 from hikari.utilities import constants
 from hikari.utilities import data_binding
 from hikari.utilities import date
@@ -62,23 +69,42 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
     import types
 
+    from hikari.api import cache as cache_
+    from hikari.api import entity_factory as entity_factory_
     from hikari.models import applications
     from hikari.models import audit_logs
     from hikari.models import colors
     from hikari.models import colours
     from hikari.models import gateway
-    from hikari.models import guilds
     from hikari.models import invites
     from hikari.models import messages as messages_
     from hikari.models import permissions as permissions_
-    from hikari.models import users
     from hikari.models import voices
     from hikari.models import webhooks
-    from hikari.api import cache as cache_
-    from hikari.api import entity_factory as entity_factory_
-
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
+
+
+@typing.final
+class BasicLazyCachedTCPConnectorFactory(rest_api.IConnectorFactory):
+    """Lazy cached TCP connector factory."""
+
+    __slots__ = ("connector", "connector_kwargs")
+
+    def __init__(self, **kwargs: typing.Any) -> None:
+        self.connector: typing.Optional[aiohttp.TCPConnector] = None
+        self.connector_kwargs = kwargs
+
+    async def close(self) -> None:
+        if self.connector is not None:
+            await self.connector.close()
+            self.connector = None
+
+    def acquire(self) -> aiohttp.BaseConnector:
+        if self.connector is None:
+            self.connector = aiohttp.TCPConnector(**self.connector_kwargs)
+
+        return self.connector
 
 
 class RESTAppImpl(rest_api.IRESTAppContextManager):
@@ -86,10 +112,14 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
 
     Parameters
     ----------
-    connector : aiohttp.BaseConnector
-        The AIOHTTP connector to use. This must be closed by the caller, and
-        will not be terminated when this class closes (since you will generally
-        expect this to be a connection pool).
+    connector_factory : hikari.api.rest.IConnectorFactory or builtins.None
+        A factory that produces an `aiohttp.BaseConnector` when requested.
+
+        Defaults to a connector for a shared `aiohttp.TCPConnector` if
+        `builtins.None`.
+
+        The connector factory is expected to handle providing locks around
+        resources and caching any result as desired.
     debug : builtins.bool
         Defaulting to `builtins.False`, if `builtins.True`, then each payload
         sent and received in HTTP requests will be dumped to debug logs. This
@@ -99,8 +129,6 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
         The executor to use for blocking file IO operations. If `builtins.None`
         is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
         the `asyncio.AbstractEventLoop` will be used instead.
-    global_ratelimit : hikari.impl.rate_limits.ManualRateLimiter
-        The global ratelimiter.
     http_settings : hikari.config.HTTPSettings
         HTTP-related settings.
     proxy_settings : hikari.config.ProxySettings
@@ -122,10 +150,9 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
     def __init__(
         self,
         *,
-        connector: aiohttp.BaseConnector,
+        connector_factory: rest_api.IConnectorFactory,
         debug: bool = False,
         executor: typing.Optional[concurrent.futures.Executor],
-        global_ratelimit: rate_limits.ManualRateLimiter,
         http_settings: config.HTTPSettings,
         proxy_settings: config.ProxySettings,
         token: typing.Optional[str],
@@ -141,11 +168,10 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
         self._proxy_settings = proxy_settings
         self._rest = RESTClientImpl(
             app=self,
-            connector=connector,
+            connector_factory=connector_factory,
             connector_owner=False,
             debug=debug,
             http_settings=http_settings,
-            global_ratelimit=global_ratelimit,
             proxy_settings=proxy_settings,
             token=token,
             token_type=token_type,
@@ -210,15 +236,21 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
 
     Parameters
     ----------
-    connector : aiohttp.BaseConnector or builtins.None
-        The connector to use for HTTP sockets. If `builtins.None`, this will be
-        automatically created for you.
+    connector_factory : IConnectorFactory or builtins.None
+        A factory that produces an `aiohttp.BaseConnector` when requested.
+
+        Defaults to a connector for a shared `aiohttp.TCPConnector` if
+        `builtins.None`.
+
+        The connector factory is expected to handle providing locks around
+        resources and caching any result as desired.
     connector_owner : builtins.bool
         If you created the connector yourself, set this to `builtins.True` if
         you want this component to destroy the connector once closed. Otherwise,
         `builtins.False` will prevent this and you will have to do this
         manually. The latter is useful if you wish to maintain a shared
-        connection pool across your application.
+        connection pool across your application with other non-Hikari
+        components.
     debug : builtins.bool
         If `builtins.True`, then much more information is logged each time a
         request is made. Generally you do not need this to be on, so it will
@@ -239,12 +271,17 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
     version : builtins.int
         The Discord API version to use. Can be `6` (stable, default), or `7`
         (undocumented development release).
+
+    !!! warning
+        You must only use one event loop with each instance of this object.
+        This event loop will be bound to a connector when the first call
+        to `acquire` is made.
     """
 
     def __init__(
         self,
         *,
-        connector: typing.Optional[aiohttp.BaseConnector] = None,
+        connector_factory: typing.Optional[rest_api.IConnectorFactory] = None,
         connector_owner: bool = True,
         debug: bool = False,
         executor: typing.Optional[concurrent.futures.Executor] = None,
@@ -253,11 +290,18 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
         url: typing.Optional[str] = None,
         version: int = 6,
     ) -> None:
-        self._connector = aiohttp.TCPConnector() if connector is None else connector
+        # Lazy initialized later, since we must initialize this in the event
+        # loop we run the application from, otherwise aiohttp throws complaints
+        # at us. Quart, amongst other libraries, causes issues with this by
+        # making a new event loop on startup, which means if we initialised
+        # the connector here and initialised this class in global scope, it
+        # would potentially end up using the wrong event loop and aiohttp
+        # would then fail when creating an HTTP request.
+        self._connector_factory: rest_api.IConnectorFactory = connector_factory or BasicLazyCachedTCPConnectorFactory()
         self._connector_owner = connector_owner
         self._debug = debug
+        self._event_loop: typing.Optional[asyncio.AbstractEventLoop] = None
         self._executor = executor
-        self._global_ratelimit = rate_limits.ManualRateLimiter()
         self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
         self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
         self._url = url
@@ -276,12 +320,16 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
         return self._proxy_settings
 
     def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> rest_api.IRESTAppContextManager:
+        loop = asyncio.get_running_loop()
+
+        if loop != self._event_loop:
+            raise RuntimeError("Cannot use this object on a different event loop... please create a new instance.")
+
         return RESTAppImpl(
-            connector=self._connector,
+            connector_factory=self._connector_factory,
             debug=self._debug,
             executor=self._executor,
             http_settings=self._http_settings,
-            global_ratelimit=self._global_ratelimit,
             proxy_settings=self._proxy_settings,
             token=token,
             token_type=token_type,
@@ -291,8 +339,7 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
 
     async def close(self) -> None:
         if self._connector_owner:
-            await self._connector.close()
-        self._global_ratelimit.close()
+            await self._connector_factory.close()
 
     async def __aenter__(self) -> RESTAppFactoryImpl:
         return self
@@ -318,14 +365,32 @@ class RESTClientImpl(rest_api.IRESTClient):
     app : hikari.api.rest.app.IRESTApp
         The HTTP application containing all other application components
         that Hikari uses.
+        connector_factory : typing.Callable[[], typing.Awaitable[aiohttp.BaseConnector]]
+        A factory function that produces an `aiohttp.BaseConnector` when
+        requested.
+
+        Defaults to a connector for an `aiohttp.TCPConnector`.
+    connector_factory : IConnectorFactory or builtins.None
+        A factory that produces an `aiohttp.BaseConnector` when requested.
+
+        Defaults to a connector for a shared `aiohttp.TCPConnector` if
+        `builtins.None`.
+
+        The connector factory is expected to handle providing locks around
+        resources and caching any result as desired.
+    connector_owner : builtins.bool
+        If you created the connector yourself, set this to `builtins.True` if
+        you want this component to destroy the connector once closed. Otherwise,
+        `builtins.False` will prevent this and you will have to do this
+        manually. The latter is useful if you wish to maintain a shared
+        connection pool across your application with other non-Hikari
+        components.
     debug : builtins.bool
         If `builtins.True`, this will enable logging of each payload sent and
         received, as well as information such as DNS cache hits and misses, and
         other information useful for debugging this application. These logs will
         be written as DEBUG log entries. For most purposes, this should be
         left `builtins.False`.
-    global_ratelimit : hikari.impl.rate_limits.ManualRateLimiter
-        The shared ratelimiter to use for the application.
     token : hikari.utilities.undefined.UndefinedOr[builtins.str]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
@@ -352,6 +417,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         "_app",
         "_client_session",
         "_connector",
+        "_connector_factory",
         "_connector_owner",
         "_debug",
         "_http_settings",
@@ -377,10 +443,9 @@ class RESTClientImpl(rest_api.IRESTClient):
         self,
         *,
         app: rest_api.IRESTApp,
-        connector: typing.Optional[aiohttp.BaseConnector],
+        connector_factory: rest_api.IConnectorFactory,
         connector_owner: bool,
         debug: bool,
-        global_ratelimit: rate_limits.ManualRateLimiter,
         http_settings: config.HTTPSettings,
         proxy_settings: config.ProxySettings,
         token: typing.Optional[str],
@@ -389,12 +454,13 @@ class RESTClientImpl(rest_api.IRESTClient):
         version: int,
     ) -> None:
         self.buckets = buckets.RESTBucketManager()
-        self.global_rate_limit = global_ratelimit
+        # We've been told in DAPI that this is per token.
+        self.global_rate_limit = rate_limits.ManualRateLimiter()
         self.version = version
 
         self._app = app
         self._client_session: typing.Optional[aiohttp.ClientSession] = None
-        self._connector = connector
+        self._connector_factory = connector_factory
         self._connector_owner = connector_owner
         self._debug = debug
         self._http_settings = http_settings
@@ -420,10 +486,20 @@ class RESTClientImpl(rest_api.IRESTClient):
         return self._app
 
     @typing.final
+    async def close(self) -> None:
+        """Close the HTTP client and any open HTTP connections."""
+        if self._client_session is not None:
+            await self._client_session.close()
+        self.global_rate_limit.close()
+        self.buckets.close()
+
+    @typing.final
     def _acquire_client_session(self) -> aiohttp.ClientSession:
         if self._client_session is None:
             self._client_session = aiohttp.ClientSession(
-                connector=self._connector,
+                # Should not need a lock, since we don't technically await anything.
+                connector=self._connector_factory.acquire(),
+                connector_owner=self._connector_owner,
                 version=aiohttp.HttpVersion11,
                 timeout=aiohttp.ClientTimeout(
                     total=self._http_settings.timeouts.total,
@@ -667,13 +743,6 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         return allowed_mentions
 
-    @typing.final
-    async def close(self) -> None:
-        """Close the HTTP client and any open HTTP connections."""
-        if self._client_session is not None:
-            await self._client_session.close()
-        self.buckets.close()
-
     async def fetch_channel(
         self, channel: snowflake.SnowflakeishOr[channels.PartialChannel]
     ) -> channels.PartialChannel:
@@ -801,7 +870,7 @@ class RESTClientImpl(rest_api.IRESTClient):
     def trigger_typing(
         self, channel: snowflake.SnowflakeishOr[channels.TextChannel]
     ) -> special_endpoints.TypingIndicator:
-        return special_endpoints.TypingIndicator(self._request, channel)
+        return special_endpoints.TypingIndicator(request_call=self._request, channel=channel)
 
     async def fetch_pins(
         self, channel: snowflake.SnowflakeishOr[channels.TextChannel]
@@ -862,7 +931,9 @@ class RESTClientImpl(rest_api.IRESTClient):
             direction = "before"
             timestamp = undefined.UNDEFINED
 
-        return special_endpoints.MessageIterator(self._app, self._request, channel, direction, timestamp)
+        return special_endpoints.MessageIterator(
+            app=self._app, request_call=self._request, channel=channel, direction=direction, first_id=timestamp
+        )
 
     async def fetch_message(
         self,
@@ -892,7 +963,7 @@ class RESTClientImpl(rest_api.IRESTClient):
             typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        if attachment is not undefined.UNDEFINED and attachments is not undefined.UNDEFINED:
+        if not undefined.count(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
@@ -904,7 +975,7 @@ class RESTClientImpl(rest_api.IRESTClient):
             content = undefined.UNDEFINED
 
         elif undefined.count(attachment, attachments) == 2 and isinstance(
-            content, (files.Resource, files.RawishTypes, os.PathLike)
+            content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
         ):
             # Syntatic sugar, common mistake to accidentally send an attachment
             # as the content, so lets detect this and fix it for the user. This
@@ -972,11 +1043,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         body = data_binding.JSONObjectBuilder()
         body.put("flags", flags)
-        if (
-            mentions_everyone is not undefined.UNDEFINED
-            or user_mentions is not undefined.UNDEFINED
-            or role_mentions is not undefined.UNDEFINED
-        ):
+        if undefined.count(mentions_everyone, user_mentions, role_mentions) != 3:
             body.put(
                 "allowed_mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions)
             )
@@ -1016,14 +1083,18 @@ class RESTClientImpl(rest_api.IRESTClient):
         /,
         *messages: snowflake.SnowflakeishOr[messages_.Message],
     ) -> None:
+        route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
         coroutines: typing.List[typing.Coroutine[typing.Any, typing.Any, typing.Any]] = []
 
         while messages:
+            # Discord only allows 2-100 messages in the BULK_DELETE endpoint. Because of that,
+            # if the user wants 101 messages deleted, we will post 100 messages in bulk delete
+            # and then the last message in a normal delete.
             if len(messages) == 1:
                 coroutines.append(self.delete_message(channel, *messages))
+                messages = messages[1:]
             else:
                 chunk = messages[:100]
-                route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
                 body = data_binding.JSONObjectBuilder()
                 body.put_snowflake_array("messages", chunk)
                 coroutines.append(self._request(route, json=body))
@@ -1168,7 +1239,7 @@ class RESTClientImpl(rest_api.IRESTClient):
     async def fetch_guild_webhooks(
         self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[webhooks.Webhook]:
-        route = routes.GET_GUILD_WEBHOOKS.compile(channel=guild)
+        route = routes.GET_GUILD_WEBHOOKS.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_webhook)
@@ -1240,7 +1311,7 @@ class RESTClientImpl(rest_api.IRESTClient):
             typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        if attachment is not undefined.UNDEFINED and attachments is not undefined.UNDEFINED:
+        if not undefined.count(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
         route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
@@ -1359,8 +1430,12 @@ class RESTClientImpl(rest_api.IRESTClient):
             start_at = snowflake.Snowflake.max() if newest_first else snowflake.Snowflake.min()
         elif isinstance(start_at, datetime.datetime):
             start_at = snowflake.Snowflake.from_datetime(start_at)
+        else:
+            start_at = int(start_at)
 
-        return special_endpoints.OwnGuildIterator(self._app, self._request, newest_first, str(start_at))
+        return special_endpoints.OwnGuildIterator(
+            app=self._app, request_call=self._request, newest_first=newest_first, first_id=str(start_at)
+        )
 
     async def leave_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild], /) -> None:
         route = routes.DELETE_MY_GUILD.compile(guild=guild)
@@ -1430,14 +1505,16 @@ class RESTClientImpl(rest_api.IRESTClient):
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
 
         timestamp: undefined.UndefinedOr[str]
-        if isinstance(before, datetime.datetime):
-            timestamp = str(snowflake.Snowflake.from_datetime(before))
-        elif before is not undefined.UNDEFINED:
-            timestamp = str(int(before))
-        else:
+        if before is undefined.UNDEFINED:
             timestamp = undefined.UNDEFINED
+        elif isinstance(before, datetime.datetime):
+            timestamp = str(snowflake.Snowflake.from_datetime(before))
+        else:
+            timestamp = str(int(before))
 
-        return special_endpoints.AuditLogIterator(self._app, self._request, guild, timestamp, user, event_type)
+        return special_endpoints.AuditLogIterator(
+            app=self._app, request_call=self._request, guild=guild, before=timestamp, user=user, action_type=event_type
+        )
 
     async def fetch_emoji(
         self,
@@ -1446,23 +1523,19 @@ class RESTClientImpl(rest_api.IRESTClient):
         # likewise this only is valid for custom emojis, unicode emojis make little sense here.
         emoji: typing.Union[str, emojis.CustomEmoji],
     ) -> emojis.KnownCustomEmoji:
-        route = routes.GET_GUILD_EMOJI.compile(
-            guild=guild, emoji=emoji.id if isinstance(emoji, emojis.CustomEmoji) else emoji,
-        )
+        route = routes.GET_GUILD_EMOJI.compile(guild=guild, emoji=self._transform_emoji_to_url_format(emoji))
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflake.Snowflake(guild))
 
     async def fetch_guild_emojis(
         self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Set[emojis.KnownCustomEmoji]:
+    ) -> typing.Sequence[emojis.KnownCustomEmoji]:
         route = routes.GET_GUILD_EMOJIS.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return set(
-            data_binding.cast_json_array(
-                response, self._app.entity_factory.deserialize_known_custom_emoji, guild_id=snowflake.Snowflake(guild)
-            )
+        return data_binding.cast_json_array(
+            response, self._app.entity_factory.deserialize_known_custom_emoji, guild_id=snowflake.Snowflake(guild)
         )
 
     async def create_emoji(
@@ -1479,10 +1552,9 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.POST_GUILD_EMOJIS.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
-        if image is not undefined.UNDEFINED:
-            image_resource = files.ensure_resource(image)
-            async with image_resource.stream(executor=self._app.executor) as stream:
-                body.put("image", await stream.data_uri())
+        image_resource = files.ensure_resource(image)
+        async with image_resource.stream(executor=self._app.executor) as stream:
+            body.put("image", await stream.data_uri())
 
         body.put_snowflake_array("roles", roles)
 
@@ -1503,9 +1575,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
-        route = routes.PATCH_GUILD_EMOJI.compile(
-            guild=guild, emoji=emoji.id if isinstance(emoji, emojis.CustomEmoji) else emoji,
-        )
+        route = routes.PATCH_GUILD_EMOJI.compile(guild=guild, emoji=self._transform_emoji_to_url_format(emoji))
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put_snowflake_array("roles", roles)
@@ -1518,15 +1588,14 @@ class RESTClientImpl(rest_api.IRESTClient):
         self,
         guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
+        # likewise this only is valid for custom emojis, unicode emojis make little sense here.
         emoji: typing.Union[str, emojis.CustomEmoji],
     ) -> None:
-        route = routes.DELETE_GUILD_EMOJI.compile(
-            guild=guild, emoji=emoji.id if isinstance(emoji, emojis.CustomEmoji) else emoji,
-        )
+        route = routes.DELETE_GUILD_EMOJI.compile(guild=guild, emoji=self._transform_emoji_to_url_format(emoji))
         await self._request(route)
 
     def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
-        return special_endpoints.GuildBuilder(app=self._app, name=name, request_call=self._request)
+        return special_endpoints.GuildBuilder(app=self._app, request_call=self._request, name=name)
 
     async def fetch_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.Guild:
         route = routes.GET_GUILD.compile(guild=guild)
@@ -1561,9 +1630,15 @@ class RESTClientImpl(rest_api.IRESTClient):
         owner: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
-        system_channel: undefined.UndefinedNoneOr[channels.GuildTextChannel] = undefined.UNDEFINED,
-        rules_channel: undefined.UndefinedNoneOr[channels.GuildTextChannel] = undefined.UNDEFINED,
-        public_updates_channel: undefined.UndefinedNoneOr[channels.GuildTextChannel] = undefined.UNDEFINED,
+        system_channel: undefined.UndefinedNoneOr[
+            snowflake.SnowflakeishOr[channels.GuildTextChannel]
+        ] = undefined.UNDEFINED,
+        rules_channel: undefined.UndefinedNoneOr[
+            snowflake.SnowflakeishOr[channels.GuildTextChannel]
+        ] = undefined.UNDEFINED,
+        public_updates_channel: undefined.UndefinedNoneOr[
+            snowflake.SnowflakeishOr[channels.GuildTextChannel]
+        ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Guild:
@@ -1687,7 +1762,6 @@ class RESTClientImpl(rest_api.IRESTClient):
         name: str,
         *,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
@@ -1701,7 +1775,6 @@ class RESTClientImpl(rest_api.IRESTClient):
             name,
             channels.ChannelType.GUILD_VOICE,
             position=position,
-            nsfw=nsfw,
             user_limit=user_limit,
             bitrate=bitrate,
             permission_overwrites=permission_overwrites,
@@ -1716,7 +1789,6 @@ class RESTClientImpl(rest_api.IRESTClient):
         name: str,
         *,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -1727,7 +1799,6 @@ class RESTClientImpl(rest_api.IRESTClient):
             name,
             channels.ChannelType.GUILD_CATEGORY,
             position=position,
-            nsfw=nsfw,
             permission_overwrites=permission_overwrites,
             reason=reason,
         )
@@ -1793,7 +1864,7 @@ class RESTClientImpl(rest_api.IRESTClient):
     def fetch_members(
         self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
     ) -> iterators.LazyIterator[guilds.Member]:
-        return special_endpoints.MemberIterator(self._app, self._request, guild)
+        return special_endpoints.MemberIterator(app=self._app, request_call=self._request, guild=guild)
 
     async def edit_member(
         self,
