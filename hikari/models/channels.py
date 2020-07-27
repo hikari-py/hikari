@@ -210,8 +210,9 @@ class TextChannel(PartialChannel, abc.ABC):
         Parameters
         ----------
         content : hikari.utilities.undefined.UndefinedOr[typing.Any]
-            If specified, the message contents. If `UNDEFINED`, then nothing
-            will be sent in the content. Any other value here will be cast to a
+            If specified, the message contents. If
+            `hikari.utilities.undefined.UNDEFINED`, then nothing will be sent
+            in the content. Any other value here will be cast to a
             `builtins.str`.
 
             If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
